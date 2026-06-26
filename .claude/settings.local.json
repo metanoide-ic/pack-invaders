@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"const fs=require\\('fs'\\); const c=fs.readFileSync\\('src/data/characters.ts','utf8'\\); const matches=[...c.matchAll\\(/name: '\\([^']+\\)'/g\\)]; matches.forEach\\(m=>console.log\\(JSON.stringify\\(m[1]\\)\\)\\);\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); let c=fs.readFileSync\\('src/data/characters.ts','utf8'\\); c=c.replace\\(/Mar�/g,'Maré'\\).replace\\(/Inst�vel/g,'Instável'\\); fs.writeFileSync\\('src/data/characters.ts',c,'utf8'\\); console.log\\('done'\\);\")",
+      "Bash(npm run *)",
+      "Bash(node -e ' *)",
+      "Bash(git config *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
+    ]
+  }
+}
