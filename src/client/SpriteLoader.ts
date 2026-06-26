@@ -3,11 +3,13 @@
  * Falls back to procedural sprites if images fail to load.
  */
 
+import { generateFenixPortrait } from './SpriteGen';
+
 export interface LoadedSprites {
-  characters: Map<string, HTMLImageElement>;
-  vendors: Map<string, HTMLImageElement>;
-  bosses: Map<string, HTMLImageElement>;
-  enemies: Map<string, HTMLImageElement>;
+  characters: Map<string, HTMLImageElement | HTMLCanvasElement>;
+  vendors: Map<string, HTMLImageElement | HTMLCanvasElement>;
+  bosses: Map<string, HTMLImageElement | HTMLCanvasElement>;
+  enemies: Map<string, HTMLImageElement | HTMLCanvasElement>;
   menuBg: HTMLImageElement | null;
 }
 
@@ -52,17 +54,26 @@ let cachedLoaded: LoadedSprites | null = null;
 export async function loadAllSprites(): Promise<LoadedSprites> {
   if (cachedLoaded) return cachedLoaded;
 
-  const characters = new Map<string, HTMLImageElement>();
-  const vendors = new Map<string, HTMLImageElement>();
-  const bosses = new Map<string, HTMLImageElement>();
-  const enemies = new Map<string, HTMLImageElement>();
+  const characters = new Map<string, HTMLImageElement | HTMLCanvasElement>();
+  const vendors = new Map<string, HTMLImageElement | HTMLCanvasElement>();
+  const bosses = new Map<string, HTMLImageElement | HTMLCanvasElement>();
+  const enemies = new Map<string, HTMLImageElement | HTMLCanvasElement>();
+
+  // Procedural portrait generators for characters without PNG art
+  const proceduralPortraits: Record<string, () => HTMLCanvasElement> = {
+    'fenix': () => generateFenixPortrait(300, 480),
+  };
 
   // Load characters
   for (const id of CHARACTER_IDS) {
     try {
       const img = await loadImage(`./sprites/characters/${id}.png`);
       characters.set(id, img);
-    } catch { /* fallback to procedural */ }
+    } catch {
+      if (proceduralPortraits[id]) {
+        characters.set(id, proceduralPortraits[id]());
+      }
+    }
   }
 
   // Load vendors
@@ -92,7 +103,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
 }
 
 /** Get character portrait by game character ID */
-export function getCharacterPortrait(charId: string): HTMLImageElement | null {
+export function getCharacterPortrait(charId: string): HTMLImageElement | HTMLCanvasElement | null {
   if (!cachedLoaded) return null;
   const spriteId = CHAR_ID_MAP[charId];
   if (!spriteId) return null;
@@ -100,7 +111,7 @@ export function getCharacterPortrait(charId: string): HTMLImageElement | null {
 }
 
 /** Get vendor portrait by vendor ID */
-export function getVendorPortrait(vendorId: string): HTMLImageElement | null {
+export function getVendorPortrait(vendorId: string): HTMLImageElement | HTMLCanvasElement | null {
   if (!cachedLoaded) return null;
   const spriteId = VENDOR_ID_MAP[vendorId];
   if (!spriteId) return null;
@@ -108,7 +119,7 @@ export function getVendorPortrait(vendorId: string): HTMLImageElement | null {
 }
 
 /** Get boss portrait by boss definition ID */
-export function getBossPortrait(bossDefId: string): HTMLImageElement | null {
+export function getBossPortrait(bossDefId: string): HTMLImageElement | HTMLCanvasElement | null {
   if (!cachedLoaded) return null;
   // Map boss_drill_sergeant -> vrox, etc.
   const BOSS_DEF_MAP: Record<string, string> = {

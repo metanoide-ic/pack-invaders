@@ -572,6 +572,251 @@ function generateBossEnemy(variant: number): HTMLCanvasElement {
   return c;
 }
 
+// ─── Firefighter (Fênix) Character Portrait ──────────────────────────────────
+
+export function generateFenixPortrait(w: number, h: number): HTMLCanvasElement {
+  const c = createCanvas(w, h);
+  const ctx = c.getContext('2d')!;
+
+  const sx = (x: number) => Math.floor(x * w / 200);
+  const sy = (y: number) => Math.floor(y * h / 320);
+  const sr = (x: number, y: number, rw: number, rh: number, col: string) => {
+    ctx.fillStyle = col;
+    ctx.fillRect(sx(x), sy(y), Math.max(1, sx(x + rw) - sx(x)), Math.max(1, sy(y + rh) - sy(y)));
+  };
+
+  // Background gradient — fire/ember tone
+  const bg = ctx.createLinearGradient(0, 0, 0, h);
+  bg.addColorStop(0, '#1a0800');
+  bg.addColorStop(0.5, '#2d0f00');
+  bg.addColorStop(1, '#0a0000');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, w, h);
+
+  // Helmet (dark red/black)
+  sr(60, 10, 80, 60, '#7f1d1d');
+  sr(55, 20, 90, 50, '#991b1b');
+  sr(65, 8, 70, 15, '#b91c1c');
+  sr(75, 5, 50, 12, '#dc2626');
+  // Helmet visor (yellow/amber)
+  sr(68, 30, 64, 28, '#f59e0b');
+  sr(72, 34, 56, 20, '#fbbf24');
+  sr(74, 35, 52, 18, '#fde68a');
+  // Visor reflection
+  sr(76, 36, 18, 8, '#fffbeb');
+  // Face shadow below visor
+  sr(70, 58, 60, 16, '#450a0a');
+
+  // Body / suit (fire-resistant gear)
+  sr(50, 74, 100, 100, '#7f1d1d');
+  sr(55, 80, 90, 90, '#991b1b');
+  sr(62, 84, 76, 82, '#b91c1c');
+  // Suit details
+  sr(70, 90, 60, 4, '#f97316');  // chest stripe
+  sr(70, 100, 60, 3, '#f97316');
+  sr(74, 108, 52, 30, '#7f1d1d'); // chest
+  sr(76, 110, 48, 26, '#450a0a');
+  // Badge
+  sr(84, 113, 12, 12, '#fbbf24');
+  sr(86, 115, 8, 8, '#f97316');
+  sr(88, 117, 4, 4, '#ef4444');
+
+  // Arms
+  sr(28, 80, 22, 70, '#7f1d1d');  // left arm
+  sr(30, 82, 18, 64, '#991b1b');
+  sr(150, 80, 22, 70, '#7f1d1d'); // right arm
+  sr(152, 82, 18, 64, '#991b1b');
+  // Gloves
+  sr(26, 148, 26, 20, '#1c1917');
+  sr(148, 148, 26, 20, '#1c1917');
+
+  // Legs
+  sr(60, 174, 35, 80, '#7f1d1d');  // left leg
+  sr(63, 176, 30, 76, '#991b1b');
+  sr(105, 174, 35, 80, '#7f1d1d'); // right leg
+  sr(107, 176, 30, 76, '#991b1b');
+  // Boots
+  sr(56, 248, 42, 24, '#292524');
+  sr(102, 248, 42, 24, '#292524');
+  sr(54, 260, 44, 14, '#1c1917');
+  sr(102, 260, 44, 14, '#1c1917');
+
+  // Flame effect on shoulders/helmet
+  const flames = [
+    { x: 58, y: 15, s: 12 }, { x: 130, y: 15, s: 12 },
+    { x: 42, y: 82, s: 10 }, { x: 148, y: 82, s: 10 },
+  ];
+  for (const f of flames) {
+    ctx.globalAlpha = 0.9;
+    sr(f.x, f.y, f.s, f.s * 2, '#f97316');
+    sr(f.x + 2, f.y - 4, f.s - 4, f.s, '#fbbf24');
+    sr(f.x + 4, f.y - 8, f.s - 8, f.s, '#fde68a');
+    ctx.globalAlpha = 1;
+  }
+
+  // Axe (held in right hand)
+  sr(168, 100, 8, 60, '#57534e'); // handle
+  sr(172, 102, 4, 56, '#78716c');
+  sr(162, 90, 22, 18, '#a8a29e'); // blade back
+  sr(160, 92, 26, 12, '#d6d3d1');
+  sr(162, 93, 24, 6, '#f5f5f4');  // blade edge
+
+  // Embers / sparks
+  const embers: Array<{ x: number; y: number; r: number }> = [
+    { x: 40, y: 60, r: 2 }, { x: 160, y: 55, r: 3 }, { x: 30, y: 140, r: 2 },
+    { x: 170, y: 130, r: 2 }, { x: 50, y: 200, r: 2 }, { x: 145, y: 210, r: 2 },
+  ];
+  for (const em of embers) {
+    ctx.fillStyle = '#f97316';
+    ctx.globalAlpha = 0.7;
+    ctx.beginPath();
+    ctx.arc(sx(em.x), sy(em.y), em.r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+
+  return c;
+}
+
+// ─── Extra Enemy Sprites (missing types) ────────────────────────────────────
+
+function generateSpecialEnemy(type: string, element: string): HTMLCanvasElement {
+  const c = createCanvas(16, 16);
+  const ctx = c.getContext('2d')!;
+  const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
+
+  switch (type) {
+    case 'crystalline':
+      rect(ctx, 7, 1, 2, 3, col.light);
+      rect(ctx, 5, 4, 6, 4, col.mid);
+      rect(ctx, 3, 8, 10, 5, col.mid);
+      rect(ctx, 5, 13, 6, 2, col.dark);
+      px(ctx, 6, 6, col.light); px(ctx, 9, 6, col.light);
+      rect(ctx, 1, 9, 2, 3, col.light); rect(ctx, 13, 9, 2, 3, col.light);
+      break;
+    case 'flame_elemental':
+      rect(ctx, 6, 4, 4, 3, '#ffcc00');
+      rect(ctx, 4, 7, 8, 5, '#ff6600');
+      rect(ctx, 3, 9, 10, 4, '#ff3300');
+      rect(ctx, 5, 5, 2, 2, '#ffff00'); rect(ctx, 9, 5, 2, 2, '#ffff00');
+      px(ctx, 7, 3, '#ffffff'); px(ctx, 9, 2, '#ffcc00');
+      rect(ctx, 6, 13, 4, 2, '#ff3300');
+      break;
+    case 'gold_thief':
+      rect(ctx, 6, 2, 4, 4, '#a16207');
+      rect(ctx, 5, 6, 6, 6, '#ca8a04');
+      rect(ctx, 4, 8, 8, 4, '#eab308');
+      px(ctx, 6, 4, '#fbbf24'); px(ctx, 9, 4, '#fbbf24');
+      rect(ctx, 5, 12, 3, 3, '#92400e'); rect(ctx, 8, 12, 3, 3, '#92400e');
+      rect(ctx, 7, 5, 2, 2, '#fde68a');
+      break;
+    case 'helix':
+      rect(ctx, 7, 0, 2, 16, col.dark);
+      for (let i = 0; i < 4; i++) {
+        rect(ctx, 3 + i * 2, i * 2 + 2, 4, 2, col.mid);
+        rect(ctx, 9 - i * 2, i * 2 + 4, 4, 2, col.light);
+      }
+      break;
+    case 'hive_mind':
+      rect(ctx, 5, 3, 6, 6, col.dark);
+      rect(ctx, 4, 5, 8, 4, col.mid);
+      for (let i = 0; i < 3; i++) {
+        rect(ctx, 3 + i * 4, 9, 3, 3, col.mid);
+      }
+      px(ctx, 6, 5, col.light); px(ctx, 9, 5, col.light);
+      rect(ctx, 5, 12, 6, 3, col.dark);
+      break;
+    case 'kamikaze':
+      rect(ctx, 6, 1, 4, 8, '#ef4444');
+      rect(ctx, 4, 5, 8, 6, '#dc2626');
+      rect(ctx, 7, 9, 2, 4, '#fbbf24');
+      px(ctx, 6, 3, '#ffffff'); px(ctx, 9, 3, '#ffffff');
+      rect(ctx, 3, 8, 3, 3, '#991b1b'); rect(ctx, 10, 8, 3, 3, '#991b1b');
+      rect(ctx, 6, 13, 4, 2, '#f97316');
+      break;
+    case 'magnetic_core':
+      rect(ctx, 5, 5, 6, 6, col.mid);
+      rect(ctx, 6, 4, 4, 8, col.mid);
+      rect(ctx, 4, 6, 8, 4, col.mid);
+      px(ctx, 8, 7, col.light); px(ctx, 8, 8, col.light);
+      rect(ctx, 2, 7, 3, 2, col.dark); rect(ctx, 11, 7, 3, 2, col.dark);
+      rect(ctx, 7, 2, 2, 3, col.dark); rect(ctx, 7, 11, 2, 3, col.dark);
+      break;
+    case 'phase_wraith':
+      rect(ctx, 6, 2, 4, 4, col.mid);
+      rect(ctx, 5, 6, 6, 5, col.dark);
+      rect(ctx, 4, 7, 8, 3, col.mid);
+      px(ctx, 6, 4, col.light); px(ctx, 9, 4, col.light);
+      rect(ctx, 5, 11, 2, 4, col.dark); rect(ctx, 9, 11, 2, 4, col.dark);
+      rect(ctx, 6, 13, 4, 2, col.mid);
+      break;
+    case 'plague_carrier':
+      rect(ctx, 5, 3, 6, 5, '#166534');
+      rect(ctx, 4, 5, 8, 5, '#15803d');
+      rect(ctx, 3, 7, 10, 3, '#16a34a');
+      px(ctx, 6, 5, '#86efac'); px(ctx, 9, 5, '#86efac');
+      rect(ctx, 5, 10, 6, 5, '#14532d');
+      rect(ctx, 7, 10, 2, 2, '#bbf7d0');
+      break;
+    case 'root_golem':
+      rect(ctx, 5, 2, 6, 5, '#78350f');
+      rect(ctx, 4, 5, 8, 7, '#92400e');
+      rect(ctx, 3, 8, 10, 4, '#a16207');
+      px(ctx, 6, 4, '#fde68a'); px(ctx, 9, 4, '#fde68a');
+      rect(ctx, 1, 9, 3, 5, '#78350f'); rect(ctx, 12, 9, 3, 5, '#78350f');
+      rect(ctx, 5, 12, 6, 3, '#92400e');
+      break;
+    case 'spore_cloud':
+      for (let i = 0; i < 5; i++) {
+        const ox = [4, 8, 6, 3, 10][i];
+        const oy = [4, 3, 7, 8, 8][i];
+        ctx.fillStyle = ['#4ade80','#86efac','#22c55e','#16a34a','#4ade80'][i];
+        ctx.beginPath(); ctx.arc(ox, oy, 2, 0, Math.PI * 2); ctx.fill();
+      }
+      rect(ctx, 5, 11, 6, 4, '#15803d');
+      break;
+    case 'storm_djinn':
+      rect(ctx, 6, 2, 4, 4, '#fde68a');
+      rect(ctx, 5, 6, 6, 5, '#fbbf24');
+      rect(ctx, 3, 7, 10, 3, '#f59e0b');
+      px(ctx, 6, 4, '#ffffff'); px(ctx, 9, 4, '#ffffff');
+      rect(ctx, 4, 10, 3, 5, '#f97316'); rect(ctx, 9, 10, 3, 5, '#f97316');
+      rect(ctx, 7, 11, 2, 4, '#fbbf24');
+      break;
+    case 'tide_walker':
+      rect(ctx, 6, 2, 4, 4, '#0e7490');
+      rect(ctx, 5, 6, 6, 5, '#0891b2');
+      rect(ctx, 4, 7, 8, 3, '#06b6d4');
+      px(ctx, 6, 4, '#67e8f9'); px(ctx, 9, 4, '#67e8f9');
+      rect(ctx, 3, 9, 3, 5, '#0e7490'); rect(ctx, 10, 9, 3, 5, '#0e7490');
+      rect(ctx, 6, 12, 4, 3, '#0891b2');
+      break;
+    case 'void_dancer':
+      rect(ctx, 6, 2, 4, 4, '#6d28d9');
+      rect(ctx, 5, 6, 6, 5, '#7c3aed');
+      rect(ctx, 4, 7, 8, 3, '#8b5cf6');
+      px(ctx, 6, 4, '#ddd6fe'); px(ctx, 9, 4, '#ddd6fe');
+      rect(ctx, 3, 8, 2, 6, '#6d28d9'); rect(ctx, 11, 8, 2, 6, '#6d28d9');
+      rect(ctx, 6, 12, 4, 3, '#7c3aed');
+      break;
+    case 'war_drum':
+      rect(ctx, 4, 4, 8, 8, '#7f1d1d');
+      rect(ctx, 3, 5, 10, 6, '#991b1b');
+      rect(ctx, 4, 4, 8, 2, '#b91c1c');
+      rect(ctx, 4, 10, 8, 2, '#b91c1c');
+      px(ctx, 6, 7, '#fca5a5'); px(ctx, 9, 7, '#fca5a5');
+      rect(ctx, 2, 8, 2, 2, '#450a0a'); rect(ctx, 12, 8, 2, 2, '#450a0a');
+      break;
+    default:
+      rect(ctx, 5, 3, 6, 6, col.mid);
+      rect(ctx, 4, 5, 8, 4, col.mid);
+      px(ctx, 6, 5, col.light); px(ctx, 9, 5, col.light);
+      rect(ctx, 5, 9, 6, 4, col.dark);
+      break;
+  }
+  return c;
+}
+
 // ─── Item Icon Generation ────────────────────────────────────────────────────
 
 function generateItemIcon(itemId: string): HTMLCanvasElement {
@@ -1897,6 +2142,23 @@ export function generateAllSprites(): SpriteSheet {
   enemies.set('iron_maiden', generateLargeEnemy(1, 'normal'));
   enemies.set('time_warp', generateMediumEnemy(3, 'dark'));
   enemies.set('boss_swarm_queen', generateBossEnemy(1));
+
+  // Missing enemy types (wave 2+)
+  enemies.set('crystalline', generateSpecialEnemy('crystalline', 'ice'));
+  enemies.set('flame_elemental', generateSpecialEnemy('flame_elemental', 'fire'));
+  enemies.set('gold_thief', generateSpecialEnemy('gold_thief', 'normal'));
+  enemies.set('helix', generateSpecialEnemy('helix', 'electric'));
+  enemies.set('hive_mind', generateSpecialEnemy('hive_mind', 'normal'));
+  enemies.set('kamikaze', generateSpecialEnemy('kamikaze', 'fire'));
+  enemies.set('magnetic_core', generateSpecialEnemy('magnetic_core', 'electric'));
+  enemies.set('phase_wraith', generateSpecialEnemy('phase_wraith', 'dark'));
+  enemies.set('plague_carrier', generateSpecialEnemy('plague_carrier', 'poison'));
+  enemies.set('root_golem', generateSpecialEnemy('root_golem', 'grass'));
+  enemies.set('spore_cloud', generateSpecialEnemy('spore_cloud', 'poison'));
+  enemies.set('storm_djinn', generateSpecialEnemy('storm_djinn', 'electric'));
+  enemies.set('tide_walker', generateSpecialEnemy('tide_walker', 'water'));
+  enemies.set('void_dancer', generateSpecialEnemy('void_dancer', 'dark'));
+  enemies.set('war_drum', generateSpecialEnemy('war_drum', 'normal'));
 
   // Item icons
   const items = new Map<string, HTMLCanvasElement>();

@@ -4544,7 +4544,8 @@ export class Renderer {
     return '#1f2937';
   }
 
-  private getEnemySpriteId(e: { tags: string[] | readonly string[]; width: number }): string {
+  private getEnemySpriteId(e: { tags: string[] | readonly string[]; width: number; defId?: string }): string {
+    if (e.defId && this.sprites.enemies.has(e.defId)) return e.defId;
     if (e.tags.includes('Fogo')) return 'fire_imp';
     if (e.tags.includes('Gelo') || e.tags.includes('Água')) return 'ice_golem';
     if (e.tags.includes('Orgânico') || e.tags.includes('Planta')) return 'vine_creep';
