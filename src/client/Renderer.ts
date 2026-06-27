@@ -1272,33 +1272,51 @@ export class Renderer {
       return;
     }
     const progress = t.timer / t.duration;
-    const scale = 1 + progress * 2;
-    const alpha = 1 - progress;
+    // Ease-in-out for reveal, ease-out for fade
+    const revealP = Math.min(1, progress * 2.5);
+    const fadeP   = Math.max(0, (progress - 0.5) * 2);
+    const alpha   = revealP * (1 - fadeP * 0.9);
     const { ctx, canvas } = this;
     const L = this.getLayout();
     ctx.save();
-    ctx.globalAlpha = alpha * 0.9;
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
+
+    // Dark overlay
+    ctx.globalAlpha = alpha * 0.85;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Flash at peak (progress ~0.3-0.5)
-    const flashIntensity = Math.max(0, 1 - Math.abs(progress - 0.35) * 5);
+    // Horizontal scan lines sweep effect
+    const scanAlpha = Math.max(0, alpha * 0.06);
+    ctx.globalAlpha = scanAlpha;
+    ctx.fillStyle = '#6366f1';
+    for (let sy = 0; sy < canvas.height; sy += 6) {
+      ctx.fillRect(0, sy, canvas.width, 2);
+    }
+
+    // White flash at peak (progress ~0.2)
+    const flashIntensity = Math.max(0, 1 - Math.abs(progress - 0.18) * 8);
     if (flashIntensity > 0) {
-      ctx.globalAlpha = flashIntensity * 0.4;
+      ctx.globalAlpha = flashIntensity * 0.55;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Month text — zoom-in from large
+    const scaleT = 1 + (1 - revealP) * 1.8;
     ctx.globalAlpha = alpha;
-    ctx.font = `bold ${Math.floor(L.h * 0.06 * scale)}px monospace`;
+    ctx.font = `bold ${Math.floor(L.h * 0.058 * scaleT)}px monospace`;
     ctx.fillStyle = '#fbbf24';
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = 20 * alpha;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(this.game.getTimeString(), L.cx, L.cy - Math.floor(L.h * 0.03));
-    // Monthly flavor text below
-    ctx.font = `${Math.floor(L.h * 0.018 * Math.min(scale, 1.5))}px monospace`;
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(this.game.getMonthlyFlavor(), L.cx, L.cy + Math.floor(L.h * 0.04));
+    ctx.fillText(this.game.getTimeString(), L.cx, L.cy - Math.floor(L.h * 0.04));
+    ctx.shadowBlur = 0;
+
+    // Flavor line
+    ctx.font = `${Math.floor(L.h * 0.017)}px monospace`;
+    ctx.fillStyle = `rgba(148,163,184,${alpha})`;
+    ctx.fillText(this.game.getMonthlyFlavor(), L.cx, L.cy + Math.floor(L.h * 0.038));
 
     // Gameplay tip (rotates based on wave)
     const tips = [
@@ -2421,12 +2439,23 @@ export class Renderer {
     // Render floating texts (damage numbers, gold)
     for (const ft of state.floatingTexts) {
       const alpha = ft.life / ft.maxLife;
+      const lifeRatio = 1 - alpha; // 0=fresh, 1=dead
+      // Scale: pops big at first, shrinks slightly
+      const ftScale = 1 + Math.max(0, 0.3 - lifeRatio * 0.6);
+      const fontSize = Math.floor(L.h * 0.016 * ftScale);
+      ctx.save();
       ctx.globalAlpha = alpha;
-      ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+      ctx.font = `bold ${fontSize}px monospace`;
+      ctx.textAlign = 'center';
+      // Drop shadow for readability
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
       ctx.fillStyle = ft.color;
       ctx.fillText(ft.text, ft.x, ft.y);
+      ctx.restore();
     }
     ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
 
     // Vignette effect (darkened edges)
     const vigGrad = ctx.createRadialGradient(L.cx, L.cy, Math.floor(L.h * 0.3), L.cx, L.cy, Math.floor(L.h * 0.7));
@@ -2609,14 +2638,43 @@ export class Renderer {
       ctx.textAlign = 'left';
     }
 
-    // HP bar
+    // ── HP bar ────────────────────────────────────────────────────────────
     const hpPct = e.hp / e.maxHp;
-    ctx.fillStyle = '#1f2937';
-    ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2 - 6, e.width, 4);
-    ctx.fillStyle = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#f59e0b' : '#ef4444';
-    ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2 - 6, e.width * hpPct, 4);
+    const barW  = e.isBoss ? Math.min(240, e.width * 2.5) : e.width;
+    const barH  = e.isBoss ? 7 : 4;
+    const barX  = e.x - barW / 2;
+    const barY  = e.y - e.height / 2 - (e.isBoss ? 10 : 7);
+    const hpColor = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#f59e0b' : '#ef4444';
 
-    // Aura ring for support enemies
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(barX - 1, barY - 1, barW + 2, barH + 2);
+    ctx.fillStyle = '#1f2937';
+    ctx.fillRect(barX, barY, barW, barH);
+    ctx.fillStyle = hpColor;
+    ctx.fillRect(barX, barY, barW * hpPct, barH);
+    // Shine
+    ctx.fillStyle = 'rgba(255,255,255,0.18)';
+    ctx.fillRect(barX, barY, barW * hpPct, Math.floor(barH * 0.4));
+
+    if (e.isBoss) {
+      // Boss phase 2 indicator on HP bar
+      if (e.boss2ndPhaseActive) {
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(barX - 1, barY - 1, barW + 2, barH + 2);
+      }
+      // 50% marker line
+      ctx.fillStyle = 'rgba(239,68,68,0.5)';
+      ctx.fillRect(barX + barW * 0.5 - 1, barY, 2, barH);
+      // Boss HP text
+      ctx.font = `bold 9px monospace`;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${Math.ceil(e.hp)} / ${e.maxHp}`, e.x, barY - 2);
+      ctx.textAlign = 'left';
+    }
+
+    // ── Support / Special auras ───────────────────────────────────────────
     if ((e as any).defId === 'healer') {
       ctx.globalAlpha = 0.3 + Math.sin(performance.now() * 0.005) * 0.1;
       ctx.strokeStyle = '#4ade80';
@@ -2632,6 +2690,18 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(e.x, e.y, 60, 0, Math.PI * 2);
       ctx.stroke();
+    }
+    // Leech drain range pulse
+    if (e.special?.type === 'drain') {
+      const dPulse = 0.12 + Math.sin(performance.now() * 0.009) * 0.08;
+      ctx.globalAlpha = dPulse;
+      ctx.strokeStyle = '#a855f7';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.special.range, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
 
     // Reset alpha
@@ -2946,37 +3016,73 @@ export class Renderer {
     ctx.fillText('A/D mover | SHIFT dash | 1-2-3 skills | ESC pausa', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
     ctx.textAlign = 'left';
 
-    // Mini enemy radar (bottom-right corner)
+    // ── Enemy radar (bottom-right) ───────────────────────────────────────
     if (state.enemies.length > 0) {
-      const radarW = Math.floor(L.w * 0.06);
-      const radarH = Math.floor(L.h * 0.10);
-      const radarX = canvas.width - radarW - Math.floor(L.w * 0.01);
-      const radarY = canvas.height - radarH - Math.floor(L.h * 0.06);
+      const radarW = Math.floor(L.w * 0.13);
+      const radarH = Math.floor(L.h * 0.115);
+      const radarX = canvas.width - radarW - Math.floor(L.w * 0.012);
+      const radarY = canvas.height - radarH - Math.floor(L.h * 0.07);
 
-      ctx.globalAlpha = 0.4;
-      ctx.fillStyle = '#0a0a1a';
-      ctx.fillRect(radarX, radarY, radarW, radarH);
-      ctx.strokeStyle = '#1e293b';
+      // Background panel
+      ctx.globalAlpha = 0.82;
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(radarX - 2, radarY - 14, radarW + 4, radarH + 16);
+      ctx.globalAlpha = 1;
+
+      // Scanline grid lines (subtle)
+      ctx.globalAlpha = 0.12;
+      ctx.strokeStyle = '#4b5563';
+      ctx.lineWidth = 1;
+      for (let gx = radarX; gx <= radarX + radarW; gx += Math.floor(radarW / 4)) {
+        ctx.beginPath(); ctx.moveTo(gx, radarY); ctx.lineTo(gx, radarY + radarH); ctx.stroke();
+      }
+      for (let gy = radarY; gy <= radarY + radarH; gy += Math.floor(radarH / 3)) {
+        ctx.beginPath(); ctx.moveTo(radarX, gy); ctx.lineTo(radarX + radarW, gy); ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Border
+      const radarBossActive = state.enemies.some(e => e.isBoss);
+      ctx.strokeStyle = radarBossActive ? '#fbbf24' : 'rgba(99,102,241,0.55)';
       ctx.lineWidth = 1;
       ctx.strokeRect(radarX, radarY, radarW, radarH);
-      ctx.globalAlpha = 0.7;
 
-      // Draw enemy dots
+      // Label
+      ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = radarBossActive ? '#fbbf24' : '#4b5563';
+      ctx.textAlign = 'left';
+      ctx.fillText('RADAR', radarX, radarY - 3);
+      ctx.fillStyle = '#475569';
+      ctx.textAlign = 'right';
+      ctx.fillText(`${state.enemies.length}`, radarX + radarW, radarY - 3);
+      ctx.textAlign = 'left';
+
+      // Enemy dots
       for (const e of state.enemies) {
         const rx = radarX + (e.x / canvas.width) * radarW;
-        const ry = radarY + Math.max(0, Math.min(1, (e.y + 100) / (canvas.height + 100))) * radarH;
-        ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
-        const dotSize = e.isBoss ? 3 : 1.5;
-        ctx.fillRect(rx - dotSize / 2, ry - dotSize / 2, dotSize, dotSize);
+        const ry = radarY + Math.max(0, Math.min(1, (e.y + 80) / (canvas.height + 80))) * radarH;
+        if (e.isBoss) {
+          const bPulse = 0.6 + Math.sin(performance.now() * 0.008) * 0.4;
+          ctx.globalAlpha = bPulse;
+          ctx.fillStyle = '#fbbf24';
+          ctx.beginPath(); ctx.arc(rx, ry, 4, 0, Math.PI * 2); ctx.fill();
+          ctx.globalAlpha = 1;
+        } else {
+          ctx.fillStyle = e.special?.type === 'drain' ? '#a855f7' : '#ef4444';
+          ctx.fillRect(rx - 1.5, ry - 1.5, 3, 3);
+        }
       }
 
-      // Player dot
+      // Player dot (bright green triangle pointing up)
       const px = radarX + (state.playerX / canvas.width) * radarW;
-      const py = radarY + radarH - 4;
+      const py2 = radarY + radarH - 5;
       ctx.fillStyle = '#4ade80';
-      ctx.fillRect(px - 2, py - 1, 4, 3);
-
-      ctx.globalAlpha = 1;
+      ctx.beginPath();
+      ctx.moveTo(px, py2 - 5);
+      ctx.lineTo(px - 4, py2 + 2);
+      ctx.lineTo(px + 4, py2 + 2);
+      ctx.closePath();
+      ctx.fill();
     }
 
     // ─── Skill Bar (bottom-left) ─────────────────────────────────────────
