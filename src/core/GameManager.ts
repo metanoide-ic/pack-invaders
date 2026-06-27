@@ -22,6 +22,7 @@ import { getMetaGoldBonus } from '../data/missions';
 import { getDifficultyById, Difficulty, unlockNextDifficulty } from '../data/difficulties';
 import { addToLeaderboard } from '../data/leaderboard';
 import { getRelicBonuses, getRandomNewRelic, addRelic, Relic, getEquippedRelics } from '../data/relics';
+import { VersusEngine } from './VersusEngine';
 
 export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
 
@@ -638,8 +639,24 @@ export class GameManager {
     this.phase = this.previousPhase;
   }
 
+  versusEngine: VersusEngine | null = null;
+
   enterExtraModes(): void {
     this.phase = 'EXTRA_MODES';
+  }
+
+  enterVersusShips(): void {
+    this.versusEngine = new VersusEngine('ships');
+    this.phase = 'VERSUS_SHIPS';
+  }
+
+  enterVersusPvp(): void {
+    this.versusEngine = new VersusEngine('pvp');
+    this.phase = 'VERSUS_PVP';
+  }
+
+  tickVersus(dt: number): void {
+    this.versusEngine?.tick(dt);
   }
 
   // ─── Shop ─────────────────────────────────────────────────────────────────

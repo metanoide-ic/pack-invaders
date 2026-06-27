@@ -268,6 +268,33 @@ function gameLoop(): void {
     prevFusionCount = fusionNow;
   }
 
+  // ── Versus modes tick ─────────────────────────────────────────────────────
+  if ((game.phase === 'VERSUS_SHIPS' || game.phase === 'VERSUS_PVP') && game.versusEngine) {
+    const vs = game.versusEngine;
+    const st = vs.state;
+
+    if (st.phase === 'playing') {
+      // P1 movement (WASD)
+      const p1Dir = input.getVersusP1Dir();
+      if (p1Dir !== 0) vs.moveP1(p1Dir, dt);
+
+      // P2 movement (Arrow keys)
+      const p2Dir = input.getVersusP2Dir();
+      if (p2Dir !== 0) vs.moveP2(p2Dir, dt);
+
+      // PvP fire on demand; Ships = auto-fire (handled in VersusEngine.tick)
+      if (st.mode === 'pvp') {
+        if (input.checkVersusP1Fire()) vs.tryFireP1();
+        if (input.checkVersusP2Fire()) vs.tryFireP2();
+      }
+
+      vs.tick(dt);
+    } else {
+      // Result screen — R to reset, ESC to menu
+      if (input.checkVersusReset()) vs.reset();
+    }
+  }
+
   // Twitch vote phase
   if (game.phase === 'TWITCH_VOTE') {
     game.twitch.update(dt);

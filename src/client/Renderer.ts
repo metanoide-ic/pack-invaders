@@ -1046,12 +1046,30 @@ export class Renderer {
       ctx.beginPath();
       ctx.rect(cx2 + 1, cy2 + 1, cw - 2, ch2 - 2);
       ctx.clip();
+      // Fallback: generated pixel art character sprite (scaled up)
+      const genCharSprite = this.sprites.characters?.get(ch.id);
+
       if (portrait) {
         const iw = portrait.naturalWidth || portrait.width;
         const ih = portrait.naturalHeight || portrait.height;
         const sc2 = Math.max(cw / iw, ch2 / ih);
         const dw = iw * sc2; const dh = ih * sc2;
         ctx.drawImage(portrait, cx2 + (cw - dw) / 2, cy2 + (ch2 - dh), dw, dh);
+      } else if (genCharSprite) {
+        // Draw pixel art character scaled to fill bottom 55% of card, crisp pixels
+        ctx.imageSmoothingEnabled = false;
+        const pxW = genCharSprite.width;
+        const pxH = genCharSprite.height;
+        const maxW = cw * 0.75;
+        const maxH = ch2 * 0.62;
+        const scChar = Math.min(maxW / pxW, maxH / pxH);
+        const dw2 = Math.floor(pxW * scChar);
+        const dh2 = Math.floor(pxH * scChar);
+        // Position: horizontally centered, vertically in lower half
+        const drawX = cx2 + Math.floor((cw - dw2) / 2);
+        const drawY = cy2 + ch2 - dh2 - Math.floor(ch2 * 0.05);
+        ctx.drawImage(genCharSprite, drawX, drawY, dw2, dh2);
+        ctx.imageSmoothingEnabled = true;
       } else {
         this.drawCharPlaceholder(ctx, cx2, cy2, cw, ch2, chColor, ch.id);
       }
@@ -5148,17 +5166,17 @@ export class Renderer {
         id: 'VERSUS_SHIPS',
         title: 'VERSUS NAVES',
         icon: '🚀',
-        desc: ['Duas naves batalham', '+ ondas de inimigos', 'Tela dividida'],
+        desc: ['2 naves local', 'Ondas de inimigos', 'A/D  ←/→  tiro auto'],
         color: '#38bdf8',
-        available: false,
+        available: true,
       },
       {
         id: 'VERSUS_PVP',
         title: 'PVP PURO',
         icon: '⚔',
-        desc: ['Combate direto', 'Sem inimigos', 'Primeiro a 0 HP perde'],
+        desc: ['Combate direto', 'Sem inimigos', 'SPACE / ENTER atirar'],
         color: '#f97316',
-        available: false,
+        available: true,
       },
     ];
 
@@ -5230,33 +5248,195 @@ export class Renderer {
     ctx.textAlign = 'left';
   }
 
-  private renderVersusShips(_dt: number): void {
-    const { ctx, canvas } = this;
+  private renderVersus(dt: number): void {
+    const { ctx, canvas, game } = this;
     const L = this.getLayout();
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
-    ctx.fillStyle = '#38bdf8';
-    ctx.textAlign = 'center';
-    ctx.fillText('VERSUS NAVES', L.cx, L.cy - 20);
-    ctx.font = `${Math.floor(L.h * 0.02)}px monospace`;
-    ctx.fillStyle = '#4b5563';
-    ctx.fillText('Em breve...', L.cx, L.cy + 30);
+    const vs = game.versusEngine;
+    if (!vs) return;
+    const st = vs.state;
+    const now = performance.now();
+
+    // ── Background ────────────────────────────────────────────────────────
+    const bg = this.sprites.background;
+    if (bg) {
+      const sc = Math.max(canvas.width / bg.width, canvas.height / bg.height);
+      ctx.drawImage(bg, 0, 0, bg.width * sc, bg.height * sc);
+    } else {
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
+    // Screen shake
+    let shakeX = 0; let shakeY = 0;
+    if (st.shakeTimer > 0) {
+      shakeX = (Math.random() - 0.5) * 8;
+      shakeY = (Math.random() - 0.5) * 8;
+      ctx.save();
+      ctx.translate(shakeX, shakeY);
+    }
+
+    // ── Divider (PvP visual cue) ──────────────────────────────────────────
+    if (st.mode === 'pvp') {
+      ctx.globalAlpha = 0.15;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([12, 8]);
+      ctx.beginPath();
+      ctx.moveTo(0, L.cy);
+      ctx.lineTo(canvas.width, L.cy);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+    }
+
+    // ── Enemies ───────────────────────────────────────────────────────────
+    for (const e of st.enemies) {
+      const sprite = this.sprites.enemies.get('scout');
+      if (sprite) {
+        ctx.drawImage(sprite, e.x - e.width / 2, e.y - 10, e.width, 20);
+      } else {
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(e.x - e.width / 2, e.y - 10, e.width, 20);
+      }
+      // HP bar
+      const hp = e.hp / e.maxHp;
+      ctx.fillStyle = '#111827'; ctx.fillRect(e.x - 10, e.y - 14, 20, 3);
+      ctx.fillStyle = hp > 0.5 ? '#4ade80' : '#ef4444';
+      ctx.fillRect(e.x - 10, e.y - 14, 20 * hp, 3);
+    }
+
+    // ── Projectiles ────────────────────────────────────────────────────────
+    for (const p of st.projectiles) {
+      if (p.owner === 1) ctx.fillStyle = '#4ade80';
+      else if (p.owner === 2) ctx.fillStyle = '#38bdf8';
+      else ctx.fillStyle = '#ef4444';
+      ctx.shadowColor = ctx.fillStyle;
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── Ships ─────────────────────────────────────────────────────────────
+    const drawShip = (ship: typeof st.p1, colorIdx: number, label: string, color: string): void => {
+      if (!ship.alive) return;
+      const flicker = ship.invTimer > 0 && Math.sin(now * 0.04) > 0;
+      if (flicker) return;
+      const sprite = this.sprites.playerShips[colorIdx % 4];
+      ctx.save();
+      ctx.shadowColor = color; ctx.shadowBlur = 14;
+      ctx.drawImage(sprite, ship.x - 16, ship.y - 16, 32, 32);
+      ctx.shadowBlur = 0;
+      ctx.restore();
+      // Label tag
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = color;
+      ctx.textAlign = 'center';
+      ctx.fillText(label, ship.x, ship.y - 22);
+      ctx.textAlign = 'left';
+    };
+    drawShip(st.p1, 0, 'P1', '#4ade80');
+    drawShip(st.p2, 2, 'P2', '#38bdf8');
+
+    // ── Floating scores ────────────────────────────────────────────────────
+    for (const f of st.floats) {
+      ctx.globalAlpha = f.life / f.maxLife;
+      ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+      ctx.fillStyle = f.color;
+      ctx.textAlign = 'center';
+      ctx.fillText(f.text, f.x, f.y);
+    }
+    ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
+
+    if (st.shakeTimer > 0) ctx.restore();
+
+    // ── HUD ───────────────────────────────────────────────────────────────
+    const hudH = Math.floor(L.h * 0.068);
+    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    ctx.fillRect(0, 0, canvas.width, hudH);
+
+    // P1 HP bar (left)
+    this.drawVersusHPBar(20, 8, Math.floor(L.w * 0.3), hudH - 16, st.p1, '#4ade80', 'P1');
+    // P2 HP bar (right)
+    this.drawVersusHPBar(canvas.width - 20 - Math.floor(L.w * 0.3), 8, Math.floor(L.w * 0.3), hudH - 16, st.p2, '#38bdf8', 'P2');
+
+    // Center: mode title + wave or timer
+    ctx.textAlign = 'center';
+    if (st.mode === 'ships') {
+      ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(`ONDA ${st.wave}`, L.cx, Math.floor(hudH * 0.45));
+      ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#4b5563';
+      ctx.fillText(`P1: ${st.p1.score}  |  P2: ${st.p2.score}`, L.cx, Math.floor(hudH * 0.8));
+    } else {
+      const timeLeft = Math.max(0, Math.ceil(st.roundTimer));
+      const tColor = timeLeft <= 10 ? '#ef4444' : '#fbbf24';
+      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
+      ctx.fillStyle = tColor;
+      ctx.fillText(timeLeft > 0 ? `${timeLeft}s` : 'FIM!', L.cx, Math.floor(hudH * 0.55));
+    }
+    ctx.textAlign = 'left';
+
+    // ── Result overlay ────────────────────────────────────────────────────
+    if (st.phase !== 'playing') {
+      ctx.fillStyle = 'rgba(0,0,0,0.7)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const resultColor = st.phase === 'p1_wins' ? '#4ade80' : st.phase === 'p2_wins' ? '#38bdf8' : '#fbbf24';
+      const resultText  = st.phase === 'p1_wins' ? 'P1 VENCEU!' : st.phase === 'p2_wins' ? 'P2 VENCEU!' : 'EMPATE!';
+      ctx.font = `bold ${Math.floor(L.h * 0.07)}px monospace`;
+      ctx.fillStyle = resultColor;
+      ctx.shadowColor = resultColor; ctx.shadowBlur = 30;
+      ctx.textAlign = 'center';
+      ctx.fillText(resultText, L.cx, L.cy - 20);
+      ctx.shadowBlur = 0;
+      ctx.font = `${Math.floor(L.h * 0.018)}px monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('R = REVANCHE  |  ESC = MENU', L.cx, L.cy + 40);
+      ctx.textAlign = 'left';
+    }
+
+    // ── Controls hint (bottom) ────────────────────────────────────────────
+    if (st.phase === 'playing') {
+      ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = '#374151';
+      ctx.fillText('P1: A/D mover' + (st.mode === 'pvp' ? ' | SPACE atirar' : ''), 10, canvas.height - 8);
+      ctx.textAlign = 'right';
+      ctx.fillText('P2: ←/→ mover' + (st.mode === 'pvp' ? ' | ENTER atirar' : ''), canvas.width - 10, canvas.height - 8);
+      ctx.textAlign = 'left';
+    }
   }
 
-  private renderVersusPvp(_dt: number): void {
-    const { ctx, canvas } = this;
-    const L = this.getLayout();
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-    ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
-    ctx.fillStyle = '#f97316';
+  private drawVersusHPBar(x: number, y: number, w: number, h: number, ship: { hp: number; maxHp: number; alive: boolean; kills: number }, color: string, label: string): void {
+    const { ctx } = this;
+    const pct = ship.alive ? ship.hp / ship.maxHp : 0;
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(x, y, w, h);
+    const barColor = pct > 0.5 ? color : pct > 0.25 ? '#f59e0b' : '#ef4444';
+    ctx.fillStyle = barColor;
+    ctx.fillRect(x + 1, y + 1, (w - 2) * pct, h - 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.1)';
+    ctx.fillRect(x + 1, y + 1, (w - 2) * pct, Math.floor(h * 0.4));
+    ctx.strokeStyle = color + '66';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, w, h);
+    ctx.font = `bold ${Math.floor(h * 0.65)}px monospace`;
+    ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
-    ctx.fillText('PVP PURO', L.cx, L.cy - 20);
-    ctx.font = `${Math.floor(L.h * 0.02)}px monospace`;
-    ctx.fillStyle = '#4b5563';
-    ctx.fillText('Em breve...', L.cx, L.cy + 30);
+    ctx.fillText(`${label}  ${Math.ceil(ship.hp)} HP`, x + w / 2, y + h - 3);
     ctx.textAlign = 'left';
+    ctx.font = `${Math.floor(h * 0.5)}px monospace`;
+    ctx.fillStyle = color + 'aa';
+    ctx.fillText(`kills: ${ship.kills}`, x + 4, y + h + Math.floor(h * 0.6));
+  }
+
+  private renderVersusShips(dt: number): void {
+    this.renderVersus(dt);
+  }
+
+  private renderVersusPvp(dt: number): void {
+    this.renderVersus(dt);
   }
 }

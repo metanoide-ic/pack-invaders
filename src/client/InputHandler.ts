@@ -506,14 +506,18 @@ export class InputHandler {
     const cardY = Math.floor(L.h * 0.22);
     const gap = Math.floor(L.w * 0.04);
     const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP'] as const;
-    const available = [true, false, false];
 
     for (let i = 0; i < modes.length; i++) {
-      if (!available[i]) continue;
       const cx = startX + i * (cardW + gap);
       if (pos.x >= cx && pos.x <= cx + cardW && pos.y >= cardY && pos.y <= cardY + cardH) {
         this.audio.buttonClick();
-        this.game.phase = modes[i];
+        if (modes[i] === 'VERSUS_SHIPS') {
+          this.game.enterVersusShips();
+        } else if (modes[i] === 'VERSUS_PVP') {
+          this.game.enterVersusPvp();
+        } else {
+          this.game.phase = modes[i];
+        }
         return;
       }
     }
@@ -1297,5 +1301,45 @@ export class InputHandler {
       this.game.phase = 'MAIN_MENU';
       return;
     }
+  }
+
+  // ── Versus mode input helpers ────────────────────────────────────────────
+
+  getVersusP1Dir(): number {
+    let dir = 0;
+    if (this.keysDown.has('a')) dir -= 1;
+    if (this.keysDown.has('d')) dir += 1;
+    return dir;
+  }
+
+  getVersusP2Dir(): number {
+    let dir = 0;
+    if (this.keysDown.has('arrowleft')) dir -= 1;
+    if (this.keysDown.has('arrowright')) dir += 1;
+    return dir;
+  }
+
+  private p1FirePressed = false;
+  checkVersusP1Fire(): boolean {
+    const down = this.keysDown.has(' ') || this.keysDown.has('z');
+    if (down && !this.p1FirePressed) { this.p1FirePressed = true; return true; }
+    if (!down) this.p1FirePressed = false;
+    return false;
+  }
+
+  private p2FirePressed = false;
+  checkVersusP2Fire(): boolean {
+    const down = this.keysDown.has('enter') || this.keysDown.has('m');
+    if (down && !this.p2FirePressed) { this.p2FirePressed = true; return true; }
+    if (!down) this.p2FirePressed = false;
+    return false;
+  }
+
+  private versusRPressed = false;
+  checkVersusReset(): boolean {
+    const down = this.keysDown.has('r');
+    if (down && !this.versusRPressed) { this.versusRPressed = true; return true; }
+    if (!down) this.versusRPressed = false;
+    return false;
   }
 }
