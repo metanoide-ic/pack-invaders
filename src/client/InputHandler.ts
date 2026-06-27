@@ -212,8 +212,8 @@ export class InputHandler {
         (this.renderer as any).codexTab = 5;
         this.renderer.codexScroll = 0;
       }
-      // Dismiss controls overlay on any key
-      if (this.game.showControlsOverlay) {
+      // Dismiss controls overlay on any key (but not the Enter that just opened it)
+      if (this.game.showControlsOverlay && e.key !== 'Enter') {
         this.game.dismissControlsOverlay();
       }
     });

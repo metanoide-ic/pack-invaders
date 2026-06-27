@@ -4157,8 +4157,10 @@ export class Renderer {
     ctx.fillText(`Skills usadas: ${game.stats.skillsUsed}`, rightCol, cy); cy += lineH;
 
     // Difficulty badge
+    const diffDef = getDifficultyById(game.currentDifficulty);
+    const diffName = diffDef?.name ?? game.currentDifficulty;
     ctx.fillStyle = game.aliencoreMode ? '#ef4444' : '#4ade80';
-    ctx.fillText(`Dificuldade: ${game.currentDifficulty}${game.aliencoreMode ? ' [ALIENCORE]' : ''}`, rightCol, cy);
+    ctx.fillText(`Dificuldade: ${diffName}${game.aliencoreMode ? ' [ALIENCORE]' : ''}`, rightCol, cy);
 
     // ─── Leaderboard ─────────────────────────────────────────────────────
     const board = getLeaderboard();
@@ -4179,8 +4181,9 @@ export class Renderer {
         const charName = charNameMap[entry.characterId] ?? entry.characterId;
         const medal = lb === 0 ? '🥇' : lb === 1 ? '🥈' : lb === 2 ? '🥉' : `${lb + 1}.`;
         ctx.fillStyle = lb === 0 ? '#fbbf24' : lb < 3 ? '#94a3b8' : '#475569';
+        const entryDiff = getDifficultyById(entry.difficulty)?.name ?? entry.difficulty;
         ctx.fillText(
-          `${medal} ${charName} — ${entry.months}m | ${entry.kills}k | ${entry.difficulty}`,
+          `${medal} ${charName} — ${entry.months}m | ${entry.kills}k | ${entryDiff}`,
           L.cx, lbY + (lb + 1) * lineGap
         );
       }
@@ -4196,15 +4199,20 @@ export class Renderer {
       ctx.fillText(`💰 Bônus de missões: +${metaBonus}g por run`, L.cx, bonusY);
     }
 
-    // Achievements unlocked this run
+    // Achievements unlocked this run (IDs → display names)
     if (game.newAchievements.length > 0) {
+      const achNames = game.newAchievements.slice(0, 3).map(id => {
+        if (id.startsWith('🔓')) return id; // character unlocks already have display text
+        const def = ALL_ACHIEVEMENTS.find(a => a.id === id);
+        return def ? `${def.icon} ${def.name}` : id;
+      });
       ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
       ctx.fillStyle = '#4ade80';
       ctx.textAlign = 'center';
       ctx.fillText('🏆 CONQUISTAS:', L.cx, Math.floor(L.h * 0.74));
       ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
       ctx.fillStyle = '#e2e8f0';
-      ctx.fillText(game.newAchievements.slice(0, 3).join(' | '), L.cx, Math.floor(L.h * 0.77));
+      ctx.fillText(achNames.join(' | '), L.cx, Math.floor(L.h * 0.77));
     }
 
     // Codex entries unlocked this run
