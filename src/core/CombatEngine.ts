@@ -54,6 +54,8 @@ export interface Enemy {
   explodeOnDeath?: boolean;
   /** Original speed (for reference after slow effects) */
   baseSpeed: number;
+  /** Boss phase 2 already activated (prevents re-trigger) */
+  boss2ndPhaseActive?: boolean;
   /** Definition ID for codex tracking */
   defId: string;
 }
@@ -148,6 +150,10 @@ export interface CombatState {
   killedEnemyIds: string[];
   /** Total damage taken this wave (for perfect wave bonus) */
   damageTakenThisWave: number;
+  /** Timer for boss phase 2 transition flash effect */
+  bossPhaseTransitionTimer: number;
+  /** Timer for drain warning indicator */
+  drainWarningTimer: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -208,6 +214,8 @@ export class CombatEngine {
       playerFlashTimer: 0,
       killedEnemyIds: [],
       damageTakenThisWave: 0,
+      bossPhaseTransitionTimer: 0,
+      drainWarningTimer: 0,
     };
   }
 
@@ -273,6 +281,8 @@ export class CombatEngine {
     this.state.waveTime += dt;
     this.state.bossWarningTimer = Math.max(0, this.state.bossWarningTimer - dt);
     this.state.playerFlashTimer = Math.max(0, this.state.playerFlashTimer - dt);
+    this.state.bossPhaseTransitionTimer = Math.max(0, this.state.bossPhaseTransitionTimer - dt);
+    this.state.drainWarningTimer = Math.max(0, this.state.drainWarningTimer - dt);
 
     // Combo timer
     if (this.state.combo > 0) {
@@ -656,6 +666,23 @@ export class CombatEngine {
         }
       }
 
+      // Drain enemy: suck HP from player when nearby
+      if (e.special?.type === 'drain') {
+        const playerY2 = this.arenaHeight - 45;
+        const ddx = this.state.playerX - e.x;
+        const ddy = playerY2 - e.y;
+        const dist = Math.sqrt(ddx * ddx + ddy * ddy);
+        if (dist < e.special.range) {
+          this.damagePlayer(e.special.dps * dt);
+          this.state.drainWarningTimer = 0.5;
+          // Slow own movement — hovering while draining
+          e.speed = Math.max(5, e.speed * 0.92);
+        } else {
+          // Restore speed when out of range
+          e.speed = Math.min(e.baseSpeed, e.speed + e.baseSpeed * 0.5 * dt);
+        }
+      }
+
       // Clamp to arena
       e.x = Math.max(e.width / 2, Math.min(this.arenaWidth - e.width / 2, e.x));
       e.y = Math.min(this.arenaHeight + 50, e.y); // Allow going a bit past bottom for reach-bottom check
@@ -1022,6 +1049,23 @@ export class CombatEngine {
             p.piercing--;
           } else {
             p.alive = false;
+          }
+
+          // Boss phase 2 trigger (HP drops below 50%)
+          if (e.isBoss && !e.boss2ndPhaseActive && e.hp > 0 && e.hp <= e.maxHp * 0.5) {
+            e.boss2ndPhaseActive = true;
+            e.speed     = e.baseSpeed * 1.55;
+            e.baseSpeed = e.speed;
+            if (e.special?.type === 'shoot') {
+              e.special.fireRate        *= 1.8;
+              e.special.projectileSpeed *= 1.25;
+            }
+            e.shootTimer = 0;
+            this.state.bossPhaseTransitionTimer = 2.5;
+            this.triggerShake(14, 0.9);
+            this.triggerHitStop(0.12);
+            this.spawnFloatingText(e.x, e.y - 50, '⚠ FASE 2! ⚠', '#ef4444');
+            this.spawnFloatingText(e.x, e.y - 20, 'ENRAIVECIDO!',  '#f97316');
           }
 
           if (e.hp <= 0) {

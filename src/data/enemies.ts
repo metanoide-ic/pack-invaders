@@ -35,7 +35,8 @@ export type EnemySpecial =
   | { type: 'spawn'; childId: string; interval: number }
   | { type: 'phase'; chance: number }
   | { type: 'armor'; hits: number }
-  | { type: 'slow_on_hit'; duration: number };
+  | { type: 'slow_on_hit'; duration: number }
+  | { type: 'drain'; range: number; dps: number };
 
 // ─── Basic Enemies (available from start) ────────────────────────────────────
 
@@ -1270,6 +1271,25 @@ export const BOSS_EPOCH: EnemyDefinition = {
   spriteId: 'boss_epoch', minWave: 28, weight: 0,
 };
 
+// ─── Leech — drains HP from player when close ────────────────────────────────
+export const ENEMY_LEECH: EnemyDefinition = {
+  id: 'leech',
+  name: 'Sanguessuga',
+  tags: ['Orgânico'],
+  hp: 22,
+  speed: 32,
+  damage: 0,
+  width: 20,
+  height: 20,
+  goldReward: 9,
+  armor: 0,
+  movement: 'sine',
+  special: { type: 'drain', range: 95, dps: 5 },
+  spriteId: 'leech',
+  minWave: 5,
+  weight: 4,
+};
+
 // ─── All Enemies Export ──────────────────────────────────────────────────────
 
 export const ALL_ENEMIES: EnemyDefinition[] = [
@@ -1287,7 +1307,7 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   ENEMY_KAMIKAZE, ENEMY_HELIX, ENEMY_PHASE_WRAITH, ENEMY_HIVE_MIND, ENEMY_SPORE_CLOUD,
   ENEMY_CRYSTALLINE, ENEMY_MAGNETIC_CORE, ENEMY_FLAME_ELEMENTAL, ENEMY_TIDE_WALKER,
   ENEMY_STORM_DJINN, ENEMY_PLAGUE_CARRIER, ENEMY_ROOT_GOLEM, ENEMY_VOID_DANCER,
-  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF,
+  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF, ENEMY_LEECH,
   BOSS_TITAN_PRIME, BOSS_DEVOURER, BOSS_STORM_KING, BOSS_ARCHITECT, BOSS_KEPLER_PRIME,
   // New bosses (9-20)
   BOSS_TOXAR, BOSS_CRIOX, BOSS_VULKRA, BOSS_PHANTAX, BOSS_TERRAVOX, BOSS_SOLYX,

@@ -288,7 +288,6 @@ export class Renderer {
     const menuBg = loadedSpritesMenu?.menuBg as HTMLImageElement | null;
 
     if (menuBg) {
-      // Draw background covering full canvas (crop to fit)
       const imgW = menuBg.naturalWidth || menuBg.width;
       const imgH = menuBg.naturalHeight || menuBg.height;
       const scale = Math.max(canvas.width / imgW, canvas.height / imgH);
@@ -297,11 +296,32 @@ export class Renderer {
       const offX = (canvas.width - drawW) / 2;
       const offY = (canvas.height - drawH) / 2;
       ctx.drawImage(menuBg, offX, offY, drawW, drawH);
-      // Dark overlay for readability
       ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else {
       ctx.fillStyle = '#030308';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Procedural starfield
+      const nowMs = performance.now();
+      const seed = 12345;
+      const starCount = 90;
+      for (let s = 0; s < starCount; s++) {
+        const sx = ((seed * (s * 7919 + 1)) % canvas.width + canvas.width) % canvas.width;
+        const sy = ((seed * (s * 3571 + 13)) % canvas.height + canvas.height) % canvas.height;
+        const twinkle = 0.25 + Math.abs(Math.sin(nowMs * 0.001 * (0.3 + (s % 7) * 0.1) + s)) * 0.75;
+        const r = 0.5 + (s % 3) * 0.5;
+        ctx.globalAlpha = twinkle * 0.7;
+        ctx.fillStyle = s % 5 === 0 ? '#a5b4fc' : s % 3 === 0 ? '#fbbf24' : '#ffffff';
+        ctx.beginPath();
+        ctx.arc(sx, sy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      // Subtle vignette
+      const vgr = ctx.createRadialGradient(L.cx, L.cy, L.h * 0.1, L.cx, L.cy, L.h * 0.75);
+      vgr.addColorStop(0, 'transparent');
+      vgr.addColorStop(1, 'rgba(0,0,0,0.6)');
+      ctx.fillStyle = vgr;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
@@ -360,16 +380,23 @@ export class Renderer {
 
     // ─── Title ───────────────────────────────────────────────────────────
     const titleX = Math.floor(panelW * 0.1);
-    const floatY = Math.sin(this.menuFloatTimer * 1.2) * 2;
-    ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
+    const floatY = Math.sin(this.menuFloatTimer * 1.1) * 3;
+    const titleGlow = 8 + Math.sin(this.menuFloatTimer * 1.8) * 5;
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = titleGlow;
+    ctx.font = `bold ${Math.floor(L.h * 0.056)}px monospace`;
     ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'left';
-    ctx.fillText('PACK', titleX, Math.floor(L.h * 0.12) + floatY);
-    ctx.fillText('INVADERS', titleX, Math.floor(L.h * 0.18) + floatY);
+    ctx.fillText('PACK', titleX, Math.floor(L.h * 0.115) + floatY);
+    ctx.shadowColor = '#f97316';
+    ctx.shadowBlur = titleGlow * 0.7;
+    ctx.fillStyle = '#fb923c';
+    ctx.fillText('INVADERS', titleX, Math.floor(L.h * 0.178) + floatY);
+    ctx.shadowBlur = 0;
 
     ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('Mochila • Roguelike • Arcade', titleX, Math.floor(L.h * 0.22));
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('Mochila  ◆  Roguelike  ◆  Arcade', titleX, Math.floor(L.h * 0.215));
 
     // ─── Menu buttons ────────────────────────────────────────────────────
     const menuItems = ['JOGAR', 'ARQUIVO', 'CONQUISTAS', 'MISSÕES', 'CONTROLES', 'OPÇÕES', 'CRÉDITOS', 'SAIR'];
@@ -2615,197 +2642,269 @@ export class Renderer {
     const { ctx, canvas, game } = this;
     const state = game.combat.state;
     const L = this.getLayout();
-    const hudH = Math.floor(L.h * 0.065);
+    const hudH = Math.floor(L.h * 0.072);
+    const now = performance.now();
 
-    // Aliencore red tint
+    // ── Drain warning flash (red vignette at edges) ──────────────────────
+    if (state.drainWarningTimer > 0) {
+      const alpha = state.drainWarningTimer * 0.5 * (0.7 + Math.sin(now * 0.025) * 0.3);
+      ctx.globalAlpha = alpha;
+      const vGrad = ctx.createRadialGradient(L.cx, L.cy, L.h * 0.25, L.cx, L.cy, L.h * 0.75);
+      vGrad.addColorStop(0, 'transparent');
+      vGrad.addColorStop(1, '#a855f7');
+      ctx.fillStyle = vGrad;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+    }
+
+    // ── Boss phase 2 transition flash ────────────────────────────────────
+    if (state.bossPhaseTransitionTimer > 0) {
+      const t = state.bossPhaseTransitionTimer;
+      if (t > 2.0) {
+        const flashAlpha = (t - 2.0) * 0.7;
+        ctx.globalAlpha = flashAlpha;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.globalAlpha = 1;
+      }
+      const pulseAlpha = 0.06 + Math.sin(now * 0.015) * 0.04;
+      ctx.globalAlpha = pulseAlpha;
+      ctx.fillStyle = '#ef4444';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.globalAlpha = 1;
+      // Banner
+      ctx.font = `bold ${Math.floor(L.h * 0.028)}px monospace`;
+      ctx.fillStyle = '#ef4444';
+      ctx.textAlign = 'center';
+      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 18;
+      const shk = Math.sin(now * 0.025) * 4;
+      ctx.fillText('⚠ FASE 2 ⚠', L.cx + shk, Math.floor(L.h * 0.22));
+      ctx.shadowBlur = 0;
+      ctx.textAlign = 'left';
+    }
+
+    // ── Aliencore tint ───────────────────────────────────────────────────
     if (game.aliencoreMode) {
       ctx.fillStyle = 'rgba(239, 68, 68, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // Top bar
-    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    // ── Top HUD bar ──────────────────────────────────────────────────────
+    const barGrad = ctx.createLinearGradient(0, 0, 0, hudH);
+    barGrad.addColorStop(0, 'rgba(0,0,0,0.92)');
+    barGrad.addColorStop(1, 'rgba(0,0,0,0.72)');
+    ctx.fillStyle = barGrad;
     ctx.fillRect(0, 0, canvas.width, hudH);
+    // Bottom edge accent
+    ctx.fillStyle = 'rgba(99,102,241,0.18)';
+    ctx.fillRect(0, hudH - 1, canvas.width, 1);
 
-    // Aliencore badge
-    if (game.aliencoreMode) {
-      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-      ctx.fillStyle = '#ef4444';
-      ctx.textAlign = 'center';
-      ctx.fillText('ALIENCORE', L.cx, Math.floor(hudH * 0.88));
-      ctx.textAlign = 'left';
-    }
-
-    // HP bar (smooth) — bigger and clearer
-    const hpBarW = Math.floor(L.w * 0.14);
-    const hpBarH = Math.floor(hudH * 0.35);
+    // ── LEFT: HP + Shield ────────────────────────────────────────────────
+    const hpBarW = Math.floor(L.w * 0.175);
+    const hpBarH = Math.floor(hudH * 0.38);
     const hpBarX = Math.floor(L.w * 0.01);
-    const hpBarY = Math.floor(hudH * 0.2);
-    const hpFrame = this.sprites.ui.get('health_bar_frame');
-    if (hpFrame) ctx.drawImage(hpFrame, hpBarX, hpBarY - 2);
-    // HP background
-    ctx.fillStyle = '#1f2937';
-    ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
-    // HP fill
+    const hpBarY = Math.floor(hudH * 0.12);
+
     const hpPct = Math.max(0, this.displayHp / state.playerMaxHp);
     const hpColor = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#f59e0b' : '#ef4444';
+
+    // HP label
+    ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('♥  HP', hpBarX, hpBarY - 2);
+
+    // HP bar bg
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
+    // HP fill
     ctx.fillStyle = hpColor;
-    ctx.fillRect(hpBarX + 1, hpBarY + 1, (hpBarW - 2) * hpPct, hpBarH - 2);
+    ctx.fillRect(hpBarX + 1, hpBarY + 1, Math.floor((hpBarW - 2) * hpPct), hpBarH - 2);
     // HP shine
-    ctx.fillStyle = 'rgba(255,255,255,0.15)';
-    ctx.fillRect(hpBarX + 1, hpBarY + 1, (hpBarW - 2) * hpPct, Math.floor(hpBarH * 0.35));
+    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillRect(hpBarX + 1, hpBarY + 1, Math.floor((hpBarW - 2) * hpPct), Math.floor(hpBarH * 0.38));
     // HP border
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = hpPct < 0.25 ? '#ef444480' : 'rgba(255,255,255,0.18)';
     ctx.lineWidth = 1;
     ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
 
-    // Last Stand indicator (pulsing red glow when below 25% HP)
+    // HP text inside bar
+    ctx.font = `bold ${Math.floor(hpBarH * 0.65)}px monospace`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${Math.ceil(state.playerHp)}/${state.playerMaxHp}`, hpBarX + hpBarW - 4, hpBarY + hpBarH - 3);
+    ctx.textAlign = 'left';
+
+    // Last Stand pulse
     if (hpPct < 0.25 && (game.combat as any)._lastStandActive) {
-      const pulse = 0.4 + Math.sin(performance.now() * 0.008) * 0.2;
-      ctx.globalAlpha = pulse;
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(hpBarX - 2, hpBarY - 2, hpBarW + 4, hpBarH + 4);
+      const pulse2 = 0.3 + Math.sin(now * 0.008) * 0.25;
+      ctx.globalAlpha = pulse2;
+      ctx.strokeStyle = '#ef4444';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(hpBarX - 1, hpBarY - 1, hpBarW + 2, hpBarH + 2);
       ctx.globalAlpha = 1;
       ctx.font = `bold ${Math.floor(L.h * 0.01)}px monospace`;
       ctx.fillStyle = '#fbbf24';
-      ctx.fillText('ÚLTIMO RECURSO!', hpBarX, hpBarY + hpBarH + 12);
+      ctx.fillText('ÚLTIMO RECURSO!', hpBarX, hpBarY + hpBarH + 11);
     }
 
-    ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(`${Math.ceil(state.playerHp)}/${state.playerMaxHp}`, hpBarX + hpBarW + 8, hpBarY + hpBarH);
-
-    // Shield bar (below HP bar)
+    // Shield bar (slim, below HP)
     if (state.playerMaxShield > 0) {
-      const shieldBarY = hpBarY + hpBarH + 4;
-      const shieldBarH = Math.floor(hudH * 0.18);
+      const shY = hpBarY + hpBarH + 3;
+      const shH = Math.floor(hudH * 0.14);
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(hpBarX, shieldBarY, hpBarW, shieldBarH);
-      const shieldPct = state.playerShield / state.playerMaxShield;
-      if (shieldPct > 0) {
+      ctx.fillRect(hpBarX, shY, hpBarW, shH);
+      const shPct = state.playerShield / state.playerMaxShield;
+      if (shPct > 0) {
         ctx.fillStyle = state.shieldRegenDelay > 0 ? '#1e40af' : '#38bdf8';
-        ctx.fillRect(hpBarX + 1, shieldBarY + 1, (hpBarW - 2) * shieldPct, shieldBarH - 2);
-        // Shine
-        ctx.fillStyle = 'rgba(255,255,255,0.15)';
-        ctx.fillRect(hpBarX + 1, shieldBarY + 1, (hpBarW - 2) * shieldPct, Math.floor(shieldBarH * 0.4));
+        ctx.fillRect(hpBarX + 1, shY + 1, Math.floor((hpBarW - 2) * shPct), shH - 2);
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(hpBarX + 1, shY + 1, Math.floor((hpBarW - 2) * shPct), Math.floor(shH * 0.4));
       }
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
+      ctx.strokeStyle = 'rgba(56,189,248,0.35)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(hpBarX, shieldBarY, hpBarW, shieldBarH);
-      // Shield text
-      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      ctx.strokeRect(hpBarX, shY, hpBarW, shH);
+      ctx.font = `${Math.floor(shH * 0.75)}px monospace`;
       ctx.fillStyle = '#67e8f9';
-      ctx.fillText(`🛡 ${Math.ceil(state.playerShield)}`, hpBarX + hpBarW + 8, shieldBarY + shieldBarH);
+      ctx.textAlign = 'right';
+      ctx.fillText(`🛡 ${Math.ceil(state.playerShield)}`, hpBarX + hpBarW - 2, shY + shH - 1);
+      ctx.textAlign = 'left';
     }
 
-    // Wave + timer
-    const col2X = Math.floor(L.w * 0.18);
-    // Wave time with background pill
-    ctx.fillStyle = 'rgba(99, 102, 241, 0.2)';
+    // Active synergies (below HP area, tiny pills)
+    if (game.activeSynergies.length > 0) {
+      ctx.font = `${Math.floor(L.h * 0.0085)}px monospace`;
+      ctx.fillStyle = '#6366f1';
+      ctx.fillText(game.activeSynergies.slice(0, 5).join(' ◆ '), hpBarX, hudH - 4);
+    }
+
+    // ── CENTER-LEFT: Wave date + timer ───────────────────────────────────
+    const col2X = Math.floor(L.w * 0.205);
     const timeText = game.getTimeString();
-    const timeW = ctx.measureText(timeText).width + 16;
-    ctx.fillRect(col2X - 8, Math.floor(hudH * 0.2), timeW, Math.floor(hudH * 0.35));
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText(timeText, col2X, Math.floor(hudH * 0.4));
-    ctx.font = L.fontTiny;
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(`${state.waveTime.toFixed(0)}s`, col2X, Math.floor(hudH * 0.65));
+    ctx.font = `bold ${Math.floor(L.h * 0.019)}px monospace`;
+    ctx.fillStyle = '#c7d2fe';
+    ctx.fillText(timeText, col2X, Math.floor(hudH * 0.52));
+    ctx.font = `${Math.floor(L.h * 0.0095)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText(`${state.waveTime.toFixed(0)}s`, col2X, Math.floor(hudH * 0.78));
 
-    // Gold
-    const col3X = Math.floor(L.w * 0.28);
-    const coin = this.sprites.ui.get('gold_coin');
-    if (coin) ctx.drawImage(coin, col3X, Math.floor(hudH * 0.2));
-    ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+    // ── CENTER-LEFT: Gold ────────────────────────────────────────────────
+    const col3X = Math.floor(L.w * 0.29);
+    ctx.font = `bold ${Math.floor(L.h * 0.019)}px monospace`;
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText(`${state.gold + game.gold}`, col3X + 12, Math.floor(hudH * 0.5));
+    ctx.fillText(`⬡ ${state.gold + game.gold}`, col3X, Math.floor(hudH * 0.52));
+    ctx.font = `${Math.floor(L.h * 0.0085)}px monospace`;
+    ctx.fillStyle = '#78350f';
+    ctx.fillText('GOLD', col3X, Math.floor(hudH * 0.78));
 
-    // Wave progress bar
-    const progressX = Math.floor(L.w * 0.35);
-    const progressW = Math.floor(L.w * 0.12);
+    // ── CENTER: Wave progress ────────────────────────────────────────────
+    const progX  = Math.floor(L.w * 0.38);
+    const progW  = Math.floor(L.w * 0.16);
+    const progH  = Math.floor(hudH * 0.28);
+    const progY  = Math.floor(hudH * 0.32);
     const killed = state.totalEnemies - state.enemies.length;
-    const progressPct = state.totalEnemies > 0 ? killed / state.totalEnemies : 0;
-    ctx.fillStyle = '#1f2937';
-    ctx.fillRect(progressX, Math.floor(hudH * 0.3), progressW, Math.floor(hudH * 0.18));
-    ctx.fillStyle = '#6366f1';
-    ctx.fillRect(progressX, Math.floor(hudH * 0.3), progressW * progressPct, Math.floor(hudH * 0.18));
-    ctx.font = L.fontTiny;
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText(`${killed}/${state.totalEnemies}`, progressX + progressW + 5, Math.floor(hudH * 0.48));
+    const progPct = state.totalEnemies > 0 ? killed / state.totalEnemies : 0;
 
-    // DPS
-    const col5X = Math.floor(L.w * 0.52);
-    ctx.font = L.fontTiny;
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(progX, progY, progW, progH);
+    const progGrad = ctx.createLinearGradient(progX, 0, progX + progW * progPct, 0);
+    progGrad.addColorStop(0, '#4f46e5');
+    progGrad.addColorStop(1, '#818cf8');
+    ctx.fillStyle = progGrad;
+    ctx.fillRect(progX + 1, progY + 1, Math.floor((progW - 2) * progPct), progH - 2);
+    ctx.strokeStyle = 'rgba(99,102,241,0.5)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(progX, progY, progW, progH);
+    ctx.font = `bold ${Math.floor(progH * 0.75)}px monospace`;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText(`${killed} / ${state.totalEnemies}`, progX + progW / 2, progY + progH - 3);
+    ctx.font = `${Math.floor(L.h * 0.0082)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('INIMIGOS', progX + progW / 2, progY + progH + Math.floor(L.h * 0.013));
+    ctx.textAlign = 'left';
+
+    // DPS (small, below progress)
+    ctx.font = `${Math.floor(L.h * 0.0082)}px monospace`;
     ctx.fillStyle = '#f97316';
-    ctx.fillText(`DPS: ${state.dpsDisplay}`, col5X, Math.floor(hudH * 0.4));
+    ctx.fillText(`DPS ${state.dpsDisplay}`, progX, progY + progH + Math.floor(L.h * 0.026));
 
-    // Combo
+    // ── CENTER-RIGHT: Combo ──────────────────────────────────────────────
     if (state.combo > 1) {
-      const comboScale = Math.min(2, 1 + state.combo * 0.03);
-      ctx.font = `bold ${Math.floor(L.h * 0.02 * comboScale)}px monospace`;
-      ctx.fillStyle = state.combo >= 10 ? '#ef4444' : state.combo >= 5 ? '#f97316' : '#fbbf24';
-      ctx.fillText(`x${state.combo} COMBO`, col5X, Math.floor(hudH * 0.75));
-
-      // Gold bonus indicator
+      const comboX = Math.floor(L.w * 0.58);
+      const comboColor = state.combo >= 15 ? '#ef4444' : state.combo >= 8 ? '#f97316' : '#fbbf24';
+      const comboScale = Math.min(1.6, 1 + state.combo * 0.025);
+      ctx.font = `bold ${Math.floor(L.h * 0.022 * comboScale)}px monospace`;
+      ctx.fillStyle = comboColor;
+      ctx.shadowColor = comboColor;
+      ctx.shadowBlur = 6 + state.combo * 0.3;
+      ctx.fillText(`× ${state.combo}`, comboX, Math.floor(hudH * 0.56));
+      ctx.shadowBlur = 0;
+      ctx.font = `${Math.floor(L.h * 0.0085)}px monospace`;
+      ctx.fillStyle = comboColor + 'aa';
+      ctx.fillText('COMBO', comboX, Math.floor(hudH * 0.8));
       const comboBonus = 1 + Math.min(state.combo * 0.1, 2.0);
-      ctx.font = `${Math.floor(L.h * 0.01)}px monospace`;
       ctx.fillStyle = '#4ade80';
-      ctx.fillText(`gold x${comboBonus.toFixed(1)}`, col5X, Math.floor(hudH * 0.92));
+      ctx.fillText(`gold ×${comboBonus.toFixed(1)}`, comboX + Math.floor(L.w * 0.075), Math.floor(hudH * 0.8));
 
-      // Large center combo indicator for big combos
+      // Big center combo for high streaks
       if (state.combo >= 10) {
-        ctx.globalAlpha = 0.3 + Math.sin(performance.now() * 0.01) * 0.1;
-        ctx.font = `bold ${Math.floor(L.h * 0.06)}px monospace`;
-        ctx.fillStyle = '#fbbf24';
+        ctx.globalAlpha = 0.22 + Math.sin(now * 0.009) * 0.08;
+        ctx.font = `bold ${Math.floor(L.h * 0.075)}px monospace`;
+        ctx.fillStyle = comboColor;
         ctx.textAlign = 'center';
-        ctx.fillText(`x${state.combo}`, L.cx, L.cy);
+        ctx.fillText(`×${state.combo}`, L.cx, L.cy + Math.floor(L.h * 0.03));
         ctx.textAlign = 'left';
         ctx.globalAlpha = 1;
       }
     }
 
-    // Score
+    // ── RIGHT: Score + multiplier + mini portrait ────────────────────────
+    const charPortrait = getCharacterPortrait(game.characterId);
+    if (charPortrait) {
+      const pSize = Math.floor(hudH * 0.82);
+      ctx.globalAlpha = 0.85;
+      ctx.drawImage(charPortrait, canvas.width - pSize - Math.floor(L.w * 0.105), 3, pSize, pSize);
+      ctx.globalAlpha = 1;
+    }
+
     ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
     ctx.fillStyle = '#a78bfa';
     ctx.textAlign = 'right';
-    ctx.fillText(`Score: ${state.score}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.4));
-    // Score multiplier
+    ctx.fillText(`${state.score}`, canvas.width - Math.floor(L.w * 0.12), Math.floor(hudH * 0.48));
+    ctx.font = `${Math.floor(L.h * 0.0082)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('SCORE', canvas.width - Math.floor(L.w * 0.12), Math.floor(hudH * 0.76));
     if (state.scoreMultiplier > 1.05) {
+      const mColor = state.scoreMultiplier >= 3 ? '#fbbf24' : state.scoreMultiplier >= 2 ? '#f97316' : '#a78bfa';
       ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-      ctx.fillStyle = state.scoreMultiplier >= 3 ? '#fbbf24' : state.scoreMultiplier >= 2 ? '#f97316' : '#a78bfa';
-      ctx.fillText(`x${state.scoreMultiplier.toFixed(1)}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.6));
+      ctx.fillStyle = mColor;
+      ctx.fillText(`×${state.scoreMultiplier.toFixed(1)}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.48));
     }
 
-    // Character portrait mini (top-right)
-    const charPortrait = getCharacterPortrait(game.characterId);
-    if (charPortrait) {
-      const pSize = Math.floor(hudH * 0.8);
-      ctx.globalAlpha = 0.8;
-      ctx.drawImage(charPortrait, canvas.width - pSize - Math.floor(L.w * 0.13), 3, pSize, pSize);
-      ctx.globalAlpha = 1;
+    // Aliencore badge
+    if (game.aliencoreMode) {
+      ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText('ALIENCORE', canvas.width - Math.floor(L.w * 0.12), Math.floor(hudH * 0.76) - Math.floor(L.h * 0.014));
     }
     ctx.textAlign = 'left';
 
-    // Active synergies
-    if (game.activeSynergies.length > 0) {
-      ctx.font = L.fontTiny;
-      ctx.fillStyle = '#a78bfa';
-      ctx.fillText(game.activeSynergies.slice(0, 4).join(' | '), Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
-    }
-
-    // Boss warning
+    // ── Boss warning ─────────────────────────────────────────────────────
     if (state.bossWarningTimer > 0) {
       const alpha = Math.min(1, state.bossWarningTimer);
       ctx.globalAlpha = alpha;
-      ctx.font = L.fontHuge;
+      ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
       ctx.fillStyle = '#ef4444';
       ctx.textAlign = 'center';
-      const shake = Math.sin(performance.now() * 0.02) * 3;
-      ctx.fillText('⚠ BOSS INCOMING ⚠', L.cx + shake, L.cy - Math.floor(L.h * 0.1));
+      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20;
+      const shk2 = Math.sin(now * 0.022) * 4;
+      ctx.fillText('⚠  BOSS  ⚠', L.cx + shk2, L.cy - Math.floor(L.h * 0.1));
+      ctx.shadowBlur = 0;
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
     }
 
-    // Wave Event banner (top-center, below HUD)
+    // ── Wave Event banner ────────────────────────────────────────────────
     const waveEvent = game.currentWaveEvent;
     if (waveEvent) {
       const bannerW = Math.floor(L.w * 0.22);
@@ -3688,22 +3787,36 @@ export class Renderer {
   private renderGameOver(victory: boolean): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
+    const now = performance.now();
 
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    // ── Dramatic background ──────────────────────────────────────────────
+    ctx.fillStyle = 'rgba(0,0,0,0.88)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Title with glow
-    ctx.font = L.fontHuge;
-    ctx.textAlign = 'center';
+    // Atmospheric gradient overlay
+    const bgGrad = ctx.createRadialGradient(L.cx, L.cy * 0.5, 0, L.cx, L.cy * 0.5, L.h * 0.6);
     if (victory) {
-      ctx.shadowColor = '#fbbf24';
-      ctx.shadowBlur = 15;
+      bgGrad.addColorStop(0, 'rgba(251,191,36,0.12)');
+      bgGrad.addColorStop(1, 'transparent');
     } else {
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 10;
+      bgGrad.addColorStop(0, 'rgba(239,68,68,0.10)');
+      bgGrad.addColorStop(1, 'transparent');
     }
-    ctx.fillStyle = victory ? '#fbbf24' : '#ef4444';
-    ctx.fillText(victory ? 'VITÓRIA!' : 'GAME OVER', L.cx, Math.floor(L.h * 0.1));
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // ── Title ─────────────────────────────────────────────────────────────
+    const titleY = Math.floor(L.h * 0.11);
+    const titleSize = Math.floor(L.h * 0.062);
+    ctx.font = `bold ${titleSize}px monospace`;
+    ctx.textAlign = 'center';
+    const titleText = victory ? 'VITÓRIA!' : 'GAME OVER';
+    const titleColor = victory ? '#fbbf24' : '#ef4444';
+    const titlePulse = 0.85 + Math.sin(now * 0.0025) * 0.15;
+    ctx.shadowColor = titleColor;
+    ctx.shadowBlur = 28 * titlePulse;
+    ctx.fillStyle = titleColor;
+    ctx.fillText(titleText, L.cx, titleY);
     ctx.shadowBlur = 0;
 
     // Check for record
@@ -3715,16 +3828,19 @@ export class Renderer {
     }
 
     // ─── Stats Panel ─────────────────────────────────────────────────────
-    const panelW = Math.floor(L.w * 0.5);
+    const panelW = Math.floor(L.w * 0.58);
     const panelX = (L.w - panelW) / 2;
-    const panelY = Math.floor(L.h * 0.20);
-    const panelH = Math.floor(L.h * 0.42);
+    const panelY = Math.floor(L.h * 0.16);
+    const panelH = Math.floor(L.h * 0.44);
 
-    ctx.fillStyle = 'rgba(10, 10, 25, 0.9)';
+    ctx.fillStyle = 'rgba(5, 5, 18, 0.92)';
     ctx.fillRect(panelX, panelY, panelW, panelH);
-    ctx.strokeStyle = '#1e293b';
+    ctx.strokeStyle = victory ? 'rgba(251,191,36,0.3)' : 'rgba(239,68,68,0.3)';
     ctx.lineWidth = 1;
     ctx.strokeRect(panelX, panelY, panelW, panelH);
+    // Top accent line
+    ctx.fillStyle = titleColor;
+    ctx.fillRect(panelX, panelY, panelW, 2);
 
     const lineH = Math.floor(L.h * 0.032);
     let cy = panelY + lineH;
@@ -3866,11 +3982,18 @@ export class Renderer {
     }
     ctx.textAlign = 'left';
 
-    // Buttons
-    const btnW = Math.floor(L.w * 0.2);
-    const btnH = Math.floor(L.h * 0.06);
-    this.renderButton(L.cx - btnW / 2, Math.floor(L.h * 0.85), btnW, btnH, 'TENTAR NOVAMENTE', '#6366f1');
-    this.renderButton(L.cx - btnW / 2, Math.floor(L.h * 0.93), btnW, btnH, 'MENU PRINCIPAL', '#374151');
+    // ── Buttons ───────────────────────────────────────────────────────────
+    const btnW  = Math.floor(L.w * 0.23);
+    const btnH  = Math.floor(L.h * 0.067);
+    const btn1Y = Math.floor(L.h * 0.84);
+    const btn2Y = Math.floor(L.h * 0.918);
+    // Primary button glow pulse
+    const btnPulse = 0.7 + Math.sin(now * 0.004) * 0.3;
+    ctx.shadowColor = '#6366f1';
+    ctx.shadowBlur = 12 * btnPulse;
+    this.renderButton(L.cx - btnW / 2, btn1Y, btnW, btnH, 'TENTAR NOVAMENTE', '#4f46e5');
+    ctx.shadowBlur = 0;
+    this.renderButton(L.cx - btnW / 2, btn2Y, btnW, btnH, 'MENU PRINCIPAL', '#1e293b');
 
     ctx.textAlign = 'left';
   }
