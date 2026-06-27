@@ -699,7 +699,7 @@ export class InputHandler {
     }
 
     // Tab clicks
-    const tabs = 6;
+    const tabs = 8;
     const tabW = Math.floor(L.w * 0.1);
     const tabGap = Math.floor(L.w * 0.005);
     const tabStartX = (L.w - tabs * (tabW + tabGap)) / 2;
