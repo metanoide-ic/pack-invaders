@@ -2362,21 +2362,19 @@ export class Renderer {
       ctx.globalAlpha = 1;
     }
 
-    // Render player ship
-    const charDef2 = this.game.characters.find(c => c.id === this.game.characterId);
-    const shipIdx = charDef2?.shipColorIndex ?? 0;
-    const ship = this.sprites.playerShips[shipIdx % 4];
+    // Render player character (top-down back view)
+    const charId = this.game.characterId;
+    const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
+    const charIdx = CHARACTER_ORDER.indexOf(charId);
+    // playerShips[0-6] now hold the 7 top-down character sprites
+    const playerSprite = (charIdx >= 0 ? this.sprites.playerShips[charIdx] : null)
+      ?? this.sprites.playerShips[0];
 
-    // Engine glow beneath ship (always visible)
-    const engineGlow = 0.4 + Math.sin(performance.now() * 0.015) * 0.15;
-    ctx.globalAlpha = engineGlow;
-    ctx.fillStyle = '#f97316';
+    // Ground shadow beneath character
+    ctx.globalAlpha = 0.3;
+    ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(state.playerX, canvas.height - 22, 8, 12 + Math.sin(performance.now() * 0.02) * 3, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#fbbf24';
-    ctx.beginPath();
-    ctx.ellipse(state.playerX, canvas.height - 20, 4, 7, 0, 0, Math.PI * 2);
+    ctx.ellipse(state.playerX, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
@@ -2400,81 +2398,40 @@ export class Renderer {
       }
     }
 
-    if (ship) {
-      // Tilt based on velocity (lean into turns)
-      const tilt = ((game.combat as any).playerVelocity ?? 0) / 1500;
+    if (playerSprite) {
+      // Draw top-down character — 32x32, centered at player position
       ctx.save();
       ctx.translate(state.playerX, canvas.height - 29);
-      ctx.rotate(tilt * 0.2);
-      ctx.drawImage(ship, -16, -16);
+      ctx.drawImage(playerSprite, -16, -16);
       ctx.restore();
     } else {
-      // Procedural ship (triangle with details)
+      // Fallback: simple person silhouette
       const px = state.playerX;
-      const py = canvas.height - 35;
-
-      // Thrust flame (animated)
-      const flameLen = 8 + Math.sin(performance.now() * 0.02) * 4;
-      ctx.fillStyle = '#f97316';
-      ctx.globalAlpha = 0.8;
-      ctx.beginPath();
-      ctx.moveTo(px - 4, py + 10);
-      ctx.lineTo(px + 4, py + 10);
-      ctx.lineTo(px, py + 10 + flameLen);
-      ctx.closePath();
-      ctx.fill();
-      ctx.fillStyle = '#fbbf24';
-      ctx.globalAlpha = 0.6;
-      ctx.beginPath();
-      ctx.moveTo(px - 2, py + 10);
-      ctx.lineTo(px + 2, py + 10);
-      ctx.lineTo(px, py + 10 + flameLen * 0.6);
-      ctx.closePath();
-      ctx.fill();
-      ctx.globalAlpha = 1;
-
-      // Ship body (triangle)
+      const py = canvas.height - 29;
       ctx.fillStyle = '#4ade80';
+      ctx.fillRect(px - 6, py - 14, 12, 16); // body
       ctx.beginPath();
-      ctx.moveTo(px, py - 14);
-      ctx.lineTo(px - 12, py + 10);
-      ctx.lineTo(px + 12, py + 10);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ship highlight
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
-      ctx.beginPath();
-      ctx.moveTo(px, py - 14);
-      ctx.lineTo(px - 4, py);
-      ctx.lineTo(px + 4, py);
-      ctx.closePath();
-      ctx.fill();
-
-      // Ship cockpit
-      ctx.fillStyle = '#22d3ee';
-      ctx.beginPath();
-      ctx.arc(px, py - 2, 3, 0, Math.PI * 2);
+      ctx.arc(px, py - 18, 6, 0, Math.PI * 2); // head
       ctx.fill();
     }
 
     // ── Player 2 (COOP) ──────────────────────────────────────────────────────
     if (state.player2Active && state.player2X !== undefined) {
-      const p2Ship = this.sprites.playerShips[1]; // different color ship
-      if (p2Ship) {
-        ctx.save();
-        ctx.translate(state.player2X, canvas.height - 29);
-        ctx.drawImage(p2Ship, -16, -16);
-        ctx.restore();
-      }
-      // P2 thruster glow
-      ctx.save();
-      ctx.fillStyle = '#ef4444';
-      ctx.globalAlpha = 0.6;
-      ctx.ellipse(state.player2X, canvas.height - 22, 8, 12 + Math.sin(performance.now() * 0.02) * 3, 0, 0, Math.PI * 2);
+      // P2 shadow
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#000000';
+      ctx.beginPath();
+      ctx.ellipse(state.player2X, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      ctx.restore();
+      // Use fire_lord (index 1) for P2 top-down character sprite
+      const p2Sprite = this.sprites.playerShips[1] ?? this.sprites.playerShips[0];
+      if (p2Sprite) {
+        ctx.save();
+        ctx.translate(state.player2X, canvas.height - 29);
+        ctx.drawImage(p2Sprite, -16, -16);
+        ctx.restore();
+      }
     }
 
     // Render floating texts (damage numbers, gold)
