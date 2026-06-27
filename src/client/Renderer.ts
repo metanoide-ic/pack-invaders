@@ -601,30 +601,130 @@ export class Renderer {
     const L = this.getLayout();
     this.menuFloatTimer += dt;
 
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Background: menu bg with dark overlay, or deep space fallback
+    const loadedSprites = (this as any).loadedSprites;
+    const menuBg = loadedSprites?.menuBg as HTMLImageElement | null;
+    if (menuBg) {
+      const imgW = menuBg.naturalWidth || menuBg.width;
+      const imgH = menuBg.naturalHeight || menuBg.height;
+      const scale = Math.max(canvas.width / imgW, canvas.height / imgH);
+      ctx.drawImage(menuBg, (canvas.width - imgW * scale) / 2, (canvas.height - imgH * scale) / 2, imgW * scale, imgH * scale);
+      ctx.fillStyle = 'rgba(3,3,12,0.82)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = '#050510';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
-    const floatY = Math.sin(this.menuFloatTimer * 1.0) * 3;
+    // Animated star field
+    if (!(this as any)._creditStars) {
+      (this as any)._creditStars = Array.from({ length: 80 }, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 1.5 + 0.3,
+        speed: Math.random() * 0.15 + 0.05,
+      }));
+    }
+    const stars: { x: number; y: number; r: number; speed: number }[] = (this as any)._creditStars;
+    for (const s of stars) {
+      s.y += s.speed;
+      if (s.y > canvas.height) { s.y = 0; s.x = Math.random() * canvas.width; }
+      const alpha = 0.4 + Math.sin(this.menuFloatTimer * s.speed * 8 + s.x) * 0.3;
+      ctx.globalAlpha = Math.max(0.1, alpha);
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // Title with glow
+    const floatY = Math.sin(this.menuFloatTimer * 0.9) * 4;
     ctx.textAlign = 'center';
-
+    ctx.shadowColor = '#fbbf24';
+    ctx.shadowBlur = 18 + Math.sin(this.menuFloatTimer * 1.5) * 6;
     ctx.font = L.fontHuge;
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.2) + floatY);
+    ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.14) + floatY);
+    ctx.shadowBlur = 0;
 
-    ctx.font = L.fontNormal;
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText('Desenvolvido por João Paulo Leal', L.cx, Math.floor(L.h * 0.38));
+    ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
+    ctx.fillStyle = '#475569';
+    ctx.fillText('Mochila • Roguelike • Arcade', L.cx, Math.floor(L.h * 0.20) + floatY);
 
-    ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Código, arte e game design', L.cx, Math.floor(L.h * 0.48));
+    // Divider line
+    const lineW = Math.floor(L.w * 0.35);
+    const lineY = Math.floor(L.h * 0.255);
+    ctx.strokeStyle = 'rgba(99,102,241,0.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(L.cx - lineW / 2, lineY);
+    ctx.lineTo(L.cx + lineW / 2, lineY);
+    ctx.stroke();
 
+    // Credits sections
+    const sections: { label: string; color: string; lines: string[] }[] = [
+      {
+        label: 'DESENVOLVIMENTO',
+        color: '#6366f1',
+        lines: ['João Paulo Leal', 'Código, design e game design'],
+      },
+      {
+        label: 'ARTE & NARRATIVA',
+        color: '#f472b6',
+        lines: ['Sprites procedurais e retratos por IA', 'Lore original em português'],
+      },
+      {
+        label: 'ÁUDIO',
+        color: '#4ade80',
+        lines: ['Sintetizador Web Audio API', 'Todos os sons gerados proceduralmente'],
+      },
+      {
+        label: 'AGRADECIMENTOS',
+        color: '#fbbf24',
+        lines: ['Família, amigos e testadores', 'Comunidade roguelike brasileira'],
+      },
+    ];
+
+    const sectionGapX = Math.floor(L.w * 0.25);
+    const col0 = L.cx - sectionGapX;
+    const col1 = L.cx + sectionGapX;
+    const row0Y = Math.floor(L.h * 0.33);
+    const row1Y = Math.floor(L.h * 0.57);
+    const positions = [
+      { x: col0, y: row0Y }, { x: col1, y: row0Y },
+      { x: col0, y: row1Y }, { x: col1, y: row1Y },
+    ];
+
+    for (let si = 0; si < sections.length; si++) {
+      const sec = sections[si];
+      const pos = positions[si];
+      const sectionFloat = Math.sin(this.menuFloatTimer * 0.7 + si * 0.9) * 2;
+
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = sec.color;
+      ctx.fillText(sec.label, pos.x, pos.y + sectionFloat);
+
+      ctx.font = `${Math.floor(L.h * 0.015)}px monospace`;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(sec.lines[0], pos.x, pos.y + Math.floor(L.h * 0.038) + sectionFloat);
+
+      ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#64748b';
+      ctx.fillText(sec.lines[1], pos.x, pos.y + Math.floor(L.h * 0.058) + sectionFloat);
+    }
+
+    // Bottom tagline
+    ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
+    ctx.fillStyle = '#334155';
+    ctx.fillText('Feito com TypeScript + Canvas 2D', L.cx, Math.floor(L.h * 0.83));
     ctx.fillStyle = '#6366f1';
-    ctx.fillText('Brasil, 2024', L.cx, Math.floor(L.h * 0.55));
+    ctx.fillText('Brasil, 2025', L.cx, Math.floor(L.h * 0.87));
 
     // Back button
     const backBtnW = Math.floor(L.w * 0.12);
     const backBtnH = Math.floor(L.h * 0.05);
-    this.renderButton(L.cx - backBtnW / 2, Math.floor(L.h * 0.8), backBtnW, backBtnH, '← VOLTAR', '#374151');
+    this.renderButton(L.cx - backBtnW / 2, Math.floor(L.h * 0.92), backBtnW, backBtnH, '← VOLTAR', '#374151');
 
     ctx.textAlign = 'left';
   }
