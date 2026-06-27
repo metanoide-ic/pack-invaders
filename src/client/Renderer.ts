@@ -19,7 +19,7 @@ import { renderPlanet } from './PlanetRenderer';
 import { countPossibleCombinations, countPossibleBuffs, ALL_COMBINATIONS } from '../core/ItemCombinations';
 import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
-import { getEquippedRelics } from '../data/relics';
+import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { getCharacterPortrait, getVendorPortrait, getBossPortrait } from './SpriteLoader';
 
 export interface Layout {
@@ -4327,9 +4327,9 @@ export class Renderer {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
     const codex = game.codex;
-    const tabs = ['Inimigos', 'Bosses', 'Personagens', 'Itens', 'Cartas', 'Fusões', 'Colecionaveis'];
-    const categories: Array<'enemy' | 'boss' | 'character' | 'item' | 'card' | 'collectible' | 'fusion'> = [
-      'enemy', 'boss', 'character', 'item', 'card', 'fusion', 'collectible'
+    const tabs = ['Inimigos', 'Bosses', 'Personagens', 'Itens', 'Cartas', 'Fusões', 'Colecionaveis', 'Relíquias'];
+    const categories: Array<'enemy' | 'boss' | 'character' | 'item' | 'card' | 'collectible' | 'fusion' | 'relics'> = [
+      'enemy', 'boss', 'character', 'item', 'card', 'fusion', 'collectible', 'relics'
     ];
 
     // Background
@@ -4375,13 +4375,17 @@ export class Renderer {
       ctx.fillText(tabs[i], tx + tabW / 2, tabY + tabH * 0.7);
     }
 
-    // Entries — special handling for Fusion tab
-    const isFusionTab = categories[this.codexTab] === 'fusion';
+    // Entries — special handling for Fusion and Relics tabs
+    const currentCat = categories[this.codexTab];
+    const isFusionTab = currentCat === 'fusion';
+    const isRelicsTab = currentCat === 'relics';
     const startY = Math.floor(L.h * 0.17);
     const margin = Math.floor(L.w * 0.02);
 
     if (isFusionTab) {
       this.renderFusionGuide(startY, L, margin);
+    } else if (isRelicsTab) {
+      this.renderRelicsGuide(startY, L, margin);
     } else {
     const entries = codex.getAllByCategory(categories[this.codexTab] as any);
     const entryH = Math.floor(L.h * 0.1);
@@ -4671,6 +4675,105 @@ export class Renderer {
       ctx.fillStyle = '#f472b6';
       ctx.textAlign = 'center';
       ctx.fillText('▼', L.cx, L.h - Math.floor(L.h * 0.04));
+    }
+    ctx.textAlign = 'left';
+  }
+
+  /** Render the Relics tab in the Codex — shows all 12 relics with collected status */
+  private renderRelicsGuide(startY: number, L: Layout, margin: number): void {
+    const { ctx } = this;
+    const collected = new Set(getCollectedRelics());
+    const collectedCount = collected.size;
+    const equipped = getEquippedRelics();
+
+    // Summary header
+    ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+    ctx.fillStyle = '#fbbf24';
+    ctx.textAlign = 'left';
+    ctx.fillText(
+      `${collectedCount}/${ALL_RELICS.length} Relíquias coletadas — Equipadas: ${equipped.length}/5`,
+      margin, startY - Math.floor(L.h * 0.015)
+    );
+
+    // Show equipped bonuses summary
+    if (equipped.length > 0) {
+      const bonusParts: string[] = [];
+      let totalHp = 0, totalDmg = 0, totalRate = 0, totalHeal = 0;
+      for (const r of equipped) {
+        totalHp += r.bonus.hpBonus ?? 0;
+        totalDmg += r.bonus.damagePercent ?? 0;
+        totalRate += r.bonus.fireRatePercent ?? 0;
+        totalHeal += r.bonus.healPerSecond ?? 0;
+      }
+      if (totalHp > 0) bonusParts.push(`+${totalHp} HP`);
+      if (totalDmg > 0) bonusParts.push(`+${totalDmg}% DMG`);
+      if (totalRate > 0) bonusParts.push(`+${totalRate}% Cadência`);
+      if (totalHeal > 0) bonusParts.push(`+${totalHeal} HP/s`);
+      if (bonusParts.length > 0) {
+        ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+        ctx.fillStyle = '#4ade80';
+        ctx.fillText(`Bônus ativo: ${bonusParts.join(' | ')}`, margin, startY - Math.floor(L.h * 0.002));
+      }
+    }
+
+    // Grid of relics: 4 columns × 3 rows
+    const cols = 4;
+    const cardW = Math.floor((L.w - margin * 2 - (cols - 1) * Math.floor(L.w * 0.012)) / cols);
+    const cardH = Math.floor(L.h * 0.22);
+    const gapX = Math.floor(L.w * 0.012);
+    const gapY = Math.floor(L.h * 0.015);
+
+    for (let ri = 0; ri < ALL_RELICS.length; ri++) {
+      const relic = ALL_RELICS[ri];
+      const col = ri % cols;
+      const row = Math.floor(ri / cols);
+      const cx = margin + col * (cardW + gapX);
+      const cy = startY + row * (cardH + gapY);
+      const isCollected = collected.has(relic.id);
+      const isEquipped = equipped.some(e => e.id === relic.id);
+
+      // Card bg
+      ctx.fillStyle = isEquipped
+        ? 'rgba(251,191,36,0.12)'
+        : isCollected
+          ? 'rgba(20,60,40,0.7)'
+          : 'rgba(10,10,24,0.6)';
+      ctx.fillRect(cx, cy, cardW, cardH);
+
+      // Border
+      ctx.strokeStyle = isEquipped ? '#fbbf24' : isCollected ? '#4ade80' : '#1f2937';
+      ctx.lineWidth = isEquipped ? 2 : 1;
+      ctx.strokeRect(cx, cy, cardW, cardH);
+
+      // Top accent bar
+      if (isCollected) {
+        ctx.fillStyle = isEquipped ? '#fbbf24' : '#4ade80';
+        ctx.fillRect(cx, cy, cardW, 2);
+      }
+
+      // Icon
+      ctx.font = `${Math.floor(L.h * 0.045)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = isCollected ? 1 : 0.25;
+      ctx.fillText(relic.icon, cx + cardW / 2, cy + Math.floor(cardH * 0.4));
+      ctx.globalAlpha = 1;
+
+      // Name
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = isCollected ? '#e2e8f0' : '#374151';
+      ctx.fillText(isCollected ? relic.name : '???', cx + cardW / 2, cy + Math.floor(cardH * 0.58));
+
+      // Description / bonus
+      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      ctx.fillStyle = isCollected ? '#94a3b8' : '#1f2937';
+      ctx.fillText(isCollected ? relic.description : 'Derrote bosses', cx + cardW / 2, cy + Math.floor(cardH * 0.74));
+
+      // "EQUIPADA" badge
+      if (isEquipped) {
+        ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText('EQUIPADA', cx + cardW / 2, cy + Math.floor(cardH * 0.90));
+      }
     }
     ctx.textAlign = 'left';
   }
