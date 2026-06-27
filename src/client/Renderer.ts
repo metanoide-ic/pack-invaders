@@ -1843,6 +1843,17 @@ export class Renderer {
     this.renderButton(L.cx - btnW / 2, L.btnY, btnW, btnH, 'INICIAR COMBATE', hasWeapon ? '#6366f1' : '#374151');
     ctx.shadowBlur = 0;
 
+    // Aliencore toggle (below combat button, only when unlocked)
+    if (game.aliencoreUnlocked) {
+      const acBtnW = Math.floor(L.w * 0.16);
+      const acBtnH = Math.floor(L.h * 0.034);
+      const acBtnX = L.cx - acBtnW / 2;
+      const acBtnY = L.btnY + btnH + Math.floor(L.h * 0.012);
+      this.renderButton(acBtnX, acBtnY, acBtnW, acBtnH,
+        game.aliencoreMode ? '⚠ ALIENCORE: ON' : '⚠ ALIENCORE: OFF',
+        game.aliencoreMode ? '#ef4444' : '#374151');
+    }
+
     // Codex shortcut button (top right)
     const codexBtnW = Math.floor(L.w * 0.1);
     const codexBtnH = Math.floor(L.h * 0.04);

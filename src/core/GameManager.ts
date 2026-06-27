@@ -204,6 +204,8 @@ export class GameManager {
     this.wave = 0;
     this.newAchievements = [];
     this.newlyUnlockedDifficulty = null;
+    this.aliencoreMode = false;
+    this.aliencoreUnlocked = SaveManager.isAliencoreEverUnlocked();
 
     // Give player the starting items — scan for first valid position
     for (const itemId of charDef.startingItems) {
@@ -648,6 +650,12 @@ export class GameManager {
 
   enterExtraModes(): void {
     this.phase = 'EXTRA_MODES';
+  }
+
+  enterCoop(): void {
+    this.startCombat();
+    this.phase = 'COOP';
+    this.combat.activateCoopP2(this.characterId);
   }
 
   enterVersusShips(): void {

@@ -515,6 +515,8 @@ export class InputHandler {
           this.game.enterVersusShips();
         } else if (modes[i] === 'VERSUS_PVP') {
           this.game.enterVersusPvp();
+        } else if (modes[i] === 'COOP') {
+          this.game.enterCoop();
         } else {
           this.game.phase = modes[i];
         }
@@ -842,6 +844,20 @@ export class InputHandler {
       this.audio.waveStart();
       this.game.startCombat();
       return;
+    }
+
+    // Aliencore toggle (below combat button)
+    if (this.game.aliencoreUnlocked) {
+      const acBtnW = Math.floor(L.w * 0.16);
+      const acBtnH = Math.floor(L.h * 0.034);
+      const acBtnX = L.cx - acBtnW / 2;
+      const acBtnY = L.btnY + btnH + Math.floor(L.h * 0.012);
+      if (pos.x >= acBtnX && pos.x <= acBtnX + acBtnW &&
+          pos.y >= acBtnY && pos.y <= acBtnY + acBtnH) {
+        this.game.aliencoreMode = !this.game.aliencoreMode;
+        this.audio.buttonClick();
+        return;
+      }
     }
 
     // Check if clicking on a placed item to pick it up

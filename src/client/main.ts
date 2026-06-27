@@ -75,7 +75,7 @@ function gameLoop(): void {
 
   // Phase transition audio & effects
   if (game.phase !== prevPhase) {
-    if (game.phase === 'COMBAT') {
+    if (game.phase === 'COMBAT' || game.phase === 'COOP') {
       audio.waveStart();
       audio.setCombatAmbient(true);
       renderer.startWaveTransition(game.wave);
@@ -120,15 +120,22 @@ function gameLoop(): void {
   }
 
   // Combat updates
-  if (game.phase === 'COMBAT' && !isPaused()) {
+  if ((game.phase === 'COMBAT' || game.phase === 'COOP') && !isPaused()) {
     // Pass player direction to combat engine
     const playerDir = input.getPlayerDir();
-    game.combat.tick(dt, playerDir);
+    const p2Dir = game.phase === 'COOP' ? input.getP2Dir() : 0;
+    game.combat.tick(dt, playerDir, p2Dir);
     game.updateSkills(dt);
 
     // Check dash input
     if (input.checkDash()) {
       game.combat.dash();
+      audio.dash();
+    }
+
+    // COOP: P2 dash
+    if (game.phase === 'COOP' && input.checkP2Dash()) {
+      game.combat.dashP2();
       audio.dash();
     }
 
@@ -313,7 +320,7 @@ function gameLoop(): void {
 
   // Render
   renderer.render();
-  if (isPaused() && (game.phase === 'COMBAT' || game.phase === 'INVENTORY')) {
+  if (isPaused() && (game.phase === 'COMBAT' || game.phase === 'COOP' || game.phase === 'INVENTORY')) {
     renderer.renderPause();
   }
   requestAnimationFrame(gameLoop);

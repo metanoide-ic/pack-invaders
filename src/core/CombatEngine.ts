@@ -177,6 +177,7 @@ export class CombatEngine {
   /** Dash cooldown */
   private dashCooldown = 0;
   private dashActive = 0;
+  private playerVelocity2 = 0;
 
   /** Per-character base speed multiplier (preserved across card speed bonuses) */
   private charSpeedMult = 1;
@@ -280,8 +281,9 @@ export class CombatEngine {
   /**
    * Main combat tick. Called at 60fps.
    * @param playerDir -1=left, 0=none, 1=right
+   * @param p2Dir P2 direction in COOP mode (-1/0/1)
    */
-  tick(dt: number, playerDir: number = 0): void {
+  tick(dt: number, playerDir: number = 0, p2Dir: number = 0): void {
     if (!this.state.isActive) return;
 
     // Hit-stop: freeze everything briefly
@@ -320,6 +322,7 @@ export class CombatEngine {
 
     // 0. Move player
     this.movePlayer(dt, playerDir);
+    if (this.state.player2Active) this.movePlayer2(dt, p2Dir);
 
     // 1. Fire weapons from backpack
     this.fireWeapons(dt);
@@ -420,6 +423,43 @@ export class CombatEngine {
       } else {
         // If standing still, dash in last input direction or right
         this.playerVelocity = this.playerSpeed * 2;
+      }
+    }
+  }
+
+  private movePlayer2(dt: number, dir: number): void {
+    const st = this.state;
+    if (st.player2DashCooldown! > 0) st.player2DashCooldown! -= dt;
+    const dashActive = (st as any)._p2DashActive ?? 0;
+    if (dashActive > 0) (st as any)._p2DashActive -= dt;
+    const maxSpeed = this.playerSpeed * (dashActive > 0 ? 2.5 : 1);
+    const accel = 2000;
+    const decel = 1800;
+    if (dir !== 0) {
+      this.playerVelocity2 += dir * accel * dt;
+      this.playerVelocity2 = Math.max(-maxSpeed, Math.min(maxSpeed, this.playerVelocity2));
+    } else {
+      if (Math.abs(this.playerVelocity2) < decel * dt) {
+        this.playerVelocity2 = 0;
+      } else {
+        this.playerVelocity2 -= Math.sign(this.playerVelocity2) * decel * dt;
+      }
+    }
+    st.player2X! += this.playerVelocity2 * dt;
+    if (st.player2X! < 20) { st.player2X = 20; this.playerVelocity2 = 0; }
+    if (st.player2X! > this.arenaWidth - 20) { st.player2X = this.arenaWidth - 20; this.playerVelocity2 = 0; }
+  }
+
+  dashP2(): void {
+    const st = this.state;
+    if (!st.player2Active) return;
+    if ((st.player2DashCooldown ?? 0) <= 0) {
+      (st as any)._p2DashActive = 0.15;
+      st.player2DashCooldown = 1.0;
+      if (this.playerVelocity2 !== 0) {
+        this.playerVelocity2 = Math.sign(this.playerVelocity2) * this.playerSpeed * 2.5;
+      } else {
+        this.playerVelocity2 = this.playerSpeed * 2;
       }
     }
   }
