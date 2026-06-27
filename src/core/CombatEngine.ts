@@ -154,6 +154,13 @@ export interface CombatState {
   bossPhaseTransitionTimer: number;
   /** Timer for drain warning indicator */
   drainWarningTimer: number;
+  // Co-op Player 2 state
+  player2Active?: boolean;
+  player2X?: number;
+  player2Hp?: number;
+  player2MaxHp?: number;
+  player2DashCooldown?: number;
+  player2DashVelocity?: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -217,6 +224,15 @@ export class CombatEngine {
       bossPhaseTransitionTimer: 0,
       drainWarningTimer: 0,
     };
+  }
+
+  activateCoopP2(_charId: string): void {
+    this.state.player2Active = true;
+    this.state.player2X = this.arenaWidth / 2 + 80;
+    this.state.player2Hp = 100;
+    this.state.player2MaxHp = 100;
+    this.state.player2DashCooldown = 0;
+    this.state.player2DashVelocity = 0;
   }
 
   startWave(wave: number, isBossMonth: boolean = false): void {

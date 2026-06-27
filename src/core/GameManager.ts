@@ -23,7 +23,7 @@ import { getDifficultyById, Difficulty, unlockNextDifficulty } from '../data/dif
 import { addToLeaderboard } from '../data/leaderboard';
 import { getRelicBonuses, getRandomNewRelic, addRelic, Relic, getEquippedRelics } from '../data/relics';
 
-export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS';
+export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
 
 export interface WaveEvent {
   id: string;
@@ -636,6 +636,10 @@ export class GameManager {
 
   closeSettings(): void {
     this.phase = this.previousPhase;
+  }
+
+  enterExtraModes(): void {
+    this.phase = 'EXTRA_MODES';
   }
 
   // ─── Shop ─────────────────────────────────────────────────────────────────

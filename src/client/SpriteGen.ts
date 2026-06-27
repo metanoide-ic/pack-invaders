@@ -10,6 +10,7 @@ export interface SpriteSheet {
   projectiles: Map<string, HTMLCanvasElement>;
   ui: Map<string, HTMLCanvasElement>;
   background: HTMLCanvasElement;
+  characters: Map<string, HTMLCanvasElement>;
 }
 
 // ─── Pixel Drawing Utilities ─────────────────────────────────────────────────
@@ -1141,6 +1142,180 @@ function generateBackground(): HTMLCanvasElement {
   return c;
 }
 
+// ─── Character Sprite Generation ─────────────────────────────────────────────
+
+const CHARACTER_IDS = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
+
+const CHARACTER_COLORS: Record<string, { main: string; dark: string }> = {
+  grass_man:    { main: '#4ade80', dark: '#16a34a' },
+  fire_lord:    { main: '#f97316', dark: '#c2410c' },
+  aqua_sage:    { main: '#38bdf8', dark: '#0284c7' },
+  storm_runner: { main: '#a3e635', dark: '#4d7c0f' },
+  void_walker:  { main: '#a855f7', dark: '#7e22ce' },
+  beast_tamer:  { main: '#ec4899', dark: '#be185d' },
+  firefighter:  { main: '#ef4444', dark: '#b91c1c' },
+};
+
+const SKIN      = '#d4a574';
+const SKIN_DARK = '#a07850';
+
+function generateCharacterSprite(charId: string): HTMLCanvasElement {
+  const c = createCanvas(20, 32);
+  const ctx = c.getContext('2d')!;
+  const col = CHARACTER_COLORS[charId] || { main: '#9e9e9e', dark: '#616161' };
+  const m = col.main;
+  const d = col.dark;
+
+  // ── Head (rows 1-6) ─────────────────────────────────────────────────────
+  rect(ctx, 6, 1, 8, 6, SKIN);
+  // Face shadow
+  rect(ctx, 6, 5, 8, 2, SKIN_DARK);
+  // Eyes (row 3)
+  px(ctx, 8,  3, '#1a1a1a');
+  px(ctx, 11, 3, '#1a1a1a');
+
+  // ── Neck (rows 7-8) ─────────────────────────────────────────────────────
+  rect(ctx, 8, 7, 4, 2, SKIN_DARK);
+
+  // ── Torso (rows 9-16) ────────────────────────────────────────────────────
+  rect(ctx, 5, 9, 10, 8, m);
+  rect(ctx, 5, 9, 1, 8, d);   // left shadow
+  rect(ctx, 14, 9, 1, 8, d);  // right shadow
+  // chest detail
+  rect(ctx, 7, 11, 6, 2, d);
+
+  // ── Belt (rows 17-18) ────────────────────────────────────────────────────
+  rect(ctx, 5, 17, 10, 2, d);
+  px(ctx, 9, 17, '#fbbf24');
+  px(ctx, 10, 17, '#fbbf24');
+
+  // ── Left arm (rows 9-18, x 2-4) ─────────────────────────────────────────
+  rect(ctx, 2, 9, 3, 9, m);
+  rect(ctx, 2, 9, 1, 9, d);
+  // left hand
+  rect(ctx, 2, 18, 3, 2, SKIN);
+
+  // ── Right arm (rows 9-18, x 15-17) ──────────────────────────────────────
+  rect(ctx, 15, 9, 3, 9, m);
+  rect(ctx, 17, 9, 1, 9, d);
+  // right hand
+  rect(ctx, 15, 18, 3, 2, SKIN);
+
+  // ── Legs (rows 19-28) ────────────────────────────────────────────────────
+  // left leg
+  rect(ctx, 5, 19, 4, 10, m);
+  rect(ctx, 5, 19, 1, 10, d);
+  // right leg
+  rect(ctx, 11, 19, 4, 10, m);
+  rect(ctx, 14, 19, 1, 10, d);
+  // gap between legs
+  rect(ctx, 9, 19, 2, 3, d);
+
+  // ── Feet (rows 29-31) ────────────────────────────────────────────────────
+  rect(ctx, 4, 29, 5, 3, d);
+  rect(ctx, 11, 29, 5, 3, d);
+
+  // ── Character-specific: hat/hair + weapon ────────────────────────────────
+  switch (charId) {
+    case 'grass_man':
+      // Leaf crown
+      rect(ctx, 5, 0, 10, 2, d);
+      rect(ctx, 4, 1, 2, 1, m); rect(ctx, 14, 1, 2, 1, m);
+      px(ctx, 9, 0, m); px(ctx, 10, 0, m);
+      // Staff (right side)
+      rect(ctx, 17, 5, 2, 14, '#5d4037');
+      rect(ctx, 16, 4, 4, 2, m);
+      break;
+    case 'fire_lord':
+      // Flame hair
+      px(ctx, 7, 0, '#fbbf24'); px(ctx, 9, 0, '#f97316');
+      px(ctx, 11, 0, '#fbbf24'); px(ctx, 13, 0, '#f97316');
+      rect(ctx, 7, 1, 2, 1, '#fbbf24'); rect(ctx, 11, 1, 2, 1, '#fbbf24');
+      // Torch (right side)
+      rect(ctx, 17, 10, 2, 10, '#795548');
+      rect(ctx, 16, 7, 4, 4, '#fbbf24');
+      rect(ctx, 17, 6, 2, 3, '#ef4444');
+      break;
+    case 'aqua_sage':
+      // Water hat (wide brim)
+      rect(ctx, 4, 0, 12, 2, d);
+      rect(ctx, 6, 1, 8, 1, m);
+      // Trident (right)
+      rect(ctx, 17, 6, 2, 14, '#546e7a');
+      px(ctx, 16, 5, m); px(ctx, 17, 4, m); px(ctx, 18, 4, m); px(ctx, 19, 5, m);
+      break;
+    case 'storm_runner':
+      // Spiky electric hair
+      px(ctx, 7, 0, '#facc15'); px(ctx, 10, 0, '#facc15'); px(ctx, 13, 0, '#facc15');
+      rect(ctx, 8, 1, 2, 1, '#facc15'); rect(ctx, 11, 1, 2, 1, '#facc15');
+      // Electric lance (right)
+      rect(ctx, 17, 8, 2, 12, '#facc15');
+      rect(ctx, 16, 6, 4, 3, m);
+      break;
+    case 'void_walker':
+      // Hood
+      rect(ctx, 5, 0, 10, 3, d);
+      rect(ctx, 4, 1, 12, 2, d);
+      // Shadow blade (right)
+      rect(ctx, 17, 8, 2, 12, '#1a1a2e');
+      rect(ctx, 16, 7, 4, 2, d);
+      px(ctx, 17, 9, '#a855f7'); px(ctx, 18, 11, '#a855f7');
+      break;
+    case 'beast_tamer':
+      // Animal ears / headband
+      rect(ctx, 6, 0, 8, 2, d);
+      px(ctx, 5, 1, m); px(ctx, 14, 1, m);
+      rect(ctx, 5, 2, 2, 2, m); rect(ctx, 13, 2, 2, 2, m);
+      // Whip (right)
+      rect(ctx, 16, 10, 3, 1, '#5d4037');
+      rect(ctx, 17, 11, 2, 1, '#5d4037');
+      rect(ctx, 18, 12, 2, 1, '#5d4037');
+      rect(ctx, 17, 13, 3, 1, '#5d4037');
+      break;
+    case 'firefighter':
+      // Helmet
+      rect(ctx, 4, 0, 12, 3, d);
+      rect(ctx, 5, 1, 10, 2, m);
+      rect(ctx, 5, 3, 10, 1, '#fbbf24');  // visor band
+      // Fire axe (right)
+      rect(ctx, 17, 9, 2, 12, '#616161');
+      rect(ctx, 15, 7, 4, 4, d);
+      rect(ctx, 15, 7, 2, 4, '#9e9e9e');
+      break;
+  }
+
+  return c;
+}
+
+// ─── Leech Enemy Sprite ───────────────────────────────────────────────────────
+
+function generateLeechSprite(): HTMLCanvasElement {
+  const c = createCanvas(16, 16);
+  const ctx = c.getContext('2d')!;
+  const mid = '#a855f7';
+  const dark = '#7e22ce';
+  const light = '#d8b4fe';
+
+  // Worm body (oval)
+  rect(ctx, 2, 5, 12, 7, mid);
+  rect(ctx, 1, 6, 14, 5, mid);
+  // Rings along body
+  rect(ctx, 4, 5, 1, 7, dark);
+  rect(ctx, 7, 5, 1, 7, dark);
+  rect(ctx, 10, 5, 1, 7, dark);
+  // Sucker mouth at left
+  rect(ctx, 0, 6, 3, 5, dark);
+  rect(ctx, 1, 7, 2, 3, light);
+  px(ctx, 1, 8, '#ffffff');
+  // Tail at right
+  rect(ctx, 13, 7, 2, 3, dark);
+  // Eyes on top of body
+  px(ctx, 5, 5, '#ff0000');
+  px(ctx, 8, 5, '#ff0000');
+
+  return c;
+}
+
 /** Simple seeded PRNG for deterministic background */
 function seedRandom(seed: number): () => number {
   let s = seed;
@@ -1287,6 +1462,15 @@ export function generateAllSprites(): SpriteSheet {
   // Background
   const background = generateBackground();
 
-  cachedSprites = { playerShips, enemies, items, projectiles, ui, background };
+  // Characters
+  const characters = new Map<string, HTMLCanvasElement>();
+  for (const id of CHARACTER_IDS) {
+    characters.set(id, generateCharacterSprite(id));
+  }
+
+  // Leech enemy
+  enemies.set('leech', generateLeechSprite());
+
+  cachedSprites = { playerShips, enemies, items, projectiles, ui, background, characters };
   return cachedSprites;
 }

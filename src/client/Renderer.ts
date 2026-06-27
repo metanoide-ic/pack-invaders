@@ -209,6 +209,10 @@ export class Renderer {
       case 'CODEX': this.renderCodex(); break;
       case 'TWITCH_VOTE': this.renderTwitchVote(dt); break;
       case 'SETTINGS': this.renderSettings(); break;
+      case 'EXTRA_MODES': this.renderExtraModes(); break;
+      case 'COOP': this.renderCombat(dt); break;
+      case 'VERSUS_SHIPS': this.renderVersusShips(dt); break;
+      case 'VERSUS_PVP': this.renderVersusPvp(dt); break;
     }
 
     this.updateAndRenderParticles(dt);
@@ -399,7 +403,7 @@ export class Renderer {
     ctx.fillText('Mochila  ◆  Roguelike  ◆  Arcade', titleX, Math.floor(L.h * 0.215));
 
     // ─── Menu buttons ────────────────────────────────────────────────────
-    const menuItems = ['JOGAR', 'ARQUIVO', 'CONQUISTAS', 'MISSÕES', 'CONTROLES', 'OPÇÕES', 'CRÉDITOS', 'SAIR'];
+    const menuItems = ['JOGAR', 'MODOS EXTRAS', 'ARQUIVO', 'CONQUISTAS', 'MISSÕES', 'CONTROLES', 'OPÇÕES', 'CRÉDITOS', 'SAIR'];
     const btnW = Math.floor(panelW * 0.8);
     const btnH = Math.floor(L.h * 0.05);
     const btnX = titleX;
@@ -2436,6 +2440,25 @@ export class Renderer {
       ctx.fill();
     }
 
+    // ── Player 2 (COOP) ──────────────────────────────────────────────────────
+    if (state.player2Active && state.player2X !== undefined) {
+      const p2Ship = this.sprites.playerShips[1]; // different color ship
+      if (p2Ship) {
+        ctx.save();
+        ctx.translate(state.player2X, canvas.height - 29);
+        ctx.drawImage(p2Ship, -16, -16);
+        ctx.restore();
+      }
+      // P2 thruster glow
+      ctx.save();
+      ctx.fillStyle = '#ef4444';
+      ctx.globalAlpha = 0.6;
+      ctx.ellipse(state.player2X, canvas.height - 22, 8, 12 + Math.sin(performance.now() * 0.02) * 3, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     // Render floating texts (damage numbers, gold)
     for (const ft of state.floatingTexts) {
       const alpha = ft.life / ft.maxLife;
@@ -2958,6 +2981,31 @@ export class Renderer {
       ctx.fillText('ALIENCORE', canvas.width - Math.floor(L.w * 0.12), Math.floor(hudH * 0.76) - Math.floor(L.h * 0.014));
     }
     ctx.textAlign = 'left';
+
+    // ── P2 HP bar (COOP mode) ────────────────────────────────────────────
+    if (state.player2Active && state.player2Hp !== undefined && state.player2MaxHp !== undefined) {
+      const p2BarW = Math.floor(L.w * 0.12);
+      const p2BarH = Math.floor(hudH * 0.32);
+      const p2BarX = canvas.width - Math.floor(L.w * 0.01) - p2BarW;
+      const p2BarY = Math.floor(hudH * 0.55);
+      const p2Pct = Math.max(0, state.player2Hp / state.player2MaxHp);
+      const p2Color = p2Pct > 0.5 ? '#ef4444' : p2Pct > 0.25 ? '#f59e0b' : '#b91c1c';
+      ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = '#4b5563';
+      ctx.textAlign = 'right';
+      ctx.fillText('P2 ♥', p2BarX + p2BarW, p2BarY - 2);
+      ctx.fillStyle = '#111827';
+      ctx.fillRect(p2BarX, p2BarY, p2BarW, p2BarH);
+      ctx.fillStyle = p2Color;
+      ctx.fillRect(p2BarX + 1, p2BarY + 1, Math.floor((p2BarW - 2) * p2Pct), p2BarH - 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.18)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(p2BarX, p2BarY, p2BarW, p2BarH);
+      ctx.font = `${Math.floor(p2BarH * 0.6)}px monospace`;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(`${Math.ceil(state.player2Hp)}/${state.player2MaxHp}`, p2BarX + p2BarW - 2, p2BarY + p2BarH - 2);
+      ctx.textAlign = 'left';
+    }
 
     // ── Boss warning ─────────────────────────────────────────────────────
     if (state.bossWarningTimer > 0) {
@@ -5065,6 +5113,150 @@ export class Renderer {
     ctx.fillStyle = '#64748b';
     ctx.fillText('Clique ou pressione qualquer tecla para continuar', L.cx, Math.floor(L.h * 0.85));
     ctx.globalAlpha = 1;
+    ctx.textAlign = 'left';
+  }
+
+  // ─── Extra Modes ─────────────────────────────────────────────────────────────
+
+  private renderExtraModes(): void {
+    const { ctx, canvas, game } = this;
+    const L = this.getLayout();
+
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Title
+    ctx.font = `bold ${Math.floor(L.h * 0.045)}px monospace`;
+    ctx.fillStyle = '#fbbf24';
+    ctx.textAlign = 'center';
+    ctx.fillText('MODOS EXTRAS', L.cx, Math.floor(L.h * 0.1));
+
+    ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('Escolha o modo de jogo', L.cx, Math.floor(L.h * 0.16));
+
+    const modes = [
+      {
+        id: 'COOP',
+        title: 'CO-OP',
+        icon: '👥',
+        desc: ['2 jogadores local', 'Compartilham a arena', 'P2 usa setas do teclado'],
+        color: '#4ade80',
+        available: true,
+      },
+      {
+        id: 'VERSUS_SHIPS',
+        title: 'VERSUS NAVES',
+        icon: '🚀',
+        desc: ['Duas naves batalham', '+ ondas de inimigos', 'Tela dividida'],
+        color: '#38bdf8',
+        available: false,
+      },
+      {
+        id: 'VERSUS_PVP',
+        title: 'PVP PURO',
+        icon: '⚔',
+        desc: ['Combate direto', 'Sem inimigos', 'Primeiro a 0 HP perde'],
+        color: '#f97316',
+        available: false,
+      },
+    ];
+
+    const cardW = Math.floor(L.w * 0.24);
+    const cardH = Math.floor(L.h * 0.52);
+    const totalW = cardW * 3 + Math.floor(L.w * 0.04) * 2;
+    const startX = L.cx - Math.floor(totalW / 2);
+    const cardY = Math.floor(L.h * 0.22);
+    const gap = Math.floor(L.w * 0.04);
+
+    for (let i = 0; i < modes.length; i++) {
+      const mode = modes[i];
+      const cx = startX + i * (cardW + gap);
+      const isHover = this.mouseX >= cx && this.mouseX <= cx + cardW &&
+                      this.mouseY >= cardY && this.mouseY <= cardY + cardH;
+
+      // Card background
+      ctx.fillStyle = isHover && mode.available ? `${mode.color}22` : 'rgba(10,10,30,0.9)';
+      ctx.fillRect(cx, cardY, cardW, cardH);
+      // Card border
+      ctx.strokeStyle = isHover && mode.available ? mode.color : (mode.available ? `${mode.color}66` : '#374151');
+      ctx.lineWidth = 2;
+      ctx.strokeRect(cx, cardY, cardW, cardH);
+
+      // Icon
+      ctx.font = `${Math.floor(L.h * 0.07)}px monospace`;
+      ctx.fillStyle = mode.available ? mode.color : '#374151';
+      ctx.textAlign = 'center';
+      ctx.fillText(mode.icon, cx + cardW / 2, cardY + Math.floor(cardH * 0.22));
+
+      // Title
+      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
+      ctx.fillStyle = mode.available ? '#e2e8f0' : '#4b5563';
+      ctx.fillText(mode.title, cx + cardW / 2, cardY + Math.floor(cardH * 0.38));
+
+      // Description lines
+      ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
+      ctx.fillStyle = mode.available ? '#94a3b8' : '#374151';
+      for (let j = 0; j < mode.desc.length; j++) {
+        ctx.fillText(mode.desc[j], cx + cardW / 2, cardY + Math.floor(cardH * 0.50) + j * Math.floor(L.h * 0.04));
+      }
+
+      // Play button or "Em Breve"
+      const btnY = cardY + Math.floor(cardH * 0.80);
+      const btnH = Math.floor(L.h * 0.045);
+      const btnX = cx + Math.floor(cardW * 0.1);
+      const btnW = Math.floor(cardW * 0.8);
+
+      if (mode.available) {
+        ctx.fillStyle = isHover ? mode.color : `${mode.color}88`;
+        ctx.fillRect(btnX, btnY, btnW, btnH);
+        ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+        ctx.fillStyle = '#000000';
+        ctx.fillText('JOGAR', cx + cardW / 2, btnY + btnH * 0.65);
+      } else {
+        ctx.fillStyle = '#1f2937';
+        ctx.fillRect(btnX, btnY, btnW, btnH);
+        ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
+        ctx.fillStyle = '#4b5563';
+        ctx.fillText('EM BREVE', cx + cardW / 2, btnY + btnH * 0.65);
+      }
+    }
+
+    // Back button
+    const backY = Math.floor(L.h * 0.88);
+    ctx.font = `${Math.floor(L.h * 0.016)}px monospace`;
+    ctx.fillStyle = '#6366f1';
+    ctx.fillText('← VOLTAR', L.cx, backY);
+    ctx.textAlign = 'left';
+  }
+
+  private renderVersusShips(_dt: number): void {
+    const { ctx, canvas } = this;
+    const L = this.getLayout();
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
+    ctx.fillStyle = '#38bdf8';
+    ctx.textAlign = 'center';
+    ctx.fillText('VERSUS NAVES', L.cx, L.cy - 20);
+    ctx.font = `${Math.floor(L.h * 0.02)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('Em breve...', L.cx, L.cy + 30);
+    ctx.textAlign = 'left';
+  }
+
+  private renderVersusPvp(_dt: number): void {
+    const { ctx, canvas } = this;
+    const L = this.getLayout();
+    ctx.fillStyle = '#050510';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
+    ctx.fillStyle = '#f97316';
+    ctx.textAlign = 'center';
+    ctx.fillText('PVP PURO', L.cx, L.cy - 20);
+    ctx.font = `${Math.floor(L.h * 0.02)}px monospace`;
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('Em breve...', L.cx, L.cy + 30);
     ctx.textAlign = 'left';
   }
 }

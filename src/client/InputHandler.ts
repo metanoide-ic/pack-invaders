@@ -112,7 +112,7 @@ export class InputHandler {
       }
       // Main Menu: arrow keys for selection, Enter to confirm
       if (this.game.phase === 'MAIN_MENU') {
-        const menuCount = 8;
+        const menuCount = 9;
         if (e.key === 'ArrowUp') {
           (this.renderer as any)._menuSelectedIdx = Math.max(0, ((this.renderer as any)._menuSelectedIdx ?? 0) - 1);
           this.audio.buttonClick();
@@ -126,14 +126,21 @@ export class InputHandler {
           this.audio.buttonClick();
           switch (idx) {
             case 0: this.game.phase = 'SAVE_SELECT'; break;
-            case 1: this.game.openCodex(); break;
-            case 2: this.game.phase = 'ACHIEVEMENTS'; break;
-            case 3: this.game.phase = 'MISSIONS'; break;
-            case 4: this.game.showControlsOverlay = true; break;
-            case 5: this.game.openSettings('MAIN_MENU'); break;
-            case 6: this.game.phase = 'CREDITS'; break;
-            case 7: window.close(); break;
+            case 1: this.game.enterExtraModes(); break;
+            case 2: this.game.openCodex(); break;
+            case 3: this.game.phase = 'ACHIEVEMENTS'; break;
+            case 4: this.game.phase = 'MISSIONS'; break;
+            case 5: this.game.showControlsOverlay = true; break;
+            case 6: this.game.openSettings('MAIN_MENU'); break;
+            case 7: this.game.phase = 'CREDITS'; break;
+            case 8: window.close(); break;
           }
+        }
+      }
+      if (this.game.phase === 'EXTRA_MODES') {
+        if (e.key === 'Escape') {
+          this.game.phase = 'MAIN_MENU';
+          this.audio.buttonClick();
         }
       }
       if (this.game.phase === 'CODEX') {
@@ -177,13 +184,13 @@ export class InputHandler {
         } else if (this.game.phase === 'SAVE_SELECT') {
           this.game.phase = 'MAIN_MENU';
           this.audio.buttonClick();
-        } else if (this.game.phase === 'CREDITS' || this.game.phase === 'ACHIEVEMENTS' || this.game.phase === 'MISSIONS') {
+        } else if (this.game.phase === 'CREDITS' || this.game.phase === 'ACHIEVEMENTS' || this.game.phase === 'MISSIONS' || this.game.phase === 'EXTRA_MODES') {
           this.game.phase = 'MAIN_MENU';
           this.audio.buttonClick();
         } else if (this.game.phase === 'GAME_OVER' || this.game.phase === 'VICTORY') {
           this.game.phase = 'MAIN_MENU';
           this.audio.buttonClick();
-        } else if (this.game.phase === 'COMBAT' || this.game.phase === 'INVENTORY') {
+        } else if (this.game.phase === 'COMBAT' || this.game.phase === 'COOP' || this.game.phase === 'INVENTORY') {
           togglePause();
         } else if (this.game.phase === 'TITLE' && this.twitchInputActive) {
           this.twitchInputActive = false;
@@ -218,9 +225,37 @@ export class InputHandler {
   /** Get current player movement direction: -1, 0, or 1 */
   getPlayerDir(): number {
     let dir = 0;
-    if (this.keysDown.has('a') || this.keysDown.has('arrowleft')) dir -= 1;
-    if (this.keysDown.has('d') || this.keysDown.has('arrowright')) dir += 1;
+    const isCoopP2Active = this.game.phase === 'COOP' && this.game.combat.state.player2Active;
+    // In COOP mode P1 uses only A/D; otherwise A/D and arrow keys work for P1
+    if (isCoopP2Active) {
+      if (this.keysDown.has('a')) dir -= 1;
+      if (this.keysDown.has('d')) dir += 1;
+    } else {
+      if (this.keysDown.has('a') || this.keysDown.has('arrowleft')) dir -= 1;
+      if (this.keysDown.has('d') || this.keysDown.has('arrowright')) dir += 1;
+    }
     return dir;
+  }
+
+  /** Get P2 movement direction in COOP mode */
+  getP2Dir(): number {
+    if (!(this.game.phase === 'COOP' && this.game.combat.state.player2Active)) return 0;
+    let dir = 0;
+    if (this.keysDown.has('arrowleft')) dir -= 1;
+    if (this.keysDown.has('arrowright')) dir += 1;
+    return dir;
+  }
+
+  /** Check if P2 dash (ArrowUp) was pressed */
+  private p2DashPressed = false;
+  checkP2Dash(): boolean {
+    const upDown = this.keysDown.has('arrowup');
+    if (upDown && !this.p2DashPressed) {
+      this.p2DashPressed = true;
+      return true;
+    }
+    if (!upDown) this.p2DashPressed = false;
+    return false;
   }
 
   /** Check if dash was pressed this frame */
@@ -339,6 +374,9 @@ export class InputHandler {
       case 'SETTINGS':
         this.handleSettingsClick(pos);
         break;
+      case 'EXTRA_MODES':
+        this.handleExtraModesClick(pos);
+        break;
       case 'TWITCH_VOTE':
         // Vote is handled by timer, no click needed
         break;
@@ -425,21 +463,57 @@ export class InputHandler {
     const startY = Math.floor(L.h * 0.30);
     const gap = Math.floor(L.h * 0.065);
 
-    const menuItems = 8;
+    const menuItems = 9;
     for (let i = 0; i < menuItems; i++) {
       const y = startY + i * gap;
       if (pos.x >= btnX && pos.x <= btnX + btnW && pos.y >= y && pos.y <= y + btnH) {
         this.audio.buttonClick();
         switch (i) {
           case 0: this.game.phase = 'SAVE_SELECT'; break;
-          case 1: this.game.openCodex(); break;
-          case 2: this.game.phase = 'ACHIEVEMENTS'; break;
-          case 3: this.game.phase = 'MISSIONS'; break;
-          case 4: this.game.showControlsOverlay = true; break;
-          case 5: this.game.openSettings('MAIN_MENU'); break;
-          case 6: this.game.phase = 'CREDITS'; break;
-          case 7: window.close(); break;
+          case 1: this.game.enterExtraModes(); break;
+          case 2: this.game.openCodex(); break;
+          case 3: this.game.phase = 'ACHIEVEMENTS'; break;
+          case 4: this.game.phase = 'MISSIONS'; break;
+          case 5: this.game.showControlsOverlay = true; break;
+          case 6: this.game.openSettings('MAIN_MENU'); break;
+          case 7: this.game.phase = 'CREDITS'; break;
+          case 8: window.close(); break;
         }
+        return;
+      }
+    }
+  }
+
+  // ─── Extra Modes Phase ────────────────────────────────────────────────────
+
+  private handleExtraModesClick(pos: { x: number; y: number }): void {
+    const L = this.renderer.getLayout();
+
+    // Back button
+    const backY = Math.floor(L.h * 0.88);
+    const btnH = Math.floor(L.h * 0.03);
+    if (pos.y >= backY - btnH && pos.y <= backY + btnH) {
+      this.audio.buttonClick();
+      this.game.phase = 'MAIN_MENU';
+      return;
+    }
+
+    // Mode cards — same layout as renderExtraModes
+    const cardW = Math.floor(L.w * 0.24);
+    const cardH = Math.floor(L.h * 0.52);
+    const totalW = cardW * 3 + Math.floor(L.w * 0.04) * 2;
+    const startX = L.cx - Math.floor(totalW / 2);
+    const cardY = Math.floor(L.h * 0.22);
+    const gap = Math.floor(L.w * 0.04);
+    const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP'] as const;
+    const available = [true, false, false];
+
+    for (let i = 0; i < modes.length; i++) {
+      if (!available[i]) continue;
+      const cx = startX + i * (cardW + gap);
+      if (pos.x >= cx && pos.x <= cx + cardW && pos.y >= cardY && pos.y <= cardY + cardH) {
+        this.audio.buttonClick();
+        this.game.phase = modes[i];
         return;
       }
     }
