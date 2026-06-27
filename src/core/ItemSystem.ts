@@ -15,7 +15,7 @@ export type Tag =
   | 'Arma' | 'Emissor' | 'Fogo' | 'Água' | 'Orgânico' | 'Animal'
   | 'Modificador' | 'ModFrequência' | 'Utilitário' | 'Pet'
   | 'Vento' | 'Elétrico' | 'Veneno' | 'Gelo' | 'Planta'
-  | 'Escudo' | 'Cura' | 'AoE' | 'Perfurante' | 'Explosivo';
+  | 'Escudo' | 'Cura' | 'AoE' | 'Perfurante' | 'Explosivo' | 'Guiado';
 
 export interface ItemStats {
   damage: number;

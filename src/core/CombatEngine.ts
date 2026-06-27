@@ -154,6 +154,8 @@ export interface CombatState {
   bossPhaseTransitionTimer: number;
   /** Timer for drain warning indicator */
   drainWarningTimer: number;
+  /** Player movement slow timer (from slow_on_hit enemies) */
+  playerSlowTimer: number;
   // Co-op Player 2 state
   player2Active?: boolean;
   player2X?: number;
@@ -224,6 +226,7 @@ export class CombatEngine {
       damageTakenThisWave: 0,
       bossPhaseTransitionTimer: 0,
       drainWarningTimer: 0,
+      playerSlowTimer: 0,
     };
   }
 
@@ -301,6 +304,7 @@ export class CombatEngine {
     this.state.playerFlashTimer = Math.max(0, this.state.playerFlashTimer - dt);
     this.state.bossPhaseTransitionTimer = Math.max(0, this.state.bossPhaseTransitionTimer - dt);
     this.state.drainWarningTimer = Math.max(0, this.state.drainWarningTimer - dt);
+    this.state.playerSlowTimer = Math.max(0, this.state.playerSlowTimer - dt);
 
     // Combo timer
     if (this.state.combo > 0) {
@@ -388,7 +392,8 @@ export class CombatEngine {
     if (this.dashActive > 0) this.dashActive -= dt;
 
     // Smooth acceleration/deceleration
-    const maxSpeed = this.playerSpeed * (this.dashActive > 0 ? 2.5 : 1);
+    const slowPenalty = this.state.playerSlowTimer > 0 ? 0.5 : 1;
+    const maxSpeed = this.playerSpeed * (this.dashActive > 0 ? 2.5 : 1) * slowPenalty;
     const accel = 2000; // pixels/s²
     const decel = 1800; // friction when not pressing
 
@@ -530,8 +535,8 @@ export class CombatEngine {
       p.trail.push({ x: p.x, y: p.y });
       if (p.trail.length > 3) p.trail.shift();
 
-      // Homing behavior
-      if (this._homingActive) {
+      // Homing behavior: activated globally or per-projectile (Guiado tag from missile launcher)
+      if (this._homingActive || p.tags.includes('Guiado')) {
         let nearest: Enemy | null = null;
         let nearDist = Infinity;
         for (const e of this.state.enemies) {
@@ -906,6 +911,13 @@ export class CombatEngine {
       return;
     }
 
+    // Void Walker passive: 12% chance to go intangible and ignore damage
+    if (this.backpack.config.characterId === 'void_walker' && Math.random() < 0.12) {
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 65, 'INTANGÍVEL!', '#a78bfa');
+      this.triggerShake(2, 0.1);
+      return;
+    }
+
     // Firefighter (Fênix): -25% damage taken while above 50% HP (guardian armor)
     if (this.backpack.config.characterId === 'firefighter') {
       if (this.state.playerHp > this.state.playerMaxHp * 0.5) {
@@ -1072,11 +1084,10 @@ export class CombatEngine {
             e.slowAmount = Math.min(e.slowAmount ?? 1, 0.3); // near freeze
           }
 
-          // slow_on_hit special: this enemy slows projectiles/other enemies on hit
+          // slow_on_hit: hitting this enemy triggers a retaliation slow on the player
           if (e.special?.type === 'slow_on_hit') {
-            // Slow the player (reduce player speed temporarily by applying a debuff)
-            // For now we'll just note it as a slow on the floating text
-            this.spawnFloatingText(e.x, e.y - e.height / 2, 'SLOW', '#67e8f9');
+            this.state.playerSlowTimer = Math.max(this.state.playerSlowTimer, e.special.duration);
+            this.spawnFloatingText(this.state.playerX, this.arenaHeight - 70, 'LENTO!', '#67e8f9');
           }
 
           // Floating damage number
@@ -1216,10 +1227,14 @@ export class CombatEngine {
     }
 
     // Combo streak messages
-    if (this.state.combo === 5) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'FRENESI!', '#f97316');
+    if (this.state.combo === 5)  this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'FRENESI!', '#f97316');
     if (this.state.combo === 10) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'IMPARÁVEL!', '#ef4444');
     if (this.state.combo === 15) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'DEVASTADOR!', '#a855f7');
     if (this.state.combo === 25) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'GENOCÍDIO!', '#fbbf24');
+    if (this.state.combo === 35) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, 'EXTERMINADOR!', '#f97316');
+    if (this.state.combo === 50) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '★ LENDÁRIO! ★', '#fbbf24');
+    if (this.state.combo === 75) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '⚡ CALAMIDADE! ⚡', '#facc15');
+    if (this.state.combo === 100) this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '☠ APOCALIPSE! ☠', '#ef4444');
 
     this.state.enemies.splice(index, 1);
   }
@@ -1287,11 +1302,13 @@ export class CombatEngine {
       case 'fire_lord':
         this.state.playerHp -= 1 * dt;
         break;
-      case 'aqua_sage':
-        this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + 2 * dt);
+      case 'aqua_sage': {
+        const regenRate = this.state.playerHp / this.state.playerMaxHp < 0.5 ? 4 : 2;
+        this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + regenRate * dt);
         break;
+      }
       case 'void_walker':
-        this.state.playerHp -= 3 * dt;
+        this.state.playerHp -= 1.5 * dt;
         break;
     }
 
@@ -1544,6 +1561,10 @@ export class CombatEngine {
         crit += item.state.critChance;
       }
     }
+    // Void Walker passive: +20% crit chance
+    if (this.backpack.config.characterId === 'void_walker') crit += 0.20;
+    // Wave event crit bonus
+    crit += (this as any)._waveEventCritBonus ?? 0;
     return Math.min(0.8, crit); // Cap at 80%
   }
 
@@ -1571,7 +1592,7 @@ export class CombatEngine {
     } else if (year === 2) {
       count = 18 + monthInYear * 1.5; // 19-36
     } else {
-      count = Math.min(50, 30 + (year - 2) * 5 + monthInYear); // 36+
+      count = Math.min(80, 28 + (year - 2) * 10 + monthInYear * 1.5); // Year 3+: scales aggressively
     }
     count = Math.floor(count);
 
@@ -1659,7 +1680,8 @@ export class CombatEngine {
       const boss = getBossForWave(totalMonths);
       const bossSource = boss || getBossForWave(5)!; // fallback to first boss
       if (bossSource) {
-        const bossHp = 250 + totalMonths * 50 + (year - 1) * 200;
+        // Exponential HP scaling: each year multiplies base by ~1.4x
+        const bossHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
         enemies.push({
           id: `enemy_${this.nextEnemyId++}`,
           x: this.arenaWidth / 2,

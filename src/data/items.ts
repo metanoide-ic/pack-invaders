@@ -26,13 +26,14 @@ function weaponTick(item: PlacedItem, dt: number, emit: EmitProjectile, opts?: {
       const rad = angle * Math.PI / 180;
       const vx = Math.sin(rad) * item.stats.projectileSpeed;
       const vy = -Math.cos(rad) * item.stats.projectileSpeed;
+      const extraTags = opts?.homing ? ['Guiado' as const] : [];
       emit({
         x: 400, y: 500,
         vx, vy,
         damage: item.stats.damage * item.stats.damageMultiplier,
         piercing: item.state.piercingBonus ?? 0,
         aoeRadius: item.stats.aoeRadius,
-        tags: [...item.definition.tags],
+        tags: [...item.definition.tags, ...extraTags],
         ownerId: item.instanceId,
       });
     }
