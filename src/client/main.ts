@@ -240,12 +240,16 @@ function gameLoop(): void {
         audio.waveComplete();
       }
       game.endCombat();
+      const phaseAfterCombat = game.phase as GamePhase;
       // Show achievement notifications
       if (game.newAchievements.length > 0) {
         for (const achName of game.newAchievements) {
           renderer.showAchievementNotif(achName);
         }
-        game.newAchievements = [];
+        // Don't clear on GAME_OVER/VICTORY — renderGameOver() needs them for static panel
+        if (phaseAfterCombat !== 'GAME_OVER' && phaseAfterCombat !== 'VICTORY') {
+          game.newAchievements = [];
+        }
       }
     }
   }

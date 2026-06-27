@@ -593,11 +593,11 @@ export class InputHandler {
 
   private handleCreditsClick(pos: { x: number; y: number }): void {
     const L = this.renderer.getLayout();
-    // Back button
+    // Back button — must match Renderer: L.h * 0.92
     const backBtnW = Math.floor(L.w * 0.12);
     const backBtnH = Math.floor(L.h * 0.05);
     const backBtnX = L.cx - backBtnW / 2;
-    const backBtnY = Math.floor(L.h * 0.8);
+    const backBtnY = Math.floor(L.h * 0.92);
     if (pos.x >= backBtnX && pos.x <= backBtnX + backBtnW &&
         pos.y >= backBtnY && pos.y <= backBtnY + backBtnH) {
       this.audio.buttonClick();
@@ -866,13 +866,16 @@ export class InputHandler {
 
   private handleCardClick(pos: { x: number; y: number }): void {
     const L = this.renderer.getLayout();
-    const cardW = Math.floor(L.w * 0.18);
-    const cardH = Math.floor(L.h * 0.52);
-    const gap = Math.floor(L.w * 0.03);
-    const startX = (L.w - 3 * cardW - 2 * gap) / 2;
-    const cardTopY = Math.floor(L.h * 0.16);
+    // Card geometry must match Renderer.renderCards exactly
+    const cardCount = this.game.cardChoices.length;
+    const cardW = Math.floor(L.w * 0.22);
+    const cardH = Math.floor(L.h * 0.67);
+    const gap = Math.floor(L.w * 0.035);
+    const totalW = cardCount * cardW + (cardCount - 1) * gap;
+    const startX = Math.floor((L.w - totalW) / 2);
+    const cardTopY = Math.floor(L.h * 0.135);
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < cardCount; i++) {
       const cx = startX + i * (cardW + gap);
       if (pos.x >= cx && pos.x <= cx + cardW && pos.y >= cardTopY && pos.y <= cardTopY + cardH) {
         this.audio.cardSelect();
@@ -882,11 +885,24 @@ export class InputHandler {
       }
     }
 
-    // Reroll button
-    const rerollBtnW = Math.floor(L.w * 0.14);
-    const rerollBtnH = Math.floor(L.h * 0.04);
+    // Skip button — must match Renderer bottomY = Math.floor(L.h * 0.855)
+    const bottomY = Math.floor(L.h * 0.855);
+    const skipBtnW = Math.floor(L.w * 0.14);
+    const skipBtnH = Math.floor(L.h * 0.052);
+    const skipBtnX = L.cx - skipBtnW / 2;
+    if (pos.x > skipBtnX && pos.x < skipBtnX + skipBtnW &&
+        pos.y > bottomY && pos.y < bottomY + skipBtnH) {
+      this.audio.buttonClick();
+      this.game.skipCards();
+      this.shopItemsCached = false;
+      return;
+    }
+
+    // Reroll button — rendered just below skip
+    const rerollBtnW = Math.floor(L.w * 0.15);
+    const rerollBtnH = Math.floor(L.h * 0.042);
     const rerollBtnX = L.cx - rerollBtnW / 2;
-    const rerollBtnY = Math.floor(L.h * 0.84);
+    const rerollBtnY = bottomY + skipBtnH + Math.floor(L.h * 0.012);
     if (pos.x >= rerollBtnX && pos.x <= rerollBtnX + rerollBtnW &&
         pos.y >= rerollBtnY && pos.y <= rerollBtnY + rerollBtnH) {
       if (this.game.gold >= this.game.getRerollCost()) {
@@ -895,18 +911,6 @@ export class InputHandler {
         this.audio.buy();
       }
       return;
-    }
-
-    // Skip button
-    const skipBtnW = Math.floor(L.w * 0.14);
-    const skipBtnH = Math.floor(L.h * 0.05);
-    const skipBtnX = L.cx - skipBtnW / 2;
-    const skipBtnY = Math.floor(L.h * 0.78);
-    if (pos.x > skipBtnX && pos.x < skipBtnX + skipBtnW &&
-        pos.y > skipBtnY && pos.y < skipBtnY + skipBtnH) {
-      this.audio.buttonClick();
-      this.game.skipCards();
-      this.shopItemsCached = false;
     }
   }
 

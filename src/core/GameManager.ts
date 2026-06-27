@@ -149,6 +149,8 @@ export class GameManager {
   currentWaveEvent: WaveEvent | null = null;
   /** Relic dropped this wave (shown on card screen) */
   pendingRelic: Relic | null = null;
+  /** Newly unlocked difficulty ID (shown on game over screen) */
+  newlyUnlockedDifficulty: string | null = null;
 
   constructor(characterId: string = 'grass_man') {
     this.characterId = characterId;
@@ -200,6 +202,8 @@ export class GameManager {
     this.year = 1;
     this.totalMonths = 0;
     this.wave = 0;
+    this.newAchievements = [];
+    this.newlyUnlockedDifficulty = null;
 
     // Give player the starting items — scan for first valid position
     for (const itemId of charDef.startingItems) {
@@ -505,7 +509,8 @@ export class GameManager {
 
       // Unlock next difficulty at month 48
       if (this.totalMonths >= 48) {
-        unlockNextDifficulty(this.currentDifficulty);
+        const unlocked = unlockNextDifficulty(this.currentDifficulty);
+        if (unlocked) this.newlyUnlockedDifficulty = unlocked;
       }
 
       // Add to leaderboard

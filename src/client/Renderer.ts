@@ -4189,10 +4189,27 @@ export class Renderer {
       }
     }
 
+    // Newly unlocked difficulty notification
+    if (game.newlyUnlockedDifficulty) {
+      const diffUnlocked = getDifficultyById(game.newlyUnlockedDifficulty);
+      const unlockY = panelY + panelH + Math.floor(L.h * 0.125);
+      const unlockW = Math.floor(L.w * 0.38);
+      const unlockH = Math.floor(L.h * 0.04);
+      ctx.fillStyle = 'rgba(251,191,36,0.15)';
+      ctx.fillRect(L.cx - unlockW / 2, unlockY - Math.floor(unlockH * 0.75), unlockW, unlockH);
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(L.cx - unlockW / 2, unlockY - Math.floor(unlockH * 0.75), unlockW, unlockH);
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText(`🔓 DIFICULDADE DESBLOQUEADA: ${diffUnlocked.icon} ${diffUnlocked.name.toUpperCase()}`, L.cx, unlockY);
+    }
+
     // Meta gold bonus hint
     const metaBonus = getMetaGoldBonus();
     if (metaBonus > 0) {
-      const bonusY = panelY + panelH + Math.floor(L.h * 0.135);
+      const bonusY = panelY + panelH + Math.floor(L.h * 0.175);
       ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
       ctx.fillStyle = '#fbbf24';
       ctx.textAlign = 'center';
