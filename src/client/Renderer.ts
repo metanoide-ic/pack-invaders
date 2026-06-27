@@ -12,7 +12,7 @@ import { InputHandler } from './InputHandler';
 import { Enemy } from '../core/CombatEngine';
 import { SaveManager } from '../core/SaveManager';
 import { ALL_ACHIEVEMENTS, getUnlockedAchievements, getGlobalStats } from '../data/achievements';
-import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus } from '../data/missions';
+import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus, getClaimableMissionCount } from '../data/missions';
 import { getDifficultyById } from '../data/difficulties';
 import { getLeaderboard } from '../data/leaderboard';
 import { renderPlanet } from './PlanetRenderer';
@@ -409,6 +409,7 @@ export class Renderer {
     const btnX = titleX;
     const startY = Math.floor(L.h * 0.30);
     const gap = Math.floor(L.h * 0.065);
+    const claimableCount = getClaimableMissionCount();
 
     for (let i = 0; i < menuItems.length; i++) {
       const y = startY + i * gap;
@@ -428,6 +429,28 @@ export class Renderer {
       ctx.fillStyle = i === 0 ? '#fbbf24' : isActive ? '#e2e8f0' : '#94a3b8';
       ctx.textAlign = 'left';
       ctx.fillText(menuItems[i], btnX + 8, y + btnH * 0.65);
+
+      // Badge for claimable missions on the MISSÕES item
+      if (menuItems[i] === 'MISSÕES' && claimableCount > 0) {
+        const textW = ctx.measureText(menuItems[i]).width;
+        const badgeX = btnX + 8 + textW + 8;
+        const badgeY = y + btnH * 0.5;
+        const badgeR = Math.floor(L.h * 0.012);
+        const pulse = 0.7 + Math.sin(this.titlePulse * 3) * 0.3;
+        ctx.save();
+        ctx.globalAlpha = pulse;
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(badgeX + badgeR, badgeY, badgeR, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
+        ctx.fillStyle = '#ffffff';
+        ctx.textAlign = 'center';
+        ctx.fillText(String(claimableCount), badgeX + badgeR, badgeY + Math.floor(L.h * 0.004));
+        ctx.textAlign = 'left';
+        ctx.restore();
+      }
     }
 
     // Version
@@ -458,7 +481,7 @@ export class Renderer {
     // Character name lookup
     const charNames: Record<string, string> = {
       grass_man: 'Raiz', fire_lord: 'Cinza', aqua_sage: 'Maré',
-      storm_runner: 'Pulso', void_walker: 'Fenda', beast_tamer: 'Necra',
+      storm_runner: 'Pulso', void_walker: 'Fenda', beast_tamer: 'Nex', firefighter: 'Fênix',
     };
 
     // 4 Save slot cards
@@ -4039,18 +4062,38 @@ export class Renderer {
 
     // ─── Leaderboard ─────────────────────────────────────────────────────
     const board = getLeaderboard();
+    const charNameMap: Record<string, string> = {
+      grass_man: 'Raiz', fire_lord: 'Cinza', aqua_sage: 'Maré',
+      storm_runner: 'Pulso', void_walker: 'Fenda', beast_tamer: 'Nex', firefighter: 'Fênix',
+    };
     if (board.length > 0) {
-      const lbY = panelY + panelH + Math.floor(L.h * 0.02);
-      ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
+      const lbY = panelY + panelH + Math.floor(L.h * 0.015);
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
       ctx.fillStyle = '#fbbf24';
       ctx.textAlign = 'center';
-      ctx.fillText('TOP RUNS:', L.cx, lbY);
-      ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
-      for (let lb = 0; lb < Math.min(board.length, 3); lb++) {
+      ctx.fillText('TOP RUNS', L.cx, lbY);
+      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      const lineGap = Math.floor(L.h * 0.019);
+      for (let lb = 0; lb < Math.min(board.length, 5); lb++) {
         const entry = board[lb];
-        ctx.fillStyle = lb === 0 ? '#fbbf24' : '#94a3b8';
-        ctx.fillText(`${lb + 1}. ${entry.months} meses | ${entry.kills} kills | ${entry.difficulty}`, L.cx, lbY + (lb + 1) * Math.floor(L.h * 0.022));
+        const charName = charNameMap[entry.characterId] ?? entry.characterId;
+        const medal = lb === 0 ? '🥇' : lb === 1 ? '🥈' : lb === 2 ? '🥉' : `${lb + 1}.`;
+        ctx.fillStyle = lb === 0 ? '#fbbf24' : lb < 3 ? '#94a3b8' : '#475569';
+        ctx.fillText(
+          `${medal} ${charName} — ${entry.months}m | ${entry.kills}k | ${entry.difficulty}`,
+          L.cx, lbY + (lb + 1) * lineGap
+        );
       }
+    }
+
+    // Meta gold bonus hint
+    const metaBonus = getMetaGoldBonus();
+    if (metaBonus > 0) {
+      const bonusY = panelY + panelH + Math.floor(L.h * 0.135);
+      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText(`💰 Bônus de missões: +${metaBonus}g por run`, L.cx, bonusY);
     }
 
     // Achievements unlocked this run
