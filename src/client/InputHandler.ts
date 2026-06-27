@@ -535,71 +535,70 @@ export class InputHandler {
     const chars = this.game.characters;
     const currentIdx = (this.renderer as any).selectedCharIdx ?? 0;
 
-    // Back button (top left)
+    // ◀ ESC (top-left)
     if (pos.x < Math.floor(L.w * 0.10) && pos.y < Math.floor(L.h * 0.06)) {
       this.audio.buttonClick();
       this.game.phase = 'SAVE_SELECT';
       return;
     }
 
-    // Bottom strip area — thumbnail strip + difficulty + play button
-    const stripY = Math.floor(L.h * 0.845);
+    // Carousel geometry — must match Renderer constants
+    const CARD_W  = Math.floor(L.w * 0.265);
+    const CARD_H  = Math.floor(L.h * 0.638);
+    const CARD_Y  = Math.floor(L.h * 0.048);
+    const SPACING = Math.floor(L.w * 0.296);
 
-    // Thumbnail strip (character selection) — must match Renderer.renderTitle sizing
-    if (pos.y >= stripY) {
-      const stripH = L.h - stripY;
-      const thumbCount = chars.length;
-      const thumbAvailW = Math.floor(L.w * 0.55);
-      const thumbGap = Math.floor(L.w * 0.006);
-      const thumbW = Math.floor((thumbAvailW - (thumbCount - 1) * thumbGap) / thumbCount);
-      const thumbH = Math.floor(stripH * 0.84);
-      const thumbTotalW = thumbCount * thumbW + (thumbCount - 1) * thumbGap;
-      const thumbStartX = Math.floor((thumbAvailW - thumbTotalW) / 2) + Math.floor(L.w * 0.01);
-      const thumbY = stripY + Math.floor((stripH - thumbH) / 2);
-
-      for (let ti = 0; ti < thumbCount; ti++) {
-        const tx = thumbStartX + ti * (thumbW + thumbGap);
-        if (pos.x >= tx && pos.x <= tx + thumbW && pos.y >= thumbY && pos.y <= thumbY + thumbH) {
-          if (ti !== currentIdx) {
-            this.audio.buttonClick();
-            (this.renderer as any).selectedCharIdx = ti;
-          }
-          return;
-        }
-      }
-
-      // Play button (bottom right)
-      const pbW = Math.floor(L.w * 0.16);
-      const pbH = Math.floor((L.h - stripY) * 0.72);
-      const pbX = L.w - pbW - Math.floor(L.w * 0.025);
-      const pbY = stripY + Math.floor(((L.h - stripY) - pbH) / 2);
-      if (pos.x >= pbX && pos.x <= pbX + pbW && pos.y >= pbY && pos.y <= pbY + pbH) {
-        const char = chars[currentIdx];
-        if (this.game.isCharacterUnlocked(char.id)) {
-          this.audio.cardSelect();
-          this.game.startFromTitle(char.id);
-        } else {
-          (this.renderer as any)._lockedShakeTimer = 0.4;
-          this.audio.buttonClick();
-        }
-        return;
-      }
-
-      // Difficulty cycling (bottom strip, left-center area)
-      const diffX = Math.floor(L.w * 0.60);
-      if (pos.x >= diffX && pos.x <= diffX + Math.floor(L.w * 0.14)) {
+    // Left arrow / left card area
+    if (pos.y >= CARD_Y && pos.y <= CARD_Y + CARD_H && pos.x < L.cx - Math.floor(CARD_W * 0.5)) {
+      if (currentIdx > 0) {
+        (this.renderer as any).selectedCharIdx = currentIdx - 1;
         this.audio.buttonClick();
-        const unlocked = getUnlockedDifficulties();
-        const cIdx = ALL_DIFFICULTIES.findIndex(d => d.id === this.game.currentDifficulty);
-        for (let offset = 1; offset <= ALL_DIFFICULTIES.length; offset++) {
-          const nextIdx = (cIdx + offset) % ALL_DIFFICULTIES.length;
-          if (unlocked.has(ALL_DIFFICULTIES[nextIdx].id)) {
-            this.game.currentDifficulty = ALL_DIFFICULTIES[nextIdx].id;
-            break;
-          }
-        }
-        return;
       }
+      return;
+    }
+
+    // Right arrow / right card area
+    if (pos.y >= CARD_Y && pos.y <= CARD_Y + CARD_H && pos.x > L.cx + Math.floor(CARD_W * 0.5)) {
+      if (currentIdx < chars.length - 1) {
+        (this.renderer as any).selectedCharIdx = currentIdx + 1;
+        this.audio.buttonClick();
+      }
+      return;
+    }
+
+    // Play button (centered bottom)
+    const pbW = Math.floor(L.w * 0.19);
+    const pbH = Math.floor(L.h * 0.068);
+    const pbX = Math.floor(L.cx - pbW / 2);
+    const pbY = L.h - Math.floor(L.h * 0.054) - pbH;
+    if (pos.x >= pbX && pos.x <= pbX + pbW && pos.y >= pbY && pos.y <= pbY + pbH) {
+      const char = chars[currentIdx];
+      if (this.game.isCharacterUnlocked(char.id)) {
+        this.audio.cardSelect();
+        this.game.startFromTitle(char.id);
+      } else {
+        (this.renderer as any)._lockedShakeTimer = 0.4;
+        this.audio.buttonClick();
+      }
+      return;
+    }
+
+    // Difficulty cycling (bottom left)
+    const diffBY = L.h - Math.floor(L.h * 0.03);
+    const diffX  = Math.floor(L.w * 0.032);
+    if (pos.x >= diffX && pos.x <= diffX + Math.floor(L.w * 0.20) &&
+        pos.y >= diffBY - Math.floor(L.h * 0.065) && pos.y <= diffBY + Math.floor(L.h * 0.01)) {
+      this.audio.buttonClick();
+      const unlocked = getUnlockedDifficulties();
+      const cIdx = ALL_DIFFICULTIES.findIndex(d => d.id === this.game.currentDifficulty);
+      for (let offset = 1; offset <= ALL_DIFFICULTIES.length; offset++) {
+        const nextIdx = (cIdx + offset) % ALL_DIFFICULTIES.length;
+        if (unlocked.has(ALL_DIFFICULTIES[nextIdx].id)) {
+          this.game.currentDifficulty = ALL_DIFFICULTIES[nextIdx].id;
+          break;
+        }
+      }
+      return;
     }
   }
 

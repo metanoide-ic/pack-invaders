@@ -795,429 +795,442 @@ export class Renderer {
   /** Shake timer when trying to select locked character */
   private _lockedShakeTimer = 0;
 
+  private readonly CHAR_COLORS = ['#4ade80', '#f97316', '#38bdf8', '#a3e635', '#a855f7', '#ec4899', '#ef4444'];
+  private readonly CHAR_BGS    = ['#052010', '#180800', '#011020', '#0d1400', '#0d0017', '#1a001a', '#1a0500'];
+  private readonly CHAR_SPRITE_MAP: Record<string, string> = {
+    grass_man: 'raiz', fire_lord: 'favil', aqua_sage: 'pelagia',
+    storm_runner: 'arco', void_walker: 'barathro', beast_tamer: 'nex', firefighter: 'fenix',
+  };
+  private readonly CHAR_ICONS: Record<string, string> = {
+    grass_man: '🌿', fire_lord: '🔥', aqua_sage: '🌊',
+    storm_runner: '☢', void_walker: '🕳', beast_tamer: '🐾', firefighter: '🧯',
+  };
+
+  /** Draw a stylized silhouette placeholder when character sprite isn't loaded */
+  private drawCharPlaceholder(
+    ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number,
+    color: string, charId: string,
+  ): void {
+    ctx.save();
+    const cx2 = x + w / 2;
+    const headR  = Math.floor(w * 0.13);
+    const bodyW  = Math.floor(w * 0.30);
+    const bodyH  = Math.floor(h * 0.26);
+    const headY  = y + Math.floor(h * 0.26);
+    const bodyY  = headY + headR + Math.floor(h * 0.03);
+    const armW   = Math.floor(w * 0.09);
+    const armH   = Math.floor(h * 0.20);
+    const legW   = Math.floor(bodyW * 0.38);
+    const legH   = Math.floor(h * 0.20);
+
+    // Body gradient
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    grad.addColorStop(0, color + '30');
+    grad.addColorStop(1, color + '08');
+    ctx.fillStyle = grad;
+    ctx.fillRect(x, y, w, h);
+
+    ctx.fillStyle = color + '55';
+
+    // Head
+    ctx.beginPath();
+    ctx.arc(cx2, headY, headR, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillRect(cx2 - bodyW / 2, bodyY, bodyW, bodyH);
+
+    // Arms
+    ctx.fillRect(cx2 - bodyW / 2 - armW - 2, bodyY, armW, armH);
+    ctx.fillRect(cx2 + bodyW / 2 + 2, bodyY, armW, armH);
+
+    // Legs
+    ctx.fillRect(cx2 - bodyW / 2, bodyY + bodyH + 2, legW, legH);
+    ctx.fillRect(cx2 + bodyW / 2 - legW, bodyY + bodyH + 2, legW, legH);
+
+    // Per-character weapon/accessory accent
+    ctx.strokeStyle = color + '88';
+    ctx.lineWidth = Math.max(2, Math.floor(w * 0.022));
+    ctx.lineCap = 'round';
+    switch (charId) {
+      case 'fire_lord':
+        ctx.beginPath();
+        ctx.moveTo(cx2 + bodyW / 2 + 2, bodyY + armH * 0.3);
+        ctx.lineTo(cx2 + bodyW / 2 + armW * 2.8, bodyY - Math.floor(h * 0.04));
+        ctx.stroke();
+        // Flame tip
+        ctx.beginPath();
+        ctx.arc(cx2 + bodyW / 2 + armW * 2.8, bodyY - Math.floor(h * 0.04), Math.floor(w * 0.04), 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24bb';
+        ctx.fill();
+        break;
+      case 'aqua_sage':
+        // Helmet arc
+        ctx.beginPath();
+        ctx.arc(cx2, headY, headR * 1.25, Math.PI * 0.85, Math.PI * 2.15);
+        ctx.stroke();
+        break;
+      case 'firefighter':
+        // Axe
+        ctx.beginPath();
+        ctx.moveTo(cx2 - bodyW / 2 - armW, bodyY + armH * 0.5);
+        ctx.lineTo(cx2 - bodyW / 2 - armW * 2.2, bodyY - Math.floor(h * 0.1));
+        ctx.stroke();
+        ctx.fillStyle = color + '66';
+        ctx.beginPath();
+        ctx.arc(cx2 - bodyW / 2 - armW * 2.2, bodyY - Math.floor(h * 0.1), Math.floor(w * 0.05), 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      case 'storm_runner':
+        // Radioactive halo
+        ctx.strokeStyle = color + '55';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx2, headY, headR * 1.6, 0, Math.PI * 2);
+        ctx.stroke();
+        break;
+    }
+
+    // Large faded icon (top area)
+    ctx.font = `${Math.floor(h * 0.10)}px monospace`;
+    ctx.fillStyle = color + '22';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(this.CHAR_ICONS[charId] || '?', cx2, y + Math.floor(h * 0.04));
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+
+    ctx.restore();
+  }
+
   private renderTitle(dt: number): void {
     const { ctx, canvas } = this;
     const L = this.getLayout();
     this.titlePulse += dt;
     this.menuFloatTimer += dt;
     const chars = this.game.characters;
-    const selChar = chars[this.selectedCharIdx];
-    const charColors = ['#4ade80', '#f97316', '#38bdf8', '#a3e635', '#a855f7', '#ec4899', '#ef4444'];
-    const charBgs   = ['#052010', '#180800', '#011020', '#0d1400', '#0d0017', '#1a001a', '#1a0500'];
-    const color = charColors[this.selectedCharIdx] || '#94a3b8';
+    const idx = this.selectedCharIdx;
+    const selChar = chars[idx];
+    const charColors = this.CHAR_COLORS;
+    const charBgs   = this.CHAR_BGS;
+    const color = charColors[idx] || '#94a3b8';
+    const bg    = charBgs[idx]    || '#0a0a1a';
 
-    // Smooth transition — fade between characters
+    // ── Fade between characters ───────────────────────────────────────────
     if ((this as any)._charFadeTimer === undefined) (this as any)._charFadeTimer = 1;
-    if ((this as any)._prevCharIdx === undefined) (this as any)._prevCharIdx = this.selectedCharIdx;
-    if ((this as any)._prevCharIdx !== this.selectedCharIdx) {
+    if ((this as any)._prevCharIdx === undefined) (this as any)._prevCharIdx = idx;
+    if ((this as any)._prevCharIdx !== idx) {
       (this as any)._charFadeTimer = 0;
-      (this as any)._prevCharIdx = this.selectedCharIdx;
+      (this as any)._prevCharIdx = idx;
     }
-    if ((this as any)._charFadeTimer < 1) (this as any)._charFadeTimer = Math.min(1, (this as any)._charFadeTimer + dt * 4);
+    if ((this as any)._charFadeTimer < 1) (this as any)._charFadeTimer = Math.min(1, (this as any)._charFadeTimer + dt * 5);
     const fadeIn = (this as any)._charFadeTimer as number;
 
-    // Locked shake
+    // ── Carousel slide offset ─────────────────────────────────────────────
+    if ((this as any)._carouselOff === undefined) (this as any)._carouselOff = 0;
+    if ((this as any)._prevCIdx === undefined) (this as any)._prevCIdx = idx;
+    if ((this as any)._prevCIdx !== idx) {
+      const dir = idx > (this as any)._prevCIdx ? -1 : 1;
+      (this as any)._carouselOff = dir * 0.55;
+      (this as any)._prevCIdx = idx;
+    }
+    const off = (this as any)._carouselOff as number;
+    if (Math.abs(off) > 0.002) (this as any)._carouselOff = off * 0.72;
+    else (this as any)._carouselOff = 0;
+
+    // ── Locked shake ──────────────────────────────────────────────────────
     if (this._lockedShakeTimer > 0) this._lockedShakeTimer -= dt;
     const lockedShake = this._lockedShakeTimer > 0 ? Math.sin(this._lockedShakeTimer * 80) * 6 : 0;
     const isUnlocked = this.game.isCharacterUnlocked(selChar.id);
 
-    // ─── BACKGROUND ──────────────────────────────────────────────────────
-    ctx.fillStyle = charBgs[this.selectedCharIdx];
+    // ── BACKGROUND ───────────────────────────────────────────────────────
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Atmospheric character glow (left side)
-    const bgGrad = ctx.createRadialGradient(Math.floor(L.w * 0.26), Math.floor(L.h * 0.55), 0, Math.floor(L.w * 0.26), Math.floor(L.h * 0.55), Math.floor(L.h * 0.72));
-    bgGrad.addColorStop(0, color + '22');
-    bgGrad.addColorStop(0.5, color + '0a');
+    const bgGrad = ctx.createRadialGradient(L.cx, L.cy * 0.75, 0, L.cx, L.cy * 0.75, L.h * 0.75);
+    bgGrad.addColorStop(0, color + '1e');
+    bgGrad.addColorStop(0.55, color + '07');
     bgGrad.addColorStop(1, 'transparent');
     ctx.globalAlpha = fadeIn;
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1;
 
-    // Floating particles (atmospheric, character-colored)
+    // Particles
     const now = performance.now() * 0.001;
-    ctx.globalAlpha = 0.25 * fadeIn;
-    for (let pi = 0; pi < 12; pi++) {
+    ctx.globalAlpha = 0.18 * fadeIn;
+    for (let pi = 0; pi < 18; pi++) {
       const seed = pi * 137.508;
-      const px = (Math.sin(seed) * 0.5 + 0.5) * L.w * 0.52;
-      const py = ((Math.cos(seed * 0.7) * 0.5 + 0.5) + (now * (0.02 + (pi % 3) * 0.01))) % 1.0;
-      const pSize = 1.5 + (pi % 3);
+      const px = (Math.sin(seed) * 0.5 + 0.5) * L.w;
+      const py = ((Math.cos(seed * 0.7) * 0.5 + 0.5) + now * (0.008 + (pi % 4) * 0.006)) % 1.0;
       ctx.fillStyle = color;
       ctx.beginPath();
-      ctx.arc(Math.floor(px), Math.floor(py * L.h * 0.85), pSize, 0, Math.PI * 2);
+      ctx.arc(Math.floor(px), Math.floor(py * L.h * 0.92), 1.5 + (pi % 3), 0, Math.PI * 2);
       ctx.fill();
     }
     ctx.globalAlpha = 1;
 
-    // ─── LEFT: FULL-HEIGHT PORTRAIT ──────────────────────────────────────
-    const charSpriteMap: Record<string, string> = {
-      grass_man: 'raiz', fire_lord: 'favil', aqua_sage: 'pelagia',
-      storm_runner: 'arco', void_walker: 'barathro', beast_tamer: 'nex',
-      firefighter: 'fenix',
-    };
-    const loadedSprites2 = (this as any).loadedSprites;
-    const portrait = loadedSprites2?.characters?.get(charSpriteMap[selChar.id]) || null;
+    // ── CAROUSEL CARDS ───────────────────────────────────────────────────
+    const CARD_W    = Math.floor(L.w * 0.265);
+    const CARD_H    = Math.floor(L.h * 0.638);
+    const CARD_Y    = Math.floor(L.h * 0.048);
+    const SPACING   = Math.floor(L.w * 0.296);
+    const loadedSp  = (this as any).loadedSprites;
 
-    const portraitW = Math.floor(L.w * 0.46);
-    const portraitH = Math.floor(L.h * 0.84);
-    const portraitX = 0;
-    const portraitY = 0;
+    const drawCard = (ci: number, centerX: number, scale: number, alpha: number): void => {
+      if (ci < 0 || ci >= chars.length) return;
+      const ch = chars[ci];
+      const chColor = charColors[ci] || '#94a3b8';
+      const cw  = Math.floor(CARD_W * scale);
+      const ch2 = Math.floor(CARD_H * scale);
+      const cx2 = Math.floor(centerX - cw / 2);
+      const cy2 = Math.floor(CARD_Y + (CARD_H - ch2) / 2);
+      const chUnlocked = this.game.isCharacterUnlocked(ch.id);
+      const isCenter = scale > 0.85;
+
+      ctx.save();
+      ctx.globalAlpha = alpha;
+
+      // Drop shadow
+      if (isCenter) {
+        ctx.shadowColor = chColor + '99';
+        ctx.shadowBlur = 28;
+      }
+
+      // Card bg
+      const cardGrad = ctx.createLinearGradient(cx2, cy2, cx2, cy2 + ch2);
+      cardGrad.addColorStop(0, '#0e0e1c');
+      cardGrad.addColorStop(1, '#06060f');
+      ctx.fillStyle = cardGrad;
+      ctx.fillRect(cx2, cy2, cw, ch2);
+
+      // Border
+      ctx.strokeStyle = isCenter ? chColor : chColor + '50';
+      ctx.lineWidth = isCenter ? 2 : 1;
+      ctx.strokeRect(cx2, cy2, cw, ch2);
+      ctx.shadowBlur = 0;
+
+      // Portrait / placeholder
+      const portrait = loadedSp?.characters?.get(this.CHAR_SPRITE_MAP[ch.id]) || null;
+      ctx.beginPath();
+      ctx.rect(cx2 + 1, cy2 + 1, cw - 2, ch2 - 2);
+      ctx.clip();
+      if (portrait) {
+        const iw = portrait.naturalWidth || portrait.width;
+        const ih = portrait.naturalHeight || portrait.height;
+        const sc2 = Math.max(cw / iw, ch2 / ih);
+        const dw = iw * sc2; const dh = ih * sc2;
+        ctx.drawImage(portrait, cx2 + (cw - dw) / 2, cy2 + (ch2 - dh), dw, dh);
+      } else {
+        this.drawCharPlaceholder(ctx, cx2, cy2, cw, ch2, chColor, ch.id);
+      }
+
+      // Bottom gradient name overlay (center card only)
+      if (isCenter) {
+        const nameGrad = ctx.createLinearGradient(0, cy2 + ch2 * 0.56, 0, cy2 + ch2);
+        nameGrad.addColorStop(0, 'transparent');
+        nameGrad.addColorStop(1, 'rgba(4,4,16,0.97)');
+        ctx.fillStyle = nameGrad;
+        ctx.fillRect(cx2, cy2, cw, ch2);
+      }
+
+      // Locked overlay
+      if (!chUnlocked) {
+        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillRect(cx2, cy2, cw, ch2);
+        ctx.font = `${Math.floor(ch2 * 0.13)}px monospace`;
+        ctx.fillStyle = '#374151';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('🔒', cx2 + cw / 2, cy2 + ch2 * 0.45);
+        ctx.textBaseline = 'alphabetic';
+        ctx.textAlign = 'left';
+      }
+
+      ctx.restore();
+
+      // Name + title on center card (outside clip)
+      if (isCenter) {
+        ctx.save();
+        ctx.globalAlpha = alpha * fadeIn;
+        ctx.font = `bold ${Math.floor(L.h * 0.042)}px monospace`;
+        ctx.fillStyle = chColor;
+        ctx.textAlign = 'center';
+        ctx.shadowColor = chColor;
+        ctx.shadowBlur = 14;
+        ctx.fillText(ch.name.toUpperCase(), cx2 + cw / 2 + lockedShake, cy2 + ch2 - Math.floor(ch2 * 0.115));
+        ctx.shadowBlur = 0;
+        ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
+        ctx.fillStyle = chColor + 'bb';
+        ctx.fillText(ch.title, cx2 + cw / 2, cy2 + ch2 - Math.floor(ch2 * 0.046));
+        ctx.textAlign = 'left';
+        ctx.restore();
+      }
+    };
+
+    const slideOff = (this as any)._carouselOff as number;
+    // Draw side cards behind center
+    drawCard(idx - 1, L.cx - SPACING + slideOff * SPACING, 0.70, 0.40);
+    drawCard(idx + 1, L.cx + SPACING + slideOff * SPACING, 0.70, 0.40);
+    // Draw center card on top
+    drawCard(idx, L.cx + slideOff * SPACING, 1.00, 1.00);
+
+    // ── NAVIGATION ARROWS ─────────────────────────────────────────────────
+    const arrowCY = CARD_Y + Math.floor(CARD_H * 0.44);
+    const arrowSize = Math.floor(L.h * 0.06);
+    const pulse = 0.68 + Math.sin(now * 2.2) * 0.18;
+    ctx.font = `bold ${arrowSize}px monospace`;
+    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'center';
+    if (idx > 0) {
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = charColors[idx - 1];
+      ctx.shadowColor = charColors[idx - 1];
+      ctx.shadowBlur = 10;
+      ctx.fillText('◀', Math.floor(L.cx - SPACING * 0.54), arrowCY);
+      ctx.shadowBlur = 0;
+    }
+    if (idx < chars.length - 1) {
+      ctx.globalAlpha = pulse;
+      ctx.fillStyle = charColors[idx + 1];
+      ctx.shadowColor = charColors[idx + 1];
+      ctx.shadowBlur = 10;
+      ctx.fillText('▶', Math.floor(L.cx + SPACING * 0.54), arrowCY);
+      ctx.shadowBlur = 0;
+    }
+    ctx.globalAlpha = 1;
+    ctx.textBaseline = 'alphabetic';
+    ctx.textAlign = 'left';
+
+    // ── DOT INDICATORS ────────────────────────────────────────────────────
+    const dotY  = CARD_Y + CARD_H + Math.floor(L.h * 0.022);
+    const dotR  = Math.floor(L.h * 0.007);
+    const dotGap = Math.floor(L.w * 0.016);
+    const dotsW = chars.length * (dotR * 2 + dotGap) - dotGap;
+    const dotStartX = Math.floor(L.cx - dotsW / 2 + dotR);
+    for (let di = 0; di < chars.length; di++) {
+      const dx = dotStartX + di * (dotR * 2 + dotGap);
+      const dActive = di === idx;
+      ctx.beginPath();
+      ctx.arc(dx, dotY, dActive ? dotR * 1.5 : dotR, 0, Math.PI * 2);
+      ctx.fillStyle = dActive ? charColors[di] : charColors[di] + '40';
+      if (dActive) { ctx.shadowColor = charColors[di]; ctx.shadowBlur = 8; }
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    }
+
+    // ── INFO PANEL (below cards) ──────────────────────────────────────────
+    const infoY = dotY + Math.floor(L.h * 0.038);
+    const infoW = Math.floor(L.w * 0.58);
+    const infoX = Math.floor(L.cx - infoW / 2);
 
     ctx.save();
     ctx.globalAlpha = fadeIn;
-    if (portrait) {
-      const iw = portrait.naturalWidth || portrait.width;
-      const ih = portrait.naturalHeight || portrait.height;
-      const sc = Math.max(portraitW / iw, portraitH / ih);
-      const dw = iw * sc; const dh = ih * sc;
-      ctx.beginPath(); ctx.rect(portraitX, portraitY, portraitW, portraitH); ctx.clip();
-      ctx.drawImage(portrait, portraitX + (portraitW - dw) / 2, portraitY + (portraitH - dh), dw, dh);
-    } else {
-      // Placeholder card
-      const icons: Record<string, string> = {
-        grass_man: '🌿', fire_lord: '🔥', aqua_sage: '🌊',
-        storm_runner: '☢', void_walker: '🕳', beast_tamer: '🐾',
-        firefighter: '🧯',
-      };
-      ctx.fillStyle = color + '08';
-      ctx.fillRect(portraitX, portraitY, portraitW, portraitH);
-      ctx.font = `${Math.floor(L.h * 0.22)}px monospace`;
-      ctx.fillStyle = color + '30';
-      ctx.textAlign = 'center';
-      ctx.fillText(icons[selChar.id] || '?', portraitX + portraitW / 2, portraitY + portraitH * 0.52);
-    }
-    ctx.restore();
 
-    // Portrait overlay — fade to dark on right edge + bottom
-    const fadeRight = ctx.createLinearGradient(portraitW - Math.floor(L.w * 0.15), 0, portraitW, 0);
-    fadeRight.addColorStop(0, 'transparent');
-    fadeRight.addColorStop(1, charBgs[this.selectedCharIdx]);
-    ctx.fillStyle = fadeRight;
-    ctx.fillRect(portraitX, portraitY, portraitW, portraitH);
-
-    const fadeBottom = ctx.createLinearGradient(0, Math.floor(L.h * 0.72), 0, portraitH);
-    fadeBottom.addColorStop(0, 'transparent');
-    fadeBottom.addColorStop(1, charBgs[this.selectedCharIdx]);
-    ctx.fillStyle = fadeBottom;
-    ctx.fillRect(portraitX, portraitY, portraitW, portraitH);
-
-    // Locked silhouette overlay
-    if (!isUnlocked) {
-      ctx.fillStyle = 'rgba(0,0,0,0.72)';
-      ctx.fillRect(portraitX, portraitY, portraitW, portraitH);
-      ctx.font = `${Math.floor(L.h * 0.12)}px monospace`;
-      ctx.fillStyle = '#374151';
-      ctx.textAlign = 'center';
-      ctx.fillText('🔒', portraitX + portraitW / 2, portraitY + portraitH * 0.48);
-      ctx.textAlign = 'left';
-    }
-
-    // ─── RIGHT PANEL ─────────────────────────────────────────────────────
-    const panX = Math.floor(L.w * 0.47);
-    const panW = L.w - panX - Math.floor(L.w * 0.02);
-
-    // Panel bg (very subtle, dark glass)
-    ctx.fillStyle = 'rgba(4, 4, 16, 0.72)';
-    ctx.fillRect(panX - 8, 0, panW + 16, Math.floor(L.h * 0.84));
-
-    // Vertical accent bar (character color)
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.7 * fadeIn;
-    ctx.fillRect(panX - 2, Math.floor(L.h * 0.08), 3, Math.floor(L.h * 0.68));
-    ctx.globalAlpha = 1;
-
-    let cy = Math.floor(L.h * 0.07);
-    const lh = Math.floor(L.h * 0.026);
-    const lineSmall = Math.floor(L.h * 0.021);
-
-    // Character name (huge)
-    ctx.globalAlpha = fadeIn;
-    ctx.font = `bold ${Math.floor(L.h * 0.062)}px monospace`;
-    ctx.fillStyle = color;
-    ctx.fillText(selChar.name.toUpperCase() + (lockedShake !== 0 ? '' : ''), panX, cy + Math.floor(L.h * 0.048));
-    cy += Math.floor(L.h * 0.06);
-
-    // Subtitle / title
-    ctx.font = `${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = color + 'aa';
-    ctx.fillText(selChar.title, panX, cy);
-    cy += Math.floor(L.h * 0.015);
-
-    // Thin divider
-    ctx.strokeStyle = color + '33';
+    // Passive card
+    const lineSmall = Math.floor(L.h * 0.0185);
+    const passH = Math.floor(L.h * 0.076);
+    ctx.fillStyle = color + '12';
+    ctx.fillRect(infoX, infoY, infoW, passH);
+    ctx.strokeStyle = color + '35';
     ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(panX, cy); ctx.lineTo(panX + panW, cy); ctx.stroke();
-    cy += Math.floor(L.h * 0.022);
-
-    // ── PASSIVA ─────────────────────────────────────────────────────────
-    // Passiva card background
-    const passH = Math.floor(L.h * 0.095);
-    ctx.fillStyle = color + '0f';
-    ctx.fillRect(panX, cy - 4, panW, passH);
-    ctx.strokeStyle = color + '28';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(panX, cy - 4, panW, passH);
+    ctx.strokeRect(infoX, infoY, infoW, passH);
     ctx.fillStyle = color;
-    ctx.fillRect(panX, cy - 4, 3, passH);
-
+    ctx.fillRect(infoX, infoY, 3, passH);
     ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
     ctx.fillStyle = color;
-    ctx.fillText('◆ PASSIVA', panX + 10, cy + Math.floor(L.h * 0.014));
-    cy += Math.floor(L.h * 0.018);
-    ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
-    ctx.fillStyle = '#e2e8f0';
-    const passWords = selChar.passive.split(' '); let passLine = '';
-    for (const w of passWords) {
-      if (ctx.measureText(passLine + w).width > panW - 16 && passLine) {
-        ctx.fillText(passLine.trim(), panX + 10, cy); cy += lineSmall;
-        passLine = w + ' ';
-      } else { passLine += w + ' '; }
+    ctx.fillText('◆ PASSIVA', infoX + 10, infoY + Math.floor(L.h * 0.016));
+    ctx.font = `${Math.floor(L.h * 0.0108)}px monospace`;
+    ctx.fillStyle = '#cbd5e1';
+    const pWords = selChar.passive.split(' '); let pLine = '';
+    let pY = infoY + Math.floor(L.h * 0.034);
+    for (const w of pWords) {
+      if (ctx.measureText(pLine + w).width > infoW - 22 && pLine) {
+        ctx.fillText(pLine.trim(), infoX + 10, pY); pY += lineSmall; pLine = w + ' ';
+      } else { pLine += w + ' '; }
     }
-    if (passLine.trim()) { ctx.fillText(passLine.trim(), panX + 10, cy); cy += lineSmall; }
-    cy += Math.floor(L.h * 0.018);
+    if (pLine.trim()) ctx.fillText(pLine.trim(), infoX + 10, pY);
 
-    // ── HABILIDADES (3 skill mini-cards) ────────────────────────────────
-    ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
-    ctx.fillStyle = '#6366f1';
-    ctx.fillText('◆ HABILIDADES', panX, cy);
-    cy += Math.floor(L.h * 0.018);
-
-    const charSkillsList = CHARACTER_SKILLS[selChar.id] || [];
-    const skillCardW = Math.floor((panW - 8) / 3);
-    const skillCardH = Math.floor(L.h * 0.08);
-    for (let si = 0; si < Math.min(charSkillsList.length, 3); si++) {
-      const sk = charSkillsList[si];
-      const sx = panX + si * (skillCardW + 4);
-      const sy = cy;
-      ctx.fillStyle = 'rgba(30, 28, 60, 0.8)';
-      ctx.fillRect(sx, sy, skillCardW, skillCardH);
-      ctx.strokeStyle = '#6366f1' + '55';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(sx, sy, skillCardW, skillCardH);
-      // Key number badge
-      ctx.fillStyle = '#6366f1';
-      ctx.fillRect(sx, sy, Math.floor(skillCardW * 0.22), Math.floor(skillCardH * 0.38));
-      ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${si + 1}`, sx + Math.floor(skillCardW * 0.11), sy + Math.floor(skillCardH * 0.28));
-      // Icon + name
-      ctx.font = `${Math.floor(skillCardH * 0.28)}px monospace`;
-      ctx.fillStyle = '#c7d2fe';
-      ctx.fillText(sk.icon, sx + skillCardW / 2, sy + Math.floor(skillCardH * 0.58));
-      ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
-      ctx.fillStyle = '#a5b4fc';
-      ctx.fillText(sk.name.slice(0, 10), sx + skillCardW / 2, sy + Math.floor(skillCardH * 0.84));
-      ctx.textAlign = 'left';
-    }
-    cy += skillCardH + Math.floor(L.h * 0.018);
-
-    // ── STATS ROW ────────────────────────────────────────────────────────
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(panX, cy); ctx.lineTo(panX + panW, cy); ctx.stroke();
-    cy += Math.floor(L.h * 0.016);
-
-    const statW = Math.floor(panW / 3);
-    const statItems = [
-      { icon: '♥', label: 'HP', value: String(selChar.startingHp), color: '#f87171' },
-      { icon: '💰', label: 'GOLD', value: String(selChar.startingGold) + 'g', color: '#fbbf24' },
-      { icon: '📦', label: 'GRADE', value: `${selChar.backpackCols}×${selChar.backpackRows}`, color: '#60a5fa' },
+    // Stats row
+    const statsY  = infoY + passH + Math.floor(L.h * 0.01);
+    const statW2  = Math.floor(infoW / 3);
+    const statH   = Math.floor(L.h * 0.058);
+    const statDefs = [
+      { icon: '♥', label: 'HP',    value: String(selChar.startingHp),              clr: '#f87171' },
+      { icon: '💰', label: 'GOLD',  value: selChar.startingGold + 'g',              clr: '#fbbf24' },
+      { icon: '📦', label: 'GRADE', value: `${selChar.backpackCols}×${selChar.backpackRows}`, clr: '#60a5fa' },
     ];
-    for (let si = 0; si < statItems.length; si++) {
-      const st = statItems[si];
-      const sx = panX + si * statW;
-      ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
-      ctx.fillStyle = st.color;
-      ctx.textAlign = 'center';
-      ctx.fillText(st.icon + ' ' + st.value, sx + statW / 2, cy + Math.floor(L.h * 0.018));
-      ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-      ctx.fillStyle = '#475569';
-      ctx.fillText(st.label, sx + statW / 2, cy + Math.floor(L.h * 0.032));
-    }
-    ctx.textAlign = 'left';
-    cy += Math.floor(L.h * 0.048);
-
-    // ── VANTAGENS / DESVANTAGENS (2 colunas) ───────────────────────────
-    ctx.strokeStyle = '#1e293b';
-    ctx.beginPath(); ctx.moveTo(panX, cy); ctx.lineTo(panX + panW, cy); ctx.stroke();
-    cy += Math.floor(L.h * 0.014);
-
-    const colW = Math.floor(panW / 2) - 4;
-    ctx.font = `bold ${Math.floor(L.h * 0.010)}px monospace`;
-    ctx.fillStyle = '#4ade80'; ctx.fillText('✦ VANTAGENS', panX, cy);
-    ctx.fillStyle = '#ef4444'; ctx.fillText('✦ DESVANTAGENS', panX + colW + 8, cy);
-    cy += Math.floor(lh * 0.85);
-
-    ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-    const advCount = Math.min(selChar.advantages.length, 4);
-    const disCount = Math.min(selChar.disadvantages.length, 3);
-    const rows = Math.max(advCount, disCount);
-    for (let ri = 0; ri < rows; ri++) {
-      if (ri < advCount) {
-        ctx.fillStyle = '#86efac';
-        ctx.fillText('+ ' + selChar.advantages[ri].slice(0, 30), panX, cy);
-      }
-      if (ri < disCount) {
-        ctx.fillStyle = '#fca5a5';
-        ctx.fillText('– ' + selChar.disadvantages[ri].slice(0, 30), panX + colW + 8, cy);
-      }
-      cy += Math.floor(lh * 0.78);
-    }
-
-    // Unlock condition (if locked)
-    if (!isUnlocked) {
-      cy += Math.floor(L.h * 0.01);
-      const lockW = panW;
-      ctx.fillStyle = 'rgba(127, 29, 29, 0.35)';
-      ctx.fillRect(panX, cy - 4, lockW, Math.floor(L.h * 0.045));
-      ctx.strokeStyle = '#ef4444' + '60';
+    for (let si = 0; si < statDefs.length; si++) {
+      const st = statDefs[si];
+      const sx = infoX + si * statW2;
+      ctx.fillStyle = st.clr + '14';
+      ctx.fillRect(sx, statsY, statW2 - 3, statH);
+      ctx.strokeStyle = st.clr + '40';
       ctx.lineWidth = 1;
-      ctx.strokeRect(panX, cy - 4, lockW, Math.floor(L.h * 0.045));
+      ctx.strokeRect(sx, statsY, statW2 - 3, statH);
+      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
+      ctx.fillStyle = st.clr;
+      ctx.textAlign = 'center';
+      ctx.fillText(st.icon + ' ' + st.value, sx + (statW2 - 3) / 2, statsY + Math.floor(statH * 0.55));
+      ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = '#4b5563';
+      ctx.fillText(st.label, sx + (statW2 - 3) / 2, statsY + Math.floor(statH * 0.84));
+      ctx.textAlign = 'left';
+    }
+
+    // Unlock condition (locked)
+    if (!isUnlocked) {
+      const lockY = statsY + statH + Math.floor(L.h * 0.008);
+      ctx.fillStyle = 'rgba(127,29,29,0.32)';
+      ctx.fillRect(infoX, lockY, infoW, Math.floor(L.h * 0.044));
+      ctx.strokeStyle = '#ef444455';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(infoX, lockY, infoW, Math.floor(L.h * 0.044));
       ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
       ctx.fillStyle = '#fca5a5';
       ctx.textAlign = 'center';
-      ctx.fillText('🔒  ' + selChar.unlockCondition, panX + lockW / 2, cy + Math.floor(L.h * 0.02));
+      ctx.fillText('🔒  ' + selChar.unlockCondition, infoX + infoW / 2, lockY + Math.floor(L.h * 0.028));
       ctx.textAlign = 'left';
     }
 
-    ctx.globalAlpha = 1;
+    ctx.restore();
 
-    // ─── BOTTOM BAR: thumbnail strip + difficulty + play ────────────────
-    const stripY = Math.floor(L.h * 0.845);
-    const stripH = L.h - stripY;
-
-    // Strip background
-    ctx.fillStyle = 'rgba(2, 2, 12, 0.9)';
-    ctx.fillRect(0, stripY, canvas.width, stripH);
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 1;
-    ctx.beginPath(); ctx.moveTo(0, stripY); ctx.lineTo(canvas.width, stripY); ctx.stroke();
-
-    // Character thumbnails — adaptive sizing so any count fits the left region
-    const thumbCount = chars.length;
-    const thumbAvailW = Math.floor(L.w * 0.55);
-    const thumbGap = Math.floor(L.w * 0.006);
-    const thumbW = Math.floor((thumbAvailW - (thumbCount - 1) * thumbGap) / thumbCount);
-    const thumbH = Math.floor(stripH * 0.84);
-    const thumbTotalW = thumbCount * thumbW + (thumbCount - 1) * thumbGap;
-    const thumbStartX = Math.floor((thumbAvailW - thumbTotalW) / 2) + Math.floor(L.w * 0.01);
-    const thumbY = stripY + Math.floor((stripH - thumbH) / 2);
-
-    for (let ti = 0; ti < thumbCount; ti++) {
-      const ch = chars[ti];
-      const tx = thumbStartX + ti * (thumbW + thumbGap);
-      const isSelected = ti === this.selectedCharIdx;
-      const chColor = charColors[ti];
-      const chUnlocked = this.game.isCharacterUnlocked(ch.id);
-
-      // Thumbnail background
-      if (isSelected) {
-        ctx.fillStyle = chColor + '28';
-        ctx.fillRect(tx - 2, thumbY - 3, thumbW + 4, thumbH + 6);
-        ctx.strokeStyle = chColor;
-        ctx.lineWidth = 2;
-        ctx.shadowColor = chColor;
-        ctx.shadowBlur = 8;
-        ctx.strokeRect(tx - 2, thumbY - 3, thumbW + 4, thumbH + 6);
-        ctx.shadowBlur = 0;
-      } else {
-        ctx.fillStyle = '#0a0a1a';
-        ctx.fillRect(tx, thumbY, thumbW, thumbH);
-        ctx.strokeStyle = chUnlocked ? '#1e293b' : '#0f0f1a';
-        ctx.lineWidth = 1;
-        ctx.strokeRect(tx, thumbY, thumbW, thumbH);
-      }
-
-      // Portrait in thumbnail
-      const thumbPortrait = loadedSprites2?.characters?.get(charSpriteMap[ch.id]) || null;
-      if (thumbPortrait) {
-        ctx.save();
-        ctx.globalAlpha = isSelected ? 1 : (chUnlocked ? 0.55 : 0.2);
-        const tp_iw = thumbPortrait.naturalWidth || thumbPortrait.width;
-        const tp_ih = thumbPortrait.naturalHeight || thumbPortrait.height;
-        const tp_sc = Math.max(thumbW / tp_iw, thumbH / tp_ih);
-        const tp_dw = tp_iw * tp_sc; const tp_dh = tp_ih * tp_sc;
-        ctx.beginPath(); ctx.rect(tx, thumbY, thumbW, thumbH); ctx.clip();
-        ctx.drawImage(thumbPortrait, tx + (thumbW - tp_dw) / 2, thumbY + (thumbH - tp_dh), tp_dw, tp_dh);
-        ctx.restore();
-      } else {
-        // No art: colored box with icon
-        const icons2: Record<string, string> = {
-          grass_man: '🌿', fire_lord: '🔥', aqua_sage: '🌊',
-          storm_runner: '☢', void_walker: '🕳', beast_tamer: '🐾',
-          firefighter: '🧯',
-        };
-        ctx.fillStyle = chColor + (isSelected ? '20' : '10');
-        ctx.fillRect(tx, thumbY, thumbW, thumbH);
-        ctx.font = `${Math.floor(thumbH * 0.42)}px monospace`;
-        ctx.fillStyle = isSelected ? chColor : chColor + '55';
-        ctx.textAlign = 'center';
-        ctx.fillText(icons2[ch.id] || '?', tx + thumbW / 2, thumbY + thumbH * 0.58);
-        ctx.textAlign = 'left';
-      }
-
-      // Locked overlay on thumbnail
-      if (!chUnlocked) {
-        ctx.fillStyle = 'rgba(0,0,0,0.65)';
-        ctx.fillRect(tx, thumbY, thumbW, thumbH);
-        ctx.font = `${Math.floor(thumbH * 0.3)}px monospace`;
-        ctx.fillStyle = '#374151';
-        ctx.textAlign = 'center';
-        ctx.fillText('🔒', tx + thumbW / 2, thumbY + thumbH * 0.56);
-        ctx.textAlign = 'left';
-      }
-
-      // Name below thumbnail
-      ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
-      ctx.fillStyle = isSelected ? chColor : (chUnlocked ? '#475569' : '#1f2937');
-      ctx.textAlign = 'center';
-      ctx.fillText(ch.name.toUpperCase(), tx + thumbW / 2, thumbY + thumbH + Math.floor(L.h * 0.018));
-      ctx.textAlign = 'left';
-    }
-
-    // ── Difficulty selector (bottom right cluster) ───────────────────────
-    const diffX = Math.floor(L.w * 0.60);
-    const diffY = stripY + Math.floor(stripH * 0.28);
-    const currentDiff = getDifficultyById(this.game.currentDifficulty);
-    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-    ctx.fillStyle = '#374151';
-    ctx.textAlign = 'left';
-    ctx.fillText('DIFICULDADE  ▼', diffX, diffY);
-    ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = currentDiff.color;
-    ctx.fillText(`${currentDiff.icon} ${currentDiff.name}`, diffX, diffY + Math.floor(L.h * 0.022));
-
-    // ── PLAY button (bottom right) ────────────────────────────────────────
-    const pbW = Math.floor(L.w * 0.16);
-    const pbH = Math.floor(stripH * 0.72);
-    const pbX = L.w - pbW - Math.floor(L.w * 0.025) + Math.floor(lockedShake);
-    const pbY2 = stripY + Math.floor((stripH - pbH) / 2);
-
+    // ── PLAY BUTTON (centered bottom) ─────────────────────────────────────
+    const pbW = Math.floor(L.w * 0.19);
+    const pbH = Math.floor(L.h * 0.068);
+    const pbX = Math.floor(L.cx - pbW / 2 + lockedShake);
+    const pbY = L.h - Math.floor(L.h * 0.054) - pbH;
     if (isUnlocked) {
-      ctx.shadowColor = color;
-      ctx.shadowBlur = 10 + Math.sin(this.titlePulse * 2.5) * 5;
+      ctx.shadowColor = color; ctx.shadowBlur = 12 + Math.sin(this.titlePulse * 2.5) * 5;
     } else if (this._lockedShakeTimer > 0) {
-      ctx.shadowColor = '#ef4444';
-      ctx.shadowBlur = 14;
+      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 14;
     }
-    this.renderButton(pbX, pbY2, pbW, pbH,
+    this.renderButton(pbX, pbY, pbW, pbH,
       isUnlocked ? '▶  JOGAR' : '🔒 BLOQUEADO',
       isUnlocked ? color : (this._lockedShakeTimer > 0 ? '#ef4444' : '#374151'));
     ctx.shadowBlur = 0;
 
+    // ── DIFFICULTY (bottom left) ──────────────────────────────────────────
+    const currentDiff = getDifficultyById(this.game.currentDifficulty);
+    const diffX = Math.floor(L.w * 0.032);
+    const diffBY = L.h - Math.floor(L.h * 0.03);
+    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+    ctx.fillStyle = '#374151';
+    ctx.fillText('DIFICULDADE ▼', diffX, diffBY - Math.floor(L.h * 0.03));
+    ctx.font = `bold ${Math.floor(L.h * 0.019)}px monospace`;
+    ctx.fillStyle = currentDiff.color;
+    ctx.fillText(`${currentDiff.icon} ${currentDiff.name}`, diffX, diffBY);
+
     // ◀ ESC (top-left)
     ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
-    ctx.fillStyle = '#475569';
-    ctx.textAlign = 'left';
-    ctx.fillText('◀ ESC', Math.floor(L.w * 0.018), Math.floor(L.h * 0.035));
+    ctx.fillStyle = '#4b5563';
+    ctx.fillText('◀ ESC', Math.floor(L.w * 0.018), Math.floor(L.h * 0.036));
 
     // Keyboard hint
     ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-    ctx.fillStyle = '#1e293b';
+    ctx.fillStyle = '#1f2937';
     ctx.textAlign = 'center';
-    ctx.fillText('← → navegar  |  ENTER jogar  |  ESC voltar', Math.floor(L.w * 0.26), Math.floor(L.h * 0.99));
+    ctx.fillText('← → navegar  |  ENTER jogar  |  ESC voltar', L.cx, L.h - Math.floor(L.h * 0.006));
     ctx.textAlign = 'left';
   }
 
