@@ -1218,69 +1218,126 @@ function generateCharacterSprite(charId: string): HTMLCanvasElement {
   // ── Character-specific: hat/hair + weapon ────────────────────────────────
   switch (charId) {
     case 'grass_man':
-      // Leaf crown
+      // Raiz: leaf crown + improvised wooden staff
       rect(ctx, 5, 0, 10, 2, d);
       rect(ctx, 4, 1, 2, 1, m); rect(ctx, 14, 1, 2, 1, m);
       px(ctx, 9, 0, m); px(ctx, 10, 0, m);
-      // Staff (right side)
-      rect(ctx, 17, 5, 2, 14, '#5d4037');
-      rect(ctx, 16, 4, 4, 2, m);
+      // Extra leaf points
+      px(ctx, 6, 0, '#22c55e'); px(ctx, 13, 0, '#22c55e');
+      // Staff (right side, dark wood)
+      rect(ctx, 17, 5, 2, 16, '#5d4037');
+      rect(ctx, 16, 4, 4, 3, m);
+      px(ctx, 15, 5, '#22c55e'); px(ctx, 19, 6, '#22c55e');
       break;
+
     case 'fire_lord':
-      // Flame hair
-      px(ctx, 7, 0, '#fbbf24'); px(ctx, 9, 0, '#f97316');
-      px(ctx, 11, 0, '#fbbf24'); px(ctx, 13, 0, '#f97316');
-      rect(ctx, 7, 1, 2, 1, '#fbbf24'); rect(ctx, 11, 1, 2, 1, '#fbbf24');
-      // Torch (right side)
-      rect(ctx, 17, 10, 2, 10, '#795548');
-      rect(ctx, 16, 7, 4, 4, '#fbbf24');
-      rect(ctx, 17, 6, 2, 3, '#ef4444');
+      // Cinza: short dark hair, mechanical RIGHT arm (gray metal), flamethrower barrel
+      rect(ctx, 6, 0, 8, 2, '#374151'); // dark hair
+      // Mechanical right arm — overwrite skin arm with gray metal
+      rect(ctx, 15, 9, 3, 10, '#6b7280');   // metal arm
+      rect(ctx, 17, 9, 1, 10, '#374151');   // arm shadow
+      rect(ctx, 15, 19, 3, 2, '#4b5563');   // metal hand/end
+      // Flamethrower barrel extending from right hand
+      rect(ctx, 15, 18, 5, 3, '#374151');   // barrel body
+      rect(ctx, 19, 19, 1, 2, '#6b7280');   // barrel tip
+      // Flame at tip
+      px(ctx, 19, 18, '#fbbf24'); px(ctx, 19, 17, '#f97316');
+      // Locket on chest (small gold pixel)
+      px(ctx, 9, 13, '#fbbf24'); px(ctx, 10, 13, '#fbbf24');
+      px(ctx, 9, 14, '#fbbf24'); px(ctx, 10, 14, '#fbbf24');
       break;
+
     case 'aqua_sage':
-      // Water hat (wide brim)
-      rect(ctx, 4, 0, 12, 2, d);
-      rect(ctx, 6, 1, 8, 1, m);
-      // Trident (right)
-      rect(ctx, 17, 6, 2, 14, '#546e7a');
-      px(ctx, 16, 5, m); px(ctx, 17, 4, m); px(ctx, 18, 4, m); px(ctx, 19, 5, m);
+      // Maré: military beret + rank stripe, pressurized water cannon
+      rect(ctx, 5, 0, 10, 3, d); // beret
+      rect(ctx, 5, 1, 10, 2, m);
+      px(ctx, 6, 0, d); px(ctx, 13, 0, d); // beret shape
+      rect(ctx, 8, 2, 4, 1, '#fbbf24'); // rank stripe on beret
+      // Military stripes on torso
+      rect(ctx, 6, 10, 3, 1, '#fbbf24'); rect(ctx, 6, 12, 3, 1, '#fbbf24');
+      // Pressurized water cannon (right side)
+      rect(ctx, 15, 9, 4, 5, '#546e7a');  // cannon body
+      rect(ctx, 17, 6, 2, 4, '#546e7a');  // cannon top
+      rect(ctx, 17, 5, 2, 2, m);          // nozzle
+      rect(ctx, 16, 14, 4, 2, '#374151'); // grip
       break;
+
     case 'storm_runner':
-      // Spiky electric hair
-      px(ctx, 7, 0, '#facc15'); px(ctx, 10, 0, '#facc15'); px(ctx, 13, 0, '#facc15');
-      rect(ctx, 8, 1, 2, 1, '#facc15'); rect(ctx, 11, 1, 2, 1, '#facc15');
-      // Electric lance (right)
-      rect(ctx, 17, 8, 2, 12, '#facc15');
-      rect(ctx, 16, 6, 4, 3, m);
+      // Pulso: HALF alien face (left=skin, right=alien carapace), radioactive glow
+      // Overwrite right half of face with alien color (green-olive)
+      rect(ctx, 10, 1, 4, 6, '#4d7c0f'); // alien side of face
+      px(ctx, 11, 3, '#a3e635');          // alien eye (bright)
+      px(ctx, 8, 3, '#1a1a1a');           // human eye stays
+      // Alien texture on right head side
+      px(ctx, 12, 2, '#a3e635'); px(ctx, 13, 4, '#4ade80');
+      px(ctx, 11, 5, '#65a30d');
+      // Hair on human left side
+      rect(ctx, 6, 0, 5, 2, '#374151');
+      // Radioactive energy pulse (right side, no physical weapon)
+      rect(ctx, 16, 10, 3, 8, '#a3e635');
+      px(ctx, 15, 9, m); px(ctx, 16, 8, '#86efac'); px(ctx, 17, 7, '#4ade80');
+      px(ctx, 19, 11, '#fbbf24'); px(ctx, 19, 14, '#fbbf24');
+      // Alien carapace continues to right arm
+      rect(ctx, 15, 9, 3, 5, '#4d7c0f');
+      rect(ctx, 17, 9, 1, 5, '#374151');
       break;
+
     case 'void_walker':
-      // Hood
-      rect(ctx, 5, 0, 10, 3, d);
-      rect(ctx, 4, 1, 12, 2, d);
-      // Shadow blade (right)
-      rect(ctx, 17, 8, 2, 12, '#1a1a2e');
-      rect(ctx, 16, 7, 4, 2, d);
-      px(ctx, 17, 9, '#a855f7'); px(ctx, 18, 11, '#a855f7');
+      // Fenda: scientist look — lab coat (white/light torso), glasses, no weapon
+      // Lab coat overwrite on torso
+      rect(ctx, 5, 9, 10, 8, '#e5e7eb');
+      rect(ctx, 5, 9, 1, 8, '#9ca3af');
+      rect(ctx, 14, 9, 1, 8, '#9ca3af');
+      rect(ctx, 9, 9, 2, 8, '#d1d5db'); // coat lapels
+      // Glasses
+      rect(ctx, 7, 3, 2, 2, '#374151');
+      rect(ctx, 11, 3, 2, 2, '#374151');
+      rect(ctx, 9, 3, 2, 1, '#374151');  // bridge
+      px(ctx, 7, 3, '#60a5fa'); px(ctx, 8, 3, '#60a5fa');
+      px(ctx, 11, 3, '#60a5fa'); px(ctx, 12, 3, '#60a5fa');
+      // Lab coat collar
+      rect(ctx, 7, 8, 6, 2, '#f3f4f6');
+      // Arms stay in coat color
+      rect(ctx, 2, 9, 3, 9, '#e5e7eb');
+      rect(ctx, 2, 9, 1, 9, '#9ca3af');
+      rect(ctx, 15, 9, 3, 9, '#e5e7eb');
+      rect(ctx, 17, 9, 1, 9, '#9ca3af');
+      // Void shimmer (random intangibility effect on right side)
+      px(ctx, 17, 11, d); px(ctx, 18, 13, d); px(ctx, 16, 15, d);
+      px(ctx, 17, 17, d); px(ctx, 19, 12, '#7c3aed');
       break;
+
     case 'beast_tamer':
-      // Animal ears / headband
-      rect(ctx, 6, 0, 8, 2, d);
-      px(ctx, 5, 1, m); px(ctx, 14, 1, m);
-      rect(ctx, 5, 2, 2, 2, m); rect(ctx, 13, 2, 2, 2, m);
-      // Whip (right)
+      // Nex: practical headband, small alien companion at feet
+      rect(ctx, 5, 1, 10, 2, d); // headband
+      px(ctx, 8, 1, m); px(ctx, 11, 1, m); // headband gems
+      // Small tamed alien creature at feet (left side, tiny 4x5)
+      rect(ctx, 0, 24, 4, 5, '#4d7c0f');  // alien body (green)
+      px(ctx, 1, 23, '#a3e635');           // alien head
+      px(ctx, 0, 25, '#1a1a1a');           // alien eye
+      // Chain/leash connecting Nex to alien
+      px(ctx, 4, 26, '#fbbf24'); px(ctx, 5, 26, '#fbbf24');
+      // Whip in right hand
       rect(ctx, 16, 10, 3, 1, '#5d4037');
       rect(ctx, 17, 11, 2, 1, '#5d4037');
       rect(ctx, 18, 12, 2, 1, '#5d4037');
       rect(ctx, 17, 13, 3, 1, '#5d4037');
+      rect(ctx, 18, 14, 1, 2, '#5d4037');
       break;
+
     case 'firefighter':
-      // Helmet
-      rect(ctx, 4, 0, 12, 3, d);
-      rect(ctx, 5, 1, 10, 2, m);
-      rect(ctx, 5, 3, 10, 1, '#fbbf24');  // visor band
-      // Fire axe (right)
-      rect(ctx, 17, 9, 2, 12, '#616161');
-      rect(ctx, 15, 7, 4, 4, d);
-      rect(ctx, 15, 7, 2, 4, '#9e9e9e');
+      // Fênix: heavy firefighter helmet, axe + foam tank on back
+      rect(ctx, 4, 0, 12, 4, d); // helmet body
+      rect(ctx, 5, 1, 10, 3, m); // helmet top
+      rect(ctx, 4, 3, 12, 1, '#fbbf24'); // visor band
+      rect(ctx, 6, 4, 8, 1, '#9ca3af');  // visor glass
+      // Foam tank on back (left arm side, protruding)
+      rect(ctx, 1, 10, 2, 8, '#ef4444');
+      rect(ctx, 0, 11, 1, 6, '#b91c1c');
+      // Fire axe (right hand)
+      rect(ctx, 17, 9, 2, 14, '#616161'); // handle
+      rect(ctx, 14, 7, 5, 4, d);          // axe head dark
+      rect(ctx, 14, 7, 3, 4, '#9e9e9e'); // axe blade shine
       break;
   }
 
