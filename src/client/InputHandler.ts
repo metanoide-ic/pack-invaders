@@ -1298,11 +1298,11 @@ export class InputHandler {
   private handleGameOverClick(pos: { x: number; y: number }): void {
     const L = this.renderer.getLayout();
     const btnW = Math.floor(L.w * 0.2);
-    const btnH = Math.floor(L.h * 0.06);
+    const btnH = Math.floor(L.h * 0.067);
     const btnX = L.cx - btnW / 2;
 
-    // "Tentar Novamente" button
-    const retryY = Math.floor(L.h * 0.85);
+    // "Tentar Novamente" button — must match Renderer: btn1Y = L.h * 0.84
+    const retryY = Math.floor(L.h * 0.84);
     if (pos.x >= btnX && pos.x <= btnX + btnW &&
         pos.y >= retryY && pos.y <= retryY + btnH) {
       this.audio.buttonClick();
@@ -1313,8 +1313,8 @@ export class InputHandler {
       return;
     }
 
-    // "Menu Principal" button
-    const menuY = Math.floor(L.h * 0.93);
+    // "Menu Principal" button — must match Renderer: btn2Y = L.h * 0.918
+    const menuY = Math.floor(L.h * 0.918);
     if (pos.x >= btnX && pos.x <= btnX + btnW &&
         pos.y >= menuY && pos.y <= menuY + btnH) {
       this.audio.buttonClick();
