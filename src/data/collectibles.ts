@@ -80,7 +80,7 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_raiz_seeds',
     name: 'Sementes Mutantes',
-    lore: 'Seis sementes guardadas em um tubo de vidro lacrado. Cada uma pulsa com bioluminescencia verde. Etiqueta manuscrita: "ESPECIE DESCONHECIDA — NAO PLANTAR SEM SUPERVISAO". Raiz plantou uma no Dia 10. Em 48 horas, havia uma arvore de 12 metros que respondia a comandos de voz. As outras cinco ainda esperam. Ele diz que ainda nao e hora.',
+    lore: 'Seis sementes guardadas em um tubo de vidro lacrado. Cada uma pulsa com bioluminescencia verde. Etiqueta manuscrita: "ESPECIE DESCONHECIDA — NAO PLANTAR SEM SUPERVISAO". Romulo plantou uma no Dia 10. Em 48 horas, havia uma arvore de 12 metros que respondia a comandos de voz. As outras cinco ainda esperam. Ele diz que ainda nao e hora.',
     characterId: 'grass_man',
     order: 1,
     spriteHint: 'seed',
@@ -120,7 +120,7 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_raiz_root_network',
     name: 'Diagrama — Rede de Raizes',
-    lore: 'Diagrama cientifico mostrando a rede neural subterranea que conecta todas as plantas mutantes na Zona Verde. Similar a uma rede de internet biologica, cada arvore e um "no" que transmite informacao quimica. No centro do diagrama, um X vermelho com a anotacao: "PONTO CENTRAL — coordenadas de Raiz. Ele e o servidor. A floresta o usa como cerebro. Ou ele usa a floresta. Nao sabemos qual." Embaixo, uma pergunta sem resposta: "Se ele morrer, a floresta morre?"',
+    lore: 'Diagrama cientifico mostrando a rede neural subterranea que conecta todas as plantas mutantes na Zona Verde. Similar a uma rede de internet biologica, cada arvore e um "no" que transmite informacao quimica. No centro do diagrama, um X vermelho com a anotacao: "PONTO CENTRAL — coordenadas de Romulo. Ele e o servidor. A floresta o usa como cerebro. Ou ele usa a floresta. Nao sabemos qual." Embaixo, uma pergunta sem resposta: "Se ele morrer, a floresta morre?"',
     characterId: 'grass_man',
     order: 6,
     spriteHint: 'diagram',
@@ -128,14 +128,14 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INFERNO COLLECTIBLES — Trauma e Fogo
+// KAGUTSUCHI COLLECTIBLES — Trauma e Fogo
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_teddy',
     name: 'Ursinho de Pelucia Queimado',
-    lore: 'Metade derretida, metade intacta. O olho esquerdo de vidro ainda brilha. Era da Leticia — irma mais nova de Cinza. Ela tinha 7 anos. Dormia com o urso toda noite. Na noite do Evento, quando a casa explodiu, Cinza encontrou o urso no quintal, a 15 metros da cratera. Do corpo dela, nao encontrou nada. Ele carrega o urso no bolso interno do colete. Sempre. Nao fala sobre isso. Nunca.',
+    lore: 'Metade derretida, metade intacta. O olho esquerdo de vidro ainda brilha. Era da Yuki — filha de Kagutsuchi, 6 anos. Dormia com o urso toda noite. Na noite do Evento, quando o gas explodiu, Kagutsuchi encontrou o urso no quintal, a 15 metros da cratera. Do corpo dela, nao encontrou nada. Ele carrega o urso no bolso interno do colete. Sempre. Nao fala sobre isso. Nunca.',
     characterId: 'fire_lord',
     order: 1,
     spriteHint: 'teddy',
@@ -151,7 +151,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_photo',
     name: 'Foto de Familia — Derretida',
-    lore: 'A foto esta quase irreconhecivel — o calor fundiu a camada plastica com a imagem. Mas se voce olhar com cuidado, de um angulo especifico, da pra ver: quatro pessoas. Um homem mais velho (o pai), uma mulher jovem sorrindo (a mae que ja tinha ido embora? Uma tia?), um adolescente com camisa de time (ele), e uma menina pequena de vestido amarelo (Leticia). Todos sorrindo. A ultima vez. Cinza olha para esta foto toda noite. E toda noite, queima algo depois.',
+    lore: 'A foto esta quase irreconhecivel — o calor fundiu a camada plastica com a imagem. Mas se voce olhar com cuidado, de um angulo especifico, da pra ver: tres pessoas. Um homem (ele), uma mulher sorrindo (Ana), e uma menina pequena de vestido amarelo (Yuki). Todos sorrindo. A ultima vez. Kagutsuchi olha para esta foto toda noite. Conto ate tres. Fecha. E toda noite, queima algo depois.',
     characterId: 'fire_lord',
     order: 3,
     spriteHint: 'photo',
@@ -159,7 +159,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_badge',
     name: 'Distintivo de Bombeiro',
-    lore: 'Distintivo #2847 do Corpo de Bombeiros Militar de Goias. Encontrado a 200 metros da casa destruida. O bombeiro chegou rapido — rapido demais para o incendio ser normal. Provavelmente ja estava na vizinhanca quando a explosao aconteceu. Nao sobreviveu. Cinza encontrou o corpo no dia seguinte — carbonizado, mas de joelhos, como se tivesse morrido tentando levantar. Ele guarda o distintivo como lembrete: ate o fim, alguem tentou.',
+    lore: 'Distintivo #2847 do Corpo de Bombeiros Militar de Goias. Encontrado a 200 metros da casa destruida. O bombeiro chegou rapido — rapido demais para a explosao ser normal. Provavelmente ja estava na vizinhanca quando o gas detonou. Nao sobreviveu. Kagutsuchi encontrou o corpo no dia seguinte — carbonizado, mas de joelhos, como se tivesse morrido tentando levantar. Ele guarda o distintivo como lembrete: ate o fim, alguem tentou.',
     characterId: 'fire_lord',
     order: 4,
     spriteHint: 'badge',
@@ -167,7 +167,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_psych_eval',
     name: 'Avaliacao Psicologica — Confidencial',
-    lore: 'RELATORIO — Submarino Tupi, Dept. Psicologico. Paciente: "Cinza" (nome real riscado). Diagnostico: TEPT grave, piromania compulsiva, ideacao suicida recorrente mascarada como "comportamento de risco". Nota do psicologo: "Paciente demonstra zero valor pela propria vida mas alta eficiencia em combate. Funcional para missoes. Nao funcional como ser humano. Recomendacao: manter em campo. E o unico lugar onde nao tenta morrer." [Carimbo: APROVADO PARA OPERACOES]',
+    lore: 'RELATORIO — Submarino Tupi, Dept. Psicologico. Paciente: "Kagutsuchi" (nome real riscado). Diagnostico: TEPT grave, piromania compulsiva, ideacao suicida recorrente mascarada como "comportamento de risco". Nota do psicologo: "Paciente demonstra zero valor pela propria vida mas alta eficiencia em combate. Funcional para missoes. Nao funcional como ser humano. Recomendacao: manter em campo. E o unico lugar onde nao tenta morrer." [Carimbo: APROVADO PARA OPERACOES]',
     characterId: 'fire_lord',
     order: 5,
     spriteHint: 'document',
@@ -175,7 +175,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_lighter',
     name: 'Isqueiro do Pai',
-    lore: 'Zippo de aco com as iniciais "R.S." gravadas. O pai era fumante — o unico vicio dele. Cinza encontrou o isqueiro intacto nos escombros. Como sobreviveu ao calor, ele nao sabe. O mecanismo ainda funciona perfeitamente. Ele o usa para acender cada arma incendiaria que constroi. Cada chama que cria comeca com o isqueiro do pai. Como se, de alguma forma, o velho ainda estivesse ajudando. Ainda estivesse ali.',
+    lore: 'Zippo de aco com as iniciais "K.S." gravadas. O pai era fumante — o unico vicio dele. Kagutsuchi encontrou o isqueiro intacto nos escombros. Como sobreviveu ao calor do plasma, ele nao sabe. O mecanismo ainda funciona perfeitamente. Ele o usa para acender cada arma incendiaria que constroi. Cada chama que cria comeca com o isqueiro do pai. Como se, de alguma forma, o velho ainda estivesse ajudando. Ainda estivesse ali.',
     characterId: 'fire_lord',
     order: 6,
     spriteHint: 'lighter',
@@ -213,7 +213,7 @@ export const MARE_COLLECTIBLES: Collectible[] = [
   },
   {
     id: 'col_mare_personal_log',
-    name: 'Diario Pessoal de Maré — Dia 22',
+    name: 'Diario Pessoal de Mazu — Dia 22',
     lore: '"Faz 22 dias que nao vejo o sol. O submarino nao tem janelas — obvio. Mas eu sinto falta. Da luz natural, do vento no rosto. Subi ao periscópio hoje. Vi o ceu. Estava... errado. Nao azul. Nao cinza. Algo entre roxo e verde. Como se a atmosfera tivesse mudado de composicao. Ou como se algo estivesse entre nos e o sol, filtrando a luz. O ar da superficie ainda e respiravel. Por enquanto. Quanto tempo ate nao ser?"',
     characterId: 'aqua_sage',
     order: 4,
@@ -245,7 +245,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_dosimeter',
     name: 'Dosimetro — SATURADO',
-    lore: 'Dosimetro pessoal de radiacao. O marcador esta no maximo — alem do maximo. O indicador ultrapassou a escala e parou. O dispositivo nao foi projetado para medir este nivel de exposicao porque este nivel de exposicao deveria ser instantaneamente fatal. No verso, etiqueta: "PROPRIEDADE DE: Matheus C. — Tecnico de manutencao, Usina Angra III". Matheus e o nome que Pulso nao usa mais. Matheus morreu no reator. O que saiu era outra coisa.',
+    lore: 'Dosimetro pessoal de radiacao. O marcador esta no maximo — alem do maximo. O indicador ultrapassou a escala e parou. O dispositivo nao foi projetado para medir este nivel de exposicao porque este nivel de exposicao deveria ser instantaneamente fatal. No verso, etiqueta: "PROPRIEDADE DE: Matheus C. — Tecnico de manutencao, Usina Angra III". Matheus e o nome que Frank nao usa mais. Matheus morreu no reator. O que saiu prefere ser chamado de Frank.',
     characterId: 'storm_runner',
     order: 1,
     spriteHint: 'device',
@@ -253,7 +253,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_tissue',
     name: 'Amostra de Tecido Fusionado',
-    lore: 'Frasco de formol contendo um pedaco de pele. Metade e claramente humana — poros, pelos, melanina. A outra metade e algo impossivel: escamas microscopicas, bioluminescentes, que pulsam com uma luz azul-violeta. A transicao entre humano e alien nao e abrupta — e gradual. As celulas se misturaram como tintas na agua. Nota do laboratorio: "Amostra retirada do antebraco esquerdo do paciente Pulso. As celulas alien estao se expandindo a uma taxa de 0.3% por dia."',
+    lore: 'Frasco de formol contendo um pedaco de pele. Metade e claramente humana — poros, pelos, melanina. A outra metade e algo impossivel: escamas microscopicas, bioluminescentes, que pulsam com uma luz azul-violeta. A transicao entre humano e alien nao e abrupta — e gradual. As celulas se misturaram como tintas na agua. Nota do laboratorio: "Amostra retirada do antebraco esquerdo do paciente Frank. As celulas alien estao se expandindo a uma taxa de 0.3% por dia."',
     characterId: 'storm_runner',
     order: 2,
     spriteHint: 'vial',
@@ -293,14 +293,14 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ABISMO COLLECTIBLES — A Fenda e o Outro Lado
+// DR. EON COLLECTIBLES — A Fenda e o Outro Lado
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_notebook',
     name: 'Caderno de Equacoes Quanticas',
-    lore: 'Caderno universitario de 200 paginas, completamente preenchido. As primeiras 50 paginas sao fisica quantica convencional — equações de Schrodinger, diagramas de Feynman. As seguintes 100 sao... algo mais. Simbolos que nao existem em nenhuma notação cientifica. Equações que se contradizem e se resolvem simultaneamente. As ultimas 50 paginas foram escritas apos o retorno de Fenda. Os fisicos do submarino dizem que "fazem sentido impossível". Que descrevem coisas que nao deveriam ser descritíveis.',
+    lore: 'Caderno universitario de 200 paginas, completamente preenchido. As primeiras 50 paginas sao fisica quantica convencional — equacoes de Schrodinger, diagramas de Feynman. As seguintes 100 sao... algo mais. Simbolos que nao existem em nenhuma notacao cientifica. Equacoes que se contradizem e se resolvem simultaneamente. As ultimas 50 paginas foram escritas apos o retorno de Dr. Eon. Os fisicos do submarino dizem que "fazem sentido impossivel". Que descrevem coisas que nao deveriam ser descritíveis.',
     characterId: 'void_walker',
     order: 1,
     spriteHint: 'book',
@@ -308,7 +308,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_photo_other',
     name: 'Foto — "O Outro Lado"',
-    lore: 'Uma fotografia Polaroid que nao deveria existir. Fenda nao levou camera ao outro lado. A foto apareceu no bolso de sua calca quando voltou. Mostra: um horizonte sem chao e sem ceu. Estruturas que parecem cidades invertidas, pendendo de nada. Luz vindo de todas as direcoes simultaneamente. E no centro, muito distante, algo escuro. Enorme. Esférico. Com olhos. Muitos olhos. Ninguem alem de Fenda olha para esta foto por mais de 5 segundos sem sentir nausea.',
+    lore: 'Uma fotografia Polaroid que nao deveria existir. Dr. Eon nao levou camera ao outro lado. A foto apareceu no bolso de sua calca quando voltou. Mostra: um horizonte sem chao e sem ceu. Estruturas que parecem cidades invertidas, pendendo de nada. Luz vindo de todas as direcoes simultaneamente. E no centro, muito distante, algo escuro. Enorme. Esferico. Com olhos. Muitos olhos. Ninguem alem de Dr. Eon olha para esta foto por mais de 5 segundos sem sentir nausea.',
     characterId: 'void_walker',
     order: 2,
     spriteHint: 'photo',
@@ -316,7 +316,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_clock',
     name: 'Relogio Distorcido',
-    lore: 'Relogio de pulso Casio F-91W. O mais comum do mundo. Mas este marca o tempo ao contrário. O ponteiro dos segundos gira no sentido anti-horário. A hora diminui em vez de aumentar. A data retrocede. Fenda o usava quando caiu na fenda. Quando voltou, o relogio marcava uma data 300 anos no passado. E continua voltando. Os cientistas calculam que, pela taxa atual, em 2 meses o relogio marcará o momento exato do Big Bang. Ninguem sabe o que acontece depois.',
+    lore: 'Relogio de pulso Casio F-91W. O mais comum do mundo. Mas este marca o tempo ao contrario. O ponteiro dos segundos gira no sentido anti-horario. A hora diminui em vez de aumentar. A data retrocede. Dr. Eon o usava quando caiu na fenda. Quando voltou, o relogio marcava uma data 300 anos no passado. E continua voltando. Os cientistas calculam que, pela taxa atual, em 2 meses o relogio marcara o momento exato do Big Bang. Ninguem sabe o que acontece depois.',
     characterId: 'void_walker',
     order: 3,
     spriteHint: 'watch',
@@ -324,7 +324,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_interview',
     name: 'Transcricao — "O Que Ha La"',
-    lore: 'TRANSCRICAO — Debriefing de "Fenda", Dia 3 pos-retorno. Comandante: "O que voce viu do outro lado?" Fenda: "Tudo. Nada. As duas coisas sao a mesma la." Comandante: "Pode ser mais especifico?" Fenda: "O espaco nao tem direcao. O tempo nao tem sequencia. Eu vivi toda a minha vida — passado, presente, futuro — simultaneamente. Vi minha morte. Vi meu nascimento. Vi o fim do universo. Vi o inicio. E entre tudo isso... vi ELES. Os que vieram. E vi o que os fez vir." Comandante: "O que os fez vir?" [LONGO SILENCIO — 47 segundos] Fenda: "Medo." [FIM DA TRANSCRICAO]',
+    lore: 'TRANSCRICAO — Debriefing de "Dr. Eon", Dia 3 pos-retorno. Comandante: "O que voce viu do outro lado?" Dr. Eon: "Tudo. Nada. As duas coisas sao a mesma la." Comandante: "Pode ser mais especifico?" Dr. Eon: "O espaco nao tem direcao. O tempo nao tem sequencia. Eu vivi toda a minha vida — passado, presente, futuro — simultaneamente. Vi minha morte. Vi meu nascimento. Vi o fim do universo. Vi o inicio. E entre tudo isso... vi ELES. Os que vieram. E vi o que os fez vir." Comandante: "O que os fez vir?" [LONGO SILENCIO — 47 segundos] Dr. Eon: "Medo. Eles estao fugindo de algo." [FIM DA TRANSCRICAO]',
     characterId: 'void_walker',
     order: 4,
     spriteHint: 'document',
@@ -332,7 +332,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_scar',
     name: 'Diagrama — Cicatrizes Dimensionais',
-    lore: 'Mapa de Sao Paulo e arredores com marcacoes em vermelho indicando "cicatrizes dimensionais" — pontos onde o tecido do espaco-tempo esta enfraquecido. Ha 247 marcacoes. A maior e a fenda principal sobre o centro da cidade. As menores sao onde teletransportadores e distorcoes temporais operam. Nota de Fenda: "As cicatrizes estao se conectando. Formando um padrão. Um circulo. Quando o circulo se fechar... outra fenda. Maior. Permanente. E o que esta do outro lado VAI passar." Data estimada de fechamento do circulo: 6 meses.',
+    lore: 'Mapa de Sao Paulo e arredores com marcacoes em vermelho indicando "cicatrizes dimensionais" — pontos onde o tecido do espaco-tempo esta enfraquecido. Ha 247 marcacoes. A maior e a fenda principal sobre o centro da cidade. As menores sao onde teletransportadores e distorcoes temporais operam. Nota de Dr. Eon: "As cicatrizes estao se conectando. Formando um padrao. Um circulo. Quando o circulo se fechar... outra fenda. Maior. Permanente. E o que esta do outro lado VAI passar. Nao os aliens que conhecemos. O que eles temem." Data estimada de fechamento do circulo: 6 meses.',
     characterId: 'void_walker',
     order: 5,
     spriteHint: 'map',
@@ -340,7 +340,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_mirror',
     name: 'Fragmento de Espelho — Reflexo Errado',
-    lore: 'Pedaco de espelho que Fenda carrega no bolso. Quem olha nao ve seu proprio reflexo — ve uma versao levemente diferente. Mais velha, ou mais jovem, ou com roupas diferentes. Sempre olhando de volta com uma expressao que voce NAO esta fazendo. Os cientistas dizem que o espelho esta mostrando versoes de realidades adjacentes. Fenda diz que e mais simples: "E a versao de voce que nao sobreviveu. Olhando com inveja. Querendo trocar de lugar."',
+    lore: 'Pedaco de espelho que Dr. Eon carrega no bolso. Quem olha nao ve seu proprio reflexo — ve uma versao levemente diferente. Mais velha, ou mais jovem, ou com roupas diferentes. Sempre olhando de volta com uma expressao que voce NAO esta fazendo. Os cientistas dizem que o espelho esta mostrando versoes de realidades adjacentes. Dr. Eon diz que e mais simples: "E a versao de voce que nao sobreviveu. Olhando com inveja. Querendo trocar de lugar."',
     characterId: 'void_walker',
     order: 6,
     spriteHint: 'mirror',
@@ -348,7 +348,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOMADORA COLLECTIBLES — Necromancia Alien
+// DIANA COLLECTIBLES — Necromancia Alien
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const DOMADORA_COLLECTIBLES: Collectible[] = [
@@ -371,14 +371,14 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_domadora_ethics',
     name: 'Carta de Resignacao — Comite de Etica',
-    lore: 'PARA: Conselho do Submarino Tupi. DE: Dr. Helena Rocha, Representante de Etica. ASSUNTO: RESIGNACAO IMEDIATA. "Nao posso mais fazer parte de um conselho que aprova os experimentos da operativa Nex. O que ela faz nao e ciencia — e profanacao. Usar cadaveres como armas? Manipular restos como marionetes? Onde esta a linha? SE ELES FIZESSEM ISSO COM NOSSOS MORTOS, chamariamos de crime de guerra. Eu me recuso. Eu saio." [Nota no rodape, outra letra: "Dra. Rocha morreu na missao seguinte. Ironia: Nex reanimou o alien que a matou e o usou para proteger a evacuacao de civis."]',
+    lore: 'PARA: Conselho do Submarino Tupi. DE: Dr. Helena Rocha, Representante de Etica. ASSUNTO: RESIGNACAO IMEDIATA. "Nao posso mais fazer parte de um conselho que aprova os experimentos da operativa Diana. O que ela faz nao e ciencia — e profanacao. Usar cadaveres como armas? Manipular restos como marionetes? Onde esta a linha? SE ELES FIZESSEM ISSO COM NOSSOS MORTOS, chamariamos de crime de guerra. Eu me recuso. Eu saio." [Nota no rodape, outra letra: "Dra. Rocha morreu na missao seguinte. Ironia: Diana reanimou o alien que a matou e o usou para proteger a evacuacao de civis."]',
     characterId: 'beast_tamer',
     order: 3,
     spriteHint: 'letter',
   },
   {
     id: 'col_domadora_personal',
-    name: 'Diario de Nex — Entrada 1',
+    name: 'Diario de Diana — Entrada 1',
     lore: '"Eu era veterinaria. Cuidava de gatos, cachorros, cavalos. Vida simples. Quando o Evento comecou e todos os animais da clinica entraram em panico, eu os soltei. Todos. Ate o rottweiler agressivo. Porque nenhum bicho merece morrer em gaiola. Depois, quando encontrei o primeiro alien morto, eu so... quis entender. Como qualquer vet faria. Abri. Estudei. E quando vi que ainda se mexia... eu nao tive medo. Tive curiosidade. Sempre foi meu maior defeito."',
     characterId: 'beast_tamer',
     order: 4,
@@ -387,7 +387,7 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_domadora_dog_tags',
     name: 'Plaqueta de Identificacao — "Rex"',
-    lore: 'Plaqueta metalica de coleira de cachorro. "REX — Se encontrado, ligar: (21) 98xxx-xxxx". Rex era um pastor-alemao que Nex tratou por 4 anos na clinica. Artrite, problemas de quadril, coracao grande. Nunca soube o que aconteceu com ele apos o Evento. Ate que um dia, em missao, encontrou um corpo canino mutado por esporos, irreconhecível. Mas a plaqueta estava la. Ela enterrou o corpo. Foi a unica vez que os outros a viram chorar.',
+    lore: 'Plaqueta metalica de coleira de cachorro. "REX — Se encontrado, ligar: (21) 98xxx-xxxx". Rex era um pastor-alemao que Diana tratou por 4 anos na clinica. Artrite, problemas de quadril, coracao grande. Nunca soube o que aconteceu com ele apos o Evento. Ate que um dia, em missao, encontrou um corpo canino mutado por esporos, irreconhecivel. Mas a plaqueta estava la. Ela enterrou o corpo. Foi a unica vez que os outros a viram chorar.',
     characterId: 'beast_tamer',
     order: 5,
     spriteHint: 'tag',

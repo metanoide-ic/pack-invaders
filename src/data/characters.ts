@@ -36,10 +36,10 @@ export interface CharacterDefinition {
 
 export const GRASS_MAN: CharacterDefinition = {
   id: 'grass_man',
-  name: 'Raiz',
+  name: 'Romulo',
   title: 'O Sobrevivente',
-  description: 'Um homem comum que se escondeu na mata. Aprendeu a transformar a selva mutante em arma.',
-  backstory: 'Nao era soldado, nem heroi. Apenas um homem comum que estava acampando longe da cidade quando "O Evento" aconteceu. Enquanto as cidades caiam, ele fugiu para o fundo da floresta. Os esporos alienigenas que choveram nao o mataram — mutaram a vegetacao ao redor. Sozinho por meses, ele aprendeu a sobreviver: usar cipos como cordas, espinhos como laminas, seiva acida como veneno. A floresta virou seu lar, seu esconderijo e seu arsenal. Ele empilha tudo que encontra, porque na mata, quem desperdica, morre.',
+  description: 'Um biologo amador que se perdeu na mata durante o Evento. A floresta mutante o achou primeiro.',
+  backstory: 'Estava acampando no Parque Nacional da Serra da Canastra quando o Evento comecou. Biologo amador, nao um heroi. Por 6 meses sobreviveu sozinho enquanto os esporos alienigenas mutavam a vegetacao ao redor. A floresta nao morreu — evoluiu para algo estranho, agressivo, e, descobriu ele, util. Aprendeu que as plantas mutadas reconhecem o Enxame como ameaca. Hoje ele e a floresta sao a mesma coisa.',
   passive: 'Itens ganham +75% dano por camada abaixo deles (stacking). Itens [Planta] curam 1 HP/s.',
   backpackRows: 6,
   backpackCols: 6,
@@ -50,8 +50,8 @@ export const GRASS_MAN: CharacterDefinition = {
   shipColorIndex: 2,
   unlockCondition: 'Disponivel desde o inicio.',
   unlockedByDefault: true,
-  lore1: 'Eu nao escolhi lutar. Eu so nao queria morrer. A floresta me ensinou o resto.',
-  lore2: 'Sozinho por tanto tempo, comecei a ouvir a mata. As raizes sabem onde os aliens pisam. Hoje eu nao me escondo mais — eu caco.',
+  lore1: 'Seis meses sem ver outro humano. Comecei a ouvir as raizes. Parei de achar isso estranho.',
+  lore2: 'A floresta lembra de cada alien que pisou nela. Cada um. E ela me mostra onde pisarao os proximos.',
   advantages: [
     'Itens empilhados: +75% dano por camada',
     'Itens [Planta] curam 1 HP/s',
@@ -69,10 +69,10 @@ export const GRASS_MAN: CharacterDefinition = {
 
 export const FIRE_LORD: CharacterDefinition = {
   id: 'fire_lord',
-  name: 'Cinza',
+  name: 'Kagutsuchi',
   title: 'O Inconsolável',
   description: 'Perdeu a familia e o braco no primeiro dia. Hoje so o fogo o faz sentir algo.',
-  backstory: 'Dia 1 da invasao. Estava em casa com a esposa e a filha de 6 anos quando um alien de fogo atravessou a parede. Na luta desesperada, o cano de gas se rompeu. Ele agarrou a criatura para dar tempo das duas fugirem — entao tudo explodiu. Acordou dias depois no hospital de campanha: a esposa e a filha nao sobreviveram, e seu braco direito teve de ser amputado. Os engenheiros sobreviventes lhe deram uma protese: um braco mecanico que e, tambem, um lanca-chamas. No peito ele carrega um relicario com a foto das duas. Ele luta com o mesmo fogo que tirou tudo dele.',
+  backstory: 'Dia 1. Estava em casa com Ana (esposa) e Yuki (filha, 6 anos). Um drone alien de plasma atravessou a parede. Ele agarrou a maquina para dar tempo das duas fugirem — o gas explodiu. Acordou em um hospital de campanha sem o braco direito e sem a familia. Engenheiros sobreviventes construiram uma protese funcional: um braco mecanico integrado com um lanca-chamas de plasma alien. No peito, um relicario com a ultima foto das duas. O nome Kagutsuchi e o que os outros o chamam — o deus do fogo que foi destruido por seu proprio poder.',
   passive: 'Itens [Fogo] ganham +50% dano. Explosoes tem +30% raio. Perde 1 HP/s passivamente.',
   backpackRows: 5,
   backpackCols: 7,
@@ -83,8 +83,8 @@ export const FIRE_LORD: CharacterDefinition = {
   shipColorIndex: 1,
   unlockCondition: 'Alcance wave 10 com Raiz.',
   unlockedByDefault: false,
-  lore1: 'O fogo levou a Ana e a Bia. Levou meu braco. Mas o fogo tambem e a unica coisa que ainda me obedece.',
-  lore2: 'Toda vez que incinero um deles, abro o relicario. Ainda sinto o cheiro da casa queimando. Nao paro ate o ultimo virar cinza — nem que eu vire junto.',
+  lore1: 'O fogo levou tudo que eu amava. Levou meu braco. Mas o fogo tambem nao questiona. Nao hesita. Nao chora. Por isso eu o uso.',
+  lore2: 'Toda vez que incinero um deles, abro o relicario. Conto ate tres. Fecho. E queimo o proximo.',
   advantages: [
     'Itens [Fogo] ganham +50% dano',
     'Explosões tem +30% de raio',
@@ -102,10 +102,10 @@ export const FIRE_LORD: CharacterDefinition = {
 
 export const AQUA_SAGE: CharacterDefinition = {
   id: 'aqua_sage',
-  name: 'Maré',
+  name: 'Mazu',
   title: 'A Oficial da Marinha',
   description: 'Operativa da frota submarina. Disciplina militar e armamento aquatico pressurizado.',
-  backstory: 'Tenente-Comandante da frota de submarinos da Marinha do Brasil. Quando a superficie caiu, o que restou das forcas armadas recuou para debaixo d\'agua — o unico lugar que os Enxames nao alcancaram. De bunkers no fundo do mar, os militares planejam a reconquista. Mare e a melhor operativa em servico: treinada, fria sob pressao, letal. E enviada a superficie em missoes de reconhecimento e sabotagem, usando canhoes de agua pressurizada e armamento criogenico adaptado de tecnologia alien capturada.',
+  backstory: 'Tenente-Comandante Li Mazu, frota submarina da alianca militar internacional que sobreviveu ao Evento debaixo d\'agua. O Submarino Tupi e a maior concentracao de militares ativos restantes na Terra. Mazu e a melhor operativa de superficie: fria, precisa, letalmente eficiente. Usa canhoes de agua pressurizada e armamento criogenico adaptado de tecnologia alien capturada. Ela nao fala sobre sua familia. Nao porque morreu — porque ela mesma os mandou embora antes da invasao. Tomou uma decisao que nao pode desfazer.',
   passive: 'Projeteis [Agua] desaceleram inimigos em 30%. +2 HP/s de cura passiva.',
   backpackRows: 6,
   backpackCols: 6,
@@ -116,8 +116,8 @@ export const AQUA_SAGE: CharacterDefinition = {
   shipColorIndex: 0,
   unlockCondition: 'Derrote o boss Hidra.',
   unlockedByDefault: false,
-  lore1: 'Embaixo d\'agua o mundo ainda faz sentido. Ordens claras, cadeia de comando, objetivos. La em cima e so caos — e meu trabalho e impor ordem nele.',
-  lore2: 'A Operacao Ressurgencia comeca em 72 horas. Se eu nao voltar com dados sobre os Enxames da superficie, nao havera plano. Nao havera reconquista. Eu nao falho missoes.',
+  lore1: 'Embaixo d\'agua tudo faz sentido. Ordens. Missoes. Objetivos. La em cima e so caos. E o meu trabalho transformar caos em derrota alien.',
+  lore2: 'Mandei meus filhos para um abrigo antes de embarcar. Ainda nao sei se o abrigo existe. Essa incerteza e o que me faz voltar. Todo. Dia.',
   advantages: [
     'Projeteis [Água] desaceleram inimigos 30%',
     '+2 HP/s cura passiva constante',
@@ -135,10 +135,10 @@ export const AQUA_SAGE: CharacterDefinition = {
 
 export const STORM_RUNNER: CharacterDefinition = {
   id: 'storm_runner',
-  name: 'Pulso',
+  name: 'Frank',
   title: 'O Híbrido',
   description: 'Fisico nuclear fundido a um alien pela radiacao. Metade humano, metade Enxame.',
-  backstory: 'Era fisico nuclear, chefe de turno na usina onde trabalhava. Quando os aliens atacaram, o reator entrou em colapso. A radiacao deveria te-lo matado — mas no instante exato da exposicao, um organismo alien foi irradiado junto dele e se fundiu ao seu corpo a nivel celular. Ele sobreviveu transformado: metade do rosto e humano, a outra metade e uma carapaca alienigena viva e pulsante. Sua biologia agora crepita com energia radioativa instavel. Pior: o alien dentro dele tem vontade propria, e luta constantemente para tomar o resto de seu corpo. Cada dia e uma batalha interna para continuar humano.',
+  backstory: 'Frank era fisico nuclear, chefe de turno da Usina de Angra. Quando a usina entrou em colapso durante o Evento, a radiacao deveria te-lo matado. Em vez disso, um organismo alien foi irradiado junto com ele e fundiu-se ao seu corpo em nivel celular. Metade do rosto e humano. A outra metade e uma carapaca alienigena viva e pulsante. Frank — ele insiste no nome simples, nao quer nada grandioso — passa cada dia lutando contra o alien dentro dele que quer dominar o que resta. 47 dias, disseram os cientistas. Isso foi ha 3 meses.',
   passive: 'Todos os emissores tem +40% cadencia e -20% dano. Pulsos instaveis ignoram armadura.',
   backpackRows: 5,
   backpackCols: 5,
@@ -149,8 +149,8 @@ export const STORM_RUNNER: CharacterDefinition = {
   shipColorIndex: 3,
   unlockCondition: 'Mate 50 inimigos em uma unica wave.',
   unlockedByDefault: false,
-  lore1: 'Metade de mim quer exterminar todos eles. A outra metade... e um deles. As vezes ouco os pensamentos do Enxame. E pior: as vezes concordo com eles.',
-  lore2: 'Os medicos do submarino me deram 47 dias antes do alien dominar o resto do corpo. 47 dias pra levar o maximo deles comigo. O relogio nao para — entao eu tambem nao paro.',
+  lore1: 'Me chamam de hibrido, de monstro, de experiencia. Eu prefiro Frank. Sempre fui Frank. E pretendo continuar sendo Frank ate o ultimo segundo.',
+  lore2: 'O alien dentro de mim entende o Enxame. Ouve os sinais deles. Tem dias que quase concordo. Esses sao os dias mais perigosos.',
   advantages: [
     'Todos emissores +40% cadência',
     'Pulsos instáveis ignoram armadura',
@@ -168,10 +168,10 @@ export const STORM_RUNNER: CharacterDefinition = {
 
 export const VOID_WALKER: CharacterDefinition = {
   id: 'void_walker',
-  name: 'Fenda',
+  name: 'Dr. Eon',
   title: 'O Intangível',
   description: 'Fisico cujo experimento o desconecta da realidade. Atravessa ataques sem querer.',
-  backstory: 'Fisico teorico obcecado por mecanica quantica e viagem dimensional. Quando os aliens rasgaram uma fenda no espaco-tempo sobre a cidade, ele viu a chance de sua vida: replicou o fenomeno em laboratorio. O experimento deu errado — e certo demais. Seu corpo deixou de estar totalmente ancorado a este plano. Agora, em momentos aleatorios, ele simplesmente "pisca" para fora da realidade: fica intangivel, e seres vivos e seus ataques o atravessam como se fosse fantasma. Nao controla quando acontece. As vezes e a salvacao; as vezes ele atravessa o chao e cai por segundos eternos no vazio.',
+  backstory: 'Dr. Eon — sobrenome classificado, primeiro nome apagado dos registros — era fisico teorico especializado em mecanica quantica. Quando o Enxame abriu a fenda espaco-temporal sobre Sao Paulo, ele viu a oportunidade da sua vida e replicou o fenomeno em escala menor. O experimento funcionou demais: seu corpo deixou de estar completamente ancorado a este plano. Em momentos aleatorios, ele "pisca" para fora da realidade — atravessa paredes, ignora balas, cai pelo chao. Nao controla quando acontece. Os outros o chamam de Eon porque parece viver em outra era.',
   passive: 'Intangibilidade aleatoria: chance de atravessar ataques de inimigos vivos. Ganha +dano quanto mais arriscado o estado.',
   backpackRows: 7,
   backpackCols: 5,
@@ -182,8 +182,8 @@ export const VOID_WALKER: CharacterDefinition = {
   shipColorIndex: 0,
   unlockCondition: 'Venca o jogo com menos de 20 HP.',
   unlockedByDefault: false,
-  lore1: 'As vezes a bala passa direto por mim e eu nem percebo. As vezes eu passo direto pelo chao. Eu nao decido. A realidade decide se quer me segurar.',
-  lore2: 'Do outro lado da fenda eu vi de onde eles vem. Um vazio infinito e faminto. Se meu corpo continuar se soltando deste plano, talvez um dia eu nao volte. Talvez seja o unico jeito de fechar a fenda por dentro.',
+  lore1: 'Sabe o que e pior que ser atravessado por uma bala? Nao ser atravessado. Nao saber quando vai acontecer. Nao poder confiar no proprio chao.',
+  lore2: 'Do outro lado eu vi de onde eles vem. Um vazio imenso e faminto. E vi algo pior: eles tambem tem medo. Do vazio. Vieram aqui fugindo de algo maior.',
   advantages: [
     'Chance de ficar intangível e ignorar dano',
     'Começa com 150 HP (o maior do jogo)',
@@ -201,10 +201,10 @@ export const VOID_WALKER: CharacterDefinition = {
 
 export const BEAST_TAMER: CharacterDefinition = {
   id: 'beast_tamer',
-  name: 'Nex',
+  name: 'Diana',
   title: 'A Domadora',
   description: 'Doma os proprios aliens. As vezes um inimigo morto se ergue e luta ao seu lado.',
-  backstory: 'Era veterinaria e etologa — estudava o comportamento animal. Quando os Enxames chegaram, enquanto todos viam monstros, ela viu padroes: hierarquia, instinto, submissao. Descobriu que certos aliens respondem a dominancia, exatamente como predadores terrestres. Aprendeu a quebra-los, a doma-los, a transforma-los em armas vivas. Os outros sobreviventes a temem tanto quanto temem os aliens. Ela nao se importa: prefere a lealdade de uma fera domada a covardia de um humano. Quando ela mata um alien do jeito certo, as vezes ele se levanta de novo — mas dessa vez, do lado dela.',
+  backstory: 'Diana era veterinaria e etologa especializada em comportamento de predadores. Enquanto todos viam monstros no Enxame, ela viu padroes: hierarquia, submissao, instinto. Descobriu que certos aliens respondem a dominancia da mesma forma que predadores terrestres — e aprendeu a quebra-los. Os outros sobreviventes a temem. Os aliens que ela doma, paradoxalmente, sao leais ate a morte. Diana aceita que o custo de seu metodo e perder um pouco de humanidade a cada alien que dobra. Ela paga o custo de bom grado.',
   passive: 'Itens [Pet]/[Animal] ganham +100% dano e +50% cadencia. Inimigos mortos tem chance de virar aliados.',
   backpackRows: 6,
   backpackCols: 7,
@@ -215,8 +215,8 @@ export const BEAST_TAMER: CharacterDefinition = {
   shipColorIndex: 2,
   unlockCondition: 'Tenha 4 pets na mochila simultaneamente.',
   unlockedByDefault: false,
-  lore1: 'Eles me chamam de monstro por domar monstros. Mas minhas feras nunca me traem. Quantos humanos podem dizer o mesmo?',
-  lore2: 'Encontrei a frequencia que os controla. Se eu amplificar o suficiente, talvez eu dome a colmeia inteira. Talvez eu dome a Rainha. O custo? Eu paro de sentir se ainda sou humana.',
+  lore1: 'Perguntam como eu domino criaturas que tem o cerebro do tamanho de um carro. A resposta e simples: eu nao finjo que sou mais forte. Eu conveco que sou mais perigosa.',
+  lore2: 'Encontrei a frequencia neural que os controla. Se eu amplificar o suficiente com o equipamento certo... talvez eu dome a Rainha. O custo e que eu precisaria pensar como ela pensa. Ja estou praticando.',
   advantages: [
     'Itens [Pet]/[Animal] ganham +100% dano',
     'Pets ganham +50% cadência',
@@ -234,10 +234,10 @@ export const BEAST_TAMER: CharacterDefinition = {
 
 export const FIREFIGHTER: CharacterDefinition = {
   id: 'firefighter',
-  name: 'Fênix',
+  name: 'Florian',
   title: 'O Guardião Quebrado',
   description: 'Bombeiro que falhou em salvar criancas no primeiro dia. Agora protege com obsessao.',
-  backstory: 'Bombeiro veterano, 18 anos de servico, nunca perdeu uma crianca. No dia da invasao, recebeu um chamado banal: "um gato preso no alto de uma arvore, criancas tentando resgatar". Chegou sorrindo, pronto pra mais um resgate de rotina. O "gato" abriu olhos demais. Era um alien. Ele viu, impotente, a criatura descer e devorar as criancas ao redor da arvore, uma a uma, antes que ele pudesse sacar o machado. Salvou ninguem naquele dia. Agora carrega o machado, a mangueira e o tanque de espuma para a guerra — e jurou que nenhum inocente vai morrer na frente dele de novo. Ele se joga na frente do perigo. E o escudo que falhou uma vez e nunca mais vai falhar.',
+  backstory: 'Sargento Florian Kreuz, 18 anos de servico no Corpo de Bombeiros. Nunca tinha perdido uma vitima. Dia do Evento, chamado para "gato preso em arvore, criancas tentando ajudar". Chegou sorrindo. O gato tinha dezesseis olhos. Ele viu as criancas morrerem uma por uma antes de conseguir reagir. Desde entao, Florian nao dorme mais de 4 horas. Nao porque nao consegue — porque nao quer. Cada hora dormindo e uma hora que alguem pode morrer enquanto ele nao esta la. Ele e o escudo que falhou uma vez. Nunca mais vai falhar.',
   passive: 'Recebe -25% de dano quando esta acima de 50% HP. Itens [Água/Espuma] tambem protegem (escudo).',
   backpackRows: 6,
   backpackCols: 6,
@@ -248,8 +248,8 @@ export const FIREFIGHTER: CharacterDefinition = {
   shipColorIndex: 1,
   unlockCondition: 'Limpe uma wave (após a 5ª) sem receber nenhum dano.',
   unlockedByDefault: false,
-  lore1: 'Era so um gato numa arvore. So mais um resgate. Eu cheguei sorrindo. Eu nunca mais sorri.',
-  lore2: 'Eu nao consigo salvar os que ja se foram. Mas posso me jogar na frente do proximo. E do proximo. Ate nao sobrar nada de mim pra queimar. Essa e a unica penitencia que aceito.',
+  lore1: 'Era so um gato numa arvore. Eu cheguei sorrindo. Sorrindo. Nunca mais consegui fazer isso direito.',
+  lore2: 'O nome Florian vem de Florianus — Santo Floriao, padroeiro dos bombeiros. Meu pai me deu esse nome com esperanca. Eu carrego ele como uma divida.',
   advantages: [
     'Maior HP do jogo (160) — um verdadeiro tanque',
     'Recebe -25% dano enquanto acima de 50% HP',
