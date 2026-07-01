@@ -10,6 +10,8 @@ export interface LoadedSprites {
   vendors: Map<string, HTMLImageElement | HTMLCanvasElement>;
   bosses: Map<string, HTMLImageElement | HTMLCanvasElement>;
   enemies: Map<string, HTMLImageElement | HTMLCanvasElement>;
+  /** In-combat top-down (back view) player sprites, keyed by character ID */
+  topdown: Map<string, HTMLImageElement>;
   menuBg: HTMLImageElement | null;
 }
 
@@ -58,6 +60,16 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
   const vendors = new Map<string, HTMLImageElement | HTMLCanvasElement>();
   const bosses = new Map<string, HTMLImageElement | HTMLCanvasElement>();
   const enemies = new Map<string, HTMLImageElement | HTMLCanvasElement>();
+  const topdown = new Map<string, HTMLImageElement>();
+
+  // In-combat top-down player models (48px tall, transparent bg)
+  const TOPDOWN_IDS = ['grass_man', 'aqua_sage', 'storm_runner', 'beast_tamer'];
+  for (const id of TOPDOWN_IDS) {
+    try {
+      const img = await loadImage(`./sprites/characters/topdown/${id}.png`);
+      topdown.set(id, img);
+    } catch { /* fall back to procedural sprite */ }
+  }
 
   // Procedural portrait generators for characters without PNG art
   const proceduralPortraits: Record<string, () => HTMLCanvasElement> = {
@@ -92,7 +104,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback */ }
   }
 
-  cachedLoaded = { characters, vendors, bosses, enemies, menuBg: null };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, menuBg: null };
 
   // Load menu background
   try {
@@ -100,6 +112,12 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
   } catch { /* fallback to procedural */ }
 
   return cachedLoaded;
+}
+
+/** Get in-combat top-down player sprite by character ID (null → use procedural) */
+export function getTopdownSprite(charId: string): HTMLImageElement | null {
+  if (!cachedLoaded) return null;
+  return cachedLoaded.topdown.get(charId) || null;
 }
 
 /** Get character portrait by game character ID */

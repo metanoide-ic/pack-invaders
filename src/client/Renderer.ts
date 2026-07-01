@@ -16,12 +16,12 @@ import { ALL_ACHIEVEMENTS, getUnlockedAchievements, getGlobalStats } from '../da
 import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus, getClaimableMissionCount } from '../data/missions';
 import { getDifficultyById } from '../data/difficulties';
 import { getLeaderboard } from '../data/leaderboard';
-import { renderPlanet } from './PlanetRenderer';
+import { renderPlanetPixelated } from './PlanetRenderer';
 import { countPossibleCombinations, countPossibleBuffs, ALL_COMBINATIONS } from '../core/ItemCombinations';
 import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getTopdownSprite } from './SpriteLoader';
 
 export interface Layout {
   w: number; h: number; cell: number;
@@ -1445,6 +1445,18 @@ export class Renderer {
     ctx.fillStyle = 'rgba(0,0,0,0.6)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    // Cinematic letterbox bars sliding in/out
+    const barH = Math.floor(L.h * 0.085) * revealP * (1 - fadeP);
+    if (barH > 0.5) {
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, barH);
+      ctx.fillRect(0, canvas.height - barH, canvas.width, barH);
+      ctx.fillStyle = 'rgba(99,102,241,0.35)';
+      ctx.fillRect(0, barH - 1, canvas.width, 1);
+      ctx.fillRect(0, canvas.height - barH, canvas.width, 1);
+    }
+
     // Horizontal scan lines sweep effect
     const scanAlpha = Math.max(0, alpha * 0.06);
     ctx.globalAlpha = scanAlpha;
@@ -1839,7 +1851,7 @@ export class Renderer {
     const planetX = Math.floor(L.w * 0.78);
     const planetY = Math.floor(L.h * 0.45);
     const planetR = Math.floor(L.h * 0.25);
-    renderPlanet(ctx, planetX, planetY, planetR, game.totalMonths, performance.now() / 1000);
+    renderPlanetPixelated(ctx, planetX, planetY, planetR, game.totalMonths, performance.now() / 1000);
 
     ctx.fillStyle = 'rgba(10,10,18,0.85)';
     ctx.fillRect(L.gridX - 10, L.gridY - 20, L.gridW + 20, L.gridH + 40);
@@ -2435,6 +2447,9 @@ export class Renderer {
     const state = game.combat.state;
     const L = this.getLayout();
 
+    // Crisp pixel scaling for sprites (restored before HUD, which draws PNG portraits)
+    ctx.imageSmoothingEnabled = false;
+
     // Smooth HP
     this.displayHp += (state.playerHp - this.displayHp) * Math.min(1, dt * 8);
 
@@ -2660,7 +2675,7 @@ export class Renderer {
     const heroGlow = heroGlowColors[charId] ?? '#8fb8ff';
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = 0.22 + Math.sin(now * 2.5) * 0.05;
-    ctx.drawImage(this.getGlow(heroGlow, 30), state.playerX - 30, canvas.height - 62);
+    ctx.drawImage(this.getGlow(heroGlow, 30), state.playerX - 30, canvas.height - 68);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
 
@@ -2684,15 +2699,20 @@ export class Renderer {
       }
     }
 
-    if (playerSprite) {
-      // Draw top-down character — 32x32, with idle bob + movement lean
+    const tdSprite = getTopdownSprite(charId);
+    if (tdSprite || playerSprite) {
+      // Idle bob + movement lean; art sprites are feet-anchored at the ground
       const bob = Math.sin(now * 3.2) * 1.2;
       const vel = (game.combat as any).playerVelocity ?? 0;
       const lean = Math.max(-0.09, Math.min(0.09, vel * 0.00012));
       ctx.save();
-      ctx.translate(state.playerX, canvas.height - 29 + bob);
+      ctx.translate(state.playerX, canvas.height - 13 + bob);
       ctx.rotate(lean);
-      ctx.drawImage(playerSprite, -16, -16);
+      if (tdSprite) {
+        ctx.drawImage(tdSprite, -Math.floor(tdSprite.width / 2), -tdSprite.height);
+      } else {
+        ctx.drawImage(playerSprite, -16, -32);
+      }
       ctx.restore();
       // Movement dust kicks
       if (Math.abs(vel) > 200 && Math.random() < 0.3) {
@@ -2718,14 +2738,18 @@ export class Renderer {
       ctx.ellipse(state.player2X, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      // Use fire_lord (index 1) for P2 top-down character sprite
-      const p2Sprite = this.sprites.playerShips[1] ?? this.sprites.playerShips[0];
-      if (p2Sprite) {
-        ctx.save();
-        ctx.translate(state.player2X, canvas.height - 29);
-        ctx.drawImage(p2Sprite, -16, -16);
-        ctx.restore();
+      // P2 uses a distinct character model from P1
+      const p2Char = charId === 'aqua_sage' ? 'beast_tamer' : 'aqua_sage';
+      const p2Td = getTopdownSprite(p2Char);
+      ctx.save();
+      ctx.translate(state.player2X, canvas.height - 13);
+      if (p2Td) {
+        ctx.drawImage(p2Td, -Math.floor(p2Td.width / 2), -p2Td.height);
+      } else {
+        const p2Sprite = this.sprites.playerShips[1] ?? this.sprites.playerShips[0];
+        if (p2Sprite) ctx.drawImage(p2Sprite, -16, -32);
       }
+      ctx.restore();
     }
 
     // Render floating texts (damage numbers, gold)
@@ -2759,6 +2783,7 @@ export class Renderer {
     ctx.fillStyle = vigGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
+    ctx.imageSmoothingEnabled = true;
     this.renderCombatHUD();
   }
 
@@ -3585,9 +3610,9 @@ export class Renderer {
       }
     }
 
-    // First wave tutorial
-    if (game.totalMonths === 1 && state.waveTime < 5) {
-      ctx.globalAlpha = 0.8 - state.waveTime * 0.15;
+    // First wave tutorial (waits for the wave-transition banner to finish)
+    if (game.totalMonths === 1 && state.waveTime > 1.6 && state.waveTime < 7) {
+      ctx.globalAlpha = Math.min(0.85, (state.waveTime - 1.6) * 2) * Math.min(1, (7 - state.waveTime) / 1.5);
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.fillRect(0, Math.floor(L.h * 0.35), canvas.width, Math.floor(L.h * 0.3));
       ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
