@@ -33,7 +33,7 @@ function cp(item: any, opts: { d?: number; r?: number; p?: number; a?: number; h
   if (opts.ao !== undefined) persist.ao = (persist.ao ?? 0) + opts.ao;
 }
 
-// ─── Raiz (Grass Man) Cards ───────────────────────────────────────────────────
+// ─── Rômulo (Grass Man) Cards ───────────────────────────────────────────────────
 
 export const GRASS_MAN_CARDS: CardDefinition[] = [
   {
@@ -307,7 +307,7 @@ export const GRASS_MAN_CARDS: CardDefinition[] = [
   },
 ];
 
-// ─── Cinza (Fire Lord) Cards ──────────────────────────────────────────────────
+// ─── Kagutsuchi (Fire Lord) Cards ──────────────────────────────────────────────────
 
 export const FIRE_LORD_CARDS: CardDefinition[] = [
   {
@@ -509,7 +509,7 @@ export const FIRE_LORD_CARDS: CardDefinition[] = [
   },
 ];
 
-// ─── Maré (Aqua Sage) Cards ──────────────────────────────────────────────────
+// ─── Mazu (Aqua Sage) Cards ──────────────────────────────────────────────────
 
 export const AQUA_SAGE_CARDS: CardDefinition[] = [
   { id: 'onda_pressao', name: 'Onda de Pressão', description: 'Projéteis [Água] empurram inimigos para trás.', characterId: 'aqua_sage', weight: 4,
@@ -544,7 +544,7 @@ export const AQUA_SAGE_CARDS: CardDefinition[] = [
     apply(game) { for (const i of game.backpack.getItemsByTag('Emissor')) { cp(i, { d: 1.3 }); } } },
 ];
 
-// ─── Pulso (Storm Runner) Cards ──────────────────────────────────────────────
+// ─── Frank (Storm Runner) Cards ──────────────────────────────────────────────
 
 export const STORM_RUNNER_CARDS: CardDefinition[] = [
   { id: 'sobrecarga', name: 'Sobrecarga', description: '+60% cadência. -5 HP máximo.', characterId: 'storm_runner', weight: 4,
@@ -579,7 +579,7 @@ export const STORM_RUNNER_CARDS: CardDefinition[] = [
     apply(game) { (game as any)._nuclearRevive = true; } },
 ];
 
-// ─── Fenda (Void Walker) Cards ───────────────────────────────────────────────
+// ─── Dr. Eon (Void Walker) Cards ───────────────────────────────────────────────
 
 export const VOID_WALKER_CARDS: CardDefinition[] = [
   { id: 'fenda_menor', name: 'Fenda Menor', description: 'Projéteis teletransportam inimigos para posição aleatória.', characterId: 'void_walker', weight: 4,

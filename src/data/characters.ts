@@ -1,7 +1,7 @@
 /**
  * CHARACTER DEFINITIONS — 7 playable characters.
  * Post-Apocalyptic Alien Invasion lore. After "O Evento", each survived differently.
- * Only Raiz is unlocked initially.
+ * Only Rômulo is unlocked initially.
  */
 
 export interface CharacterDefinition {
@@ -36,7 +36,7 @@ export interface CharacterDefinition {
 
 export const GRASS_MAN: CharacterDefinition = {
   id: 'grass_man',
-  name: 'Raiz',
+  name: 'Rômulo',
   title: 'O Sobrevivente',
   description: 'Um homem comum que se escondeu na mata. Aprendeu a transformar a selva mutante em arma.',
   backstory: 'Nao era soldado, nem heroi. Apenas um homem comum que estava acampando longe da cidade quando "O Evento" aconteceu. Enquanto as cidades caiam, ele fugiu para o fundo da floresta. Os esporos alienigenas que choveram nao o mataram — mutaram a vegetacao ao redor. Sozinho por meses, ele aprendeu a sobreviver: usar cipos como cordas, espinhos como laminas, seiva acida como veneno. A floresta virou seu lar, seu esconderijo e seu arsenal. Ele empilha tudo que encontra, porque na mata, quem desperdica, morre.',
@@ -69,7 +69,7 @@ export const GRASS_MAN: CharacterDefinition = {
 
 export const FIRE_LORD: CharacterDefinition = {
   id: 'fire_lord',
-  name: 'Cinza',
+  name: 'Kagutsuchi',
   title: 'O Inconsolável',
   description: 'Perdeu a familia e o braco no primeiro dia. Hoje so o fogo o faz sentir algo.',
   backstory: 'Dia 1 da invasao. Estava em casa com a esposa e a filha de 6 anos quando um alien de fogo atravessou a parede. Na luta desesperada, o cano de gas se rompeu. Ele agarrou a criatura para dar tempo das duas fugirem — entao tudo explodiu. Acordou dias depois no hospital de campanha: a esposa e a filha nao sobreviveram, e seu braco direito teve de ser amputado. Os engenheiros sobreviventes lhe deram uma protese: um braco mecanico que e, tambem, um lanca-chamas. No peito ele carrega um relicario com a foto das duas. Ele luta com o mesmo fogo que tirou tudo dele.',
@@ -81,7 +81,7 @@ export const FIRE_LORD: CharacterDefinition = {
   startingGold: 40,
   startingItems: ['fire_gun'],
   shipColorIndex: 1,
-  unlockCondition: 'Alcance wave 10 com Raiz.',
+  unlockCondition: 'Alcance wave 10 com Rômulo.',
   unlockedByDefault: false,
   lore1: 'O fogo levou a Ana e a Bia. Levou meu braco. Mas o fogo tambem e a unica coisa que ainda me obedece.',
   lore2: 'Toda vez que incinero um deles, abro o relicario. Ainda sinto o cheiro da casa queimando. Nao paro ate o ultimo virar cinza — nem que eu vire junto.',
@@ -102,10 +102,10 @@ export const FIRE_LORD: CharacterDefinition = {
 
 export const AQUA_SAGE: CharacterDefinition = {
   id: 'aqua_sage',
-  name: 'Maré',
+  name: 'Mazu',
   title: 'A Oficial da Marinha',
   description: 'Operativa da frota submarina. Disciplina militar e armamento aquatico pressurizado.',
-  backstory: 'Tenente-Comandante da frota de submarinos da Marinha do Brasil. Quando a superficie caiu, o que restou das forcas armadas recuou para debaixo d\'agua — o unico lugar que os Enxames nao alcancaram. De bunkers no fundo do mar, os militares planejam a reconquista. Mare e a melhor operativa em servico: treinada, fria sob pressao, letal. E enviada a superficie em missoes de reconhecimento e sabotagem, usando canhoes de agua pressurizada e armamento criogenico adaptado de tecnologia alien capturada.',
+  backstory: 'Tenente-Comandante da frota de submarinos da Marinha do Brasil. Quando a superficie caiu, o que restou das forcas armadas recuou para debaixo d\'agua — o unico lugar que os Enxames nao alcancaram. De bunkers no fundo do mar, os militares planejam a reconquista. Mazu e a melhor operativa em servico: treinada, fria sob pressao, letal. E enviada a superficie em missoes de reconhecimento e sabotagem, usando canhoes de agua pressurizada e armamento criogenico adaptado de tecnologia alien capturada.',
   passive: 'Projeteis [Agua] desaceleram inimigos em 30%. +2 HP/s de cura passiva.',
   backpackRows: 6,
   backpackCols: 6,
@@ -135,7 +135,7 @@ export const AQUA_SAGE: CharacterDefinition = {
 
 export const STORM_RUNNER: CharacterDefinition = {
   id: 'storm_runner',
-  name: 'Pulso',
+  name: 'Frank',
   title: 'O Híbrido',
   description: 'Fisico nuclear fundido a um alien pela radiacao. Metade humano, metade Enxame.',
   backstory: 'Era fisico nuclear, chefe de turno na usina onde trabalhava. Quando os aliens atacaram, o reator entrou em colapso. A radiacao deveria te-lo matado — mas no instante exato da exposicao, um organismo alien foi irradiado junto dele e se fundiu ao seu corpo a nivel celular. Ele sobreviveu transformado: metade do rosto e humano, a outra metade e uma carapaca alienigena viva e pulsante. Sua biologia agora crepita com energia radioativa instavel. Pior: o alien dentro dele tem vontade propria, e luta constantemente para tomar o resto de seu corpo. Cada dia e uma batalha interna para continuar humano.',
@@ -168,7 +168,7 @@ export const STORM_RUNNER: CharacterDefinition = {
 
 export const VOID_WALKER: CharacterDefinition = {
   id: 'void_walker',
-  name: 'Fenda',
+  name: 'Dr. Eon',
   title: 'O Intangível',
   description: 'Fisico cujo experimento o desconecta da realidade. Atravessa ataques sem querer.',
   backstory: 'Fisico teorico obcecado por mecanica quantica e viagem dimensional. Quando os aliens rasgaram uma fenda no espaco-tempo sobre a cidade, ele viu a chance de sua vida: replicou o fenomeno em laboratorio. O experimento deu errado — e certo demais. Seu corpo deixou de estar totalmente ancorado a este plano. Agora, em momentos aleatorios, ele simplesmente "pisca" para fora da realidade: fica intangivel, e seres vivos e seus ataques o atravessam como se fosse fantasma. Nao controla quando acontece. As vezes e a salvacao; as vezes ele atravessa o chao e cai por segundos eternos no vazio.',
@@ -201,7 +201,7 @@ export const VOID_WALKER: CharacterDefinition = {
 
 export const BEAST_TAMER: CharacterDefinition = {
   id: 'beast_tamer',
-  name: 'Nex',
+  name: 'Diana',
   title: 'A Domadora',
   description: 'Doma os proprios aliens. As vezes um inimigo morto se ergue e luta ao seu lado.',
   backstory: 'Era veterinaria e etologa — estudava o comportamento animal. Quando os Enxames chegaram, enquanto todos viam monstros, ela viu padroes: hierarquia, instinto, submissao. Descobriu que certos aliens respondem a dominancia, exatamente como predadores terrestres. Aprendeu a quebra-los, a doma-los, a transforma-los em armas vivas. Os outros sobreviventes a temem tanto quanto temem os aliens. Ela nao se importa: prefere a lealdade de uma fera domada a covardia de um humano. Quando ela mata um alien do jeito certo, as vezes ele se levanta de novo — mas dessa vez, do lado dela.',
@@ -234,7 +234,7 @@ export const BEAST_TAMER: CharacterDefinition = {
 
 export const FIREFIGHTER: CharacterDefinition = {
   id: 'firefighter',
-  name: 'Fênix',
+  name: 'Florian',
   title: 'O Guardião Quebrado',
   description: 'Bombeiro que falhou em salvar criancas no primeiro dia. Agora protege com obsessao.',
   backstory: 'Bombeiro veterano, 18 anos de servico, nunca perdeu uma crianca. No dia da invasao, recebeu um chamado banal: "um gato preso no alto de uma arvore, criancas tentando resgatar". Chegou sorrindo, pronto pra mais um resgate de rotina. O "gato" abriu olhos demais. Era um alien. Ele viu, impotente, a criatura descer e devorar as criancas ao redor da arvore, uma a uma, antes que ele pudesse sacar o machado. Salvou ninguem naquele dia. Agora carrega o machado, a mangueira e o tanque de espuma para a guerra — e jurou que nenhum inocente vai morrer na frente dele de novo. Ele se joga na frente do perigo. E o escudo que falhou uma vez e nunca mais vai falhar.',

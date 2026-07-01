@@ -82,7 +82,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
 
   switch (charId) {
     case 'grass_man': {
-      // Raiz — earthy rags, wooden staff pointing up
+      // Rômulo — jungle survivor, wooden staff pointing up
       rect(ctx, 15, 0, 2, 6, '#5d4037'); // staff shaft
       rect(ctx, 13, 0, 6, 2, '#4ade80'); // staff tip leaves
       px(ctx, 12, 1, '#22c55e'); px(ctx, 19, 1, '#22c55e');
@@ -105,7 +105,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'fire_lord': {
-      // Cinza — dark jacket, mechanical right arm, flamethrower above
+      // Kagutsuchi — dark jacket, mechanical right arm, flamethrower above
       rect(ctx, 18, 0, 3, 8, '#374151'); // flamethrower barrel
       rect(ctx, 16, 0, 6, 2, '#4b5563');
       px(ctx, 20, 0, '#f97316'); px(ctx, 21, 0, '#fbbf24');
@@ -131,7 +131,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'aqua_sage': {
-      // Maré — navy military uniform, beret, water cannon
+      // Mazu — navy military uniform, beret, water cannon
       rect(ctx, 14, 0, 4, 7, '#546e7a'); // water cannon
       rect(ctx, 13, 0, 6, 2, '#78909c');
       rect(ctx, 15, 0, 2, 1, '#80d8ff');
@@ -155,7 +155,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'storm_runner': {
-      // Pulso — half alien, torn lab coat, energy hands
+      // Frank — half alien, torn lab coat, energy hands
       rect(ctx, 7, 0, 4, 5, '#a3e635'); // energy glow left
       px(ctx, 7, 0, '#86efac'); px(ctx, 10, 1, '#fbbf24');
       // Head (left = skin, right = alien)
@@ -181,7 +181,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'void_walker': {
-      // Fenda — white lab coat, glasses, purple shimmer
+      // Dr. Eon — white lab coat, glasses, purple shimmer
       px(ctx, 14, 2, '#a855f7'); px(ctx, 16, 1, '#c084fc');
       px(ctx, 18, 3, '#7c3aed'); px(ctx, 12, 3, '#a855f7');
       // Head
@@ -211,7 +211,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'beast_tamer': {
-      // Nex — tactical vest, ponytail, whip up, small alien ahead
+      // Diana — tactical vest, ponytail, whip up, small alien ahead
       rect(ctx, 13, 0, 6, 5, '#4d7c0f'); // alien companion
       px(ctx, 14, 0, '#a3e635'); px(ctx, 18, 0, '#a3e635');
       rect(ctx, 12, 2, 2, 2, '#3a5e09'); rect(ctx, 18, 2, 2, 2, '#3a5e09');
@@ -239,7 +239,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'firefighter': {
-      // Fênix — heavy helmet, fire axe up, foam tank hump, red gear
+      // Florian — heavy helmet, fire axe up, foam tank hump, red gear
       rect(ctx, 14, 0, 2, 8, '#9e9e9e'); // axe handle
       rect(ctx, 11, 0, 6, 3, '#ef4444'); // axe head
       rect(ctx, 11, 0, 3, 3, '#bdbdbd');

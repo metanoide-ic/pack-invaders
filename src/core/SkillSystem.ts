@@ -162,7 +162,7 @@ const SKILL_EMP_BLAST: SkillDefinition = {
   },
 };
 
-// ─── Fenda (Void Walker) ─────────────────────────────────────────────────────
+// ─── Dr. Eon (Void Walker) ─────────────────────────────────────────────────────
 
 const SKILL_VOID_RIFT: SkillDefinition = {
   id: 'void_rift', name: 'Fenda do Vazio', description: 'Abre uma fenda que suga inimigos e causa 50 dano.',

@@ -92,7 +92,7 @@ export const VENDOR_BRUTUS: VendorDefinition = {
   title: 'O Arsenal Ambulante',
   description: 'Ex-fisiculturista e militar que encontrou seu propósito no apocalipse.',
   personality: 'Agressivo, entusiasmado com violência, trata armas como filhos. Surpreendentemente gentil com crianças.',
-  unlockTrigger: 'fire_lord', // Unlocks when 2nd character (Inferno) is unlocked
+  unlockTrigger: 'fire_lord', // Unlocks when 2nd character (Kagutsuchi) is unlocked
   exclusiveItems: [
     'fire_gun', 'shotgun', 'sniper', 'missile_launcher', 'chain_gun',
     'plasma_cannon', 'grenade_launcher', 'flamethrower', 'harpoon_gun', 'bone_spear',
@@ -139,7 +139,7 @@ export const VENDOR_NYX: VendorDefinition = {
   title: 'A Alquimista das Sombras',
   description: 'Cientista brilhante com estética gótica que cria tecnologia a partir de cadáveres alien.',
   personality: 'Fria, sarcástica, intelectualmente superior. Fala em metáforas macabras. Respeita apenas inteligência.',
-  unlockTrigger: 'storm_runner', // Unlocks when 4th character (Pulso) is unlocked
+  unlockTrigger: 'storm_runner', // Unlocks when 4th character (Frank) is unlocked
   exclusiveItems: [
     'lightning_rod', 'tesla_coil', 'acid_sprayer', 'void_cannon', 'frost_nova',
     'solar_beam', 'crystal_shard_gun', 'ancient_staff', 'laser_beam', 'sound_cannon',

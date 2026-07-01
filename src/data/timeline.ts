@@ -48,16 +48,16 @@ export const MONTHLY_EVENTS: MonthlyEvent[] = [
   // ANO 3
   // ═══════════════════════════════════════════════════════════════════════════
   { month: 25, text: 'Terceiro ano. A resistência se profissionaliza.' },
-  { month: 26, text: 'Domadora decifrou a frequência de controle. Testando em campo.' },
+  { month: 26, text: 'Diana decifrou a frequência de controle. Testando em campo.' },
   { month: 27, text: 'Um enxame inteiro parou de atacar por 3 horas. Depois voltou pior.' },
   { month: 28, text: 'O submarino captou transmissões de outro continente. Há outros vivos.' },
   { month: 29, text: 'Os cadáveres alienígenas não decompõem mais. Acumulam-se.' },
-  { month: 30, text: 'Domadora dominou a frequência. Podemos virar o jogo.' },
+  { month: 30, text: 'Diana dominou a frequência. Podemos virar o jogo.' },
   { month: 31, text: 'A fenda de São Paulo está se expandindo. Três quarteirões por semana.' },
-  { month: 32, text: 'Pulso não tem mais muito tempo. Ele sabe. Continua lutando.' },
+  { month: 32, text: 'Frank não tem mais muito tempo. Ele sabe. Continua lutando.' },
   { month: 33, text: 'Encontramos inscrições alienígenas idênticas a hieróglifos egípcios.' },
   { month: 34, text: 'O horizonte brilha à noite. Não é o sol. Não é fogo.' },
-  { month: 35, text: 'Abismo disse algo pela primeira vez em semanas: "Eles têm medo."' },
+  { month: 35, text: 'Dr. Eon disse algo pela primeira vez em semanas: "Eles têm medo."' },
   { month: 36, text: 'A Rainha enviou uma mensagem. Termos de rendição. Resposta: não.' },
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -68,11 +68,11 @@ export const MONTHLY_EVENTS: MonthlyEvent[] = [
   { month: 39, text: 'Um alien se rendeu. Primeiro caso documentado. Não sabemos o que fazer.' },
   { month: 40, text: 'O solo em algumas regiões pulsa. Como um coração.' },
   { month: 41, text: 'Interceptamos uma mensagem deles para casa: "Resistência inesperada."' },
-  { month: 42, text: 'Mare trouxe dados do fundo do oceano. O ninho principal fica lá embaixo.' },
+  { month: 42, text: 'Mazu trouxe dados do fundo do oceano. O ninho principal fica lá embaixo.' },
   { month: 43, text: 'Os que sobreviveram até aqui não são mais totalmente humanos. Nenhum de nós.' },
-  { month: 44, text: 'Raiz ouviu a floresta falar. Não em palavras. Em intenções.' },
-  { month: 45, text: 'Inferno apagou o fogo pela primeira vez. Disse que precisa sentir frio para lembrar.' },
-  { month: 46, text: 'A frequência de Domadora funciona. Os pequenos obedecem. Os grandes resistem.' },
+  { month: 44, text: 'Rômulo ouviu a floresta falar. Não em palavras. Em intenções.' },
+  { month: 45, text: 'Kagutsuchi apagou o fogo pela primeira vez. Disse que precisa sentir frio para lembrar.' },
+  { month: 46, text: 'A frequência de Diana funciona. Os pequenos obedecem. Os grandes resistem.' },
   { month: 47, text: 'Algo se move na fenda. Algo maior que o Titã. Algo que vem.' },
   { month: 48, text: 'A última transmissão conhecida. Depois disso, só nós. Só o silêncio. E eles.' },
 ];

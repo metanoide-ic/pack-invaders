@@ -495,8 +495,8 @@ export class Renderer {
 
     // Character name lookup
     const charNames: Record<string, string> = {
-      grass_man: 'Raiz', fire_lord: 'Cinza', aqua_sage: 'Maré',
-      storm_runner: 'Pulso', void_walker: 'Fenda', beast_tamer: 'Nex', firefighter: 'Fênix',
+      grass_man: 'Rômulo', fire_lord: 'Kagutsuchi', aqua_sage: 'Mazu',
+      storm_runner: 'Frank', void_walker: 'Dr. Eon', beast_tamer: 'Diana', firefighter: 'Florian',
     };
 
     // 4 Save slot cards
@@ -4380,8 +4380,8 @@ export class Renderer {
     // ─── Leaderboard ─────────────────────────────────────────────────────
     const board = getLeaderboard();
     const charNameMap: Record<string, string> = {
-      grass_man: 'Raiz', fire_lord: 'Cinza', aqua_sage: 'Maré',
-      storm_runner: 'Pulso', void_walker: 'Fenda', beast_tamer: 'Nex', firefighter: 'Fênix',
+      grass_man: 'Rômulo', fire_lord: 'Kagutsuchi', aqua_sage: 'Mazu',
+      storm_runner: 'Frank', void_walker: 'Dr. Eon', beast_tamer: 'Diana', firefighter: 'Florian',
     };
     if (board.length > 0) {
       const lbY = panelY + panelH + Math.floor(L.h * 0.015);
