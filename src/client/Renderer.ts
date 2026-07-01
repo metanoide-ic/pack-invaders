@@ -7,6 +7,7 @@
 
 import { GameManager } from '../core/GameManager';
 import { generateAllSprites, SpriteSheet } from './SpriteGen';
+import { SpaceBackground } from './SpaceBackground';
 import { ItemDefinition, getOccupiedCells } from '../core/ItemSystem';
 import { InputHandler } from './InputHandler';
 import { Enemy } from '../core/CombatEngine';
@@ -100,6 +101,18 @@ export class Renderer {
   private achievementNotifs: { name: string; timer: number }[] = [];
   /** Fusion activation popup queue */
   private fusionPopups: { name: string; color: string; timer: number }[] = [];
+  /** Parallax space backdrop */
+  private spaceBg = new SpaceBackground(1280, 720);
+  /** Pre-rendered radial glow sprites, cached by color+radius */
+  private glowCache = new Map<string, HTMLCanvasElement>();
+  /** Pre-rendered scanline pattern for CRT effect */
+  private scanlinePattern: CanvasPattern | null = null;
+  /** Enemy HP memo for hit-flash detection */
+  private enemyHpMemo = new Map<string, number>();
+  /** Per-enemy hit flash timers */
+  private enemyHitFlash = new Map<string, number>();
+  /** Projectile IDs seen last frame (for muzzle flash on new ones) */
+  private seenProjIds = new Set<string>();
 
   constructor(
     private ctx: CanvasRenderingContext2D,
@@ -226,6 +239,8 @@ export class Renderer {
     this.renderAchievementNotifs(dt);
     this.renderFusionPopups(dt);
     this.renderTwitchInput();
+
+    this.renderScreenFX();
 
     ctx.restore();
   }
@@ -1597,16 +1612,56 @@ export class Renderer {
   // ─── Background ───────────────────────────────────────────────────────────
 
   private renderBackground(dt: number): void {
+    const { ctx, game } = this;
+    const inCombat = game.phase === 'COMBAT' || game.phase === 'COOP';
+    this.spaceBg.render(ctx, dt, game.year, inCombat);
+  }
+
+  /** Get (or build) a pre-rendered radial glow sprite for additive blending */
+  private getGlow(color: string, radius: number): HTMLCanvasElement {
+    const key = `${color}_${radius}`;
+    const cached = this.glowCache.get(key);
+    if (cached) return cached;
+    const c = document.createElement('canvas');
+    c.width = radius * 2;
+    c.height = radius * 2;
+    const gctx = c.getContext('2d')!;
+    const grad = gctx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.4, color + '80');
+    grad.addColorStop(1, color + '00');
+    gctx.fillStyle = grad;
+    gctx.fillRect(0, 0, radius * 2, radius * 2);
+    this.glowCache.set(key, c);
+    return c;
+  }
+
+  /** CRT scanline + glass overlay, drawn on top of everything */
+  private renderScreenFX(): void {
+    if (localStorage.getItem('packinvaders_crt') === 'off') return;
     const { ctx, canvas } = this;
-    this.bgOffset = (this.bgOffset + dt * 20) % 256;
-    const bg = this.sprites.background;
-    const tilesX = Math.ceil(canvas.width / 256) + 1;
-    const tilesY = Math.ceil(canvas.height / 256) + 1;
-    for (let tx = 0; tx < tilesX; tx++) {
-      for (let ty = 0; ty < tilesY; ty++) {
-        ctx.drawImage(bg, tx * 256, ty * 256 - 256 + this.bgOffset);
-      }
+    if (!this.scanlinePattern) {
+      const p = document.createElement('canvas');
+      p.width = 1;
+      p.height = 3;
+      const pctx = p.getContext('2d')!;
+      pctx.fillStyle = 'rgba(0, 0, 0, 0.10)';
+      pctx.fillRect(0, 0, 1, 1);
+      this.scanlinePattern = ctx.createPattern(p, 'repeat');
     }
+    if (this.scanlinePattern) {
+      ctx.fillStyle = this.scanlinePattern;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    // Subtle corner darkening (CRT glass curvature feel)
+    const vig = ctx.createRadialGradient(
+      canvas.width / 2, canvas.height / 2, canvas.height * 0.55,
+      canvas.width / 2, canvas.height / 2, canvas.height * 0.95
+    );
+    vig.addColorStop(0, 'rgba(0,0,0,0)');
+    vig.addColorStop(1, 'rgba(0,0,10,0.28)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 
   // ─── Particles ────────────────────────────────────────────────────────────
@@ -1635,22 +1690,26 @@ export class Renderer {
 
   private updateAndRenderParticles(dt: number): void {
     const { ctx } = this;
+    ctx.globalCompositeOperation = 'lighter';
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      p.vy += 60 * dt; // gentle gravity for arcing sparks
       p.life -= dt;
       if (p.life <= 0) { this.particles.splice(i, 1); continue; }
       const alpha = p.life / p.maxLife;
-      ctx.globalAlpha = alpha;
+      ctx.globalAlpha = alpha * 0.9;
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.fillRect(Math.floor(p.x), Math.floor(p.y), p.size, p.size);
     }
     ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   private updateAndRenderExplosions(dt: number): void {
     const { ctx } = this;
+    ctx.globalCompositeOperation = 'lighter';
     for (let i = this.explosions.length - 1; i >= 0; i--) {
       const ex = this.explosions[i];
       ex.life -= dt;
@@ -1658,17 +1717,26 @@ export class Renderer {
       const progress = 1 - ex.life / ex.maxLife;
       ex.radius = ex.maxRadius * progress;
       const alpha = ex.life / ex.maxLife;
-      ctx.globalAlpha = alpha * 0.6;
+      // Bright core flash at the start
+      if (progress < 0.35) {
+        ctx.globalAlpha = (0.35 - progress) * 2;
+        ctx.drawImage(
+          this.getGlow('#ffffff', 12),
+          ex.x - 12, ex.y - 12
+        );
+      }
+      ctx.globalAlpha = alpha * 0.7;
       ctx.strokeStyle = ex.color;
       ctx.lineWidth = 3 * (1 - progress);
       ctx.beginPath();
       ctx.arc(ex.x, ex.y, ex.radius, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.globalAlpha = alpha * 0.15;
+      ctx.globalAlpha = alpha * 0.18;
       ctx.fillStyle = ex.color;
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
   }
 
   private renderGoldPopups(dt: number): void {
@@ -1787,13 +1855,15 @@ export class Renderer {
     const itemCount = game.backpack.getAllItems().length;
     ctx.font = L.fontTitle;
     ctx.fillStyle = '#a78bfa';
-    ctx.fillText(`MOCHILA (${itemCount})`, L.gridX, L.gridY - Math.floor(L.h * 0.04));
+    const mochilaLabel = `MOCHILA (${itemCount})`;
+    ctx.fillText(mochilaLabel, L.gridX, L.gridY - Math.floor(L.h * 0.04));
+    const mochilaW = ctx.measureText(mochilaLabel).width;
 
     ctx.font = L.fontSmall;
     ctx.fillStyle = '#94a3b8';
     ctx.fillText(
       `${game.getTimeString()} | Gold: ${game.gold}`,
-      L.gridX + Math.floor(L.w * 0.1), L.gridY - Math.floor(L.h * 0.04)
+      L.gridX + mochilaW + Math.floor(L.w * 0.015), L.gridY - Math.floor(L.h * 0.04)
     );
 
     this.renderGrid();
@@ -2368,19 +2438,40 @@ export class Renderer {
     // Smooth HP
     this.displayHp += (state.playerHp - this.displayHp) * Math.min(1, dt * 8);
 
-    // Ground zone indicator (subtle gradient at bottom)
-    const groundGrad = ctx.createLinearGradient(0, canvas.height - 80, 0, canvas.height);
+    // ── Ground & energy barricade ────────────────────────────────────────
+    const now = performance.now() / 1000;
+    // Danger glow rising from the ground zone
+    const groundGrad = ctx.createLinearGradient(0, canvas.height - 90, 0, canvas.height);
     groundGrad.addColorStop(0, 'transparent');
-    groundGrad.addColorStop(1, 'rgba(99, 102, 241, 0.08)');
+    groundGrad.addColorStop(1, 'rgba(80, 120, 255, 0.10)');
     ctx.fillStyle = groundGrad;
-    ctx.fillRect(0, canvas.height - 80, canvas.width, 80);
-    // Ground line
-    ctx.strokeStyle = 'rgba(99, 102, 241, 0.2)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(0, canvas.height - 55);
-    ctx.lineTo(canvas.width, canvas.height - 55);
-    ctx.stroke();
+    ctx.fillRect(0, canvas.height - 90, canvas.width, 90);
+    // Pixel dirt strip
+    ctx.fillStyle = '#0b0e1a';
+    ctx.fillRect(0, canvas.height - 16, canvas.width, 16);
+    ctx.fillStyle = '#141a30';
+    ctx.fillRect(0, canvas.height - 16, canvas.width, 3);
+    ctx.fillStyle = '#1f2847';
+    for (let gx = 0; gx < canvas.width; gx += 24) {
+      ctx.fillRect(gx + ((gx / 24) % 3) * 5, canvas.height - 12, 4, 2);
+    }
+    // Energy defense line — the barrier enemies must not cross
+    const pulse = 0.5 + Math.sin(now * 2.2) * 0.25;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = pulse * 0.5;
+    ctx.fillStyle = '#4f6cf7';
+    ctx.fillRect(0, canvas.height - 56, canvas.width, 2);
+    ctx.globalAlpha = pulse * 0.22;
+    ctx.fillRect(0, canvas.height - 58, canvas.width, 6);
+    // Marching energy dashes along the line
+    ctx.globalAlpha = pulse * 0.9;
+    ctx.fillStyle = '#9db4ff';
+    const dashOffset = (now * 60) % 48;
+    for (let dx = -48; dx < canvas.width; dx += 48) {
+      ctx.fillRect(dx + dashOffset, canvas.height - 56, 10, 2);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
 
     // Track enemy deaths for explosion effects
     const currentEnemyIds = new Set(state.enemies.map(e => e.id));
@@ -2389,9 +2480,10 @@ export class Renderer {
         const pos = data;
         // Color explosion based on enemy element
         const color = (pos as any).color || '#ef4444';
-        this.spawnExplosion(pos.x, pos.y, 25, color);
-        this.spawnParticles(pos.x, pos.y, color, 6);
-        this.spawnParticles(pos.x, pos.y, '#fbbf24', 4);
+        this.spawnExplosion(pos.x, pos.y, 30, color);
+        this.spawnParticles(pos.x, pos.y, color, 10);
+        this.spawnParticles(pos.x, pos.y, '#fbbf24', 5);
+        this.spawnParticles(pos.x, pos.y, '#ffffff', 3);
       }
     }
     this.prevEnemyPositions.clear();
@@ -2405,6 +2497,39 @@ export class Renderer {
       else if (e.tags.includes('Orgânico')) color = '#4ade80';
       const posData: any = { x: e.x, y: e.y, color };
       this.prevEnemyPositions.set(e.id, posData);
+    }
+
+    // Hit-flash: detect HP drops per enemy
+    for (const e of state.enemies) {
+      const prevHp = this.enemyHpMemo.get(e.id);
+      if (prevHp !== undefined && e.hp < prevHp) {
+        this.enemyHitFlash.set(e.id, 0.09);
+      }
+      this.enemyHpMemo.set(e.id, e.hp);
+    }
+    for (const [id, t] of this.enemyHitFlash) {
+      const nt = t - dt;
+      if (nt <= 0 || !currentEnemyIds.has(id)) this.enemyHitFlash.delete(id);
+      else this.enemyHitFlash.set(id, nt);
+    }
+    for (const id of this.enemyHpMemo.keys()) {
+      if (!currentEnemyIds.has(id)) this.enemyHpMemo.delete(id);
+    }
+
+    // Muzzle flash on newly fired projectiles
+    if (state.projectiles.length < 90) {
+      const newSeen = new Set<string>();
+      for (const p of state.projectiles) {
+        newSeen.add(p.id);
+        if (!this.seenProjIds.has(p.id) && p.y > canvas.height - 90) {
+          ctx.globalCompositeOperation = 'lighter';
+          ctx.globalAlpha = 0.7;
+          ctx.drawImage(this.getGlow('#cfe0ff', 10), p.x - 10, p.y - 10);
+          ctx.globalAlpha = 1;
+          ctx.globalCompositeOperation = 'source-over';
+        }
+      }
+      this.seenProjIds = newSeen;
     }
 
     // Damage flash — red vignette from edges (more impactful than flat tint)
@@ -2422,20 +2547,27 @@ export class Renderer {
       this.renderEnemy(e, dt);
     }
 
-    // Render player projectiles with trails
+    // Render player projectiles: additive glow + core sprite + trail
+    ctx.globalCompositeOperation = 'lighter';
     for (const p of state.projectiles) {
+      const element = this.getProjectileElement(p.tags);
+      const trailColor = element === 'fire' ? '#f97316'
+        : element === 'ice' ? '#67e8f9'
+        : element === 'electric' ? '#facc15'
+        : element === 'poison' ? '#a855f7'
+        : '#22d3ee';
       for (let t = 0; t < p.trail.length; t++) {
-        const alpha = (t + 1) / (p.trail.length + 1) * 0.3;
+        const alpha = (t + 1) / (p.trail.length + 1) * 0.35;
         ctx.globalAlpha = alpha;
-        const element = this.getProjectileElement(p.tags);
-        ctx.fillStyle = element === 'fire' ? '#f97316'
-          : element === 'ice' ? '#67e8f9'
-          : element === 'electric' ? '#facc15'
-          : '#22d3ee';
+        ctx.fillStyle = trailColor;
         ctx.fillRect(p.trail[t].x - 2, p.trail[t].y - 2, 4, 4);
       }
-      ctx.globalAlpha = 1;
-
+      ctx.globalAlpha = 0.55;
+      ctx.drawImage(this.getGlow(trailColor, 8), p.x - 8, p.y - 8);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    for (const p of state.projectiles) {
       const element = this.getProjectileElement(p.tags);
       const projSprite = this.sprites.projectiles.get(element);
       if (projSprite) {
@@ -2446,26 +2578,33 @@ export class Renderer {
       }
     }
 
-    // Render enemy projectiles (red, with bounce glow for bouncing ones)
+    // Render enemy projectiles: menacing glow + core
+    ctx.globalCompositeOperation = 'lighter';
+    for (const ep of state.enemyProjectiles) {
+      const isBouncy = !!(ep.bounces && ep.bounces > 0);
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(this.getGlow(isBouncy ? '#f97316' : '#ef4444', 9), ep.x - 9, ep.y - 9);
+    }
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
     for (const ep of state.enemyProjectiles) {
       if (ep.bounces && ep.bounces > 0) {
-        // Bouncing projectile: orange with trail
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
         ctx.arc(ep.x, ep.y, 5, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = '#fde68a';
         ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 3, 0, Math.PI * 2);
+        ctx.arc(ep.x, ep.y, 2.5, 0, Math.PI * 2);
         ctx.fill();
       } else {
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
         ctx.arc(ep.x, ep.y, 4, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = '#fca5a5';
+        ctx.fillStyle = '#ffe4e6';
         ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 2, 0, Math.PI * 2);
+        ctx.arc(ep.x, ep.y, 1.8, 0, Math.PI * 2);
         ctx.fill();
       }
     }
@@ -2512,6 +2651,19 @@ export class Renderer {
     ctx.fill();
     ctx.globalAlpha = 1;
 
+    // Hero glow — soft character-colored light so the player pops at night
+    const heroGlowColors: Record<string, string> = {
+      grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
+      storm_runner: '#a3e635', void_walker: '#a855f7', beast_tamer: '#ec4899',
+      firefighter: '#ef4444',
+    };
+    const heroGlow = heroGlowColors[charId] ?? '#8fb8ff';
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.22 + Math.sin(now * 2.5) * 0.05;
+    ctx.drawImage(this.getGlow(heroGlow, 30), state.playerX - 30, canvas.height - 62);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+
     // Active skill aura (colored ring when skill is active)
     for (const sk of this.game.skills) {
       if (sk.activeTimer > 0) {
@@ -2533,11 +2685,19 @@ export class Renderer {
     }
 
     if (playerSprite) {
-      // Draw top-down character — 32x32, centered at player position
+      // Draw top-down character — 32x32, with idle bob + movement lean
+      const bob = Math.sin(now * 3.2) * 1.2;
+      const vel = (game.combat as any).playerVelocity ?? 0;
+      const lean = Math.max(-0.09, Math.min(0.09, vel * 0.00012));
       ctx.save();
-      ctx.translate(state.playerX, canvas.height - 29);
+      ctx.translate(state.playerX, canvas.height - 29 + bob);
+      ctx.rotate(lean);
       ctx.drawImage(playerSprite, -16, -16);
       ctx.restore();
+      // Movement dust kicks
+      if (Math.abs(vel) > 200 && Math.random() < 0.3) {
+        this.spawnParticles(state.playerX - Math.sign(vel) * 8, canvas.height - 18, '#3d4668', 1);
+      }
     } else {
       // Fallback: simple person silhouette
       const px = state.playerX;
@@ -2579,9 +2739,12 @@ export class Renderer {
       ctx.globalAlpha = alpha;
       ctx.font = `bold ${fontSize}px monospace`;
       ctx.textAlign = 'center';
-      // Drop shadow for readability
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillText(ft.text, ft.x + 1, ft.y + 1);
+      // Full pixel outline for readability against any backdrop
+      ctx.fillStyle = 'rgba(0,0,0,0.85)';
+      ctx.fillText(ft.text, ft.x + 1, ft.y);
+      ctx.fillText(ft.text, ft.x - 1, ft.y);
+      ctx.fillText(ft.text, ft.x, ft.y + 1);
+      ctx.fillText(ft.text, ft.x, ft.y - 1);
       ctx.fillStyle = ft.color;
       ctx.fillText(ft.text, ft.x, ft.y);
       ctx.restore();
@@ -2651,8 +2814,24 @@ export class Renderer {
       ctx.fill();
     }
 
+    // Idle hover bob (subtle, per-enemy phase from moveTimer)
+    const bobY = e.isBoss ? Math.sin(e.moveTimer * 2) * 2 : Math.sin(e.moveTimer * 4) * 1.5;
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+
     if (sprite) {
-      ctx.drawImage(sprite, e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+      if (flash > 0) {
+        // White-hot flash + squash pop on hit
+        const pop = 1 + flash * 1.6;
+        ctx.save();
+        ctx.translate(e.x, e.y + bobY);
+        ctx.scale(pop, 2 - pop);
+        ctx.filter = 'brightness(2.8) saturate(0.4)';
+        ctx.drawImage(sprite, -e.width / 2, -e.height / 2, e.width, e.height);
+        ctx.filter = 'none';
+        ctx.restore();
+      } else {
+        ctx.drawImage(sprite, e.x - e.width / 2, e.y - e.height / 2 + bobY, e.width, e.height);
+      }
     } else {
       // Procedural enemy shapes based on movement type
       switch (e.movement) {
@@ -5201,6 +5380,24 @@ export class Renderer {
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
     ctx.fillText(particlesEnabled ? 'LIGADO' : 'DESLIGADO', partBtn.x + partBtn.w / 2, partBtn.y + partBtn.h * 0.7);
+    cy += lineH;
+
+    // ─── CRT / Scanlines ─────────────────────────────────────────────────
+    ctx.textAlign = 'left';
+    ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillText('📺 Efeito CRT', labelX, cy);
+    const crtEnabled = localStorage.getItem('packinvaders_crt') !== 'off';
+    const crtBtn = { x: sliderX, y: cy + Math.floor(lineH * 0.15), w: Math.floor(sliderW * 0.3), h: Math.floor(L.h * 0.035) };
+    ctx.fillStyle = crtEnabled ? '#4ade80' : '#374151';
+    ctx.fillRect(crtBtn.x, crtBtn.y, crtBtn.w, crtBtn.h);
+    ctx.strokeStyle = crtEnabled ? '#22c55e' : '#64748b';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(crtBtn.x, crtBtn.y, crtBtn.w, crtBtn.h);
+    ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(crtEnabled ? 'LIGADO' : 'DESLIGADO', crtBtn.x + crtBtn.w / 2, crtBtn.y + crtBtn.h * 0.7);
     cy += lineH;
 
     // ─── Fullscreen ──────────────────────────────────────────────────────

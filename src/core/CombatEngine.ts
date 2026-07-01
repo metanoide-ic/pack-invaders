@@ -588,6 +588,13 @@ export class CombatEngine {
   }
 
   private updateEnemies(dt: number): void {
+    // Anti-slog pacing: stragglers hurry up so waves don't drag
+    const remaining = this.state.enemies.length;
+    const remainRatio = this.state.totalEnemies > 0 ? remaining / this.state.totalEnemies : 1;
+    let paceMult = 1;
+    if (remaining <= 3 || remainRatio < 0.15) paceMult = 1.6;
+    if (this.state.waveTime > 45) paceMult *= 1.5;
+
     for (const e of this.state.enemies) {
       e.moveTimer += dt;
 
@@ -621,7 +628,7 @@ export class CombatEngine {
       // Base speed with slow effect
       const slowMult = (e.slowTimer && e.slowTimer > 0 && e.slowAmount) ? e.slowAmount : 1;
       const globalSlowMult = (this as any)._globalSlowMult ?? 1;
-      const speed = e.speed * slowMult * globalSlowMult;
+      const speed = e.speed * slowMult * globalSlowMult * (e.isBoss ? 1 : paceMult);
 
       // Movement behavior based on pattern
       switch (e.movement) {

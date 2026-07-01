@@ -322,6 +322,13 @@ export class InputHandler {
   private onClick(e: MouseEvent): void {
     const pos = this.getCanvasPos(e);
 
+    // Controls overlay promises "click or any key to continue" — honor the click
+    if (this.game.showControlsOverlay) {
+      this.game.dismissControlsOverlay();
+      this.audio.buttonClick();
+      return;
+    }
+
     // Dismiss Twitch input on click outside
     if (this.twitchInputActive && this.game.phase === 'TITLE') {
       const L = this.renderer.getLayout();
@@ -1187,7 +1194,18 @@ export class InputHandler {
     }
     cy += lineH;
 
-    // ─── Fullscreen toggle (row 4) ──────────────────────────────────────
+    // ─── CRT toggle (row 4) ─────────────────────────────────────────────
+    const crtBtnY = cy + Math.floor(lineH * 0.15);
+    if (pos.x >= sliderX && pos.x <= sliderX + shakeBtnW &&
+        pos.y >= crtBtnY && pos.y <= crtBtnY + shakeBtnH) {
+      this.audio.buttonClick();
+      const current = localStorage.getItem('packinvaders_crt') !== 'off';
+      localStorage.setItem('packinvaders_crt', current ? 'off' : 'on');
+      return;
+    }
+    cy += lineH;
+
+    // ─── Fullscreen toggle (row 5) ──────────────────────────────────────
     const fsBtnW = Math.floor(panelW * 0.4);
     const fsBtnH = Math.floor(L.h * 0.045);
     const fsBtnX = L.cx - fsBtnW / 2;
