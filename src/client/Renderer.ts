@@ -2653,63 +2653,65 @@ export class Renderer {
     }
 
     if (sprite) {
-      ctx.drawImage(sprite, e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+      // Draw 40% larger than hitbox for visual punch
+      const drawW = Math.floor(e.width * 1.4);
+      const drawH = Math.floor(e.height * 1.4);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2, drawW, drawH);
+      ctx.imageSmoothingEnabled = true;
     } else {
-      // Procedural enemy shapes based on movement type
+      // Procedural enemy shapes — also 40% larger visually
+      const vw = Math.floor(e.width * 1.4);
+      const vh = Math.floor(e.height * 1.4);
       switch (e.movement) {
         case 'straight':
-          // Rectangle with antenna
           ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, vh);
           ctx.fillStyle = 'rgba(255,255,255,0.2)';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, 3);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, 3);
           break;
         case 'sine':
-          // Diamond shape
           ctx.fillStyle = '#a855f7';
           ctx.beginPath();
-          ctx.moveTo(e.x, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 2, e.y);
-          ctx.lineTo(e.x, e.y + e.height / 2);
-          ctx.lineTo(e.x - e.width / 2, e.y);
+          ctx.moveTo(e.x, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 2, e.y);
+          ctx.lineTo(e.x, e.y + vh / 2);
+          ctx.lineTo(e.x - vw / 2, e.y);
           ctx.closePath();
           ctx.fill();
           break;
         case 'zigzag':
-          // Triangle (pointing down)
           ctx.fillStyle = '#f97316';
           ctx.beginPath();
-          ctx.moveTo(e.x - e.width / 2, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 2, e.y - e.height / 2);
-          ctx.lineTo(e.x, e.y + e.height / 2);
+          ctx.moveTo(e.x - vw / 2, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 2, e.y - vh / 2);
+          ctx.lineTo(e.x, e.y + vh / 2);
           ctx.closePath();
           ctx.fill();
           break;
         case 'erratic':
-          // Circle (flickering)
           ctx.fillStyle = '#facc15';
           ctx.beginPath();
-          ctx.arc(e.x, e.y, e.width / 2, 0, Math.PI * 2);
+          ctx.arc(e.x, e.y, vw / 2, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = 'rgba(0,0,0,0.3)';
           ctx.beginPath();
-          ctx.arc(e.x - 2, e.y - 2, e.width * 0.2, 0, Math.PI * 2);
+          ctx.arc(e.x - 2, e.y - 2, vw * 0.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(e.x + 3, e.y - 2, e.width * 0.2, 0, Math.PI * 2);
+          ctx.arc(e.x + 3, e.y - 2, vw * 0.2, 0, Math.PI * 2);
           ctx.fill();
           break;
         case 'charge':
-          // Arrow/chevron pointing down
           ctx.fillStyle = e.charging ? '#ff6b6b' : '#ef4444';
           ctx.beginPath();
-          ctx.moveTo(e.x, e.y + e.height / 2);
-          ctx.lineTo(e.x - e.width / 2, e.y - e.height / 3);
-          ctx.lineTo(e.x - e.width / 4, e.y - e.height / 3);
-          ctx.lineTo(e.x - e.width / 4, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 4, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 4, e.y - e.height / 3);
-          ctx.lineTo(e.x + e.width / 2, e.y - e.height / 3);
+          ctx.moveTo(e.x, e.y + vh / 2);
+          ctx.lineTo(e.x - vw / 2, e.y - vh / 3);
+          ctx.lineTo(e.x - vw / 4, e.y - vh / 3);
+          ctx.lineTo(e.x - vw / 4, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 4, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 4, e.y - vh / 3);
+          ctx.lineTo(e.x + vw / 2, e.y - vh / 3);
           ctx.closePath();
           ctx.fill();
           break;
@@ -2719,20 +2721,19 @@ export class Renderer {
           ctx.beginPath();
           for (let a = 0; a < 6; a++) {
             const angle = (a / 6) * Math.PI * 2 - Math.PI / 2;
-            const hx = e.x + Math.cos(angle) * e.width / 2;
-            const hy = e.y + Math.sin(angle) * e.height / 2;
+            const hx = e.x + Math.cos(angle) * vw / 2;
+            const hy = e.y + Math.sin(angle) * vh / 2;
             if (a === 0) ctx.moveTo(hx, hy);
             else ctx.lineTo(hx, hy);
           }
           ctx.closePath();
           ctx.fill();
-          // Barrel pointing down
           ctx.fillStyle = '#1d4ed8';
-          ctx.fillRect(e.x - 2, e.y, 4, e.height / 2);
+          ctx.fillRect(e.x - 3, e.y, 6, vh / 2);
           break;
         default:
           ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, vh);
       }
 
       // Eyes for non-boss regular enemies (gives them character)
