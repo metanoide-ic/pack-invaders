@@ -489,6 +489,11 @@ export class Renderer {
     ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
     ctx.fillStyle = '#1e293b';
     ctx.fillText('v1.0 — 2024', titleX, L.h - Math.floor(L.h * 0.025));
+    // Daily seed (for future daily challenges)
+    const today = new Date();
+    const seed = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillText(`seed: ${seed}`, titleX + Math.floor(panelW * 0.5), L.h - Math.floor(L.h * 0.025));
   }
 
   // ─── Save Select ──────────────────────────────────────────────────────────
@@ -4639,6 +4644,35 @@ export class Renderer {
     this.renderButton(L.cx - btnW / 2, btn2Y, btnW, btnH, 'MENU PRINCIPAL', '#1e293b');
 
     // Keyboard hints
+    // Run badges (performance medals)
+    const badges: { icon: string; label: string; color: string }[] = [];
+    if (game.combat.state.damageTakenThisWave === 0 && game.totalMonths > 1) badges.push({ icon: '🛡', label: 'ÚLTIMA WAVE PERFEITA', color: '#fbbf24' });
+    if (game.stats.skillsUsed >= 20) badges.push({ icon: '⚡', label: 'SKILL MASTER', color: '#6366f1' });
+    if ((game.combat.state as any).maxCombo >= 15) badges.push({ icon: '🔥', label: `COMBO ${(game.combat.state as any).maxCombo}`, color: '#f97316' });
+    if (game.stats.fusionsDiscovered.length >= 3) badges.push({ icon: '★', label: `${game.stats.fusionsDiscovered.length} FUSÕES`, color: '#f472b6' });
+    if (game.totalMonths >= 12) badges.push({ icon: '🏆', label: 'ANO COMPLETO', color: '#4ade80' });
+    if (game.totalMonths >= 24) badges.push({ icon: '👑', label: 'VETERANO', color: '#fbbf24' });
+
+    if (badges.length > 0) {
+      const badgeY = btn1Y - Math.floor(L.h * 0.05);
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${Math.floor(L.h * 0.010)}px monospace`;
+      const badgeSpacing = Math.floor(L.w * 0.13);
+      const badgeStartX = L.cx - (badges.length - 1) * badgeSpacing / 2;
+      for (let bi = 0; bi < Math.min(badges.length, 5); bi++) {
+        const b = badges[bi];
+        const bx = badgeStartX + bi * badgeSpacing;
+        ctx.fillStyle = b.color + '20';
+        ctx.fillRect(bx - Math.floor(badgeSpacing * 0.4), badgeY - 8, Math.floor(badgeSpacing * 0.8), 22);
+        ctx.strokeStyle = b.color + '60';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx - Math.floor(badgeSpacing * 0.4), badgeY - 8, Math.floor(badgeSpacing * 0.8), 22);
+        ctx.fillStyle = b.color;
+        ctx.fillText(`${b.icon} ${b.label}`, bx, badgeY + 6);
+      }
+      ctx.textAlign = 'left';
+    }
+
     ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
     ctx.fillStyle = '#374151';
     ctx.textAlign = 'center';
