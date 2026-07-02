@@ -2480,44 +2480,74 @@ export class Renderer {
 
     // Render player projectiles with trails
     for (const p of state.projectiles) {
+      const element = this.getProjectileElement(p.tags);
+      const projColor = element === 'fire' ? '#f97316'
+        : element === 'ice' ? '#67e8f9'
+        : element === 'electric' ? '#facc15'
+        : element === 'poison' ? '#4ade80'
+        : element === 'dark' ? '#a78bfa'
+        : '#22d3ee';
+
+      // Trail (larger, more visible)
       for (let t = 0; t < p.trail.length; t++) {
-        const alpha = (t + 1) / (p.trail.length + 1) * 0.3;
+        const alpha = (t + 1) / (p.trail.length + 1) * 0.4;
         ctx.globalAlpha = alpha;
-        const element = this.getProjectileElement(p.tags);
-        ctx.fillStyle = element === 'fire' ? '#f97316'
-          : element === 'ice' ? '#67e8f9'
-          : element === 'electric' ? '#facc15'
-          : '#22d3ee';
-        ctx.fillRect(p.trail[t].x - 2, p.trail[t].y - 2, 4, 4);
+        ctx.fillStyle = projColor;
+        const trailSize = 3 + t;
+        ctx.fillRect(p.trail[t].x - trailSize / 2, p.trail[t].y - trailSize / 2, trailSize, trailSize);
       }
       ctx.globalAlpha = 1;
 
-      const element = this.getProjectileElement(p.tags);
+      // Projectile body (glow + core)
       const projSprite = this.sprites.projectiles.get(element);
       if (projSprite) {
-        ctx.drawImage(projSprite, p.x - 4, p.y - 4);
+        ctx.drawImage(projSprite, p.x - 5, p.y - 5, 10, 10);
       } else {
-        ctx.fillStyle = '#22d3ee';
-        ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+        // Glow
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = projColor;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
+        ctx.fill();
+        // Core
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+        ctx.fill();
       }
     }
 
-    // Render enemy projectiles (red, with bounce glow for bouncing ones)
+    // Render enemy projectiles (larger, more threatening)
     for (const ep of state.enemyProjectiles) {
       if (ep.bounces && ep.bounces > 0) {
-        // Bouncing projectile: orange with trail
+        // Bouncing projectile: orange with glow
+        ctx.globalAlpha = 0.4;
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 5, 0, Math.PI * 2);
+        ctx.arc(ep.x, ep.y, 8, 0, Math.PI * 2);
         ctx.fill();
+        ctx.globalAlpha = 1;
         ctx.fillStyle = '#fbbf24';
         ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 3, 0, Math.PI * 2);
+        ctx.arc(ep.x, ep.y, 4, 0, Math.PI * 2);
         ctx.fill();
       } else {
+        // Normal enemy projectile: red with glow
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
         ctx.fillStyle = '#ef4444';
         ctx.beginPath();
         ctx.arc(ep.x, ep.y, 4, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#fca5a5';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 2, 0, Math.PI * 2);
+        ctx.fill();
         ctx.fill();
         ctx.fillStyle = '#fca5a5';
         ctx.beginPath();
