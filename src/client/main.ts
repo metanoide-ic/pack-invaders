@@ -245,16 +245,18 @@ function gameLoop(): void {
     if (game.combat.state.waveCleared || game.combat.state.playerHp <= 0) {
       // Wave cleared celebration
       if (game.combat.state.waveCleared) {
-        // Big burst of particles from player position
-        renderer.spawnParticles(game.combat.state.playerX, 680, '#fbbf24', 20);
+        // Big burst from player
+        renderer.spawnParticles(game.combat.state.playerX, 680, '#fbbf24', 25);
         renderer.spawnParticles(game.combat.state.playerX, 680, '#4ade80', 15);
-        // Scattered confetti across screen
-        for (let i = 0; i < 12; i++) {
+        // Confetti burst across screen
+        for (let i = 0; i < 15; i++) {
           const px = Math.random() * 1280;
           const py = Math.random() * 400 + 100;
           const colors = ['#fbbf24', '#4ade80', '#6366f1', '#f97316', '#22d3ee'];
-          renderer.spawnParticles(px, py, colors[i % colors.length], 2);
+          renderer.spawnParticles(px, py, colors[i % colors.length], 3);
         }
+        // "WAVE CLEAR" floating text
+        game.combat.spawnFloatingText(640, 300, 'WAVE CLEAR!', '#fbbf24');
         audio.waveComplete();
       }
       game.endCombat();

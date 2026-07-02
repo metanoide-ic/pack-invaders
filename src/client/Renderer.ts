@@ -2079,6 +2079,28 @@ export class Renderer {
         ctx.fillText('★' + fname.slice(0, 10), badgeX + 2, badgeY + 8);
       }
     }
+
+    // Fusion connection lines between fused item pairs
+    const fusedItems = items.filter(i => (i.state as any).fusedName);
+    for (const fi of fusedItems) {
+      const adj = game.backpack.getAdjacentItems(fi.instanceId);
+      for (const partner of adj) {
+        if ((partner.state as any).fusedName) {
+          const x1 = L.gridX + fi.position.col * L.cell + L.cell / 2;
+          const y1 = L.gridY + fi.position.row * L.cell + L.cell / 2;
+          const x2 = L.gridX + partner.position.col * L.cell + L.cell / 2;
+          const y2 = L.gridY + partner.position.row * L.cell + L.cell / 2;
+          ctx.globalAlpha = 0.25 + Math.sin(performance.now() * 0.003) * 0.1;
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
+      }
+    }
   }
 
   /** Tooltip when hovering over placed items */
@@ -2467,10 +2489,11 @@ export class Renderer {
         ctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2);
         ctx.fill();
         ctx.globalAlpha = 1;
-        // Explosion ring + particles
+        // Explosion ring + particles + gold sparkles
         this.spawnExplosion(pos.x, pos.y, 30, color);
-        this.spawnParticles(pos.x, pos.y, color, 8);
-        this.spawnParticles(pos.x, pos.y, '#ffffff', 3);
+        this.spawnParticles(pos.x, pos.y, color, 6);
+        this.spawnParticles(pos.x, pos.y, '#ffffff', 2);
+        this.spawnParticles(pos.x, pos.y, '#fbbf24', 3); // Gold sparkles
       }
     }
     this.prevEnemyPositions.clear();
