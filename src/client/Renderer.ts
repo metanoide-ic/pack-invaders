@@ -1797,6 +1797,8 @@ export class Renderer {
     }
 
     const itemCount = game.backpack.getAllItems().length;
+    const totalCells = game.backpack.cols * game.backpack.rows;
+    const usedCells = game.backpack.getAllItems().reduce((sum, it) => sum + it.definition.gridShape.flat().filter(c => c === 1).length, 0);
     ctx.font = L.fontTitle;
     ctx.fillStyle = '#a78bfa';
     ctx.fillText(`MOCHILA (${itemCount})`, L.gridX, L.gridY - Math.floor(L.h * 0.04));
@@ -1804,7 +1806,7 @@ export class Renderer {
     ctx.font = L.fontSmall;
     ctx.fillStyle = '#94a3b8';
     ctx.fillText(
-      `${game.getTimeString()} | Gold: ${game.gold}`,
+      `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`,
       L.gridX + Math.floor(L.w * 0.1), L.gridY - Math.floor(L.h * 0.04)
     );
 
@@ -3989,6 +3991,15 @@ export class Renderer {
     const itemCardW = Math.min(itemW, Math.floor(L.w * 0.13));
     const itemCardH = Math.floor(L.h * 0.45);
 
+    // Find best pick (most synergies)
+    const existingIds2 = game.backpack.getAllItems().map(it => it.definition.id);
+    let bestPickIdx = -1;
+    let bestPickScore = 0;
+    for (let bi = 0; bi < items.length; bi++) {
+      const sc = countPossibleCombinations(items[bi].id, existingIds2) * 3 + countPossibleBuffs(items[bi].tags, game.backpack.getAllItems().map(it => [...it.definition.tags]));
+      if (sc > bestPickScore && game.gold >= items[bi].cost) { bestPickScore = sc; bestPickIdx = bi; }
+    }
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const x = L.panelX + i * (itemCardW + 10);
@@ -4013,6 +4024,17 @@ export class Renderer {
         ctx.shadowBlur = 8;
         ctx.strokeRect(x, y, itemCardW, itemCardH);
         ctx.shadowBlur = 0;
+      }
+
+      // "★ BEST" badge for highest synergy pick
+      if (i === bestPickIdx && bestPickScore > 0) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(x, y, itemCardW, 14);
+        ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText('★ BEST PICK', x + itemCardW / 2, y + 10);
+        ctx.textAlign = 'left';
       }
 
       const sprite = this.sprites.items.get(item.id);
