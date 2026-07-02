@@ -77,6 +77,8 @@ export interface Projectile {
   alive: boolean;
   /** Trail positions for visual effect */
   trail: { x: number; y: number }[];
+  /** Backpack instanceId of the item that fired this shot (per-item hit effects) */
+  ownerId?: string;
 }
 
 // ─── Enemy Projectile ────────────────────────────────────────────────────────
@@ -115,6 +117,24 @@ export interface PowerUp {
   type: PowerUpType;
   /** Seconds until despawn after landing */
   life: number;
+}
+
+/**
+ * Ally turret — a small stationary friendly that fires at the nearest enemy.
+ * One system backs three different card effects (reanimated corpse, drone,
+ * mind-controlled captive) since they're all "temporary friendly damage
+ * source" in spirit.
+ */
+export interface AllyTurret {
+  id: string;
+  x: number;
+  y: number;
+  /** Seconds remaining; Infinity = lasts until wave ends */
+  life: number;
+  damage: number;
+  fireRate: number;
+  timer: number;
+  color: string;
 }
 
 // ─── Combat State ────────────────────────────────────────────────────────────
@@ -175,6 +195,10 @@ export interface CombatState {
   powerUps: PowerUp[];
   /** Rapid-fire buff timer (2x fire rate while > 0) */
   rapidFireTimer: number;
+  /** Friendly turrets (Reanimação, Enxame Morto, Controle Mental) */
+  allyTurrets: AllyTurret[];
+  /** Emergency shield already granted this wave (Escudo Regenerativo) */
+  regenShieldUsed: boolean;
   // Co-op Player 2 state
   player2Active?: boolean;
   player2X?: number;
@@ -192,6 +216,7 @@ export class CombatEngine {
   private nextProjectileId = 0;
   private nextEnemyId = 0;
   private nextEnemyProjId = 0;
+  private nextAllyId = 0;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -199,6 +224,15 @@ export class CombatEngine {
   private dashCooldown = 0;
   private dashActive = 0;
   private playerVelocity2 = 0;
+  /** Enxame Morto (Diana): kills toward the next drone spawn */
+  private _droneKillCounter = 0;
+  /** Singularidade (Dr. Eon): seconds until the next black hole pulse */
+  private _blackHoleTimer = 0;
+  /** Singularidade: seconds remaining in an active pull burst */
+  private _blackHoleActive = 0;
+  /** Per-run revive flags (persist for the CombatEngine's lifetime, i.e. the whole run) */
+  private _phoenixReviveUsed = false;
+  private _nuclearReviveUsed = false;
 
   /** Per-character base speed multiplier (preserved across card speed bonuses) */
   private charSpeedMult = 1;
@@ -248,6 +282,8 @@ export class CombatEngine {
       playerSlowTimer: 0,
       powerUps: [],
       rapidFireTimer: 0,
+      allyTurrets: [],
+      regenShieldUsed: false,
     };
   }
 
@@ -279,6 +315,29 @@ export class CombatEngine {
     this.state.damageTakenThisWave = 0;
     this.state.powerUps = [];
     this.state.rapidFireTimer = 0;
+    this.state.allyTurrets = [];
+    this.state.regenShieldUsed = false;
+    this._droneKillCounter = 0;
+
+    // Marionete (Diana): first enemy of the wave is paralyzed on arrival
+    if ((this as any)._paralyzeFirstDuration && this.state.enemies.length > 0) {
+      const first = this.state.enemies[0];
+      first.slowTimer = (this as any)._paralyzeFirstDuration;
+      first.slowAmount = 0.02;
+    }
+
+    // Controle Mental (Diana): one captured enemy fights for you all wave
+    if ((this as any)._mindControlActive && this.state.enemies.length > 0) {
+      const idx = Math.floor(Math.random() * this.state.enemies.length);
+      const captured = this.state.enemies.splice(idx, 1)[0];
+      this.state.allyTurrets.push({
+        id: `ally_mc_${Date.now()}`,
+        x: this.arenaWidth / 2, y: this.arenaHeight - 140,
+        life: Infinity, damage: Math.max(8, captured.damage), fireRate: 1.2, timer: 0,
+        color: '#ec4899',
+      });
+      this.state.totalEnemies = Math.max(0, this.state.totalEnemies - 1);
+    }
 
     // Boss warning
     if (isBossMonth) {
@@ -369,8 +428,14 @@ export class CombatEngine {
     // 5b. Power-up drops (fall + catch)
     this.updatePowerUps(dt);
 
+    // 5c. Ally turrets (Reanimação, Enxame Morto, Controle Mental)
+    this.updateAllyTurrets(dt);
+
     // 6. Check collisions (projectile vs enemy)
     this.checkCollisions();
+
+    // 6b. Anti-Matéria: player shots intercept enemy shots
+    if ((this as any)._antiMatter) this.checkAntiMatter();
 
     // 7. Check enemy projectiles vs player
     this.checkEnemyProjectileHits();
@@ -570,6 +635,7 @@ export class CombatEngine {
             tags: [...proj.tags],
             alive: true,
             trail: [],
+            ownerId: proj.ownerId,
           });
         });
 
@@ -872,6 +938,8 @@ export class CombatEngine {
   }
 
   private updateEnemyShooting(dt: number): void {
+    // Distorção (Dr. Eon): enemy projectiles fly slower, permanently
+    const projSlowMult = (this as any)._enemyProjSlow ?? 1;
     for (const e of this.state.enemies) {
       // Don't shoot while phased
       if (e.phased) continue;
@@ -894,8 +962,8 @@ export class CombatEngine {
             id: `eproj_${this.nextEnemyProjId++}`,
             x: e.x,
             y: e.y + e.height / 2,
-            vx,
-            vy,
+            vx: vx * projSlowMult,
+            vy: vy * projSlowMult,
             damage: Math.ceil(e.damage * 0.5),
             alive: true,
           });
@@ -912,8 +980,8 @@ export class CombatEngine {
                 id: `eproj_${this.nextEnemyProjId++}`,
                 x: e.x,
                 y: e.y + e.height / 2,
-                vx: Math.cos(spreadAngle) * spec.projectileSpeed,
-                vy: Math.sin(spreadAngle) * spec.projectileSpeed,
+                vx: Math.cos(spreadAngle) * spec.projectileSpeed * projSlowMult,
+                vy: Math.sin(spreadAngle) * spec.projectileSpeed * projSlowMult,
                 damage: Math.ceil(e.damage * 0.4),
                 alive: true,
                 bounces: 2, // Boss projectiles bounce off walls twice
@@ -931,7 +999,7 @@ export class CombatEngine {
           const dx = this.state.playerX - e.x;
           const dy = (this.arenaHeight - 30) - e.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          const projSpeed = 180;
+          const projSpeed = 180 * projSlowMult;
           this.state.enemyProjectiles.push({
             id: `eproj_${this.nextEnemyProjId++}`,
             x: e.x,
@@ -1026,6 +1094,68 @@ export class CombatEngine {
     }
     // Signal for audio feedback (consumed by main loop)
     (st as any)._powerupCaughtType = pu.type;
+  }
+
+  /** Spawn an ally turret (used by Reanimação, Enxame Morto, Controle Mental) */
+  private spawnAllyTurret(x: number, y: number, life: number, damage: number, fireRate: number, color: string): void {
+    if (this.state.allyTurrets.length >= 6) return; // sane cap
+    this.state.allyTurrets.push({
+      id: `ally_${this.nextAllyId++}`, x, y, life, damage, fireRate, timer: 0, color,
+    });
+  }
+
+  private updateAllyTurrets(dt: number): void {
+    const turrets = this.state.allyTurrets;
+    for (let i = turrets.length - 1; i >= 0; i--) {
+      const t = turrets[i];
+      t.life -= dt;
+      if (t.life <= 0) { turrets.splice(i, 1); continue; }
+
+      t.timer -= dt;
+      if (t.timer <= 0 && this.state.enemies.length > 0) {
+        t.timer = 1 / t.fireRate;
+        // Fire at the nearest enemy
+        let nearest = this.state.enemies[0];
+        let nearDist = Infinity;
+        for (const e of this.state.enemies) {
+          if (e.phased) continue;
+          const d = Math.hypot(e.x - t.x, e.y - t.y);
+          if (d < nearDist) { nearDist = d; nearest = e; }
+        }
+        const dx = nearest.x - t.x, dy = nearest.y - t.y;
+        const dist = Math.max(1, Math.hypot(dx, dy));
+        const speed = 500;
+        this.state.projectiles.push({
+          id: `proj_ally_${this.nextProjectileId++}`,
+          x: t.x, y: t.y,
+          vx: (dx / dist) * speed, vy: (dy / dist) * speed,
+          damage: t.damage, piercing: 0, aoeRadius: 0,
+          tags: [], alive: true, trail: [],
+        });
+      }
+    }
+  }
+
+  /** Anti-Matéria (Dr. Eon): player projectiles collide with and cancel enemy projectiles */
+  private checkAntiMatter(): void {
+    for (const p of this.state.projectiles) {
+      if (!p.alive) continue;
+      for (const ep of this.state.enemyProjectiles) {
+        if (!ep.alive) continue;
+        if (this.rectCollision(p.x - 4, p.y - 4, 8, 8, ep.x - 5, ep.y - 5, 10, 10)) {
+          ep.alive = false;
+          if (p.piercing > 0) p.piercing--;
+          else p.alive = false;
+          this.spawnParticleBurst(ep.x, ep.y);
+          break;
+        }
+      }
+    }
+  }
+
+  /** Tiny visual sparkle for anti-matter cancellations (reuses floating text as a marker) */
+  private spawnParticleBurst(x: number, y: number): void {
+    this.spawnFloatingText(x, y, '✦', '#a78bfa');
   }
 
   private updateEnemyProjectiles(dt: number): void {
@@ -1125,6 +1255,36 @@ export class CombatEngine {
       (this as any)._secondWindUsed = true;
       this.spawnFloatingText(this.state.playerX, this.arenaHeight - 80, 'SEGUNDO FÔLEGO!', '#4ade80');
       this.triggerShake(8, 0.3);
+    }
+
+    // Rift Walk (Dr. Eon): teleport away from death, survive at 1 HP, 1x/wave
+    if (this.state.playerHp <= 0 && (this as any)._riftWalkActive && !(this as any)._riftWalkUsed) {
+      this.state.playerHp = 1;
+      (this as any)._riftWalkUsed = true;
+      this.state.playerX = 60 + Math.random() * (this.arenaWidth - 120);
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 80, 'RIFT WALK!', '#a78bfa');
+      this.triggerShake(6, 0.3);
+    }
+
+    // Renascimento da Fênix (Kagutsuchi): revive at 30 HP, once per RUN
+    if (this.state.playerHp <= 0 && (this as any)._phoenixReviveActive && !this._phoenixReviveUsed) {
+      this.state.playerHp = 30;
+      this._phoenixReviveUsed = true;
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 80, '🔥 RENASCIMENTO! 🔥', '#f97316');
+      this.triggerShake(10, 0.4);
+      this.triggerHitStop(0.15);
+    }
+
+    // Colapso Nuclear (Frank): wipe the wave, revive at 1 HP, once per RUN
+    if (this.state.playerHp <= 0 && (this as any)._nuclearReviveActive && !this._nuclearReviveUsed) {
+      this.state.playerHp = 1;
+      this._nuclearReviveUsed = true;
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 80, '☢ COLAPSO NUCLEAR! ☢', '#a3e635');
+      this.triggerShake(16, 0.6);
+      this.triggerHitStop(0.2);
+      for (let i = this.state.enemies.length - 1; i >= 0; i--) {
+        this.killEnemy(this.state.enemies[i], i);
+      }
     }
 
     this.triggerPlayerFlash();
@@ -1234,6 +1394,12 @@ export class CombatEngine {
             }
           }
 
+          // Mestre do Combo: +5% dano por hit no combo (max 50%)
+          const comboDmgPerHit = (this as any)._comboDmgPerHit ?? 0;
+          if (comboDmgPerHit > 0) {
+            damage *= 1 + Math.min(0.5, this.state.combo * comboDmgPerHit);
+          }
+
           e.hp -= damage;
           e.hitFlash = 0.08;
           // Knockback (push enemy up slightly on hit)
@@ -1264,6 +1430,28 @@ export class CombatEngine {
           if (e.special?.type === 'slow_on_hit') {
             this.state.playerSlowTimer = Math.max(this.state.playerSlowTimer, e.special.duration);
             this.spawnFloatingText(this.state.playerX, this.arenaHeight - 70, 'LENTO!', '#67e8f9');
+          }
+
+          // ─── Per-item hit effects (cards that buff a specific weapon) ────
+          const ownerItem = p.ownerId ? this.backpack.getItem(p.ownerId) : undefined;
+          if (ownerItem) {
+            // Onda de Pressão (Mazu): water shots push enemies back
+            const pushback = ownerItem.state.pushback as number | undefined;
+            if (pushback) e.y -= pushback;
+
+            // Gelo Negro (Mazu): stronger, controllable freeze than passive water chill
+            const freezeDur = ownerItem.state.freezeDuration as number | undefined;
+            if (freezeDur) {
+              e.slowTimer = Math.max(e.slowTimer ?? 0, freezeDur);
+              e.slowAmount = Math.min(e.slowAmount ?? 1, 0.05);
+            }
+
+            // Fenda Menor (Dr. Eon): shots teleport the target (25% per hit, avoids spam-lock)
+            if (ownerItem.state.teleportOnHit && Math.random() < 0.25) {
+              e.x = 40 + Math.random() * (this.arenaWidth - 80);
+              e.y = Math.max(20, e.y - 60);
+              this.spawnFloatingText(e.x, e.y - e.height / 2 - 10, '✨', '#a78bfa');
+            }
           }
 
           // Floating damage number
@@ -1312,7 +1500,29 @@ export class CombatEngine {
           }
 
           if (e.hp <= 0) {
+            // Curto-Circuito (Frank): chance to chain lightning to a nearby enemy on kill.
+            // Resolve the chain target BEFORE splicing `e` out (indices below `i` would
+            // shift and invalidate `i`), but apply/kill it AFTER — using a fresh indexOf,
+            // since killing `e` first is what keeps `i` valid for e's own splice.
+            const chainChance = ownerItem?.state.chainChance as number | undefined;
+            let chainTarget: Enemy | null = null;
+            if (chainChance && Math.random() < chainChance) {
+              let nearDist = Infinity;
+              for (const other of this.state.enemies) {
+                if (other === e || other.phased) continue;
+                const d = Math.hypot(other.x - e.x, other.y - e.y);
+                if (d < nearDist && d < 150) { nearDist = d; chainTarget = other; }
+              }
+            }
             this.killEnemy(e, i);
+            if (chainTarget) {
+              chainTarget.hp -= damage * 0.6;
+              this.spawnFloatingText(chainTarget.x, chainTarget.y - 10, `⚡${Math.floor(damage * 0.6)}`, '#facc15');
+              if (chainTarget.hp <= 0) {
+                const chainIdx = this.state.enemies.indexOf(chainTarget);
+                if (chainIdx >= 0) this.killEnemy(chainTarget, chainIdx);
+              }
+            }
           }
           break;
         }
@@ -1446,11 +1656,64 @@ export class CombatEngine {
     if (e.isBoss) {
       this.triggerHitStop(0.12);
       this.triggerShake(15, 0.8);
+      // Dissecação (Diana): boss gold bonus multiplies further
+      const bossGoldMult = (this as any)._bossGoldMult ?? 1;
+      const bossBonus = Math.floor(goldReward * 3 * bossGoldMult);
       this.spawnFloatingText(e.x, e.y - 30, '★ BOSS DERROTADO! ★', '#fbbf24');
-      this.spawnFloatingText(e.x, e.y, `+${goldReward * 3}g BONUS!`, '#fbbf24');
-      this.state.gold += goldReward * 3; // Triple gold bonus for boss
+      this.spawnFloatingText(e.x, e.y, `+${bossBonus}g BONUS!`, '#fbbf24');
+      this.state.gold += bossBonus;
       this.state.score += 500;
       (this.state as any)._bossKilledEffect = { x: e.x, y: e.y, timer: 1.0 };
+    }
+
+    // Necrose (Diana): death poisons nearby enemies
+    const deathPoisonDur = (this as any)._deathPoison ?? 0;
+    if (deathPoisonDur > 0) {
+      const poisonDmg = 4 + this.state.wave * 0.3;
+      for (const other of this.state.enemies) {
+        if (other === e) continue;
+        const dx = other.x - e.x, dy = other.y - e.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 70) {
+          (other as any).poisonTimer = Math.max((other as any).poisonTimer ?? 0, deathPoisonDur);
+          (other as any).poisonDamage = Math.max((other as any).poisonDamage ?? 0, poisonDmg);
+        }
+      }
+    }
+
+    // Reanimação (Diana): chance the corpse fights alongside you for 5s
+    const reanimateChance = (this as any)._reanimate ?? 0;
+    if (reanimateChance > 0 && !e.isBoss && Math.random() < reanimateChance) {
+      this.spawnAllyTurret(e.x, e.y, 5, Math.max(5, e.damage * 0.6), 0.8, '#4ade80');
+      this.spawnFloatingText(e.x, e.y - 15, '💀 REANIMADO', '#4ade80');
+    }
+
+    // Enxame Morto (Diana): every N kills, summon a permanent drone for the wave
+    const dronePerKills = (this as any)._dronePerKills ?? 0;
+    if (dronePerKills > 0) {
+      this._droneKillCounter++;
+      if (this._droneKillCounter >= dronePerKills) {
+        this._droneKillCounter = 0;
+        this.spawnAllyTurret(
+          this.state.playerX + (Math.random() - 0.5) * 80, this.arenaHeight - 160,
+          Infinity, 8 + this.state.wave * 0.4, 1.0, '#fbbf24'
+        );
+        this.spawnFloatingText(this.state.playerX, this.arenaHeight - 110, '🤖 DRONE!', '#fbbf24');
+      }
+    }
+
+    // Fragmentação (Dr. Eon): death spawns friendly projectiles
+    const deathProjCount = (this as any)._deathProjectiles ?? 0;
+    if (deathProjCount > 0) {
+      for (let dp = 0; dp < deathProjCount; dp++) {
+        const ang = -Math.PI / 2 + (Math.random() - 0.5) * 1.4; // upward-ish spread
+        this.state.projectiles.push({
+          id: `proj_frag_${this.nextProjectileId++}`,
+          x: e.x, y: e.y,
+          vx: Math.cos(ang) * 320, vy: Math.sin(ang) * 320,
+          damage: 6 + this.state.wave * 0.4, piercing: 0, aoeRadius: 0,
+          tags: [], alive: true, trail: [],
+        });
+      }
     }
 
     // Combo streak messages
@@ -1520,6 +1783,17 @@ export class CombatEngine {
         this.state.playerShield + 5 * dt // 5 shield/s regen
       );
     }
+
+    // Escudo Regenerativo: emergency shield once per wave when HP drops low
+    const regenShieldAmount = (this as any)._regenShield ?? 0;
+    if (regenShieldAmount > 0 && !this.state.regenShieldUsed &&
+        this.state.playerHp / this.state.playerMaxHp < 0.3) {
+      this.state.regenShieldUsed = true;
+      this.state.playerShield = Math.min(this.state.playerMaxShield + regenShieldAmount, this.state.playerShield + regenShieldAmount);
+      this.state.playerMaxShield = Math.max(this.state.playerMaxShield, this.state.playerShield);
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '🛡 ESCUDO DE EMERGÊNCIA!', '#38bdf8');
+      this.triggerShake(4, 0.2);
+    }
   }
 
   /** Apply character-specific passive effects each tick */
@@ -1587,6 +1861,29 @@ export class CombatEngine {
         const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
         e.x += (dx / dist) * gravPull * dt;
         e.y += (dy / dist) * gravPull * dt;
+      }
+    }
+
+    // Singularidade (Dr. Eon): periodic black hole pulse — strong pull for a burst
+    const blackHoleInterval = (this as any)._blackHoleInterval ?? 0;
+    if (blackHoleInterval > 0) {
+      this._blackHoleTimer += dt;
+      if (this._blackHoleTimer >= blackHoleInterval) {
+        this._blackHoleTimer = 0;
+        this._blackHoleActive = 2.0;
+        this.spawnFloatingText(this.state.playerX, this.arenaHeight - 100, '🕳 SINGULARIDADE!', '#a855f7');
+        this.triggerShake(6, 0.4);
+      }
+    }
+    if (this._blackHoleActive > 0) {
+      this._blackHoleActive -= dt;
+      const cx = this.arenaWidth / 2;
+      const cy = this.arenaHeight * 0.35;
+      for (const e of this.state.enemies) {
+        const dx = cx - e.x, dy = cy - e.y;
+        const dist = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+        e.x += (dx / dist) * 120 * dt;
+        e.y += (dy / dist) * 120 * dt;
       }
     }
 

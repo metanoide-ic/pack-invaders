@@ -2717,6 +2717,30 @@ export class Renderer {
       this.renderEnemy(e, dt);
     }
 
+    // Render ally turrets (Reanimação, Enxame Morto, Controle Mental)
+    for (const t of state.allyTurrets) {
+      const pulse = 0.85 + Math.sin(now * 6 + t.x * 0.1) * 0.15;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(this.getGlow(t.color, 16), t.x - 16, t.y - 16);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = t.color;
+      ctx.save();
+      ctx.translate(t.x, t.y);
+      ctx.scale(pulse, pulse);
+      ctx.beginPath();
+      ctx.moveTo(0, -8); ctx.lineTo(7, 0); ctx.lineTo(0, 8); ctx.lineTo(-7, 0);
+      ctx.closePath();
+      ctx.fill();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+
     // Off-screen enemy indicators (arrows at top edge)
     const indicatorY = Math.floor(L.h * 0.07);
     for (const e of state.enemies) {

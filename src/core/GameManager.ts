@@ -430,6 +430,29 @@ export class GameManager {
     // Reset per-wave timers
     c._empTimer = 0; c._lightningTimer = 0;
 
+    // Revives & one-shot defensive cards
+    if (g._riftWalk) { c._riftWalkActive = true; c._riftWalkUsed = false; } // 1x/wave
+    if (g._phoenixRevive) c._phoenixReviveActive = true; // 1x/run (used-flag lives on CombatEngine itself)
+    if (g._nuclearRevive) c._nuclearReviveActive = true; // 1x/run
+    if (g._regenShield) c._regenShield = g._regenShield; // 1x/wave (state.regenShieldUsed resets in startWave)
+
+    // Diana (beast_tamer) cards
+    if (g._paralyzeFirst) c._paralyzeFirstDuration = g._paralyzeFirst;
+    if (g._mindControl) c._mindControlActive = true;
+    if (g._reanimate) c._reanimate = g._reanimate;
+    if (g._dronePerKills) c._dronePerKills = g._dronePerKills;
+    if (g._deathPoison) c._deathPoison = g._deathPoison;
+    if (g._bossGoldMult) c._bossGoldMult = g._bossGoldMult;
+
+    // Dr. Eon (void_walker) cards
+    if (g._blackHoleInterval) c._blackHoleInterval = g._blackHoleInterval;
+    if (g._enemyProjSlow) c._enemyProjSlow = g._enemyProjSlow;
+    if (g._deathProjectiles) c._deathProjectiles = g._deathProjectiles;
+    if (g._antiMatter) c._antiMatter = true;
+
+    // Neutral cards
+    if (g._comboDmgPerHit) c._comboDmgPerHit = g._comboDmgPerHit;
+
     // Apply Aliencore mode effects
     if (this.aliencoreMode) {
       for (const e of this.combat.state.enemies) {
@@ -439,6 +462,15 @@ export class GameManager {
           e.hp *= 2;     // Boss HP +100%
           e.maxHp *= 2;
         }
+      }
+    }
+
+    // Surto de Crescimento (Rômulo): self-inflicted enemy HP penalty from the card
+    const enemyHpBonus = (this as any)._enemyHpBonus ?? 0;
+    if (enemyHpBonus > 0) {
+      for (const e of this.combat.state.enemies) {
+        e.hp = Math.floor(e.hp * (1 + enemyHpBonus));
+        e.maxHp = Math.floor(e.maxHp * (1 + enemyHpBonus));
       }
     }
 
@@ -502,7 +534,9 @@ export class GameManager {
     const goldMultiplier = this.aliencoreMode ? 1.5 : 1;
     // Perfect Wave: +50% gold if no damage taken
     const perfectBonus = this.combat.state.damageTakenThisWave === 0 ? 1.5 : 1.0;
-    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus);
+    // Cards: Sorte Grande / Mercador Fantasma / Magnetismo Dourado stack additively
+    const cardGoldBonus = 1 + ((this as any)._goldBonus ?? 0);
+    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus);
     this.gold += this.lastWaveGold;
 
     // Track stats
@@ -709,8 +743,14 @@ export class GameManager {
     const available = ALL_ITEMS.filter(i => i.cost > 0 && vendorItemIds.has(i.id));
     const shuffled = [...available].sort(() => Math.random() - 0.5);
     // Character shop size: Diana sees 3 items, Dr. Eon sees 4 (their disadvantages)
-    const shopSize = this.characterId === 'beast_tamer' ? 3
+    let shopSize = this.characterId === 'beast_tamer' ? 3
       : this.characterId === 'void_walker' ? 4 : 5;
+    // Novo Estoque card: next shop only gets extra slots, consumed on use
+    const extraSlots = (this as any)._extraShopSlots ?? 0;
+    if (extraSlots > 0) {
+      shopSize += extraSlots;
+      (this as any)._extraShopSlots = 0;
+    }
     return shuffled.slice(0, shopSize);
   }
 
