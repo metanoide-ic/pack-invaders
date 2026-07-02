@@ -448,7 +448,16 @@ export class Renderer {
         ctx.fillRect(btnX - 5, y, 3, btnH);
       }
 
-      ctx.font = i === 0 ? `bold ${Math.floor(L.h * 0.02)}px monospace` : `${Math.floor(L.h * 0.016)}px monospace`;
+      // JOGAR button: pulsing glow when not hovered
+      if (i === 0 && !isActive) {
+        const jogPulse = 0.5 + Math.sin(this.menuFloatTimer * 2.5) * 0.3;
+        ctx.globalAlpha = jogPulse * 0.3;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(btnX - 5, y, btnW + 10, btnH);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.font = i === 0 ? `bold ${Math.floor(L.h * 0.022)}px monospace` : `${Math.floor(L.h * 0.016)}px monospace`;
       ctx.fillStyle = i === 0 ? '#fbbf24' : isActive ? '#e2e8f0' : '#94a3b8';
       ctx.textAlign = 'left';
       ctx.fillText(menuItems[i], btnX + 8, y + btnH * 0.65);

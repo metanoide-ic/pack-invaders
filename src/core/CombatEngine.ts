@@ -820,6 +820,8 @@ export class CombatEngine {
             damage: Math.ceil(e.damage * 0.5),
             alive: true,
           });
+          // Muzzle flash on shoot
+          e.hitFlash = 0.05;
 
           // Boss multi-shot: fire additional projectiles in spread pattern
           if (e.isBoss) {
