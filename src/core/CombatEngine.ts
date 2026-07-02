@@ -58,6 +58,8 @@ export interface Enemy {
   boss2ndPhaseActive?: boolean;
   /** Definition ID for codex tracking */
   defId: string;
+  /** Hit flash timer (brief white flash when taking damage) */
+  hitFlash?: number;
 }
 
 // ─── Projectile (in-flight) ──────────────────────────────────────────────────
@@ -590,6 +592,8 @@ export class CombatEngine {
   private updateEnemies(dt: number): void {
     for (const e of this.state.enemies) {
       e.moveTimer += dt;
+      // Decay hit flash
+      if (e.hitFlash && e.hitFlash > 0) e.hitFlash -= dt;
 
       // Update slow timer
       if (e.slowTimer && e.slowTimer > 0) {
@@ -1062,6 +1066,9 @@ export class CombatEngine {
           }
 
           e.hp -= damage;
+          e.hitFlash = 0.08;
+          // Knockback (push enemy up slightly on hit)
+          e.y -= 2;
           this.state.damageDealtThisSecond += damage;
 
           // Maré (aqua_sage): water projectiles slow enemies

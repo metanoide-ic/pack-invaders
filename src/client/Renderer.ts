@@ -2912,6 +2912,17 @@ export class Renderer {
       ctx.textAlign = 'left';
     }
 
+    // ── Hit flash (white overlay when damaged) ────────────────────────────
+    if (e.hitFlash && e.hitFlash > 0) {
+      const flashAlpha = Math.min(0.7, e.hitFlash * 10);
+      ctx.globalAlpha = flashAlpha;
+      ctx.fillStyle = '#ffffff';
+      const fw = Math.floor(e.width * 1.4);
+      const fh = Math.floor(e.height * 1.4);
+      ctx.fillRect(e.x - fw / 2, e.y - fh / 2, fw, fh);
+      ctx.globalAlpha = 1;
+    }
+
     // ── HP bar ────────────────────────────────────────────────────────────
     const hpPct = e.hp / e.maxHp;
     const barW  = e.isBoss ? Math.min(240, e.width * 2.5) : e.width;
