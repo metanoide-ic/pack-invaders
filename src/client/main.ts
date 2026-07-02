@@ -201,7 +201,14 @@ function gameLoop(): void {
     // Kill sound
     const currentEnemies = game.combat.state.enemies.length;
     if (currentEnemies < prevEnemyCount) {
+      const killsThisFrame = prevEnemyCount - currentEnemies;
       audio.kill();
+      // Multi-kill popup
+      if (killsThisFrame >= 3) {
+        const labels = ['', '', '', 'TRIPLE KILL!', 'QUAD KILL!', 'PENTA KILL!', 'MASSACRE!'];
+        const label = killsThisFrame >= 6 ? 'MASSACRE!' : labels[killsThisFrame] || `${killsThisFrame}x KILL!`;
+        game.combat.spawnFloatingText(game.combat.state.playerX, game.combat.arenaHeight - 100, label, '#fbbf24');
+      }
       // Combo milestone sounds at 5, 10, 15, 20...
       if (game.combat.state.combo > 0 && game.combat.state.combo % 5 === 0) {
         audio.comboMilestone();

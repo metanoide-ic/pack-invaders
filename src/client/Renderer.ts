@@ -1855,6 +1855,17 @@ export class Renderer {
     this.renderButton(L.cx - btnW / 2, L.btnY, btnW, btnH, 'INICIAR COMBATE', hasWeapon ? '#6366f1' : '#374151');
     ctx.shadowBlur = 0;
 
+    // Show DPS estimate below button
+    if (hasWeapon) {
+      const power = game.backpack.calculateBackpackPower();
+      const dpsEst = power.totalDamage * (power.totalFireRate / Math.max(1, power.emitters.length)) * power.totalProjectiles;
+      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      ctx.fillStyle = '#64748b';
+      ctx.textAlign = 'center';
+      ctx.fillText(`DPS estimado: ${dpsEst.toFixed(0)}`, L.cx, L.btnY + btnH + Math.floor(L.h * 0.018));
+      ctx.textAlign = 'left';
+    }
+
     // Aliencore toggle (below combat button, only when unlocked)
     if (game.aliencoreUnlocked) {
       const acBtnW = Math.floor(L.w * 0.16);
@@ -2432,6 +2443,23 @@ export class Renderer {
     // Render enemies
     for (const e of state.enemies) {
       this.renderEnemy(e, dt);
+    }
+
+    // Off-screen enemy indicators (arrows at top edge)
+    const indicatorY = Math.floor(L.h * 0.07);
+    for (const e of state.enemies) {
+      if (e.y < -5) {
+        const arrowX = Math.max(10, Math.min(canvas.width - 10, e.x));
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(arrowX, indicatorY);
+        ctx.lineTo(arrowX - 5, indicatorY + 8);
+        ctx.lineTo(arrowX + 5, indicatorY + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
 
     // Render player projectiles with trails
@@ -3483,20 +3511,41 @@ export class Renderer {
       }
     }
 
-    // First wave tutorial
-    if (game.totalMonths === 1 && state.waveTime < 5) {
-      ctx.globalAlpha = 0.8 - state.waveTime * 0.15;
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(0, Math.floor(L.h * 0.35), canvas.width, Math.floor(L.h * 0.3));
-      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
-      ctx.fillStyle = '#fbbf24';
+    // First wave tutorial — minimal, visual, fades fast
+    if (game.totalMonths === 1 && state.waveTime < 4) {
+      const tutAlpha = Math.max(0, 1 - state.waveTime * 0.3);
+      ctx.globalAlpha = tutAlpha;
       ctx.textAlign = 'center';
-      ctx.fillText('← A/D para mover | SHIFT para dash →', L.cx, Math.floor(L.h * 0.45));
-      ctx.font = `${Math.floor(L.h * 0.015)}px monospace`;
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillText('Destrua os invasores! Seus itens atiram automaticamente.', L.cx, Math.floor(L.h * 0.52));
-      ctx.fillText('Teclas 1-2-3: use habilidades | SHIFT: dash', L.cx, Math.floor(L.h * 0.56));
-      ctx.fillText('Colete gold para comprar itens melhores na loja.', L.cx, Math.floor(L.h * 0.60));
+
+      // Key prompts floating near player
+      const py = canvas.height - 80;
+      ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
+
+      // Left/Right hint
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('A', state.playerX - 50, py);
+      ctx.fillText('D', state.playerX + 50, py);
+      ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('mover', state.playerX, py + 18);
+
+      // Skill hint (top)
+      if (state.waveTime > 1.5) {
+        ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+        ctx.fillStyle = '#6366f1';
+        ctx.fillText('1  2  3', L.cx, Math.floor(L.h * 0.15));
+        ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('habilidades', L.cx, Math.floor(L.h * 0.18));
+      }
+
+      // Dash hint
+      if (state.waveTime > 2.5) {
+        ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+        ctx.fillStyle = '#67e8f9';
+        ctx.fillText('SHIFT = dash', L.cx, Math.floor(L.h * 0.85));
+      }
+
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
     }

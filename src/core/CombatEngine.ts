@@ -1538,7 +1538,7 @@ export class CombatEngine {
     }
   }
 
-  private spawnFloatingText(x: number, y: number, text: string, color: string): void {
+  spawnFloatingText(x: number, y: number, text: string, color: string): void {
     // Cap floating texts to avoid memory issues
     if (this.state.floatingTexts.length > 30) {
       this.state.floatingTexts.shift();
