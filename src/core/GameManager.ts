@@ -5,7 +5,7 @@
  */
 
 import { BackpackGrid, BackpackConfig } from './BackpackGrid';
-import { CombatEngine } from './CombatEngine';
+import { CombatEngine, Enemy } from './CombatEngine';
 import { ItemDefinition } from './ItemSystem';
 import { ALL_ITEMS } from '../data/items';
 import { pickRandomCards } from '../data/cards';
@@ -536,7 +536,9 @@ export class GameManager {
     const perfectBonus = this.combat.state.damageTakenThisWave === 0 ? 1.5 : 1.0;
     // Cards: Sorte Grande / Mercador Fantasma / Magnetismo Dourado stack additively
     const cardGoldBonus = 1 + ((this as any)._goldBonus ?? 0);
-    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus);
+    // Relic: Cristal de Criox (+10% gold, permanent meta-progression)
+    const relicGoldBonus = 1 + (getRelicBonuses().goldPercent ?? 0) / 100;
+    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus);
     this.gold += this.lastWaveGold;
 
     // Track stats
@@ -842,6 +844,7 @@ export class GameManager {
       },
       damageArea: (x, y, radius, damage) => {
         const scaledDmg = damage * powerMult;
+        const killed: Enemy[] = [];
         for (const e of this.combat.state.enemies) {
           const dx = e.x - x;
           const dy = e.y - y;
@@ -851,17 +854,15 @@ export class GameManager {
             e.hp -= dmg;
             this.combat.state.damageDealtThisSecond += dmg;
             this.combat.state.score += dmg;
+            if (e.hp <= 0) killed.push(e);
           }
         }
-        // Remove dead enemies
-        this.combat.state.enemies = this.combat.state.enemies.filter(e => {
-          if (e.hp <= 0) {
-            this.combat.state.gold += e.goldReward;
-            this.combat.state.killedEnemyIds.push(e.defId);
-            return false;
-          }
-          return true;
-        });
+        // Route through the real kill pipeline: combo, gold scaling, power-up
+        // drops, elite affixes, boss fanfare, and every card mechanic that
+        // hooks killEnemy (Reanimação, Necrose, Curto-Circuito, etc.)
+        for (const e of killed) {
+          this.combat.killEnemyExternal(e);
+        }
       },
       heal: (amount) => {
         this.combat.state.playerHp = Math.min(
@@ -939,9 +940,11 @@ export class GameManager {
     let rateMult = 1 + (relicBonus.fireRatePercent ?? 0) / 100;
     if (this.isSkillActive('self_ignite')) dmgMult *= 2.0;
     if (this.isSkillActive('overclock')) rateMult *= 3.0;
-    if (this.isSkillActive('frenzy')) rateMult *= 2.0;
     (this.combat as any)._skillDamageMult = dmgMult;
     (this.combat as any)._skillFireRateMult = rateMult;
+    // Frenzy is pet-specific ("Pets atacam 3x mais rápido") — scoped inside
+    // fireWeapons() by tag instead of the global multiplier above.
+    (this.combat as any)._frenzyActive = this.isSkillActive('frenzy');
 
     // Relic: heal per second
     if (relicBonus.healPerSecond) {
@@ -972,6 +975,7 @@ export class GameManager {
       if (skill.activeTimer <= 0) continue;
       switch (skill.definition.id) {
         case 'thorn_shield':
+        case 'rescue_shield':
           // Block incoming enemy projectiles near player
           this.combat.state.enemyProjectiles = this.combat.state.enemyProjectiles.filter(p => {
             const dx = p.x - this.combat.state.playerX;
@@ -981,8 +985,9 @@ export class GameManager {
             return true;
           });
           break;
-        case 'whirlpool':
+        case 'whirlpool': {
           // Pull enemies toward center continuously
+          const whirlKilled: Enemy[] = [];
           for (const e of this.combat.state.enemies) {
             const cx = this.combat.arenaWidth / 2;
             const cy = this.combat.arenaHeight / 2;
@@ -992,17 +997,12 @@ export class GameManager {
             e.x += (dx / dist) * 80 * dt;
             e.y += (dy / dist) * 80 * dt;
             e.hp -= 3 * dt;
+            if (e.hp <= 0) whirlKilled.push(e);
           }
-          // Remove dead enemies from whirlpool
-          this.combat.state.enemies = this.combat.state.enemies.filter(e => {
-            if (e.hp <= 0) {
-              this.combat.state.gold += e.goldReward;
-              this.combat.state.killedEnemyIds.push(e.defId);
-              return false;
-            }
-            return true;
-          });
+          // Route through the real kill pipeline (combo, drops, card mechanics)
+          for (const e of whirlKilled) this.combat.killEnemyExternal(e);
           break;
+        }
         case 'photosynthesis_active':
           // Heal over time (40 HP / 5s = 8 HP/s)
           this.combat.state.playerHp = Math.min(

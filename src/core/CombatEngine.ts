@@ -561,6 +561,9 @@ export class CombatEngine {
   }
 
   private fireWeapons(dt: number): void {
+    // Mudança de Fase (Dr. Eon): invulnerable but cannot attack while phased
+    if ((this as any)._phaseShiftActive) return;
+
     const emitters = this.backpack.getAllItems().filter(i =>
       i.definition.tags.includes('Emissor') || i.definition.tags.includes('Arma')
     );
@@ -616,6 +619,11 @@ export class CombatEngine {
               charDmg *= 0.7;
             }
             break;
+        }
+
+        // Frenzy skill: pets fire 3x faster while active
+        if ((this as any)._frenzyActive && (tags.includes('Pet') || tags.includes('Animal'))) {
+          charRate *= 3;
         }
 
         // Apply rate multipliers temporarily
@@ -1531,6 +1539,17 @@ export class CombatEngine {
   }
 
   /** Handle enemy death — gold, score, combo, split, explode */
+  /**
+   * Kill an enemy from outside the normal collision pipeline (skills, external
+   * AoE sources) while still running the full killEnemy reward/effect chain —
+   * combo, gold scaling, power-up drops, elite affix triggers, boss fanfare,
+   * card mechanics like Reanimação/Necrose/Curto-Circuito, etc.
+   */
+  killEnemyExternal(e: Enemy): void {
+    const idx = this.state.enemies.indexOf(e);
+    if (idx >= 0) this.killEnemy(e, idx);
+  }
+
   private killEnemy(e: Enemy, index: number): void {
     // Track for codex
     this.state.killedEnemyIds.push(e.defId);
