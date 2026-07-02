@@ -3661,6 +3661,38 @@ export class Renderer {
     ctx.fillText('A/D | SHIFT dash | 1-2-3 skills | 4-5-6 poções', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
     ctx.textAlign = 'left';
 
+    // ── Pause button (tappable; matches InputHandler.tryCombatButton) ────
+    const pbSize = Math.floor(L.h * 0.05);
+    const pbX = L.w - pbSize - Math.floor(L.w * 0.008);
+    const pbY = Math.floor(L.h * 0.075);
+    ctx.globalAlpha = 0.75;
+    ctx.fillStyle = '#0b0e1a';
+    ctx.fillRect(pbX, pbY, pbSize, pbSize);
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(pbX, pbY, pbSize, pbSize);
+    ctx.fillStyle = '#94a3b8';
+    const barW2 = Math.max(3, Math.floor(pbSize * 0.14));
+    ctx.fillRect(pbX + Math.floor(pbSize * 0.28), pbY + Math.floor(pbSize * 0.25), barW2, Math.floor(pbSize * 0.5));
+    ctx.fillRect(pbX + Math.floor(pbSize * 0.58), pbY + Math.floor(pbSize * 0.25), barW2, Math.floor(pbSize * 0.5));
+    ctx.globalAlpha = 1;
+
+    // ── Touch steering marker ────────────────────────────────────────────
+    const touchX = (this.inputHandler as any)?.touchTargetX;
+    if (touchX !== null && touchX !== undefined) {
+      const markerPulse = 0.4 + Math.sin(now * 0.008) * 0.2;
+      ctx.globalAlpha = markerPulse;
+      ctx.strokeStyle = '#67e8f9';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(touchX, canvas.height - 70);
+      ctx.lineTo(touchX - 6, canvas.height - 80);
+      ctx.lineTo(touchX + 6, canvas.height - 80);
+      ctx.closePath();
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
     // ── Enemy radar (bottom-right) ───────────────────────────────────────
     if (state.enemies.length > 0) {
       const radarW = Math.floor(L.w * 0.13);

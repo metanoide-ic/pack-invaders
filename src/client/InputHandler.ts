@@ -63,6 +63,18 @@ export class InputHandler {
   /** Which settings slider is being dragged: 'vol' | 'sfx' | null */
   private _sliderDrag: 'vol' | 'sfx' | null = null;
 
+  // ── Touch controls (mobile) ──────────────────────────────────────────────
+  /** Touch identifier currently steering the player (null = none) */
+  private touchMoveId: number | null = null;
+  /** Target X (canvas coords) the player walks toward while touching */
+  private touchTargetX: number | null = null;
+  /** One-shot action queues consumed by the main loop's check* methods */
+  private queuedSkill = -1;
+  private queuedPotion = -1;
+  private queuedDash = false;
+  /** Whether any touch has ever happened (to show touch hints) */
+  touchModeUsed = false;
+
   constructor(
     private canvas: HTMLCanvasElement,
     private game: GameManager,
@@ -76,6 +88,12 @@ export class InputHandler {
     canvas.addEventListener('mouseup', () => { this._sliderDrag = null; });
     window.addEventListener('mouseup', () => { this._sliderDrag = null; });
     canvas.addEventListener('wheel', (e) => this.onWheel(e));
+
+    // Touch controls: finger steers the player in combat; HUD icons are buttons
+    canvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+    canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+    canvas.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: false });
+    canvas.addEventListener('touchcancel', (e) => this.onTouchEnd(e), { passive: false });
 
     // Keyboard for combat movement + Twitch input
     window.addEventListener('keydown', (e) => {
@@ -241,6 +259,12 @@ export class InputHandler {
       if (this.keysDown.has('a') || this.keysDown.has('arrowleft')) dir -= 1;
       if (this.keysDown.has('d') || this.keysDown.has('arrowright')) dir += 1;
     }
+    // Touch steering: walk toward the finger (with a small deadzone so the
+    // character settles instead of jittering under the touch point)
+    if (dir === 0 && this.touchTargetX !== null) {
+      const dx = this.touchTargetX - this.game.combat.state.playerX;
+      if (Math.abs(dx) > 14) dir = Math.sign(dx);
+    }
     return dir;
   }
 
@@ -268,6 +292,10 @@ export class InputHandler {
   /** Check if dash was pressed this frame */
   private dashPressed = false;
   checkDash(): boolean {
+    if (this.queuedDash) {
+      this.queuedDash = false;
+      return true;
+    }
     const shiftDown = this.keysDown.has('shift') || this.keysDown.has(' ');
     if (shiftDown && !this.dashPressed) {
       this.dashPressed = true;
@@ -282,6 +310,11 @@ export class InputHandler {
   /** Check if a skill key was pressed (1, 2, 3). Returns slot index or -1. */
   private skillPressed: Set<string> = new Set();
   checkSkillInput(): number {
+    if (this.queuedSkill >= 0) {
+      const s = this.queuedSkill;
+      this.queuedSkill = -1;
+      return s;
+    }
     const keys = ['1', '2', '3'];
     for (let i = 0; i < keys.length; i++) {
       if (this.keysDown.has(keys[i]) && !this.skillPressed.has(keys[i])) {
@@ -297,6 +330,11 @@ export class InputHandler {
 
   /** Check if a potion key was pressed (4, 5, 6). Returns slot index or -1. */
   checkPotionInput(): number {
+    if (this.queuedPotion >= 0) {
+      const p = this.queuedPotion;
+      this.queuedPotion = -1;
+      return p;
+    }
     const keys = ['4', '5', '6'];
     for (let i = 0; i < keys.length; i++) {
       if (this.keysDown.has(keys[i]) && !this.skillPressed.has(keys[i])) {
@@ -311,12 +349,19 @@ export class InputHandler {
   }
 
   private getCanvasPos(e: MouseEvent): { x: number; y: number } {
+    return this.clientToCanvas(e.clientX, e.clientY);
+  }
+
+  /** Map viewport coords to internal 1280x720 space, accounting for
+   *  object-fit: contain letterboxing on non-16:9 screens. */
+  private clientToCanvas(clientX: number, clientY: number): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
-    const scaleX = this.canvas.width / rect.width;
-    const scaleY = this.canvas.height / rect.height;
+    const scale = Math.min(rect.width / this.canvas.width, rect.height / this.canvas.height);
+    const offX = (rect.width - this.canvas.width * scale) / 2;
+    const offY = (rect.height - this.canvas.height * scale) / 2;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (clientX - rect.left - offX) / scale,
+      y: (clientY - rect.top - offY) / scale,
     };
   }
 
@@ -324,6 +369,107 @@ export class InputHandler {
   getHeldShape(): number[][] | null {
     if (!this.heldItem) return null;
     return getRotatedShape(this.heldItem.definition.gridShape, this.heldItem.rotation);
+  }
+
+  // ─── Touch Controls ────────────────────────────────────────────────────────
+
+  /** Handle a combat-HUD button press at canvas pos. Returns true if consumed. */
+  private tryCombatButton(pos: { x: number; y: number }): boolean {
+    const L = this.renderer.getLayout();
+    const h = this.canvas.height;
+
+    // Geometry mirrors renderCombatHUD's skill/potion bars
+    const skillBarX = Math.floor(L.w * 0.01);
+    const skillBarY = h - Math.floor(L.h * 0.12);
+    const skillSize = Math.floor(L.h * 0.06);
+    const skillGap = Math.floor(L.w * 0.005);
+    const pad = 8; // generous touch padding
+
+    // Skill slots 1-3
+    for (let i = 0; i < this.game.skills.length; i++) {
+      const sx = skillBarX + i * (skillSize + skillGap);
+      if (pos.x >= sx - pad && pos.x <= sx + skillSize + pad &&
+          pos.y >= skillBarY - pad && pos.y <= skillBarY + skillSize + pad) {
+        this.queuedSkill = i;
+        return true;
+      }
+    }
+
+    // Dash slot (right after skills; beast_tamer has no dash)
+    if (this.game.characterId !== 'beast_tamer') {
+      const dashX = skillBarX + this.game.skills.length * (skillSize + skillGap) + skillGap;
+      if (pos.x >= dashX - pad && pos.x <= dashX + skillSize + pad &&
+          pos.y >= skillBarY - pad && pos.y <= skillBarY + skillSize + pad) {
+        this.queuedDash = true;
+        return true;
+      }
+    }
+
+    // Potion slots
+    const potBarX = Math.floor(L.w * 0.20);
+    const potBarY = h - Math.floor(L.h * 0.12);
+    const potSize = Math.floor(L.h * 0.05);
+    const potGap = Math.floor(L.w * 0.004);
+    for (let pi = 0; pi < this.game.potions.length; pi++) {
+      const px = potBarX + pi * (potSize + potGap);
+      if (pos.x >= px - pad && pos.x <= px + potSize + pad &&
+          pos.y >= potBarY - pad && pos.y <= potBarY + potSize + pad) {
+        this.queuedPotion = pi;
+        return true;
+      }
+    }
+
+    // Pause button (top-right corner, below the HUD strip)
+    const pbSize = Math.floor(L.h * 0.05);
+    const pbX = L.w - pbSize - Math.floor(L.w * 0.008);
+    const pbY = Math.floor(L.h * 0.075);
+    if (pos.x >= pbX - pad && pos.x <= pbX + pbSize + pad &&
+        pos.y >= pbY - pad && pos.y <= pbY + pbSize + pad) {
+      this.audio.buttonClick();
+      togglePause();
+      return true;
+    }
+
+    return false;
+  }
+
+  private onTouchStart(e: TouchEvent): void {
+    this.touchModeUsed = true;
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (!inCombat) return; // menus: let the browser synthesize click events
+
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      const pos = this.clientToCanvas(t.clientX, t.clientY);
+      if (this.tryCombatButton(pos)) continue;
+      // Anything else steers the player toward the finger
+      this.touchMoveId = t.identifier;
+      this.touchTargetX = pos.x;
+    }
+  }
+
+  private onTouchMove(e: TouchEvent): void {
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (!inCombat) return;
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === this.touchMoveId) {
+        this.touchTargetX = this.clientToCanvas(t.clientX, t.clientY).x;
+      }
+    }
+  }
+
+  private onTouchEnd(e: TouchEvent): void {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === this.touchMoveId) {
+        this.touchMoveId = null;
+        this.touchTargetX = null;
+      }
+    }
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (inCombat) e.preventDefault();
   }
 
   private onClick(e: MouseEvent): void {
