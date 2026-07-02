@@ -1903,23 +1903,42 @@ export class Renderer {
     const { ctx, game } = this;
     const L = this.getLayout();
     const { cols, rows } = game.backpack;
+    const charColors: Record<string, string> = {
+      grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
+      storm_runner: '#facc15', void_walker: '#a78bfa', beast_tamer: '#ec4899',
+    };
+    const charColor = charColors[game.characterId] || '#6366f1';
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = L.gridX + c * L.cell;
         const y = L.gridY + r * L.cell;
-        // Darker cells with subtle gradient feel
-        ctx.fillStyle = (r + c) % 2 === 0 ? '#10101a' : '#0d0d16';
+        // Checker pattern
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#10101a' : '#0c0c14';
         ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
         // Subtle inner border
-        ctx.strokeStyle = '#1e1e30';
+        ctx.strokeStyle = '#1a1a2a';
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, L.cell - 3, L.cell - 3);
+
+        // Bottom row highlight for stacking characters
+        if (game.backpack.config.requireStacking && r === rows - 1) {
+          ctx.fillStyle = charColor + '10';
+          ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
+        }
       }
     }
-    // Outer grid border
-    ctx.strokeStyle = '#3b3b5a';
+    // Outer grid border (character-colored)
+    ctx.strokeStyle = charColor + '40';
     ctx.lineWidth = 2;
     ctx.strokeRect(L.gridX - 1, L.gridY - 1, cols * L.cell + 1, rows * L.cell + 1);
+    // Corner accents
+    const cornerSize = 8;
+    ctx.fillStyle = charColor + '60';
+    ctx.fillRect(L.gridX - 1, L.gridY - 1, cornerSize, 2);
+    ctx.fillRect(L.gridX - 1, L.gridY - 1, 2, cornerSize);
+    ctx.fillRect(L.gridX + cols * L.cell - cornerSize, L.gridY - 1, cornerSize + 1, 2);
+    ctx.fillRect(L.gridX + cols * L.cell - 1, L.gridY - 1, 2, cornerSize);
   }
 
   private renderPlacedItems(): void {
@@ -2286,18 +2305,22 @@ export class Renderer {
     const isHovering = held && this.mouseY > L.sellZoneY;
     const zoneH = L.h - L.sellZoneY;
 
-    ctx.fillStyle = isHovering ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)';
+    // Pulse when holding item (draw attention to sell zone)
+    const pulse = held ? 0.08 + Math.sin(performance.now() * 0.005) * 0.04 : 0;
+    const baseAlpha = isHovering ? 0.35 : (held ? 0.12 + pulse : 0.06);
+
+    ctx.fillStyle = `rgba(239, 68, 68, ${baseAlpha})`;
     ctx.fillRect(0, L.sellZoneY, canvas.width, zoneH);
-    ctx.strokeStyle = isHovering ? '#ef4444' : '#7f1d1d';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isHovering ? '#ef4444' : held ? '#991b1b' : '#4a1515';
+    ctx.lineWidth = isHovering ? 2.5 : 1.5;
     ctx.strokeRect(2, L.sellZoneY + 2, canvas.width - 4, zoneH - 4);
 
     ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = isHovering ? '#ef4444' : '#991b1b';
+    ctx.fillStyle = isHovering ? '#ef4444' : held ? '#b91c1c' : '#7f1d1d';
     ctx.textAlign = 'center';
     const label = held
-      ? `VENDER (${Math.floor(held.definition.cost * 0.5)}g)`
-      : 'VENDER (arraste aqui)';
+      ? `💰 VENDER (${Math.floor(held.definition.cost * 0.5)}g)`
+      : '↓ arraste pra vender';
     ctx.fillText(label, L.cx, L.sellZoneY + zoneH / 2 + 4);
     ctx.textAlign = 'left';
   }
@@ -3621,13 +3644,19 @@ export class Renderer {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // ─── HEADER ──────────────────────────────────────────────────────────
-    // Wave gold result
+    // Wave gold result + stats
     const perfectText = game.combat.state.damageTakenThisWave === 0 ? ' ★ PERFEITO!' : '';
     if (game.lastWaveGold > 0) {
       ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
-      ctx.fillStyle = '#4ade80';
+      ctx.fillStyle = perfectText ? '#fbbf24' : '#4ade80';
       ctx.textAlign = 'center';
-      ctx.fillText(`+${game.lastWaveGold} Gold${perfectText}`, L.cx, Math.floor(L.h * 0.055));
+      ctx.fillText(`+${game.lastWaveGold} Gold${perfectText}`, L.cx, Math.floor(L.h * 0.045));
+      // Sub-stats line
+      ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#64748b';
+      const kills = game.stats.enemiesKilled > 0 ? game.currentWaveKills : 0;
+      const maxCombo = (game.combat.state as any).maxCombo || 0;
+      ctx.fillText(`${kills} kills | combo max: ${maxCombo} | score: x${game.combat.state.scoreMultiplier.toFixed(1)}`, L.cx, Math.floor(L.h * 0.068));
       ctx.textAlign = 'left';
     }
 
