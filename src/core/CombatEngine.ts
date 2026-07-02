@@ -58,6 +58,8 @@ export interface Enemy {
   boss2ndPhaseActive?: boolean;
   /** Definition ID for codex tracking */
   defId: string;
+  /** Hit flash timer (brief white flash when taking damage) */
+  hitFlash?: number;
 }
 
 // ─── Projectile (in-flight) ──────────────────────────────────────────────────
@@ -597,6 +599,8 @@ export class CombatEngine {
 
     for (const e of this.state.enemies) {
       e.moveTimer += dt;
+      // Decay hit flash
+      if (e.hitFlash && e.hitFlash > 0) e.hitFlash -= dt;
 
       // Update slow timer
       if (e.slowTimer && e.slowTimer > 0) {
@@ -823,6 +827,8 @@ export class CombatEngine {
             damage: Math.ceil(e.damage * 0.5),
             alive: true,
           });
+          // Muzzle flash on shoot
+          e.hitFlash = 0.05;
 
           // Boss multi-shot: fire additional projectiles in spread pattern
           if (e.isBoss) {
@@ -895,9 +901,9 @@ export class CombatEngine {
   }
 
   private checkEnemyProjectileHits(): void {
-    const playerW = 32;
-    const playerH = 32;
-    const playerY = this.arenaHeight - 45;
+    const playerW = 28; // Hitbox smaller than visual (forgiving)
+    const playerH = 28;
+    const playerY = this.arenaHeight - 48;
 
     for (const p of this.state.enemyProjectiles) {
       if (!p.alive) continue;
@@ -1069,6 +1075,9 @@ export class CombatEngine {
           }
 
           e.hp -= damage;
+          e.hitFlash = 0.08;
+          // Knockback (push enemy up slightly on hit)
+          e.y -= 2;
           this.state.damageDealtThisSecond += damage;
 
           // Maré (aqua_sage): water projectiles slow enemies
@@ -1545,7 +1554,7 @@ export class CombatEngine {
     }
   }
 
-  private spawnFloatingText(x: number, y: number, text: string, color: string): void {
+  spawnFloatingText(x: number, y: number, text: string, color: string): void {
     // Cap floating texts to avoid memory issues
     if (this.state.floatingTexts.length > 30) {
       this.state.floatingTexts.shift();

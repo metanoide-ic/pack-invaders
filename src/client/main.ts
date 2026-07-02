@@ -75,6 +75,7 @@ function gameLoop(): void {
 
   // Phase transition audio & effects
   if (game.phase !== prevPhase) {
+    renderer.phaseTransitionTimer = 0.3; // Brief fade on any phase change
     if (game.phase === 'COMBAT' || game.phase === 'COOP') {
       audio.waveStart();
       audio.setCombatAmbient(true);
@@ -124,8 +125,11 @@ function gameLoop(): void {
     // Pass player direction to combat engine
     const playerDir = input.getPlayerDir();
     const p2Dir = game.phase === 'COOP' ? input.getP2Dir() : 0;
-    game.combat.tick(dt, playerDir, p2Dir);
-    game.updateSkills(dt);
+    // Death slowdown: when HP < 15%, slow time for dramatic effect
+    const hpRatio = game.combat.state.playerHp / game.combat.state.playerMaxHp;
+    const timeMult = hpRatio < 0.15 && hpRatio > 0 ? 0.4 : 1.0;
+    game.combat.tick(dt * timeMult, playerDir, p2Dir);
+    game.updateSkills(dt * timeMult);
 
     // Check dash input
     if (input.checkDash()) {
@@ -200,7 +204,14 @@ function gameLoop(): void {
     // Kill sound
     const currentEnemies = game.combat.state.enemies.length;
     if (currentEnemies < prevEnemyCount) {
+      const killsThisFrame = prevEnemyCount - currentEnemies;
       audio.kill();
+      // Multi-kill popup
+      if (killsThisFrame >= 3) {
+        const labels = ['', '', '', 'TRIPLE KILL!', 'QUAD KILL!', 'PENTA KILL!', 'MASSACRE!'];
+        const label = killsThisFrame >= 6 ? 'MASSACRE!' : labels[killsThisFrame] || `${killsThisFrame}x KILL!`;
+        game.combat.spawnFloatingText(game.combat.state.playerX, game.combat.arenaHeight - 100, label, '#fbbf24');
+      }
       // Combo milestone sounds at 5, 10, 15, 20...
       if (game.combat.state.combo > 0 && game.combat.state.combo % 5 === 0) {
         audio.comboMilestone();
@@ -234,16 +245,18 @@ function gameLoop(): void {
     if (game.combat.state.waveCleared || game.combat.state.playerHp <= 0) {
       // Wave cleared celebration
       if (game.combat.state.waveCleared) {
-        // Big burst of particles from player position
-        renderer.spawnParticles(game.combat.state.playerX, 680, '#fbbf24', 20);
+        // Big burst from player
+        renderer.spawnParticles(game.combat.state.playerX, 680, '#fbbf24', 25);
         renderer.spawnParticles(game.combat.state.playerX, 680, '#4ade80', 15);
-        // Scattered confetti across screen
-        for (let i = 0; i < 12; i++) {
+        // Confetti burst across screen
+        for (let i = 0; i < 15; i++) {
           const px = Math.random() * 1280;
           const py = Math.random() * 400 + 100;
           const colors = ['#fbbf24', '#4ade80', '#6366f1', '#f97316', '#22d3ee'];
-          renderer.spawnParticles(px, py, colors[i % colors.length], 2);
+          renderer.spawnParticles(px, py, colors[i % colors.length], 3);
         }
+        // "WAVE CLEAR" floating text
+        game.combat.spawnFloatingText(640, 300, 'WAVE CLEAR!', '#fbbf24');
         audio.waveComplete();
       }
       game.endCombat();

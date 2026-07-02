@@ -128,14 +128,14 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// INFERNO COLLECTIBLES — Trauma e Fogo
+// KAGUTSUCHI COLLECTIBLES — Trauma e Fogo
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_teddy',
     name: 'Ursinho de Pelucia Queimado',
-    lore: 'Metade derretida, metade intacta. O olho esquerdo de vidro ainda brilha. Era da Leticia — irma mais nova de Kagutsuchi. Ela tinha 7 anos. Dormia com o urso toda noite. Na noite do Evento, quando a casa explodiu, Kagutsuchi encontrou o urso no quintal, a 15 metros da cratera. Do corpo dela, nao encontrou nada. Ele carrega o urso no bolso interno do colete. Sempre. Nao fala sobre isso. Nunca.',
+    lore: 'Metade derretida, metade intacta. O olho esquerdo de vidro ainda brilha. Era da Yuki — filha de Kagutsuchi, 6 anos. Dormia com o urso toda noite. Na noite do Evento, quando o gas explodiu, Kagutsuchi encontrou o urso no quintal, a 15 metros da cratera. Do corpo dela, nao encontrou nada. Ele carrega o urso no bolso interno do colete. Sempre. Nao fala sobre isso. Nunca.',
     characterId: 'fire_lord',
     order: 1,
     spriteHint: 'teddy',
@@ -151,7 +151,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_photo',
     name: 'Foto de Familia — Derretida',
-    lore: 'A foto esta quase irreconhecivel — o calor fundiu a camada plastica com a imagem. Mas se voce olhar com cuidado, de um angulo especifico, da pra ver: quatro pessoas. Um homem mais velho (o pai), uma mulher jovem sorrindo (a mae que ja tinha ido embora? Uma tia?), um adolescente com camisa de time (ele), e uma menina pequena de vestido amarelo (Leticia). Todos sorrindo. A ultima vez. Kagutsuchi olha para esta foto toda noite. E toda noite, queima algo depois.',
+    lore: 'A foto esta quase irreconhecivel — o calor fundiu a camada plastica com a imagem. Mas se voce olhar com cuidado, de um angulo especifico, da pra ver: tres pessoas. Um homem (ele), uma mulher sorrindo (Ana), e uma menina pequena de vestido amarelo (Yuki). Todos sorrindo. A ultima vez. Kagutsuchi olha para esta foto toda noite. Conto ate tres. Fecha. E toda noite, queima algo depois.',
     characterId: 'fire_lord',
     order: 3,
     spriteHint: 'photo',
@@ -159,7 +159,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_badge',
     name: 'Distintivo de Bombeiro',
-    lore: 'Distintivo #2847 do Corpo de Bombeiros Militar de Goias. Encontrado a 200 metros da casa destruida. O bombeiro chegou rapido — rapido demais para o incendio ser normal. Provavelmente ja estava na vizinhanca quando a explosao aconteceu. Nao sobreviveu. Kagutsuchi encontrou o corpo no dia seguinte — carbonizado, mas de joelhos, como se tivesse morrido tentando levantar. Ele guarda o distintivo como lembrete: ate o fim, alguem tentou.',
+    lore: 'Distintivo #2847 do Corpo de Bombeiros Militar de Goias. Encontrado a 200 metros da casa destruida. O bombeiro chegou rapido — rapido demais para a explosao ser normal. Provavelmente ja estava na vizinhanca quando o gas detonou. Nao sobreviveu. Kagutsuchi encontrou o corpo no dia seguinte — carbonizado, mas de joelhos, como se tivesse morrido tentando levantar. Ele guarda o distintivo como lembrete: ate o fim, alguem tentou.',
     characterId: 'fire_lord',
     order: 4,
     spriteHint: 'badge',
@@ -175,7 +175,7 @@ export const INFERNO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_inferno_lighter',
     name: 'Isqueiro do Pai',
-    lore: 'Zippo de aco com as iniciais "R.S." gravadas. O pai era fumante — o unico vicio dele. Kagutsuchi encontrou o isqueiro intacto nos escombros. Como sobreviveu ao calor, ele nao sabe. O mecanismo ainda funciona perfeitamente. Ele o usa para acender cada arma incendiaria que constroi. Cada chama que cria comeca com o isqueiro do pai. Como se, de alguma forma, o velho ainda estivesse ajudando. Ainda estivesse ali.',
+    lore: 'Zippo de aco com as iniciais "K.S." gravadas. O pai era fumante — o unico vicio dele. Kagutsuchi encontrou o isqueiro intacto nos escombros. Como sobreviveu ao calor do plasma, ele nao sabe. O mecanismo ainda funciona perfeitamente. Ele o usa para acender cada arma incendiaria que constroi. Cada chama que cria comeca com o isqueiro do pai. Como se, de alguma forma, o velho ainda estivesse ajudando. Ainda estivesse ali.',
     characterId: 'fire_lord',
     order: 6,
     spriteHint: 'lighter',
@@ -245,7 +245,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_dosimeter',
     name: 'Dosimetro — SATURADO',
-    lore: 'Dosimetro pessoal de radiacao. O marcador esta no maximo — alem do maximo. O indicador ultrapassou a escala e parou. O dispositivo nao foi projetado para medir este nivel de exposicao porque este nivel de exposicao deveria ser instantaneamente fatal. No verso, etiqueta: "PROPRIEDADE DE: Matheus C. — Tecnico de manutencao, Usina Angra III". Matheus e o nome que Frank nao usa mais. Matheus morreu no reator. O que saiu era outra coisa.',
+    lore: 'Dosimetro pessoal de radiacao. O marcador esta no maximo — alem do maximo. O indicador ultrapassou a escala e parou. O dispositivo nao foi projetado para medir este nivel de exposicao porque este nivel de exposicao deveria ser instantaneamente fatal. No verso, etiqueta: "PROPRIEDADE DE: Matheus C. — Tecnico de manutencao, Usina Angra III". Matheus e o nome que Frank nao usa mais. Matheus morreu no reator. O que saiu prefere ser chamado de Frank.',
     characterId: 'storm_runner',
     order: 1,
     spriteHint: 'device',
@@ -293,7 +293,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ABISMO COLLECTIBLES — A Fenda e o Outro Lado
+// DR. EON COLLECTIBLES — A Fenda e o Outro Lado
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const ABISMO_COLLECTIBLES: Collectible[] = [
@@ -324,7 +324,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_interview',
     name: 'Transcricao — "O Que Ha La"',
-    lore: 'TRANSCRICAO — Debriefing de "Dr. Eon", Dia 3 pos-retorno. Comandante: "O que voce viu do outro lado?" Dr. Eon: "Tudo. Nada. As duas coisas sao a mesma la." Comandante: "Pode ser mais especifico?" Dr. Eon: "O espaco nao tem direcao. O tempo nao tem sequencia. Eu vivi toda a minha vida — passado, presente, futuro — simultaneamente. Vi minha morte. Vi meu nascimento. Vi o fim do universo. Vi o inicio. E entre tudo isso... vi ELES. Os que vieram. E vi o que os fez vir." Comandante: "O que os fez vir?" [LONGO SILENCIO — 47 segundos] Dr. Eon: "Medo." [FIM DA TRANSCRICAO]',
+    lore: 'TRANSCRICAO — Debriefing de "Dr. Eon", Dia 3 pos-retorno. Comandante: "O que voce viu do outro lado?" Dr. Eon: "Tudo. Nada. As duas coisas sao a mesma la." Comandante: "Pode ser mais especifico?" Dr. Eon: "O espaco nao tem direcao. O tempo nao tem sequencia. Eu vivi toda a minha vida — passado, presente, futuro — simultaneamente. Vi minha morte. Vi meu nascimento. Vi o fim do universo. Vi o inicio. E entre tudo isso... vi ELES. Os que vieram. E vi o que os fez vir." Comandante: "O que os fez vir?" [LONGO SILENCIO — 47 segundos] Dr. Eon: "Medo. Eles estao fugindo de algo." [FIM DA TRANSCRICAO]',
     characterId: 'void_walker',
     order: 4,
     spriteHint: 'document',
@@ -332,7 +332,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_scar',
     name: 'Diagrama — Cicatrizes Dimensionais',
-    lore: 'Mapa de Sao Paulo e arredores com marcacoes em vermelho indicando "cicatrizes dimensionais" — pontos onde o tecido do espaco-tempo esta enfraquecido. Ha 247 marcacoes. A maior e a fenda principal sobre o centro da cidade. As menores sao onde teletransportadores e distorcoes temporais operam. Nota de Dr. Eon: "As cicatrizes estao se conectando. Formando um padrão. Um circulo. Quando o circulo se fechar... outra fenda. Maior. Permanente. E o que esta do outro lado VAI passar." Data estimada de fechamento do circulo: 6 meses.',
+    lore: 'Mapa de Sao Paulo e arredores com marcacoes em vermelho indicando "cicatrizes dimensionais" — pontos onde o tecido do espaco-tempo esta enfraquecido. Ha 247 marcacoes. A maior e a fenda principal sobre o centro da cidade. As menores sao onde teletransportadores e distorcoes temporais operam. Nota de Dr. Eon: "As cicatrizes estao se conectando. Formando um padrao. Um circulo. Quando o circulo se fechar... outra fenda. Maior. Permanente. E o que esta do outro lado VAI passar. Nao os aliens que conhecemos. O que eles temem." Data estimada de fechamento do circulo: 6 meses.',
     characterId: 'void_walker',
     order: 5,
     spriteHint: 'map',
@@ -348,7 +348,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// DOMADORA COLLECTIBLES — Necromancia Alien
+// DIANA COLLECTIBLES — Necromancia Alien
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const DOMADORA_COLLECTIBLES: Collectible[] = [

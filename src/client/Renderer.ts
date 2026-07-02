@@ -113,6 +113,8 @@ export class Renderer {
   private enemyHitFlash = new Map<string, number>();
   /** Projectile IDs seen last frame (for muzzle flash on new ones) */
   private seenProjIds = new Set<string>();
+  /** Phase transition fade (0 = none, decreasing from 0.4) */
+  phaseTransitionTimer = 0;
 
   constructor(
     private ctx: CanvasRenderingContext2D,
@@ -190,7 +192,7 @@ export class Renderer {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply screen shake
+    // Apply screen shake + zoom pulse
     const state = game.combat.state;
     let shakeX = 0;
     let shakeY = 0;
@@ -200,7 +202,18 @@ export class Renderer {
       shakeY = (Math.random() - 0.5) * state.shakeIntensity * decay * 2;
     }
 
+    // Zoom pulse on big impacts (intensity > 10 = boss kill level)
+    let zoomScale = 1;
+    if (state.shakeIntensity >= 10 && state.shakeTimer < 0.1) {
+      zoomScale = 1 + (0.1 - state.shakeTimer) * 0.15;
+    }
+
     ctx.save();
+    if (zoomScale > 1) {
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    }
     ctx.translate(shakeX, shakeY);
 
     this.renderBackground(dt);
@@ -239,6 +252,16 @@ export class Renderer {
     this.renderAchievementNotifs(dt);
     this.renderFusionPopups(dt);
     this.renderTwitchInput();
+
+    // Phase transition fade overlay
+    if (this.phaseTransitionTimer > 0) {
+      this.phaseTransitionTimer -= dt;
+      const fadeAlpha = this.phaseTransitionTimer / 0.3;
+      ctx.globalAlpha = fadeAlpha * 0.6;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.globalAlpha = 1;
+    }
 
     this.renderScreenFX();
 
@@ -440,7 +463,16 @@ export class Renderer {
         ctx.fillRect(btnX - 5, y, 3, btnH);
       }
 
-      ctx.font = i === 0 ? `bold ${Math.floor(L.h * 0.02)}px monospace` : `${Math.floor(L.h * 0.016)}px monospace`;
+      // JOGAR button: pulsing glow when not hovered
+      if (i === 0 && !isActive) {
+        const jogPulse = 0.5 + Math.sin(this.menuFloatTimer * 2.5) * 0.3;
+        ctx.globalAlpha = jogPulse * 0.3;
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(btnX - 5, y, btnW + 10, btnH);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.font = i === 0 ? `bold ${Math.floor(L.h * 0.022)}px monospace` : `${Math.floor(L.h * 0.016)}px monospace`;
       ctx.fillStyle = i === 0 ? '#fbbf24' : isActive ? '#e2e8f0' : '#94a3b8';
       ctx.textAlign = 'left';
       ctx.fillText(menuItems[i], btnX + 8, y + btnH * 0.65);
@@ -472,6 +504,11 @@ export class Renderer {
     ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
     ctx.fillStyle = '#1e293b';
     ctx.fillText('v1.0 — 2024', titleX, L.h - Math.floor(L.h * 0.025));
+    // Daily seed (for future daily challenges)
+    const today = new Date();
+    const seed = `${today.getFullYear()}${(today.getMonth()+1).toString().padStart(2,'0')}${today.getDate().toString().padStart(2,'0')}`;
+    ctx.fillStyle = '#1e293b';
+    ctx.fillText(`seed: ${seed}`, titleX + Math.floor(panelW * 0.5), L.h - Math.floor(L.h * 0.025));
   }
 
   // ─── Save Select ──────────────────────────────────────────────────────────
@@ -1550,6 +1587,19 @@ export class Renderer {
     const inGrid = gridCol >= 0 && gridRow >= 0 &&
       gridCol < this.game.backpack.cols && gridRow < this.game.backpack.rows;
 
+    // Subtle hint on all valid placement positions (low alpha, don't recompute every frame)
+    const tempDef2: ItemDefinition = { ...held.definition, gridShape: shape };
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#4ade80';
+    for (let r = 0; r < this.game.backpack.rows; r++) {
+      for (let c = 0; c < this.game.backpack.cols; c++) {
+        if (this.game.backpack.canPlace(tempDef2, { col: c, row: r })) {
+          ctx.fillRect(L.gridX + c * L.cell, L.gridY + r * L.cell, L.cell - 2, L.cell - 2);
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+
     // Show grid highlight if cursor is over grid
     if (inGrid) {
       const tempDef: ItemDefinition = { ...held.definition, gridShape: shape };
@@ -1865,6 +1915,8 @@ export class Renderer {
     }
 
     const itemCount = game.backpack.getAllItems().length;
+    const totalCells = game.backpack.cols * game.backpack.rows;
+    const usedCells = game.backpack.getAllItems().reduce((sum, it) => sum + it.definition.gridShape.flat().filter(c => c === 1).length, 0);
     ctx.font = L.fontTitle;
     ctx.fillStyle = '#a78bfa';
     const mochilaLabel = `MOCHILA (${itemCount})`;
@@ -1873,10 +1925,20 @@ export class Renderer {
 
     ctx.font = L.fontSmall;
     ctx.fillStyle = '#94a3b8';
+    // Calculate months until next boss
+    const currentMonth = game.month;
+    const monthsUntilBoss = currentMonth <= 6 ? 6 - currentMonth : 12 - currentMonth;
+    const bossHint = monthsUntilBoss <= 2 ? ` | ⚠ Boss em ${monthsUntilBoss}` : '';
+    const infoLine = `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`;
     ctx.fillText(
-      `${game.getTimeString()} | Gold: ${game.gold}`,
+      infoLine,
       L.gridX + mochilaW + Math.floor(L.w * 0.015), L.gridY - Math.floor(L.h * 0.04)
     );
+    // Boss warning color
+    if (monthsUntilBoss <= 2) {
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText(bossHint, L.gridX + mochilaW + Math.floor(L.w * 0.015) + ctx.measureText(infoLine).width, L.gridY - Math.floor(L.h * 0.04));
+    }
 
     this.renderGrid();
     this.renderPlacedItems();
@@ -1925,6 +1987,17 @@ export class Renderer {
     this.renderButton(L.cx - btnW / 2, L.btnY, btnW, btnH, 'INICIAR COMBATE', hasWeapon ? '#6366f1' : '#374151');
     ctx.shadowBlur = 0;
 
+    // Show DPS estimate below button
+    if (hasWeapon) {
+      const power = game.backpack.calculateBackpackPower();
+      const dpsEst = power.totalDamage * (power.totalFireRate / Math.max(1, power.emitters.length)) * power.totalProjectiles;
+      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+      ctx.fillStyle = '#64748b';
+      ctx.textAlign = 'center';
+      ctx.fillText(`DPS estimado: ${dpsEst.toFixed(0)}`, L.cx, L.btnY + btnH + Math.floor(L.h * 0.018));
+      ctx.textAlign = 'left';
+    }
+
     // Aliencore toggle (below combat button, only when unlocked)
     if (game.aliencoreUnlocked) {
       const acBtnW = Math.floor(L.w * 0.16);
@@ -1960,23 +2033,42 @@ export class Renderer {
     const { ctx, game } = this;
     const L = this.getLayout();
     const { cols, rows } = game.backpack;
+    const charColors: Record<string, string> = {
+      grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
+      storm_runner: '#facc15', void_walker: '#a78bfa', beast_tamer: '#ec4899',
+    };
+    const charColor = charColors[game.characterId] || '#6366f1';
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = L.gridX + c * L.cell;
         const y = L.gridY + r * L.cell;
-        // Darker cells with subtle gradient feel
-        ctx.fillStyle = (r + c) % 2 === 0 ? '#10101a' : '#0d0d16';
+        // Checker pattern
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#10101a' : '#0c0c14';
         ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
         // Subtle inner border
-        ctx.strokeStyle = '#1e1e30';
+        ctx.strokeStyle = '#1a1a2a';
         ctx.lineWidth = 1;
         ctx.strokeRect(x + 0.5, y + 0.5, L.cell - 3, L.cell - 3);
+
+        // Bottom row highlight for stacking characters
+        if (game.backpack.config.requireStacking && r === rows - 1) {
+          ctx.fillStyle = charColor + '10';
+          ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
+        }
       }
     }
-    // Outer grid border
-    ctx.strokeStyle = '#3b3b5a';
+    // Outer grid border (character-colored)
+    ctx.strokeStyle = charColor + '40';
     ctx.lineWidth = 2;
     ctx.strokeRect(L.gridX - 1, L.gridY - 1, cols * L.cell + 1, rows * L.cell + 1);
+    // Corner accents
+    const cornerSize = 8;
+    ctx.fillStyle = charColor + '60';
+    ctx.fillRect(L.gridX - 1, L.gridY - 1, cornerSize, 2);
+    ctx.fillRect(L.gridX - 1, L.gridY - 1, 2, cornerSize);
+    ctx.fillRect(L.gridX + cols * L.cell - cornerSize, L.gridY - 1, cornerSize + 1, 2);
+    ctx.fillRect(L.gridX + cols * L.cell - 1, L.gridY - 1, 2, cornerSize);
   }
 
   private renderPlacedItems(): void {
@@ -2091,6 +2183,28 @@ export class Renderer {
         ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
         ctx.fillStyle = '#f472b6';
         ctx.fillText('★' + fname.slice(0, 10), badgeX + 2, badgeY + 8);
+      }
+    }
+
+    // Fusion connection lines between fused item pairs
+    const fusedItems = items.filter(i => (i.state as any).fusedName);
+    for (const fi of fusedItems) {
+      const adj = game.backpack.getAdjacentItems(fi.instanceId);
+      for (const partner of adj) {
+        if ((partner.state as any).fusedName) {
+          const x1 = L.gridX + fi.position.col * L.cell + L.cell / 2;
+          const y1 = L.gridY + fi.position.row * L.cell + L.cell / 2;
+          const x2 = L.gridX + partner.position.col * L.cell + L.cell / 2;
+          const y2 = L.gridY + partner.position.row * L.cell + L.cell / 2;
+          ctx.globalAlpha = 0.25 + Math.sin(performance.now() * 0.003) * 0.1;
+          ctx.strokeStyle = '#f472b6';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x1, y1);
+          ctx.lineTo(x2, y2);
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        }
       }
     }
   }
@@ -2343,18 +2457,22 @@ export class Renderer {
     const isHovering = held && this.mouseY > L.sellZoneY;
     const zoneH = L.h - L.sellZoneY;
 
-    ctx.fillStyle = isHovering ? 'rgba(239, 68, 68, 0.3)' : 'rgba(239, 68, 68, 0.1)';
+    // Pulse when holding item (draw attention to sell zone)
+    const pulse = held ? 0.08 + Math.sin(performance.now() * 0.005) * 0.04 : 0;
+    const baseAlpha = isHovering ? 0.35 : (held ? 0.12 + pulse : 0.06);
+
+    ctx.fillStyle = `rgba(239, 68, 68, ${baseAlpha})`;
     ctx.fillRect(0, L.sellZoneY, canvas.width, zoneH);
-    ctx.strokeStyle = isHovering ? '#ef4444' : '#7f1d1d';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = isHovering ? '#ef4444' : held ? '#991b1b' : '#4a1515';
+    ctx.lineWidth = isHovering ? 2.5 : 1.5;
     ctx.strokeRect(2, L.sellZoneY + 2, canvas.width - 4, zoneH - 4);
 
     ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = isHovering ? '#ef4444' : '#991b1b';
+    ctx.fillStyle = isHovering ? '#ef4444' : held ? '#b91c1c' : '#7f1d1d';
     ctx.textAlign = 'center';
     const label = held
-      ? `VENDER (${Math.floor(held.definition.cost * 0.5)}g)`
-      : 'VENDER (arraste aqui)';
+      ? `💰 VENDER (${Math.floor(held.definition.cost * 0.5)}g)`
+      : '↓ arraste pra vender';
     ctx.fillText(label, L.cx, L.sellZoneY + zoneH / 2 + 4);
     ctx.textAlign = 'left';
   }
@@ -2493,8 +2611,15 @@ export class Renderer {
     for (const [id, data] of this.prevEnemyPositions) {
       if (!currentEnemyIds.has(id)) {
         const pos = data;
-        // Color explosion based on enemy element
         const color = (pos as any).color || '#ef4444';
+        // Kill flash (brief white burst)
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // Explosion ring + particles + gold sparkles
         this.spawnExplosion(pos.x, pos.y, 30, color);
         this.spawnParticles(pos.x, pos.y, color, 10);
         this.spawnParticles(pos.x, pos.y, '#fbbf24', 5);
@@ -2557,9 +2682,40 @@ export class Renderer {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Low HP danger overlay (pulsing red border + slight darken)
+    const critHpRatio = state.playerHp / state.playerMaxHp;
+    if (critHpRatio < 0.25 && critHpRatio > 0) {
+      const dangerPulse = 0.1 + Math.sin(performance.now() * 0.008) * 0.08;
+      ctx.globalAlpha = dangerPulse;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Red border pulse
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+      ctx.globalAlpha = 1;
+    }
+
     // Render enemies
     for (const e of state.enemies) {
       this.renderEnemy(e, dt);
+    }
+
+    // Off-screen enemy indicators (arrows at top edge)
+    const indicatorY = Math.floor(L.h * 0.07);
+    for (const e of state.enemies) {
+      if (e.y < -5) {
+        const arrowX = Math.max(10, Math.min(canvas.width - 10, e.x));
+        ctx.globalAlpha = 0.6;
+        ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
+        ctx.beginPath();
+        ctx.moveTo(arrowX, indicatorY);
+        ctx.lineTo(arrowX - 5, indicatorY + 8);
+        ctx.lineTo(arrowX + 5, indicatorY + 8);
+        ctx.closePath();
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      }
     }
 
     // Render player projectiles: additive glow + core sprite + trail
@@ -2606,7 +2762,7 @@ export class Renderer {
       if (ep.bounces && ep.bounces > 0) {
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 5, 0, Math.PI * 2);
+        ctx.arc(ep.x, ep.y, 8, 0, Math.PI * 2);
         ctx.fill();
         ctx.fillStyle = '#fde68a';
         ctx.beginPath();
@@ -2662,7 +2818,7 @@ export class Renderer {
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(state.playerX, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(state.playerX, canvas.height - 14, 20, 8, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
@@ -2690,12 +2846,12 @@ export class Renderer {
           : sk.definition.id.includes('tidal') || sk.definition.id.includes('whirl') || sk.definition.id.includes('rain') ? '#38bdf8'
           : sk.definition.id.includes('thunder') || sk.definition.id.includes('over') || sk.definition.id.includes('emp') ? '#facc15'
           : '#ec4899';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(state.playerX, canvas.height - 35, 22, 0, Math.PI * 2);
+        ctx.arc(state.playerX, canvas.height - 32, 30, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = 1;
-        break; // Only show one aura
+        break;
       }
     }
 
@@ -2711,7 +2867,8 @@ export class Renderer {
       if (tdSprite) {
         ctx.drawImage(tdSprite, -Math.floor(tdSprite.width / 2), -tdSprite.height);
       } else {
-        ctx.drawImage(playerSprite, -16, -32);
+        // Fallback procedural sprite drawn larger for visibility
+        ctx.drawImage(playerSprite, -24, -44, 48, 48);
       }
       ctx.restore();
       // Movement dust kicks
@@ -2721,11 +2878,11 @@ export class Renderer {
     } else {
       // Fallback: simple person silhouette
       const px = state.playerX;
-      const py = canvas.height - 29;
+      const py = canvas.height - 32;
       ctx.fillStyle = '#4ade80';
-      ctx.fillRect(px - 6, py - 14, 12, 16); // body
+      ctx.fillRect(px - 10, py - 18, 20, 24); // body (bigger)
       ctx.beginPath();
-      ctx.arc(px, py - 18, 6, 0, Math.PI * 2); // head
+      ctx.arc(px, py - 24, 10, 0, Math.PI * 2); // head (bigger)
       ctx.fill();
     }
 
@@ -2844,6 +3001,10 @@ export class Renderer {
     const flash = this.enemyHitFlash.get(e.id) ?? 0;
 
     if (sprite) {
+      // Draw 40% larger than hitbox for visual punch (hitbox stays tight)
+      const drawW = Math.floor(e.width * 1.4);
+      const drawH = Math.floor(e.height * 1.4);
+      ctx.imageSmoothingEnabled = false;
       if (flash > 0) {
         // White-hot flash + squash pop on hit
         const pop = 1 + flash * 1.6;
@@ -2851,68 +3012,66 @@ export class Renderer {
         ctx.translate(e.x, e.y + bobY);
         ctx.scale(pop, 2 - pop);
         ctx.filter = 'brightness(2.8) saturate(0.4)';
-        ctx.drawImage(sprite, -e.width / 2, -e.height / 2, e.width, e.height);
+        ctx.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
         ctx.filter = 'none';
         ctx.restore();
       } else {
-        ctx.drawImage(sprite, e.x - e.width / 2, e.y - e.height / 2 + bobY, e.width, e.height);
+        ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2 + bobY, drawW, drawH);
       }
+      ctx.imageSmoothingEnabled = true;
     } else {
-      // Procedural enemy shapes based on movement type
+      // Procedural enemy shapes — also 40% larger visually
+      const vw = Math.floor(e.width * 1.4);
+      const vh = Math.floor(e.height * 1.4);
       switch (e.movement) {
         case 'straight':
-          // Rectangle with antenna
           ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, vh);
           ctx.fillStyle = 'rgba(255,255,255,0.2)';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, 3);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, 3);
           break;
         case 'sine':
-          // Diamond shape
           ctx.fillStyle = '#a855f7';
           ctx.beginPath();
-          ctx.moveTo(e.x, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 2, e.y);
-          ctx.lineTo(e.x, e.y + e.height / 2);
-          ctx.lineTo(e.x - e.width / 2, e.y);
+          ctx.moveTo(e.x, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 2, e.y);
+          ctx.lineTo(e.x, e.y + vh / 2);
+          ctx.lineTo(e.x - vw / 2, e.y);
           ctx.closePath();
           ctx.fill();
           break;
         case 'zigzag':
-          // Triangle (pointing down)
           ctx.fillStyle = '#f97316';
           ctx.beginPath();
-          ctx.moveTo(e.x - e.width / 2, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 2, e.y - e.height / 2);
-          ctx.lineTo(e.x, e.y + e.height / 2);
+          ctx.moveTo(e.x - vw / 2, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 2, e.y - vh / 2);
+          ctx.lineTo(e.x, e.y + vh / 2);
           ctx.closePath();
           ctx.fill();
           break;
         case 'erratic':
-          // Circle (flickering)
           ctx.fillStyle = '#facc15';
           ctx.beginPath();
-          ctx.arc(e.x, e.y, e.width / 2, 0, Math.PI * 2);
+          ctx.arc(e.x, e.y, vw / 2, 0, Math.PI * 2);
           ctx.fill();
           ctx.fillStyle = 'rgba(0,0,0,0.3)';
           ctx.beginPath();
-          ctx.arc(e.x - 2, e.y - 2, e.width * 0.2, 0, Math.PI * 2);
+          ctx.arc(e.x - 2, e.y - 2, vw * 0.2, 0, Math.PI * 2);
           ctx.fill();
           ctx.beginPath();
-          ctx.arc(e.x + 3, e.y - 2, e.width * 0.2, 0, Math.PI * 2);
+          ctx.arc(e.x + 3, e.y - 2, vw * 0.2, 0, Math.PI * 2);
           ctx.fill();
           break;
         case 'charge':
-          // Arrow/chevron pointing down
           ctx.fillStyle = e.charging ? '#ff6b6b' : '#ef4444';
           ctx.beginPath();
-          ctx.moveTo(e.x, e.y + e.height / 2);
-          ctx.lineTo(e.x - e.width / 2, e.y - e.height / 3);
-          ctx.lineTo(e.x - e.width / 4, e.y - e.height / 3);
-          ctx.lineTo(e.x - e.width / 4, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 4, e.y - e.height / 2);
-          ctx.lineTo(e.x + e.width / 4, e.y - e.height / 3);
-          ctx.lineTo(e.x + e.width / 2, e.y - e.height / 3);
+          ctx.moveTo(e.x, e.y + vh / 2);
+          ctx.lineTo(e.x - vw / 2, e.y - vh / 3);
+          ctx.lineTo(e.x - vw / 4, e.y - vh / 3);
+          ctx.lineTo(e.x - vw / 4, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 4, e.y - vh / 2);
+          ctx.lineTo(e.x + vw / 4, e.y - vh / 3);
+          ctx.lineTo(e.x + vw / 2, e.y - vh / 3);
           ctx.closePath();
           ctx.fill();
           break;
@@ -2922,20 +3081,19 @@ export class Renderer {
           ctx.beginPath();
           for (let a = 0; a < 6; a++) {
             const angle = (a / 6) * Math.PI * 2 - Math.PI / 2;
-            const hx = e.x + Math.cos(angle) * e.width / 2;
-            const hy = e.y + Math.sin(angle) * e.height / 2;
+            const hx = e.x + Math.cos(angle) * vw / 2;
+            const hy = e.y + Math.sin(angle) * vh / 2;
             if (a === 0) ctx.moveTo(hx, hy);
             else ctx.lineTo(hx, hy);
           }
           ctx.closePath();
           ctx.fill();
-          // Barrel pointing down
           ctx.fillStyle = '#1d4ed8';
-          ctx.fillRect(e.x - 2, e.y, 4, e.height / 2);
+          ctx.fillRect(e.x - 3, e.y, 6, vh / 2);
           break;
         default:
           ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
-          ctx.fillRect(e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+          ctx.fillRect(e.x - vw / 2, e.y - vh / 2, vw, vh);
       }
 
       // Eyes for non-boss regular enemies (gives them character)
@@ -2972,6 +3130,17 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText(`${e.armorHits}`, e.x, e.y - e.height / 2 - 10);
       ctx.textAlign = 'left';
+    }
+
+    // ── Hit flash (white overlay when damaged) ────────────────────────────
+    if (e.hitFlash && e.hitFlash > 0) {
+      const flashAlpha = Math.min(0.7, e.hitFlash * 10);
+      ctx.globalAlpha = flashAlpha;
+      ctx.fillStyle = '#ffffff';
+      const fw = Math.floor(e.width * 1.4);
+      const fh = Math.floor(e.height * 1.4);
+      ctx.fillRect(e.x - fw / 2, e.y - fh / 2, fw, fh);
+      ctx.globalAlpha = 1;
     }
 
     // ── HP bar ────────────────────────────────────────────────────────────
@@ -3287,6 +3456,15 @@ export class Renderer {
       ctx.fillText(`×${state.scoreMultiplier.toFixed(1)}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.48));
     }
 
+    // Run timer (top right, small)
+    const runMs = Date.now() - game.stats.runStartTime;
+    const runMin = Math.floor(runMs / 60000);
+    const runSec = Math.floor((runMs % 60000) / 1000);
+    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${runMin}:${runSec.toString().padStart(2, '0')}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.62));
+
     // Aliencore badge
     if (game.aliencoreMode) {
       ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
@@ -3320,19 +3498,82 @@ export class Renderer {
       ctx.textAlign = 'left';
     }
 
-    // ── Boss warning ─────────────────────────────────────────────────────
+    // ── Boss Intro (dramatic) ───────────────────────────────────────────
     if (state.bossWarningTimer > 0) {
-      const alpha = Math.min(1, state.bossWarningTimer);
+      const bTimer = state.bossWarningTimer;
+      const alpha = Math.min(1, bTimer * 0.8);
+
+      // Dark cinematic bars (top and bottom)
+      ctx.globalAlpha = alpha * 0.7;
+      ctx.fillStyle = '#000000';
+      const barH2 = Math.floor(L.h * 0.08 * Math.min(1, (2 - bTimer) * 3));
+      ctx.fillRect(0, 0, canvas.width, barH2);
+      ctx.fillRect(0, canvas.height - barH2, canvas.width, barH2);
+
+      // Boss name (find boss in enemies)
+      const bossEnemy = state.enemies.find(e => e.isBoss);
+      const bossName = bossEnemy ? (bossEnemy as any).displayName || bossEnemy.defId.replace('boss_', '').replace(/_/g, ' ').toUpperCase() : 'BOSS';
+
       ctx.globalAlpha = alpha;
-      ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
-      ctx.fillStyle = '#ef4444';
       ctx.textAlign = 'center';
-      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20;
-      const shk2 = Math.sin(now * 0.022) * 4;
-      ctx.fillText('⚠  BOSS  ⚠', L.cx + shk2, L.cy - Math.floor(L.h * 0.1));
+
+      // "WARNING" flash
+      const flash = Math.sin(now * 0.015) > 0;
+      if (flash) {
+        ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('⚠ WARNING ⚠', L.cx, L.cy - Math.floor(L.h * 0.15));
+      }
+
+      // Boss name (large, with glow)
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 15 + Math.sin(now * 0.01) * 5;
+      ctx.font = `bold ${Math.floor(L.h * 0.045)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(bossName, L.cx, L.cy - Math.floor(L.h * 0.04));
       ctx.shadowBlur = 0;
+
+      // Subtitle
+      ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('se aproxima...', L.cx, L.cy + Math.floor(L.h * 0.02));
+
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
+    }
+
+    // ── Boss HP Bar (top center, large) ──────────────────────────────────
+    const bossAlive = state.enemies.find(e2 => e2.isBoss);
+    if (bossAlive && state.bossWarningTimer <= 0) {
+      const bHpBarW = Math.floor(L.w * 0.35);
+      const bHpBarH = Math.floor(L.h * 0.022);
+      const bHpBarX = L.cx - bHpBarW / 2;
+      const bHpBarY = hudH + Math.floor(L.h * 0.015);
+      const bHpPct = Math.max(0, bossAlive.hp / bossAlive.maxHp);
+      // Background
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(bHpBarX, bHpBarY, bHpBarW, bHpBarH);
+      // HP fill (red gradient)
+      ctx.fillStyle = bHpPct > 0.5 ? '#dc2626' : bHpPct > 0.25 ? '#f97316' : '#fbbf24';
+      ctx.fillRect(bHpBarX + 1, bHpBarY + 1, (bHpBarW - 2) * bHpPct, bHpBarH - 2);
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.fillRect(bHpBarX + 1, bHpBarY + 1, (bHpBarW - 2) * bHpPct, Math.floor(bHpBarH * 0.4));
+      // Border
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bHpBarX, bHpBarY, bHpBarW, bHpBarH);
+      // Boss name
+      const bName = (bossAlive as any).displayName || bossAlive.defId.replace('boss_', '').replace(/_/g, ' ');
+      ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText(bName.toUpperCase(), L.cx, bHpBarY - 4);
+      // HP text
+      ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(`${Math.ceil(bossAlive.hp)} / ${bossAlive.maxHp}`, L.cx, bHpBarY + bHpBarH + Math.floor(L.h * 0.012));
+      ctx.textAlign = 'left';
     }
 
     // ── Wave Event banner ────────────────────────────────────────────────
@@ -3372,9 +3613,9 @@ export class Renderer {
     }
 
     ctx.font = L.fontTiny;
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = '#374151';
     ctx.textAlign = 'right';
-    ctx.fillText('A/D mover | SHIFT dash | 1-2-3 skills | ESC pausa', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
+    ctx.fillText('A/D | SHIFT dash | 1-2-3 skills | 4-5-6 poções', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
     ctx.textAlign = 'left';
 
     // ── Enemy radar (bottom-right) ───────────────────────────────────────
@@ -3610,20 +3851,43 @@ export class Renderer {
       }
     }
 
-    // First wave tutorial (waits for the wave-transition banner to finish)
-    if (game.totalMonths === 1 && state.waveTime > 1.6 && state.waveTime < 7) {
-      ctx.globalAlpha = Math.min(0.85, (state.waveTime - 1.6) * 2) * Math.min(1, (7 - state.waveTime) / 1.5);
-      ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.fillRect(0, Math.floor(L.h * 0.35), canvas.width, Math.floor(L.h * 0.3));
-      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
-      ctx.fillStyle = '#fbbf24';
+    // First wave tutorial — minimal, visual, fades fast
+    // Waits for the wave-transition banner to finish before appearing
+    if (game.totalMonths === 1 && state.waveTime > 1.6 && state.waveTime < 5.6) {
+      const t = state.waveTime - 1.6;
+      const tutAlpha = Math.min(1, t * 2.5) * Math.max(0, 1 - t * 0.3);
+      ctx.globalAlpha = tutAlpha;
       ctx.textAlign = 'center';
-      ctx.fillText('← A/D para mover | SHIFT para dash →', L.cx, Math.floor(L.h * 0.45));
-      ctx.font = `${Math.floor(L.h * 0.015)}px monospace`;
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillText('Destrua os invasores! Seus itens atiram automaticamente.', L.cx, Math.floor(L.h * 0.52));
-      ctx.fillText('Teclas 1-2-3: use habilidades | SHIFT: dash', L.cx, Math.floor(L.h * 0.56));
-      ctx.fillText('Colete gold para comprar itens melhores na loja.', L.cx, Math.floor(L.h * 0.60));
+
+      // Key prompts floating near player
+      const py = canvas.height - 80;
+      ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
+
+      // Left/Right hint
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('A', state.playerX - 50, py);
+      ctx.fillText('D', state.playerX + 50, py);
+      ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('mover', state.playerX, py + 18);
+
+      // Skill hint (top)
+      if (t > 1.5) {
+        ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+        ctx.fillStyle = '#6366f1';
+        ctx.fillText('1  2  3', L.cx, Math.floor(L.h * 0.15));
+        ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText('habilidades', L.cx, Math.floor(L.h * 0.18));
+      }
+
+      // Dash hint
+      if (t > 2.5) {
+        ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+        ctx.fillStyle = '#67e8f9';
+        ctx.fillText('SHIFT = dash', L.cx, Math.floor(L.h * 0.85));
+      }
+
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
     }
@@ -3653,13 +3917,19 @@ export class Renderer {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // ─── HEADER ──────────────────────────────────────────────────────────
-    // Wave gold result
+    // Wave gold result + stats
     const perfectText = game.combat.state.damageTakenThisWave === 0 ? ' ★ PERFEITO!' : '';
     if (game.lastWaveGold > 0) {
       ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
-      ctx.fillStyle = '#4ade80';
+      ctx.fillStyle = perfectText ? '#fbbf24' : '#4ade80';
       ctx.textAlign = 'center';
-      ctx.fillText(`+${game.lastWaveGold} Gold${perfectText}`, L.cx, Math.floor(L.h * 0.055));
+      ctx.fillText(`+${game.lastWaveGold} Gold${perfectText}`, L.cx, Math.floor(L.h * 0.045));
+      // Sub-stats line
+      ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#64748b';
+      const kills = game.stats.enemiesKilled > 0 ? game.currentWaveKills : 0;
+      const maxCombo = (game.combat.state as any).maxCombo || 0;
+      ctx.fillText(`${kills} kills | combo max: ${maxCombo} | score: x${game.combat.state.scoreMultiplier.toFixed(1)}`, L.cx, Math.floor(L.h * 0.068));
       ctx.textAlign = 'left';
     }
 
@@ -4067,6 +4337,15 @@ export class Renderer {
     const itemCardW = Math.min(itemW, Math.floor(L.w * 0.13));
     const itemCardH = Math.floor(L.h * 0.45);
 
+    // Find best pick (most synergies)
+    const existingIds2 = game.backpack.getAllItems().map(it => it.definition.id);
+    let bestPickIdx = -1;
+    let bestPickScore = 0;
+    for (let bi = 0; bi < items.length; bi++) {
+      const sc = countPossibleCombinations(items[bi].id, existingIds2) * 3 + countPossibleBuffs(items[bi].tags, game.backpack.getAllItems().map(it => [...it.definition.tags]));
+      if (sc > bestPickScore && game.gold >= items[bi].cost) { bestPickScore = sc; bestPickIdx = bi; }
+    }
+
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
       const x = L.panelX + i * (itemCardW + 10);
@@ -4091,6 +4370,17 @@ export class Renderer {
         ctx.shadowBlur = 8;
         ctx.strokeRect(x, y, itemCardW, itemCardH);
         ctx.shadowBlur = 0;
+      }
+
+      // "★ BEST" badge for highest synergy pick
+      if (i === bestPickIdx && bestPickScore > 0) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillRect(x, y, itemCardW, 14);
+        ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
+        ctx.fillStyle = '#000000';
+        ctx.textAlign = 'center';
+        ctx.fillText('★ BEST PICK', x + itemCardW / 2, y + 10);
+        ctx.textAlign = 'left';
       }
 
       const sprite = this.sprites.items.get(item.id);
@@ -4148,30 +4438,39 @@ export class Renderer {
         ctx.textAlign = 'left';
       }
 
-      // Shape preview — always visible inside card
+      // Shape preview — larger, with cell count label
       if (item.gridShape) {
-        const previewCellSize = Math.floor(L.h * 0.014);
+        const previewCellSize = Math.floor(L.h * 0.018);
         const shape = item.gridShape;
         const shapeCols = shape[0].length;
         const shapeRows = shape.length;
         const previewW = shapeCols * previewCellSize;
         const previewH = shapeRows * previewCellSize;
         const previewX = x + (itemCardW - previewW) / 2;
-        const previewY = y + Math.floor(itemCardH * 0.58);
+        const previewY = y + Math.floor(itemCardH * 0.56);
         const color = this.getItemColor(item.tags);
         for (let sr = 0; sr < shapeRows; sr++) {
           for (let sc = 0; sc < shapeCols; sc++) {
-            const px = previewX + sc * previewCellSize;
-            const py = previewY + sr * previewCellSize;
+            const px2 = previewX + sc * previewCellSize;
+            const py2 = previewY + sr * previewCellSize;
             if (shape[sr][sc] === 1) {
               ctx.fillStyle = color;
-              ctx.fillRect(px, py, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillRect(px2, py2, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillStyle = 'rgba(255,255,255,0.1)';
+              ctx.fillRect(px2, py2, previewCellSize - 1, 2);
             } else {
-              ctx.fillStyle = 'rgba(30,30,50,0.3)';
-              ctx.fillRect(px, py, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillStyle = 'rgba(20,20,35,0.4)';
+              ctx.fillRect(px2, py2, previewCellSize - 1, previewCellSize - 1);
             }
           }
         }
+        // Cell count
+        const cellCount = shape.flat().filter(c => c === 1).length;
+        ctx.font = `${Math.floor(L.h * 0.008)}px monospace`;
+        ctx.fillStyle = '#64748b';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${cellCount} cel`, x + itemCardW / 2, previewY + previewH + Math.floor(L.h * 0.012));
+        ctx.textAlign = 'left';
       }
 
       // Fade-in animation per item
@@ -4507,6 +4806,40 @@ export class Renderer {
     ctx.shadowBlur = 0;
     this.renderButton(L.cx - btnW / 2, btn2Y, btnW, btnH, 'MENU PRINCIPAL', '#1e293b');
 
+    // Keyboard hints
+    // Run badges (performance medals)
+    const badges: { icon: string; label: string; color: string }[] = [];
+    if (game.combat.state.damageTakenThisWave === 0 && game.totalMonths > 1) badges.push({ icon: '🛡', label: 'ÚLTIMA WAVE PERFEITA', color: '#fbbf24' });
+    if (game.stats.skillsUsed >= 20) badges.push({ icon: '⚡', label: 'SKILL MASTER', color: '#6366f1' });
+    if ((game.combat.state as any).maxCombo >= 15) badges.push({ icon: '🔥', label: `COMBO ${(game.combat.state as any).maxCombo}`, color: '#f97316' });
+    if (game.stats.fusionsDiscovered.length >= 3) badges.push({ icon: '★', label: `${game.stats.fusionsDiscovered.length} FUSÕES`, color: '#f472b6' });
+    if (game.totalMonths >= 12) badges.push({ icon: '🏆', label: 'ANO COMPLETO', color: '#4ade80' });
+    if (game.totalMonths >= 24) badges.push({ icon: '👑', label: 'VETERANO', color: '#fbbf24' });
+
+    if (badges.length > 0) {
+      const badgeY = btn1Y - Math.floor(L.h * 0.05);
+      ctx.textAlign = 'center';
+      ctx.font = `bold ${Math.floor(L.h * 0.010)}px monospace`;
+      const badgeSpacing = Math.floor(L.w * 0.13);
+      const badgeStartX = L.cx - (badges.length - 1) * badgeSpacing / 2;
+      for (let bi = 0; bi < Math.min(badges.length, 5); bi++) {
+        const b = badges[bi];
+        const bx = badgeStartX + bi * badgeSpacing;
+        ctx.fillStyle = b.color + '20';
+        ctx.fillRect(bx - Math.floor(badgeSpacing * 0.4), badgeY - 8, Math.floor(badgeSpacing * 0.8), 22);
+        ctx.strokeStyle = b.color + '60';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bx - Math.floor(badgeSpacing * 0.4), badgeY - 8, Math.floor(badgeSpacing * 0.8), 22);
+        ctx.fillStyle = b.color;
+        ctx.fillText(`${b.icon} ${b.label}`, bx, badgeY + 6);
+      }
+      ctx.textAlign = 'left';
+    }
+
+    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+    ctx.fillStyle = '#374151';
+    ctx.textAlign = 'center';
+    ctx.fillText('ENTER = jogar de novo  |  ESC = menu', L.cx, btn2Y + btnH + Math.floor(L.h * 0.02));
     ctx.textAlign = 'left';
   }
 
