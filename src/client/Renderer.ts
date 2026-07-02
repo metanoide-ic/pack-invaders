@@ -1987,6 +1987,22 @@ export class Renderer {
     this.renderButton(L.cx - btnW / 2, L.btnY, btnW, btnH, 'INICIAR COMBATE', hasWeapon ? '#6366f1' : '#374151');
     ctx.shadowBlur = 0;
 
+    // Next wave preview: informed backpack-building decisions
+    const preview = game.getNextWavePreview();
+    ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
+    ctx.textAlign = 'center';
+    if (preview.isBoss) {
+      const bossPulse = 0.6 + Math.sin(performance.now() * 0.005) * 0.4;
+      ctx.globalAlpha = bossPulse;
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText(`⚠ PRÓXIMO MÊS: BOSS + ~${preview.count} inimigos ⚠`, L.cx, L.btnY - Math.floor(L.h * 0.014));
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText(`Próximo mês: ~${preview.count} inimigos`, L.cx, L.btnY - Math.floor(L.h * 0.014));
+    }
+    ctx.textAlign = 'left';
+
     // Show DPS estimate below button
     if (hasWeapon) {
       const power = game.backpack.calculateBackpackPower();
@@ -3018,7 +3034,7 @@ export class Renderer {
       ctx.globalAlpha = e.phased ? 0.25 : 1;
     }
 
-    // Elite enemy golden outline
+    // Elite enemy golden outline + affix badge
     if ((e as any).isElite && !e.isBoss) {
       const elitePulse = 0.5 + Math.sin(performance.now() * 0.006) * 0.3;
       ctx.globalAlpha = elitePulse;
@@ -3028,6 +3044,31 @@ export class Renderer {
       ctx.arc(e.x, e.y, e.width * 0.6 + 3, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
+      // Affix badge so the player can read the threat at a glance
+      const affix = (e as any).affix;
+      if (affix) {
+        const badge = affix === 'regen' ? { icon: '♻', color: '#4ade80' }
+          : affix === 'armored' ? { icon: '🛡', color: '#38bdf8' }
+          : { icon: '💥', color: '#f97316' };
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = badge.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(badge.icon, e.x, e.y - e.height / 2 - 16);
+        ctx.textAlign = 'left';
+      }
+    }
+
+    // Charge telegraph: flashing warning before the enemy locks on and rushes
+    const chargeTel = (e as any)._chargeTel;
+    if (chargeTel !== undefined && chargeTel > 0 && !e.charging) {
+      const telBlink = Math.floor(performance.now() / 90) % 2 === 0;
+      if (telBlink) {
+        ctx.font = 'bold 16px monospace';
+        ctx.fillStyle = '#ef4444';
+        ctx.textAlign = 'center';
+        ctx.fillText('!', e.x, e.y - e.height / 2 - 8);
+        ctx.textAlign = 'left';
+      }
     }
 
     // Charging enemies glow red
@@ -3472,6 +3513,15 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.fillText(`×${state.combo}`, L.cx, L.cy + Math.floor(L.h * 0.03));
         ctx.textAlign = 'left';
+        ctx.globalAlpha = 1;
+      }
+
+      // FEVER indicator: combo 15+ grants +25% fire rate
+      if (state.combo >= 15) {
+        ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
+        ctx.fillStyle = '#ef4444';
+        ctx.globalAlpha = 0.7 + Math.sin(now * 0.012) * 0.3;
+        ctx.fillText('🔥 FEVER +25% cadência', comboX + Math.floor(L.w * 0.075), Math.floor(hudH * 0.5));
         ctx.globalAlpha = 1;
       }
     }
@@ -4004,7 +4054,8 @@ export class Renderer {
       ctx.fillStyle = '#64748b';
       const kills = game.stats.enemiesKilled > 0 ? game.currentWaveKills : 0;
       const maxCombo = (game.combat.state as any).maxCombo || 0;
-      ctx.fillText(`${kills} kills | combo max: ${maxCombo} | score: x${game.combat.state.scoreMultiplier.toFixed(1)}`, L.cx, Math.floor(L.h * 0.068));
+      const interestText = game.lastInterest > 0 ? ` | 🏦 juros: +${game.lastInterest}g` : '';
+      ctx.fillText(`${kills} kills | combo max: ${maxCombo} | score: x${game.combat.state.scoreMultiplier.toFixed(1)}${interestText}`, L.cx, Math.floor(L.h * 0.068));
       ctx.textAlign = 'left';
     }
 

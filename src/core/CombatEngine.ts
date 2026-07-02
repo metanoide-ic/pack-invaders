@@ -516,6 +516,9 @@ export class CombatEngine {
     // Rapid-fire power-up: 2x fire rate
     if (this.state.rapidFireTimer > 0) skillRateMult *= 2;
 
+    // FEVER: combo 15+ rewards aggressive play with +25% fire rate
+    if (this.state.combo >= 15) skillRateMult *= 1.25;
+
     for (const emitter of emitters) {
       if (emitter.definition.onTick) {
         // ── Character weapon identity (from character advantage lists) ──
@@ -662,6 +665,11 @@ export class CombatEngine {
       // Decay hit flash
       if (e.hitFlash && e.hitFlash > 0) e.hitFlash -= dt;
 
+      // Elite affix: regenerator heals 2%/s while below max
+      if ((e as any).affix === 'regen' && e.hp < e.maxHp && e.hp > 0) {
+        e.hp = Math.min(e.maxHp, e.hp + e.maxHp * 0.02 * dt);
+      }
+
       // Update slow timer
       if (e.slowTimer && e.slowTimer > 0) {
         e.slowTimer -= dt;
@@ -727,13 +735,17 @@ export class CombatEngine {
           break;
 
         case 'charge': {
-          // Moves down slowly until reaching y=150, then charges toward player
+          // Moves down slowly until reaching y=150, telegraphs, then charges
           if (!e.charging && e.y < 150) {
             e.y += speed * 0.4 * dt;
           } else if (!e.charging) {
-            // Lock onto player and begin charge
-            e.charging = true;
-            e.chargeTargetX = this.state.playerX;
+            // Telegraph: brief warning pause so the player can react
+            const tel = (e as any)._chargeTel ?? 0.45;
+            (e as any)._chargeTel = tel - dt;
+            if ((e as any)._chargeTel <= 0) {
+              e.charging = true;
+              e.chargeTargetX = this.state.playerX;
+            }
           }
 
           if (e.charging) {
@@ -1391,6 +1403,23 @@ export class CombatEngine {
       this.spawnFloatingText(e.x, e.y, 'BOOM!', '#ef4444');
     }
 
+    // Elite affix: volatile — bursts into a fan of projectiles on death
+    if ((e as any).affix === 'volatile') {
+      for (let a = 0; a < 3; a++) {
+        const ang = Math.PI * (0.3 + 0.2 * a); // downward fan
+        this.state.enemyProjectiles.push({
+          id: `eproj_${this.nextEnemyProjId++}`,
+          x: e.x,
+          y: e.y,
+          vx: Math.cos(ang) * 150,
+          vy: Math.sin(ang) * 150,
+          damage: Math.ceil(e.damage * 0.35),
+          alive: true,
+        });
+      }
+      this.spawnFloatingText(e.x, e.y - 10, '💥 VOLÁTIL', '#f97316');
+    }
+
     // Card: Kills Explosivas (all kills explode)
     const explodeDmg = (this as any)._explodeOnKillDamage ?? (this as any)._explodeOnKill ?? 0;
     if (explodeDmg > 0) {
@@ -1877,9 +1906,15 @@ export class CombatEngine {
         defId: def.id,
         ...(isElite ? { charging: false } : {}), // Elite flag via charging field reuse
       } as any);
-      // Mark elite in state for rendering
+      // Mark elite in state for rendering + roll a visible affix
       if (isElite) {
-        (enemies[enemies.length - 1] as any).isElite = true;
+        const elite = enemies[enemies.length - 1] as any;
+        elite.isElite = true;
+        const affixes = ['regen', 'armored', 'volatile'];
+        elite.affix = affixes[Math.floor(Math.random() * affixes.length)];
+        if (elite.affix === 'armored') {
+          elite.armorHits = (elite.armorHits ?? 0) + 3;
+        }
       }
     }
 

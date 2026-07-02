@@ -151,6 +151,24 @@ export class GameManager {
   pendingRelic: Relic | null = null;
   /** Newly unlocked difficulty ID (shown on game over screen) */
   newlyUnlockedDifficulty: string | null = null;
+  /** Interest earned on banked gold last wave (shown on cards screen) */
+  lastInterest: number = 0;
+
+  /** Preview of next month's wave for the inventory screen */
+  getNextWavePreview(): { count: number; isBoss: boolean } {
+    const nextTotal = this.totalMonths + 1;
+    const m = this.month + 1 > 12 ? 1 : this.month + 1;
+    const y = this.month + 1 > 12 ? this.year + 1 : this.year;
+    const isBoss = y >= 3 || (y >= 2 && (m === 3 || m === 9)) || m === 6 || m === 12;
+    // Mirrors CombatEngine.generateWave's count curve
+    let count: number;
+    if (nextTotal === 1) count = 4;
+    else if (nextTotal <= 6) count = 4 + nextTotal * 1.5;
+    else if (nextTotal <= 12) count = 10 + (nextTotal - 6) * 2;
+    else if (y === 2) count = 18 + m * 1.5;
+    else count = Math.min(80, 28 + (y - 2) * 10 + m * 1.5);
+    return { count: Math.floor(count), isBoss };
+  }
 
   constructor(characterId: string = 'grass_man') {
     this.characterId = characterId;
@@ -543,6 +561,11 @@ export class GameManager {
       this.startTwitchVote();
       return;
     }
+
+    // Juros: reward banking gold between waves (capped so it doesn't snowball).
+    // Creates a real spend-vs-save decision at the shop.
+    this.lastInterest = Math.min(20, Math.floor(this.gold * 0.08));
+    this.gold += this.lastInterest;
 
     // No victory condition — endless roguelike until death
     // Auto-save after each wave
