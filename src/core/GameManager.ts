@@ -465,6 +465,19 @@ export class GameManager {
       }
     }
 
+    // Pacto Sombrio: max-HP penalty while equipped (delta-tracked so buying
+    // or selling the item adjusts cleanly between waves)
+    let hpPenalty = 0;
+    for (const it of this.backpack.getAllItems()) {
+      hpPenalty += ((it.state as any).maxHpPenalty ?? 0);
+    }
+    const prevPenalty = (this as any)._appliedHpPenalty ?? 0;
+    if (hpPenalty !== prevPenalty) {
+      this.combat.state.playerMaxHp = Math.max(10, this.combat.state.playerMaxHp - (hpPenalty - prevPenalty));
+      this.combat.state.playerHp = Math.min(this.combat.state.playerHp, this.combat.state.playerMaxHp);
+      (this as any)._appliedHpPenalty = hpPenalty;
+    }
+
     // Surto de Crescimento (Rômulo): self-inflicted enemy HP penalty from the card
     const enemyHpBonus = (this as any)._enemyHpBonus ?? 0;
     if (enemyHpBonus > 0) {
@@ -743,10 +756,25 @@ export class GameManager {
     // Get items from the current vendor's pool
     const vendorItemIds = new Set(this.currentVendor.exclusiveItems);
     const available = ALL_ITEMS.filter(i => i.cost > 0 && vendorItemIds.has(i.id));
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
+
+    // Pedra da Sorte: bias the shuffle toward rarer items
+    let luckBonus = 0;
+    let extraItemSlots = 0;
+    for (const it of this.backpack.getAllItems()) {
+      luckBonus += ((it.state as any).shopRarityBonus ?? 0);
+      extraItemSlots += ((it.state as any).extraShopItem ?? 0); // Insígnia de Mercador
+    }
+    const shuffled = [...available].sort(() =>
+      Math.random() - 0.5
+    ).sort((a, b) =>
+      // Stable-ish rarity nudge: each luck point gives rare items a head start
+      luckBonus > 0 ? (Math.random() - luckBonus * b.rarity * 0.15) - (Math.random() - luckBonus * a.rarity * 0.15) : 0
+    );
+
     // Character shop size: Diana sees 3 items, Dr. Eon sees 4 (their disadvantages)
     let shopSize = this.characterId === 'beast_tamer' ? 3
       : this.characterId === 'void_walker' ? 4 : 5;
+    shopSize += extraItemSlots;
     // Novo Estoque card: next shop only gets extra slots, consumed on use
     const extraSlots = (this as any)._extraShopSlots ?? 0;
     if (extraSlots > 0) {
@@ -758,11 +786,25 @@ export class GameManager {
 
   /** Final shop price after card discounts and character affinities */
   getItemCost(itemDef: ItemDefinition): number {
-    const discount = (this as any)._shopDiscount ?? 0;
-    let cost = itemDef.cost * (1 - discount);
+    let discount = (this as any)._shopDiscount ?? 0;
+    // Insígnia de Mercador: item-based shop discount
+    for (const it of this.backpack.getAllItems()) {
+      discount += ((it.state as any).shopDiscount ?? 0);
+    }
+    let cost = itemDef.cost * (1 - Math.min(0.6, discount));
     // Rômulo: organic items -20%
     if (this.characterId === 'grass_man' && itemDef.tags.includes('Orgânico')) cost *= 0.8;
     return Math.floor(cost);
+  }
+
+  /** Sell rate (Reciclador de Sucata raises the base 50%) */
+  getSellRate(): number {
+    let rate = 0.5;
+    for (const it of this.backpack.getAllItems()) {
+      const b = (it.state as any).sellBonus ?? 0;
+      if (b) rate = Math.max(rate, 0.5 + b);
+    }
+    return Math.min(0.8, rate);
   }
 
   buyItem(itemDef: ItemDefinition): boolean {
@@ -773,9 +815,9 @@ export class GameManager {
     return true; // Item needs to be placed by the player
   }
 
-  /** Sell an item for 50% of its cost */
+  /** Sell an item (base 50%; Reciclador de Sucata raises to 75%) */
   sellItem(itemDef: ItemDefinition): number {
-    const sellPrice = Math.floor(itemDef.cost * 0.5);
+    const sellPrice = Math.floor(itemDef.cost * this.getSellRate());
     this.gold += sellPrice;
     return sellPrice;
   }

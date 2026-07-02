@@ -44,7 +44,7 @@ export const VENDOR_LUNA: VendorDefinition = {
   unlockTrigger: null, // Available from start
   exclusiveItems: [
     'basic_gun', 'repair_kit', 'gold_magnet', 'armor_plate', 'wind_fan',
-    'lucky_charm', 'watering_can', 'plant_shield', 'cat', 'snack_box',
+    'lucky_charm', 'watering_can', 'plant_shield', 'cat', 'parrot',
     'coin_doubler', 'medkit', 'scrap_recycler', 'magnet_field', 'emergency_repair',
     'ammo_box', 'targeting_array', 'golden_egg', 'luck_stone', 'phase_shifter',
     'shotgun', 'poison_dart', 'ice_gun', 'dual_pistols', 'boomerang',

@@ -216,6 +216,13 @@ export class BackpackGrid {
     const item = this.items.get(instanceId);
     if (!item) return [];
 
+    // Cristal Nexus: while placed, every item counts as adjacent to every
+    // other — the whole backpack becomes one synergy web (its entire point).
+    const hasNexus = Array.from(this.items.values()).some(i => i.definition.id === 'nexus_crystal');
+    if (hasNexus) {
+      return Array.from(this.items.values()).filter(i => i.instanceId !== instanceId);
+    }
+
     const myCells = getOccupiedCells(item.definition.gridShape, item.position);
     const myCellSet = new Set(myCells.map(c => `${c.col},${c.row}`));
     const adjacentIds = new Set<string>();

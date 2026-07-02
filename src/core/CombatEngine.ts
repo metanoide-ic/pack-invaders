@@ -233,6 +233,10 @@ export class CombatEngine {
   /** Per-run revive flags (persist for the CombatEngine's lifetime, i.e. the whole run) */
   private _phoenixReviveUsed = false;
   private _nuclearReviveUsed = false;
+  /** Coletor de Almas: kills accumulated across the whole run */
+  private _soulKills = 0;
+  /** Gerador de Escudo: item shield capacity applied last wave (for clean re-apply) */
+  private _prevItemShield = 0;
 
   /** Per-character base speed multiplier (preserved across card speed bonuses) */
   private charSpeedMult = 1;
@@ -318,6 +322,30 @@ export class CombatEngine {
     this.state.allyTurrets = [];
     this.state.regenShieldUsed = false;
     this._droneKillCounter = 0;
+
+    // ── Per-wave item effects & flag resets ────────────────────────────────
+    let itemShieldBonus = 0;
+    for (const it of this.backpack.getAllItems()) {
+      const st = it.state as any;
+      // Reset once-per-wave flags (golden egg gold, emergency effects)
+      delete st.waveGoldGiven;
+      delete st.shieldUsed;
+      delete st._emergencyHealUsed;
+      // Kit Médico: +50 HP at the start of every wave
+      if (st.waveHealBonus) {
+        this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + st.waveHealBonus);
+      }
+      // Gerador de Escudo: extra shield capacity while equipped
+      if (st.shieldMax) itemShieldBonus += st.shieldMax;
+    }
+    this.state.playerMaxShield += itemShieldBonus - this._prevItemShield;
+    if (itemShieldBonus > this._prevItemShield) {
+      this.state.playerShield = Math.min(this.state.playerMaxShield,
+        this.state.playerShield + (itemShieldBonus - this._prevItemShield));
+    } else {
+      this.state.playerShield = Math.min(this.state.playerShield, this.state.playerMaxShield);
+    }
+    this._prevItemShield = itemShieldBonus;
 
     // Marionete (Diana): first enemy of the wave is paralyzed on arrival
     if ((this as any)._paralyzeFirstDuration && this.state.enemies.length > 0) {
@@ -587,6 +615,27 @@ export class CombatEngine {
     // FEVER: combo 15+ rewards aggressive play with +25% fire rate
     if (this.state.combo >= 15) skillRateMult *= 1.25;
 
+    // ── Item-driven global modifiers (Núcleo Berserker, Corneta, etc.) ────
+    let itemDmg = 1;
+    let itemRate = 1;
+    const hpPctNow = this.state.playerHp / this.state.playerMaxHp;
+    for (const it of this.backpack.getAllItems()) {
+      const st = it.state as any;
+      // Núcleo Berserker: below threshold HP → damage multiplier (2.0 = +100%)
+      if (st.berserkerThreshold && hpPctNow < st.berserkerThreshold) itemDmg *= st.berserkerDamageBonus ?? 2;
+      // Corneta de Guerra: +10% dmg per combo point (capped +100%)
+      if (st.comboDamageBonus) itemDmg *= 1 + Math.min(1.0, this.state.combo * st.comboDamageBonus);
+      // Fragmento de Núcleo Alien: +3% dmg per enemy on screen (capped +150%)
+      if (st.damagePerEnemy) itemDmg *= 1 + Math.min(1.5, this.state.enemies.length * st.damagePerEnemy);
+      // Coletor de Almas: +1% dmg per kill this run (capped +200%)
+      if (st.soulDamagePerKill) itemDmg *= 1 + Math.min(2.0, this._soulKills * st.soulDamagePerKill);
+      // Estandarte de Guerra: +5% dmg per kill this wave (capped +150%)
+      if (st.warBannerBonusPerKill) itemDmg *= 1 + Math.min(1.5, this.state.killedEnemyIds.length * st.warBannerBonusPerKill);
+      // Injetor de Adrenalina: fire-rate multiplier below 50% HP (1.5 = +50%)
+      if (st.lowHpFireRateBonus && hpPctNow < 0.5) itemRate *= st.lowHpFireRateBonus;
+    }
+    skillRateMult *= itemRate;
+
     for (const emitter of emitters) {
       if (emitter.definition.onTick) {
         // ── Character weapon identity (from character advantage lists) ──
@@ -637,7 +686,7 @@ export class CombatEngine {
             y: this.arenaHeight - 45,
             vx: proj.vx,
             vy: proj.vy,
-            damage: proj.damage * voidBonus * skillDmgMult * charDmg,
+            damage: proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg,
             piercing: proj.piercing,
             aoeRadius: proj.aoeRadius,
             tags: [...proj.tags],
@@ -1062,10 +1111,17 @@ export class CombatEngine {
       }
       if (pu.life <= 0) { st.powerUps.splice(i, 1); continue; }
 
-      // Catch: player (or P2 in co-op) touches it near the ground
-      const caughtBy1 = Math.abs(pu.x - st.playerX) < 26 && pu.y > this.arenaHeight - 85;
+      // Catch: player (or P2 in co-op) touches it near the ground.
+      // Campo Magnético multiplies the catch radius.
+      let magnetMult = 1;
+      for (const it of this.backpack.getAllItems()) {
+        const m = (it.state as any).pickupRadiusBonus;
+        if (m) magnetMult = Math.max(magnetMult, m);
+      }
+      const catchR = 26 * magnetMult;
+      const caughtBy1 = Math.abs(pu.x - st.playerX) < catchR && pu.y > this.arenaHeight - 85;
       const caughtBy2 = !!st.player2Active && st.player2X !== undefined &&
-        Math.abs(pu.x - st.player2X) < 26 && pu.y > this.arenaHeight - 85;
+        Math.abs(pu.x - st.player2X) < catchR && pu.y > this.arenaHeight - 85;
       if (caughtBy1 || caughtBy2) {
         this.applyPowerUp(pu);
         st.powerUps.splice(i, 1);
@@ -1175,8 +1231,16 @@ export class CombatEngine {
   }
 
   private updateEnemyProjectiles(dt: number): void {
+    // Ventilador: continuously decelerates incoming enemy projectiles
+    let windDrag = 0;
+    for (const it of this.backpack.getAllItems()) {
+      if (it.definition.id === 'wind_fan') windDrag += 0.25;
+    }
     for (const p of this.state.enemyProjectiles) {
       if (!p.alive) continue;
+      if (windDrag > 0 && p.vy > 0) {
+        p.vy *= Math.max(0.4, 1 - windDrag * dt);
+      }
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
@@ -1205,6 +1269,12 @@ export class CombatEngine {
     const playerH = 28;
     const playerY = this.arenaHeight - 48;
 
+    // Matriz de Reflexão: chance to bounce enemy shots back as friendly fire
+    let reflectCh = 0;
+    for (const it of this.backpack.getAllItems()) {
+      reflectCh += (it.state as any).reflectChance ?? 0;
+    }
+
     for (const p of this.state.enemyProjectiles) {
       if (!p.alive) continue;
       if (this.rectCollision(
@@ -1212,6 +1282,17 @@ export class CombatEngine {
         this.state.playerX - playerW / 2, playerY, playerW, playerH
       )) {
         p.alive = false;
+        if (reflectCh > 0 && Math.random() < Math.min(0.6, reflectCh)) {
+          this.state.projectiles.push({
+            id: `proj_reflect_${this.nextProjectileId++}`,
+            x: p.x, y: p.y,
+            vx: p.vx * 0.5, vy: -Math.abs(p.vy) * 1.5,
+            damage: p.damage * 1.5, piercing: 0, aoeRadius: 0,
+            tags: [], alive: true, trail: [],
+          });
+          this.spawnFloatingText(p.x, p.y - 10, '↩ REFLETIDO', '#a78bfa');
+          continue;
+        }
         this.damagePlayer(p.damage);
       }
     }
@@ -1236,6 +1317,30 @@ export class CombatEngine {
       if (this.state.playerHp > this.state.playerMaxHp * 0.5) {
         amount *= 0.75;
       }
+    }
+
+    // ── Item defenses (Deslocador de Fase, Ventilador, Golem, Coroa) ──────
+    let itemDodge = 0;
+    let itemReduction = 1;
+    let thornRatio = 0;
+    for (const it of this.backpack.getAllItems()) {
+      const st = it.state as any;
+      if (st.dodgeChance) itemDodge += st.dodgeChance;
+      if (st.damageReduction) itemReduction *= 1 - st.damageReduction; // Ventilador
+      if (st.damageAbsorb) itemReduction *= 1 - st.damageAbsorb;       // Golem de Cristal
+      if (st.thornDamage) thornRatio = Math.max(thornRatio, st.thornDamage);
+    }
+    if (itemDodge > 0 && Math.random() < Math.min(0.5, itemDodge)) {
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 65, 'ESQUIVA!', '#67e8f9');
+      return;
+    }
+    amount *= itemReduction;
+    // Coroa de Espinhos: return a share of the damage to a random enemy
+    if (thornRatio > 0 && this.state.enemies.length > 0) {
+      const t = this.state.enemies[Math.floor(Math.random() * this.state.enemies.length)];
+      const thornDmg = amount * thornRatio;
+      t.hp -= thornDmg;
+      this.spawnFloatingText(t.x, t.y - 10, `↩${Math.floor(thornDmg)}`, '#4ade80');
     }
 
     // Shield absorbs damage first
@@ -1468,6 +1573,33 @@ export class CombatEngine {
               e.y = Math.max(20, e.y - 60);
               this.spawnFloatingText(e.x, e.y - e.height / 2 - 10, '✨', '#a78bfa');
             }
+
+            const os = ownerItem.state as any;
+            // Canhão Sônico: knockback + brief stun
+            if (os.knockback) e.y -= 12 * os.knockback;
+            if (os.stunDuration && Math.random() < 0.35) {
+              e.slowTimer = Math.max(e.slowTimer ?? 0, os.stunDuration);
+              e.slowAmount = 0.02;
+            }
+            // Arpão: drags the target downward into kill range
+            if (os.pullEffect) e.y += 25 * os.pullEffect;
+            // Canhão do Vazio: impact pulls nearby enemies toward the hit point
+            if (os.gravityPull) {
+              for (const other of this.state.enemies) {
+                if (other === e || other.phased) continue;
+                const gdx = p.x - other.x, gdy = p.y - other.y;
+                const gd = Math.hypot(gdx, gdy);
+                if (gd > 1 && gd < 100) {
+                  other.x += (gdx / gd) * 30 * os.gravityPull;
+                  other.y += (gdy / gd) * 30 * os.gravityPull;
+                }
+              }
+            }
+            // Sanguessuga Vital: heal a fraction of damage dealt by this item
+            if (os.leechRatio) {
+              this.state.playerHp = Math.min(this.state.playerMaxHp,
+                this.state.playerHp + damage * os.leechRatio);
+            }
           }
 
           // Floating damage number
@@ -1530,6 +1662,21 @@ export class CombatEngine {
                 if (d < nearDist && d < 150) { nearDist = d; chainTarget = other; }
               }
             }
+            // Arma de Fragmentos: the killing shot shatters into shards
+            const shatter = ownerItem ? ((ownerItem.state as any).shatterCount ?? 0) : 0;
+            if (shatter > 0) {
+              for (let sh = 0; sh < shatter; sh++) {
+                const ang = -Math.PI / 2 + (sh - (shatter - 1) / 2) * 0.6;
+                this.state.projectiles.push({
+                  id: `proj_shard_${this.nextProjectileId++}`,
+                  x: e.x, y: e.y,
+                  vx: Math.cos(ang) * 350, vy: Math.sin(ang) * 350,
+                  damage: damage * 0.35, piercing: 0, aoeRadius: 0,
+                  tags: [], alive: true, trail: [],
+                  // no ownerId: shards must not re-shatter
+                });
+              }
+            }
             this.killEnemy(e, i);
             if (chainTarget) {
               chainTarget.hp -= damage * 0.6;
@@ -1571,6 +1718,35 @@ export class CombatEngine {
     // Card: Drops de Sorte / gold_harvest (+gold per kill)
     const goldPerKill = (this as any)._goldPerKillAmount ?? (this as any)._goldPerKill ?? 0;
     if (goldPerKill > 0) goldReward += goldPerKill;
+
+    // ── Item gold & on-kill effects ────────────────────────────────────────
+    this._soulKills++; // Coletor de Almas accumulator (harmless if not equipped)
+    let itemGoldFlat = 0;
+    let itemGoldMult = 1;
+    let goldDoubleCh = 0;
+    for (const it of this.backpack.getAllItems()) {
+      const st = it.state as any;
+      if (st.goldPerKill) itemGoldFlat += st.goldPerKill;   // Detector de Ouro
+      if (st.goldSteal) itemGoldFlat += st.goldSteal;       // Morcego das Sombras
+      if (st.goldBonus) itemGoldMult *= 1 + st.goldBonus;   // Ímã de Ouro
+      if (st.goldDoubleChance) goldDoubleCh += st.goldDoubleChance; // Duplicador
+      // Núcleo Explosivo: deaths splash nearby enemies
+      if (st.deathExplosionDamage) {
+        for (const other of this.state.enemies) {
+          if (other === e || other.phased) continue;
+          const edx = other.x - e.x, edy = other.y - e.y;
+          if (Math.hypot(edx, edy) < (st.deathExplosionRadius ?? 40)) {
+            other.hp -= st.deathExplosionDamage;
+            this.state.damageDealtThisSecond += st.deathExplosionDamage;
+          }
+        }
+      }
+    }
+    goldReward = Math.floor(goldReward * itemGoldMult) + itemGoldFlat;
+    if (goldDoubleCh > 0 && Math.random() < Math.min(0.5, goldDoubleCh)) {
+      goldReward *= 2;
+      this.spawnFloatingText(e.x, e.y - 14, '💰 2X!', '#fbbf24');
+    }
 
     this.state.gold += goldReward;
     this.state.score += Math.floor(goldReward * 10 * this.state.scoreMultiplier);
@@ -1803,7 +1979,11 @@ export class CombatEngine {
     const power = this.backpack.calculateBackpackPower();
     // Item-based healing (Dr. Eon: all healing halved — body barely anchored to this plane)
     if (power.totalHeal > 0) {
-      const healMult = this.backpack.config.characterId === 'void_walker' ? 0.5 : 1;
+      let healMult = this.backpack.config.characterId === 'void_walker' ? 0.5 : 1;
+      // Santo Graal: multiplies all item-sourced healing (1.2 = +20%)
+      for (const it of this.backpack.getAllItems()) {
+        if ((it.state as any).healBonus) healMult *= (it.state as any).healBonus;
+      }
       this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + power.totalHeal * healMult * dt);
     }
 
@@ -2018,6 +2198,25 @@ export class CombatEngine {
           this.spawnFloatingText(this.state.playerX, this.arenaHeight - 80, 'EMP!', '#facc15');
           this.triggerShake(3, 0.1);
         }
+      }
+
+      // Mina de Ouro: passive gold generation during combat
+      if (item.state.goldPerSecond) {
+        item.state.goldAccum = (item.state.goldAccum ?? 0) + item.state.goldPerSecond * dt;
+        if (item.state.goldAccum >= 1) {
+          const whole = Math.floor(item.state.goldAccum);
+          item.state.goldAccum -= whole;
+          this.state.gold += whole;
+        }
+      }
+
+      // Reparo de Emergência: below 20% HP, heal 30 (once per wave)
+      if (item.state.emergencyHeal && item.state.emergencyThreshold &&
+          !(item.state as any)._emergencyHealUsed &&
+          this.state.playerHp / this.state.playerMaxHp < item.state.emergencyThreshold) {
+        (item.state as any)._emergencyHealUsed = 1;
+        this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + item.state.emergencyHeal);
+        this.spawnFloatingText(this.state.playerX, this.arenaHeight - 95, '🔧 REPARO!', '#4ade80');
       }
 
       // Gravity Anchor: slow enemies near player

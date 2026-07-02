@@ -2429,7 +2429,7 @@ export class Renderer {
 
     ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
     ctx.fillStyle = '#fbbf24';
-    ctx.fillText(`💰 Venda: ${Math.floor(item.definition.cost * 0.5)}g`, tx + 8, cy);
+    ctx.fillText(`💰 Venda: ${Math.floor(item.definition.cost * game.getSellRate())}g`, tx + 8, cy);
 
     // Show adjacency synergy count
     const adjItems = game.backpack.getAdjacentItems(item.instanceId);
@@ -2487,7 +2487,7 @@ export class Renderer {
     ctx.fillStyle = isHovering ? '#ef4444' : held ? '#b91c1c' : '#7f1d1d';
     ctx.textAlign = 'center';
     const label = held
-      ? `💰 VENDER (${Math.floor(held.definition.cost * 0.5)}g)`
+      ? `💰 VENDER (${Math.floor(held.definition.cost * this.game.getSellRate())}g)`
       : '↓ arraste pra vender';
     ctx.fillText(label, L.cx, L.sellZoneY + zoneH / 2 + 4);
     ctx.textAlign = 'left';
