@@ -201,6 +201,19 @@ function gameLoop(): void {
       }
     }
 
+    // Power-up catch sound
+    const puCaught = (game.combat.state as any)._powerupCaughtType;
+    if (puCaught) {
+      (game.combat.state as any)._powerupCaughtType = null;
+      if (puCaught === 'nuke') {
+        audio.comboMilestone();
+        renderer.spawnParticles(game.combat.state.playerX, 660, '#a855f7', 20);
+      } else {
+        audio.collectibleFound();
+        renderer.spawnParticles(game.combat.state.playerX, 660, '#4ade80', 6);
+      }
+    }
+
     // Kill sound
     const currentEnemies = game.combat.state.enemies.length;
     if (currentEnemies < prevEnemyCount) {

@@ -2780,6 +2780,49 @@ export class Renderer {
       }
     }
 
+    // ── Power-up drops ───────────────────────────────────────────────────
+    const puStyle: Record<string, { color: string; icon: string }> = {
+      heal:   { color: '#4ade80', icon: '♥' },
+      gold:   { color: '#fbbf24', icon: '$' },
+      shield: { color: '#38bdf8', icon: '◆' },
+      rapid:  { color: '#22d3ee', icon: '»' },
+      nuke:   { color: '#a855f7', icon: '☢' },
+    };
+    for (const pu of state.powerUps) {
+      const style = puStyle[pu.type] ?? puStyle.gold;
+      const puPulse = 0.7 + Math.sin(now * 6 + pu.x * 0.1) * 0.3;
+      const blink = pu.life < 3 && Math.floor(now * 6) % 2 === 0; // blink when expiring
+      if (blink) continue;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.5 * puPulse;
+      ctx.drawImage(this.getGlow(style.color, 14), pu.x - 14, pu.y - 14);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      // Diamond capsule
+      ctx.fillStyle = style.color;
+      ctx.save();
+      ctx.translate(pu.x, pu.y);
+      ctx.rotate(Math.PI / 4);
+      ctx.fillRect(-6, -6, 12, 12);
+      ctx.restore();
+      ctx.fillStyle = '#0a0e1a';
+      ctx.font = 'bold 10px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(style.icon, pu.x, pu.y + 3.5);
+      ctx.textAlign = 'left';
+    }
+
+    // Rapid-fire buff indicator above the player
+    if (state.rapidFireTimer > 0) {
+      ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.fillStyle = '#22d3ee';
+      ctx.textAlign = 'center';
+      ctx.globalAlpha = 0.7 + Math.sin(now * 10) * 0.3;
+      ctx.fillText(`»» 2X «« ${state.rapidFireTimer.toFixed(1)}s`, state.playerX, canvas.height - 72);
+      ctx.globalAlpha = 1;
+      ctx.textAlign = 'left';
+    }
+
     // Dash afterimage trail
     if ((game.combat as any).dashActive > 0) {
       const velocity = (game.combat as any).playerVelocity ?? 0;
@@ -4402,8 +4445,8 @@ export class Renderer {
       ctx.fillStyle = '#6366f1';
       ctx.fillText(item.tags.slice(0, 3).join(', '), x + itemCardW / 2, y + Math.floor(itemCardH * 0.75));
 
-      const discount = (game as any)._shopDiscount ?? 0;
-      const finalCost = Math.floor(item.cost * (1 - discount));
+      const finalCost = game.getItemCost(item);
+      const discount = finalCost < item.cost ? 1 : 0;
       ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
       ctx.fillStyle = game.gold >= finalCost ? '#4ade80' : '#ef4444';
       if (discount > 0) {

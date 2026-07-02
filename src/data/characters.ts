@@ -79,7 +79,7 @@ export const FIRE_LORD: CharacterDefinition = {
   backpackRule: 'freeform',
   startingHp: 80,
   startingGold: 40,
-  startingItems: ['fire_gun'],
+  startingItems: ['flamethrower'],
   shipColorIndex: 1,
   unlockCondition: 'Alcance wave 10 com Rômulo.',
   unlockedByDefault: false,

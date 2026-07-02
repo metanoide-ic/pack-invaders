@@ -104,6 +104,19 @@ export interface FloatingText {
   maxLife: number;
 }
 
+// ─── Power-Up Drops ──────────────────────────────────────────────────────────
+
+export type PowerUpType = 'heal' | 'gold' | 'shield' | 'rapid' | 'nuke';
+
+export interface PowerUp {
+  id: string;
+  x: number;
+  y: number;
+  type: PowerUpType;
+  /** Seconds until despawn after landing */
+  life: number;
+}
+
 // ─── Combat State ────────────────────────────────────────────────────────────
 
 export interface CombatState {
@@ -158,6 +171,10 @@ export interface CombatState {
   drainWarningTimer: number;
   /** Player movement slow timer (from slow_on_hit enemies) */
   playerSlowTimer: number;
+  /** Power-up drops falling from killed enemies */
+  powerUps: PowerUp[];
+  /** Rapid-fire buff timer (2x fire rate while > 0) */
+  rapidFireTimer: number;
   // Co-op Player 2 state
   player2Active?: boolean;
   player2X?: number;
@@ -229,6 +246,8 @@ export class CombatEngine {
       bossPhaseTransitionTimer: 0,
       drainWarningTimer: 0,
       playerSlowTimer: 0,
+      powerUps: [],
+      rapidFireTimer: 0,
     };
   }
 
@@ -258,6 +277,8 @@ export class CombatEngine {
     this.state.hitStopTimer = 0;
     this.state.killedEnemyIds = [];
     this.state.damageTakenThisWave = 0;
+    this.state.powerUps = [];
+    this.state.rapidFireTimer = 0;
 
     // Boss warning
     if (isBossMonth) {
@@ -344,6 +365,9 @@ export class CombatEngine {
 
     // 5. Move enemy projectiles
     this.updateEnemyProjectiles(dt);
+
+    // 5b. Power-up drops (fall + catch)
+    this.updatePowerUps(dt);
 
     // 6. Check collisions (projectile vs enemy)
     this.checkCollisions();
@@ -475,10 +499,11 @@ export class CombatEngine {
     const emitters = this.backpack.getAllItems().filter(i =>
       i.definition.tags.includes('Emissor') || i.definition.tags.includes('Arma')
     );
+    const charId = this.backpack.config.characterId;
 
     // Void Walker dynamic damage bonus based on missing HP
     let voidBonus = 1;
-    if (this.backpack.config.characterId === 'void_walker') {
+    if (charId === 'void_walker') {
       const missingHp = this.state.playerMaxHp - this.state.playerHp;
       const bonusStacks = Math.min(10, Math.floor(missingHp / 10));
       voidBonus = 1 + bonusStacks * 0.1; // max +100%
@@ -486,13 +511,48 @@ export class CombatEngine {
 
     // Skill-based multipliers (set externally by GameManager)
     const skillDmgMult = (this as any)._skillDamageMult ?? 1;
-    const skillRateMult = (this as any)._skillFireRateMult ?? 1;
+    let skillRateMult = (this as any)._skillFireRateMult ?? 1;
+
+    // Rapid-fire power-up: 2x fire rate
+    if (this.state.rapidFireTimer > 0) skillRateMult *= 2;
 
     for (const emitter of emitters) {
       if (emitter.definition.onTick) {
-        // Apply skill rate multiplier temporarily
+        // ── Character weapon identity (from character advantage lists) ──
+        const tags = emitter.definition.tags;
+        let charDmg = 1;
+        let charRate = 1;
+        switch (charId) {
+          case 'fire_lord':      // Kagutsuchi: +50% fire damage
+            if (tags.includes('Fogo')) charDmg *= 1.5;
+            break;
+          case 'grass_man':      // Rômulo: -20% fire damage
+            if (tags.includes('Fogo')) charDmg *= 0.8;
+            break;
+          case 'firefighter':    // Florian: fire trauma -30% dmg; defensive -15% rate
+            if (tags.includes('Fogo')) charDmg *= 0.7;
+            charRate *= 0.85;
+            break;
+          case 'aqua_sage':      // Mazu: water weapons +25% rate
+            if (tags.includes('Água')) charRate *= 1.25;
+            break;
+          case 'storm_runner':   // Frank: everything +40% rate / -20% dmg
+            charRate *= 1.4;
+            charDmg *= 0.8;
+            break;
+          case 'beast_tamer':    // Diana: pets +100% dmg +50% rate, others -30% dmg
+            if (tags.includes('Pet') || tags.includes('Animal')) {
+              charDmg *= 2;
+              charRate *= 1.5;
+            } else {
+              charDmg *= 0.7;
+            }
+            break;
+        }
+
+        // Apply rate multipliers temporarily
         const origRate = emitter.stats.fireRateMultiplier;
-        emitter.stats.fireRateMultiplier *= skillRateMult;
+        emitter.stats.fireRateMultiplier *= skillRateMult * charRate;
 
         emitter.definition.onTick(emitter, dt, (proj) => {
           this.state.projectiles.push({
@@ -501,7 +561,7 @@ export class CombatEngine {
             y: this.arenaHeight - 45,
             vx: proj.vx,
             vy: proj.vy,
-            damage: proj.damage * voidBonus * skillDmgMult,
+            damage: proj.damage * voidBonus * skillDmgMult * charDmg,
             piercing: proj.piercing,
             aoeRadius: proj.aoeRadius,
             tags: [...proj.tags],
@@ -874,6 +934,88 @@ export class CombatEngine {
     }
   }
 
+  private nextPowerUpId = 0;
+
+  /** Spawn a power-up drop at a position (weighted random type) */
+  private spawnPowerUp(x: number, y: number): void {
+    const roll = Math.random();
+    const type: PowerUpType =
+      roll < 0.30 ? 'heal' :
+      roll < 0.58 ? 'gold' :
+      roll < 0.78 ? 'shield' :
+      roll < 0.94 ? 'rapid' : 'nuke';
+    this.state.powerUps.push({
+      id: `pu_${this.nextPowerUpId++}`,
+      x, y, type,
+      life: 10,
+    });
+  }
+
+  private updatePowerUps(dt: number): void {
+    if (this.state.rapidFireTimer > 0) this.state.rapidFireTimer -= dt;
+
+    const groundY = this.arenaHeight - 40;
+    const st = this.state;
+    for (let i = st.powerUps.length - 1; i >= 0; i--) {
+      const pu = st.powerUps[i];
+      // Fall until resting just above the ground line
+      if (pu.y < groundY) {
+        pu.y += 85 * dt;
+      } else {
+        pu.life -= dt;
+      }
+      if (pu.life <= 0) { st.powerUps.splice(i, 1); continue; }
+
+      // Catch: player (or P2 in co-op) touches it near the ground
+      const caughtBy1 = Math.abs(pu.x - st.playerX) < 26 && pu.y > this.arenaHeight - 85;
+      const caughtBy2 = !!st.player2Active && st.player2X !== undefined &&
+        Math.abs(pu.x - st.player2X) < 26 && pu.y > this.arenaHeight - 85;
+      if (caughtBy1 || caughtBy2) {
+        this.applyPowerUp(pu);
+        st.powerUps.splice(i, 1);
+      }
+    }
+  }
+
+  private applyPowerUp(pu: PowerUp): void {
+    const st = this.state;
+    switch (pu.type) {
+      case 'heal':
+        st.playerHp = Math.min(st.playerMaxHp, st.playerHp + 15);
+        this.spawnFloatingText(pu.x, pu.y - 20, '+15 HP', '#4ade80');
+        break;
+      case 'gold': {
+        const amount = 12 + Math.floor(st.wave * 0.8);
+        st.gold += amount;
+        this.spawnFloatingText(pu.x, pu.y - 20, `+${amount}g`, '#fbbf24');
+        break;
+      }
+      case 'shield':
+        st.playerShield = Math.min(st.playerMaxShield, st.playerShield + 15);
+        this.spawnFloatingText(pu.x, pu.y - 20, '+ESCUDO', '#38bdf8');
+        break;
+      case 'rapid':
+        st.rapidFireTimer = 5;
+        this.spawnFloatingText(pu.x, pu.y - 20, 'CADÊNCIA 2X!', '#22d3ee');
+        break;
+      case 'nuke': {
+        // Big screen-wide blast: heavy damage to normals, chip to bosses
+        for (const e of st.enemies) {
+          e.hp -= e.isBoss ? e.maxHp * 0.06 : Math.max(25, e.maxHp * 0.5);
+        }
+        this.spawnFloatingText(pu.x, pu.y - 20, '☢ DEVASTAÇÃO! ☢', '#a855f7');
+        this.triggerShake(10, 0.5);
+        this.triggerHitStop(0.08);
+        for (let i = st.enemies.length - 1; i >= 0; i--) {
+          if (st.enemies[i].hp <= 0) this.killEnemy(st.enemies[i], i);
+        }
+        break;
+      }
+    }
+    // Signal for audio feedback (consumed by main loop)
+    (st as any)._powerupCaughtType = pu.type;
+  }
+
   private updateEnemyProjectiles(dt: number): void {
     for (const p of this.state.enemyProjectiles) {
       if (!p.alive) continue;
@@ -1058,6 +1200,12 @@ export class CombatEngine {
             damage *= 2;
             isCrit = true;
             this.triggerHitStop(0.03); // Micro freeze on crit
+            // Kagutsuchi: crits ignite the target (burn DoT)
+            if (charId === 'fire_lord') {
+              (e as any).poisonTimer = Math.max((e as any).poisonTimer ?? 0, 2.5);
+              (e as any).poisonDamage = Math.max((e as any).poisonDamage ?? 0, damage * 0.3);
+              this.spawnFloatingText(e.x, e.y - e.height / 2 - 8, '🔥', '#f97316');
+            }
           }
           // ─── End Crit System ────────────────────────────────────────────
 
@@ -1202,6 +1350,40 @@ export class CombatEngine {
     const goldText = comboBonus > 1.1 ? `+${goldReward}g (x${comboBonus.toFixed(1)})` : `+${goldReward}g`;
     this.spawnFloatingText(e.x, e.y, goldText, '#4ade80');
 
+    // Power-up drop chance (bosses always drop one)
+    if (e.isBoss || (Math.random() < 0.07 && this.state.powerUps.length < 4)) {
+      this.spawnPowerUp(e.x, e.y);
+    }
+
+    const charId = this.backpack.config.characterId;
+
+    // Kagutsuchi (fire_lord): 20% chance kills explode in flames
+    if (charId === 'fire_lord' && Math.random() < 0.2) {
+      const blastDmg = 12 + this.state.wave * 0.5;
+      for (const other of this.state.enemies) {
+        if (other === e || other.phased) continue;
+        const dx = other.x - e.x;
+        const dy = other.y - e.y;
+        if (Math.sqrt(dx * dx + dy * dy) < 55) {
+          other.hp -= blastDmg;
+          this.state.damageDealtThisSecond += blastDmg;
+        }
+      }
+      this.spawnFloatingText(e.x, e.y - 10, '🔥BOOM', '#f97316');
+    }
+
+    // Frank (storm_runner): every 10 kills, radioactive pulse hits everything
+    if (charId === 'storm_runner' && this.state.killedEnemyIds.length % 10 === 0) {
+      const pulseDmg = 10 + this.state.wave * 0.6;
+      for (const other of this.state.enemies) {
+        if (other.phased) continue;
+        other.hp -= pulseDmg;
+        this.state.damageDealtThisSecond += pulseDmg;
+      }
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 100, '☢ PULSO RADIOATIVO!', '#a3e635');
+      this.triggerShake(5, 0.25);
+    }
+
     // Explode on death (enemy's own explode ability)
     if (e.explodeOnDeath && e.special?.type === 'explode') {
       this.damagePlayer(e.special.damage);
@@ -1294,9 +1476,10 @@ export class CombatEngine {
 
   private applyHealing(dt: number): void {
     const power = this.backpack.calculateBackpackPower();
-    // Item-based healing (from backpack stats)
+    // Item-based healing (Dr. Eon: all healing halved — body barely anchored to this plane)
     if (power.totalHeal > 0) {
-      this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + power.totalHeal * dt);
+      const healMult = this.backpack.config.characterId === 'void_walker' ? 0.5 : 1;
+      this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + power.totalHeal * healMult * dt);
     }
 
     // Shield regeneration (after 3s without taking damage)
@@ -1316,7 +1499,8 @@ export class CombatEngine {
 
     switch (charId) {
       case 'fire_lord':
-        this.state.playerHp -= 1 * dt;
+        // Passive drain never kills on its own (stops at 1 HP)
+        this.state.playerHp = Math.max(1, this.state.playerHp - 1 * dt);
         break;
       case 'aqua_sage': {
         const regenRate = this.state.playerHp / this.state.playerMaxHp < 0.5 ? 4 : 2;
@@ -1324,8 +1508,16 @@ export class CombatEngine {
         break;
       }
       case 'void_walker':
-        this.state.playerHp -= 1.5 * dt;
+        this.state.playerHp = Math.max(1, this.state.playerHp - 1.5 * dt);
         break;
+      case 'grass_man': {
+        // Rômulo: each [Planta] item heals 1 HP/s
+        const plantas = this.backpack.getAllItems().filter(i => i.definition.tags.includes('Planta')).length;
+        if (plantas > 0) {
+          this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + plantas * dt);
+        }
+        break;
+      }
     }
 
     // Permanent heal per second from cards (_permanentHealPerSec)

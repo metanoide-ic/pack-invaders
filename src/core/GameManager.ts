@@ -685,13 +685,23 @@ export class GameManager {
     const vendorItemIds = new Set(this.currentVendor.exclusiveItems);
     const available = ALL_ITEMS.filter(i => i.cost > 0 && vendorItemIds.has(i.id));
     const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 5);
+    // Character shop size: Diana sees 3 items, Dr. Eon sees 4 (their disadvantages)
+    const shopSize = this.characterId === 'beast_tamer' ? 3
+      : this.characterId === 'void_walker' ? 4 : 5;
+    return shuffled.slice(0, shopSize);
+  }
+
+  /** Final shop price after card discounts and character affinities */
+  getItemCost(itemDef: ItemDefinition): number {
+    const discount = (this as any)._shopDiscount ?? 0;
+    let cost = itemDef.cost * (1 - discount);
+    // Rômulo: organic items -20%
+    if (this.characterId === 'grass_man' && itemDef.tags.includes('Orgânico')) cost *= 0.8;
+    return Math.floor(cost);
   }
 
   buyItem(itemDef: ItemDefinition): boolean {
-    // Apply shop discount from cards
-    const discount = (this as any)._shopDiscount ?? 0;
-    const finalCost = Math.floor(itemDef.cost * (1 - discount));
+    const finalCost = this.getItemCost(itemDef);
     if (this.gold < finalCost) return false;
     this.gold -= finalCost;
     this.stats.itemsBought++;
