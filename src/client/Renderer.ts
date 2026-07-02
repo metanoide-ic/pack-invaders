@@ -1546,6 +1546,19 @@ export class Renderer {
     const inGrid = gridCol >= 0 && gridRow >= 0 &&
       gridCol < this.game.backpack.cols && gridRow < this.game.backpack.rows;
 
+    // Subtle hint on all valid placement positions (low alpha, don't recompute every frame)
+    const tempDef2: ItemDefinition = { ...held.definition, gridShape: shape };
+    ctx.globalAlpha = 0.06;
+    ctx.fillStyle = '#4ade80';
+    for (let r = 0; r < this.game.backpack.rows; r++) {
+      for (let c = 0; c < this.game.backpack.cols; c++) {
+        if (this.game.backpack.canPlace(tempDef2, { col: c, row: r })) {
+          ctx.fillRect(L.gridX + c * L.cell, L.gridY + r * L.cell, L.cell - 2, L.cell - 2);
+        }
+      }
+    }
+    ctx.globalAlpha = 1;
+
     // Show grid highlight if cursor is over grid
     if (inGrid) {
       const tempDef: ItemDefinition = { ...held.definition, gridShape: shape };
@@ -1829,10 +1842,19 @@ export class Renderer {
 
     ctx.font = L.fontSmall;
     ctx.fillStyle = '#94a3b8';
+    // Calculate months until next boss
+    const currentMonth = game.month;
+    const monthsUntilBoss = currentMonth <= 6 ? 6 - currentMonth : 12 - currentMonth;
+    const bossHint = monthsUntilBoss <= 2 ? ` | ⚠ Boss em ${monthsUntilBoss}` : '';
     ctx.fillText(
-      `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`,
+      `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}${bossHint}`,
       L.gridX + Math.floor(L.w * 0.1), L.gridY - Math.floor(L.h * 0.04)
     );
+    // Boss warning color
+    if (monthsUntilBoss <= 2) {
+      ctx.fillStyle = '#ef4444';
+      ctx.fillText(bossHint, L.gridX + Math.floor(L.w * 0.1) + ctx.measureText(`${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`).width, L.gridY - Math.floor(L.h * 0.04));
+    }
 
     this.renderGrid();
     this.renderPlacedItems();
