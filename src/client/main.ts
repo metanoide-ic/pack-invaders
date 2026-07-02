@@ -125,8 +125,11 @@ function gameLoop(): void {
     // Pass player direction to combat engine
     const playerDir = input.getPlayerDir();
     const p2Dir = game.phase === 'COOP' ? input.getP2Dir() : 0;
-    game.combat.tick(dt, playerDir, p2Dir);
-    game.updateSkills(dt);
+    // Death slowdown: when HP < 15%, slow time for dramatic effect
+    const hpRatio = game.combat.state.playerHp / game.combat.state.playerMaxHp;
+    const timeMult = hpRatio < 0.15 && hpRatio > 0 ? 0.4 : 1.0;
+    game.combat.tick(dt * timeMult, playerDir, p2Dir);
+    game.updateSkills(dt * timeMult);
 
     // Check dash input
     if (input.checkDash()) {

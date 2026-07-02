@@ -196,6 +196,13 @@ export class InputHandler {
           this.twitchInputActive = false;
         }
       }
+      // Enter = Quick Retry on Game Over
+      if (e.key === 'Enter' && (this.game.phase === 'GAME_OVER' || this.game.phase === 'VICTORY')) {
+        this.audio.cardSelect();
+        const charId = this.game.characterId;
+        const slot = this.game.currentSaveSlot;
+        this.game.startFromSave(slot, charId);
+      }
       // Quick shortcut: C to open/close codex from inventory or combat
       if (e.key.toLowerCase() === 'c' && !this.twitchInputActive) {
         if (this.game.phase === 'CODEX') {

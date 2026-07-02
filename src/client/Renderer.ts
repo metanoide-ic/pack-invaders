@@ -2442,6 +2442,20 @@ export class Renderer {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
+    // Low HP danger overlay (pulsing red border + slight darken)
+    const critHpRatio = state.playerHp / state.playerMaxHp;
+    if (critHpRatio < 0.25 && critHpRatio > 0) {
+      const dangerPulse = 0.1 + Math.sin(performance.now() * 0.008) * 0.08;
+      ctx.globalAlpha = dangerPulse;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Red border pulse
+      ctx.strokeStyle = '#dc2626';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(2, 2, canvas.width - 4, canvas.height - 4);
+      ctx.globalAlpha = 1;
+    }
+
     // Render enemies
     for (const e of state.enemies) {
       this.renderEnemy(e, dt);
@@ -4451,6 +4465,11 @@ export class Renderer {
     ctx.shadowBlur = 0;
     this.renderButton(L.cx - btnW / 2, btn2Y, btnW, btnH, 'MENU PRINCIPAL', '#1e293b');
 
+    // Keyboard hints
+    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+    ctx.fillStyle = '#374151';
+    ctx.textAlign = 'center';
+    ctx.fillText('ENTER = jogar de novo  |  ESC = menu', L.cx, btn2Y + btnH + Math.floor(L.h * 0.02));
     ctx.textAlign = 'left';
   }
 
