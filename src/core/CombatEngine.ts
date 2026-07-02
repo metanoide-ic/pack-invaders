@@ -753,12 +753,20 @@ export class CombatEngine {
         }
       }
 
-      // Update phase timer (for 'phase' special)
+      // Update phase timer (for 'phase' special) — `chance` controls the
+      // fraction of each cycle spent phased/invulnerable, per enemy design
+      // (0.2 = mostly vulnerable with brief evasive windows, 0.7 = mostly
+      // evasive). Previously ignored, making every phase enemy identical.
       if (e.phaseTimer !== undefined) {
         e.phaseTimer -= dt;
         if (e.phaseTimer <= 0) {
           e.phased = !e.phased;
-          e.phaseTimer = e.phased ? 1.0 + Math.random() * 0.5 : 1.5 + Math.random() * 1.0;
+          const chance = e.special?.type === 'phase' ? e.special.chance : 0.4;
+          const cycleBase = 3.0;
+          const jitter = 0.8 + Math.random() * 0.4;
+          e.phaseTimer = e.phased
+            ? Math.max(0.4, cycleBase * chance * jitter)
+            : Math.max(0.4, cycleBase * (1 - chance) * jitter);
         }
       }
 
@@ -1625,9 +1633,15 @@ export class CombatEngine {
       this.triggerShake(5, 0.25);
     }
 
-    // Explode on death (enemy's own explode ability)
+    // Explode on death (enemy's own explode ability) — only hits the player
+    // if actually within blast radius; previously ignored radius entirely
+    // and always hit the player no matter how far away the enemy died.
     if (e.explodeOnDeath && e.special?.type === 'explode') {
-      this.damagePlayer(e.special.damage);
+      const playerY = this.arenaHeight - 45;
+      const dist = Math.hypot(this.state.playerX - e.x, playerY - e.y);
+      if (dist < e.special.radius) {
+        this.damagePlayer(e.special.damage);
+      }
       this.triggerShake(6, 0.3);
       this.spawnFloatingText(e.x, e.y, 'BOOM!', '#ef4444');
     }
