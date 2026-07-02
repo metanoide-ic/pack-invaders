@@ -2890,7 +2890,7 @@ export class Renderer {
     const heroGlow = heroGlowColors[charId] ?? '#8fb8ff';
     ctx.globalCompositeOperation = 'lighter';
     ctx.globalAlpha = 0.22 + Math.sin(now * 2.5) * 0.05;
-    ctx.drawImage(this.getGlow(heroGlow, 30), state.playerX - 30, canvas.height - 68);
+    ctx.drawImage(this.getGlow(heroGlow, 38), state.playerX - 38, canvas.height - 84);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
 
@@ -2907,7 +2907,7 @@ export class Renderer {
           : '#ec4899';
         ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(state.playerX, canvas.height - 32, 30, 0, Math.PI * 2);
+        ctx.arc(state.playerX, canvas.height - 42, 36, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = 1;
         break;
@@ -2926,8 +2926,8 @@ export class Renderer {
       if (tdSprite) {
         ctx.drawImage(tdSprite, -Math.floor(tdSprite.width / 2), -tdSprite.height);
       } else {
-        // Fallback procedural sprite drawn larger for visibility
-        ctx.drawImage(playerSprite, -24, -44, 48, 48);
+        // Fallback procedural sprite at 2x integer scale (crisp 64px)
+        ctx.drawImage(playerSprite, -32, -60, 64, 64);
       }
       ctx.restore();
       // Movement dust kicks
@@ -2963,7 +2963,7 @@ export class Renderer {
         ctx.drawImage(p2Td, -Math.floor(p2Td.width / 2), -p2Td.height);
       } else {
         const p2Sprite = this.sprites.playerShips[1] ?? this.sprites.playerShips[0];
-        if (p2Sprite) ctx.drawImage(p2Sprite, -16, -32);
+        if (p2Sprite) ctx.drawImage(p2Sprite, -32, -60, 64, 64);
       }
       ctx.restore();
     }
@@ -3008,6 +3008,12 @@ export class Renderer {
     const spriteId = this.getEnemySpriteId(e);
     const sprite = this.sprites.enemies.get(spriteId);
 
+    // Tiered visual scale for readability: the smaller the enemy, the bigger
+    // the boost. Presentation only — hitboxes (e.width/e.height) are untouched.
+    const vMult = e.isBoss ? 1.6 : e.width <= 18 ? 1.95 : e.width <= 26 ? 1.7 : 1.5;
+    const drawW = Math.floor(e.width * vMult);
+    const drawH = Math.floor(e.height * vMult);
+
     // Phased enemies are semi-transparent and flickering
     if (e.phased) {
       ctx.globalAlpha = 0.2 + Math.sin(performance.now() * 0.02) * 0.15;
@@ -3029,7 +3035,7 @@ export class Renderer {
       ctx.globalAlpha = (e.phased ? 0.3 : 1) * pulse * 0.3;
       ctx.fillStyle = '#fbbf24';
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.width * 0.8, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, drawW * 0.6, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = e.phased ? 0.25 : 1;
     }
@@ -3041,7 +3047,7 @@ export class Renderer {
       ctx.strokeStyle = '#fbbf24';
       ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.width * 0.6 + 3, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, drawW * 0.5 + 3, 0, Math.PI * 2);
       ctx.stroke();
       ctx.globalAlpha = 1;
       // Affix badge so the player can read the threat at a glance
@@ -3053,7 +3059,7 @@ export class Renderer {
         ctx.font = 'bold 11px monospace';
         ctx.fillStyle = badge.color;
         ctx.textAlign = 'center';
-        ctx.fillText(badge.icon, e.x, e.y - e.height / 2 - 16);
+        ctx.fillText(badge.icon, e.x, e.y - drawH / 2 - 14);
         ctx.textAlign = 'left';
       }
     }
@@ -3066,7 +3072,7 @@ export class Renderer {
         ctx.font = 'bold 16px monospace';
         ctx.fillStyle = '#ef4444';
         ctx.textAlign = 'center';
-        ctx.fillText('!', e.x, e.y - e.height / 2 - 8);
+        ctx.fillText('!', e.x, e.y - drawH / 2 - 6);
         ctx.textAlign = 'left';
       }
     }
@@ -3076,7 +3082,7 @@ export class Renderer {
       ctx.globalAlpha = (e.phased ? 0.25 : 1);
       ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.width * 0.6, 0, Math.PI * 2);
+      ctx.arc(e.x, e.y, drawW * 0.45, 0, Math.PI * 2);
       ctx.fill();
     }
 
@@ -3085,9 +3091,6 @@ export class Renderer {
     const flash = this.enemyHitFlash.get(e.id) ?? 0;
 
     if (sprite) {
-      // Draw 40% larger than hitbox for visual punch (hitbox stays tight)
-      const drawW = Math.floor(e.width * 1.4);
-      const drawH = Math.floor(e.height * 1.4);
       ctx.imageSmoothingEnabled = false;
       if (flash > 0) {
         // White-hot flash + squash pop on hit
@@ -3104,9 +3107,9 @@ export class Renderer {
       }
       ctx.imageSmoothingEnabled = true;
     } else {
-      // Procedural enemy shapes — also 40% larger visually
-      const vw = Math.floor(e.width * 1.4);
-      const vh = Math.floor(e.height * 1.4);
+      // Procedural enemy shapes use the same tiered visual scale
+      const vw = drawW;
+      const vh = drawH;
       switch (e.movement) {
         case 'straight':
           ctx.fillStyle = e.isBoss ? '#fbbf24' : '#ef4444';
@@ -3206,13 +3209,13 @@ export class Renderer {
       ctx.strokeStyle = '#38bdf8';
       ctx.lineWidth = 3;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, e.width * 0.55, -Math.PI * 0.7, Math.PI * 0.7);
+      ctx.arc(e.x, e.y, drawW * 0.5, -Math.PI * 0.7, Math.PI * 0.7);
       ctx.stroke();
       // Armor hits counter
       ctx.font = `bold 9px monospace`;
       ctx.fillStyle = '#38bdf8';
       ctx.textAlign = 'center';
-      ctx.fillText(`${e.armorHits}`, e.x, e.y - e.height / 2 - 10);
+      ctx.fillText(`${e.armorHits}`, e.x, e.y - drawH / 2 - 10);
       ctx.textAlign = 'left';
     }
 
@@ -3221,18 +3224,18 @@ export class Renderer {
       const flashAlpha = Math.min(0.7, e.hitFlash * 10);
       ctx.globalAlpha = flashAlpha;
       ctx.fillStyle = '#ffffff';
-      const fw = Math.floor(e.width * 1.4);
-      const fh = Math.floor(e.height * 1.4);
+      const fw = drawW;
+      const fh = drawH;
       ctx.fillRect(e.x - fw / 2, e.y - fh / 2, fw, fh);
       ctx.globalAlpha = 1;
     }
 
     // ── HP bar ────────────────────────────────────────────────────────────
     const hpPct = e.hp / e.maxHp;
-    const barW  = e.isBoss ? Math.min(240, e.width * 2.5) : e.width;
+    const barW  = e.isBoss ? Math.min(240, drawW * 1.8) : drawW;
     const barH  = e.isBoss ? 7 : 4;
     const barX  = e.x - barW / 2;
-    const barY  = e.y - e.height / 2 - (e.isBoss ? 10 : 7);
+    const barY  = e.y - drawH / 2 - (e.isBoss ? 10 : 7);
     const hpColor = hpPct > 0.5 ? '#4ade80' : hpPct > 0.25 ? '#f59e0b' : '#ef4444';
 
     ctx.fillStyle = '#111827';
