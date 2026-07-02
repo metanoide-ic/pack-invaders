@@ -2508,7 +2508,7 @@ export class Renderer {
     ctx.globalAlpha = 0.3;
     ctx.fillStyle = '#000000';
     ctx.beginPath();
-    ctx.ellipse(state.playerX, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
+    ctx.ellipse(state.playerX, canvas.height - 14, 20, 8, 0, 0, Math.PI * 2);
     ctx.fill();
     ctx.globalAlpha = 1;
 
@@ -2523,29 +2523,30 @@ export class Renderer {
           : sk.definition.id.includes('tidal') || sk.definition.id.includes('whirl') || sk.definition.id.includes('rain') ? '#38bdf8'
           : sk.definition.id.includes('thunder') || sk.definition.id.includes('over') || sk.definition.id.includes('emp') ? '#facc15'
           : '#ec4899';
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
-        ctx.arc(state.playerX, canvas.height - 35, 22, 0, Math.PI * 2);
+        ctx.arc(state.playerX, canvas.height - 32, 30, 0, Math.PI * 2);
         ctx.stroke();
         ctx.globalAlpha = 1;
-        break; // Only show one aura
+        break;
       }
     }
 
     if (playerSprite) {
-      // Draw top-down character — 32x32, centered at player position
+      // Draw top-down character — 48x48 (larger for visibility)
       ctx.save();
-      ctx.translate(state.playerX, canvas.height - 29);
-      ctx.drawImage(playerSprite, -16, -16);
+      ctx.imageSmoothingEnabled = false;
+      ctx.translate(state.playerX, canvas.height - 32);
+      ctx.drawImage(playerSprite, -24, -24, 48, 48);
       ctx.restore();
     } else {
       // Fallback: simple person silhouette
       const px = state.playerX;
-      const py = canvas.height - 29;
+      const py = canvas.height - 32;
       ctx.fillStyle = '#4ade80';
-      ctx.fillRect(px - 6, py - 14, 12, 16); // body
+      ctx.fillRect(px - 10, py - 18, 20, 24); // body (bigger)
       ctx.beginPath();
-      ctx.arc(px, py - 18, 6, 0, Math.PI * 2); // head
+      ctx.arc(px, py - 24, 10, 0, Math.PI * 2); // head (bigger)
       ctx.fill();
     }
 

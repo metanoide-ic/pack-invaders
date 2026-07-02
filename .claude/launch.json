@@ -1,0 +1,31 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pack-invaders-vite",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "backrooms-multiplayer-server",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\joaop\\OneDrive\\Área de Trabalho\\Jogo2\\server.js"],
+      "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "backrooms-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\joaop\\AppData\\Local\\Temp\\claude\\C--Users-joaop-OneDrive--rea-de-Trabalho-Jogo\\f20f4571-6838-4b7b-8958-19f9b4a136d4\\scratchpad\\static-server.js"],
+      "port": 5544,
+      "autoPort": true
+    },
+    {
+      "name": "beyond-the-ice-wall-vite",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["C:\\Users\\joaop\\OneDrive\\Área de Trabalho\\Jogo3\\dev-runner.js"],
+      "port": 3100
+    }
+  ]
+}

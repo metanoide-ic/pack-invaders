@@ -888,9 +888,9 @@ export class CombatEngine {
   }
 
   private checkEnemyProjectileHits(): void {
-    const playerW = 32;
-    const playerH = 32;
-    const playerY = this.arenaHeight - 45;
+    const playerW = 28; // Hitbox smaller than visual (forgiving)
+    const playerH = 28;
+    const playerY = this.arenaHeight - 48;
 
     for (const p of this.state.enemyProjectiles) {
       if (!p.alive) continue;
