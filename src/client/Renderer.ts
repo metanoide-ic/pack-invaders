@@ -179,7 +179,7 @@ export class Renderer {
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Apply screen shake
+    // Apply screen shake + zoom pulse
     const state = game.combat.state;
     let shakeX = 0;
     let shakeY = 0;
@@ -189,7 +189,18 @@ export class Renderer {
       shakeY = (Math.random() - 0.5) * state.shakeIntensity * decay * 2;
     }
 
+    // Zoom pulse on big impacts (intensity > 10 = boss kill level)
+    let zoomScale = 1;
+    if (state.shakeIntensity >= 10 && state.shakeTimer < 0.1) {
+      zoomScale = 1 + (0.1 - state.shakeTimer) * 0.15;
+    }
+
     ctx.save();
+    if (zoomScale > 1) {
+      ctx.translate(canvas.width / 2, canvas.height / 2);
+      ctx.scale(zoomScale, zoomScale);
+      ctx.translate(-canvas.width / 2, -canvas.height / 2);
+    }
     ctx.translate(shakeX, shakeY);
 
     this.renderBackground(dt);
@@ -1619,6 +1630,19 @@ export class Renderer {
         ctx.drawImage(bg, tx * 256, ty * 256 - 256 + this.bgOffset);
       }
     }
+
+    // Parallax foreground stars (faster, brighter) during combat
+    if (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') {
+      ctx.globalAlpha = 0.6;
+      const fastOffset = (this.bgOffset * 2.5) % canvas.height;
+      for (let i = 0; i < 8; i++) {
+        const sx = (i * 167 + 43) % canvas.width;
+        const sy = ((i * 97 + fastOffset) % (canvas.height + 20)) - 10;
+        ctx.fillStyle = i % 3 === 0 ? '#6366f1' : i % 3 === 1 ? '#22d3ee' : '#ffffff';
+        ctx.fillRect(sx, sy, 2, 2);
+      }
+      ctx.globalAlpha = 1;
+    }
   }
 
   // ─── Particles ────────────────────────────────────────────────────────────
@@ -2435,11 +2459,18 @@ export class Renderer {
     for (const [id, data] of this.prevEnemyPositions) {
       if (!currentEnemyIds.has(id)) {
         const pos = data;
-        // Color explosion based on enemy element
         const color = (pos as any).color || '#ef4444';
-        this.spawnExplosion(pos.x, pos.y, 25, color);
-        this.spawnParticles(pos.x, pos.y, color, 6);
-        this.spawnParticles(pos.x, pos.y, '#fbbf24', 4);
+        // Kill flash (brief white burst)
+        ctx.globalAlpha = 0.7;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, 12, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        // Explosion ring + particles
+        this.spawnExplosion(pos.x, pos.y, 30, color);
+        this.spawnParticles(pos.x, pos.y, color, 8);
+        this.spawnParticles(pos.x, pos.y, '#ffffff', 3);
       }
     }
     this.prevEnemyPositions.clear();
