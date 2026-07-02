@@ -3225,6 +3225,15 @@ export class Renderer {
       ctx.fillText(`×${state.scoreMultiplier.toFixed(1)}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.48));
     }
 
+    // Run timer (top right, small)
+    const runMs = Date.now() - game.stats.runStartTime;
+    const runMin = Math.floor(runMs / 60000);
+    const runSec = Math.floor((runMs % 60000) / 1000);
+    ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+    ctx.fillStyle = '#475569';
+    ctx.textAlign = 'right';
+    ctx.fillText(`${runMin}:${runSec.toString().padStart(2, '0')}`, canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.62));
+
     // Aliencore badge
     if (game.aliencoreMode) {
       ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
@@ -3373,9 +3382,9 @@ export class Renderer {
     }
 
     ctx.font = L.fontTiny;
-    ctx.fillStyle = '#475569';
+    ctx.fillStyle = '#374151';
     ctx.textAlign = 'right';
-    ctx.fillText('A/D mover | SHIFT dash | 1-2-3 skills | ESC pausa', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
+    ctx.fillText('A/D | SHIFT dash | 1-2-3 skills | 4-5-6 poções', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
     ctx.textAlign = 'left';
 
     // ── Enemy radar (bottom-right) ───────────────────────────────────────
@@ -4196,30 +4205,39 @@ export class Renderer {
         ctx.textAlign = 'left';
       }
 
-      // Shape preview — always visible inside card
+      // Shape preview — larger, with cell count label
       if (item.gridShape) {
-        const previewCellSize = Math.floor(L.h * 0.014);
+        const previewCellSize = Math.floor(L.h * 0.018);
         const shape = item.gridShape;
         const shapeCols = shape[0].length;
         const shapeRows = shape.length;
         const previewW = shapeCols * previewCellSize;
         const previewH = shapeRows * previewCellSize;
         const previewX = x + (itemCardW - previewW) / 2;
-        const previewY = y + Math.floor(itemCardH * 0.58);
+        const previewY = y + Math.floor(itemCardH * 0.56);
         const color = this.getItemColor(item.tags);
         for (let sr = 0; sr < shapeRows; sr++) {
           for (let sc = 0; sc < shapeCols; sc++) {
-            const px = previewX + sc * previewCellSize;
-            const py = previewY + sr * previewCellSize;
+            const px2 = previewX + sc * previewCellSize;
+            const py2 = previewY + sr * previewCellSize;
             if (shape[sr][sc] === 1) {
               ctx.fillStyle = color;
-              ctx.fillRect(px, py, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillRect(px2, py2, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillStyle = 'rgba(255,255,255,0.1)';
+              ctx.fillRect(px2, py2, previewCellSize - 1, 2);
             } else {
-              ctx.fillStyle = 'rgba(30,30,50,0.3)';
-              ctx.fillRect(px, py, previewCellSize - 1, previewCellSize - 1);
+              ctx.fillStyle = 'rgba(20,20,35,0.4)';
+              ctx.fillRect(px2, py2, previewCellSize - 1, previewCellSize - 1);
             }
           }
         }
+        // Cell count
+        const cellCount = shape.flat().filter(c => c === 1).length;
+        ctx.font = `${Math.floor(L.h * 0.008)}px monospace`;
+        ctx.fillStyle = '#64748b';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${cellCount} cel`, x + itemCardW / 2, previewY + previewH + Math.floor(L.h * 0.012));
+        ctx.textAlign = 'left';
       }
 
       // Fade-in animation per item
