@@ -100,6 +100,8 @@ export class Renderer {
   private achievementNotifs: { name: string; timer: number }[] = [];
   /** Fusion activation popup queue */
   private fusionPopups: { name: string; color: string; timer: number }[] = [];
+  /** Phase transition fade (0 = none, decreasing from 0.4) */
+  phaseTransitionTimer = 0;
 
   constructor(
     private ctx: CanvasRenderingContext2D,
@@ -226,6 +228,16 @@ export class Renderer {
     this.renderAchievementNotifs(dt);
     this.renderFusionPopups(dt);
     this.renderTwitchInput();
+
+    // Phase transition fade overlay
+    if (this.phaseTransitionTimer > 0) {
+      this.phaseTransitionTimer -= dt;
+      const fadeAlpha = this.phaseTransitionTimer / 0.3;
+      ctx.globalAlpha = fadeAlpha * 0.6;
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+      ctx.globalAlpha = 1;
+    }
 
     ctx.restore();
   }
@@ -3118,19 +3130,82 @@ export class Renderer {
       ctx.textAlign = 'left';
     }
 
-    // ── Boss warning ─────────────────────────────────────────────────────
+    // ── Boss Intro (dramatic) ───────────────────────────────────────────
     if (state.bossWarningTimer > 0) {
-      const alpha = Math.min(1, state.bossWarningTimer);
+      const bTimer = state.bossWarningTimer;
+      const alpha = Math.min(1, bTimer * 0.8);
+
+      // Dark cinematic bars (top and bottom)
+      ctx.globalAlpha = alpha * 0.7;
+      ctx.fillStyle = '#000000';
+      const barH2 = Math.floor(L.h * 0.08 * Math.min(1, (2 - bTimer) * 3));
+      ctx.fillRect(0, 0, canvas.width, barH2);
+      ctx.fillRect(0, canvas.height - barH2, canvas.width, barH2);
+
+      // Boss name (find boss in enemies)
+      const bossEnemy = state.enemies.find(e => e.isBoss);
+      const bossName = bossEnemy ? (bossEnemy as any).displayName || bossEnemy.defId.replace('boss_', '').replace(/_/g, ' ').toUpperCase() : 'BOSS';
+
       ctx.globalAlpha = alpha;
-      ctx.font = `bold ${Math.floor(L.h * 0.05)}px monospace`;
-      ctx.fillStyle = '#ef4444';
       ctx.textAlign = 'center';
-      ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 20;
-      const shk2 = Math.sin(now * 0.022) * 4;
-      ctx.fillText('⚠  BOSS  ⚠', L.cx + shk2, L.cy - Math.floor(L.h * 0.1));
+
+      // "WARNING" flash
+      const flash = Math.sin(now * 0.015) > 0;
+      if (flash) {
+        ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+        ctx.fillStyle = '#ef4444';
+        ctx.fillText('⚠ WARNING ⚠', L.cx, L.cy - Math.floor(L.h * 0.15));
+      }
+
+      // Boss name (large, with glow)
+      ctx.shadowColor = '#ef4444';
+      ctx.shadowBlur = 15 + Math.sin(now * 0.01) * 5;
+      ctx.font = `bold ${Math.floor(L.h * 0.045)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText(bossName, L.cx, L.cy - Math.floor(L.h * 0.04));
       ctx.shadowBlur = 0;
+
+      // Subtitle
+      ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.fillStyle = '#94a3b8';
+      ctx.fillText('se aproxima...', L.cx, L.cy + Math.floor(L.h * 0.02));
+
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
+    }
+
+    // ── Boss HP Bar (top center, large) ──────────────────────────────────
+    const bossAlive = state.enemies.find(e2 => e2.isBoss);
+    if (bossAlive && state.bossWarningTimer <= 0) {
+      const bHpBarW = Math.floor(L.w * 0.35);
+      const bHpBarH = Math.floor(L.h * 0.022);
+      const bHpBarX = L.cx - bHpBarW / 2;
+      const bHpBarY = hudH + Math.floor(L.h * 0.015);
+      const bHpPct = Math.max(0, bossAlive.hp / bossAlive.maxHp);
+      // Background
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(bHpBarX, bHpBarY, bHpBarW, bHpBarH);
+      // HP fill (red gradient)
+      ctx.fillStyle = bHpPct > 0.5 ? '#dc2626' : bHpPct > 0.25 ? '#f97316' : '#fbbf24';
+      ctx.fillRect(bHpBarX + 1, bHpBarY + 1, (bHpBarW - 2) * bHpPct, bHpBarH - 2);
+      // Shine
+      ctx.fillStyle = 'rgba(255,255,255,0.12)';
+      ctx.fillRect(bHpBarX + 1, bHpBarY + 1, (bHpBarW - 2) * bHpPct, Math.floor(bHpBarH * 0.4));
+      // Border
+      ctx.strokeStyle = '#fbbf24';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bHpBarX, bHpBarY, bHpBarW, bHpBarH);
+      // Boss name
+      const bName = (bossAlive as any).displayName || bossAlive.defId.replace('boss_', '').replace(/_/g, ' ');
+      ctx.font = `bold ${Math.floor(L.h * 0.011)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText(bName.toUpperCase(), L.cx, bHpBarY - 4);
+      // HP text
+      ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+      ctx.fillStyle = '#e2e8f0';
+      ctx.fillText(`${Math.ceil(bossAlive.hp)} / ${bossAlive.maxHp}`, L.cx, bHpBarY + bHpBarH + Math.floor(L.h * 0.012));
+      ctx.textAlign = 'left';
     }
 
     // ── Wave Event banner ────────────────────────────────────────────────

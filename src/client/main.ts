@@ -75,6 +75,7 @@ function gameLoop(): void {
 
   // Phase transition audio & effects
   if (game.phase !== prevPhase) {
+    renderer.phaseTransitionTimer = 0.3; // Brief fade on any phase change
     if (game.phase === 'COMBAT' || game.phase === 'COOP') {
       audio.waveStart();
       audio.setCombatAmbient(true);
