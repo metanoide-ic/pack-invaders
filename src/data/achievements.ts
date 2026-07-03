@@ -106,7 +106,9 @@ export function getGlobalStats(): AchievementStats {
 export function updateGlobalStats(delta: Partial<AchievementStats>): void {
   const current = getGlobalStats();
   for (const [key, val] of Object.entries(delta)) {
-    if (key === 'maxCombo') {
+    if (key === 'maxCombo' || key === 'charactersUnlocked') {
+      // Absolute stats: take the max, never accumulate (charactersUnlocked
+      // was being summed every run, falsely unlocking roster achievements)
       (current as any)[key] = Math.max((current as any)[key] || 0, val as number);
     } else {
       (current as any)[key] = ((current as any)[key] || 0) + (val as number);

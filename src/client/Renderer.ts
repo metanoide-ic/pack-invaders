@@ -2789,6 +2789,40 @@ export class Renderer {
       }
     }
 
+    // ── Boss laser columns (beam pattern): telegraph stripe, then hot beam ──
+    for (const beam of (state as any).bossBeams ?? []) {
+      const half = beam.width / 2;
+      if (beam.warnTime > 0) {
+        // Telegraph: pulsing translucent column + edge lines
+        const warnPulse = 0.18 + Math.abs(Math.sin(now * 12)) * 0.2;
+        ctx.fillStyle = `rgba(244, 63, 94, ${warnPulse.toFixed(3)})`;
+        ctx.fillRect(beam.x - half, 0, beam.width, canvas.height);
+        ctx.strokeStyle = 'rgba(244, 63, 94, 0.8)';
+        ctx.setLineDash([10, 8]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(beam.x - half, 0); ctx.lineTo(beam.x - half, canvas.height);
+        ctx.moveTo(beam.x + half, 0); ctx.lineTo(beam.x + half, canvas.height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      } else {
+        // Active: bright core + additive glow, flickering
+        const flicker = 0.75 + Math.sin(now * 40) * 0.25;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.35 * flicker;
+        ctx.fillStyle = '#f43f5e';
+        ctx.fillRect(beam.x - half, 0, beam.width, canvas.height);
+        ctx.globalAlpha = 0.85 * flicker;
+        ctx.fillStyle = '#fda4af';
+        ctx.fillRect(beam.x - half * 0.45, 0, beam.width * 0.45, canvas.height);
+        ctx.globalAlpha = flicker;
+        ctx.fillStyle = '#fff1f2';
+        ctx.fillRect(beam.x - 3, 0, 6, canvas.height);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+    }
+
     // Render enemy projectiles: menacing glow + core
     ctx.globalCompositeOperation = 'lighter';
     for (const ep of state.enemyProjectiles) {
@@ -2826,6 +2860,7 @@ export class Renderer {
       gold:   { color: '#fbbf24', icon: '$' },
       shield: { color: '#38bdf8', icon: '◆' },
       rapid:  { color: '#22d3ee', icon: '»' },
+      freeze: { color: '#93c5fd', icon: '❄' },
       nuke:   { color: '#a855f7', icon: '☢' },
     };
     for (const pu of state.powerUps) {

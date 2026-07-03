@@ -108,7 +108,7 @@ export interface FloatingText {
 
 // ─── Power-Up Drops ──────────────────────────────────────────────────────────
 
-export type PowerUpType = 'heal' | 'gold' | 'shield' | 'rapid' | 'nuke';
+export type PowerUpType = 'heal' | 'gold' | 'shield' | 'rapid' | 'freeze' | 'nuke';
 
 export interface PowerUp {
   id: string;
@@ -136,6 +136,42 @@ export interface AllyTurret {
   timer: number;
   color: string;
 }
+
+// ─── Boss Beam (telegraphed laser column) ────────────────────────────────────
+
+export interface BossBeam {
+  /** Column center X */
+  x: number;
+  /** Column width in px */
+  width: number;
+  /** Telegraph seconds remaining — beam is harmless while > 0 */
+  warnTime: number;
+  /** Active seconds remaining once the telegraph ends */
+  activeTime: number;
+  /** Damage per second while the player stands in the column */
+  dps: number;
+}
+
+/**
+ * Boss attack archetypes. Every boss keeps its base movement/shooting, but
+ * layers one signature attack on top so the 20 bosses stop feeling identical:
+ * - dive: telegraphs, then crashes down at the player (heavy contact hit)
+ * - barrage: periodic radial fan of projectiles
+ * - beam: telegraphed vertical laser column at the player's position
+ * - pull: gravity window that drags the player toward the boss
+ */
+type BossPattern = 'dive' | 'barrage' | 'beam' | 'pull';
+
+const BOSS_PATTERNS: Record<string, BossPattern> = {
+  boss_vulkra: 'dive', boss_devourer: 'dive', boss_drill_sergeant: 'dive',
+  boss_terravox: 'dive', boss_titan_prime: 'dive',
+  boss_hydra: 'barrage', boss_swarm_queen: 'barrage', boss_storm_king: 'barrage',
+  boss_toxar: 'barrage', boss_epoch: 'barrage', boss_criox: 'barrage',
+  boss_solyx: 'beam', boss_kepler_prime: 'beam', boss_architect: 'beam',
+  boss_mechron: 'beam', boss_harbinger: 'beam',
+  boss_voidmaw: 'pull', boss_abyssara: 'pull', boss_phantax: 'pull',
+  boss_astral_serpent: 'pull',
+};
 
 // ─── Combat State ────────────────────────────────────────────────────────────
 
@@ -197,6 +233,8 @@ export interface CombatState {
   rapidFireTimer: number;
   /** Friendly turrets (Reanimação, Enxame Morto, Controle Mental) */
   allyTurrets: AllyTurret[];
+  /** Boss laser columns (beam pattern) */
+  bossBeams: BossBeam[];
   /** Emergency shield already granted this wave (Escudo Regenerativo) */
   regenShieldUsed: boolean;
   // Co-op Player 2 state
@@ -235,6 +273,9 @@ export class CombatEngine {
   private _nuclearReviveUsed = false;
   /** Coletor de Almas: kills accumulated across the whole run */
   private _soulKills = 0;
+  /** Damage-popup throttle: per-tick DoT (beams, drain) folds into one popup */
+  private _dmgPopupAccum = 0;
+  private _dmgPopupCooldown = 0;
   /** Gerador de Escudo: item shield capacity applied last wave (for clean re-apply) */
   private _prevItemShield = 0;
 
@@ -287,6 +328,7 @@ export class CombatEngine {
       powerUps: [],
       rapidFireTimer: 0,
       allyTurrets: [],
+      bossBeams: [],
       regenShieldUsed: false,
     };
   }
@@ -320,6 +362,7 @@ export class CombatEngine {
     this.state.powerUps = [];
     this.state.rapidFireTimer = 0;
     this.state.allyTurrets = [];
+    this.state.bossBeams = [];
     this.state.regenShieldUsed = false;
     this._droneKillCounter = 0;
 
@@ -415,6 +458,7 @@ export class CombatEngine {
     this.state.bossPhaseTransitionTimer = Math.max(0, this.state.bossPhaseTransitionTimer - dt);
     this.state.drainWarningTimer = Math.max(0, this.state.drainWarningTimer - dt);
     this.state.playerSlowTimer = Math.max(0, this.state.playerSlowTimer - dt);
+    this._dmgPopupCooldown = Math.max(0, this._dmgPopupCooldown - dt);
 
     // Combo timer
     if (this.state.combo > 0) {
@@ -449,6 +493,9 @@ export class CombatEngine {
 
     // 4. Enemy shooting
     this.updateEnemyShooting(dt);
+
+    // 4b. Boss signature attacks (dive/barrage/beam/pull)
+    this.updateBossPatterns(dt);
 
     // 5. Move enemy projectiles
     this.updateEnemyProjectiles(dt);
@@ -910,8 +957,10 @@ export class CombatEngine {
         }
       }
 
-      // Boss special movement: strafe at top while shooting
-      if (e.isBoss && e.y > 60) {
+      // Boss special movement: strafe at top while shooting.
+      // Skipped while the boss is executing a dive attack (pattern engine
+      // steers it below the hover cap and back).
+      if (e.isBoss && e.y > 60 && !(e as any)._diving) {
         // Bosses hover at top area and strafe
         if (e.y > 120) e.y = 120; // Cap boss y-position
         e.x += Math.sin(e.moveTimer * 1.5) * speed * 3 * dt;
@@ -1079,16 +1128,160 @@ export class CombatEngine {
     }
   }
 
+  /**
+   * Boss signature attacks. Each boss runs one archetype from BOSS_PATTERNS
+   * on an internal cooldown (shorter in phase 2). Beams live in
+   * state.bossBeams so the renderer can draw the telegraph/active column.
+   */
+  private updateBossPatterns(dt: number): void {
+    const st = this.state;
+
+    // Advance beams (they outlive the shot that created them)
+    for (let i = st.bossBeams.length - 1; i >= 0; i--) {
+      const b = st.bossBeams[i];
+      if (b.warnTime > 0) {
+        b.warnTime -= dt;
+      } else {
+        b.activeTime -= dt;
+        if (Math.abs(st.playerX - b.x) < b.width / 2 + 14) {
+          this.damagePlayer(b.dps * dt);
+        }
+        if (b.activeTime <= 0) st.bossBeams.splice(i, 1);
+      }
+    }
+
+    for (const e of st.enemies) {
+      if (!e.isBoss || e.hp <= 0) continue;
+      const pattern = BOSS_PATTERNS[e.defId] ?? 'barrage';
+      const ex = e as any;
+      if (ex._patTimer === undefined) ex._patTimer = 3.5; // grace period after spawn
+      const cdMult = e.boss2ndPhaseActive ? 0.65 : 1;
+
+      switch (pattern) {
+        case 'dive': {
+          if (ex._divePhase === 'telegraph') {
+            ex._diveTimer -= dt;
+            e.hitFlash = 0.05; // pulse white while winding up
+            if (ex._diveTimer <= 0) {
+              ex._divePhase = 'dive';
+              ex._diving = true;
+              ex._diveHit = false;
+              ex._diveTargetX = st.playerX; // lock on at launch
+            }
+          } else if (ex._divePhase === 'dive') {
+            const targetY = this.arenaHeight - 70;
+            const dx = (ex._diveTargetX ?? st.playerX) - e.x;
+            const dy = targetY - e.y;
+            const dist = Math.hypot(dx, dy);
+            const spd = 640;
+            if (dist > 14) {
+              e.x += (dx / dist) * spd * dt;
+              e.y += (dy / dist) * spd * dt;
+            } else {
+              ex._divePhase = 'return';
+            }
+            // Contact hit — once per dive
+            if (!ex._diveHit) {
+              const pdx = st.playerX - e.x;
+              const pdy = (this.arenaHeight - 45) - e.y;
+              if (Math.abs(pdx) < e.width / 2 + 28 && Math.abs(pdy) < e.height / 2 + 32) {
+                ex._diveHit = true;
+                this.damagePlayer(e.damage);
+                this.triggerShake(10, 0.35);
+              }
+            }
+          } else if (ex._divePhase === 'return') {
+            e.y -= 320 * dt;
+            if (e.y <= 110) {
+              ex._divePhase = undefined;
+              ex._diving = false;
+              ex._patTimer = 7.5 * cdMult;
+            }
+          } else {
+            ex._patTimer -= dt;
+            if (ex._patTimer <= 0) {
+              ex._divePhase = 'telegraph';
+              ex._diveTimer = 0.9;
+              this.spawnFloatingText(e.x, e.y + 40, '⚠ MERGULHO!', '#f97316');
+              this.triggerShake(4, 0.3);
+            }
+          }
+          break;
+        }
+
+        case 'barrage': {
+          ex._patTimer -= dt;
+          if (ex._patTimer <= 0) {
+            ex._patTimer = 6.0 * cdMult;
+            const count = e.boss2ndPhaseActive ? 14 : 10;
+            const projSlowMult = (this as any)._enemyProjSlow ?? 1;
+            const spd = 175 * projSlowMult;
+            for (let k = 0; k < count; k++) {
+              // Downward fan spanning ~140°
+              const ang = Math.PI * (0.12 + 0.76 * (k / (count - 1)));
+              st.enemyProjectiles.push({
+                id: `eproj_${this.nextEnemyProjId++}`,
+                x: e.x,
+                y: e.y + e.height / 2,
+                vx: Math.cos(ang) * spd,
+                vy: Math.sin(ang) * spd,
+                damage: Math.ceil(e.damage * 0.35),
+                alive: true,
+              });
+            }
+            e.hitFlash = 0.1;
+            this.triggerShake(5, 0.25);
+          }
+          break;
+        }
+
+        case 'beam': {
+          ex._patTimer -= dt;
+          if (ex._patTimer <= 0) {
+            ex._patTimer = 8.0 * cdMult;
+            st.bossBeams.push({
+              x: st.playerX,
+              width: 90,
+              warnTime: 1.1,
+              activeTime: 1.4,
+              dps: Math.max(10, e.damage * 1.2),
+            });
+            this.spawnFloatingText(st.playerX, this.arenaHeight - 130, '⚠ LASER!', '#f43f5e');
+          }
+          break;
+        }
+
+        case 'pull': {
+          if (ex._pullActive > 0) {
+            ex._pullActive -= dt;
+            const dir = Math.sign(e.x - st.playerX);
+            st.playerX = Math.max(24, Math.min(this.arenaWidth - 24, st.playerX + dir * 135 * dt));
+            st.drainWarningTimer = 0.2; // reuse the drain warning tint
+            if (ex._pullActive <= 0) ex._patTimer = 7.0 * cdMult;
+          } else {
+            ex._patTimer -= dt;
+            if (ex._patTimer <= 0) {
+              ex._pullActive = 2.0;
+              this.spawnFloatingText(e.x, e.y + 40, '🌀 ATRAÇÃO GRAVITACIONAL!', '#a78bfa');
+            }
+          }
+          break;
+        }
+      }
+    }
+  }
+
   private nextPowerUpId = 0;
 
   /** Spawn a power-up drop at a position (weighted random type) */
   private spawnPowerUp(x: number, y: number): void {
     const roll = Math.random();
     const type: PowerUpType =
-      roll < 0.30 ? 'heal' :
-      roll < 0.58 ? 'gold' :
-      roll < 0.78 ? 'shield' :
-      roll < 0.94 ? 'rapid' : 'nuke';
+      roll < 0.28 ? 'heal' :
+      roll < 0.54 ? 'gold' :
+      roll < 0.72 ? 'shield' :
+      roll < 0.86 ? 'rapid' :
+      roll < 0.95 ? 'freeze' : 'nuke';
     this.state.powerUps.push({
       id: `pu_${this.nextPowerUpId++}`,
       x, y, type,
@@ -1149,6 +1342,15 @@ export class CombatEngine {
       case 'rapid':
         st.rapidFireTimer = 5;
         this.spawnFloatingText(pu.x, pu.y - 20, 'CADÊNCIA 2X!', '#22d3ee');
+        break;
+      case 'freeze':
+        for (const e of st.enemies) {
+          if (e.isBoss) continue; // bosses shrug it off
+          e.slowTimer = Math.max(e.slowTimer ?? 0, 2.5);
+          e.slowAmount = 0.05;
+        }
+        this.spawnFloatingText(pu.x, pu.y - 20, '❄ CONGELADOS!', '#93c5fd');
+        this.triggerShake(4, 0.2);
         break;
       case 'nuke': {
         // Big screen-wide blast: heavy damage to normals, chip to bosses
@@ -1349,8 +1551,9 @@ export class CombatEngine {
       const absorbed = Math.min(this.state.playerShield, remaining);
       this.state.playerShield -= absorbed;
       remaining -= absorbed;
-      if (absorbed > 0 && remaining === 0) {
-        this.spawnFloatingText(this.state.playerX + 20, this.arenaHeight - 50, `🛡-${absorbed}`, '#38bdf8');
+      if (absorbed >= 1 && remaining === 0 && this._dmgPopupCooldown <= 0) {
+        this.spawnFloatingText(this.state.playerX + 20, this.arenaHeight - 50, `🛡-${Math.round(absorbed)}`, '#38bdf8');
+        this._dmgPopupCooldown = 0.25;
       }
     }
 
@@ -1410,7 +1613,14 @@ export class CombatEngine {
 
     this.triggerPlayerFlash();
     this.triggerShake(5, 0.2);
-    this.spawnFloatingText(this.state.playerX, this.arenaHeight - 60, `-${amount}`, '#ef4444');
+    // Fold per-frame DoT ticks into one readable popup instead of 60/s
+    this._dmgPopupAccum += amount;
+    if (this._dmgPopupCooldown <= 0 && this._dmgPopupAccum >= 1) {
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 60,
+        `-${Math.round(this._dmgPopupAccum)}`, '#ef4444');
+      this._dmgPopupAccum = 0;
+      this._dmgPopupCooldown = 0.25;
+    }
   }
 
   private checkCollisions(): void {
@@ -1523,8 +1733,9 @@ export class CombatEngine {
 
           e.hp -= damage;
           e.hitFlash = 0.08;
-          // Knockback (push enemy up slightly on hit)
-          e.y -= 2;
+          // Knockback (push enemy up slightly on hit) — bosses are too heavy;
+          // sustained fire used to juggle them above the hover cap and off-screen
+          if (!e.isBoss) e.y -= 2;
           this.state.damageDealtThisSecond += damage;
 
           // Maré (aqua_sage): water projectiles slow enemies
@@ -1556,9 +1767,9 @@ export class CombatEngine {
           // ─── Per-item hit effects (cards that buff a specific weapon) ────
           const ownerItem = p.ownerId ? this.backpack.getItem(p.ownerId) : undefined;
           if (ownerItem) {
-            // Onda de Pressão (Mazu): water shots push enemies back
+            // Onda de Pressão (Mazu): water shots push enemies back (bosses resist)
             const pushback = ownerItem.state.pushback as number | undefined;
-            if (pushback) e.y -= pushback;
+            if (pushback && !e.isBoss) e.y -= pushback;
 
             // Gelo Negro (Mazu): stronger, controllable freeze than passive water chill
             const freezeDur = ownerItem.state.freezeDuration as number | undefined;
@@ -1568,15 +1779,15 @@ export class CombatEngine {
             }
 
             // Fenda Menor (Dr. Eon): shots teleport the target (25% per hit, avoids spam-lock)
-            if (ownerItem.state.teleportOnHit && Math.random() < 0.25) {
+            if (ownerItem.state.teleportOnHit && !e.isBoss && Math.random() < 0.25) {
               e.x = 40 + Math.random() * (this.arenaWidth - 80);
               e.y = Math.max(20, e.y - 60);
               this.spawnFloatingText(e.x, e.y - e.height / 2 - 10, '✨', '#a78bfa');
             }
 
             const os = ownerItem.state as any;
-            // Canhão Sônico: knockback + brief stun
-            if (os.knockback) e.y -= 12 * os.knockback;
+            // Canhão Sônico: knockback + brief stun (bosses resist knockback)
+            if (os.knockback && !e.isBoss) e.y -= 12 * os.knockback;
             if (os.stunDuration && Math.random() < 0.35) {
               e.slowTimer = Math.max(e.slowTimer ?? 0, os.stunDuration);
               e.slowAmount = 0.02;
@@ -1775,8 +1986,9 @@ export class CombatEngine {
     const goldText = comboBonus > 1.1 ? `+${goldReward}g (x${comboBonus.toFixed(1)})` : `+${goldReward}g`;
     this.spawnFloatingText(e.x, e.y, goldText, '#4ade80');
 
-    // Power-up drop chance (bosses always drop one)
-    if (e.isBoss || (Math.random() < 0.07 && this.state.powerUps.length < 4)) {
+    // Power-up drop chance (bosses always drop one; Suprimentos event triples it)
+    const dropMult = (this as any)._dropChanceMult ?? 1;
+    if (e.isBoss || (Math.random() < 0.07 * dropMult && this.state.powerUps.length < 4)) {
       this.spawnPowerUp(e.x, e.y);
     }
 
@@ -1959,6 +2171,9 @@ export class CombatEngine {
   private checkEnemyReachBottom(): void {
     for (let i = this.state.enemies.length - 1; i >= 0; i--) {
       const enemy = this.state.enemies[i];
+      // Bosses never despawn at the bottom — diving bosses dip low on purpose
+      // and must return, not get removed with a free damage tick.
+      if (enemy.isBoss) continue;
       if (enemy.y > this.arenaHeight - 30) {
         // Card: Escudo Ofensivo — enemies take damage when touching player
         if ((this as any)._contactDamageAmount) {

@@ -43,6 +43,8 @@ const WAVE_EVENTS: WaveEvent[] = [
   { id: 'crit_wave', name: 'Crit Zone', description: '30% chance de crit em tudo.', icon: '⚡', color: '#f97316' },
   { id: 'no_shield', name: 'Exposed', description: 'Sem escudo essa wave.', icon: '⚠', color: '#dc2626' },
   { id: 'double_combo', name: 'Streak', description: 'Timer de combo 2x maior.', icon: '🔥', color: '#f97316' },
+  { id: 'meteor_rain', name: 'Chuva de Meteoros', description: 'Meteoros caem do céu — desvie!', icon: '☄', color: '#f97316' },
+  { id: 'supply_drop', name: 'Suprimentos', description: 'Power-ups caem 3x mais!', icon: '🎁', color: '#22d3ee' },
 ];
 
 export interface CardChoice {
@@ -410,6 +412,10 @@ export class GameManager {
     const g = this as any;
     const c = this.combat as any;
 
+    // Wave event: Suprimentos triples power-up drop chance (reset each wave)
+    c._dropChanceMult = this.currentWaveEvent?.id === 'supply_drop' ? 3 : 1;
+    (this as any)._meteorTimer = 0;
+
     if (g._goldPerHit) { c._goldPerHitActive = true; c._goldPerHitAmount = g._goldPerHit; }
     if (g._secondWind) { c._secondWindActive = true; c._secondWindUsed = false; }
     if (g._bouncyShots) c._bouncyShots = g._bouncyShots;
@@ -569,6 +575,16 @@ export class GameManager {
     // Check character unlocks before game over check
     this.checkCharacterUnlocks();
 
+    // Per-wave global stats — runs for EVERY wave including the fatal one,
+    // so nothing is double-counted at game over and boss kills from every
+    // wave (not just the last) reach achievements/missions.
+    updateGlobalStats({
+      totalKills: this.currentWaveKills,
+      totalGoldEarned: this.lastWaveGold,
+      bossesKilled: this.combat.state.killedEnemyIds.filter(id => id.startsWith('boss_')).length,
+      maxCombo: (this.combat.state as any).maxCombo || 0,
+    });
+
     if (this.combat.state.playerHp <= 0) {
       // Save best run
       if (this.totalMonths > this.bestRun) {
@@ -645,12 +661,7 @@ export class GameManager {
     // Go to card selection
     this.cardChoices = this.generateCardChoices();
 
-    // Update global stats for mid-run achievement checks
-    updateGlobalStats({
-      totalKills: this.currentWaveKills,
-      totalGoldEarned: this.lastWaveGold,
-      maxCombo: (this.combat.state as any).maxCombo || 0,
-    });
+    // Mid-run achievement check (stats already updated above, pre-game-over)
     const newAchs = checkAchievements();
     if (newAchs.length > 0) {
       this.newAchievements.push(...newAchs);
@@ -954,6 +965,23 @@ export class GameManager {
         case 'no_shield':
           this.combat.state.playerShield = 0;
           break;
+        case 'meteor_rain': {
+          // Falling rocks the player must dodge
+          (this as any)._meteorTimer = ((this as any)._meteorTimer ?? 0) + dt;
+          if ((this as any)._meteorTimer >= 1.1) {
+            (this as any)._meteorTimer = 0;
+            this.combat.state.enemyProjectiles.push({
+              id: `meteor_${Date.now()}`,
+              x: 40 + Math.random() * (this.combat.arenaWidth - 80),
+              y: -10,
+              vx: (Math.random() - 0.5) * 40,
+              vy: 240 + Math.random() * 80,
+              damage: 8 + Math.floor(this.totalMonths * 0.4),
+              alive: true,
+            });
+          }
+          break;
+        }
       }
     } else {
       (this.combat as any)._waveEventCritBonus = 0;
@@ -1292,15 +1320,13 @@ export class GameManager {
 
   /** Update global achievement stats at end of run */
   private updateAchievementStats(): void {
+    // Kills/gold/bosses/combo are accumulated per wave in endCombat (before
+    // the game-over branch), so only run-scoped stats are added here.
     updateGlobalStats({
-      totalKills: this.stats.enemiesKilled,
-      totalGoldEarned: this.combat.state.gold + this.gold,
       totalItemsBought: this.stats.itemsBought,
       totalMonthsSurvived: this.totalMonths,
       totalRuns: 1,
-      bossesKilled: this.combat.state.killedEnemyIds.filter(id => id.startsWith('boss_')).length,
-      maxCombo: (this.combat.state as any).maxCombo || this.combat.state.combo,
-      charactersUnlocked: this.unlockedCharIds.length,
+      charactersUnlocked: this.unlockedCharIds.length, // max-semantics
       collectiblesFound: this.stats.codexUnlockedThisRun.length,
     });
     this.newAchievements = checkAchievements();
