@@ -1929,7 +1929,8 @@ export class Renderer {
     const currentMonth = game.month;
     const monthsUntilBoss = currentMonth <= 6 ? 6 - currentMonth : 12 - currentMonth;
     const bossHint = monthsUntilBoss <= 2 ? ` | ⚠ Boss em ${monthsUntilBoss}` : '';
-    const infoLine = `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`;
+    const anomalyHint = game.currentAnomaly ? ` | ${game.currentAnomaly.icon} ${game.currentAnomaly.name}` : '';
+    const infoLine = `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}${anomalyHint}`;
     ctx.fillText(
       infoLine,
       L.gridX + mochilaW + Math.floor(L.w * 0.015), L.gridY - Math.floor(L.h * 0.04)
@@ -3779,6 +3780,25 @@ export class Renderer {
       ctx.fillStyle = waveEvent.color;
       ctx.textAlign = 'center';
       ctx.fillText(`${waveEvent.icon} ${waveEvent.name}`, L.cx, bannerY + bannerH * 0.65);
+      ctx.textAlign = 'left';
+    }
+
+    // Year Anomaly banner (persistent all year, sits under the event banner)
+    const anomaly = game.currentAnomaly;
+    if (anomaly) {
+      const bannerW = Math.floor(L.w * 0.19);
+      const bannerH = Math.floor(L.h * 0.028);
+      const bannerX = L.cx - bannerW / 2;
+      const bannerY = hudH + 4 + (waveEvent ? Math.floor(L.h * 0.035) + 4 : 0);
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.55)';
+      ctx.fillRect(bannerX, bannerY, bannerW, bannerH);
+      ctx.strokeStyle = anomaly.color + '60';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(bannerX, bannerY, bannerW, bannerH);
+      ctx.font = `${Math.floor(L.h * 0.0105)}px monospace`;
+      ctx.fillStyle = anomaly.color;
+      ctx.textAlign = 'center';
+      ctx.fillText(`${anomaly.icon} ${anomaly.name}`, L.cx, bannerY + bannerH * 0.68);
       ctx.textAlign = 'left';
     }
 

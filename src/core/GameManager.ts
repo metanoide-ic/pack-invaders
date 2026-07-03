@@ -47,6 +47,26 @@ const WAVE_EVENTS: WaveEvent[] = [
   { id: 'supply_drop', name: 'Suprimentos', description: 'Power-ups caem 3x mais!', icon: '🎁', color: '#22d3ee' },
 ];
 
+/**
+ * Year Anomalies — from Year 2 on, each year rolls one global modifier that
+ * lasts all 12 months. Every anomaly pairs a threat with a payoff so late
+ * runs change texture instead of only inflating numbers.
+ */
+export interface YearAnomaly {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+export const YEAR_ANOMALIES: YearAnomaly[] = [
+  { id: 'horde', name: 'Ano da Horda', description: '+35% inimigos, porém 15% mais fracos. +10% gold.', icon: '👾', color: '#f472b6' },
+  { id: 'haste', name: 'Ano da Pressa', description: 'Inimigos 20% mais rápidos. +25% gold.', icon: '💨', color: '#fbbf24' },
+  { id: 'elites', name: 'Ano das Elites', description: 'Muito mais elites. +30% gold.', icon: '👑', color: '#38bdf8' },
+  { id: 'bounty', name: 'Ano da Fartura', description: 'Power-ups 2x mais comuns. Inimigos +15% HP.', icon: '🎁', color: '#4ade80' },
+];
+
 export interface CardChoice {
   id: string;
   name: string;
@@ -149,6 +169,9 @@ export class GameManager {
   pendingCollectible: Collectible | null = null;
   /** Current wave event modifier (null = normal wave) */
   currentWaveEvent: WaveEvent | null = null;
+  /** Year Anomaly (Year 2+): global modifier for the whole current year */
+  currentAnomaly: YearAnomaly | null = null;
+  private anomalyYear = 0;
   /** Relic dropped this wave (shown on card screen) */
   pendingRelic: Relic | null = null;
   /** Newly unlocked difficulty ID (shown on game over screen) */
@@ -224,6 +247,8 @@ export class GameManager {
     this.wave = 0;
     this.newAchievements = [];
     this.newlyUnlockedDifficulty = null;
+    this.currentAnomaly = null;
+    this.anomalyYear = 0;
     this.aliencoreMode = false;
     this.aliencoreUnlocked = SaveManager.isAliencoreEverUnlocked();
 
@@ -374,8 +399,33 @@ export class GameManager {
     const isBoss = this.isBossMonth() || this.twitch.bossNextWave;
     this.twitch.bossNextWave = false;
 
+    // ─── Year Anomaly (Year 2+): rolled once per year, shapes every wave ──
+    const ca = this.combat as any;
+    if (this.year >= 2) {
+      if (this.anomalyYear !== this.year) {
+        this.anomalyYear = this.year;
+        this.currentAnomaly = YEAR_ANOMALIES[Math.floor(Math.random() * YEAR_ANOMALIES.length)];
+      }
+    } else {
+      this.currentAnomaly = null;
+    }
+    ca._anomalyCountMult = 1; ca._anomalyHpMult = 1; ca._anomalySpeedMult = 1;
+    ca._anomalyGoldMult = 1; ca._anomalyEliteBonus = 0; ca._anomalyDropMult = 1;
+    switch (this.currentAnomaly?.id) {
+      case 'horde': ca._anomalyCountMult = 1.35; ca._anomalyHpMult = 0.85; ca._anomalyGoldMult = 1.1; break;
+      case 'haste': ca._anomalySpeedMult = 1.2; ca._anomalyGoldMult = 1.25; break;
+      case 'elites': ca._anomalyEliteBonus = 0.12; ca._anomalyGoldMult = 1.3; break;
+      case 'bounty': ca._anomalyDropMult = 2; ca._anomalyHpMult = 1.15; break;
+    }
+
     this.phase = 'COMBAT';
     this.combat.startWave(this.totalMonths, isBoss);
+
+    // Announce the anomaly at the start of each year
+    if (this.currentAnomaly && this.month === 1) {
+      this.combat.spawnFloatingText(640, 230, `${this.currentAnomaly.icon} ${this.currentAnomaly.name.toUpperCase()}!`, this.currentAnomaly.color);
+      this.combat.spawnFloatingText(640, 260, this.currentAnomaly.description, '#e2e8f0');
+    }
 
     // Wave Event (20% chance after month 4, never on boss months)
     this.currentWaveEvent = null;
@@ -412,8 +462,9 @@ export class GameManager {
     const g = this as any;
     const c = this.combat as any;
 
-    // Wave event: Suprimentos triples power-up drop chance (reset each wave)
-    c._dropChanceMult = this.currentWaveEvent?.id === 'supply_drop' ? 3 : 1;
+    // Wave event: Suprimentos triples power-up drop chance (reset each wave);
+    // the Fartura anomaly stacks on top of it
+    c._dropChanceMult = (this.currentWaveEvent?.id === 'supply_drop' ? 3 : 1) * (c._anomalyDropMult ?? 1);
     (this as any)._meteorTimer = 0;
 
     if (g._goldPerHit) { c._goldPerHitActive = true; c._goldPerHitAmount = g._goldPerHit; }

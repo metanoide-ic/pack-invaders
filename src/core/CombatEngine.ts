@@ -2579,6 +2579,47 @@ export class CombatEngine {
     return Math.min(0.8, crit); // Cap at 80%
   }
 
+  /** Spawn position for enemy #i in a given formation (above the arena) */
+  private formationPos(formation: string, i: number): { x: number; y: number } {
+    const W = this.arenaWidth;
+    const cx = W / 2;
+    const jitter = Math.random() * 16 - 8;
+    let x: number, y: number;
+    switch (formation) {
+      case 'v': { // wedge opening downward, tip first
+        const row = Math.floor(i / 2);
+        const side = i % 2 === 0 ? -1 : 1;
+        x = cx + side * (36 + row * 46);
+        y = -40 - row * 50;
+        break;
+      }
+      case 'wall': { // broad rows marching together
+        const perRow = 14;
+        x = 60 + (i % perRow) * ((W - 120) / (perRow - 1));
+        y = -40 - Math.floor(i / perRow) * 120;
+        break;
+      }
+      case 'pincer': { // two tight flanking columns
+        const side = i % 2 === 0 ? -1 : 1;
+        const idx = Math.floor(i / 2);
+        x = side === -1 ? 80 + (idx % 2) * 64 : W - 80 - (idx % 2) * 64;
+        y = -40 - Math.floor(idx / 2) * 62;
+        break;
+      }
+      case 'columns': { // four lanes down the middle
+        x = cx + ((i % 4) - 1.5) * 150;
+        y = -40 - Math.floor(i / 4) * 58;
+        break;
+      }
+      default: { // grid — the classic
+        x = 80 + (i % 10) * Math.floor((W - 160) / 10) + Math.random() * 20;
+        y = -40 - Math.floor(i / 10) * 70 - Math.random() * 30;
+        break;
+      }
+    }
+    return { x: Math.max(40, Math.min(W - 40, x + jitter)), y };
+  }
+
   private generateWave(totalMonths: number, isBossMonth: boolean = false): Enemy[] {
     const enemies: Enemy[] = [];
 
@@ -2605,7 +2646,14 @@ export class CombatEngine {
     } else {
       count = Math.min(80, 28 + (year - 2) * 10 + monthInYear * 1.5); // Year 3+: scales aggressively
     }
-    count = Math.floor(count);
+    count = Math.floor(count * ((this as any)._anomalyCountMult ?? 1));
+
+    // Spawn formation: readable shape variety instead of always the same
+    // 10-wide grid. Deep shapes are only used for small/medium waves.
+    const formationPool = count > 34 ? ['grid', 'grid', 'wall']
+      : count > 24 ? ['grid', 'grid', 'wall', 'pincer', 'columns']
+      : ['grid', 'grid', 'v', 'wall', 'pincer', 'columns'];
+    const formation = formationPool[Math.floor(Math.random() * formationPool.length)];
 
     // Weighted random selection
     const weightedPool: EnemyDefinition[] = [];
@@ -2636,6 +2684,7 @@ export class CombatEngine {
         // Year 3+: massive HP scaling
         hpScale = 5 + (year - 2) * 3 + monthInYear * 0.4;
       }
+      hpScale *= (this as any)._anomalyHpMult ?? 1;
 
       // Speed: slower in early months, ramps up
       let baseSpeed: number;
@@ -2646,17 +2695,20 @@ export class CombatEngine {
       } else {
         baseSpeed = def.speed * (1 + (year - 1) * 0.1);
       }
+      baseSpeed *= (this as any)._anomalySpeedMult ?? 1;
 
       // Elite chance: 10% per enemy after month 6, increases over time
-      const eliteChance = totalMonths > 6 ? Math.min(0.25, 0.05 + totalMonths * 0.005) : 0;
+      const eliteChance = (totalMonths > 6 ? Math.min(0.25, 0.05 + totalMonths * 0.005) : 0)
+        + ((this as any)._anomalyEliteBonus ?? 0);
       const isElite = Math.random() < eliteChance;
       const eliteMult = isElite ? 2.5 : 1;
       const eliteGoldMult = isElite ? 3 : 1;
 
+      const pos = this.formationPos(formation, i);
       enemies.push({
         id: `enemy_${this.nextEnemyId++}`,
-        x: 80 + (i % 10) * Math.floor((this.arenaWidth - 160) / 10) + Math.random() * 20,
-        y: -40 - Math.floor(i / 10) * 70 - Math.random() * 30,
+        x: pos.x,
+        y: pos.y,
         hp: Math.floor(def.hp * hpScale * eliteMult),
         maxHp: Math.floor(def.hp * hpScale * eliteMult),
         speed: baseSpeed * (isElite ? 1.2 : 1),
@@ -2664,7 +2716,7 @@ export class CombatEngine {
         tags: [...def.tags],
         width: Math.floor(def.width * (isElite ? 1.3 : 1)),
         height: Math.floor(def.height * (isElite ? 1.3 : 1)),
-        goldReward: Math.floor(def.goldReward * eliteGoldMult),
+        goldReward: Math.floor(def.goldReward * eliteGoldMult * ((this as any)._anomalyGoldMult ?? 1)),
         shootTimer: def.special?.type === 'shoot' ? 1 / def.special.fireRate : 2,
         special: def.special,
         isBoss: false,
