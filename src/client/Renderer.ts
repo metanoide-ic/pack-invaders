@@ -2839,6 +2839,31 @@ export class Renderer {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     for (const ep of state.enemyProjectiles) {
+      if ((ep as any).bomb) {
+        // Bomb: dark shell, blinking fuse, dashed drop line to the impact point
+        ctx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
+        ctx.setLineDash([4, 8]);
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(ep.x, ep.y + 8);
+        ctx.lineTo(ep.x, canvas.height - 45);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = '#1f2937';
+        ctx.beginPath();
+        ctx.arc(ep.x, ep.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = '#f97316';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        if (Math.floor(now * 8) % 2 === 0) {
+          ctx.fillStyle = '#fde047';
+          ctx.beginPath();
+          ctx.arc(ep.x, ep.y - 9, 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        continue;
+      }
       if (ep.bounces && ep.bounces > 0) {
         ctx.fillStyle = '#f97316';
         ctx.beginPath();
@@ -3102,6 +3127,33 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(e.x, e.y, drawW * 0.6, 0, Math.PI * 2);
       ctx.fill();
+      ctx.globalAlpha = e.phased ? 0.25 : 1;
+    }
+
+    // Shield aura (Égide): teal protection bubble — reads as "kill me first"
+    if (e.special?.type === 'shield_aura') {
+      const auraPulse = 0.5 + Math.sin(performance.now() * 0.004) * 0.15;
+      ctx.globalAlpha = 0.07 * auraPulse * 4;
+      ctx.fillStyle = '#2dd4bf';
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, e.special.range, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.35 * auraPulse * 2;
+      ctx.strokeStyle = '#2dd4bf';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.globalAlpha = e.phased ? 0.25 : 1;
+    }
+
+    // Reflect (Espelhar): violet mirror shimmer
+    if (e.special?.type === 'reflect') {
+      const shimmer = 0.35 + Math.abs(Math.sin(performance.now() * 0.005)) * 0.4;
+      ctx.globalAlpha = shimmer;
+      ctx.strokeStyle = '#c084fc';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(e.x - drawW * 0.55, e.y - drawH * 0.55, drawW * 1.1, drawH * 1.1);
       ctx.globalAlpha = e.phased ? 0.25 : 1;
     }
 

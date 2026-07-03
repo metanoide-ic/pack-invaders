@@ -19,7 +19,7 @@ const CHARACTER_IDS = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex', 'f
 const VENDOR_IDS = ['luna', 'brutus', 'nyx', 'zikri'];
 const BOSS_IDS = [
   'vrox', 'nydra', 'krix', 'toxar', 'gorvath', 'criox', 'phantax', 'gluthar',
-  'vulkra', 'zethar', 'terravox', 'solyx', 'abyssara', 'nexus',
+  'vulkra', 'zethar', 'terravox', 'solyx', 'abyssara', 'nexus', 'mechron',
   'voidmaw', 'astral_serpent', 'harbinger', 'xalvor', 'zyrgoth',
 ];
 
@@ -155,7 +155,7 @@ export function getBossPortrait(bossDefId: string): HTMLImageElement | HTMLCanva
     'boss_solyx': 'solyx',
     'boss_abyssara': 'abyssara',
     'boss_architect': 'nexus',
-    'boss_mechron': 'nexus', // reuse until separate sprite
+    'boss_mechron': 'mechron',
     'boss_voidmaw': 'voidmaw',
     'boss_astral_serpent': 'astral_serpent',
     'boss_harbinger': 'harbinger',

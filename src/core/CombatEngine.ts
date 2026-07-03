@@ -93,6 +93,8 @@ export interface EnemyProjectile {
   alive: boolean;
   /** Number of wall bounces remaining (0 = no bounce) */
   bounces?: number;
+  /** Bomb (Zepelim): explodes with area damage when it reaches the ground */
+  bomb?: boolean;
 }
 
 // ─── Floating Text (damage numbers, gold) ────────────────────────────────────
@@ -1107,6 +1109,25 @@ export class CombatEngine {
         }
       }
 
+      // Bomber (Zepelim): drops slow bombs that burst on the ground line
+      if (e.special?.type === 'bomber') {
+        e.shootTimer -= dt;
+        if (e.shootTimer <= 0) {
+          e.shootTimer = e.special.interval;
+          this.state.enemyProjectiles.push({
+            id: `eproj_${this.nextEnemyProjId++}`,
+            x: e.x,
+            y: e.y + e.height / 2,
+            vx: 0,
+            vy: 95 * projSlowMult,
+            damage: e.special.damage,
+            alive: true,
+            bomb: true,
+          });
+          e.hitFlash = 0.05;
+        }
+      }
+
       // Bosses that don't have explicit 'shoot' still fire periodically
       if (e.isBoss && (!e.special || e.special.type !== 'shoot')) {
         e.shootTimer -= dt;
@@ -1450,6 +1471,17 @@ export class CombatEngine {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
+      // Bomb (Zepelim): detonates on the ground line with splash damage
+      if (p.bomb && p.y >= this.arenaHeight - 45) {
+        p.alive = false;
+        if (Math.abs(this.state.playerX - p.x) < 85) {
+          this.damagePlayer(p.damage);
+        }
+        this.triggerShake(4, 0.2);
+        this.spawnFloatingText(p.x, this.arenaHeight - 60, '💥', '#f97316');
+        continue;
+      }
+
       // Bounce off left/right walls
       if (p.bounces && p.bounces > 0) {
         if (p.x < 5 || p.x > this.arenaWidth - 5) {
@@ -1735,6 +1767,17 @@ export class CombatEngine {
             damage *= 1 + Math.min(0.5, this.state.combo * comboDmgPerHit);
           }
 
+          // Shield aura (Égide): a nearby shielder soaks part of the hit.
+          // The shielder never protects itself — killing it is the answer.
+          let auraSoak = 0;
+          for (const sh of this.state.enemies) {
+            if (sh === e || sh.hp <= 0 || sh.special?.type !== 'shield_aura') continue;
+            if (Math.hypot(sh.x - e.x, sh.y - e.y) < sh.special.range) {
+              auraSoak = Math.max(auraSoak, sh.special.reduction);
+            }
+          }
+          if (auraSoak > 0) damage *= 1 - auraSoak;
+
           e.hp -= damage;
           e.hitFlash = 0.08;
           // Knockback (push enemy up slightly on hit) — bosses are too heavy;
@@ -1766,6 +1809,23 @@ export class CombatEngine {
           if (e.special?.type === 'slow_on_hit') {
             this.state.playerSlowTimer = Math.max(this.state.playerSlowTimer, e.special.duration);
             this.spawnFloatingText(this.state.playerX, this.arenaHeight - 70, 'LENTO!', '#67e8f9');
+          }
+
+          // reflect (Espelhar): chance to bounce a shot straight back
+          if (e.special?.type === 'reflect' && !e.phased && Math.random() < e.special.chance) {
+            const rdx = this.state.playerX - e.x;
+            const rdy = (this.arenaHeight - 45) - e.y;
+            const rdist = Math.max(1, Math.hypot(rdx, rdy));
+            const rSpeed = e.special.projectileSpeed * ((this as any)._enemyProjSlow ?? 1);
+            this.state.enemyProjectiles.push({
+              id: `eproj_${this.nextEnemyProjId++}`,
+              x: e.x, y: e.y + e.height / 2,
+              vx: (rdx / rdist) * rSpeed,
+              vy: (rdy / rdist) * rSpeed,
+              damage: Math.ceil(e.damage * 0.6),
+              alive: true,
+            });
+            e.hitFlash = 0.12;
           }
 
           // ─── Per-item hit effects (cards that buff a specific weapon) ────

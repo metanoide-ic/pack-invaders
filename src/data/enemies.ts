@@ -36,7 +36,13 @@ export type EnemySpecial =
   | { type: 'phase'; chance: number }
   | { type: 'armor'; hits: number }
   | { type: 'slow_on_hit'; duration: number }
-  | { type: 'drain'; range: number; dps: number };
+  | { type: 'drain'; range: number; dps: number }
+  /** Allies within range take reduced damage — kill the shielder first */
+  | { type: 'shield_aura'; range: number; reduction: number }
+  /** Periodically drops bombs that explode on the ground line */
+  | { type: 'bomber'; interval: number; damage: number }
+  /** Chance to fire a shot back at the player when hit — punishes tunneling */
+  | { type: 'reflect'; chance: number; projectileSpeed: number };
 
 // ─── Basic Enemies (available from start) ────────────────────────────────────
 
@@ -391,10 +397,49 @@ export const ENEMY_REFLECTOR: EnemyDefinition = {
   goldReward: 6,
   armor: 2,
   movement: 'straight',
-  special: { type: 'armor', hits: 5 },
+  // Finally lives up to its name: hits have a chance to bounce a shot back
+  special: { type: 'reflect', chance: 0.3, projectileSpeed: 200 },
   spriteId: 'reflector',
   minWave: 6,
   weight: 3,
+};
+
+export const ENEMY_AEGIS: EnemyDefinition = {
+  id: 'aegis',
+  name: 'Égide',
+  tags: [],
+  hp: 90,
+  speed: 12,
+  damage: 8,
+  width: 34,
+  height: 34,
+  goldReward: 20,
+  armor: 1,
+  movement: 'strafe',
+  // Priority target: halves damage taken by everything near it
+  special: { type: 'shield_aura', range: 130, reduction: 0.5 },
+  spriteId: 'aegis',
+  minWave: 8,
+  weight: 2,
+};
+
+export const ENEMY_ZEPPELIN: EnemyDefinition = {
+  id: 'zeppelin',
+  name: 'Zepelim',
+  tags: ['Explosivo'],
+  hp: 55,
+  speed: 18,
+  damage: 10,
+  width: 38,
+  height: 26,
+  goldReward: 14,
+  armor: 0,
+  movement: 'strafe',
+  // Area denial: drops bombs that burst on the ground line
+  special: { type: 'bomber', interval: 3.5, damage: 14 },
+  spriteId: 'zeppelin',
+  minWave: 9,
+  weight: 2,
 };
 
 export const ENEMY_SPAWNER: EnemyDefinition = {
@@ -1299,6 +1344,7 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   BOSS_DRILL_SERGEANT, BOSS_HYDRA,
   ENEMY_HEALER, ENEMY_TELEPORTER, ENEMY_SPLITTER, ENEMY_MAGNETIC, ENEMY_REFLECTOR,
   ENEMY_SPAWNER, ENEMY_BERSERKER, ENEMY_GHOST_SHIP, ENEMY_ACID_BLOB, ENEMY_SENTINEL,
+  ENEMY_AEGIS, ENEMY_ZEPPELIN,
   ENEMY_FROST_ARCHER, ENEMY_FIRE_DANCER, ENEMY_EARTH_GOLEM, ENEMY_WIND_SPRITE,
   ENEMY_POISON_MUSHROOM, ENEMY_CRYSTAL_GUARDIAN, ENEMY_SHADOW_ASSASSIN, ENEMY_LAVA_SLIME,
   ENEMY_STORM_CLOUD, ENEMY_BONE_WARRIOR, ENEMY_MIMIC, ENEMY_PLAGUE_DOCTOR,
