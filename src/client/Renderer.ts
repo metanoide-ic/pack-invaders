@@ -2037,10 +2037,15 @@ export class Renderer {
       const relicX = L.w - Math.floor(L.w * 0.12);
       ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
       ctx.fillStyle = '#64748b';
-      ctx.fillText('RELÍQUIAS:', relicX, relicY);
+      ctx.fillText(`RELÍQUIAS (${equippedRelics.length}/${ALL_RELICS.length}):`, relicX, relicY);
       ctx.font = `${Math.floor(L.h * 0.016)}px monospace`;
       for (let ri = 0; ri < equippedRelics.length; ri++) {
-        ctx.fillText(equippedRelics[ri].icon, relicX + ri * Math.floor(L.w * 0.02), relicY + Math.floor(L.h * 0.02));
+        // Wrap into rows of 6 so a big collection stays on screen
+        const col = ri % 6;
+        const row = Math.floor(ri / 6);
+        ctx.fillText(equippedRelics[ri].icon,
+          relicX + col * Math.floor(L.w * 0.02),
+          relicY + Math.floor(L.h * 0.02) + row * Math.floor(L.h * 0.024));
       }
     }
   }
@@ -3114,6 +3119,8 @@ export class Renderer {
       if (affix) {
         const badge = affix === 'regen' ? { icon: '♻', color: '#4ade80' }
           : affix === 'armored' ? { icon: '🛡', color: '#38bdf8' }
+          : affix === 'swift' ? { icon: '⚡', color: '#fde047' }
+          : affix === 'split' ? { icon: '🧬', color: '#f472b6' }
           : { icon: '💥', color: '#f97316' };
         ctx.font = 'bold 11px monospace';
         ctx.fillStyle = badge.color;
@@ -3121,6 +3128,27 @@ export class Renderer {
         ctx.fillText(badge.icon, e.x, e.y - drawH / 2 - 14);
         ctx.textAlign = 'left';
       }
+    }
+
+    // Boss dive telegraph: pulsing ring + chevrons pointing at the ground
+    if (e.isBoss && (e as any)._divePhase === 'telegraph') {
+      const divePulse = 0.4 + Math.abs(Math.sin(performance.now() * 0.012)) * 0.6;
+      ctx.globalAlpha = divePulse;
+      ctx.strokeStyle = '#f97316';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, drawW * 0.55 + 6, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.fillStyle = '#f97316';
+      ctx.font = 'bold 20px monospace';
+      ctx.textAlign = 'center';
+      const chevronPhase = Math.floor(performance.now() / 160) % 3;
+      for (let c = 0; c < 3; c++) {
+        ctx.globalAlpha = c === chevronPhase ? divePulse : divePulse * 0.35;
+        ctx.fillText('▼', e.x, e.y + drawH / 2 + 22 + c * 20);
+      }
+      ctx.textAlign = 'left';
+      ctx.globalAlpha = 1;
     }
 
     // Charge telegraph: flashing warning before the enemy locks on and rushes
@@ -3578,12 +3606,14 @@ export class Renderer {
         ctx.globalAlpha = 1;
       }
 
-      // FEVER indicator: combo 15+ grants +25% fire rate
+      // FEVER (15+): +25% fire rate. OVERDRIVE (30+): +20% damage on top.
       if (state.combo >= 15) {
+        const overdrive = state.combo >= 30;
         ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
-        ctx.fillStyle = '#ef4444';
+        ctx.fillStyle = overdrive ? '#c084fc' : '#ef4444';
         ctx.globalAlpha = 0.7 + Math.sin(now * 0.012) * 0.3;
-        ctx.fillText('🔥 FEVER +25% cadência', comboX + Math.floor(L.w * 0.075), Math.floor(hudH * 0.5));
+        ctx.fillText(overdrive ? '⚡ OVERDRIVE +cadência +dano' : '🔥 FEVER +25% cadência',
+          comboX + Math.floor(L.w * 0.075), Math.floor(hudH * 0.5));
         ctx.globalAlpha = 1;
       }
     }

@@ -659,7 +659,8 @@ export class CombatEngine {
     // Rapid-fire power-up: 2x fire rate
     if (this.state.rapidFireTimer > 0) skillRateMult *= 2;
 
-    // FEVER: combo 15+ rewards aggressive play with +25% fire rate
+    // FEVER: combo 15+ rewards aggressive play with +25% fire rate.
+    // OVERDRIVE: combo 30+ adds +20% damage on top (renderer shows the tier).
     if (this.state.combo >= 15) skillRateMult *= 1.25;
 
     // ── Item-driven global modifiers (Núcleo Berserker, Corneta, etc.) ────
@@ -733,7 +734,8 @@ export class CombatEngine {
             y: this.arenaHeight - 45,
             vx: proj.vx,
             vy: proj.vy,
-            damage: proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg,
+            damage: proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
+              * (this.state.combo >= 30 ? 1.2 : 1), // OVERDRIVE
             piercing: proj.piercing,
             aoeRadius: proj.aoeRadius,
             tags: [...proj.tags],
@@ -1311,6 +1313,8 @@ export class CombatEngine {
         const m = (it.state as any).pickupRadiusBonus;
         if (m) magnetMult = Math.max(magnetMult, m);
       }
+      // Relic: Lente de Kepler widens the catch radius
+      magnetMult *= 1 + ((this as any)._relicPickup ?? 0);
       const catchR = 26 * magnetMult;
       const caughtBy1 = Math.abs(pu.x - st.playerX) < catchR && pu.y > this.arenaHeight - 85;
       const caughtBy2 = !!st.player2Active && st.player2X !== undefined &&
@@ -1522,8 +1526,8 @@ export class CombatEngine {
     }
 
     // ── Item defenses (Deslocador de Fase, Ventilador, Golem, Coroa) ──────
-    let itemDodge = 0;
-    let itemReduction = 1;
+    let itemDodge = (this as any)._relicDodge ?? 0;
+    let itemReduction = 1 - ((this as any)._relicDR ?? 0);
     let thornRatio = 0;
     for (const it of this.backpack.getAllItems()) {
       const st = it.state as any;
@@ -2051,6 +2055,30 @@ export class CombatEngine {
       this.spawnFloatingText(e.x, e.y - 10, '💥 VOLÁTIL', '#f97316');
     }
 
+    // Elite affix: split — bursts into two weaker copies on death
+    if ((e as any).affix === 'split' && this.state.enemies.length < 60) {
+      for (let s = -1; s <= 1; s += 2) {
+        this.state.enemies.push({
+          ...e,
+          id: `enemy_${this.nextEnemyId++}`,
+          x: Math.max(20, Math.min(this.arenaWidth - 20, e.x + s * 30)),
+          hp: Math.max(1, Math.floor(e.maxHp * 0.3)),
+          maxHp: Math.max(1, Math.floor(e.maxHp * 0.3)),
+          width: Math.floor(e.width * 0.7),
+          height: Math.floor(e.height * 0.7),
+          goldReward: Math.max(1, Math.floor(e.goldReward * 0.3)),
+          speed: e.baseSpeed * 1.2,
+          baseSpeed: e.baseSpeed * 1.2,
+          moveDir: s,
+        } as Enemy);
+        const copy = this.state.enemies[this.state.enemies.length - 1] as any;
+        copy.affix = undefined;
+        copy.isElite = false;
+        this.state.totalEnemies++;
+      }
+      this.spawnFloatingText(e.x, e.y - 10, '🧬 DIVISÃO!', '#f472b6');
+    }
+
     // Card: Kills Explosivas (all kills explode)
     const explodeDmg = (this as any)._explodeOnKillDamage ?? (this as any)._explodeOnKill ?? 0;
     if (explodeDmg > 0) {
@@ -2546,6 +2574,8 @@ export class CombatEngine {
     if (this.backpack.config.characterId === 'void_walker') crit += 0.20;
     // Wave event crit bonus
     crit += (this as any)._waveEventCritBonus ?? 0;
+    // Relic crit bonus (Broca do Sargento)
+    crit += (this as any)._relicCrit ?? 0;
     return Math.min(0.8, crit); // Cap at 80%
   }
 
@@ -2654,10 +2684,14 @@ export class CombatEngine {
       if (isElite) {
         const elite = enemies[enemies.length - 1] as any;
         elite.isElite = true;
-        const affixes = ['regen', 'armored', 'volatile'];
+        const affixes = ['regen', 'armored', 'volatile', 'swift', 'split'];
         elite.affix = affixes[Math.floor(Math.random() * affixes.length)];
         if (elite.affix === 'armored') {
           elite.armorHits = (elite.armorHits ?? 0) + 3;
+        }
+        if (elite.affix === 'swift') {
+          elite.speed *= 1.5;
+          elite.baseSpeed *= 1.5;
         }
       }
     }

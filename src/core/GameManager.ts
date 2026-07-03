@@ -21,7 +21,7 @@ import { updateGlobalStats, checkAchievements } from '../data/achievements';
 import { getMetaGoldBonus } from '../data/missions';
 import { getDifficultyById, Difficulty, unlockNextDifficulty } from '../data/difficulties';
 import { addToLeaderboard } from '../data/leaderboard';
-import { getRelicBonuses, getRandomNewRelic, addRelic, Relic, getEquippedRelics } from '../data/relics';
+import { getRelicBonuses, getRandomNewRelic, getRelicForBoss, addRelic, Relic, getEquippedRelics } from '../data/relics';
 import { VersusEngine } from './VersusEngine';
 
 export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
@@ -647,11 +647,12 @@ export class GameManager {
       }
     }
 
-    // Boss kill = relic drop (guaranteed new relic if available)
+    // Boss kill = relic drop: the boss's own signature relic first,
+    // falling back to a random uncollected one
     this.pendingRelic = null;
-    const bossKilledThisWave = this.combat.state.killedEnemyIds.some(id => id.startsWith('boss_'));
-    if (bossKilledThisWave) {
-      const newRelic = getRandomNewRelic();
+    const killedBossId = this.combat.state.killedEnemyIds.find(id => id.startsWith('boss_'));
+    if (killedBossId) {
+      const newRelic = getRelicForBoss(killedBossId) ?? getRandomNewRelic();
       if (newRelic) {
         this.pendingRelic = newRelic;
         addRelic(newRelic.id);
@@ -798,6 +799,8 @@ export class GameManager {
   /** Final shop price after card discounts and character affinities */
   getItemCost(itemDef: ItemDefinition): number {
     let discount = (this as any)._shopDiscount ?? 0;
+    // Relic: Planta do Arquiteto — permanent shop discount
+    discount += (getRelicBonuses().shopDiscountPercent ?? 0) / 100;
     // Insígnia de Mercador: item-based shop discount
     for (const it of this.backpack.getAllItems()) {
       discount += ((it.state as any).shopDiscount ?? 0);
@@ -1012,6 +1015,11 @@ export class GameManager {
     if (this.isSkillActive('overclock')) rateMult *= 3.0;
     (this.combat as any)._skillDamageMult = dmgMult;
     (this.combat as any)._skillFireRateMult = rateMult;
+    // Relic combat bonuses (crit/dodge/damage reduction/pickup radius)
+    (this.combat as any)._relicCrit = (relicBonus.critPercent ?? 0) / 100;
+    (this.combat as any)._relicDodge = (relicBonus.dodgePercent ?? 0) / 100;
+    (this.combat as any)._relicDR = (relicBonus.damageReductionPercent ?? 0) / 100;
+    (this.combat as any)._relicPickup = (relicBonus.pickupRadiusPercent ?? 0) / 100;
     // Frenzy is pet-specific ("Pets atacam 3x mais rápido") — scoped inside
     // fireWeapons() by tag instead of the global multiplier above.
     (this.combat as any)._frenzyActive = this.isSkillActive('frenzy');
