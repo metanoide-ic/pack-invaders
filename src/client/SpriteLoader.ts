@@ -23,6 +23,13 @@ const BOSS_IDS = [
   'voidmaw', 'astral_serpent', 'harbinger', 'xalvor', 'zyrgoth',
 ];
 
+/** Enemy defIds with real cut-out art (rest fall back to procedural sprites) */
+const ENEMY_SPRITE_IDS = [
+  'sentinel', 'spawner', 'leech', 'fire_imp', 'berserker', 'thunder_bug',
+  'helix', 'root_golem', 'vine_creep', 'flame_elemental', 'storm_cloud',
+  'hive_mind', 'shadow_wraith', 'gold_thief', 'shadow_assassin', 'ghost_ship',
+];
+
 /** Map character IDs in code to sprite file names */
 const CHAR_ID_MAP: Record<string, string> = {
   'grass_man': 'raiz',
@@ -102,6 +109,15 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
       const img = await loadImage(`./sprites/bosses/${id}.png`);
       bosses.set(id, img);
     } catch { /* fallback */ }
+  }
+
+  // Load enemy sprites (real art cut from the AI-generated sheet; falls
+  // back to procedural generation in Renderer when a defId has no file)
+  for (const id of ENEMY_SPRITE_IDS) {
+    try {
+      const img = await loadImage(`./sprites/enemies/${id}.png`);
+      enemies.set(id, img);
+    } catch { /* fallback to procedural */ }
   }
 
   cachedLoaded = { characters, vendors, bosses, enemies, topdown, menuBg: null };

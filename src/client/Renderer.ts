@@ -3096,7 +3096,9 @@ export class Renderer {
   private renderEnemy(e: Enemy, dt: number): void {
     const { ctx } = this;
     const spriteId = this.getEnemySpriteId(e);
-    const sprite = this.sprites.enemies.get(spriteId);
+    // Prefer real cut-out art (loaded PNGs) over the procedural fallback
+    const loadedEnemies = (this as any).loadedSprites?.enemies as Map<string, HTMLImageElement> | undefined;
+    const sprite = loadedEnemies?.get(spriteId) || this.sprites.enemies.get(spriteId);
 
     // Tiered visual scale for readability: the smaller the enemy, the bigger
     // the boost. Presentation only — hitboxes (e.width/e.height) are untouched.
