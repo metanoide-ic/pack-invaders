@@ -69,6 +69,8 @@ let prevPhase: GamePhase = game.phase;
 let prevEnemyCount = 0;
 let lavaWarningCooldown = 0;
 let prevFusionCount = 0;
+let prevBeamCount = 0;
+let prevDiveTelegraph = false;
 
 function gameLoop(): void {
   const now = performance.now();
@@ -80,12 +82,13 @@ function gameLoop(): void {
     renderer.phaseTransitionTimer = 0.3; // Brief fade on any phase change
     if (game.phase === 'COMBAT' || game.phase === 'COOP') {
       audio.waveStart();
-      audio.setCombatAmbient(true);
+      const hasBoss = game.combat.state.enemies.some(e => e.isBoss);
+      audio.setMusicMode(hasBoss ? 'boss' : 'combat');
       renderer.startWaveTransition(game.wave);
       prevEnemyCount = game.combat.state.enemies.length;
     }
     if (game.phase === 'CARDS') {
-      audio.setCombatAmbient(false);
+      audio.setMusicMode('calm');
       renderer.startCardAnimation();
       audio.waveComplete();
       if (game.pendingCollectible) {
@@ -114,11 +117,18 @@ function gameLoop(): void {
       }
       prevFusionCount = fusions;
     }
-    if (game.phase === 'MAIN_MENU' && !audio['ambientPlaying']) {
-      audio.startAmbient();
+    if (game.phase === 'MAIN_MENU') {
+      audio.startMusic('calm');
+      audio.setMusicMode('calm');
     }
-    if (game.phase === 'GAME_OVER') audio.gameOver();
-    if (game.phase === 'VICTORY') audio.victory();
+    if (game.phase === 'GAME_OVER') {
+      audio.stopMusic();
+      audio.gameOver();
+    }
+    if (game.phase === 'VICTORY') {
+      audio.stopMusic();
+      audio.victory();
+    }
     prevPhase = game.phase;
   }
 
@@ -132,6 +142,16 @@ function gameLoop(): void {
     const timeMult = hpRatio < 0.15 && hpRatio > 0 ? 0.4 : 1.0;
     game.combat.tick(dt * timeMult, playerDir, p2Dir);
     game.updateSkills(dt * timeMult);
+
+    // Boss attack alarms: new laser telegraph or dive wind-up
+    const beamCount = (game.combat.state as any).bossBeams?.length ?? 0;
+    const diveTelegraphing = game.combat.state.enemies.some(
+      e => e.isBoss && (e as any)._divePhase === 'telegraph');
+    if (beamCount > prevBeamCount || (diveTelegraphing && !prevDiveTelegraph)) {
+      audio.bossAlarm();
+    }
+    prevBeamCount = beamCount;
+    prevDiveTelegraph = diveTelegraphing;
 
     // Check dash input
     if (input.checkDash()) {
@@ -357,8 +377,7 @@ function gameLoop(): void {
 // Init audio context on first click (browser requirement)
 canvas.addEventListener('click', () => {
   // AudioContext is lazily initialized inside AudioManager
-  // Start ambient on first interaction
-  audio.startAmbient();
+  audio.startMusic('calm');
 }, { once: true });
 
 requestAnimationFrame(gameLoop);

@@ -1,7 +1,53 @@
 /**
- * AudioManager — Procedural Web Audio API sound effects.
+ * AudioManager — Procedural Web Audio API sound effects + chiptune music.
  * No external files needed; all sounds are synthesized.
  */
+
+type MusicMode = 'calm' | 'combat' | 'boss';
+
+/**
+ * Music data: 4-bar loops in A minor, one chord table per mode.
+ * bass = root frequency per bar; chord = arpeggio tones per bar.
+ */
+const MUSIC: Record<MusicMode, {
+  bpm: number;
+  bass: number[];
+  chords: number[][];
+}> = {
+  // Menu/shop: Am — F — C — G, gentle
+  calm: {
+    bpm: 84,
+    bass: [55.00, 43.65, 65.41, 49.00],
+    chords: [
+      [220.00, 261.63, 329.63],
+      [174.61, 220.00, 261.63],
+      [261.63, 329.63, 392.00],
+      [196.00, 246.94, 293.66],
+    ],
+  },
+  // Combat: Am — Am — F — G, driving
+  combat: {
+    bpm: 112,
+    bass: [55.00, 55.00, 43.65, 49.00],
+    chords: [
+      [220.00, 261.63, 329.63],
+      [220.00, 261.63, 329.63],
+      [174.61, 220.00, 261.63],
+      [196.00, 246.94, 293.66],
+    ],
+  },
+  // Boss: Am — B♭ — Am — E, phrygian menace
+  boss: {
+    bpm: 122,
+    bass: [55.00, 58.27, 55.00, 41.20],
+    chords: [
+      [220.00, 261.63, 329.63],
+      [233.08, 293.66, 349.23],
+      [220.00, 261.63, 329.63],
+      [164.81, 207.65, 246.94],
+    ],
+  },
+};
 
 export class AudioManager {
   private ctx: AudioContext | null = null;
@@ -9,9 +55,12 @@ export class AudioManager {
   private sfxGain: GainNode | null = null;
   private musicGain: GainNode | null = null;
   private muted = false;
-  private ambientOsc: OscillatorNode | null = null;
-  private ambientGain: GainNode | null = null;
-  private ambientPlaying = false;
+  // ── Music sequencer state ──
+  private musicInterval: number | null = null;
+  private musicMode: MusicMode = 'calm';
+  private nextStepTime = 0;
+  private musicStep = 0;
+  private noiseBuffer: AudioBuffer | null = null;
 
   private getCtx(): AudioContext {
     if (!this.ctx) {
@@ -33,6 +82,12 @@ export class AudioManager {
       this.ctx.resume();
     }
     return this.ctx;
+  }
+
+  /** SFX bus — routes through the SFX volume slider */
+  private getSfx(): GainNode {
+    this.getCtx();
+    return this.sfxGain!;
   }
 
   private getMaster(): GainNode {
@@ -87,7 +142,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.15, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.08);
   }
@@ -102,7 +157,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.2, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.1);
   }
@@ -118,7 +173,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.25, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.15);
   }
@@ -135,7 +190,7 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.15, t + i * 0.06);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.06 + 0.1);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.06);
       osc.stop(t + i * 0.06 + 0.1);
     }
@@ -151,7 +206,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.12, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.15);
   }
@@ -167,7 +222,7 @@ export class AudioManager {
     gain.gain.linearRampToValueAtTime(0.05, ctx.currentTime + 0.5);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.6);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.6);
   }
@@ -184,7 +239,7 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.15, t + i * 0.2);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.2 + 0.25);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.2);
       osc.stop(t + i * 0.2 + 0.25);
     }
@@ -202,7 +257,7 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.18, t + i * 0.12);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.12 + 0.3);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.12);
       osc.stop(t + i * 0.12 + 0.3);
     }
@@ -217,7 +272,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.08, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.04);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.04);
   }
@@ -234,7 +289,7 @@ export class AudioManager {
     gain.gain.linearRampToValueAtTime(0.15, t + 0.2);
     gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(t);
     osc.stop(t + 0.4);
   }
@@ -249,7 +304,7 @@ export class AudioManager {
     gain.gain.setValueAtTime(0.1, ctx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
     osc.connect(gain);
-    gain.connect(this.getMaster());
+    gain.connect(this.getSfx());
     osc.start(ctx.currentTime);
     osc.stop(ctx.currentTime + 0.08);
   }
@@ -266,7 +321,7 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.1, t + i * 0.04);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.04 + 0.08);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.04);
       osc.stop(t + i * 0.04 + 0.08);
     }
@@ -284,7 +339,7 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.12, t + i * 0.08);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.08 + 0.2);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.08);
       osc.stop(t + i * 0.08 + 0.2);
     }
@@ -303,47 +358,153 @@ export class AudioManager {
       gain.gain.setValueAtTime(0.08, t + i * 0.1);
       gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.1 + 0.3);
       osc.connect(gain);
-      gain.connect(this.getMaster());
+      gain.connect(this.getSfx());
       osc.start(t + i * 0.1);
       osc.stop(t + i * 0.1 + 0.3);
     }
   }
 
-  /** Start low ambient drone for atmosphere */
-  startAmbient(): void {
-    if (this.ambientPlaying) return;
+  /** Boss attack alarm — short two-tone siren for beam/dive telegraphs */
+  bossAlarm(): void {
     const ctx = this.getCtx();
-    this.ambientOsc = ctx.createOscillator();
-    this.ambientGain = ctx.createGain();
-    this.ambientOsc.type = 'sine';
-    this.ambientOsc.frequency.setValueAtTime(55, ctx.currentTime); // Low A
-    this.ambientGain.gain.setValueAtTime(0, ctx.currentTime);
-    this.ambientGain.gain.linearRampToValueAtTime(0.04, ctx.currentTime + 2);
-    this.ambientOsc.connect(this.ambientGain);
-    this.ambientGain.connect(this.getMusicGain());
-    this.ambientOsc.start();
-    this.ambientPlaying = true;
-  }
-
-  /** Stop ambient drone */
-  stopAmbient(): void {
-    if (!this.ambientPlaying || !this.ambientOsc || !this.ambientGain) return;
-    const ctx = this.getCtx();
-    this.ambientGain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.5);
-    this.ambientOsc.stop(ctx.currentTime + 0.6);
-    this.ambientOsc = null;
-    this.ambientGain = null;
-    this.ambientPlaying = false;
-  }
-
-  /** Increase ambient intensity during combat */
-  setCombatAmbient(active: boolean): void {
-    if (!this.ambientGain) return;
-    const ctx = this.getCtx();
-    const target = active ? 0.06 : 0.03;
-    this.ambientGain.gain.linearRampToValueAtTime(target, ctx.currentTime + 0.5);
-    if (this.ambientOsc) {
-      this.ambientOsc.frequency.linearRampToValueAtTime(active ? 65 : 55, ctx.currentTime + 0.5);
+    const t = ctx.currentTime;
+    for (let i = 0; i < 2; i++) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'square';
+      osc.frequency.setValueAtTime(i === 0 ? 660 : 440, t + i * 0.14);
+      gain.gain.setValueAtTime(0.09, t + i * 0.14);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + i * 0.14 + 0.13);
+      osc.connect(gain);
+      gain.connect(this.getSfx());
+      osc.start(t + i * 0.14);
+      osc.stop(t + i * 0.14 + 0.13);
     }
+  }
+
+  // ─── Music sequencer ──────────────────────────────────────────────────────
+  // 4-bar chiptune loop (16 steps/bar): bass, arpeggio lead, kick and hats.
+  // A 25ms lookahead scheduler keeps timing sample-accurate ("Tale of Two
+  // Clocks" pattern) while the mode can switch chord tables at any moment.
+
+  /** Start the music loop (idempotent) */
+  startMusic(mode: MusicMode): void {
+    this.musicMode = mode;
+    if (this.musicInterval !== null) return;
+    const ctx = this.getCtx();
+    this.nextStepTime = ctx.currentTime + 0.06;
+    this.musicStep = 0;
+    this.musicInterval = window.setInterval(() => this.scheduleMusic(), 25);
+  }
+
+  /** Switch mood — takes effect on the very next step */
+  setMusicMode(mode: MusicMode): void {
+    if (this.musicInterval === null) { this.startMusic(mode); return; }
+    this.musicMode = mode;
+  }
+
+  stopMusic(): void {
+    if (this.musicInterval !== null) {
+      clearInterval(this.musicInterval);
+      this.musicInterval = null;
+    }
+  }
+
+  private scheduleMusic(): void {
+    const ctx = this.getCtx();
+    if (ctx.state === 'suspended') return; // wait for the first user gesture
+    // Recover if the tab slept: don't machine-gun a backlog of steps
+    if (this.nextStepTime < ctx.currentTime - 0.25) {
+      this.nextStepTime = ctx.currentTime + 0.05;
+    }
+    while (this.nextStepTime < ctx.currentTime + 0.12) {
+      this.scheduleStep(this.musicStep, this.nextStepTime);
+      const stepDur = 60 / MUSIC[this.musicMode].bpm / 4;
+      this.nextStepTime += stepDur;
+      this.musicStep = (this.musicStep + 1) % 64; // 4 bars × 16 steps
+    }
+  }
+
+  private scheduleStep(step: number, t: number): void {
+    const mode = this.musicMode;
+    const data = MUSIC[mode];
+    const bar = Math.floor(step / 16);
+    const s = step % 16;
+    const stepDur = 60 / data.bpm / 4;
+
+    // Bass: driving 8ths in combat/boss, roots on the beat when calm
+    const bassSteps = mode === 'calm' ? [0, 8] : [0, 2, 4, 7, 8, 10, 12, 14];
+    if (bassSteps.includes(s)) {
+      const freq = s === 7 ? data.bass[bar] * 1.5 : data.bass[bar]; // fifth pickup
+      this.playNote(freq, t, stepDur * (mode === 'calm' ? 3.5 : 1.6), 'triangle', 0.11);
+    }
+
+    // Arpeggio lead: 8ths in combat, 16ths at the boss, sparse when calm
+    const chord = data.chords[bar];
+    const arpOn = mode === 'boss' ? true : mode === 'combat' ? s % 2 === 1 : (s === 0 || s === 6 || s === 12);
+    if (arpOn) {
+      const tone = chord[(Math.floor(step / (mode === 'calm' ? 6 : 1))) % 3];
+      const oct = mode === 'boss' && s % 8 >= 4 ? 2 : 1; // boss arp climbs an octave
+      this.playNote(tone * oct, t, stepDur * 0.9, 'square', mode === 'calm' ? 0.035 : 0.03);
+    }
+
+    // Drums (combat/boss only)
+    if (mode !== 'calm') {
+      if (s % 4 === 0) this.playKick(t);
+      if (s % 4 === 2) this.playHat(t);
+      if (mode === 'boss' && (s === 7 || s === 15)) this.playHat(t); // extra push
+    }
+  }
+
+  private playNote(freq: number, t: number, dur: number, type: OscillatorType, vol: number): void {
+    const ctx = this.getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, t);
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    osc.connect(gain);
+    gain.connect(this.getMusicGain());
+    osc.start(t);
+    osc.stop(t + dur + 0.02);
+  }
+
+  private playKick(t: number): void {
+    const ctx = this.getCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(120, t);
+    osc.frequency.exponentialRampToValueAtTime(40, t + 0.1);
+    gain.gain.setValueAtTime(0.22, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+    osc.connect(gain);
+    gain.connect(this.getMusicGain());
+    osc.start(t);
+    osc.stop(t + 0.13);
+  }
+
+  private playHat(t: number): void {
+    const ctx = this.getCtx();
+    if (!this.noiseBuffer) {
+      const len = Math.floor(ctx.sampleRate * 0.05);
+      this.noiseBuffer = ctx.createBuffer(1, len, ctx.sampleRate);
+      const ch = this.noiseBuffer.getChannelData(0);
+      for (let i = 0; i < len; i++) ch[i] = Math.random() * 2 - 1;
+    }
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuffer;
+    const hp = ctx.createBiquadFilter();
+    hp.type = 'highpass';
+    hp.frequency.value = 6500;
+    const gain = ctx.createGain();
+    gain.gain.setValueAtTime(0.05, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    src.connect(hp);
+    hp.connect(gain);
+    gain.connect(this.getMusicGain());
+    src.start(t);
+    src.stop(t + 0.05);
   }
 }
