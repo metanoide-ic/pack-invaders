@@ -553,6 +553,22 @@ export class GameManager {
       e.speed *= diff.enemySpeedMult;
       e.baseSpeed *= diff.enemySpeedMult;
     }
+    // Difficulty: extra enemies (Veterano+ promise bigger waves, but nothing
+    // ever read extraEnemyPct — clone existing enemies the same way the
+    // Twitch curse does)
+    if (diff.extraEnemyPct > 0 && this.combat.state.enemies.length > 0) {
+      const extraCount = Math.ceil(this.combat.state.enemies.length * (diff.extraEnemyPct / 100));
+      for (let i = 0; i < extraCount; i++) {
+        const template = this.combat.state.enemies[i % this.combat.state.enemies.length];
+        this.combat.state.enemies.push({
+          ...template,
+          id: `diff_enemy_${Date.now()}_${i}`,
+          x: 80 + Math.random() * 1120,
+          y: -50 - Math.random() * 250,
+        });
+      }
+      this.combat.state.totalEnemies = this.combat.state.enemies.length;
+    }
 
     // Apply Twitch curse (more enemies)
     if (this.twitch.curseNextWave) {
@@ -608,7 +624,9 @@ export class GameManager {
     const cardGoldBonus = 1 + ((this as any)._goldBonus ?? 0);
     // Relic: Cristal de Criox (+10% gold, permanent meta-progression)
     const relicGoldBonus = 1 + (getRelicBonuses().goldPercent ?? 0) / 100;
-    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus);
+    // Difficulty: harder settings promise more gold (Veterano +20% .. Extinção +150%)
+    const difficultyGoldMult = getDifficultyById(this.currentDifficulty).goldMult;
+    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus * difficultyGoldMult);
     this.gold += this.lastWaveGold;
 
     // Track stats
