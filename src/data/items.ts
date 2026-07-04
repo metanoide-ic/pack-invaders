@@ -26,7 +26,9 @@ function weaponTick(item: PlacedItem, dt: number, emit: EmitProjectile, opts?: {
       const rad = angle * Math.PI / 180;
       const vx = Math.sin(rad) * item.stats.projectileSpeed;
       const vy = -Math.cos(rad) * item.stats.projectileSpeed;
-      const extraTags = opts?.homing ? ['Guiado' as const] : [];
+      // Static per-weapon homing (missile launcher) OR granted dynamically by
+      // an adjacent/backpack-wide targeting item (Módulo de Mira, Sistema de Mira)
+      const extraTags = (opts?.homing || (item.state.homingBonus ?? 0) > 0) ? ['Guiado' as const] : [];
       emit({
         x: 400, y: 500,
         vx, vy,

@@ -25,6 +25,10 @@ export interface ItemCombination {
     piercing?: number;
     healPerSecond?: number;
     projectileCount?: number;
+    /** Additive stack into itemA's goldBonus (same field gold_magnet uses) */
+    goldMultiplier?: number;
+    /** Additive stack into itemA's shopRarityBonus (same field luck_stone uses) */
+    shopRarityBonus?: number;
   };
   /** New tags added to itemA when fused */
   addTags?: string[];
@@ -214,7 +218,7 @@ export const ALL_COMBINATIONS: ItemCombination[] = [
     itemA: 'gold_magnet', itemB: 'coin_doubler',
     resultName: 'Fábrica de Ouro',
     description: '+50% gold de todas as fontes.',
-    bonuses: {},
+    bonuses: { goldMultiplier: 0.5 },
     fusionColor: '#fbbf24',
   },
   {
@@ -398,7 +402,7 @@ export const ALL_COMBINATIONS: ItemCombination[] = [
     itemA: 'gold_mine', itemB: 'gold_magnet',
     resultName: 'Fort Knox',
     description: 'Geração de ouro absurda. +200% gold de todas fontes.',
-    bonuses: {},
+    bonuses: { goldMultiplier: 2.0 },
     fusionColor: '#fbbf24',
   },
   {
@@ -582,7 +586,7 @@ export const ALL_COMBINATIONS: ItemCombination[] = [
     itemA: 'gold_mine', itemB: 'merchant_badge',
     resultName: 'Império Dourado',
     description: '+300% geração de gold. Lojas oferecem itens raros.',
-    bonuses: {},
+    bonuses: { goldMultiplier: 3.0, shopRarityBonus: 0.4 },
     fusionColor: '#ffd600',
   },
   {
