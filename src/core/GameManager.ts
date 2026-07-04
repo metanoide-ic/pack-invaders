@@ -330,6 +330,7 @@ export class GameManager {
     this.combat.state.playerMaxHp = data.playerMaxHp;
     this.aliencoreMode = data.aliencoreMode;
     this.aliencoreUnlocked = data.aliencoreUnlocked;
+    this.currentDifficulty = data.currentDifficulty ?? 'soldier';
     this.stats.enemiesKilled = data.stats.enemiesKilled;
     this.stats.damageDealt = data.stats.damageDealt;
     this.stats.itemsBought = data.stats.itemsBought;
@@ -375,6 +376,7 @@ export class GameManager {
       playerMaxHp: this.combat.state.playerMaxHp,
       aliencoreMode: this.aliencoreMode,
       aliencoreUnlocked: this.aliencoreUnlocked,
+      currentDifficulty: this.currentDifficulty,
       items,
       stats: {
         enemiesKilled: this.stats.enemiesKilled,
