@@ -1,6 +1,6 @@
 /**
- * COLLECTIBLES — 36 discoverable items that tell the story of "O Evento".
- * 6 base + 6 per character (5 characters with locked sets) = 36 total.
+ * COLLECTIBLES — 48 discoverable items that tell the story of "O Evento".
+ * 6 base + 6 per character (7 characters with lore sets) = 48 total.
  * 20% chance to spawn one per wave as a floating item.
  */
 
@@ -403,6 +403,61 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// FLORIAN COLLECTIBLES — O Guardiao Quebrado
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const GUARDIAO_COLLECTIBLES: Collectible[] = [
+  {
+    id: 'col_guardiao_helmet',
+    name: 'Capacete Rachado — Turno 4',
+    lore: 'Capacete de bombeiro, modelo antigo, rachado do lado direito. Etiqueta interna: "SGT. F. KREUZ — CB-GO — 18 ANOS DE SERVICO". A rachadura nao veio de fogo ou escombro. Veio de um dos dezesseis olhos, quando Florian tentou correr na direcao errada. Ele guarda o capacete rachado em vez do substituto que ganhou depois. Diz que precisa lembrar do angulo exato em que falhou. Para nunca mais ficar naquele angulo.',
+    characterId: 'firefighter',
+    order: 1,
+    spriteHint: 'helmet',
+  },
+  {
+    id: 'col_guardiao_dispatch',
+    name: 'Registro de Chamado — 08:41',
+    lore: 'CORPO DE BOMBEIROS — REGISTRO DE OCORRENCIA #4471. "08:41 — Chamado recebido: gato preso em arvore, Rua das Acacias. Solicitante: menor, aprox. 9 anos, tom de voz calmo. Guarnicao despachada: Sgt. Kreuz + 2. 08:47 — Chegada ao local. 08:49 — [SEM REGISTRO POSTERIOR]." O relatorio para ai. Nao ha 08:50. Nao ha conclusao. Nao ha nomes das criancas — ningues os cadastrou antes do Evento. Florian e a unica testemunha que resta, e ele nao registrou nada. Nunca conseguiu escrever o que viu.',
+    characterId: 'firefighter',
+    order: 2,
+    spriteHint: 'document',
+  },
+  {
+    id: 'col_guardiao_medal',
+    name: 'Medalha por Bravura — Nunca Usada',
+    lore: 'Medalha do Corpo de Bombeiros de Goias, "Bravura em Servico", numa caixinha de veludo ainda selada. Concedida por um resgate ANTERIOR ao Evento — um incendio residencial, 2021, tres vidas salvas. Florian nunca a usou. Nunca abriu a caixa depois de receber. Quando perguntam por que, ele responde sempre igual: "Bravura e pra quem conseguiu. Guarda isso pra quem merece." Ele carrega a caixinha fechada na mochila, junto com o equipamento. Nunca no peito.',
+    characterId: 'firefighter',
+    order: 3,
+    spriteHint: 'badge',
+  },
+  {
+    id: 'col_guardiao_logbook',
+    name: 'Caderno de Turnos — Contagem',
+    lore: 'Caderno de capa dura, cada pagina uma data, cada data um numero circulado: "112 EVACUADOS. 89 EVACUADOS. 203 EVACUADOS." Nenhuma pagina fala de baixas — so de salvos. No verso da ultima pagina preenchida, uma frase riscada e reescrita tres vezes, cada vez com letra mais firme: "Nao consigo trazer os tres de volta. Consigo trazer os proximos cem." A contagem continua todos os dias, sem excecao, desde o Evento.',
+    characterId: 'firefighter',
+    order: 4,
+    spriteHint: 'book',
+  },
+  {
+    id: 'col_guardiao_letter_dad',
+    name: 'Carta do Pai — Antes do Evento',
+    lore: '"Filho, sei que voce acha que escolheu o nome errado pra carreira errada. Floriao, padroeiro dos bombeiros, sempre me pareceu grande demais pra um menino teimoso de Goiania. Mas eu vi voce treinar todo santo dia por seis anos pra passar naquele concurso. Voce nao carrega o nome como peso. Voce carrega ele como escolha. Ta na hora de voce ver isso tambem. Com orgulho, sempre — Pai." A carta chegou uma semana antes do Evento. Florian a leu uma vez. Guardou. Nunca releu.',
+    characterId: 'firefighter',
+    order: 5,
+    spriteHint: 'letter',
+  },
+  {
+    id: 'col_guardiao_foam_canister',
+    name: 'Cilindro de Espuma — Prototipo',
+    lore: 'Cilindro de metal com valvula improvisada, soldada por maos que claramente nao sao profissionais. Rotulo escrito a mao: "ESPUMA MK1 — NAO TESTAR PERTO DO ROSTO (Sgt. Kreuz, aprenda com os erros dos outros)." Florian adaptou equipamento de combate a incendio para conter aliens organicos — a espuma expande e prende, desacelera, ganha tempo. Ele testou cada versao pessoalmente antes de usar em missao. Diz que prefere o risco pra si mesmo. Sempre prefere.',
+    characterId: 'firefighter',
+    order: 6,
+    spriteHint: 'vial',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ALL COLLECTIBLES EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -414,6 +469,7 @@ export const ALL_COLLECTIBLES: Collectible[] = [
   ...PULSO_COLLECTIBLES,
   ...ABISMO_COLLECTIBLES,
   ...DOMADORA_COLLECTIBLES,
+  ...GUARDIAO_COLLECTIBLES,
 ];
 
 /** Get collectibles available for current unlocked characters */

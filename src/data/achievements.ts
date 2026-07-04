@@ -3,6 +3,8 @@
  * Stored in localStorage. Displayed in main menu.
  */
 
+import { ALL_COLLECTIBLES } from './collectibles';
+
 export interface Achievement {
   id: string;
   name: string;
@@ -67,8 +69,8 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
 
   { id: 'collector_10', name: 'Colecionador', description: 'Encontre 10 colecionáveis.', icon: '📜',
     condition: (s) => s.collectiblesFound >= 10 },
-  { id: 'collector_all', name: 'Arquivista', description: 'Encontre todos os 36 colecionáveis.', icon: '📚',
-    condition: (s) => s.collectiblesFound >= 36 },
+  { id: 'collector_all', name: 'Arquivista', description: `Encontre todos os ${ALL_COLLECTIBLES.length} colecionáveis.`, icon: '📚',
+    condition: (s) => s.collectiblesFound >= ALL_COLLECTIBLES.length },
 
   { id: 'persistent', name: 'Persistente', description: 'Complete 10 runs.', icon: '🔄',
     condition: (s) => s.totalRuns >= 10 },

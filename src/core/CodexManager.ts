@@ -133,6 +133,7 @@ export class CodexManager {
       44: ['storm_runner'], // Pulso lore2 (47 days reference)
       46: ['void_walker'], // Abismo lore2
       48: ['beast_tamer'], // Domadora lore2
+      50: ['firefighter'], // Guardião lore2
     };
 
     const idsToUnlock = timeUnlocks[totalMonths];
