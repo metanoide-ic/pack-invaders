@@ -60,6 +60,91 @@ function shade(hex: string, factor: number): string {
   return `#${nr.toString(16).padStart(2,'0')}${ng.toString(16).padStart(2,'0')}${nb.toString(16).padStart(2,'0')}`;
 }
 
+// ─── Gungeon-style Finishing Pass ────────────────────────────────────────────
+// Every generated sprite gets a bold black silhouette outline (the single
+// biggest visual signature of Enter the Gungeon's art) plus a soft ambient
+// occlusion pass along interior color seams so flat rects read as painted
+// pixel art instead of raw blocks.
+
+/** Draw a 1px (or `thickness`px) black outline around every opaque region. */
+function addOutline(c: HTMLCanvasElement, color = '#0b0b0f', thickness = 1): void {
+  const ctx = c.getContext('2d')!;
+  const w = c.width, h = c.height;
+  const img = ctx.getImageData(0, 0, w, h);
+  const data = img.data;
+  const opaque = new Uint8Array(w * h);
+  for (let i = 0; i < w * h; i++) opaque[i] = data[i * 4 + 3] > 20 ? 1 : 0;
+
+  const toDraw: number[] = [];
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const idx = y * w + x;
+      if (opaque[idx]) continue;
+      let touches = false;
+      for (let dy = -thickness; dy <= thickness && !touches; dy++) {
+        for (let dx = -thickness; dx <= thickness && !touches; dx++) {
+          if (dx === 0 && dy === 0) continue;
+          const nx = x + dx, ny = y + dy;
+          if (nx < 0 || ny < 0 || nx >= w || ny >= h) continue;
+          if (opaque[ny * w + nx]) touches = true;
+        }
+      }
+      if (touches) toDraw.push(idx);
+    }
+  }
+  ctx.fillStyle = color;
+  for (const idx of toDraw) {
+    const x = idx % w, y = Math.floor(idx / w);
+    ctx.fillRect(x, y, 1, 1);
+  }
+}
+
+/**
+ * Cheap ambient-occlusion: darkens the bottom/right-facing opaque pixels
+ * that sit adjacent to a *different* opaque color (an interior seam),
+ * giving flat-colored rects a hint of contact shadow between body parts.
+ */
+function addSeamShading(c: HTMLCanvasElement, strength = 0.82): void {
+  const ctx = c.getContext('2d')!;
+  const w = c.width, h = c.height;
+  const img = ctx.getImageData(0, 0, w, h);
+  const data = img.data;
+  const at = (x: number, y: number) => (y * w + x) * 4;
+  for (let y = 0; y < h - 1; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = at(x, y);
+      if (data[i + 3] < 20) continue;
+      const below = at(x, y + 1);
+      if (data[below + 3] < 20) continue;
+      const same = data[i] === data[below] && data[i + 1] === data[below + 1] && data[i + 2] === data[below + 2];
+      if (same) continue;
+      // Darken this pixel slightly — it borders a seam below it.
+      data[i] = Math.floor(data[i] * strength);
+      data[i + 1] = Math.floor(data[i + 1] * strength);
+      data[i + 2] = Math.floor(data[i + 2] * strength);
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
+/** Soft dark ellipse under a top-down sprite so it feels grounded, not floating. */
+function drawGroundShadow(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number): void {
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  ctx.fillStyle = '#000000';
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+/** Apply the full finishing pass (seam shading + outline) to a sprite canvas. */
+function finish(c: HTMLCanvasElement, outlineThickness = 1): HTMLCanvasElement {
+  addSeamShading(c);
+  addOutline(c, '#0b0b0f', outlineThickness);
+  return c;
+}
+
 const ELEMENT_COLORS: Record<string, { dark: string; mid: string; light: string }> = {
   fire:     { dark: '#8b2500', mid: '#e64a19', light: '#ffab40' },
   water:    { dark: '#0d47a1', mid: '#2196f3', light: '#80d8ff' },
@@ -72,207 +157,183 @@ const ELEMENT_COLORS: Record<string, { dark: string; mid: string; light: string 
 };
 
 // ─── Player Top-Down Character Generation ────────────────────────────────────
+// Chibi proportions (big rounded head, small body) drawn with arcs/round-rects
+// instead of raw blocks — reads much closer to Enter the Gungeon's silhouettes
+// once the outline + seam-shading finishing pass runs on top.
 
 const TD_SKIN      = '#d4a574';
 const TD_SKIN_DARK = '#a07850';
 
+function circle(ctx: CanvasRenderingContext2D, cx: number, cy: number, r: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function ellipse(ctx: CanvasRenderingContext2D, cx: number, cy: number, rx: number, ry: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+  ctx.fill();
+}
+
+interface TDPalette { main: string; dark: string; }
+
+const TD_PALETTE: Record<string, TDPalette> = {
+  grass_man:    { main: '#4a6b25', dark: '#2d4015' },
+  fire_lord:    { main: '#374151', dark: '#1a1f29' },
+  aqua_sage:    { main: '#1565c0', dark: '#0d2340' },
+  storm_runner: { main: '#e5e7eb', dark: '#9ca3af' },
+  void_walker:  { main: '#f3f4f6', dark: '#9ca3af' },
+  beast_tamer:  { main: '#4b5563', dark: '#1f2937' },
+  firefighter:  { main: '#991b1b', dark: '#450a0a' },
+};
+
+/** Shared chibi body base: boots, torso, arms, neck, head, eyes.
+ *  (Renderer.ts already draws its own ground shadow beneath the player, so
+ *  the sprite itself doesn't bake in a second one.) */
+function drawTDBase(ctx: CanvasRenderingContext2D, col: TDPalette): void {
+  // Boots / legs
+  roundRect(ctx, 15, 35, 8, 10, 3, col.dark);
+  roundRect(ctx, 25, 35, 8, 10, 3, col.dark);
+  ellipse(ctx, 19, 43.5, 4.2, 2.6, shade(col.dark, 0.55));
+  ellipse(ctx, 29, 43.5, 4.2, 2.6, shade(col.dark, 0.55));
+
+  // Torso
+  roundRect(ctx, 12, 21, 24, 18, 7, col.main);
+  roundRect(ctx, 14, 21, 20, 9, 6, shade(col.main, 1.18));
+  roundRect(ctx, 21, 28, 6, 11, 2, col.dark);
+
+  // Arms
+  ellipse(ctx, 9, 28, 5, 9, col.main);
+  ellipse(ctx, 39, 28, 5, 9, col.main);
+  circle(ctx, 9, 35.5, 3.4, TD_SKIN);
+  circle(ctx, 39, 35.5, 3.4, TD_SKIN);
+
+  // Neck + head
+  roundRect(ctx, 20, 16, 8, 6, 2, TD_SKIN_DARK);
+  circle(ctx, 24, 11, 10, TD_SKIN);
+  ellipse(ctx, 24, 19, 6, 2, shade(TD_SKIN, 0.88));
+
+  // Default eyes (characters may override before/after)
+  px(ctx, 20, 10, '#1a1a1a'); px(ctx, 27, 10, '#1a1a1a');
+}
+
 function generatePlayerTopDown(charId: string): HTMLCanvasElement {
-  const c = createCanvas(32, 32);
+  const c = createCanvas(48, 48);
   const ctx = c.getContext('2d')!;
+  const col = TD_PALETTE[charId] || { main: '#6b7280', dark: '#374151' };
+
+  drawTDBase(ctx, col);
 
   switch (charId) {
     case 'grass_man': {
-      // Raiz — earthy rags, wooden staff pointing up
-      rect(ctx, 15, 0, 2, 6, '#5d4037'); // staff shaft
-      rect(ctx, 13, 0, 6, 2, '#4ade80'); // staff tip leaves
-      px(ctx, 12, 1, '#22c55e'); px(ctx, 19, 1, '#22c55e');
-      // Head
-      rect(ctx, 12, 6, 8, 6, TD_SKIN);
-      rect(ctx, 12, 6, 8, 2, '#3b1f0a'); // dark brown hair
-      px(ctx, 13, 9, '#1a1a1a'); px(ctx, 18, 9, '#1a1a1a');
-      // Shoulders + arms
-      rect(ctx, 8, 12, 16, 4, '#4a5e2a');
-      rect(ctx, 5, 13, 5, 6, TD_SKIN); rect(ctx, 22, 13, 5, 6, TD_SKIN);
-      rect(ctx, 5, 18, 4, 2, '#3b2510'); rect(ctx, 23, 18, 4, 2, '#3b2510');
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#3d5a1e');
-      rect(ctx, 13, 17, 6, 5, '#4a6b25');
-      rect(ctx, 14, 18, 4, 3, '#2d4015');
-      // Hips + legs
-      rect(ctx, 10, 23, 12, 3, '#3b2510');
-      rect(ctx, 10, 26, 5, 5, '#2d4015'); rect(ctx, 17, 26, 5, 5, '#2d4015');
-      rect(ctx, 9, 29, 6, 3, '#1a0f05'); rect(ctx, 17, 29, 6, 3, '#1a0f05');
+      // Raiz — leaf crown, gnarled wooden staff raised overhead
+      roundRect(ctx, 18, 2, 5, 4, 2, '#22c55e');
+      roundRect(ctx, 25, 2, 5, 4, 2, '#22c55e');
+      circle(ctx, 24, 3, 3, '#4ade80');
+      rect(ctx, 33, 2, 3, 30, '#5d4037');
+      roundRect(ctx, 29, 0, 12, 5, 2, '#4ade80');
+      px(ctx, 30, 0, '#86efac'); px(ctx, 39, 0, '#86efac');
       break;
     }
     case 'fire_lord': {
-      // Cinza — dark jacket, mechanical right arm, flamethrower above
-      rect(ctx, 18, 0, 3, 8, '#374151'); // flamethrower barrel
-      rect(ctx, 16, 0, 6, 2, '#4b5563');
-      px(ctx, 20, 0, '#f97316'); px(ctx, 21, 0, '#fbbf24');
-      // Head
-      rect(ctx, 12, 7, 8, 5, TD_SKIN);
-      rect(ctx, 12, 7, 8, 2, '#1f2937'); // short dark hair
-      px(ctx, 13, 10, '#1a1a1a'); px(ctx, 18, 10, '#1a1a1a');
-      // Left arm (skin)
-      rect(ctx, 6, 13, 5, 7, TD_SKIN); rect(ctx, 6, 19, 4, 2, TD_SKIN_DARK);
-      // Right arm (mechanical)
-      rect(ctx, 21, 11, 5, 9, '#6b7280'); rect(ctx, 22, 11, 3, 9, '#9ca3af');
-      rect(ctx, 21, 19, 5, 2, '#374151');
-      // Shoulders
-      rect(ctx, 9, 12, 14, 4, '#374151');
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#1f2937');
-      rect(ctx, 13, 17, 6, 5, '#374151');
-      rect(ctx, 14, 18, 4, 3, '#4b5563');
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#111827');
-      rect(ctx, 10, 26, 5, 5, '#1f2937'); rect(ctx, 17, 26, 5, 5, '#1f2937');
-      rect(ctx, 9, 29, 6, 3, '#0f172a'); rect(ctx, 17, 29, 6, 3, '#0f172a');
+      // Cinza — short dark hair, mechanical right arm + flamethrower raised
+      roundRect(ctx, 17, 2, 14, 5, 3, '#111827');
+      ellipse(ctx, 39, 28, 5.5, 9.5, '#6b7280');
+      circle(ctx, 39, 35.5, 3.6, '#9ca3af');
+      rect(ctx, 37, 4, 6, 24, '#374151');
+      roundRect(ctx, 35, 1, 10, 5, 2, '#4b5563');
+      circle(ctx, 40, 1, 2.4, '#fbbf24');
+      circle(ctx, 40, 1, 1.1, '#fff7ed');
+      roundRect(ctx, 22, 26, 4, 4, 1, '#fbbf24');
       break;
     }
     case 'aqua_sage': {
-      // Maré — navy military uniform, beret, water cannon
-      rect(ctx, 14, 0, 4, 7, '#546e7a'); // water cannon
-      rect(ctx, 13, 0, 6, 2, '#78909c');
-      rect(ctx, 15, 0, 2, 1, '#80d8ff');
-      // Head + beret
-      rect(ctx, 11, 5, 10, 3, '#1e3a5f'); rect(ctx, 10, 6, 12, 2, '#1565c0');
-      rect(ctx, 13, 8, 6, 4, TD_SKIN);
-      rect(ctx, 14, 6, 4, 1, '#fbbf24'); // rank stripe on beret
-      px(ctx, 14, 10, '#1a1a1a'); px(ctx, 18, 10, '#1a1a1a');
-      // Arms
-      rect(ctx, 6, 13, 5, 7, '#1e3a5f'); rect(ctx, 21, 13, 5, 7, '#1e3a5f');
-      rect(ctx, 6, 19, 4, 2, TD_SKIN); rect(ctx, 22, 19, 4, 2, TD_SKIN);
-      rect(ctx, 9, 12, 14, 4, '#1e3a5f');
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#1e3a5f');
-      rect(ctx, 13, 17, 6, 5, '#1565c0');
-      rect(ctx, 13, 17, 3, 2, '#fbbf24');
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#0d2340');
-      rect(ctx, 10, 26, 5, 5, '#1e3a5f'); rect(ctx, 17, 26, 5, 5, '#1e3a5f');
-      rect(ctx, 9, 29, 6, 3, '#0d1a2e'); rect(ctx, 17, 29, 6, 3, '#0d1a2e');
+      // Maré — navy beret with rank stripe, pressurized water cannon raised
+      ellipse(ctx, 24, 6, 11, 6, col.dark);
+      ellipse(ctx, 24, 5, 10, 5, col.main);
+      roundRect(ctx, 19, 8, 10, 2, 1, '#fbbf24');
+      ellipse(ctx, 39, 28, 5.5, 9.5, col.main);
+      circle(ctx, 39, 35.5, 3.6, col.dark);
+      rect(ctx, 36, 3, 6, 25, '#546e7a');
+      roundRect(ctx, 34, 0, 10, 5, 2, '#78909c');
+      circle(ctx, 39, 1, 2, '#80d8ff');
+      roundRect(ctx, 14, 24, 3, 2, 1, '#fbbf24');
       break;
     }
     case 'storm_runner': {
-      // Pulso — half alien, torn lab coat, energy hands
-      rect(ctx, 7, 0, 4, 5, '#a3e635'); // energy glow left
-      px(ctx, 7, 0, '#86efac'); px(ctx, 10, 1, '#fbbf24');
-      // Head (left = skin, right = alien)
-      rect(ctx, 11, 6, 5, 6, TD_SKIN);
-      rect(ctx, 16, 6, 5, 6, '#4d7c0f');
-      rect(ctx, 11, 6, 5, 2, '#374151'); // human hair
-      rect(ctx, 16, 6, 5, 2, '#3a5e09'); // alien carapace
-      px(ctx, 13, 9, '#1a1a1a'); px(ctx, 18, 9, '#a3e635'); // human / alien eye
-      // Shoulders
-      rect(ctx, 9, 12, 6, 4, '#e5e7eb'); rect(ctx, 17, 12, 6, 4, '#4d7c0f');
-      // Arms
-      rect(ctx, 6, 13, 5, 7, '#e5e7eb'); rect(ctx, 21, 13, 5, 7, '#4d7c0f');
-      rect(ctx, 6, 19, 4, 3, '#a3e635'); rect(ctx, 22, 19, 4, 3, '#65a30d');
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#e5e7eb');
-      rect(ctx, 13, 17, 6, 5, '#f3f4f6');
-      rect(ctx, 14, 18, 4, 3, '#d1d5db');
-      px(ctx, 15, 19, '#a3e635'); px(ctx, 16, 20, '#86efac');
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#9ca3af');
-      rect(ctx, 10, 26, 5, 5, '#6b7280'); rect(ctx, 17, 26, 5, 5, '#6b7280');
-      rect(ctx, 9, 29, 6, 3, '#374151'); rect(ctx, 17, 29, 6, 3, '#374151');
+      // Pulso — half-alien face, glowing radioactive right hand (no weapon)
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(24, 0, 12, 22);
+      ctx.clip();
+      circle(ctx, 24, 11, 10, '#4d7c0f');
+      ctx.restore();
+      roundRect(ctx, 15, 3, 10, 4, 2, '#374151');
+      px(ctx, 27, 10, '#a3e635');
+      ellipse(ctx, 39, 28, 5.5, 9.5, '#4d7c0f');
+      circle(ctx, 39, 35.5, 4.4, '#a3e635');
+      circle(ctx, 39, 35.5, 2.2, '#eaffb0');
+      circle(ctx, 40, 26, 2, '#86efac');
+      px(ctx, 43, 30, '#fbbf24'); px(ctx, 44, 22, '#4ade80');
       break;
     }
     case 'void_walker': {
-      // Fenda — white lab coat, glasses, purple shimmer
-      px(ctx, 14, 2, '#a855f7'); px(ctx, 16, 1, '#c084fc');
-      px(ctx, 18, 3, '#7c3aed'); px(ctx, 12, 3, '#a855f7');
-      // Head
-      rect(ctx, 12, 6, 8, 6, TD_SKIN);
-      rect(ctx, 12, 6, 8, 2, '#5c3d1a'); // messy brown hair
-      px(ctx, 12, 7, '#7c5030'); px(ctx, 19, 7, '#7c5030');
-      // Glasses
-      rect(ctx, 12, 9, 3, 2, '#374151'); rect(ctx, 17, 9, 3, 2, '#374151');
-      rect(ctx, 15, 9, 2, 1, '#374151');
-      px(ctx, 12, 9, '#60a5fa'); px(ctx, 13, 9, '#93c5fd');
-      px(ctx, 17, 9, '#60a5fa'); px(ctx, 18, 9, '#93c5fd');
-      // Shoulders + arms
-      rect(ctx, 9, 12, 14, 4, '#f3f4f6');
-      rect(ctx, 6, 13, 5, 7, '#f3f4f6'); rect(ctx, 21, 13, 5, 7, '#f3f4f6');
-      rect(ctx, 6, 19, 4, 2, TD_SKIN); rect(ctx, 22, 19, 4, 2, TD_SKIN);
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#f3f4f6');
-      rect(ctx, 13, 17, 6, 5, '#ffffff');
-      rect(ctx, 9, 16, 2, 7, '#9ca3af'); rect(ctx, 21, 16, 2, 7, '#9ca3af');
-      // Purple shimmer
-      px(ctx, 8, 14, '#a855f7'); px(ctx, 23, 16, '#c084fc');
-      px(ctx, 9, 20, '#7c3aed'); px(ctx, 22, 22, '#a855f7');
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#d1d5db');
-      rect(ctx, 10, 26, 5, 5, '#9ca3af'); rect(ctx, 17, 26, 5, 5, '#9ca3af');
-      rect(ctx, 9, 29, 6, 3, '#4b5563'); rect(ctx, 17, 29, 6, 3, '#4b5563');
+      // Fenda — messy hair, glasses, faint purple void shimmer
+      roundRect(ctx, 15, 2, 8, 5, 3, '#5c3d1a');
+      roundRect(ctx, 24, 2, 8, 5, 3, '#5c3d1a');
+      roundRect(ctx, 16, 9, 6, 3, 1, '#374151');
+      roundRect(ctx, 26, 9, 6, 3, 1, '#374151');
+      rect(ctx, 22, 10, 4, 1, '#374151');
+      circle(ctx, 19, 10, 1.4, '#93c5fd');
+      circle(ctx, 29, 10, 1.4, '#93c5fd');
+      px(ctx, 8, 20, '#a855f7'); px(ctx, 40, 22, '#c084fc');
+      px(ctx, 6, 30, '#7c3aed'); px(ctx, 42, 33, '#a855f7');
       break;
     }
     case 'beast_tamer': {
-      // Nex — tactical vest, ponytail, whip up, small alien ahead
-      rect(ctx, 13, 0, 6, 5, '#4d7c0f'); // alien companion
-      px(ctx, 14, 0, '#a3e635'); px(ctx, 18, 0, '#a3e635');
-      rect(ctx, 12, 2, 2, 2, '#3a5e09'); rect(ctx, 18, 2, 2, 2, '#3a5e09');
-      // Whip
-      px(ctx, 20, 4, '#5d4037'); px(ctx, 21, 5, '#5d4037');
-      px(ctx, 22, 5, '#5d4037'); px(ctx, 23, 6, '#5d4037');
-      // Head
-      rect(ctx, 12, 6, 8, 6, TD_SKIN);
-      rect(ctx, 12, 6, 8, 2, '#ec4899'); // dark pink hair
-      rect(ctx, 20, 6, 3, 7, '#be185d'); // ponytail right
-      px(ctx, 13, 9, '#1a1a1a'); px(ctx, 18, 9, '#1a1a1a');
-      // Arms
-      rect(ctx, 9, 12, 14, 4, '#374151');
-      rect(ctx, 6, 13, 5, 7, TD_SKIN); rect(ctx, 21, 13, 5, 7, TD_SKIN);
-      rect(ctx, 6, 19, 4, 2, TD_SKIN_DARK); rect(ctx, 22, 19, 4, 2, TD_SKIN_DARK);
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#374151');
-      rect(ctx, 13, 17, 6, 5, '#4b5563');
-      rect(ctx, 14, 18, 4, 3, '#ec4899');
-      rect(ctx, 13, 16, 2, 2, '#ec4899'); rect(ctx, 17, 16, 2, 2, '#ec4899');
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#1f2937');
-      rect(ctx, 10, 26, 5, 5, '#374151'); rect(ctx, 17, 26, 5, 5, '#374151');
-      rect(ctx, 9, 29, 6, 3, '#111827'); rect(ctx, 17, 29, 6, 3, '#111827');
+      // Nex — headband, ponytail, whip raised, tiny tamed alien at her feet
+      roundRect(ctx, 15, 3, 18, 3, 1, col.dark);
+      circle(ctx, 19, 4, 1.3, '#ec4899'); circle(ctx, 29, 4, 1.3, '#ec4899');
+      roundRect(ctx, 32, 4, 4, 11, 2, '#be185d');
+      rect(ctx, 40, 8, 3, 2, '#5d4037'); rect(ctx, 42, 6, 3, 2, '#5d4037');
+      rect(ctx, 43, 3, 2, 3, '#5d4037'); rect(ctx, 44, 0, 2, 3, '#5d4037');
+      roundRect(ctx, 2, 38, 7, 6, 2, '#4d7c0f');
+      circle(ctx, 4, 36, 2, '#65a30d');
+      px(ctx, 3, 36, '#a3e635');
+      px(ctx, 9, 40, '#fbbf24');
       break;
     }
     case 'firefighter': {
-      // Fênix — heavy helmet, fire axe up, foam tank hump, red gear
-      rect(ctx, 14, 0, 2, 8, '#9e9e9e'); // axe handle
-      rect(ctx, 11, 0, 6, 3, '#ef4444'); // axe head
-      rect(ctx, 11, 0, 3, 3, '#bdbdbd');
-      // Head + helmet
-      rect(ctx, 10, 5, 12, 7, '#ef4444');
-      rect(ctx, 9, 6, 14, 5, '#fbbf24');
-      rect(ctx, 11, 8, 10, 4, '#374151'); // visor
-      rect(ctx, 12, 8, 8, 3, '#60a5fa');
-      // Foam tank hump
-      rect(ctx, 8, 12, 4, 6, '#dc2626'); rect(ctx, 7, 13, 3, 4, '#b91c1c');
-      // Shoulders
-      rect(ctx, 9, 12, 14, 4, '#7f1d1d');
-      rect(ctx, 8, 12, 3, 5, '#991b1b'); rect(ctx, 21, 12, 3, 5, '#991b1b');
-      // Arms
-      rect(ctx, 6, 15, 5, 6, '#7f1d1d'); rect(ctx, 21, 15, 5, 6, '#7f1d1d');
-      rect(ctx, 6, 20, 4, 2, '#374151'); rect(ctx, 22, 20, 4, 2, '#374151');
-      // Torso
-      rect(ctx, 11, 16, 10, 7, '#7f1d1d');
-      rect(ctx, 13, 17, 6, 5, '#991b1b');
-      rect(ctx, 14, 18, 4, 3, '#fbbf24'); // safety stripe
-      // Legs
-      rect(ctx, 10, 23, 12, 3, '#450a0a');
-      rect(ctx, 10, 26, 5, 5, '#7f1d1d'); rect(ctx, 17, 26, 5, 5, '#7f1d1d');
-      rect(ctx, 9, 29, 6, 3, '#1c0a0a'); rect(ctx, 17, 29, 6, 3, '#1c0a0a');
+      // Fênix — heavy helmet w/ visor, foam tank hump, fire axe raised
+      circle(ctx, 24, 10, 11, col.main);
+      ellipse(ctx, 24, 7, 10, 6, col.dark);
+      roundRect(ctx, 13, 9, 22, 5, 2, '#374151');
+      roundRect(ctx, 15, 10, 18, 3, 1, '#60a5fa');
+      roundRect(ctx, 12, 5, 24, 3, 1, '#fbbf24');
+      roundRect(ctx, 3, 24, 8, 15, 3, '#dc2626');
+      roundRect(ctx, 2, 26, 5, 10, 2, '#b91c1c');
+      rect(ctx, 36, 2, 3, 28, '#78716c');
+      roundRect(ctx, 30, 0, 13, 7, 1, '#57534e');
+      roundRect(ctx, 30, 0, 7, 7, 1, '#a8a29e');
       break;
     }
     default: {
-      rect(ctx, 12, 6, 8, 6, '#374151');
-      rect(ctx, 11, 7, 10, 5, TD_SKIN);
-      rect(ctx, 9, 12, 14, 4, '#6b7280');
-      rect(ctx, 6, 13, 5, 7, TD_SKIN); rect(ctx, 21, 13, 5, 7, TD_SKIN);
-      rect(ctx, 11, 16, 10, 7, '#4b5563');
-      rect(ctx, 10, 23, 12, 9, '#374151');
+      roundRect(ctx, 16, 3, 16, 5, 3, col.dark);
       break;
     }
   }
@@ -287,287 +348,237 @@ function generatePlayerShip(_baseColor: string): HTMLCanvasElement {
 
 // ─── Enemy Generation ────────────────────────────────────────────────────────
 
-function generateSmallEnemy(variant: number, element: string): HTMLCanvasElement {
-  const c = createCanvas(16, 16);
-  const ctx = c.getContext('2d')!;
-  const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
-
-  switch (variant) {
-    case 0: // Scout — fast dart-shaped insectoid alien
-      // Curved streamlined body
-      rect(ctx, 6, 1, 4, 3, col.light);   // head point
-      rect(ctx, 5, 4, 6, 4, col.mid);      // upper body
-      rect(ctx, 4, 8, 8, 4, col.mid);      // lower body
-      rect(ctx, 3, 10, 10, 2, col.dark);   // widest point
-      // Wing nubs
-      rect(ctx, 1, 7, 3, 3, col.dark); rect(ctx, 12, 7, 3, 3, col.dark);
-      // Glowing eyes
-      px(ctx, 6, 5, '#ffffff'); px(ctx, 9, 5, '#ffffff');
-      px(ctx, 6, 6, col.light); px(ctx, 9, 6, col.light);
-      // Tail/thruster
-      rect(ctx, 6, 12, 4, 3, col.dark);
-      px(ctx, 7, 14, col.light); px(ctx, 8, 15, col.light);
-      break;
-    case 1: // Swarm — round bug alien, 4 legs, glowing back
-      rect(ctx, 5, 4, 6, 7, col.mid);      // round body
-      rect(ctx, 4, 5, 8, 5, col.mid);
-      rect(ctx, 6, 3, 4, 2, col.dark);     // head carapace
-      // Antenna
-      px(ctx, 7, 2, col.mid); px(ctx, 6, 1, col.mid);
-      px(ctx, 8, 2, col.mid); px(ctx, 9, 1, col.mid);
-      // 4 legs
-      rect(ctx, 2, 7, 3, 1, col.dark); rect(ctx, 11, 7, 3, 1, col.dark);
-      rect(ctx, 2, 9, 3, 1, col.dark); rect(ctx, 11, 9, 3, 1, col.dark);
-      px(ctx, 1, 8, col.dark); px(ctx, 14, 8, col.dark);
-      // Eyes
-      px(ctx, 6, 5, '#ff4444'); px(ctx, 9, 5, '#ff4444');
-      // Glowing spot on back
-      rect(ctx, 7, 7, 2, 2, col.light);
-      px(ctx, 7, 7, '#ffffff');
-      break;
-    default: // Zigzag — worm-like segmented alien
-      // Segmented body
-      rect(ctx, 5, 1, 6, 3, col.mid);      // head
-      rect(ctx, 4, 4, 8, 2, col.dark);     // segment 1
-      rect(ctx, 3, 6, 10, 2, col.mid);     // segment 2
-      rect(ctx, 4, 8, 8, 2, col.dark);     // segment 3
-      rect(ctx, 5, 10, 6, 2, col.mid);     // segment 4
-      rect(ctx, 6, 12, 4, 3, col.dark);    // tail
-      // Fang mouth at bottom (toward player)
-      px(ctx, 6, 3, col.light); px(ctx, 9, 3, col.light); // eyes
-      rect(ctx, 5, 1, 2, 1, col.light); rect(ctx, 9, 1, 2, 1, col.light); // fangs
-      // Side frills on segments
-      px(ctx, 2, 7, col.light); px(ctx, 13, 7, col.light);
-      break;
-  }
-  return c;
+function triangle(ctx: CanvasRenderingContext2D, x1: number, y1: number, x2: number, y2: number, x3: number, y3: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3);
+  ctx.closePath();
+  ctx.fill();
 }
 
-function generateMediumEnemy(variant: number, element: string): HTMLCanvasElement {
+function generateSmallEnemy(variant: number, element: string): HTMLCanvasElement {
   const c = createCanvas(24, 24);
   const ctx = c.getContext('2d')!;
   const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
 
   switch (variant) {
-    case 0: // Grunt — upright bipedal alien, wide head, 3 eyes, claws
-      rect(ctx, 7, 1, 10, 5, col.dark);    // wide alien head
-      rect(ctx, 6, 2, 12, 4, col.mid);
-      // 3 eyes
-      px(ctx, 8, 3, '#ff2020'); px(ctx, 12, 3, '#ff2020'); px(ctx, 16, 3, '#ff2020');
-      rect(ctx, 6, 6, 12, 8, col.mid);     // torso
-      rect(ctx, 4, 7, 3, 6, col.dark);     // left arm
-      rect(ctx, 17, 7, 3, 6, col.dark);    // right arm
-      // Claws
-      px(ctx, 3, 12, col.light); px(ctx, 4, 13, col.light);
-      px(ctx, 20, 12, col.light); px(ctx, 19, 13, col.light);
-      // Alien armor plates on torso
-      rect(ctx, 8, 7, 8, 2, col.light);
-      rect(ctx, 7, 10, 10, 2, shade(col.mid, 0.8));
-      rect(ctx, 6, 14, 12, 6, col.mid);    // lower body
-      rect(ctx, 7, 20, 4, 3, col.dark); rect(ctx, 13, 20, 4, 3, col.dark); // legs
+    case 0: { // Scout — fast dart-shaped insectoid alien
+      drawGroundShadow(ctx, 12, 21, 6, 2);
+      triangle(ctx, 4, 15, 0, 10, 5, 18, col.dark);
+      triangle(ctx, 20, 15, 24, 10, 19, 18, col.dark);
+      ellipse(ctx, 12, 14, 5, 7, col.mid);
+      circle(ctx, 12, 8, 4, col.light);
+      circle(ctx, 9, 9, 1.3, '#ffffff'); circle(ctx, 15, 9, 1.3, '#ffffff');
+      circle(ctx, 9, 9, 0.6, col.dark); circle(ctx, 15, 9, 0.6, col.dark);
+      ellipse(ctx, 12, 20, 2.6, 3, col.dark);
+      circle(ctx, 12, 22, 1, col.light);
       break;
-    case 1: // Shooter — alien with oversized cannon arm pointing DOWN, single large eye
-      rect(ctx, 8, 2, 8, 6, col.mid);      // head
-      rect(ctx, 9, 2, 6, 4, col.dark);
-      // Single large eye
-      rect(ctx, 10, 3, 4, 3, col.light);
-      px(ctx, 11, 4, '#ff0000'); px(ctx, 12, 4, '#660000');
-      rect(ctx, 6, 8, 12, 7, col.mid);     // body
-      // Cannon arm on right (pointing DOWN — toward player)
-      rect(ctx, 17, 6, 5, 4, col.dark);    // cannon shoulder
-      rect(ctx, 18, 10, 4, 9, col.dark);   // cannon barrel downward
-      rect(ctx, 19, 18, 2, 3, col.light);  // barrel tip glow
-      // Left arm (normal)
-      rect(ctx, 3, 8, 3, 6, col.mid);
-      rect(ctx, 6, 15, 12, 5, col.dark);   // lower body
-      rect(ctx, 8, 20, 3, 3, col.mid); rect(ctx, 13, 20, 3, 3, col.mid);
+    }
+    case 1: { // Swarm — round bug alien, 4 legs, glowing back
+      drawGroundShadow(ctx, 12, 21, 6, 2);
+      rect(ctx, 11, 2, 1, 4, col.mid); rect(ctx, 12, 2, 1, 4, col.mid);
+      circle(ctx, 11, 1, 1, col.light); circle(ctx, 13, 1, 1, col.light);
+      circle(ctx, 12, 12, 7, col.mid);
+      circle(ctx, 12, 8, 3.4, col.dark);
+      roundRect(ctx, 1, 10, 5, 2, 1, col.dark); roundRect(ctx, 18, 10, 5, 2, 1, col.dark);
+      roundRect(ctx, 1, 14, 5, 2, 1, col.dark); roundRect(ctx, 18, 14, 5, 2, 1, col.dark);
+      circle(ctx, 9, 9, 1.4, '#ff4444'); circle(ctx, 15, 9, 1.4, '#ff4444');
+      circle(ctx, 12, 14, 2.4, col.light); circle(ctx, 12, 14, 1, '#ffffff');
       break;
-    case 2: // Armored — carapace plates, 2 red eyes behind visor
-      // Head with visor
-      rect(ctx, 6, 1, 12, 4, col.dark);
-      rect(ctx, 5, 2, 14, 4, col.mid);
-      // Visor slit
-      rect(ctx, 6, 3, 12, 2, shade(col.dark, 0.5));
-      px(ctx, 8, 3, '#ff0000'); px(ctx, 14, 3, '#ff0000'); // eyes behind visor
-      // Heavy carapace body
-      rect(ctx, 4, 5, 16, 10, col.mid);
-      rect(ctx, 2, 7, 20, 6, col.dark);    // main carapace plate
-      rect(ctx, 3, 8, 18, 4, col.mid);     // plate highlight
-      rect(ctx, 6, 15, 12, 6, col.mid);    // lower body
-      // Thick arms
-      rect(ctx, 1, 8, 3, 7, col.dark); rect(ctx, 20, 8, 3, 7, col.dark);
-      rect(ctx, 8, 21, 3, 2, col.dark); rect(ctx, 13, 21, 3, 2, col.dark);
-      // Armor ridge on chest
-      rect(ctx, 8, 10, 8, 1, col.light);
+    }
+    default: { // Zigzag — worm-like segmented alien
+      drawGroundShadow(ctx, 12, 21, 6, 2);
+      ellipse(ctx, 12, 4, 4, 3, col.mid);
+      ellipse(ctx, 12, 8, 5.4, 2.6, col.dark);
+      ellipse(ctx, 12, 12, 6, 2.8, col.mid);
+      ellipse(ctx, 12, 16, 5.2, 2.6, col.dark);
+      ellipse(ctx, 12, 19.5, 3.6, 2.2, col.mid);
+      circle(ctx, 9.5, 3.5, 1.1, col.light); circle(ctx, 14.5, 3.5, 1.1, col.light);
+      triangle(ctx, 8, 5, 9.5, 2, 10.5, 5, col.light);
+      triangle(ctx, 16, 5, 14.5, 2, 13.5, 5, col.light);
+      circle(ctx, 3, 11, 1, col.light); circle(ctx, 21, 11, 1, col.light);
       break;
-    default: // Fast — sleek insectoid, 4 limbs, streamlined, 2 yellow eyes
-      // Streamlined head
-      rect(ctx, 9, 1, 6, 4, col.light);
-      rect(ctx, 8, 2, 8, 3, col.mid);
-      px(ctx, 9, 3, '#ffff00'); px(ctx, 14, 3, '#ffff00'); // yellow eyes
-      // Sleek body
-      rect(ctx, 7, 5, 10, 7, col.mid);
-      rect(ctx, 8, 5, 8, 7, col.dark);
-      // 4 limbs (2 pairs)
-      rect(ctx, 3, 6, 4, 2, col.mid); rect(ctx, 17, 6, 4, 2, col.mid);
-      rect(ctx, 2, 8, 5, 2, col.dark); rect(ctx, 17, 8, 5, 2, col.dark);
-      rect(ctx, 5, 12, 3, 4, col.mid); rect(ctx, 16, 12, 3, 4, col.mid);
-      rect(ctx, 3, 14, 5, 2, col.dark); rect(ctx, 16, 14, 5, 2, col.dark);
-      // Tail
-      rect(ctx, 9, 12, 6, 8, col.mid);
-      rect(ctx, 10, 18, 4, 3, col.dark);
-      break;
+    }
   }
   return c;
 }
 
-function generateLargeEnemy(variant: number, element: string): HTMLCanvasElement {
+function generateMediumEnemy(variant: number, element: string): HTMLCanvasElement {
   const c = createCanvas(32, 32);
   const ctx = c.getContext('2d')!;
   const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
 
   switch (variant) {
-    case 0: // Tank — massive blocky alien, 4 arms, 3 red eyes, thick carapace
-      // Massive head
-      rect(ctx, 8, 1, 16, 7, col.dark);
-      rect(ctx, 7, 2, 18, 6, col.mid);
-      // 3 red eyes (vertical pair center + 1 above)
-      px(ctx, 13, 3, '#ff0000'); px(ctx, 14, 3, '#ff0000');
-      px(ctx, 17, 3, '#ff0000'); px(ctx, 18, 3, '#ff0000');
-      px(ctx, 15, 2, '#ff4400'); // top eye
-      // Thick armored body
-      rect(ctx, 5, 8, 22, 12, col.mid);
-      rect(ctx, 4, 9, 24, 10, col.dark);
-      rect(ctx, 5, 10, 22, 8, col.mid);
-      // Carapace ridges
-      rect(ctx, 6, 12, 20, 2, col.light);
-      rect(ctx, 7, 15, 18, 2, shade(col.mid, 0.8));
-      // 4 arms
-      rect(ctx, 1, 8, 4, 5, col.dark); rect(ctx, 27, 8, 4, 5, col.dark);  // upper arms
-      rect(ctx, 0, 13, 4, 5, col.mid); rect(ctx, 28, 13, 4, 5, col.mid);  // lower arms
-      px(ctx, 0, 17, col.light); px(ctx, 3, 18, col.light);  // left claws
-      px(ctx, 31, 17, col.light); px(ctx, 28, 18, col.light); // right claws
-      // Legs
-      rect(ctx, 6, 20, 8, 10, col.dark); rect(ctx, 18, 20, 8, 10, col.dark);
-      rect(ctx, 5, 27, 9, 4, col.mid); rect(ctx, 18, 27, 9, 4, col.mid);
+    case 0: { // Grunt — upright bipedal alien, wide head, 3 eyes, claws
+      drawGroundShadow(ctx, 16, 29, 9, 3);
+      roundRect(ctx, 8, 20, 5, 8, 2, col.dark); roundRect(ctx, 19, 20, 5, 8, 2, col.dark); // legs
+      roundRect(ctx, 6, 16, 20, 10, 5, col.mid); // lower body
+      roundRect(ctx, 4, 9, 6, 9, 3, col.dark); roundRect(ctx, 22, 9, 6, 9, 3, col.dark); // arms
+      triangle(ctx, 4, 18, 2, 22, 7, 20, col.light); triangle(ctx, 28, 18, 30, 22, 25, 20, col.light); // claws
+      roundRect(ctx, 7, 8, 18, 11, 5, col.mid); // torso
+      roundRect(ctx, 9, 9, 14, 4, 2, col.light); // chest plate
+      circle(ctx, 16, 5, 9, col.dark); // wide head
+      ellipse(ctx, 16, 8, 8, 4, col.mid);
+      circle(ctx, 11, 5, 1.6, '#ff2020'); circle(ctx, 16, 4, 1.6, '#ff2020'); circle(ctx, 21, 5, 1.6, '#ff2020');
       break;
-    case 1: // Shield Bearer — alien with chitin shield appendage
-      // Body
-      rect(ctx, 9, 8, 14, 12, col.mid);
-      rect(ctx, 8, 9, 16, 10, col.dark);
-      rect(ctx, 10, 10, 12, 8, col.mid);
-      // Head
-      rect(ctx, 10, 2, 12, 7, col.dark);
-      rect(ctx, 11, 3, 10, 5, col.mid);
-      // Single glowing eye (big)
-      rect(ctx, 13, 4, 6, 3, col.light);
-      px(ctx, 14, 5, '#44ffff'); px(ctx, 15, 5, '#ffffff'); px(ctx, 17, 5, '#44ffff');
-      // Shield appendage (semicircle of hardened chitin in front/above)
-      rect(ctx, 3, 1, 26, 8, shade(col.dark, 0.6)); // shield body
-      rect(ctx, 2, 3, 28, 5, shade(col.mid, 0.7));  // shield face
-      rect(ctx, 3, 2, 26, 2, col.light);             // shield highlight
-      // Arms holding shield
-      rect(ctx, 6, 8, 4, 4, col.dark); rect(ctx, 22, 8, 4, 4, col.dark);
-      // Legs
-      rect(ctx, 9, 20, 5, 10, col.dark); rect(ctx, 18, 20, 5, 10, col.dark);
-      rect(ctx, 8, 27, 6, 4, col.mid); rect(ctx, 18, 27, 6, 4, col.mid);
+    }
+    case 1: { // Shooter — alien with oversized cannon arm, single large eye
+      drawGroundShadow(ctx, 16, 29, 9, 3);
+      roundRect(ctx, 9, 20, 5, 8, 2, col.dark); roundRect(ctx, 18, 20, 5, 8, 2, col.dark);
+      roundRect(ctx, 7, 14, 18, 9, 5, col.dark);
+      roundRect(ctx, 4, 10, 5, 8, 2, col.mid); // normal left arm
+      roundRect(ctx, 22, 7, 7, 6, 2, col.dark); // cannon shoulder
+      roundRect(ctx, 24, 12, 5, 11, 2, col.dark); // cannon barrel
+      circle(ctx, 26.5, 24, 2.6, col.light); circle(ctx, 26.5, 24, 1.1, '#ffffff');
+      roundRect(ctx, 8, 9, 16, 10, 6, col.mid); // body
+      circle(ctx, 16, 4, 7, col.mid);
+      circle(ctx, 16, 5, 4.4, col.light);
+      circle(ctx, 16, 5.5, 2.4, '#ff0000'); circle(ctx, 17, 5, 1, '#660000');
       break;
-    default: // Bomber — swollen round alien, glowing core visible through skin
-      // Swollen round body
-      rect(ctx, 7, 6, 18, 18, col.mid);
-      rect(ctx, 5, 8, 22, 14, col.mid);
-      rect(ctx, 6, 7, 20, 16, col.dark);
-      // Glowing core visible through skin
-      rect(ctx, 11, 12, 10, 8, shade(col.mid, 1.3));
-      rect(ctx, 13, 14, 6, 4, col.light);
-      px(ctx, 14, 15, '#ffffff'); px(ctx, 15, 15, '#ffffff');
-      // Eyes (2)
-      px(ctx, 11, 9, '#ff6600'); px(ctx, 19, 9, '#ff6600');
-      // Tendrils
-      rect(ctx, 2, 12, 4, 2, col.dark); rect(ctx, 26, 12, 4, 2, col.dark);
-      rect(ctx, 1, 14, 3, 2, col.mid); rect(ctx, 28, 14, 3, 2, col.mid);
-      rect(ctx, 3, 10, 2, 3, col.dark); rect(ctx, 27, 10, 2, 3, col.dark);
-      // Head
-      rect(ctx, 10, 2, 12, 6, col.dark);
-      rect(ctx, 11, 3, 10, 4, col.mid);
-      px(ctx, 13, 4, col.light); px(ctx, 18, 4, col.light); // small eyes
+    }
+    case 2: { // Armored — carapace plates, 2 red eyes behind visor
+      drawGroundShadow(ctx, 16, 29, 9, 3);
+      roundRect(ctx, 9, 21, 5, 7, 2, col.mid); roundRect(ctx, 18, 21, 5, 7, 2, col.mid);
+      roundRect(ctx, 1, 11, 5, 9, 2, col.dark); roundRect(ctx, 26, 11, 5, 9, 2, col.dark); // thick arms
+      roundRect(ctx, 5, 8, 22, 14, 6, col.mid);
+      roundRect(ctx, 3, 10, 26, 8, 5, col.dark); // main carapace plate
+      roundRect(ctx, 4, 11, 24, 5, 4, col.mid);
+      roundRect(ctx, 10, 13, 12, 2, 1, col.light); // armor ridge
+      ellipse(ctx, 16, 5, 10, 6, col.dark);
+      ellipse(ctx, 16, 5, 8, 4, col.mid);
+      roundRect(ctx, 8, 4, 16, 3, 1, shade(col.dark, 0.5)); // visor slit
+      circle(ctx, 12, 5.5, 1.5, '#ff0000'); circle(ctx, 20, 5.5, 1.5, '#ff0000');
       break;
+    }
+    default: { // Fast — sleek insectoid, 4 limbs, streamlined, 2 yellow eyes
+      drawGroundShadow(ctx, 16, 27, 8, 3);
+      ellipse(ctx, 16, 18, 8, 11, col.mid);
+      ellipse(ctx, 16, 18, 6, 9, col.dark);
+      roundRect(ctx, 13, 24, 6, 5, 2, col.dark); // tail tip
+      triangle(ctx, 5, 12, 1, 8, 7, 10, col.mid); triangle(ctx, 27, 12, 31, 8, 25, 10, col.mid);
+      triangle(ctx, 6, 20, 2, 24, 8, 21, col.dark); triangle(ctx, 26, 20, 30, 24, 24, 21, col.dark);
+      ellipse(ctx, 16, 6, 6, 5, col.light);
+      ellipse(ctx, 16, 7, 4.6, 3.6, col.mid);
+      circle(ctx, 13, 6, 1.4, '#ffff00'); circle(ctx, 19, 6, 1.4, '#ffff00');
+      break;
+    }
+  }
+  return c;
+}
+
+function generateLargeEnemy(variant: number, element: string): HTMLCanvasElement {
+  const c = createCanvas(40, 40);
+  const ctx = c.getContext('2d')!;
+  const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
+
+  switch (variant) {
+    case 0: { // Tank — massive alien, 4 arms, 3 red eyes, thick carapace
+      drawGroundShadow(ctx, 20, 37, 11, 3);
+      roundRect(ctx, 8, 26, 9, 11, 3, col.dark); roundRect(ctx, 23, 26, 9, 11, 3, col.dark);
+      roundRect(ctx, 0, 11, 6, 9, 2, col.dark); roundRect(ctx, 34, 11, 6, 9, 2, col.dark); // upper arms
+      roundRect(ctx, 0, 19, 6, 7, 2, col.mid); roundRect(ctx, 34, 19, 6, 7, 2, col.mid); // lower arms
+      triangle(ctx, 0, 24, -2, 29, 5, 27, col.light); triangle(ctx, 40, 24, 42, 29, 35, 27, col.light);
+      roundRect(ctx, 5, 10, 30, 18, 8, col.mid);
+      roundRect(ctx, 3, 13, 34, 12, 6, col.dark);
+      roundRect(ctx, 4, 14, 32, 8, 5, col.mid);
+      roundRect(ctx, 9, 16, 22, 2, 1, col.light); // ridge highlight
+      circle(ctx, 20, 4, 11, col.dark);
+      ellipse(ctx, 20, 6, 9, 5, col.mid);
+      circle(ctx, 20, 3, 1.6, '#ff4400');
+      circle(ctx, 15, 6, 1.8, '#ff0000'); circle(ctx, 25, 6, 1.8, '#ff0000');
+      break;
+    }
+    case 1: { // Shield Bearer — alien with chitin shield appendage
+      drawGroundShadow(ctx, 20, 37, 10, 3);
+      roundRect(ctx, 10, 25, 6, 11, 2, col.dark); roundRect(ctx, 24, 25, 6, 11, 2, col.dark);
+      roundRect(ctx, 8, 8, 5, 5, 2, col.dark); roundRect(ctx, 27, 8, 5, 5, 2, col.dark); // arms holding shield
+      roundRect(ctx, 11, 10, 18, 15, 6, col.mid);
+      roundRect(ctx, 12, 11, 16, 12, 5, col.dark);
+      ellipse(ctx, 20, 4, 9, 8, shade(col.dark, 0.65)); // shield appendage
+      ellipse(ctx, 20, 3.4, 9, 6.6, shade(col.mid, 0.75));
+      roundRect(ctx, 12, 0.5, 16, 2, 1, col.light);
+      circle(ctx, 20, 15, 8, col.dark);
+      ellipse(ctx, 20, 16, 6, 4, col.mid);
+      circle(ctx, 20, 16, 3, col.light);
+      circle(ctx, 18.5, 16, 1, '#44ffff'); circle(ctx, 21.5, 16, 1, '#44ffff');
+      break;
+    }
+    default: { // Bomber — swollen round alien, glowing core visible through skin
+      drawGroundShadow(ctx, 20, 34, 10, 3);
+      roundRect(ctx, 1, 15, 5, 3, 1, col.dark); roundRect(ctx, 34, 15, 5, 3, 1, col.dark); // tendrils
+      roundRect(ctx, 0, 20, 4, 3, 1, col.mid); roundRect(ctx, 36, 20, 4, 3, 1, col.mid);
+      circle(ctx, 20, 18, 13, col.dark);
+      circle(ctx, 20, 18, 11, col.mid);
+      circle(ctx, 20, 18, 6.5, shade(col.mid, 1.35)); // glowing core
+      circle(ctx, 20, 18, 3.4, col.light);
+      circle(ctx, 20, 18, 1.4, '#ffffff');
+      circle(ctx, 13, 12, 1.6, '#ff6600'); circle(ctx, 27, 12, 1.6, '#ff6600');
+      circle(ctx, 20, 6, 8, col.dark);
+      ellipse(ctx, 20, 7, 6.4, 4, col.mid);
+      circle(ctx, 15.5, 7, 1.2, col.light); circle(ctx, 24.5, 7, 1.2, col.light);
+      break;
+    }
   }
   return c;
 }
 
 function generateBossEnemy(variant: number): HTMLCanvasElement {
-  const c = createCanvas(48, 48);
+  const c = createCanvas(64, 64);
   const ctx = c.getContext('2d')!;
 
   if (variant === 0) {
-    // Drill Sergeant — alien COMMANDER, 4 arms, 4 glowing red eyes (vertical pairs), energy blades
+    // Drill Sergeant — alien COMMANDER, 4 arms, 4 glowing red eyes, energy blades
     const col = ELEMENT_COLORS.normal;
-    // Imposing head with alien glyphs
-    rect(ctx, 14, 2, 20, 10, col.dark);
-    rect(ctx, 12, 3, 24, 9, col.mid);
-    // 4 red eyes in vertical pairs
-    rect(ctx, 16, 4, 3, 3, '#ff0000'); rect(ctx, 29, 4, 3, 3, '#ff0000');
-    px(ctx, 16, 4, '#ff8800'); px(ctx, 29, 4, '#ff8800');    // glow inner
-    rect(ctx, 17, 7, 3, 3, '#ff0000'); rect(ctx, 28, 7, 3, 3, '#ff0000');
-    px(ctx, 17, 7, '#ff8800'); px(ctx, 28, 7, '#ff8800');
-    // Alien glyph marks on head
-    px(ctx, 20, 4, col.light); px(ctx, 21, 6, col.light); px(ctx, 22, 4, col.light);
-    px(ctx, 25, 4, col.light); px(ctx, 26, 6, col.light); px(ctx, 27, 4, col.light);
-    // Armored body
-    rect(ctx, 10, 12, 28, 18, col.mid);
-    rect(ctx, 8, 14, 32, 14, col.dark);
-    rect(ctx, 10, 15, 28, 12, col.mid);
-    // Armor glyphs on chest
-    rect(ctx, 14, 18, 20, 2, col.light);
-    rect(ctx, 16, 21, 16, 2, shade(col.mid, 1.4));
-    rect(ctx, 18, 24, 12, 2, col.light);
-    // 4 arms (2 pairs)
-    rect(ctx, 2, 12, 6, 8, col.dark); rect(ctx, 40, 12, 6, 8, col.dark);
-    rect(ctx, 1, 20, 6, 6, col.mid); rect(ctx, 41, 20, 6, 6, col.mid);
-    // Twin energy blades (raised)
-    rect(ctx, 3, 2, 3, 12, '#6366f1'); // left blade
-    rect(ctx, 4, 1, 1, 13, '#a5b4fc'); // left blade shine
-    rect(ctx, 42, 2, 3, 12, '#6366f1'); // right blade
-    rect(ctx, 42, 1, 1, 13, '#a5b4fc');
-    // Lower body
-    rect(ctx, 12, 30, 24, 10, col.dark);
-    rect(ctx, 14, 40, 8, 7, col.mid); rect(ctx, 26, 40, 8, 7, col.mid); // legs
+    drawGroundShadow(ctx, 32, 60, 17, 4);
+    roundRect(ctx, 18, 44, 12, 15, 4, col.dark); roundRect(ctx, 34, 44, 12, 15, 4, col.dark); // legs
+    roundRect(ctx, 3, 15, 8, 12, 3, col.dark); roundRect(ctx, 53, 15, 8, 12, 3, col.dark); // upper arm pair
+    roundRect(ctx, 1, 26, 8, 9, 3, col.mid); roundRect(ctx, 55, 26, 8, 9, 3, col.mid); // lower arm pair
+    roundRect(ctx, 3, 2, 4, 16, 1, '#818cf8'); roundRect(ctx, 5, 1, 1.5, 17, 1, '#c7d2fe'); // left blade
+    roundRect(ctx, 57, 2, 4, 16, 1, '#818cf8'); roundRect(ctx, 57.5, 1, 1.5, 17, 1, '#c7d2fe'); // right blade
+    roundRect(ctx, 13, 16, 38, 24, 10, col.mid);
+    roundRect(ctx, 10, 19, 44, 18, 8, col.dark);
+    roundRect(ctx, 12, 20, 40, 14, 7, col.mid);
+    roundRect(ctx, 18, 23, 28, 3, 1, col.light);
+    roundRect(ctx, 21, 28, 22, 3, 1, shade(col.mid, 1.35));
+    roundRect(ctx, 24, 33, 16, 3, 1, col.light);
+    ellipse(ctx, 32, 8, 17, 11, col.dark);
+    ellipse(ctx, 32, 9, 14, 8, col.mid);
+    circle(ctx, 23, 8, 2.4, '#ff0000'); circle(ctx, 41, 8, 2.4, '#ff0000');
+    circle(ctx, 23, 8, 1, '#ff8800'); circle(ctx, 41, 8, 1, '#ff8800');
+    circle(ctx, 26, 13, 2, '#ff0000'); circle(ctx, 38, 13, 2, '#ff0000');
+    circle(ctx, 26, 13, 0.8, '#ff8800'); circle(ctx, 38, 13, 0.8, '#ff8800');
+    px(ctx, 29, 5, col.light); px(ctx, 32, 4, col.light); px(ctx, 35, 5, col.light);
   } else {
     // Hydra — alien HIVE QUEEN, 3 tentacle-neck heads, claws, purple eyes, egg sacs
     const col = ELEMENT_COLORS.dark;
-    // Massive main body
-    rect(ctx, 10, 26, 28, 16, col.mid);
-    rect(ctx, 8, 28, 32, 14, col.dark);
-    rect(ctx, 10, 29, 28, 12, col.mid);
-    // Egg sacs on sides
-    rect(ctx, 2, 30, 8, 8, shade(col.mid, 0.9));
-    rect(ctx, 38, 30, 8, 8, shade(col.mid, 0.9));
-    px(ctx, 4, 34, col.light); px(ctx, 41, 34, col.light);
-    // Claws
-    px(ctx, 0, 32, col.light); px(ctx, 1, 33, col.light); px(ctx, 0, 35, col.light);
-    px(ctx, 47, 32, col.light); px(ctx, 46, 33, col.light); px(ctx, 47, 35, col.light);
+    drawGroundShadow(ctx, 32, 58, 20, 4);
+    ellipse(ctx, 8, 46, 7, 8, shade(col.mid, 0.9)); ellipse(ctx, 56, 46, 7, 8, shade(col.mid, 0.9)); // egg sacs
+    circle(ctx, 8, 44, 1.4, col.light); circle(ctx, 56, 44, 1.4, col.light);
+    triangle(ctx, 2, 40, -3, 44, 4, 47, col.light); triangle(ctx, 62, 40, 67, 44, 60, 47, col.light);
+    roundRect(ctx, 12, 36, 40, 22, 10, col.mid);
+    roundRect(ctx, 10, 38, 44, 18, 9, col.dark);
+    roundRect(ctx, 12, 39, 40, 15, 8, col.mid);
     // Left tentacle neck + head
-    rect(ctx, 4, 16, 8, 8, col.dark);   // neck
-    rect(ctx, 2, 6, 12, 11, col.mid);   // head
-    rect(ctx, 3, 5, 10, 6, col.dark);   // head carapace
-    px(ctx, 5, 8, '#cc44ff'); px(ctx, 5, 9, '#8800cc'); // purple eye left
-    px(ctx, 11, 8, '#cc44ff'); px(ctx, 11, 9, '#8800cc');
-    rect(ctx, 4, 14, 6, 2, col.mid);    // fang open
+    roundRect(ctx, 8, 22, 9, 16, 3, col.dark);
+    circle(ctx, 12, 16, 9, col.mid);
+    ellipse(ctx, 12, 15, 7, 5, col.dark);
+    circle(ctx, 9, 15, 1.6, '#cc44ff'); circle(ctx, 15, 15, 1.6, '#cc44ff');
+    circle(ctx, 9, 15, 0.6, '#ffffff'); circle(ctx, 15, 15, 0.6, '#ffffff');
+    roundRect(ctx, 9, 19, 6, 2.4, 1, shade(col.mid, 0.7));
     // Center tentacle neck + head
-    rect(ctx, 20, 10, 8, 16, col.dark); // neck center
-    rect(ctx, 16, 1, 16, 11, col.mid);  // center head
-    rect(ctx, 17, 0, 14, 6, col.dark);
-    px(ctx, 19, 4, '#cc44ff'); px(ctx, 20, 5, '#ffffff'); // eye
-    px(ctx, 27, 4, '#cc44ff'); px(ctx, 26, 5, '#ffffff');
-    rect(ctx, 19, 1, 10, 1, col.light); // crest
+    roundRect(ctx, 27, 14, 10, 22, 3, col.dark);
+    circle(ctx, 32, 8, 11, col.mid);
+    ellipse(ctx, 32, 7, 9, 6, col.dark);
+    roundRect(ctx, 24, 0.5, 16, 2, 1, col.light); // crest
+    circle(ctx, 27, 7, 2, '#cc44ff'); circle(ctx, 37, 7, 2, '#cc44ff');
+    circle(ctx, 27, 7, 0.8, '#ffffff'); circle(ctx, 37, 7, 0.8, '#ffffff');
     // Right tentacle neck + head
-    rect(ctx, 36, 16, 8, 8, col.dark);  // neck
-    rect(ctx, 34, 6, 12, 11, col.mid);  // head
-    rect(ctx, 35, 5, 10, 6, col.dark);
-    px(ctx, 37, 8, '#cc44ff'); px(ctx, 37, 9, '#8800cc');
-    px(ctx, 43, 8, '#cc44ff'); px(ctx, 43, 9, '#8800cc');
-    rect(ctx, 38, 14, 6, 2, col.mid);   // fang
+    roundRect(ctx, 47, 22, 9, 16, 3, col.dark);
+    circle(ctx, 52, 16, 9, col.mid);
+    ellipse(ctx, 52, 15, 7, 5, col.dark);
+    circle(ctx, 49, 15, 1.6, '#cc44ff'); circle(ctx, 55, 15, 1.6, '#cc44ff');
+    circle(ctx, 49, 15, 0.6, '#ffffff'); circle(ctx, 55, 15, 0.6, '#ffffff');
+    roundRect(ctx, 49, 19, 6, 2.4, 1, shade(col.mid, 0.7));
   }
   return c;
 }
@@ -681,138 +692,140 @@ export function generateFenixPortrait(w: number, h: number): HTMLCanvasElement {
 // ─── Extra Enemy Sprites (missing types) ────────────────────────────────────
 
 function generateSpecialEnemy(type: string, element: string): HTMLCanvasElement {
-  const c = createCanvas(16, 16);
+  const c = createCanvas(24, 24);
   const ctx = c.getContext('2d')!;
   const col = ELEMENT_COLORS[element] || ELEMENT_COLORS.normal;
+  drawGroundShadow(ctx, 12, 21, 6, 2);
 
   switch (type) {
-    case 'crystalline':
-      rect(ctx, 7, 1, 2, 3, col.light);
-      rect(ctx, 5, 4, 6, 4, col.mid);
-      rect(ctx, 3, 8, 10, 5, col.mid);
-      rect(ctx, 5, 13, 6, 2, col.dark);
-      px(ctx, 6, 6, col.light); px(ctx, 9, 6, col.light);
-      rect(ctx, 1, 9, 2, 3, col.light); rect(ctx, 13, 9, 2, 3, col.light);
+    case 'crystalline': {
+      triangle(ctx, 12, 1, 8, 8, 16, 8, col.light);
+      roundRect(ctx, 6, 7, 12, 9, 2, col.mid);
+      triangle(ctx, 6, 16, 18, 16, 12, 22, col.dark);
+      circle(ctx, 9, 11, 1, col.light); circle(ctx, 15, 11, 1, col.light);
+      triangle(ctx, 1, 10, 5, 8, 5, 14, col.light); triangle(ctx, 23, 10, 19, 8, 19, 14, col.light);
       break;
-    case 'flame_elemental':
-      rect(ctx, 6, 4, 4, 3, '#ffcc00');
-      rect(ctx, 4, 7, 8, 5, '#ff6600');
-      rect(ctx, 3, 9, 10, 4, '#ff3300');
-      rect(ctx, 5, 5, 2, 2, '#ffff00'); rect(ctx, 9, 5, 2, 2, '#ffff00');
-      px(ctx, 7, 3, '#ffffff'); px(ctx, 9, 2, '#ffcc00');
-      rect(ctx, 6, 13, 4, 2, '#ff3300');
+    }
+    case 'flame_elemental': {
+      circle(ctx, 12, 8, 6, '#ff6600');
+      circle(ctx, 12, 8, 4, '#ff9500');
+      triangle(ctx, 12, 0, 8, 7, 16, 7, '#ffcc00');
+      circle(ctx, 9.5, 7, 1, '#ffffff'); circle(ctx, 14.5, 7, 1, '#ffffff');
+      ellipse(ctx, 12, 16, 5, 5, '#ff3300');
+      circle(ctx, 12, 18, 2, '#ff6600');
       break;
-    case 'gold_thief':
-      rect(ctx, 6, 2, 4, 4, '#a16207');
-      rect(ctx, 5, 6, 6, 6, '#ca8a04');
-      rect(ctx, 4, 8, 8, 4, '#eab308');
-      px(ctx, 6, 4, '#fbbf24'); px(ctx, 9, 4, '#fbbf24');
-      rect(ctx, 5, 12, 3, 3, '#92400e'); rect(ctx, 8, 12, 3, 3, '#92400e');
-      rect(ctx, 7, 5, 2, 2, '#fde68a');
+    }
+    case 'gold_thief': {
+      circle(ctx, 12, 7, 5, '#a16207');
+      ellipse(ctx, 12, 13, 6, 6, '#ca8a04');
+      circle(ctx, 9.5, 6, 1, '#fbbf24'); circle(ctx, 14.5, 6, 1, '#fbbf24');
+      circle(ctx, 12, 10, 2, '#fde68a');
+      roundRect(ctx, 7, 18, 4, 4, 1, '#92400e'); roundRect(ctx, 13, 18, 4, 4, 1, '#92400e');
       break;
-    case 'helix':
-      rect(ctx, 7, 0, 2, 16, col.dark);
-      for (let i = 0; i < 4; i++) {
-        rect(ctx, 3 + i * 2, i * 2 + 2, 4, 2, col.mid);
-        rect(ctx, 9 - i * 2, i * 2 + 4, 4, 2, col.light);
-      }
-      break;
-    case 'hive_mind':
-      rect(ctx, 5, 3, 6, 6, col.dark);
-      rect(ctx, 4, 5, 8, 4, col.mid);
-      for (let i = 0; i < 3; i++) {
-        rect(ctx, 3 + i * 4, 9, 3, 3, col.mid);
-      }
-      px(ctx, 6, 5, col.light); px(ctx, 9, 5, col.light);
-      rect(ctx, 5, 12, 6, 3, col.dark);
-      break;
-    case 'kamikaze':
-      rect(ctx, 6, 1, 4, 8, '#ef4444');
-      rect(ctx, 4, 5, 8, 6, '#dc2626');
-      rect(ctx, 7, 9, 2, 4, '#fbbf24');
-      px(ctx, 6, 3, '#ffffff'); px(ctx, 9, 3, '#ffffff');
-      rect(ctx, 3, 8, 3, 3, '#991b1b'); rect(ctx, 10, 8, 3, 3, '#991b1b');
-      rect(ctx, 6, 13, 4, 2, '#f97316');
-      break;
-    case 'magnetic_core':
-      rect(ctx, 5, 5, 6, 6, col.mid);
-      rect(ctx, 6, 4, 4, 8, col.mid);
-      rect(ctx, 4, 6, 8, 4, col.mid);
-      px(ctx, 8, 7, col.light); px(ctx, 8, 8, col.light);
-      rect(ctx, 2, 7, 3, 2, col.dark); rect(ctx, 11, 7, 3, 2, col.dark);
-      rect(ctx, 7, 2, 2, 3, col.dark); rect(ctx, 7, 11, 2, 3, col.dark);
-      break;
-    case 'phase_wraith':
-      rect(ctx, 6, 2, 4, 4, col.mid);
-      rect(ctx, 5, 6, 6, 5, col.dark);
-      rect(ctx, 4, 7, 8, 3, col.mid);
-      px(ctx, 6, 4, col.light); px(ctx, 9, 4, col.light);
-      rect(ctx, 5, 11, 2, 4, col.dark); rect(ctx, 9, 11, 2, 4, col.dark);
-      rect(ctx, 6, 13, 4, 2, col.mid);
-      break;
-    case 'plague_carrier':
-      rect(ctx, 5, 3, 6, 5, '#166534');
-      rect(ctx, 4, 5, 8, 5, '#15803d');
-      rect(ctx, 3, 7, 10, 3, '#16a34a');
-      px(ctx, 6, 5, '#86efac'); px(ctx, 9, 5, '#86efac');
-      rect(ctx, 5, 10, 6, 5, '#14532d');
-      rect(ctx, 7, 10, 2, 2, '#bbf7d0');
-      break;
-    case 'root_golem':
-      rect(ctx, 5, 2, 6, 5, '#78350f');
-      rect(ctx, 4, 5, 8, 7, '#92400e');
-      rect(ctx, 3, 8, 10, 4, '#a16207');
-      px(ctx, 6, 4, '#fde68a'); px(ctx, 9, 4, '#fde68a');
-      rect(ctx, 1, 9, 3, 5, '#78350f'); rect(ctx, 12, 9, 3, 5, '#78350f');
-      rect(ctx, 5, 12, 6, 3, '#92400e');
-      break;
-    case 'spore_cloud':
+    }
+    case 'helix': {
+      roundRect(ctx, 11, 0, 2, 24, 1, col.dark);
       for (let i = 0; i < 5; i++) {
-        const ox = [4, 8, 6, 3, 10][i];
-        const oy = [4, 3, 7, 8, 8][i];
-        ctx.fillStyle = ['#4ade80','#86efac','#22c55e','#16a34a','#4ade80'][i];
-        ctx.beginPath(); ctx.arc(ox, oy, 2, 0, Math.PI * 2); ctx.fill();
+        ellipse(ctx, i % 2 === 0 ? 7 : 17, 3 + i * 4, 4, 2.2, i % 2 === 0 ? col.mid : col.light);
       }
-      rect(ctx, 5, 11, 6, 4, '#15803d');
       break;
-    case 'storm_djinn':
-      rect(ctx, 6, 2, 4, 4, '#fde68a');
-      rect(ctx, 5, 6, 6, 5, '#fbbf24');
-      rect(ctx, 3, 7, 10, 3, '#f59e0b');
-      px(ctx, 6, 4, '#ffffff'); px(ctx, 9, 4, '#ffffff');
-      rect(ctx, 4, 10, 3, 5, '#f97316'); rect(ctx, 9, 10, 3, 5, '#f97316');
-      rect(ctx, 7, 11, 2, 4, '#fbbf24');
+    }
+    case 'hive_mind': {
+      circle(ctx, 12, 8, 6, col.dark);
+      ellipse(ctx, 12, 9, 5, 3.4, col.mid);
+      circle(ctx, 7, 17, 3, col.mid); circle(ctx, 12, 19, 3, col.mid); circle(ctx, 17, 17, 3, col.mid);
+      circle(ctx, 9.5, 8, 1.1, col.light); circle(ctx, 14.5, 8, 1.1, col.light);
       break;
-    case 'tide_walker':
-      rect(ctx, 6, 2, 4, 4, '#0e7490');
-      rect(ctx, 5, 6, 6, 5, '#0891b2');
-      rect(ctx, 4, 7, 8, 3, '#06b6d4');
-      px(ctx, 6, 4, '#67e8f9'); px(ctx, 9, 4, '#67e8f9');
-      rect(ctx, 3, 9, 3, 5, '#0e7490'); rect(ctx, 10, 9, 3, 5, '#0e7490');
-      rect(ctx, 6, 12, 4, 3, '#0891b2');
+    }
+    case 'kamikaze': {
+      circle(ctx, 12, 7, 5.5, '#dc2626');
+      ellipse(ctx, 12, 6, 4.4, 4.8, '#ef4444');
+      circle(ctx, 9.5, 6, 1, '#ffffff'); circle(ctx, 14.5, 6, 1, '#ffffff');
+      roundRect(ctx, 9, 11, 6, 5, 2, '#fbbf24');
+      circle(ctx, 4, 13, 2.4, '#991b1b'); circle(ctx, 20, 13, 2.4, '#991b1b');
+      circle(ctx, 12, 19, 2.2, '#f97316');
       break;
-    case 'void_dancer':
-      rect(ctx, 6, 2, 4, 4, '#6d28d9');
-      rect(ctx, 5, 6, 6, 5, '#7c3aed');
-      rect(ctx, 4, 7, 8, 3, '#8b5cf6');
-      px(ctx, 6, 4, '#ddd6fe'); px(ctx, 9, 4, '#ddd6fe');
-      rect(ctx, 3, 8, 2, 6, '#6d28d9'); rect(ctx, 11, 8, 2, 6, '#6d28d9');
-      rect(ctx, 6, 12, 4, 3, '#7c3aed');
+    }
+    case 'magnetic_core': {
+      roundRect(ctx, 10, 1, 4, 6, 1, col.dark); roundRect(ctx, 10, 17, 4, 6, 1, col.dark);
+      roundRect(ctx, 1, 10, 6, 4, 1, col.dark); roundRect(ctx, 17, 10, 6, 4, 1, col.dark);
+      circle(ctx, 12, 12, 6, col.mid);
+      circle(ctx, 12, 12, 2.6, col.light);
+      circle(ctx, 12, 12, 1, '#ffffff');
       break;
-    case 'war_drum':
-      rect(ctx, 4, 4, 8, 8, '#7f1d1d');
-      rect(ctx, 3, 5, 10, 6, '#991b1b');
-      rect(ctx, 4, 4, 8, 2, '#b91c1c');
-      rect(ctx, 4, 10, 8, 2, '#b91c1c');
-      px(ctx, 6, 7, '#fca5a5'); px(ctx, 9, 7, '#fca5a5');
-      rect(ctx, 2, 8, 2, 2, '#450a0a'); rect(ctx, 12, 8, 2, 2, '#450a0a');
+    }
+    case 'phase_wraith': {
+      ctx.globalAlpha = 0.85;
+      circle(ctx, 12, 8, 5, col.mid);
+      ellipse(ctx, 12, 14, 5.6, 5, col.dark);
+      triangle(ctx, 6, 16, 9, 22, 11, 16, col.dark);
+      triangle(ctx, 18, 16, 15, 22, 13, 16, col.dark);
+      ctx.globalAlpha = 1;
+      circle(ctx, 9.5, 8, 1.1, col.light); circle(ctx, 14.5, 8, 1.1, col.light);
       break;
-    default:
-      rect(ctx, 5, 3, 6, 6, col.mid);
-      rect(ctx, 4, 5, 8, 4, col.mid);
-      px(ctx, 6, 5, col.light); px(ctx, 9, 5, col.light);
-      rect(ctx, 5, 9, 6, 4, col.dark);
+    }
+    case 'plague_carrier': {
+      circle(ctx, 12, 9, 6.5, '#166534');
+      ellipse(ctx, 12, 9, 5.4, 4.4, '#15803d');
+      circle(ctx, 9.5, 8, 1.2, '#86efac'); circle(ctx, 14.5, 8, 1.2, '#86efac');
+      ellipse(ctx, 12, 17, 5.4, 4, '#14532d');
+      circle(ctx, 12, 17, 1.6, '#bbf7d0');
       break;
+    }
+    case 'root_golem': {
+      circle(ctx, 12, 7, 5, '#78350f');
+      ellipse(ctx, 12, 14, 7, 6, '#92400e');
+      circle(ctx, 9.5, 6, 1, '#fde68a'); circle(ctx, 14.5, 6, 1, '#fde68a');
+      roundRect(ctx, 0, 14, 4, 6, 1, '#78350f'); roundRect(ctx, 20, 14, 4, 6, 1, '#78350f');
+      roundRect(ctx, 8, 19, 8, 3, 1, '#92400e');
+      break;
+    }
+    case 'spore_cloud': {
+      const colors = ['#4ade80', '#86efac', '#22c55e', '#16a34a', '#4ade80'];
+      const pts: [number, number][] = [[6, 6], [14, 5], [10, 11], [4, 13], [17, 13]];
+      pts.forEach(([ox, oy], i) => circle(ctx, ox, oy, 3, colors[i]));
+      ellipse(ctx, 12, 18, 6, 4, '#15803d');
+      break;
+    }
+    case 'storm_djinn': {
+      circle(ctx, 12, 7, 5, '#fde68a');
+      ellipse(ctx, 12, 12, 6, 5, '#fbbf24');
+      circle(ctx, 9.5, 6, 1, '#ffffff'); circle(ctx, 14.5, 6, 1, '#ffffff');
+      roundRect(ctx, 5, 15, 4, 7, 2, '#f97316'); roundRect(ctx, 15, 15, 4, 7, 2, '#f97316');
+      roundRect(ctx, 10, 17, 4, 6, 2, '#fbbf24');
+      break;
+    }
+    case 'tide_walker': {
+      circle(ctx, 12, 7, 5, '#0e7490');
+      ellipse(ctx, 12, 12, 6, 5, '#0891b2');
+      circle(ctx, 9.5, 6, 1.1, '#67e8f9'); circle(ctx, 14.5, 6, 1.1, '#67e8f9');
+      roundRect(ctx, 4, 15, 4, 7, 2, '#0e7490'); roundRect(ctx, 16, 15, 4, 7, 2, '#0e7490');
+      roundRect(ctx, 9, 18, 6, 4, 2, '#0891b2');
+      break;
+    }
+    case 'void_dancer': {
+      circle(ctx, 12, 7, 5, '#6d28d9');
+      ellipse(ctx, 12, 12, 6, 5, '#7c3aed');
+      circle(ctx, 9.5, 6, 1.1, '#ddd6fe'); circle(ctx, 14.5, 6, 1.1, '#ddd6fe');
+      roundRect(ctx, 3, 12, 3, 9, 1, '#6d28d9'); roundRect(ctx, 18, 12, 3, 9, 1, '#6d28d9');
+      roundRect(ctx, 9, 18, 6, 4, 2, '#7c3aed');
+      break;
+    }
+    case 'war_drum': {
+      circle(ctx, 12, 12, 8, '#7f1d1d');
+      circle(ctx, 12, 12, 6.2, '#991b1b');
+      roundRect(ctx, 4, 5, 16, 2.4, 1, '#b91c1c'); roundRect(ctx, 4, 17, 16, 2.4, 1, '#b91c1c');
+      circle(ctx, 9, 12, 1.2, '#fca5a5'); circle(ctx, 15, 12, 1.2, '#fca5a5');
+      circle(ctx, 2, 12, 1.6, '#450a0a'); circle(ctx, 22, 12, 1.6, '#450a0a');
+      break;
+    }
+    default: {
+      circle(ctx, 12, 9, 6, col.mid);
+      ellipse(ctx, 12, 9, 5, 3.4, col.mid);
+      circle(ctx, 9.5, 8, 1.1, col.light); circle(ctx, 14.5, 8, 1.1, col.light);
+      roundRect(ctx, 6, 15, 12, 6, 3, col.dark);
+      break;
+    }
   }
   return c;
 }
@@ -1991,28 +2004,20 @@ function generateCharacterSprite(charId: string): HTMLCanvasElement {
 // ─── Leech Enemy Sprite ───────────────────────────────────────────────────────
 
 function generateLeechSprite(): HTMLCanvasElement {
-  const c = createCanvas(16, 16);
+  const c = createCanvas(24, 24);
   const ctx = c.getContext('2d')!;
   const mid = '#a855f7';
   const dark = '#7e22ce';
   const light = '#d8b4fe';
 
-  // Worm body (oval)
-  rect(ctx, 2, 5, 12, 7, mid);
-  rect(ctx, 1, 6, 14, 5, mid);
-  // Rings along body
-  rect(ctx, 4, 5, 1, 7, dark);
-  rect(ctx, 7, 5, 1, 7, dark);
-  rect(ctx, 10, 5, 1, 7, dark);
-  // Sucker mouth at left
-  rect(ctx, 0, 6, 3, 5, dark);
-  rect(ctx, 1, 7, 2, 3, light);
-  px(ctx, 1, 8, '#ffffff');
-  // Tail at right
-  rect(ctx, 13, 7, 2, 3, dark);
-  // Eyes on top of body
-  px(ctx, 5, 5, '#ff0000');
-  px(ctx, 8, 5, '#ff0000');
+  drawGroundShadow(ctx, 12, 20, 9, 3);
+  ellipse(ctx, 12, 12, 10, 6, mid);
+  circle(ctx, 7, 12, 1.6, dark); circle(ctx, 12, 12, 1.6, dark); circle(ctx, 17, 12, 1.6, dark);
+  circle(ctx, 3, 12, 4.4, dark);
+  circle(ctx, 3, 12, 2.2, light);
+  circle(ctx, 3, 12, 0.9, '#ffffff');
+  ellipse(ctx, 21, 12, 3, 3.6, dark);
+  circle(ctx, 8, 9, 1.1, '#ff0000'); circle(ctx, 13, 9, 1.1, '#ff0000');
 
   return c;
 }
@@ -2190,6 +2195,14 @@ export function generateAllSprites(): SpriteSheet {
 
   // Leech enemy
   enemies.set('leech', generateLeechSprite());
+
+  // ── Gungeon-style finishing pass — bold outline + seam shading on every
+  // creature/character/item/projectile sprite (not UI chrome or backgrounds).
+  for (const sheet of playerShips) finish(sheet);
+  for (const sheet of enemies.values()) finish(sheet);
+  for (const sheet of items.values()) finish(sheet);
+  for (const sheet of projectiles.values()) finish(sheet, 1);
+  for (const sheet of characters.values()) finish(sheet);
 
   cachedSprites = { playerShips, enemies, items, projectiles, ui, background, characters };
   return cachedSprites;

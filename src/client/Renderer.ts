@@ -74,6 +74,12 @@ export class Renderer {
   private lastTime = 0;
   /** Track previous enemy count for death effects */
   private prevEnemyCount = 0;
+  /** HP last frame per enemy id, used to detect hits for the flash effect */
+  private prevEnemyHp: Map<string, number> = new Map();
+  /** Remaining white hit-flash duration per enemy id */
+  private hitFlashTimers: Map<string, number> = new Map();
+  /** Reusable offscreen scratch canvas for the hit-flash silhouette composite */
+  private flashScratch: HTMLCanvasElement = document.createElement('canvas');
   private prevEnemyPositions: Map<string, { x: number; y: number }> = new Map();
   /** Smooth HP bar */
   private displayHp = 100;
@@ -1635,17 +1641,31 @@ export class Renderer {
 
   private updateAndRenderParticles(dt: number): void {
     const { ctx } = this;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter'; // additive glow — sparks brighten what's under them instead of flat-covering it
     for (let i = this.particles.length - 1; i >= 0; i--) {
       const p = this.particles[i];
       p.x += p.vx * dt;
       p.y += p.vy * dt;
+      p.vx *= 1 - Math.min(1, dt * 2.2); // drag, so sparks decelerate instead of flying straight forever
+      p.vy *= 1 - Math.min(1, dt * 2.2);
       p.life -= dt;
       if (p.life <= 0) { this.particles.splice(i, 1); continue; }
-      const alpha = p.life / p.maxLife;
-      ctx.globalAlpha = alpha;
+      const t = p.life / p.maxLife;
+      const alpha = t * t; // eases out faster near the end instead of a linear fade
+      // Glowing core: soft outer halo + bright hot center reads as a spark, not a flat dot
+      ctx.globalAlpha = alpha * 0.5;
       ctx.fillStyle = p.color;
-      ctx.fillRect(p.x, p.y, p.size, p.size);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 1.8, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size * 0.55, 0, Math.PI * 2);
+      ctx.fill();
     }
+    ctx.restore();
     ctx.globalAlpha = 1;
   }
 
@@ -1658,9 +1678,27 @@ export class Renderer {
       const progress = 1 - ex.life / ex.maxLife;
       ex.radius = ex.maxRadius * progress;
       const alpha = ex.life / ex.maxLife;
-      ctx.globalAlpha = alpha * 0.6;
+
+      // Bright flash core at the moment of impact — fades fast, gives the hit weight
+      if (progress < 0.5) {
+        ctx.save();
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = (1 - progress * 2) * 0.7;
+        const flashGrad = ctx.createRadialGradient(ex.x, ex.y, 0, ex.x, ex.y, ex.maxRadius * 0.6);
+        flashGrad.addColorStop(0, '#ffffff');
+        flashGrad.addColorStop(0.4, ex.color);
+        flashGrad.addColorStop(1, 'transparent');
+        ctx.fillStyle = flashGrad;
+        ctx.beginPath();
+        ctx.arc(ex.x, ex.y, ex.maxRadius * 0.6, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      // Expanding shockwave ring
+      ctx.globalAlpha = alpha * 0.7;
       ctx.strokeStyle = ex.color;
-      ctx.lineWidth = 3 * (1 - progress);
+      ctx.lineWidth = 3 * (1 - progress) + 0.5;
       ctx.beginPath();
       ctx.arc(ex.x, ex.y, ex.radius, 0, Math.PI * 2);
       ctx.stroke();
@@ -2392,6 +2430,8 @@ export class Renderer {
         this.spawnExplosion(pos.x, pos.y, 25, color);
         this.spawnParticles(pos.x, pos.y, color, 6);
         this.spawnParticles(pos.x, pos.y, '#fbbf24', 4);
+        this.prevEnemyHp.delete(id);
+        this.hitFlashTimers.delete(id);
       }
     }
     this.prevEnemyPositions.clear();
@@ -2405,6 +2445,17 @@ export class Renderer {
       else if (e.tags.includes('Orgânico')) color = '#4ade80';
       const posData: any = { x: e.x, y: e.y, color };
       this.prevEnemyPositions.set(e.id, posData);
+      // Hit-flash: a white silhouette pulse the instant an enemy's HP drops
+      const lastHp = this.prevEnemyHp.get(e.id);
+      if (lastHp !== undefined && e.hp < lastHp) {
+        this.hitFlashTimers.set(e.id, 0.1);
+        this.spawnParticles(e.x, e.y, color, 2);
+      }
+      this.prevEnemyHp.set(e.id, e.hp);
+    }
+    for (const [id, t] of this.hitFlashTimers) {
+      const next = t - dt;
+      if (next <= 0) this.hitFlashTimers.delete(id); else this.hitFlashTimers.set(id, next);
     }
 
     // Damage flash — red vignette from edges (more impactful than flat tint)
@@ -2422,20 +2473,34 @@ export class Renderer {
       this.renderEnemy(e, dt);
     }
 
-    // Render player projectiles with trails
+    // Render player projectiles with glowing additive trails
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
     for (const p of state.projectiles) {
+      const element = this.getProjectileElement(p.tags);
+      const glowColor = element === 'fire' ? '#f97316'
+        : element === 'ice' ? '#67e8f9'
+        : element === 'electric' ? '#facc15'
+        : '#22d3ee';
       for (let t = 0; t < p.trail.length; t++) {
-        const alpha = (t + 1) / (p.trail.length + 1) * 0.3;
+        const alpha = ((t + 1) / (p.trail.length + 1)) ** 2 * 0.5;
         ctx.globalAlpha = alpha;
-        const element = this.getProjectileElement(p.tags);
-        ctx.fillStyle = element === 'fire' ? '#f97316'
-          : element === 'ice' ? '#67e8f9'
-          : element === 'electric' ? '#facc15'
-          : '#22d3ee';
-        ctx.fillRect(p.trail[t].x - 2, p.trail[t].y - 2, 4, 4);
+        ctx.fillStyle = glowColor;
+        ctx.beginPath();
+        ctx.arc(p.trail[t].x, p.trail[t].y, 2.6, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.globalAlpha = 1;
+      // Soft glow halo behind the projectile sprite itself
+      ctx.globalAlpha = 0.45;
+      ctx.fillStyle = glowColor;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.restore();
+    ctx.globalAlpha = 1;
 
+    for (const p of state.projectiles) {
       const element = this.getProjectileElement(p.tags);
       const projSprite = this.sprites.projectiles.get(element);
       if (projSprite) {
@@ -2533,10 +2598,10 @@ export class Renderer {
     }
 
     if (playerSprite) {
-      // Draw top-down character — 32x32, centered at player position
+      // Draw top-down character — 48x48, centered at player position
       ctx.save();
       ctx.translate(state.playerX, canvas.height - 29);
-      ctx.drawImage(playerSprite, -16, -16);
+      ctx.drawImage(playerSprite, -playerSprite.width / 2, -playerSprite.height / 2);
       ctx.restore();
     } else {
       // Fallback: simple person silhouette
@@ -2563,7 +2628,7 @@ export class Renderer {
       if (p2Sprite) {
         ctx.save();
         ctx.translate(state.player2X, canvas.height - 29);
-        ctx.drawImage(p2Sprite, -16, -16);
+        ctx.drawImage(p2Sprite, -p2Sprite.width / 2, -p2Sprite.height / 2);
         ctx.restore();
       }
     }
@@ -2653,6 +2718,25 @@ export class Renderer {
 
     if (sprite) {
       ctx.drawImage(sprite, e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+      const flash = this.hitFlashTimers.get(e.id);
+      if (flash && flash > 0) {
+        // Composite the white flash on a scratch canvas first — source-atop
+        // against the main canvas would also tint the opaque background
+        // behind the sprite, not just the sprite's own silhouette.
+        const sw = Math.ceil(e.width), sh = Math.ceil(e.height);
+        this.flashScratch.width = sw;
+        this.flashScratch.height = sh;
+        const sctx = this.flashScratch.getContext('2d')!;
+        sctx.clearRect(0, 0, sw, sh);
+        sctx.drawImage(sprite, 0, 0, sw, sh);
+        sctx.globalCompositeOperation = 'source-atop';
+        sctx.fillStyle = '#ffffff';
+        sctx.fillRect(0, 0, sw, sh);
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, flash / 0.1);
+        ctx.drawImage(this.flashScratch, e.x - e.width / 2, e.y - e.height / 2, e.width, e.height);
+        ctx.restore();
+      }
     } else {
       // Procedural enemy shapes based on movement type
       switch (e.movement) {

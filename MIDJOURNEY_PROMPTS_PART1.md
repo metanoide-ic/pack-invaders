@@ -2,9 +2,11 @@
 #
 # 7 sobreviventes de uma invasão alienígena. Cada um com história real.
 # NADA de magia. NADA de naves. São pessoas reais lutando contra aliens.
-# Estilo que funcionou melhor: ilustração 3/4 vista de cima, detalhada, sombria.
-# Combate: --ar 1:1 --v 7 --style raw  |  Portrait: --ar 3:4 --v 7 --style raw
-# Dica: gere o portrait, anote o --seed, e reutilize nos outros prompts do mesmo personagem.
+# Estilo definido: pixel art no estilo de Enter the Gungeon — contornos pretos grossos,
+# cores planas e vibrantes (cel-shading), clusters de pixel bem visíveis (16/32-bit),
+# silhueta limpa e legível. Perspectiva 3/4 vista de cima (fixa do jogo), sombrio no tom, não no traço.
+# Combate: --ar 1:1 --v 6.1 --style raw --stylize 120  |  Portrait: --ar 3:4 --v 6.1 --style raw --stylize 120
+# Dica: gere o portrait, anote o --seed, e reutilize (acrescente --seed XXXXX) nos outros prompts do mesmo personagem.
 
 ---
 
@@ -16,47 +18,47 @@
 
 ### [RAIZ-01] Portrait
 ```
-cinematic character portrait, ordinary man turned hardened wilderness survivor, weathered dirt-streaked face with unkempt beard, makeshift hood stitched from leaves and bark, body partially covered in adapted mutant vines and moss that he uses as gear, holding an improvised rifle wrapped in living thorny vines, tired but determined eyes, somber dark forest behind him, gritty realistic dark illustration, chest-up, no fantasy glow just grime and nature --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, ordinary man turned hardened wilderness survivor, weathered dirt-streaked face with unkempt beard rendered in bold thick black outlines, makeshift hood stitched from leaves and bark, body partially covered in adapted mutant vines and moss used as gear, holding an improvised rifle wrapped in living thorny vines, tired determined eyes, flat cel-shaded color blocks in a saturated mossy-green and earthy-brown palette, hard shadow edges, no gradients, chunky retro pixel clusters, dark somber forest mood carried through color instead of photographic grit, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-02] Sprite de Combate (idle)
 ```
-2D game character sprite, ordinary man survivor in improvised vine-and-bark armor, makeshift thorn-wrapped rifle raised in combat ready pose, 3/4 view from slightly above, rugged grimy look, mutant forest plants growing on his gear, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, ordinary man survivor in improvised vine-and-bark armor with bold thick black outlines, makeshift thorn-wrapped rifle raised in a combat-ready pose, 3/4 top-down view from slightly above, flat saturated cel-shaded green-and-brown color blocks with hard shadow edges, chunky retro pixel clusters, mutant forest plants growing on his gear, clean readable silhouette, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-03] Ataque
 ```
-2D game character sprite attack frame, survivor firing improvised thorn rifle, burst of sharp seeds and acidic sap launching forward, recoil pose, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, survivor firing his improvised thorn rifle, burst of sharp seeds and acidic sap launching forward, recoil pose, 3/4 top-down view from slightly above, bold black outlines, flat saturated green-and-brown cel-shading with hard shadow edges, chunky pixel clusters, clean readable silhouette, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-04] Dano
 ```
-2D game character sprite hit reaction frame, survivor recoiling from a hit, gripping wound, vines on gear bristling, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, survivor recoiling from a hit, gripping his wound, vines on his gear bristling, 3/4 top-down view, bold thick black outlines, flat saturated cel-shaded green-and-brown palette, hard shadow edges, chunky retro pixel clusters, clean readable silhouette, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-05] Morte
 ```
-2D game character sprite death frame, survivor collapsing to the ground, improvised rifle falling, vines going limp, somber, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, survivor collapsing to the ground, improvised rifle falling from his grip, vines going limp, somber mood carried through muted saturated greens, 3/4 top-down view, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, clean readable silhouette, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-06] Skill — Explosão de Raízes
 ```
-game VFX sprite, burst of sharp mutant thorny vines erupting violently from the ground in all directions, acidic green sap splatter, area damage effect, dark gritty, 96x96, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, burst of sharp mutant thorny vines erupting violently from the ground in all directions, acidic green sap splatter, bold black outlines around every shape, flat saturated cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, area damage effect, 96x96, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-07] Skill — Regeneração
 ```
-game VFX sprite, restorative green spore cloud drifting upward, healing nature particles, soft sickly-green glow, dark gritty, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, restorative green spore cloud drifting upward, healing nature particles with a sickly saturated green glow, bold thick black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, punchy and readable, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-08] Skill — Barreira de Espinhos
 ```
-game VFX sprite, defensive ring of sharp thorny vines erupting upward in a protective circle, dark gritty, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, defensive ring of sharp thorny vines erupting upward in a protective circle, bold black outlines, flat saturated green cel-shaded color blocks with hard shadow edges, chunky pixel clusters, clean punchy silhouette, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [RAIZ-09] Projétil
 ```
-game projectile sprite, sharp thorn-spike round with acidic green sap trail, traveling upward, 16x32, pure black background --ar 1:2 --v 7 --style raw
+game projectile sprite, Enter the Gungeon-style pixel art, sharp thorn-spike round with an acidic green sap trail, bold black outline, flat saturated color, chunky punchy pixel cluster, traveling upward, 16x32, pure black background --ar 1:2 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -70,47 +72,47 @@ game projectile sprite, sharp thorn-spike round with acidic green sap trail, tra
 
 ### [CINZA-01] Portrait
 ```
-cinematic character portrait, grief-stricken man with severe burn scars across one side of his face, haunted rage-filled eyes, his right arm replaced by a crude mechanical flamethrower prosthetic with fuel lines and pilot flame, a small metal locket with a photo of a woman and little girl hanging on his chest, soot-stained clothes, dramatic ember light, somber and tragic, gritty realistic dark illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, grief-stricken man with severe burn scars across one side of his face rendered in bold black outlines, haunted rage-filled eyes, his right arm replaced by a crude mechanical flamethrower prosthetic with fuel lines and a pilot flame, a small metal locket with a photo of a woman and little girl hanging on his chest, soot-stained clothes, flat cel-shaded color blocks in a saturated ember-orange and charcoal palette, hard shadow edges, dramatic ember glow kept through bold flat color rather than photographic light, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-02] Sprite de Combate (idle)
 ```
-2D game character sprite, scarred man with a mechanical flamethrower prosthetic right arm raised upward ready to fire, fuel tank on back, locket on chest, soot-stained clothes, burn scars, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, scarred man with a mechanical flamethrower prosthetic right arm raised upward ready to fire, fuel tank on his back, locket on his chest, soot-stained clothes and burn scars in bold black outlines, flat saturated orange-and-charcoal cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-03] Ataque
 ```
-2D game character sprite attack frame, scarred man firing a massive jet of flame from his mechanical prosthetic arm upward, recoil, fuel igniting, intense fire stream, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, scarred man firing a massive jet of flame from his mechanical prosthetic arm upward, fuel igniting, intense saturated orange fire stream with bold black outlines, flat cel-shaded color blocks and hard shadow edges, chunky punchy pixel clusters, recoil pose, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-04] Dano
 ```
-2D game character sprite hit reaction frame, scarred man stumbling from a hit, prosthetic arm sparking, pilot flame flickering, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, scarred man stumbling from a hit, prosthetic arm sparking, pilot flame flickering, bold thick black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-05] Morte
 ```
-2D game character sprite death frame, scarred man collapsing, flamethrower arm crashing down, flames dying out, the locket slipping from his hand, tragic, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, scarred man collapsing, flamethrower arm crashing down, flames dying to dim embers, the locket slipping from his hand, tragic mood carried through desaturating warm colors, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-06] Skill — Meteoro
 ```
-game VFX sprite, fiery incendiary projectile crashing down from above with a heavy flame trail, explosive fire impact at the bottom, dark gritty, 64x96, pure black background --ar 2:3 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, fiery incendiary projectile crashing down from above with a heavy saturated-orange flame trail, explosive fire impact at the bottom, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, 64x96, pure black background --ar 2:3 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-07] Skill — Onda de Fogo
 ```
-game VFX sprite, wide horizontal wave of roiling flame spreading along the ground, dark smoke, intense orange core, dark gritty, 128x48, pure black background --ar 8:3 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, wide horizontal wave of roiling flame spreading along the ground, dark smoke plumes, intense saturated orange core, bold thick black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 128x48, pure black background --ar 8:3 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-08] Skill — Auto-Ignição
 ```
-game VFX sprite, a protective aura of swirling fire wrapping a figure like burning armor, ember sparks, dark gritty, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a protective aura of swirling fire wrapping a figure like burning armor, ember sparks, bold black outlines, flat saturated orange cel-shaded color blocks with hard shadow edges, chunky pixel clusters, punchy and readable, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [CINZA-09] Projétil
 ```
-game projectile sprite, flaming napalm round with dark smoke trail, traveling upward, 16x32, pure black background --ar 1:2 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, flaming napalm round with a dark smoke trail, bold black outline, flat saturated orange color blocks, chunky punchy pixel cluster, traveling upward, 16x32, pure black background --ar 1:2 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -123,47 +125,47 @@ game projectile sprite, flaming napalm round with dark smoke trail, traveling up
 
 ### [MARÉ-01] Portrait
 ```
-cinematic character portrait, disciplined female naval officer, dark practical submarine-crew uniform with rank insignia, short regulation hair, tactical goggles on forehead, cold focused confident expression, arm-mounted pressurized water/cryo cannon visible, faint condensation steam, somber dark military atmosphere, gritty realistic illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, disciplined female naval officer, dark practical submarine-crew uniform with rank insignia rendered in bold black outlines, short regulation hair, tactical goggles on her forehead, cold focused confident expression, arm-mounted pressurized water/cryo cannon visible, faint condensation steam, flat cel-shaded color blocks in a saturated deep-blue and steel-teal palette, hard shadow edges, somber military mood carried through bold flat color, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-02] Sprite de Combate (idle)
 ```
-2D game character sprite, female naval officer in dark tactical submarine uniform, arm-mounted pressurized water and ice cannon pointed upward, cryo vents venting steam, disciplined combat stance, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark military illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, female naval officer in a dark tactical submarine uniform with bold black outlines, arm-mounted pressurized water-and-ice cannon pointed upward, cryo vents releasing steam, disciplined combat stance, flat saturated blue-and-teal cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-03] Ataque
 ```
-2D game character sprite attack frame, female naval officer firing a pressurized ice lance upward from her arm cannon, ice crystals forming around the barrel, recoil, 3/4 view, isolated on pure black background, no floor no shadow, dark military illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, female naval officer firing a pressurized ice lance upward from her arm cannon, ice crystals forming around the barrel, recoil pose, bold black outlines, flat saturated cel-shaded blue-teal color blocks with hard shadow edges, chunky punchy pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-04] Dano
 ```
-2D game character sprite hit reaction frame, female naval officer recoiling, suit venting steam from a cracked section, gritted teeth, 3/4 view, isolated on pure black background, no floor no shadow, dark military illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, female naval officer recoiling, her suit venting steam from a cracked section, gritted teeth, bold thick black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-05] Morte
 ```
-2D game character sprite death frame, female naval officer collapsing, cryo cannon arm dropping, pressure venting steam, somber, 3/4 view, isolated on pure black background, no floor no shadow, dark military illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, female naval officer collapsing, cryo cannon arm dropping, pressure venting steam, somber mood carried through cool desaturating blues, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-06] Skill — Onda de Maré
 ```
-game VFX sprite, massive wall of dark pressurized water with teal foam crest crashing forward, crushing force, dark gritty, 128x80, pure black background --ar 8:5 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, massive wall of dark pressurized water with a teal foam crest crashing forward, crushing force, bold black outlines, flat saturated blue-teal cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, 128x80, pure black background --ar 8:5 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-07] Skill — Chuva Curativa
 ```
-game VFX sprite, gentle teal-glowing rain falling, each droplet releasing a small healing burst on impact, dark gritty, 64x96, pure black background --ar 2:3 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, gentle teal-glowing rain falling, each droplet releasing a small healing burst of saturated light on impact, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 64x96, pure black background --ar 2:3 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-08] Skill — Redemoinho
 ```
-game VFX sprite, spinning whirlpool of dark water at ground level pulling debris inward, teal glow, dark gritty, 80x80, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, spinning whirlpool of dark water at ground level pulling debris inward, saturated teal glow, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, punchy and readable, 80x80, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [MARÉ-09] Projétil
 ```
-game projectile sprite, pressurized ice/water lance with frost trail, traveling upward, 16x32, pure black background --ar 1:2 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, pressurized ice-and-water lance with a frost trail, bold black outline, flat saturated teal-blue color blocks, chunky punchy pixel cluster, traveling upward, 16x32, pure black background --ar 1:2 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -177,47 +179,47 @@ game projectile sprite, pressurized ice/water lance with frost trail, traveling 
 
 ### [PULSO-01] Portrait
 ```
-cinematic character portrait, half-human half-alien hybrid, the left side of his face is a normal human man in a torn lab coat, the right side is living alien carapace with a glowing toxic-green eye and pulsing biomass spreading across his neck, radioactive green energy crackling along the alien half, expression of a man fighting to stay himself, deeply unsettling and tragic, somber dark sci-fi, gritty realistic illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, half-human half-alien hybrid, the left side of his face a normal human man in a torn lab coat rendered in bold black outlines, the right side living alien carapace with a glowing toxic-green eye and pulsing biomass spreading across his neck, unstable radioactive energy crackling along the alien half, expression of a man fighting to stay himself, flat cel-shaded color blocks in a saturated toxic-green and lab-coat-white palette, hard shadow edges, deeply unsettling tragic mood carried through bold flat color, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-02] Sprite de Combate (idle)
 ```
-2D game character sprite, half-human half-alien hybrid man in a torn radiation lab coat, one arm mutated into alien biomass weapon glowing toxic green, the other still human holding a salvaged gun upward, asymmetric body, radioactive haze, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, half-human half-alien hybrid man in a torn radiation lab coat with bold black outlines, one arm mutated into alien biomass weapon glowing saturated toxic green, the other still human holding a salvaged gun upward, asymmetric silhouette, radioactive haze, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-03] Ataque
 ```
-2D game character sprite attack frame, hybrid man firing a burst of unstable radioactive energy upward from his mutated alien arm, toxic green glow, reality shimmer from radiation, recoil, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, hybrid man firing a burst of unstable radioactive energy upward from his mutated alien arm, saturated toxic-green glow, reality shimmer distortion, recoil pose, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-04] Dano
 ```
-2D game character sprite hit reaction frame, hybrid man recoiling, the alien biomass on his body spasming and spreading slightly, fighting for control, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, hybrid man recoiling, the alien biomass on his body spasming and spreading slightly as he fights for control, bold thick black outlines, flat saturated toxic-green cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-05] Morte
 ```
-2D game character sprite death frame, hybrid man collapsing, radioactive glow fading, alien biomass going inert, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, hybrid man collapsing, radioactive glow fading, alien biomass going inert, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, somber mood carried through dimming saturated green, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-06] Skill — Decaimento
 ```
-game VFX sprite, focused beam of toxic-green radioactive energy striking down a target, radiation burn glow, dark gritty sci-fi, 48x96, pure black background --ar 1:2 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, focused beam of toxic-green radioactive energy striking down onto a target, saturated radiation burn glow, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, 48x96, pure black background --ar 1:2 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-07] Skill — Sobrecarga Instável
 ```
-game VFX sprite, unstable radioactive overcharge aura, toxic-green energy violently crackling around a figure, biomass surging, dark gritty sci-fi, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, unstable radioactive overcharge aura, saturated toxic-green energy violently crackling around a figure, biomass surging, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-08] Skill — Pulso de Radiação
 ```
-game VFX sprite, expanding ring of toxic-green radioactive pulse spreading outward, distortion wave, dark gritty sci-fi, 96x96, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, expanding ring of toxic-green radioactive pulse spreading outward, distortion wave, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky pixel clusters, punchy and readable, 96x96, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [PULSO-09] Projétil
 ```
-game projectile sprite, unstable radioactive energy round, toxic-green glowing orb with a distortion trail, traveling upward, 18x28, pure black background --ar 2:3 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, unstable radioactive energy round, a saturated toxic-green glowing orb with a distortion trail, bold black outline, chunky punchy pixel cluster, traveling upward, 18x28, pure black background --ar 2:3 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -231,47 +233,47 @@ game projectile sprite, unstable radioactive energy round, toxic-green glowing o
 
 ### [FENDA-01] Portrait
 ```
-cinematic character portrait, gaunt theoretical physicist, tired intelligent eyes with dark circles, ragged lab coat over a quantum-experiment harness with dimensional stabilizer devices, parts of his body flickering and turning semi-transparent like a glitching signal, faint purple dimensional energy at the edges where he phases out of reality, unsettling, somber dark sci-fi, gritty realistic illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, gaunt theoretical physicist, tired intelligent eyes with dark circles rendered in bold black outlines, ragged lab coat over a quantum-experiment harness with dimensional stabilizer devices, parts of his body flickering and turning semi-transparent like a glitching signal, faint saturated purple dimensional energy at the edges where he phases out of reality, unsettling mood carried through flat cel-shaded color blocks in a saturated purple-and-slate palette, hard shadow edges, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-02] Sprite de Combate (idle)
 ```
-2D game character sprite, gaunt physicist in a ragged lab coat with quantum harness, holding an experimental device-gun upward, parts of his body semi-transparent and glitching with purple dimensional energy, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, gaunt physicist in a ragged lab coat with a quantum harness and bold black outlines, holding an experimental device-gun upward, parts of his body semi-transparent and glitching with saturated purple dimensional energy, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-03] Ataque
 ```
-2D game character sprite attack frame, phasing physicist firing an experimental dimensional round upward, purple void energy with reality distortion, his form glitching during the shot, recoil, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, phasing physicist firing an experimental dimensional round upward, saturated purple void energy with reality distortion, his form glitching mid-shot, recoil pose, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-04] Dano / Intangível
 ```
-2D game character sprite phasing frame, physicist mostly transparent as an attack passes harmlessly through him, body glitching out of reality, purple edge energy, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite phasing frame in the pixel art style of Enter the Gungeon, physicist mostly transparent as an attack passes harmlessly through him, body glitching out of reality, saturated purple edge energy, bold thick black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-05] Morte
 ```
-2D game character sprite death frame, physicist flickering and fading out of reality permanently, dissolving into purple dimensional static, 3/4 view, isolated on pure black background, no floor no shadow, dark sci-fi illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, physicist flickering and fading out of reality permanently, dissolving into saturated purple dimensional static, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-06] Skill — Fenda do Vazio
 ```
-game VFX sprite, a tear in reality ripping open, jagged purple-edged rift showing void and stars inside, pulling debris in, dark gritty sci-fi, 80x96, pure black background --ar 5:6 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a tear in reality ripping open, jagged saturated-purple-edged rift showing void and stars inside, pulling debris in, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, 80x96, pure black background --ar 5:6 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-07] Skill — Mudança de Fase
 ```
-game VFX sprite, a figure phasing through reality, multiple overlapping translucent purple afterimages, dimensional shift, dark gritty sci-fi, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, a figure phasing through reality, multiple overlapping translucent saturated-purple afterimages, dimensional shift, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-08] Skill — Colheita Sombria
 ```
-game VFX sprite, dark purple energy tendrils reaching out and draining life, stolen energy flowing back as violet light, dark gritty sci-fi, 96x64, pure black background --ar 3:2 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, dark purple energy tendrils reaching out and draining life, stolen energy flowing back as saturated violet light, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, punchy and readable, 96x64, pure black background --ar 3:2 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FENDA-09] Projétil
 ```
-game projectile sprite, void energy round, a dark orb outlined only by a purple energy ring with reality distortion trail, traveling upward, 20x20, pure black background --ar 1:1 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, void energy round, a dark orb outlined only by a saturated purple energy ring with a reality distortion trail, bold black outline, chunky punchy pixel cluster, traveling upward, 20x20, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -284,47 +286,47 @@ game projectile sprite, void energy round, a dark orb outlined only by a purple 
 
 ### [NEX-01] Portrait
 ```
-cinematic character portrait, fierce female alien-tamer, practical dark gear with claw-scarred leather, wild tied-back hair, calm dominant predator's gaze, a tamed dark alien hound creature with glowing pink eyes at her shoulder obeying her, control-collar device on her gauntlet, somber dark atmosphere, gritty realistic illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, fierce female alien-tamer, practical dark gear with claw-scarred leather rendered in bold black outlines, wild tied-back hair, calm dominant predator's gaze, a tamed dark alien hound creature with glowing saturated pink eyes at her shoulder obeying her, control-collar device on her gauntlet, flat cel-shaded color blocks in a saturated charcoal-and-hot-pink palette, hard shadow edges, somber mood carried through bold flat color, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-02] Sprite de Combate (idle)
 ```
-2D game character sprite, female alien-tamer in claw-scarred dark gear, a tamed dark alien hound creature at her side, control gauntlet and a combat whip in hand, ready stance, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, female alien-tamer in claw-scarred dark gear with bold black outlines, a tamed dark alien hound creature at her side, control gauntlet and a combat whip in hand, ready stance, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-03] Ataque
 ```
-2D game character sprite attack frame, female alien-tamer commanding her tamed alien hound to lunge forward in attack while she cracks a whip, the creature leaping upward, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, female alien-tamer commanding her tamed alien hound to lunge forward in attack while she cracks a whip, the creature leaping upward, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-04] Dano
 ```
-2D game character sprite hit reaction frame, female alien-tamer recoiling, her tamed creature snarling defensively in front of her, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, female alien-tamer recoiling, her tamed creature snarling defensively in front of her, bold thick black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-05] Morte
 ```
-2D game character sprite death frame, female alien-tamer falling, her tamed creature howling beside her, whip dropping, somber, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, female alien-tamer falling, her tamed creature howling beside her, whip dropping, somber mood carried through flat saturated color, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-06] Skill — Invocar Matilha
 ```
-game VFX sprite, a pack of tamed dark alien predator creatures charging forward together in a coordinated attack, motion blur, dark gritty, 96x64, pure black background --ar 3:2 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a pack of tamed dark alien predator creatures charging forward together in a coordinated attack, chunky motion-blur pixel clusters, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, punchy and readable at small size, 96x64, pure black background --ar 3:2 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-07] Skill — Frenesi
 ```
-game VFX sprite, a savage pink-tinged rage aura over a beast, claw and fang energy patterns, berserk intensity, dark gritty, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, a savage saturated-pink rage aura over a beast, claw and fang energy patterns, berserk intensity, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-08] Skill — Domar (aliado)
 ```
-game VFX sprite, a fallen alien creature rising again under a tamer's control, pink dominance energy binding it, reanimation glow, dark gritty, 64x96, pure black background --ar 2:3 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a fallen alien creature rising again under a tamer's control, saturated pink dominance energy binding it, reanimation glow, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, punchy and readable, 64x96, pure black background --ar 2:3 --v 6.1 --style raw --stylize 120
 ```
 
 ### [NEX-09] Projétil
 ```
-game projectile sprite, a tamed creature's claw-slash attack as a projectile, three pink energy claw marks in flight, traveling upward, 24x32, pure black background --ar 3:4 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, a tamed creature's claw-slash attack as a projectile, three saturated pink energy claw marks in flight, bold black outline, chunky punchy pixel cluster, traveling upward, 24x32, pure black background --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ---
@@ -338,47 +340,47 @@ game projectile sprite, a tamed creature's claw-slash attack as a projectile, th
 
 ### [FÊNIX-01] Portrait
 ```
-cinematic character portrait, haunted veteran firefighter in scorched ash-stained turnout bunker gear, helmet pushed back revealing a grim guilt-ridden face with soot and old scars, a fire axe slung over one shoulder and a foam-cannon hose nozzle in hand, thousand-yard stare of a man who failed to save children, somber dark atmosphere with faint embers, gritty realistic illustration, chest-up --ar 3:4 --v 7 --style raw
+Enter the Gungeon-style pixel art character portrait bust, haunted veteran firefighter in scorched ash-stained turnout bunker gear rendered in bold black outlines, helmet pushed back revealing a grim guilt-ridden face with soot and old scars, a fire axe slung over one shoulder and a foam-cannon hose nozzle in hand, thousand-yard stare of a man who failed to save children, flat cel-shaded color blocks in a saturated fire-engine-red and soot-black palette, hard shadow edges, somber mood with faint saturated embers carried through bold flat color, chunky retro pixel clusters, chest-up, clean readable silhouette --ar 3:4 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-02] Sprite de Combate (idle)
 ```
-2D game character sprite, veteran firefighter in heavy scorched turnout bunker gear and helmet, foam-cannon hose raised upward ready to spray, fire axe on his back, foam tank on his shoulders, sturdy guardian stance, 3/4 view from slightly above, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite in the pixel art style of Enter the Gungeon, veteran firefighter in heavy scorched turnout bunker gear and helmet with bold black outlines, foam-cannon hose raised upward ready to spray, fire axe on his back, foam tank on his shoulders, sturdy guardian stance, flat saturated red-and-black cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view from slightly above, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-03] Ataque
 ```
-2D game character sprite attack frame, firefighter blasting a powerful jet of white suppressant foam upward from his hose cannon, recoil, foam spray, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite attack frame, Enter the Gungeon-style pixel art, firefighter blasting a powerful jet of white suppressant foam upward from his hose cannon, recoil pose, foam spray, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-04] Dano
 ```
-2D game character sprite hit reaction frame, firefighter bracing and absorbing a hit with his heavy gear, shielding stance, gritted teeth, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite hit reaction frame in the pixel art style of Enter the Gungeon, firefighter bracing and absorbing a hit with his heavy gear, shielding stance, gritted teeth, bold thick black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, clean readable silhouette, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-05] Morte
 ```
-2D game character sprite death frame, firefighter falling to one knee then collapsing, hose dropping, axe falling, somber, 3/4 view, isolated on pure black background, no floor no shadow, dark gritty illustration --ar 1:1 --v 7 --style raw
+2D game character sprite death frame, Enter the Gungeon-style pixel art, firefighter falling to one knee then collapsing, hose dropping, axe falling, somber mood carried through flat saturated color, bold black outlines, flat cel-shaded color blocks with hard shadow edges, chunky pixel clusters, 3/4 top-down view, isolated on pure black background, no floor no cast shadow --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-06] Skill — Jato de Espuma
 ```
-game VFX sprite, a wide blast of thick white fire-suppressant foam spraying outward and coating the area, slowing effect, dark gritty, 96x80, pure black background --ar 6:5 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a wide blast of thick white fire-suppressant foam spraying outward and coating the area, slowing effect, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky punchy pixel clusters readable at small size, 96x80, pure black background --ar 6:5 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-07] Skill — Escudo do Bombeiro
 ```
-game VFX sprite, a protective riot-shield-like barrier of hardened foam and gear forming in front of a figure, blocking incoming fire, dark gritty, 64x64, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite in the pixel art style of Enter the Gungeon, a protective riot-shield-like barrier of hardened foam and gear forming in front of a figure, blocking incoming fire, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, chunky retro pixel clusters, 64x64, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-08] Skill — Machado Giratório
 ```
-game VFX sprite, a spinning fire-axe creating a circular slash of force around a point, motion arc blur, sparks, dark gritty, 80x80, pure black background --ar 1:1 --v 7 --style raw
+game VFX sprite, Enter the Gungeon-style pixel art, a spinning fire-axe creating a circular slash of force around a point, motion arc blur rendered as chunky pixel clusters, sparks, bold black outlines, flat saturated cel-shaded color blocks with hard shadow edges, 80x80, pure black background --ar 1:1 --v 6.1 --style raw --stylize 120
 ```
 
 ### [FÊNIX-09] Projétil
 ```
-game projectile sprite, a compact blast of white pressurized foam, traveling upward, 18x30, pure black background --ar 2:3 --v 7 --style raw
+game projectile sprite in the pixel art style of Enter the Gungeon, a compact blast of white pressurized foam, bold black outline, flat saturated color blocks, chunky punchy pixel cluster, traveling upward, 18x30, pure black background --ar 2:3 --v 6.1 --style raw --stylize 120
 ```
 
 ---

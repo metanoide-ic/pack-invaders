@@ -16,6 +16,16 @@
 
 ---
 
+## 🎮 DIREÇÃO DE ARTE — PIXEL ART ESTILO ENTER THE GUNGEON
+
+Todos os prompts nos 4 arquivos (PART1-4) foram escritos para gerar **pixel art no estilo Enter the Gungeon**: contornos pretos grossos e bem definidos em cada silhueta, cores chapadas (cel-shaded) vibrantes e saturadas com sombreamento em 3-4 tons e bordas duras (sem gradiente suave, sem blur, sem iluminação fotográfica), clusters de pixel grosso e nitidamente visíveis (sensação retrô 16/32-bit), e silhuetas limpas e legíveis à primeira vista. O clima sombrio/apocalíptico da invasão alienígena continua presente — só que expresso através de paleta de cor pixel-art saturada (verde tóxico doentio, vermelho de perigo, marrom ferrugem grimey, etc.) e não através de grit fotográfico ou realismo pintado.
+
+**Evite ao gerar:** nada de "cinematic", "realistic", "photorealistic" ou ilustração pintada/gritty realista — isso puxa o Midjourney para um resultado pintado/fotográfico, o oposto do visual pixel art chapado que queremos.
+
+**Parâmetros padrão:** mantenha o `--ar` (aspect ratio) já definido em cada prompt (varia por tipo de asset), e use `--v 6.1 --style raw --stylize 120` (stylize baixo mantém o Midjourney mais literal ao pedido de pixel art, evitando embelezamento pintado). Quando houver `--seed XXXXX` de consistência, mantenha-o no final, depois dos outros parâmetros.
+
+---
+
 ## ✅ ORDEM DE GERAÇÃO RECOMENDADA
 
 Siga essa sequência para sempre ter o mais importante primeiro:
