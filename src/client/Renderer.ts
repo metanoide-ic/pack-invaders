@@ -21,6 +21,7 @@ import { countPossibleCombinations, countPossibleBuffs, ALL_COMBINATIONS } from 
 import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
+import { ALL_COLLECTIBLES } from '../data/collectibles';
 import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getTopdownSprite } from './SpriteLoader';
 
 export interface Layout {
@@ -5362,7 +5363,20 @@ export class Renderer {
             ctx.fillStyle = '#6366f1';
             ctx.textAlign = 'center';
             const icons: Record<string, string> = { enemy: '👾', boss: '🐉', character: '🧑', item: '⚙', card: '🃏', collectible: '📜' };
-            ctx.fillText(icons[selEntry.category] || '?', portraitX + portraitSize / 2, portraitY2 + portraitSize * 0.6);
+            // Collectibles carry a spriteHint (paper/photo/lighter/etc.) that was
+            // written for exactly this — never looked up until now, so all 48
+            // rendered as the same generic scroll regardless of what they are.
+            const hintIcons: Record<string, string> = {
+              paper: '📄', document: '📋', radio: '📻', book: '📖', letter: '✉',
+              photo: '📷', diagram: '📈', map: '🗺', blueprint: '📐', vial: '🧪',
+              seed: '🌱', teddy: '🧸', badge: '🎖', lighter: '🔥', tag: '🏷',
+              watch: '⌚', mirror: '🪞', device: '📟', tape: '📼', helmet: '⛑',
+            };
+            const collectibleHint = selEntry.category === 'collectible'
+              ? ALL_COLLECTIBLES.find(c => c.id === selEntry.id)?.spriteHint
+              : undefined;
+            const icon = (collectibleHint && hintIcons[collectibleHint]) || icons[selEntry.category] || '?';
+            ctx.fillText(icon, portraitX + portraitSize / 2, portraitY2 + portraitSize * 0.6);
             ctx.textAlign = 'left';
           }
         }
