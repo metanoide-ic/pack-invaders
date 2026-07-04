@@ -382,6 +382,11 @@ export class CombatEngine {
       }
       // Gerador de Escudo: extra shield capacity while equipped
       if (st.shieldMax) itemShieldBonus += st.shieldMax;
+      // Florian passive: "[Água] items also protect (shield)" — was advertised
+      // on his character sheet but never actually implemented anywhere.
+      if (this.backpack.config.characterId === 'firefighter' && it.definition.tags.includes('Água')) {
+        itemShieldBonus += 6;
+      }
     }
     this.state.playerMaxShield += itemShieldBonus - this._prevItemShield;
     if (itemShieldBonus > this._prevItemShield) {
@@ -1561,17 +1566,25 @@ export class CombatEngine {
     let itemDodge = (this as any)._relicDodge ?? 0;
     let itemReduction = 1 - ((this as any)._relicDR ?? 0);
     let thornRatio = 0;
+    let itemArmor = 0;
     for (const it of this.backpack.getAllItems()) {
       const st = it.state as any;
       if (st.dodgeChance) itemDodge += st.dodgeChance;
       if (st.damageReduction) itemReduction *= 1 - st.damageReduction; // Ventilador
       if (st.damageAbsorb) itemReduction *= 1 - st.damageAbsorb;       // Golem de Cristal
       if (st.thornDamage) thornRatio = Math.max(thornRatio, st.thornDamage);
+      itemArmor += it.stats.armorBonus ?? 0; // Armadura de Espinhos, Escudo de Seiva, etc.
     }
     if (itemDodge > 0 && Math.random() < Math.min(0.5, itemDodge)) {
       this.spawnFloatingText(this.state.playerX, this.arenaHeight - 65, 'ESQUIVA!', '#67e8f9');
       return;
     }
+    // Armor was granted by several cards (Armadura de Espinhos, Escudo de Seiva,
+    // Escudo de Brasas) via item.stats.armorBonus, but nothing ever read that
+    // stat — those cards' "+X armadura" clause was pure flavor text. Diminishing
+    // returns (rather than a flat subtraction) keeps a fully-stacked backpack
+    // from trivializing damage while still making every point of armor matter.
+    if (itemArmor > 0) itemReduction *= 50 / (50 + itemArmor);
     amount *= itemReduction;
     // Coroa de Espinhos: return a share of the damage to a random enemy
     if (thornRatio > 0 && this.state.enemies.length > 0) {

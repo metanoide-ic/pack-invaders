@@ -670,6 +670,42 @@ export const BEAST_TAMER_CARDS: CardDefinition[] = [
     } },
 ];
 
+// ─── Florian (Firefighter) Cards ─────────────────────────────────────────────
+// The Guardião Quebrado: never lost a life before the Event, now overcorrects
+// hard into pure defense. His pool leans protective (shields, reflect, armor,
+// regen) with a few sacrifice/offense cards for players who want to push back.
+
+export const FIREFIGHTER_CARDS: CardDefinition[] = [
+  { id: 'escudo_vivo', name: 'Escudo Vivo', description: '+20 escudo máximo, recarrega na hora.', characterId: 'firefighter', weight: 5,
+    apply(game) { game.combat.state.playerMaxShield += 20; game.combat.state.playerShield += 20; } },
+  { id: 'coracao_de_aco', name: 'Coração de Aço', description: '+25 HP máximo.', characterId: 'firefighter', weight: 5,
+    apply(game) { game.combat.state.playerMaxHp += 25; game.combat.state.playerHp += 25; } },
+  { id: 'vigilia_eterna', name: 'Vigília Eterna', description: '+3 HP/s de regeneração permanente.', characterId: 'firefighter', weight: 5,
+    apply(game) { (game as any)._permanentHealPerSec = ((game as any)._permanentHealPerSec ?? 0) + 3; } },
+  { id: 'reflexo_guardiao', name: 'Reflexo do Guardião', description: 'Reflete 25% do dano recebido de volta.', characterId: 'firefighter', weight: 4,
+    apply(game) { (game as any)._damageReflect = ((game as any)._damageReflect ?? 0) + 0.25; } },
+  { id: 'escudo_de_emergencia_ff', name: 'Escudo de Emergência', description: 'Ganha 40 de escudo ao cair abaixo de 30% HP (1x/wave).', characterId: 'firefighter', weight: 4,
+    apply(game) { (game as any)._regenShield = 40; } },
+  { id: 'ultima_barreira', name: 'Última Barreira', description: '+80% dano causado abaixo de 25% HP.', characterId: 'firefighter', weight: 4,
+    apply(game) { (game as any)._lastStand = true; } },
+  { id: 'peso_da_culpa', name: 'Peso da Culpa', description: 'Perde 15 HP. +30% dano em tudo — ele empresta a dor.', characterId: 'firefighter', weight: 3,
+    apply(game) { game.combat.state.playerHp = Math.max(1, game.combat.state.playerHp - 15); for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.3 }); } } },
+  { id: 'muralha_ambulante', name: 'Muralha Ambulante', description: '+40 HP máximo. -10% dano em tudo.', characterId: 'firefighter', weight: 4,
+    apply(game) { game.combat.state.playerMaxHp += 40; game.combat.state.playerHp += 40; for (const i of game.backpack.getAllItems()) { cp(i, { d: 0.9 }); } } },
+  { id: 'instinto_de_resgate', name: 'Instinto de Resgate', description: 'Quem toca em você leva 15 de dano.', characterId: 'firefighter', weight: 5,
+    apply(game) { (game as any)._contactDamage = ((game as any)._contactDamage ?? 0) + 15; } },
+  { id: 'barreira_de_espuma', name: 'Barreira de Espuma', description: 'Inimigos 15% mais lentos, permanentemente.', characterId: 'firefighter', weight: 4,
+    apply(game) { (game as any)._globalSlow = ((game as any)._globalSlow ?? 1) * 0.85; } },
+  { id: 'extintor_de_cargas', name: 'Extintor de Cargas', description: 'Itens [Água] causam +30% dano.', characterId: 'firefighter', weight: 4,
+    apply(game) { for (const i of game.backpack.getAllItems()) { if (i.definition.tags.includes('Água')) cp(i, { d: 1.3 }); } } },
+  { id: 'golpe_do_machado', name: 'Golpe do Machado', description: 'Kills explodem, causando 10 dano em área.', characterId: 'firefighter', weight: 4,
+    apply(game) { (game as any)._explodeOnKill = ((game as any)._explodeOnKill ?? 0) + 10; } },
+  { id: 'furia_do_resgate', name: 'Fúria do Resgate', description: '+15% dano global.', characterId: 'firefighter', weight: 5,
+    apply(game) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.15 }); } } },
+  { id: 'armadura_do_corpo_de_bombeiros', name: 'Armadura do Corpo de Bombeiros', description: '+8 armadura (reduz dano recebido).', characterId: 'firefighter', weight: 4,
+    apply(game) { for (const i of game.backpack.getAllItems()) { cp(i, { a: 8 / Math.max(1, game.backpack.getAllItems().length) }); } } },
+];
+
 // ─── Neutral Cards (available to all characters) ─────────────────────────────
 
 export const NEUTRAL_CARDS: CardDefinition[] = [
@@ -779,7 +815,7 @@ export const NEUTRAL_CARDS: CardDefinition[] = [
 // ─── Card Pool Access ────────────────────────────────────────────────────────
 
 export function getCardsForCharacter(characterId: string): CardDefinition[] {
-  const allCards = [...GRASS_MAN_CARDS, ...FIRE_LORD_CARDS, ...AQUA_SAGE_CARDS, ...STORM_RUNNER_CARDS, ...VOID_WALKER_CARDS, ...BEAST_TAMER_CARDS, ...NEUTRAL_CARDS];
+  const allCards = [...GRASS_MAN_CARDS, ...FIRE_LORD_CARDS, ...AQUA_SAGE_CARDS, ...STORM_RUNNER_CARDS, ...VOID_WALKER_CARDS, ...BEAST_TAMER_CARDS, ...FIREFIGHTER_CARDS, ...NEUTRAL_CARDS];
   return allCards.filter(c => c.characterId === null || c.characterId === characterId);
 }
 
