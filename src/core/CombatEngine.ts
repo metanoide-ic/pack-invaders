@@ -268,6 +268,8 @@ export class CombatEngine {
   private playerVelocity2 = 0;
   /** Enxame Morto (Diana): kills toward the next drone spawn */
   private _droneKillCounter = 0;
+  /** Strongest enemy killed so far this wave (for the Reanimar skill) */
+  private _strongestKillThisWave: { x: number; y: number; damage: number; maxHp: number } | null = null;
   /** Singularidade (Dr. Eon): seconds until the next black hole pulse */
   private _blackHoleTimer = 0;
   /** Singularidade: seconds remaining in an active pull burst */
@@ -369,6 +371,7 @@ export class CombatEngine {
     this.state.bossBeams = [];
     this.state.regenShieldUsed = false;
     this._droneKillCounter = 0;
+    this._strongestKillThisWave = null;
 
     // ── Per-wave item effects & flag resets ────────────────────────────────
     let itemShieldBonus = 0;
@@ -1996,9 +1999,29 @@ export class CombatEngine {
     if (idx >= 0) this.killEnemy(e, idx);
   }
 
+  /**
+   * Diana's "Reanimar" skill: bring back the strongest non-boss enemy killed
+   * so far this wave as a temporary ally turret. Returns false (no-op) if
+   * nothing has died yet this wave, or the same kill was already reanimated.
+   */
+  reanimateStrongestKill(): boolean {
+    const target = this._strongestKillThisWave;
+    if (!target) return false;
+    this._strongestKillThisWave = null; // consumed — can't reanimate the same corpse twice
+    this.spawnAllyTurret(target.x, target.y, 8, Math.max(6, target.damage * 0.8), 1.0, '#4ade80');
+    this.spawnFloatingText(target.x, target.y - 15, '💚 REANIMADO!', '#4ade80');
+    return true;
+  }
+
   private killEnemy(e: Enemy, index: number): void {
     // Track for codex
     this.state.killedEnemyIds.push(e.defId);
+
+    // Track the strongest kill this wave for Diana's "Reanimar" skill (bosses
+    // excluded — reviving a boss-tier ally would be a different balance tier)
+    if (!e.isBoss && (!this._strongestKillThisWave || e.maxHp > this._strongestKillThisWave.maxHp)) {
+      this._strongestKillThisWave = { x: e.x, y: e.y, damage: e.damage, maxHp: e.maxHp };
+    }
 
     // Gold reward scales with wave + combo bonus
     const comboBonus = 1 + Math.min(this.state.combo * 0.05, 1.0); // max +100% at 20 combo

@@ -951,7 +951,7 @@ export class GameManager {
     const ctx: SkillContext = {
       arenaWidth: this.combat.arenaWidth,
       arenaHeight: this.combat.arenaHeight,
-      spawnBurst: (count, damage, speed, _color) => {
+      spawnBurst: (count, damage, speed, _color, homing) => {
         for (let i = 0; i < count; i++) {
           const angle = (i / count) * Math.PI * 2;
           this.combat.state.projectiles.push({
@@ -963,7 +963,7 @@ export class GameManager {
             damage,
             piercing: 1,
             aoeRadius: 10,
-            tags: [],
+            tags: homing ? ['Guiado'] : [],
             alive: true,
             trail: [],
           });
@@ -1014,6 +1014,7 @@ export class GameManager {
           e.y = Math.max(-100, e.y); // Don't push above spawn area
         }
       },
+      reanimateStrongest: () => this.combat.reanimateStrongestKill(),
     };
 
     skill.definition.activate(this.combat.state, ctx);
