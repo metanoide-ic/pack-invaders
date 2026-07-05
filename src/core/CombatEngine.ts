@@ -79,6 +79,8 @@ export interface Projectile {
   trail: { x: number; y: number }[];
   /** Backpack instanceId of the item that fired this shot (per-item hit effects) */
   ownerId?: string;
+  /** Wall bounces remaining (Frank/storm_runner: electric shots ricochet once) */
+  bounces?: number;
 }
 
 // ─── Enemy Projectile ────────────────────────────────────────────────────────
@@ -772,6 +774,7 @@ export class CombatEngine {
   }
 
   private updateProjectiles(dt: number): void {
+    const charId = this.backpack.config.characterId;
     for (const p of this.state.projectiles) {
       if (!p.alive) continue;
 
@@ -806,20 +809,20 @@ export class CombatEngine {
       p.x += p.vx * dt;
       p.y += p.vy * dt;
 
-      // Bouncy shots: bounce off left/right walls
-      if ((this as any)._bouncyShots > 0) {
+      // Bouncy shots: bounce off left/right walls, capped (card grants 2;
+      // Frank/storm_runner's "unstable pulses ricochet once" passive grants 1
+      // when no card is active). The cap used to be checked but never
+      // enforced — shots bounced forever regardless of the promised count.
+      const maxBounces = (this as any)._bouncyShots ?? (charId === 'storm_runner' ? 1 : 0);
+      if (maxBounces > 0 && (p.bounces ?? 0) < maxBounces) {
         if (p.x < 5) {
           p.x = 5;
           p.vx = Math.abs(p.vx);
-          (p as any)._bounces = ((p as any)._bounces ?? 0) + 1;
+          p.bounces = (p.bounces ?? 0) + 1;
         } else if (p.x > this.arenaWidth - 5) {
           p.x = this.arenaWidth - 5;
           p.vx = -Math.abs(p.vx);
-          (p as any)._bounces = ((p as any)._bounces ?? 0) + 1;
-        }
-        // Kill after max bounces
-        if (((p as any)._bounces ?? 0) > (this as any)._bouncyShots) {
-          // Don't bounce anymore, let normal OOB check handle it
+          p.bounces = (p.bounces ?? 0) + 1;
         }
       }
 
