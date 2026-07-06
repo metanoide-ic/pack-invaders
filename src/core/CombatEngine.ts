@@ -2771,6 +2771,27 @@ export class CombatEngine {
     return { x: Math.max(40, Math.min(W - 40, x + jitter)), y };
   }
 
+  /**
+   * Continuous accelerating growth curve, anchored to a known value at
+   * `anchorMonths` (a year boundary). Used for year-2+ difficulty scaling
+   * instead of independent per-year branch formulas, which reset at each
+   * year boundary and create discontinuities: a formula like
+   * `base + (year - 2) * K + monthInYear * rate` regresses at the start of
+   * every new year whenever `rate * 12` (the previous year's total
+   * within-year growth) exceeds `K` (the flat per-year step) — and can also
+   * spike if the opposite happens. This grows the slope itself gradually
+   * every year so the curve never resets, jumps, or dips at a boundary.
+   */
+  private continuousYearScale(totalMonths: number, anchorMonths: number, anchorValue: number, baseSlope: number, slopeAccel: number): number {
+    const year = Math.ceil(totalMonths / 12);
+    const monthInYear = ((totalMonths - 1) % 12) + 1;
+    const startYear = anchorMonths / 12 + 1;
+    const n = year - startYear; // full years elapsed since the anchor year began
+    const fullYearsSum = n * baseSlope * 12 + slopeAccel * 12 * (n * (n - 1) / 2);
+    const curSlope = baseSlope + n * slopeAccel;
+    return anchorValue + fullYearsSum + curSlope * monthInYear;
+  }
+
   private generateWave(totalMonths: number, isBossMonth: boolean = false): Enemy[] {
     const enemies: Enemy[] = [];
 
@@ -2786,16 +2807,16 @@ export class CombatEngine {
     const year = Math.ceil(totalMonths / 12);
     const monthInYear = ((totalMonths - 1) % 12) + 1;
 
-    // Enemy count scales: more enemies as time passes
+    // Enemy count scales: more enemies as time passes. Year 2+ follows a
+    // continuous accelerating curve anchored to month 12 (see
+    // continuousYearScale) so there's no discontinuity at year boundaries.
     let count: number;
     if (totalMonths <= 6) {
       count = 4 + totalMonths * 1.5; // 5-13
     } else if (totalMonths <= 12) {
       count = 10 + (totalMonths - 6) * 2; // 12-22
-    } else if (year === 2) {
-      count = 18 + monthInYear * 1.5; // 19-36
     } else {
-      count = Math.min(80, 28 + (year - 2) * 10 + monthInYear * 1.5); // Year 3+: scales aggressively
+      count = Math.min(80, this.continuousYearScale(totalMonths, 12, 22, 1.5, 0.5));
     }
     count = Math.floor(count * ((this as any)._anomalyCountMult ?? 1));
 
@@ -2805,6 +2826,21 @@ export class CombatEngine {
       : count > 24 ? ['grid', 'grid', 'wall', 'pincer', 'columns']
       : ['grid', 'grid', 'v', 'wall', 'pincer', 'columns'];
     const formation = formationPool[Math.floor(Math.random() * formationPool.length)];
+
+    // HP scaling based on era. Year 2+ follows the same continuous
+    // accelerating curve as enemy count, anchored to month 12, so there's
+    // no spike or regression at year boundaries (e.g. the old formula
+    // spiked +38% at month 24→25 and then regressed at every boundary
+    // from month 36→37 onward).
+    let hpScale: number;
+    if (totalMonths <= 6) {
+      hpScale = 1 + totalMonths * 0.1; // 1.1 - 1.6
+    } else if (totalMonths <= 12) {
+      hpScale = 1.5 + (totalMonths - 6) * 0.2; // 1.7 - 2.7
+    } else {
+      hpScale = this.continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+    }
+    hpScale *= (this as any)._anomalyHpMult ?? 1;
 
     // Weighted random selection
     const weightedPool: EnemyDefinition[] = [];
@@ -2822,20 +2858,6 @@ export class CombatEngine {
           damage: 5, width: 16, height: 16, goldReward: 2, armor: 0,
           movement: 'straight' as const, spriteId: 'scout', minWave: 1, weight: 10,
         };
-
-      // HP scaling based on era
-      let hpScale: number;
-      if (totalMonths <= 6) {
-        hpScale = 1 + totalMonths * 0.1; // 1.1 - 1.6
-      } else if (totalMonths <= 12) {
-        hpScale = 1.5 + (totalMonths - 6) * 0.2; // 1.7 - 2.7
-      } else if (year === 2) {
-        hpScale = 2.5 + monthInYear * 0.3; // 2.8 - 6.1
-      } else {
-        // Year 3+: massive HP scaling
-        hpScale = 5 + (year - 2) * 3 + monthInYear * 0.4;
-      }
-      hpScale *= (this as any)._anomalyHpMult ?? 1;
 
       // Speed: slower in early months, ramps up
       let baseSpeed: number;
