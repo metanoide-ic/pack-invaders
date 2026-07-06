@@ -26,11 +26,16 @@ function dateKeyOf(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+// Must match GameManager's YEAR_ANOMALIES.length — kept as a plain constant
+// (not imported) to avoid a circular import between this file and
+// GameManager.ts. Update this if the anomaly roster's size changes.
+const ANOMALY_COUNT = 4;
+
 export function getDailyChallenge(date: Date = new Date()): DailyChallengeInfo {
   const dateKey = dateKeyOf(date);
   const seed = hashString(dateKey);
   const characterId = ALL_CHARACTERS[seed % ALL_CHARACTERS.length].id;
-  const anomalyIndex = Math.floor(seed / ALL_CHARACTERS.length) % 4;
+  const anomalyIndex = Math.floor(seed / ALL_CHARACTERS.length) % ANOMALY_COUNT;
   return { dateKey, characterId, anomalyIndex };
 }
 

@@ -479,9 +479,14 @@ export function getAvailableCollectibles(unlockedCharIds: string[]): Collectible
   );
 }
 
-/** Get a random collectible to spawn (20% chance called externally) */
-export function getRandomCollectible(unlockedCharIds: string[]): Collectible | null {
+/** Get a random collectible to spawn (20% chance called externally).
+ * Prefers ones not yet found (per the codex) so late-game players keep
+ * discovering new lore instead of re-rolling entries they already have;
+ * once everything available is found, falls back to the full pool. */
+export function getRandomCollectible(unlockedCharIds: string[], alreadyFoundIds?: Set<string>): Collectible | null {
   const available = getAvailableCollectibles(unlockedCharIds);
   if (available.length === 0) return null;
-  return available[Math.floor(Math.random() * available.length)];
+  const novel = alreadyFoundIds ? available.filter(c => !alreadyFoundIds.has(c.id)) : available;
+  const pool = novel.length > 0 ? novel : available;
+  return pool[Math.floor(Math.random() * pool.length)];
 }

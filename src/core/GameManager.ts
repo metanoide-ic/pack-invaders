@@ -722,7 +722,7 @@ export class GameManager {
     // 20% chance of finding a collectible
     this.pendingCollectible = null;
     if (Math.random() < 0.2) {
-      const col = getRandomCollectible(this.unlockedCharIds);
+      const col = getRandomCollectible(this.unlockedCharIds, this.codex.getUnlockedIdsByCategory('collectible'));
       if (col) {
         this.pendingCollectible = col;
         this.codex.unlockEntry(col.id);
