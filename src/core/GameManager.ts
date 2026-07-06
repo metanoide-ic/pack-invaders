@@ -23,6 +23,7 @@ import { getDifficultyById, Difficulty, unlockNextDifficulty } from '../data/dif
 import { addToLeaderboard } from '../data/leaderboard';
 import { getRelicBonuses, getRandomNewRelic, getRelicForBoss, addRelic, Relic, getEquippedRelics } from '../data/relics';
 import { VersusEngine } from './VersusEngine';
+import { getDailyChallenge, getDailyBest, setDailyBest } from '../data/dailyChallenge';
 
 export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
 
@@ -178,6 +179,12 @@ export class GameManager {
   newlyUnlockedDifficulty: string | null = null;
   /** Interest earned on banked gold last wave (shown on cards screen) */
   lastInterest: number = 0;
+  /** Whether the current run is today's Daily Challenge (fixed character + anomaly) */
+  isDailyChallenge: boolean = false;
+  /** Date key (YYYY-MM-DD) of the active/last-played daily challenge */
+  dailyDateKey: string = '';
+  /** Best months survived on today's daily challenge (0 if not played yet) */
+  dailyBest: number = 0;
 
   /** Preview of next month's wave for the inventory screen */
   getNextWavePreview(): { count: number; isBoss: boolean } {
@@ -243,6 +250,7 @@ export class GameManager {
     this.newlyUnlockedDifficulty = null;
     this.currentAnomaly = null;
     this.anomalyYear = 0;
+    this.isDailyChallenge = false;
     this.aliencoreMode = false;
     this.aliencoreUnlocked = SaveManager.isAliencoreEverUnlocked();
 
@@ -396,8 +404,13 @@ export class GameManager {
     this.twitch.bossNextWave = false;
 
     // ─── Year Anomaly (Year 2+): rolled once per year, shapes every wave ──
+    // Daily Challenge pins its anomaly for the whole run (set in
+    // startDailyChallenge, active from month 1) instead of the normal
+    // year-2+/random roll.
     const ca = this.combat as any;
-    if (this.year >= 2) {
+    if (this.isDailyChallenge) {
+      // currentAnomaly stays as pinned.
+    } else if (this.year >= 2) {
       if (this.anomalyYear !== this.year) {
         this.anomalyYear = this.year;
         this.currentAnomaly = YEAR_ANOMALIES[Math.floor(Math.random() * YEAR_ANOMALIES.length)];
@@ -657,6 +670,11 @@ export class GameManager {
         localStorage.setItem('packinvaders_best_run', String(this.totalMonths));
       }
 
+      if (this.isDailyChallenge && this.totalMonths > this.dailyBest) {
+        this.dailyBest = this.totalMonths;
+        setDailyBest(this.dailyDateKey, this.totalMonths);
+      }
+
       // Unlock next difficulty at month 48
       if (this.totalMonths >= 48) {
         const unlocked = unlockNextDifficulty(this.currentDifficulty);
@@ -815,6 +833,21 @@ export class GameManager {
   enterVersusPvp(): void {
     this.versusEngine = new VersusEngine('pvp');
     this.phase = 'VERSUS_PVP';
+  }
+
+  /** Start today's Daily Challenge: a fixed character + Year Anomaly shared by
+   * everyone who plays today, regardless of character-unlock progress. */
+  startDailyChallenge(): void {
+    const daily = getDailyChallenge();
+    this.dailyDateKey = daily.dateKey;
+    this.dailyBest = getDailyBest(daily.dateKey);
+    this.currentDifficulty = 'soldier';
+    this.initGame(daily.characterId);
+    this.isDailyChallenge = true;
+    this.currentAnomaly = YEAR_ANOMALIES[daily.anomalyIndex];
+    this.anomalyYear = 1; // pinned for the whole run; see startCombat's anomaly block
+    this.updateActiveSynergies();
+    this.phase = 'INVENTORY';
   }
 
   tickVersus(dt: number): void {

@@ -659,13 +659,13 @@ export class InputHandler {
     }
 
     // Mode cards — same layout as renderExtraModes
-    const cardW = Math.floor(L.w * 0.24);
+    const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP', 'DAILY'] as const;
+    const cardW = Math.floor(L.w * (modes.length >= 4 ? 0.185 : 0.24));
     const cardH = Math.floor(L.h * 0.52);
-    const totalW = cardW * 3 + Math.floor(L.w * 0.04) * 2;
+    const gap = Math.floor(L.w * (modes.length >= 4 ? 0.025 : 0.04));
+    const totalW = cardW * modes.length + gap * (modes.length - 1);
     const startX = L.cx - Math.floor(totalW / 2);
     const cardY = Math.floor(L.h * 0.22);
-    const gap = Math.floor(L.w * 0.04);
-    const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP'] as const;
 
     for (let i = 0; i < modes.length; i++) {
       const cx = startX + i * (cardW + gap);
@@ -677,8 +677,8 @@ export class InputHandler {
           this.game.enterVersusPvp();
         } else if (modes[i] === 'COOP') {
           this.game.enterCoop();
-        } else {
-          this.game.phase = modes[i];
+        } else if (modes[i] === 'DAILY') {
+          this.game.startDailyChallenge();
         }
         return;
       }

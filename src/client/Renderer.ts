@@ -5,7 +5,7 @@
  * Fully responsive layout — all positions computed from canvas dimensions.
  */
 
-import { GameManager } from '../core/GameManager';
+import { GameManager, YEAR_ANOMALIES } from '../core/GameManager';
 import { generateAllSprites, SpriteSheet } from './SpriteGen';
 import { SpaceBackground } from './SpaceBackground';
 import { ItemDefinition, getOccupiedCells } from '../core/ItemSystem';
@@ -23,6 +23,8 @@ import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
 import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getTopdownSprite } from './SpriteLoader';
+import { ALL_CHARACTERS } from '../data/characters';
+import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
 export interface Layout {
   w: number; h: number; cell: number;
@@ -4878,18 +4880,29 @@ export class Renderer {
     ctx.fillText(titleText, L.cx, titleY);
     ctx.shadowBlur = 0;
 
-    // Check for record
+    // Check for record — header lines stack above the stats panel, which
+    // shifts down to make room so longer messages (e.g. daily challenge)
+    // don't get painted over by the panel background.
     const isRecord = game.totalMonths >= game.bestRun && game.totalMonths > 0;
+    let headerY = 0.16;
     if (isRecord) {
       ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
       ctx.fillStyle = '#fbbf24';
-      ctx.fillText('★ NOVO RECORDE! ★', L.cx, Math.floor(L.h * 0.16));
+      ctx.fillText('★ NOVO RECORDE! ★', L.cx, Math.floor(L.h * headerY));
+      headerY += 0.028;
+    }
+    if (game.isDailyChallenge) {
+      const dailyIsRecord = game.totalMonths >= game.dailyBest && game.totalMonths > 0;
+      ctx.font = `bold ${Math.floor(L.h * 0.017)}px monospace`;
+      ctx.fillStyle = '#a78bfa';
+      ctx.fillText(dailyIsRecord ? `🗓 NOVO RECORDE DO DESAFIO DIÁRIO! (${game.totalMonths} meses)` : `🗓 Desafio Diário — recorde de hoje: ${game.dailyBest} meses`, L.cx, Math.floor(L.h * headerY));
+      headerY += 0.028;
     }
 
     // ─── Stats Panel ─────────────────────────────────────────────────────
     const panelW = Math.floor(L.w * 0.58);
     const panelX = (L.w - panelW) / 2;
-    const panelY = Math.floor(L.h * 0.16);
+    const panelY = Math.floor(L.h * Math.max(0.16, headerY + 0.005));
     const panelH = Math.floor(L.h * 0.44);
 
     ctx.fillStyle = 'rgba(5, 5, 18, 0.92)';
@@ -6279,14 +6292,34 @@ export class Renderer {
         color: '#f97316',
         available: true,
       },
+      (() => {
+        const daily = getDailyChallenge();
+        const dailyChar = ALL_CHARACTERS.find(c => c.id === daily.characterId);
+        const anomaly = YEAR_ANOMALIES[daily.anomalyIndex];
+        const best = getDailyBest(daily.dateKey);
+        const streak = getDailyStreak();
+        return {
+          id: 'DAILY',
+          title: 'DESAFIO DIÁRIO',
+          icon: '🗓',
+          desc: [
+            `Hoje: ${dailyChar?.name ?? '?'}`,
+            `${anomaly.icon} ${anomaly.name}`,
+            best > 0 ? `Recorde: ${best} meses` : 'Ainda não jogado hoje',
+            ...(streak > 1 ? [`🔥 Sequência: ${streak} dias`] : []),
+          ],
+          color: '#a78bfa',
+          available: true,
+        };
+      })(),
     ];
 
-    const cardW = Math.floor(L.w * 0.24);
+    const cardW = Math.floor(L.w * (modes.length >= 4 ? 0.185 : 0.24));
     const cardH = Math.floor(L.h * 0.52);
-    const totalW = cardW * 3 + Math.floor(L.w * 0.04) * 2;
+    const gap = Math.floor(L.w * (modes.length >= 4 ? 0.025 : 0.04));
+    const totalW = cardW * modes.length + gap * (modes.length - 1);
     const startX = L.cx - Math.floor(totalW / 2);
     const cardY = Math.floor(L.h * 0.22);
-    const gap = Math.floor(L.w * 0.04);
 
     for (let i = 0; i < modes.length; i++) {
       const mode = modes[i];
