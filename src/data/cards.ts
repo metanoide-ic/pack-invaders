@@ -776,7 +776,18 @@ export const NEUTRAL_CARDS: CardDefinition[] = [
   { id: 'n_gold_rush_2', name: 'Febre do Ouro', description: '+100 gold instantâneo. Próximas 3 waves sem loja.', characterId: null, weight: 2,
     apply(game) { game.gold += 100; (game as any)._noShopWaves = 3; } },
   { id: 'n_clone_weapon', name: 'Clonagem', description: 'Seu emissor mais forte dispara 2x.', characterId: null, weight: 2,
-    apply(game) { const emitters = game.backpack.getAllItems().filter(i => i.definition.tags.includes('Emissor')); if (emitters.length > 0) { cp(emitters[0], { p: emitters[0].stats.projectileCount }); } } },
+    apply(game) {
+      const emitters = game.backpack.getAllItems().filter(i => i.definition.tags.includes('Emissor'));
+      if (emitters.length > 0) {
+        // "Mais forte" = highest effective damage output — used to just grab
+        // whichever emitter was placed first (usually the starting weapon,
+        // often the weakest one by mid-run).
+        const strongest = emitters.reduce((a, b) =>
+          b.stats.damage * b.stats.damageMultiplier > a.stats.damage * a.stats.damageMultiplier ? b : a
+        );
+        cp(strongest, { p: strongest.stats.projectileCount });
+      }
+    } },
   { id: 'n_rage_mode', name: 'Modo Fúria', description: 'A cada kill, +2% dano (reseta no fim da wave). Max +100%.', characterId: null, weight: 3,
     apply(game) { (game as any)._rageModePerKill = 0.02; } },
   { id: 'n_shield_bash', name: 'Escudo Ofensivo', description: 'Inimigos que tocam o jogador recebem 50 dano.', characterId: null, weight: 4,
