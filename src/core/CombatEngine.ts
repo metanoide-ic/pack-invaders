@@ -740,14 +740,15 @@ export class CombatEngine {
         emitter.stats.fireRateMultiplier *= skillRateMult * charRate;
 
         emitter.definition.onTick(emitter, dt, (proj) => {
+          const finalDamage = proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
+            * (this.state.combo >= 30 ? 1.2 : 1); // OVERDRIVE
           this.state.projectiles.push({
             id: `proj_${this.nextProjectileId++}`,
             x: this.state.playerX + (proj.x - 400) * 0.05,
             y: this.arenaHeight - 45,
             vx: proj.vx,
             vy: proj.vy,
-            damage: proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
-              * (this.state.combo >= 30 ? 1.2 : 1), // OVERDRIVE
+            damage: finalDamage,
             piercing: proj.piercing,
             aoeRadius: proj.aoeRadius,
             tags: [...proj.tags],
@@ -755,6 +756,25 @@ export class CombatEngine {
             trail: [],
             ownerId: proj.ownerId,
           });
+          // CO-OP: the backpack is shared, so every shot fires twin-barrel —
+          // once from each player's position — instead of P2 standing around
+          // unarmed while P1 does 100% of the shooting.
+          if (this.state.player2Active && this.state.player2X !== undefined) {
+            this.state.projectiles.push({
+              id: `proj_${this.nextProjectileId++}`,
+              x: this.state.player2X + (proj.x - 400) * 0.05,
+              y: this.arenaHeight - 45,
+              vx: proj.vx,
+              vy: proj.vy,
+              damage: finalDamage,
+              piercing: proj.piercing,
+              aoeRadius: proj.aoeRadius,
+              tags: [...proj.tags],
+              alive: true,
+              trail: [],
+              ownerId: proj.ownerId,
+            });
+          }
         });
 
         // Restore original rate
@@ -1545,6 +1565,32 @@ export class CombatEngine {
         this.damagePlayer(p.damage);
       }
     }
+
+    // CO-OP: P2 has no backpack/character, so no defenses apply — just raw damage.
+    if (this.state.player2Active && this.state.player2X !== undefined) {
+      for (const p of this.state.enemyProjectiles) {
+        if (!p.alive) continue;
+        if (this.rectCollision(
+          p.x - 4, p.y - 4, 8, 8,
+          this.state.player2X - playerW / 2, playerY, playerW, playerH
+        )) {
+          p.alive = false;
+          this.damagePlayer2(p.damage);
+        }
+      }
+    }
+  }
+
+  /** CO-OP: damage Player 2. No backpack/relics/character passives apply — P2 is a bare HP pool. */
+  private damagePlayer2(amount: number): void {
+    if (!this.state.player2Active || this.state.player2Hp === undefined) return;
+    this.state.player2Hp = Math.max(0, this.state.player2Hp - amount);
+    this.triggerPlayerFlash();
+    this.spawnFloatingText(this.state.player2X ?? this.state.playerX, this.arenaHeight - 60, `-${Math.round(amount)}`, '#ef4444');
+    if (this.state.player2Hp <= 0) {
+      this.spawnFloatingText(this.state.player2X ?? this.state.playerX, this.arenaHeight - 90, 'P2 CAIU!', '#ef4444');
+      this.state.player2Active = false;
+    }
   }
 
   private damagePlayer(amount: number): void {
@@ -2311,7 +2357,13 @@ export class CombatEngine {
             continue;
           }
         }
-        this.damagePlayer(enemy.damage);
+        // CO-OP: whichever player the enemy is closer to takes the hit
+        if (this.state.player2Active && this.state.player2X !== undefined &&
+            Math.abs(enemy.x - this.state.player2X) < Math.abs(enemy.x - this.state.playerX)) {
+          this.damagePlayer2(enemy.damage);
+        } else {
+          this.damagePlayer(enemy.damage);
+        }
         this.state.enemies.splice(i, 1);
       }
     }
