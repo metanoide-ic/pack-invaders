@@ -5,7 +5,7 @@
  */
 
 import { BackpackGrid, BackpackConfig } from './BackpackGrid';
-import { CombatEngine, Enemy } from './CombatEngine';
+import { CombatEngine, Enemy, computeWaveCount } from './CombatEngine';
 import { ItemDefinition } from './ItemSystem';
 import { ALL_ITEMS } from '../data/items';
 import { pickRandomCards } from '../data/cards';
@@ -185,13 +185,7 @@ export class GameManager {
     const m = this.month + 1 > 12 ? 1 : this.month + 1;
     const y = this.month + 1 > 12 ? this.year + 1 : this.year;
     const isBoss = y >= 3 || (y >= 2 && (m === 3 || m === 9)) || m === 6 || m === 12;
-    // Mirrors CombatEngine.generateWave's count curve
-    let count: number;
-    if (nextTotal === 1) count = 4;
-    else if (nextTotal <= 6) count = 4 + nextTotal * 1.5;
-    else if (nextTotal <= 12) count = 10 + (nextTotal - 6) * 2;
-    else if (y === 2) count = 18 + m * 1.5;
-    else count = Math.min(80, 28 + (y - 2) * 10 + m * 1.5);
+    const count = nextTotal === 1 ? 4 : computeWaveCount(nextTotal);
     return { count: Math.floor(count), isBoss };
   }
 

@@ -8,6 +8,36 @@ import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
 import { getEnemiesForWave, getBossForWave, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
 
+/**
+ * Continuous accelerating growth curve, anchored to a known value at
+ * `anchorMonths` (a year boundary). Used for year-2+ difficulty scaling
+ * instead of independent per-year branch formulas, which reset at each
+ * year boundary and create discontinuities: a formula like
+ * `base + (year - 2) * K + monthInYear * rate` regresses at the start of
+ * every new year whenever `rate * 12` (the previous year's total
+ * within-year growth) exceeds `K` (the flat per-year step) — and can also
+ * spike if the opposite happens. This grows the slope itself gradually
+ * every year so the curve never resets, jumps, or dips at a boundary.
+ */
+export function continuousYearScale(totalMonths: number, anchorMonths: number, anchorValue: number, baseSlope: number, slopeAccel: number): number {
+  const year = Math.ceil(totalMonths / 12);
+  const monthInYear = ((totalMonths - 1) % 12) + 1;
+  const startYear = anchorMonths / 12 + 1;
+  const n = year - startYear; // full years elapsed since the anchor year began
+  const fullYearsSum = n * baseSlope * 12 + slopeAccel * 12 * (n * (n - 1) / 2);
+  const curSlope = baseSlope + n * slopeAccel;
+  return anchorValue + fullYearsSum + curSlope * monthInYear;
+}
+
+/** Base enemy count for a given month, before anomaly multipliers. Shared with
+ * GameManager.getNextWavePreview so the inventory preview never drifts from
+ * what generateWave actually spawns. */
+export function computeWaveCount(totalMonths: number): number {
+  if (totalMonths <= 6) return 4 + totalMonths * 1.5;
+  if (totalMonths <= 12) return 10 + (totalMonths - 6) * 2;
+  return Math.min(80, continuousYearScale(totalMonths, 12, 22, 1.5, 0.5));
+}
+
 // ─── Enemy ───────────────────────────────────────────────────────────────────
 
 export interface Enemy {
@@ -2771,27 +2801,6 @@ export class CombatEngine {
     return { x: Math.max(40, Math.min(W - 40, x + jitter)), y };
   }
 
-  /**
-   * Continuous accelerating growth curve, anchored to a known value at
-   * `anchorMonths` (a year boundary). Used for year-2+ difficulty scaling
-   * instead of independent per-year branch formulas, which reset at each
-   * year boundary and create discontinuities: a formula like
-   * `base + (year - 2) * K + monthInYear * rate` regresses at the start of
-   * every new year whenever `rate * 12` (the previous year's total
-   * within-year growth) exceeds `K` (the flat per-year step) — and can also
-   * spike if the opposite happens. This grows the slope itself gradually
-   * every year so the curve never resets, jumps, or dips at a boundary.
-   */
-  private continuousYearScale(totalMonths: number, anchorMonths: number, anchorValue: number, baseSlope: number, slopeAccel: number): number {
-    const year = Math.ceil(totalMonths / 12);
-    const monthInYear = ((totalMonths - 1) % 12) + 1;
-    const startYear = anchorMonths / 12 + 1;
-    const n = year - startYear; // full years elapsed since the anchor year began
-    const fullYearsSum = n * baseSlope * 12 + slopeAccel * 12 * (n * (n - 1) / 2);
-    const curSlope = baseSlope + n * slopeAccel;
-    return anchorValue + fullYearsSum + curSlope * monthInYear;
-  }
-
   private generateWave(totalMonths: number, isBossMonth: boolean = false): Enemy[] {
     const enemies: Enemy[] = [];
 
@@ -2810,14 +2819,7 @@ export class CombatEngine {
     // Enemy count scales: more enemies as time passes. Year 2+ follows a
     // continuous accelerating curve anchored to month 12 (see
     // continuousYearScale) so there's no discontinuity at year boundaries.
-    let count: number;
-    if (totalMonths <= 6) {
-      count = 4 + totalMonths * 1.5; // 5-13
-    } else if (totalMonths <= 12) {
-      count = 10 + (totalMonths - 6) * 2; // 12-22
-    } else {
-      count = Math.min(80, this.continuousYearScale(totalMonths, 12, 22, 1.5, 0.5));
-    }
+    let count = computeWaveCount(totalMonths);
     count = Math.floor(count * ((this as any)._anomalyCountMult ?? 1));
 
     // Spawn formation: readable shape variety instead of always the same
@@ -2838,7 +2840,7 @@ export class CombatEngine {
     } else if (totalMonths <= 12) {
       hpScale = 1.5 + (totalMonths - 6) * 0.2; // 1.7 - 2.7
     } else {
-      hpScale = this.continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+      hpScale = continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
     }
     hpScale *= (this as any)._anomalyHpMult ?? 1;
 
