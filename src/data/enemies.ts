@@ -1373,9 +1373,15 @@ export function getEnemiesForWave(wave: number): EnemyDefinition[] {
   return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0);
 }
 
-/** Get boss for a wave (bosses appear every 5 waves) */
-export function getBossForWave(wave: number): EnemyDefinition | null {
-  if (wave % 5 !== 0) return null;
-  const bossIndex = Math.floor(wave / 5) - 1;
-  return BOSSES[bossIndex % BOSSES.length] || null;
+/**
+ * Get the boss for the Nth boss encounter of a run (1-indexed), rotating
+ * through the full roster in order before repeating. Boss *months* are
+ * decided elsewhere (GameManager.isBossMonth) and their cadence isn't a
+ * fixed interval — it starts at every 6 months and becomes every month by
+ * year 3 — so selection is keyed off how many boss fights have actually
+ * happened, not the month number itself.
+ */
+export function getBossForEncounter(encounterNumber: number): EnemyDefinition {
+  const idx = Math.max(0, encounterNumber - 1) % BOSSES.length;
+  return BOSSES[idx];
 }

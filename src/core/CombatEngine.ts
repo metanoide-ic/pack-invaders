@@ -6,7 +6,7 @@
 
 import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
-import { getEnemiesForWave, getBossForWave, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
+import { getEnemiesForWave, getBossForEncounter, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
 
 /**
  * Continuous accelerating growth curve, anchored to a known value at
@@ -300,6 +300,8 @@ export class CombatEngine {
   private _droneKillCounter = 0;
   /** Strongest enemy killed so far this wave (for the Reanimar skill) */
   private _strongestKillThisWave: { x: number; y: number; damage: number; maxHp: number } | null = null;
+  /** How many boss fights have happened this run — drives boss rotation (see getBossForEncounter) */
+  private _bossEncounterCount = 0;
   /** Singularidade (Dr. Eon): seconds until the next black hole pulse */
   private _blackHoleTimer = 0;
   /** Singularidade: seconds remaining in an active pull burst */
@@ -2925,8 +2927,8 @@ export class CombatEngine {
 
     // Boss spawning: uses timeline schedule
     if (isBossMonth) {
-      const boss = getBossForWave(totalMonths);
-      const bossSource = boss || getBossForWave(5)!; // fallback to first boss
+      this._bossEncounterCount++;
+      const bossSource = getBossForEncounter(this._bossEncounterCount);
       if (bossSource) {
         // Exponential HP scaling: each year multiplies base by ~1.4x
         const bossHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
