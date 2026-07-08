@@ -71,6 +71,52 @@ const ELEMENT_COLORS: Record<string, { dark: string; mid: string; light: string 
   poison:   { dark: '#1b3a1b', mid: '#388e3c', light: '#76ff03' },
 };
 
+/**
+ * Adds a 1px dark rim around the silhouette and soft directional shading
+ * (lighter upper-left, darker lower-right) to a procedural sprite. Closes
+ * some of the perceived-detail gap against the hand-painted PNG art used
+ * for characters that have it, without hand-placing extra pixels — this
+ * only touches the alpha/color of pixels already drawn.
+ */
+function polishSprite(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const ctx = canvas.getContext('2d')!;
+  const w = canvas.width, h = canvas.height;
+  const src = ctx.getImageData(0, 0, w, h);
+  const data = src.data;
+  const alphaAt = (x: number, y: number): number => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return 0;
+    return data[(y * w + x) * 4 + 3];
+  };
+  const out = ctx.createImageData(w, h);
+  const outData = out.data;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const a = data[i + 3];
+      if (a === 0) {
+        const hasOpaqueNeighbor = alphaAt(x - 1, y) > 0 || alphaAt(x + 1, y) > 0 || alphaAt(x, y - 1) > 0 || alphaAt(x, y + 1) > 0;
+        if (hasOpaqueNeighbor) {
+          outData[i] = 8; outData[i + 1] = 6; outData[i + 2] = 12; outData[i + 3] = 190;
+        }
+        continue;
+      }
+      const onTopEdge = alphaAt(x, y - 1) === 0;
+      const onLeftEdge = alphaAt(x - 1, y) === 0;
+      const onBottomEdge = alphaAt(x, y + 1) === 0;
+      const onRightEdge = alphaAt(x + 1, y) === 0;
+      let factor = 1;
+      if (onTopEdge || onLeftEdge) factor = 1.16;
+      else if (onBottomEdge || onRightEdge) factor = 0.86;
+      outData[i] = Math.min(255, Math.round(data[i] * factor));
+      outData[i + 1] = Math.min(255, Math.round(data[i + 1] * factor));
+      outData[i + 2] = Math.min(255, Math.round(data[i + 2] * factor));
+      outData[i + 3] = a;
+    }
+  }
+  ctx.putImageData(out, 0, 0);
+  return canvas;
+}
+
 // ─── Player Top-Down Character Generation ────────────────────────────────────
 
 const TD_SKIN      = '#d4a574';
@@ -277,7 +323,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
     }
   }
 
-  return c;
+  return polishSprite(c);
 }
 
 /** Backward-compat alias */
