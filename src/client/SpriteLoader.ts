@@ -12,6 +12,8 @@ export interface LoadedSprites {
   enemies: Map<string, HTMLImageElement | HTMLCanvasElement>;
   /** In-combat top-down (back view) player sprites, keyed by character ID */
   topdown: Map<string, HTMLImageElement>;
+  /** Item icons with real art, keyed by item definition id */
+  items: Map<string, HTMLImageElement>;
   menuBg: HTMLImageElement | null;
 }
 
@@ -28,6 +30,14 @@ const ENEMY_SPRITE_IDS = [
   'sentinel', 'spawner', 'leech', 'fire_imp', 'berserker', 'thunder_bug',
   'helix', 'root_golem', 'vine_creep', 'flame_elemental', 'storm_cloud',
   'hive_mind', 'shadow_wraith', 'gold_thief', 'shadow_assassin', 'ghost_ship',
+  'scout', 'grunt', 'zigzag', 'kamikaze', 'magnetic', 'acid_blob',
+  'crystalline', 'mimic', 'bone_warrior', 'tank', 'ice_golem',
+];
+
+/** Item ids with real icon art (rest keep the procedural icons) */
+const ITEM_SPRITE_IDS = [
+  'basic_gun', 'fire_gun', 'ice_gun', 'shotgun', 'sniper',
+  'armor_plate', 'repair_kit', 'battery', 'ancient_rune', 'void_crystal',
 ];
 
 /** Map character IDs in code to sprite file names */
@@ -103,11 +113,13 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback */ }
   }
 
-  // Load bosses
+  // Load bosses; cutout-style art (transparent bg) also becomes the boss's
+  // in-combat sprite via getBossCombatSprite
   for (const id of BOSS_IDS) {
     try {
       const img = await loadImage(`./sprites/bosses/${id}.png`);
       bosses.set(id, img);
+      if (isCutout(img)) bossCutouts.add(id);
     } catch { /* fallback */ }
   }
 
@@ -120,7 +132,16 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, menuBg: null };
+  // Load item icons (main.ts swaps these into the procedural icon map)
+  const items = new Map<string, HTMLImageElement>();
+  for (const id of ITEM_SPRITE_IDS) {
+    try {
+      const img = await loadImage(`./sprites/items/${id}.png`);
+      items.set(id, img);
+    } catch { /* fallback to procedural */ }
+  }
+
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, menuBg: null };
 
   // Load menu background
   try {
@@ -152,33 +173,63 @@ export function getVendorPortrait(vendorId: string): HTMLImageElement | HTMLCanv
   return cachedLoaded.vendors.get(spriteId) || null;
 }
 
+/** Map boss_drill_sergeant -> vrox, etc. */
+const BOSS_DEF_MAP: Record<string, string> = {
+  'boss_drill_sergeant': 'vrox',
+  'boss_hydra': 'nydra',
+  'boss_swarm_queen': 'krix',
+  'boss_toxar': 'toxar',
+  'boss_titan_prime': 'gorvath',
+  'boss_criox': 'criox',
+  'boss_phantax': 'phantax',
+  'boss_devourer': 'gluthar',
+  'boss_vulkra': 'vulkra',
+  'boss_storm_king': 'zethar',
+  'boss_terravox': 'terravox',
+  'boss_solyx': 'solyx',
+  'boss_abyssara': 'abyssara',
+  'boss_architect': 'nexus',
+  'boss_mechron': 'mechron',
+  'boss_voidmaw': 'voidmaw',
+  'boss_astral_serpent': 'astral_serpent',
+  'boss_harbinger': 'harbinger',
+  'boss_kepler_prime': 'xalvor',
+  'boss_epoch': 'zyrgoth',
+};
+
 /** Get boss portrait by boss definition ID */
 export function getBossPortrait(bossDefId: string): HTMLImageElement | HTMLCanvasElement | null {
   if (!cachedLoaded) return null;
-  // Map boss_drill_sergeant -> vrox, etc.
-  const BOSS_DEF_MAP: Record<string, string> = {
-    'boss_drill_sergeant': 'vrox',
-    'boss_hydra': 'nydra',
-    'boss_swarm_queen': 'krix',
-    'boss_toxar': 'toxar',
-    'boss_titan_prime': 'gorvath',
-    'boss_criox': 'criox',
-    'boss_phantax': 'phantax',
-    'boss_devourer': 'gluthar',
-    'boss_vulkra': 'vulkra',
-    'boss_storm_king': 'zethar',
-    'boss_terravox': 'terravox',
-    'boss_solyx': 'solyx',
-    'boss_abyssara': 'abyssara',
-    'boss_architect': 'nexus',
-    'boss_mechron': 'mechron',
-    'boss_voidmaw': 'voidmaw',
-    'boss_astral_serpent': 'astral_serpent',
-    'boss_harbinger': 'harbinger',
-    'boss_kepler_prime': 'xalvor',
-    'boss_epoch': 'zyrgoth',
-  };
   const spriteId = BOSS_DEF_MAP[bossDefId];
   if (!spriteId) return null;
   return cachedLoaded.bosses.get(spriteId) || null;
+}
+
+/** Boss sprite ids whose art is a true cutout (transparent background) and so
+ * can be drawn as an in-combat sprite. Most of the older boss art is a full
+ * painted scene with an opaque background — fine as a codex portrait, ugly as
+ * a combat sprite — so those stay procedural in combat. */
+const bossCutouts = new Set<string>();
+
+function isCutout(img: HTMLImageElement): boolean {
+  const size = 32; // sampling resolution is plenty to measure transparency
+  const c = document.createElement('canvas');
+  c.width = size; c.height = size;
+  const ctx = c.getContext('2d')!;
+  ctx.drawImage(img, 0, 0, size, size);
+  const data = ctx.getImageData(0, 0, size, size).data;
+  let transparent = 0;
+  for (let i = 3; i < data.length; i += 4) {
+    if (data[i] < 20) transparent++;
+  }
+  return transparent / (size * size) > 0.25;
+}
+
+/** Get a boss's in-combat sprite: only bosses with cutout art return one. */
+export function getBossCombatSprite(bossDefId: string): HTMLImageElement | null {
+  if (!cachedLoaded) return null;
+  const spriteId = BOSS_DEF_MAP[bossDefId];
+  if (!spriteId || !bossCutouts.has(spriteId)) return null;
+  const img = cachedLoaded.bosses.get(spriteId);
+  return img instanceof HTMLImageElement ? img : null;
 }

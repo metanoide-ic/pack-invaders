@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getTopdownSprite } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -70,7 +70,8 @@ export class Renderer {
   inputHandler: InputHandler | null = null;
   waveTransition: WaveTransition | null = null;
 
-  private sprites: SpriteSheet;
+  /** Public so main.ts can swap loaded PNG item art into the icon map */
+  sprites: SpriteSheet;
   private particles: Particle[] = [];
   private explosions: Explosion[] = [];
   private goldPopups: GoldPopup[] = [];
@@ -3194,9 +3195,12 @@ export class Renderer {
   private renderEnemy(e: Enemy, dt: number): void {
     const { ctx } = this;
     const spriteId = this.getEnemySpriteId(e);
-    // Prefer real cut-out art (loaded PNGs) over the procedural fallback
+    // Prefer real cut-out art (loaded PNGs) over the procedural fallback.
+    // Bosses with cutout art use it in combat too (opaque painted-scene boss
+    // art stays codex-only; getBossCombatSprite filters those out).
     const loadedEnemies = (this as any).loadedSprites?.enemies as Map<string, HTMLImageElement> | undefined;
-    const sprite = loadedEnemies?.get(spriteId) || this.sprites.enemies.get(spriteId);
+    const bossArt = e.isBoss && (e as any).defId ? getBossCombatSprite((e as any).defId) : null;
+    const sprite = bossArt || loadedEnemies?.get(spriteId) || this.sprites.enemies.get(spriteId);
 
     // Tiered visual scale for readability: the smaller the enemy, the bigger
     // the boost. Presentation only — hitboxes (e.width/e.height) are untouched.

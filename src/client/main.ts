@@ -39,7 +39,17 @@ try {
   // Load real sprite assets in background (non-blocking)
   loadAllSprites().then(sprites => {
     (renderer as any).loadedSprites = sprites;
-    console.log(`Loaded: ${sprites.characters.size} chars, ${sprites.vendors.size} vendors, ${sprites.bosses.size} bosses`);
+    // Swap real item art into the procedural icon map — every draw path
+    // (backpack grid, shop, tooltips, fusion guide) reads renderer.sprites.items,
+    // so replacing entries here upgrades all of them at once.
+    for (const [id, img] of sprites.items) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0);
+      renderer.sprites.items.set(id, canvas);
+    }
+    console.log(`Loaded: ${sprites.characters.size} chars, ${sprites.vendors.size} vendors, ${sprites.bosses.size} bosses, ${sprites.items.size} items`);
   }).catch(() => { /* Use procedural fallback */ });
 } catch (err) {
   // Show error on screen if initialization fails
