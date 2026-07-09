@@ -326,6 +326,8 @@ export class CombatEngine {
   private _strongestKillThisWave: { x: number; y: number; damage: number; maxHp: number } | null = null;
   /** How many boss fights have happened this run — drives boss rotation (see getBossForEncounter) */
   private _bossEncounterCount = 0;
+  /** Seconds remaining of shot-recoil, read by the renderer for the weapon-kick animation */
+  recoilTimer = 0;
   /** Singularidade (Dr. Eon): seconds until the next black hole pulse */
   private _blackHoleTimer = 0;
   /** Singularidade: seconds remaining in an active pull burst */
@@ -527,6 +529,7 @@ export class CombatEngine {
     this.state.drainWarningTimer = Math.max(0, this.state.drainWarningTimer - dt);
     this.state.playerSlowTimer = Math.max(0, this.state.playerSlowTimer - dt);
     this._dmgPopupCooldown = Math.max(0, this._dmgPopupCooldown - dt);
+    this.recoilTimer = Math.max(0, this.recoilTimer - dt);
 
     // Combo timer
     if (this.state.combo > 0) {
@@ -798,6 +801,7 @@ export class CombatEngine {
         emitter.definition.onTick(emitter, dt, (proj) => {
           const finalDamage = proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
             * (this.state.combo >= 30 ? 1.2 : 1); // OVERDRIVE
+          this.recoilTimer = 0.12; // drives the character's shot-recoil animation
           this.state.projectiles.push({
             id: `proj_${this.nextProjectileId++}`,
             x: this.state.playerX + (proj.x - 400) * 0.05,

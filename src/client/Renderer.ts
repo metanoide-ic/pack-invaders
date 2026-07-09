@@ -1697,6 +1697,72 @@ export class Renderer {
     ctx.fillText('[R-click: rotacionar]', this.mouseX + 10, this.mouseY + 2);
   }
 
+  // ─── Top-Down Character Animation ───────────────────────────────────────
+
+  /** Walk-cycle phase per player slot (0 = P1, 1 = P2) */
+  private _walkPhase: [number, number] = [0, 0];
+  private _lastAnimNow: [number, number] = [0, 0];
+
+  /**
+   * Draws a painted top-down character sprite in animated bands, relative to
+   * a feet-center origin (caller translates/rotates first):
+   * - legs (bottom 20%): alternate 2px lifts while moving — a walk cycle
+   * - torso: squashes 1px on a slow cycle while idle (breathing) and up to
+   *   2px while recoilTimer is hot (weapon kick — the guns point up, so the
+   *   whole upper body dips)
+   * - head band: rides the torso squash; for Frank (storm_runner) it's his
+   *   alien tendrils, drawn as horizontal strips with per-strip sway that
+   *   never stops — they're alive whether he's moving or not.
+   */
+  private drawTopdownAnimated(sprite: HTMLImageElement, charId: string, vel: number, recoil01: number, now: number, slot: 0 | 1): void {
+    const { ctx } = this;
+    const W = sprite.width, H = sprite.height;
+    const x0 = -Math.floor(W / 2), y0 = -H;
+    const shoulderY = Math.floor(H * (charId === 'storm_runner' ? 0.40 : 0.35));
+    const legsY = Math.floor(H * 0.80);
+    const moving = Math.abs(vel) > 40;
+
+    const dts = Math.min(0.05, Math.max(0, now - this._lastAnimNow[slot]));
+    this._lastAnimNow[slot] = now;
+    if (moving) this._walkPhase[slot] += dts * (6 + Math.abs(vel) * 0.012);
+
+    // 2-frame breathing (clean pixel toggle, no sub-pixel shimmer) + recoil
+    const breath = !moving && Math.sin(now * 2.4) > 0 ? 1 : 0;
+    const squash = Math.min(3, breath + Math.round(recoil01 * 2));
+
+    // Legs first — a lifted leg overlaps the torso band, which is drawn
+    // after and covers the overlap, leaving a ground gap under the foot.
+    if (moving) {
+      const lift = Math.sin(this._walkPhase[slot]);
+      const halfW = Math.ceil(W / 2);
+      const lLift = lift > 0.2 ? Math.round(lift * 2) : 0;
+      const rLift = lift < -0.2 ? Math.round(-lift * 2) : 0;
+      ctx.drawImage(sprite, 0, legsY, halfW, H - legsY, x0, y0 + legsY - lLift, halfW, H - legsY);
+      ctx.drawImage(sprite, halfW, legsY, W - halfW, H - legsY, x0 + halfW, y0 + legsY - rLift, W - halfW, H - legsY);
+    } else {
+      ctx.drawImage(sprite, 0, legsY, W, H - legsY, x0, y0 + legsY, W, H - legsY);
+    }
+
+    // Torso: compresses by `squash` px, bottom edge pinned to the legs
+    ctx.drawImage(sprite, 0, shoulderY, W, legsY - shoulderY, x0, y0 + shoulderY + squash, W, (legsY - shoulderY) - squash);
+
+    // Head / tendrils: shifted down by the squash so it rides the torso
+    if (charId === 'storm_runner') {
+      const strips = 4;
+      const stripH = Math.ceil(shoulderY / strips);
+      for (let i = 0; i < strips; i++) {
+        const sy = i * stripH;
+        const sh = Math.min(stripH, shoulderY - sy);
+        if (sh <= 0) continue;
+        const amp = 1.6 * (1 - i / strips) + 0.4; // tips sway more than the base
+        const dx = Math.round(Math.sin(now * 2.8 + i * 1.1) * amp);
+        ctx.drawImage(sprite, 0, sy, W, sh, x0 + dx, y0 + sy + squash, W, sh);
+      }
+    } else {
+      ctx.drawImage(sprite, 0, 0, W, shoulderY, x0, y0 + squash, W, shoulderY);
+    }
+  }
+
   // ─── Background ───────────────────────────────────────────────────────────
 
   private renderBackground(dt: number): void {
@@ -3032,17 +3098,21 @@ export class Renderer {
 
     const tdSprite = getTopdownSprite(charId);
     if (tdSprite || playerSprite) {
-      // Idle bob + movement lean; art sprites are feet-anchored at the ground
-      const bob = Math.sin(now * 3.2) * 1.2;
       const vel = (game.combat as any).playerVelocity ?? 0;
       const lean = Math.max(-0.09, Math.min(0.09, vel * 0.00012));
       ctx.save();
-      ctx.translate(state.playerX, canvas.height - 13 + bob);
-      ctx.rotate(lean);
       if (tdSprite) {
-        ctx.drawImage(tdSprite, -Math.floor(tdSprite.width / 2), -tdSprite.height);
+        // Art sprites are feet-anchored; all life (walk/breath/recoil/tendrils)
+        // comes from the band animation instead of a whole-body bob.
+        ctx.translate(state.playerX, canvas.height - 13);
+        ctx.rotate(lean);
+        const recoil01 = Math.min(1, ((game.combat as any).recoilTimer ?? 0) / 0.12);
+        this.drawTopdownAnimated(tdSprite, charId, vel, recoil01, now, 0);
       } else {
         // Fallback procedural sprite at 2x integer scale (crisp 64px)
+        const bob = Math.sin(now * 3.2) * 1.2;
+        ctx.translate(state.playerX, canvas.height - 13 + bob);
+        ctx.rotate(lean);
         ctx.drawImage(playerSprite, -32, -60, 64, 64);
       }
       ctx.restore();
@@ -3076,7 +3146,9 @@ export class Renderer {
       ctx.save();
       ctx.translate(state.player2X, canvas.height - 13);
       if (p2Td) {
-        ctx.drawImage(p2Td, -Math.floor(p2Td.width / 2), -p2Td.height);
+        const vel2 = (game.combat as any).playerVelocity2 ?? 0;
+        const recoil01 = Math.min(1, ((game.combat as any).recoilTimer ?? 0) / 0.12);
+        this.drawTopdownAnimated(p2Td, p2Char, vel2, recoil01, now, 1);
       } else {
         const p2Sprite = this.sprites.playerShips[1] ?? this.sprites.playerShips[0];
         if (p2Sprite) ctx.drawImage(p2Sprite, -32, -60, 64, 64);
