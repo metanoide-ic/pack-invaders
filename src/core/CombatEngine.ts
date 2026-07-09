@@ -6,7 +6,7 @@
 
 import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
-import { getEnemiesForWave, getBossForEncounter, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
+import { getEnemiesForWave, getBossForEncounter, BOSSES, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
 
 /**
  * Continuous accelerating growth curve, anchored to a known value at
@@ -37,6 +37,30 @@ export function computeWaveCount(totalMonths: number): number {
   if (totalMonths <= 12) return 10 + (totalMonths - 6) * 2;
   return Math.min(80, continuousYearScale(totalMonths, 12, 22, 1.5, 0.5));
 }
+
+/**
+ * Once a run cycles through the full boss roster once (see
+ * getBossForEncounter), repeats get one of these instead of reappearing
+ * identically — a long run (year 5+) should feel different each lap, not
+ * just numerically bigger. The affix fields reuse the same elite-affix
+ * behaviors already implemented for regular enemies (regen heal-over-time,
+ * volatile death burst) rather than introducing new mechanics.
+ */
+interface BossMutation {
+  suffix: string;
+  hpMult: number;
+  dmgMult: number;
+  speedMult: number;
+  extraArmor: number;
+  affix?: 'regen' | 'volatile';
+}
+const BOSS_MUTATIONS: BossMutation[] = [
+  { suffix: 'FURIOSO', hpMult: 1.0, dmgMult: 1.35, speedMult: 1.2, extraArmor: 0 },
+  { suffix: 'BLINDADO', hpMult: 1.15, dmgMult: 1.0, speedMult: 1.0, extraArmor: 10 },
+  { suffix: 'REGENERADOR', hpMult: 1.1, dmgMult: 1.0, speedMult: 1.0, extraArmor: 0, affix: 'regen' },
+  { suffix: 'VOLÁTIL', hpMult: 0.9, dmgMult: 1.15, speedMult: 1.1, extraArmor: 0, affix: 'volatile' },
+  { suffix: 'ANCESTRAL', hpMult: 1.3, dmgMult: 1.15, speedMult: 0.9, extraArmor: 5 },
+];
 
 // ─── Enemy ───────────────────────────────────────────────────────────────────
 
@@ -2930,34 +2954,53 @@ export class CombatEngine {
       this._bossEncounterCount++;
       const bossSource = getBossForEncounter(this._bossEncounterCount);
       if (bossSource) {
+        // Past the first full lap through the 20-boss roster, apply a mutation
+        // so repeats feel different instead of just numerically bigger.
+        const lap = Math.floor((this._bossEncounterCount - 1) / BOSSES.length);
+        const mutation = lap >= 1 ? BOSS_MUTATIONS[Math.floor(Math.random() * BOSS_MUTATIONS.length)] : null;
+
         // Exponential HP scaling: each year multiplies base by ~1.4x
-        const bossHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
+        const baseHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
+        const baseDamage = bossSource.damage + Math.floor(totalMonths * 0.8);
+        const baseSpeed = bossSource.speed * (1 + (year - 1) * 0.1);
+        const bossHp = mutation ? Math.floor(baseHp * mutation.hpMult) : baseHp;
+        const bossDamage = mutation ? Math.floor(baseDamage * mutation.dmgMult) : baseDamage;
+        const bossSpeed = mutation ? baseSpeed * mutation.speedMult : baseSpeed;
+        const baseArmor = bossSource.special?.type === 'armor' ? bossSource.special.hits : 0;
+        const totalArmor = baseArmor + (mutation?.extraArmor ?? 0);
+
         enemies.push({
           id: `enemy_${this.nextEnemyId++}`,
           x: this.arenaWidth / 2,
           y: -60,
           hp: bossHp,
           maxHp: bossHp,
-          speed: bossSource.speed * (1 + (year - 1) * 0.1),
-          damage: bossSource.damage + Math.floor(totalMonths * 0.8),
+          speed: bossSpeed,
+          damage: bossDamage,
           tags: [...bossSource.tags],
           width: bossSource.width,
           height: bossSource.height,
-          goldReward: bossSource.goldReward + totalMonths * 2,
+          goldReward: Math.floor((bossSource.goldReward + totalMonths * 2) * (mutation ? 1.5 : 1)),
           shootTimer: bossSource.special?.type === 'shoot' ? 1 / bossSource.special.fireRate : 2,
           special: bossSource.special,
           isBoss: true,
           movement: bossSource.movement,
-          armorHits: bossSource.special?.type === 'armor' ? bossSource.special.hits : undefined,
+          armorHits: totalArmor > 0 ? totalArmor : undefined,
           phased: false,
           phaseTimer: bossSource.special?.type === 'phase' ? 3.0 : undefined,
           spawnTimer: bossSource.special?.type === 'spawn' ? bossSource.special.interval : undefined,
           moveTimer: 0,
           moveDir: 1,
           explodeOnDeath: bossSource.special?.type === 'explode',
-          baseSpeed: bossSource.speed * (1 + (year - 1) * 0.1),
+          baseSpeed: bossSpeed,
           defId: bossSource.id,
         });
+
+        if (mutation) {
+          const spawned = enemies[enemies.length - 1] as any;
+          spawned.affix = mutation.affix;
+          spawned.displayName = `${bossSource.name.toUpperCase()} (${mutation.suffix})`;
+        }
       }
     }
 
