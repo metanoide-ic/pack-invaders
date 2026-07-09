@@ -32,8 +32,9 @@ try {
   renderer = new Renderer(ctx, canvas, game);
   input = new InputHandler(canvas, game, renderer, audio);
   renderer.inputHandler = input;
-  // Debug handle for automated playtests
+  // Debug handles for automated playtests
   (window as any).__game = game;
+  (window as any).__renderer = renderer;
 
   // Load real sprite assets in background (non-blocking)
   loadAllSprites().then(sprites => {

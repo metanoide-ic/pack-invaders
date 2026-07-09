@@ -1607,9 +1607,23 @@ export class Renderer {
     if (inGrid) {
       const tempDef: ItemDefinition = { ...held.definition, gridShape: shape };
       const canPlace = this.game.backpack.canPlace(tempDef, { col: gridCol, row: gridRow });
-      const cells = getOccupiedCells(shape, { col: gridCol, row: gridRow });
-      const highlightColor = canPlace ? 'rgba(74, 222, 128, 0.35)' : 'rgba(239, 68, 68, 0.35)';
-      const borderColor = canPlace ? '#4ade80' : '#ef4444';
+
+      // Dropping a duplicate directly onto its own placed twin merges it into
+      // an upgrade instead of just placing — highlight that distinctly (gold)
+      // rather than the misleading "can't place" red, since canPlace() is
+      // false there (the cell is occupied) even though the drop is valid.
+      const targetItem = this.game.backpack.getItemAt(gridCol, gridRow);
+      const isUpgradeTarget = !!targetItem && targetItem.definition.id === held.definition.id;
+      const upgradeLevel = isUpgradeTarget ? this.game.backpack.getUpgradeLevel(targetItem!) : 0;
+      const upgradeMaxed = isUpgradeTarget && upgradeLevel >= this.game.backpack.maxUpgrade;
+
+      const cells = isUpgradeTarget && !upgradeMaxed
+        ? getOccupiedCells(targetItem!.definition.gridShape, targetItem!.position)
+        : getOccupiedCells(shape, { col: gridCol, row: gridRow });
+      const highlightColor = isUpgradeTarget && !upgradeMaxed ? 'rgba(251, 191, 36, 0.4)'
+        : canPlace ? 'rgba(74, 222, 128, 0.35)' : 'rgba(239, 68, 68, 0.35)';
+      const borderColor = isUpgradeTarget && !upgradeMaxed ? '#fbbf24'
+        : canPlace ? '#4ade80' : '#ef4444';
 
       for (const cell of cells) {
         if (cell.col >= 0 && cell.col < this.game.backpack.cols &&
@@ -1622,6 +1636,15 @@ export class Renderer {
           ctx.lineWidth = 2;
           ctx.strokeRect(x, y, L.cell - 2, L.cell - 2);
         }
+      }
+
+      if (isUpgradeTarget) {
+        ctx.font = `bold ${L.fontSmall}`;
+        ctx.fillStyle = upgradeMaxed ? '#94a3b8' : '#fbbf24';
+        ctx.textAlign = 'left';
+        const labelX = L.gridX + targetItem!.position.col * L.cell + 2;
+        const labelY = L.gridY + targetItem!.position.row * L.cell - 6;
+        ctx.fillText(upgradeMaxed ? `NO MÁXIMO (+${this.game.backpack.maxUpgrade})` : `⬆ UPGRADE +${upgradeLevel + 1}`, labelX, labelY);
       }
 
       // Adjacency preview — highlight items that would be neighbors
@@ -5488,7 +5511,7 @@ export class Renderer {
     ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
     ctx.fillStyle = '#f472b6';
     ctx.textAlign = 'left';
-    ctx.fillText(`${combos.length} Fusões — Coloque itens adjacentes para ativar!`, margin, startY - Math.floor(L.h * 0.015));
+    ctx.fillText(`${combos.length} Fusões — adjacentes ativam. Duplicado sobre o igual = UPGRADE!`, margin, startY - Math.floor(L.h * 0.015));
 
     for (let i = 0; i < visibleCount && (i + this.codexScroll) < combos.length; i++) {
       const combo = combos[i + this.codexScroll];
@@ -6217,6 +6240,7 @@ export class Renderer {
       ['', ''],
       ['DICA:', 'Cada personagem tem 3 skills únicas!'],
       ['DICA:', 'Combo de kills = mais gold!'],
+      ['DICA:', 'Item duplicado sobre o igual na mochila = UPGRADE (+dano)!'],
     ];
 
     ctx.font = L.fontNormal;
