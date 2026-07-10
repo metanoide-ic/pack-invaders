@@ -4,6 +4,7 @@
  */
 
 import { generateFenixPortrait } from './SpriteGen';
+import { ALL_ITEMS } from '../data/items';
 
 export interface LoadedSprites {
   characters: Map<string, HTMLImageElement | HTMLCanvasElement>;
@@ -34,11 +35,9 @@ const ENEMY_SPRITE_IDS = [
   'crystalline', 'mimic', 'bone_warrior', 'tank', 'ice_golem',
 ];
 
-/** Item ids with real icon art (rest keep the procedural icons) */
-const ITEM_SPRITE_IDS = [
-  'basic_gun', 'fire_gun', 'ice_gun', 'shotgun', 'sniper',
-  'armor_plate', 'repair_kit', 'battery', 'ancient_rune', 'void_crystal',
-];
+/** Every item now has real icon art in public/sprites/items/<id>.png;
+ * load them all (missing files fail silently to the procedural icon). */
+const ITEM_SPRITE_IDS = ALL_ITEMS.map(i => i.id);
 
 /** Map character IDs in code to sprite file names */
 const CHAR_ID_MAP: Record<string, string> = {
@@ -132,14 +131,15 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }
 
-  // Load item icons (main.ts swaps these into the procedural icon map)
+  // Load item icons (main.ts swaps these into the procedural icon map).
+  // All 150 in parallel — sequential awaits would add seconds to startup.
   const items = new Map<string, HTMLImageElement>();
-  for (const id of ITEM_SPRITE_IDS) {
+  await Promise.all(ITEM_SPRITE_IDS.map(async id => {
     try {
       const img = await loadImage(`./sprites/items/${id}.png`);
       items.set(id, img);
     } catch { /* fallback to procedural */ }
-  }
+  }));
 
   cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, menuBg: null };
 
