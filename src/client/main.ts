@@ -32,6 +32,9 @@ try {
   renderer = new Renderer(ctx, canvas, game);
   input = new InputHandler(canvas, game, renderer, audio);
   renderer.inputHandler = input;
+  // Final-boss entrance roar (fired by CombatEngine at the cutscene's peak)
+  game.combat.onBossRoar = () => audio.monsterRoar();
+
   // Debug handles for automated playtests
   (window as any).__game = game;
   (window as any).__renderer = renderer;

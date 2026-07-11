@@ -382,6 +382,60 @@ export class AudioManager {
     }
   }
 
+  /** Monstrous creature roar for the final boss's entrance — layered detuned
+   * saws sweeping down into sub-bass, with a breathy noise burst on top. */
+  monsterRoar(): void {
+    const ctx = this.getCtx();
+    const t = ctx.currentTime;
+    const dur = 1.6;
+    // Three detuned saw layers falling from a scream into a growl
+    for (const [start, detune] of [[150, 0], [163, 8], [141, -11]] as const) {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filt = ctx.createBiquadFilter();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(start, t);
+      osc.frequency.exponentialRampToValueAtTime(38, t + dur);
+      osc.detune.value = detune;
+      filt.type = 'lowpass';
+      filt.frequency.setValueAtTime(1200, t);
+      filt.frequency.exponentialRampToValueAtTime(220, t + dur);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.16, t + 0.08);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      osc.connect(filt); filt.connect(gain); gain.connect(this.getSfx());
+      osc.start(t); osc.stop(t + dur);
+    }
+    // Sub-bass body
+    const sub = ctx.createOscillator();
+    const subGain = ctx.createGain();
+    sub.type = 'sine';
+    sub.frequency.setValueAtTime(55, t);
+    sub.frequency.exponentialRampToValueAtTime(26, t + dur);
+    subGain.gain.setValueAtTime(0.0001, t);
+    subGain.gain.exponentialRampToValueAtTime(0.22, t + 0.1);
+    subGain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+    sub.connect(subGain); subGain.connect(this.getSfx());
+    sub.start(t); sub.stop(t + dur);
+    // Breathy rasp: filtered noise burst
+    const len = Math.floor(ctx.sampleRate * 0.9);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate);
+    const data = buf.getChannelData(0);
+    for (let i = 0; i < len; i++) data[i] = (Math.random() * 2 - 1) * (1 - i / len);
+    const noise = ctx.createBufferSource();
+    noise.buffer = buf;
+    const nFilt = ctx.createBiquadFilter();
+    nFilt.type = 'bandpass';
+    nFilt.frequency.setValueAtTime(700, t);
+    nFilt.frequency.exponentialRampToValueAtTime(180, t + 0.9);
+    nFilt.Q.value = 0.8;
+    const nGain = ctx.createGain();
+    nGain.gain.setValueAtTime(0.14, t);
+    nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.9);
+    noise.connect(nFilt); nFilt.connect(nGain); nGain.connect(this.getSfx());
+    noise.start(t);
+  }
+
   // ─── Music sequencer ──────────────────────────────────────────────────────
   // 4-bar chiptune loop (16 steps/bar): bass, arpeggio lead, kick and hats.
   // A 25ms lookahead scheduler keeps timing sample-accurate ("Tale of Two

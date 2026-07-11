@@ -5,6 +5,7 @@
 
 import { generateFenixPortrait } from './SpriteGen';
 import { ALL_ITEMS } from '../data/items';
+import { ALL_ENEMIES } from '../data/enemies';
 
 export interface LoadedSprites {
   characters: Map<string, HTMLImageElement | HTMLCanvasElement>;
@@ -19,6 +20,10 @@ export interface LoadedSprites {
   bossCombat: Map<string, HTMLImageElement>;
   /** Planet rotation frames for the inventory screen (empty = procedural) */
   planetFrames: HTMLImageElement[];
+  /** Full-body vendor art for the shop overlay, keyed by vendor id */
+  vendorsFull: Map<string, HTMLImageElement>;
+  /** Screen-filling art for the final boss's cinematic entrance */
+  zyrgothGiant: HTMLImageElement | null;
   menuBg: HTMLImageElement | null;
 }
 
@@ -30,14 +35,10 @@ const BOSS_IDS = [
   'voidmaw', 'astral_serpent', 'harbinger', 'xalvor', 'zyrgoth',
 ];
 
-/** Enemy defIds with real cut-out art (rest fall back to procedural sprites) */
-const ENEMY_SPRITE_IDS = [
-  'sentinel', 'spawner', 'leech', 'fire_imp', 'berserker', 'thunder_bug',
-  'helix', 'root_golem', 'vine_creep', 'flame_elemental', 'storm_cloud',
-  'hive_mind', 'shadow_wraith', 'gold_thief', 'shadow_assassin', 'ghost_ship',
-  'scout', 'grunt', 'zigzag', 'kamikaze', 'magnetic', 'acid_blob',
-  'crystalline', 'mimic', 'bone_warrior', 'tank', 'ice_golem',
-];
+/** Every spawnable enemy now has real cut-out art in
+ * public/sprites/enemies/<defId>.png (missing files fail silently to the
+ * procedural sprite, same policy as items) */
+const ENEMY_SPRITE_IDS = ALL_ENEMIES.filter(e => !e.id.startsWith('boss_')).map(e => e.id);
 
 /** Every item now has real icon art in public/sprites/items/<id>.png;
  * load them all (missing files fail silently to the procedural icon). */
@@ -148,14 +149,28 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* keep procedural planet */ }
   }));
 
-  // Load enemy sprites (real art cut from the AI-generated sheet; falls
-  // back to procedural generation in Renderer when a defId has no file)
-  for (const id of ENEMY_SPRITE_IDS) {
+  // Load enemy sprites — all 55 in parallel (sequential awaits would add
+  // seconds to startup); falls back to procedural when a file is missing
+  await Promise.all(ENEMY_SPRITE_IDS.map(async id => {
     try {
       const img = await loadImage(`./sprites/enemies/${id}.png`);
       enemies.set(id, img);
     } catch { /* fallback to procedural */ }
-  }
+  }));
+
+  // Full-body vendor art (waist-up crop is done at draw time in the shop)
+  const vendorsFull = new Map<string, HTMLImageElement>();
+  await Promise.all(VENDOR_IDS.map(async id => {
+    try {
+      vendorsFull.set(id, await loadImage(`./sprites/vendors/${id}_full.png`));
+    } catch { /* shop simply skips the overlay */ }
+  }));
+
+  // Giant final boss art for Zyr-Goth's cinematic entrance
+  let zyrgothGiant: HTMLImageElement | null = null;
+  try {
+    zyrgothGiant = await loadImage('./sprites/bosses/zyrgoth_giant.png');
+  } catch { /* boss falls back to the normal combat cutout */ }
 
   // Load item icons (main.ts swaps these into the procedural icon map).
   // All 150 in parallel — sequential awaits would add seconds to startup.
@@ -167,7 +182,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), menuBg: null };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, menuBg: null };
 
   // Load menu background
   try {
@@ -268,4 +283,14 @@ export function getBossCombatSprite(bossDefId: string): HTMLImageElement | null 
 /** Planet rotation frames for the inventory screen ([] until loaded) */
 export function getPlanetFrames(): HTMLImageElement[] {
   return cachedLoaded?.planetFrames ?? [];
+}
+
+/** Full-body vendor art for the shop overlay (null → no overlay) */
+export function getVendorFullBody(vendorId: string): HTMLImageElement | null {
+  return cachedLoaded?.vendorsFull.get(vendorId) ?? null;
+}
+
+/** Giant Zyr-Goth art for the final boss cinematic (null → normal sprite) */
+export function getZyrgothGiant(): HTMLImageElement | null {
+  return cachedLoaded?.zyrgothGiant ?? null;
 }

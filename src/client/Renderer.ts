@@ -10,7 +10,7 @@ import { generateAllSprites, SpriteSheet } from './SpriteGen';
 import { SpaceBackground } from './SpaceBackground';
 import { ItemDefinition, getOccupiedCells } from '../core/ItemSystem';
 import { InputHandler } from './InputHandler';
-import { Enemy } from '../core/CombatEngine';
+import { Enemy, CombatState } from '../core/CombatEngine';
 import { SaveManager } from '../core/SaveManager';
 import { ALL_ACHIEVEMENTS, getUnlockedAchievements, getGlobalStats } from '../data/achievements';
 import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus, getClaimableMissionCount } from '../data/missions';
@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -2832,6 +2832,10 @@ export class Renderer {
       ctx.globalAlpha = 1;
     }
 
+    // Zyr-Goth's colossus layer — drawn behind every other combat element so
+    // minions, projectiles and the player read on top of him
+    this.renderZyrgothGiant(state);
+
     // Render enemies
     for (const e of state.enemies) {
       this.renderEnemy(e, dt);
@@ -3214,8 +3218,124 @@ export class Renderer {
     this.renderCombatHUD();
   }
 
+  /** Zyr-Goth, o Deus Caído: screen-tall colossus. Rises from below the
+   * bottom edge during the entrance cutscene, roars (flash + shockwave +
+   * title card), then stands breathing while his brood pours out. */
+  private renderZyrgothGiant(state: CombatState): void {
+    const boss = state.enemies.find(e => (e as any).defId === 'boss_epoch' && e.hp > 0);
+    if (!boss) return;
+    const art = getZyrgothGiant();
+    if (!art) return;
+    const { ctx, canvas } = this;
+    const combat = this.game.combat as any;
+    const now = performance.now() / 1000;
+
+    const total: number = combat.bossCinematicTotal || 3.4;
+    const cin: number = Math.max(0, combat.bossCinematic || 0);
+    const elapsed = total - cin;
+    // Rise: first 2.0s of the cutscene, ease-out (fast burst, heavy settle)
+    const riseLin = Math.min(1, elapsed / 2.0);
+    const rise = 1 - Math.pow(1 - riseLin, 3);
+
+    // Breathing only once he's fully up
+    const breathing = cin <= 0 ? Math.sin(now * 1.5) * 6 : 0;
+    const sway = cin <= 0 ? Math.sin(now * 0.6) * 4 : 0;
+
+    const drawH = canvas.height + breathing;
+    const drawW = drawH * (art.width / art.height);
+    const x = boss.x - drawW / 2 + sway;
+    // Bottom-anchored: fully risen = bottom edge touches the screen bottom
+    const y = canvas.height - drawH * rise;
+
+    // Dark dread aura behind him so he separates from the city backdrop
+    ctx.save();
+    const aura = ctx.createRadialGradient(boss.x, y + drawH * 0.3, drawW * 0.1, boss.x, y + drawH * 0.35, drawW * 0.75);
+    aura.addColorStop(0, 'rgba(120, 10, 10, 0.34)');
+    aura.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = aura;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Roar burst: 1.3s→0.4s left — scale punch, mouth flash, shock rings
+    const roarP = cin > 0 ? Math.max(0, Math.min(1, (1.3 - cin) / 0.9)) : 1;
+    const roarActive = cin > 0 && cin <= 1.3;
+    const scalePunch = roarActive ? 1 + Math.sin(roarP * Math.PI) * 0.035 : 1;
+
+    ctx.imageSmoothingEnabled = false;
+    if ((boss.hitFlash ?? 0) > 0) ctx.filter = 'brightness(1.6) saturate(1.4)';
+    if (roarActive) ctx.filter = `brightness(${1 + Math.sin(roarP * Math.PI) * 0.5})`;
+    const cx2 = x + drawW / 2, cy2 = y + drawH / 2;
+    ctx.translate(cx2, cy2);
+    ctx.scale(scalePunch, scalePunch);
+    ctx.drawImage(art, -drawW / 2, -drawH / 2, drawW, drawH);
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.filter = 'none';
+
+    // Mouth ember glow (his mouth sits at ~22% height, screen-center x)
+    const mouthX = boss.x + sway * 0.6;
+    const mouthY = y + drawH * 0.22;
+    const emberPulse = roarActive ? 0.85 : 0.3 + Math.sin(now * 2.3) * 0.12;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = emberPulse;
+    ctx.drawImage(this.getGlow('#ff3b1f', 46), mouthX - 46, mouthY - 46);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+
+    if (roarActive) {
+      // Expanding shockwave rings from the mouth
+      for (let r = 0; r < 3; r++) {
+        const ringP = Math.max(0, roarP - r * 0.18);
+        if (ringP <= 0) continue;
+        ctx.globalAlpha = (1 - ringP) * 0.55;
+        ctx.strokeStyle = r === 0 ? '#fca5a5' : '#dc2626';
+        ctx.lineWidth = 3 - r;
+        ctx.beginPath();
+        ctx.arc(mouthX, mouthY, 20 + ringP * 420, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+      // (No title card here — the standard boss warning banner already
+      // announces him during the cutscene.)
+    }
+
+    // Ground rumble dust while rising
+    if (cin > 0 && rise < 1) {
+      ctx.globalAlpha = 0.5 * (1 - rise);
+      ctx.fillStyle = '#57534e';
+      for (let i = 0; i < 14; i++) {
+        const px = boss.x + Math.sin(i * 37.7 + now * 9) * drawW * 0.45;
+        const py = canvas.height - 8 - ((now * 130 + i * 53) % 90);
+        ctx.fillRect(px, py, 3, 3);
+      }
+      ctx.globalAlpha = 1;
+    }
+    ctx.restore();
+  }
+
+  private static readonly ENEMY_ANIM_MAP: Record<string, string> = {
+    // spinners — orbs, rotors, temporal anomalies
+    helix: 'spin', magnetic_core: 'spin', time_warp: 'spin', reflector: 'spin',
+    // slimes — squash & stretch
+    acid_blob: 'blob', lava_slime: 'blob', swarm: 'blob', leech: 'blob', zyr_spawnling: 'blob',
+    // breathers/pulsers — clouds, spores, auras, gasbags
+    storm_cloud: 'pulse', spore_cloud: 'pulse', wind_sprite: 'pulse', aegis: 'pulse',
+    zeppelin: 'pulse', phase_wraith: 'pulse', ghost_ship: 'pulse', storm_djinn: 'pulse',
+    hive_mind: 'pulse', healer: 'pulse', poison_mushroom: 'pulse', war_drum: 'pulse',
+    shadow_wraith: 'pulse', bomber: 'pulse', plague_carrier: 'pulse',
+    // fliers/skitterers — quick wing-tilt
+    thunder_bug: 'flutter', fire_imp: 'flutter', kamikaze: 'flutter', gold_thief: 'flutter',
+    fire_dancer: 'flutter', void_dancer: 'flutter', teleporter: 'flutter', shadow_assassin: 'flutter',
+    // heavies — slow menacing sway
+    tank: 'menace', iron_maiden: 'menace', bone_warrior: 'menace', earth_golem: 'menace',
+    ice_golem: 'menace', root_golem: 'menace', crystal_guardian: 'menace', sentinel: 'menace',
+    shield_bearer: 'menace', mimic: 'menace', plague_doctor: 'menace', vine_creep: 'menace',
+    crystalline: 'menace', frost_archer: 'menace',
+  };
+
   private renderEnemy(e: Enemy, dt: number): void {
     const { ctx } = this;
+    // Zyr-Goth's body is the screen-tall colossus layer (renderZyrgothGiant);
+    // skip the normal sprite so he isn't drawn twice
+    if ((e as any).defId === 'boss_epoch' && getZyrgothGiant()) return;
     const spriteId = this.getEnemySpriteId(e);
     // Prefer real cut-out art (loaded PNGs) over the procedural fallback.
     // Bosses with cutout art use it in combat too (opaque painted-scene boss
@@ -3369,7 +3489,30 @@ export class Renderer {
         ctx.filter = 'none';
         ctx.restore();
       } else {
-        ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2 + bobY, drawW, drawH);
+        // Per-archetype idle animation — every creature moves like itself:
+        // orbs spin, slimes gloop, insects flutter, clouds pulse, heavies sway
+        const t = performance.now() / 1000;
+        const ph = parseFloat(e.id.replace(/\D/g, '') || '0') * 1.7;
+        const anim = e.isBoss ? 'march' : (Renderer.ENEMY_ANIM_MAP[(e as any).defId as string]
+          ?? (e.movement === 'sine' || e.movement === 'erratic' ? 'flutter' : 'march'));
+        let rot = 0, sclX = 1, sclY = 1;
+        switch (anim) {
+          case 'spin':    rot = t * 2.0 + ph; break;
+          case 'blob':    sclY = 1 + Math.sin(t * 5 + ph) * 0.08; sclX = 2 - sclY; break;
+          case 'flutter': rot = Math.sin(t * 6 + ph) * 0.1; break;
+          case 'pulse': { const p2 = 1 + Math.sin(t * 3 + ph) * 0.05; sclX = p2; sclY = p2; break; }
+          case 'menace':  rot = Math.sin(t * 1.3 + ph) * 0.045; break;
+        }
+        if (rot !== 0 || sclX !== 1 || sclY !== 1) {
+          ctx.save();
+          ctx.translate(e.x, e.y + bobY);
+          ctx.rotate(rot);
+          ctx.scale(sclX, sclY);
+          ctx.drawImage(sprite, -drawW / 2, -drawH / 2, drawW, drawH);
+          ctx.restore();
+        } else {
+          ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2 + bobY, drawW, drawH);
+        }
       }
       ctx.imageSmoothingEnabled = true;
     } else {
@@ -4580,6 +4723,16 @@ export class Renderer {
 
   // ─── Shop Phase ─────────────────────────────────────────────────────────
 
+  /** Shared shop card-strip geometry — the single source of truth used by
+   * the draw code, the hover highlighter and InputHandler's click hit-test. */
+  getShopCardLayout(count: number): { x0: number; y: number; cardW: number; cardH: number; gap: number } {
+    const L = this.getLayout();
+    const gap = 10;
+    const shopAreaW = L.w - L.panelX - Math.floor(L.w * 0.02);
+    const cardW = Math.min(Math.floor(shopAreaW / Math.max(count, 1)) - gap, Math.floor(L.w * 0.13));
+    return { x0: L.panelX, y: Math.floor(L.h * 0.145), cardW, cardH: Math.floor(L.h * 0.42), gap };
+  }
+
   private renderShop(dt: number): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
@@ -4593,15 +4746,12 @@ export class Renderer {
 
     // Highlight fusion partners when hovering over shop item
     const shopItems = this.inputHandler?.getShopItems() ?? game.getShopItems();
-    const hoverAreaW = L.w - L.panelX - Math.floor(L.w * 0.02);
-    const itemCardW2 = Math.min(Math.floor(hoverAreaW / Math.max(shopItems.length, 1)) - 10, Math.floor(L.w * 0.13));
-    const itemCardH2 = Math.floor(L.h * 0.45);
+    const SL = this.getShopCardLayout(shopItems.length);
     let hoveredShopItemId: string | null = null;
     for (let si = 0; si < shopItems.length; si++) {
-      const sx = L.panelX + si * (itemCardW2 + 10);
-      const sy = Math.floor(L.h * 0.14);
-      if (this.mouseX >= sx && this.mouseX <= sx + itemCardW2 &&
-          this.mouseY >= sy && this.mouseY <= sy + itemCardH2) {
+      const sx = SL.x0 + si * (SL.cardW + SL.gap);
+      if (this.mouseX >= sx && this.mouseX <= sx + SL.cardW &&
+          this.mouseY >= SL.y && this.mouseY <= SL.y + SL.cardH) {
         hoveredShopItemId = shopItems[si].id;
         break;
       }
@@ -4632,106 +4782,38 @@ export class Renderer {
       }
     }
 
-    // Shop panel on right
+    // ─── Shop panel board (right side) — the vendor stands in front of its
+    // bottom-right corner, so the frame is drawn first ─────────────────────
+    const vendor = game.currentVendor;
+    const panelPadX = Math.floor(L.w * 0.012);
+    const boardX = L.panelX - panelPadX;
+    const boardY = Math.floor(L.h * 0.025);
+    const boardW = L.w - boardX - Math.floor(L.w * 0.006);
+    const boardH = Math.floor(L.h * 0.945);
+    ctx.fillStyle = 'rgba(12, 12, 24, 0.72)';
+    ctx.fillRect(boardX, boardY, boardW, boardH);
+    ctx.strokeStyle = (vendor?.color ?? '#6366f1') + '55';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(boardX, boardY, boardW, boardH);
+    // Corner accents on the frame
+    ctx.strokeStyle = vendor?.color ?? '#6366f1';
+    ctx.lineWidth = 3;
+    for (const [cx3, cy3, dx3, dy3] of [
+      [boardX, boardY, 1, 1], [boardX + boardW, boardY, -1, 1],
+      [boardX, boardY + boardH, 1, -1], [boardX + boardW, boardY + boardH, -1, -1],
+    ] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx3 + dx3 * 18, cy3);
+      ctx.lineTo(cx3, cy3);
+      ctx.lineTo(cx3, cy3 + dy3 * 18);
+      ctx.stroke();
+    }
+
     ctx.font = L.fontTitle;
     ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'center';
     const shopCenterX = L.panelX + Math.floor((L.w - L.panelX) / 2);
-    ctx.fillText('LOJA', shopCenterX, Math.floor(L.h * 0.04));
-
-    // ─── Vendor Portrait & Greeting ─────────────────────────────────────
-    const vendor = game.currentVendor;
-    if (vendor) {
-      // Vendor portrait — LARGE, bottom-right (visual novel style)
-      const portraitW = Math.floor(L.w * 0.22);
-      const portraitH = Math.floor(L.h * 0.65);
-      const portraitX = L.w - portraitW - Math.floor(L.w * 0.01);
-      const portraitY = L.h - portraitH;
-
-      // Try loading real sprite
-      const loadedSprites3 = (this as any).loadedSprites;
-      const vendorSpriteMap: Record<string, string> = { luna: 'luna', brutus: 'brutus', nyx: 'nyx', zikri: 'zikri' };
-      const vendorImg = loadedSprites3?.vendors?.get(vendorSpriteMap[vendor.id]) || null;
-
-      if (vendorImg) {
-        // Draw with correct aspect ratio (align bottom, crop top if needed)
-        const imgW = vendorImg.naturalWidth || vendorImg.width;
-        const imgH = vendorImg.naturalHeight || vendorImg.height;
-        const scale = Math.max(portraitW / imgW, portraitH / imgH);
-        const drawW = imgW * scale;
-        const drawH = imgH * scale;
-        const offX = (portraitW - drawW) / 2;
-        const offY = portraitH - drawH; // Align bottom
-        ctx.save();
-        ctx.beginPath();
-        ctx.rect(portraitX, portraitY, portraitW, portraitH);
-        ctx.clip();
-        ctx.drawImage(vendorImg, portraitX + offX, portraitY + offY, drawW, drawH);
-        ctx.restore();
-      } else {
-        // Fallback silhouette
-        ctx.fillStyle = vendor.color;
-        ctx.globalAlpha = 0.6;
-        ctx.beginPath();
-        ctx.ellipse(portraitX + portraitW / 2, portraitY + portraitH * 0.25, portraitW * 0.25, portraitH * 0.15, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.ellipse(portraitX + portraitW / 2, portraitY + portraitH * 0.6, portraitW * 0.35, portraitH * 0.3, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.globalAlpha = 1;
-      }
-
-      // Vendor name (below portrait or beside)
-      ctx.font = `bold ${Math.floor(L.h * 0.015)}px monospace`;
-      ctx.fillStyle = vendor.color;
-      ctx.textAlign = 'center';
-      ctx.fillText(vendor.name, portraitX + portraitW / 2, portraitY - Math.floor(L.h * 0.015));
-      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-      ctx.fillStyle = '#94a3b8';
-      ctx.fillText(vendor.title, portraitX + portraitW / 2, portraitY - Math.floor(L.h * 0.002));
-      ctx.textAlign = 'left';
-
-      // Greeting speech bubble
-      if (game.vendorGreeting) {
-        const bubbleX = L.panelX;
-        const bubbleY = Math.floor(L.h * 0.06);
-        const bubbleW = Math.floor(L.w * 0.35);
-        const bubbleH = Math.floor(L.h * 0.07);
-
-        // Speech bubble with nicer styling
-        ctx.fillStyle = 'rgba(15, 15, 30, 0.94)';
-        ctx.fillRect(bubbleX, bubbleY, bubbleW, bubbleH);
-        ctx.strokeStyle = vendor.color + '60';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(bubbleX, bubbleY, bubbleW, bubbleH);
-        // Accent line at top
-        ctx.fillStyle = vendor.color;
-        ctx.fillRect(bubbleX, bubbleY, bubbleW, 3);
-
-        ctx.font = L.fontSmall;
-        ctx.fillStyle = '#e2e8f0';
-        ctx.textAlign = 'left';
-        // Wrap the greeting
-        const words = game.vendorGreeting.split(' ');
-        let line = '';
-        let ly = bubbleY + Math.floor(bubbleH * 0.35);
-        const maxLineW = bubbleW - 16;
-        for (const word of words) {
-          const testLine = line + word + ' ';
-          if (ctx.measureText(testLine).width > maxLineW && line.length > 0) {
-            ctx.fillText(line.trim(), bubbleX + 8, ly);
-            line = word + ' ';
-            ly += Math.floor(L.h * 0.018);
-            if (ly > bubbleY + bubbleH - 5) break;
-          } else {
-            line = testLine;
-          }
-        }
-        if (ly <= bubbleY + bubbleH - 5) {
-          ctx.fillText(line.trim(), bubbleX + 8, ly);
-        }
-      }
-    }
+    ctx.fillText('LOJA', shopCenterX, Math.floor(L.h * 0.055));
 
     const coin = this.sprites.ui.get('gold_coin');
     if (coin) ctx.drawImage(coin, shopCenterX - Math.floor(L.w * 0.03), Math.floor(L.h * 0.09));
@@ -4748,10 +4830,8 @@ export class Renderer {
     ctx.textAlign = 'left';
 
     const items = this.inputHandler?.getShopItems() ?? game.getShopItems();
-    const shopAreaW = L.w - L.panelX - Math.floor(L.w * 0.02);
-    const itemW = Math.floor(shopAreaW / Math.max(items.length, 1)) - 10;
-    const itemCardW = Math.min(itemW, Math.floor(L.w * 0.13));
-    const itemCardH = Math.floor(L.h * 0.45);
+    const itemCardW = SL.cardW;
+    const itemCardH = SL.cardH;
 
     // Find best pick (most synergies)
     const existingIds2 = game.backpack.getAllItems().map(it => it.definition.id);
@@ -4764,8 +4844,8 @@ export class Renderer {
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      const x = L.panelX + i * (itemCardW + 10);
-      const y = Math.floor(L.h * 0.14);
+      const x = SL.x0 + i * (itemCardW + SL.gap);
+      const y = SL.y;
 
       // Fade-in animation with stagger
       const fadeProgress = Math.min(1, Math.max(0, (this.shopAnimTimer - i * 0.1) * 4));
@@ -4948,6 +5028,116 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText('Coloque o item na mochila antes de continuar', L.cx, L.btnY - Math.floor(L.h * 0.015));
       ctx.textAlign = 'left';
+    }
+
+    // ─── Vendor overlay: waist-up figure standing IN FRONT of the shop
+    // board's bottom-right corner (visual-novel style), drawn last ─────────
+    if (vendor) {
+      const full = getVendorFullBody(vendor.id);
+      const vH = Math.floor(L.h * 0.44); // on-screen waist-up height
+      let vX = L.w - Math.floor(L.w * 0.16);
+      let vY = L.h - vH;
+      let vW = Math.floor(L.w * 0.13);
+      ctx.save();
+      ctx.imageSmoothingEnabled = true; // painted art — keep it smooth
+      if (full) {
+        const crop = 0.50; // top half of the figure = waist up
+        const srcH = full.height * crop;
+        const scale = vH / srcH;
+        vW = Math.floor(full.width * scale);
+        vX = L.w - vW - Math.floor(L.w * 0.014);
+        vY = L.h - vH;
+        // Soft grounding glow so the figure pops off the panel
+        const glow = ctx.createRadialGradient(vX + vW / 2, L.h, vW * 0.1, vX + vW / 2, L.h, vW * 0.9);
+        glow.addColorStop(0, vendor.color + '38');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(vX - vW, L.h - vH * 1.1, vW * 3, vH * 1.1);
+        // Gentle idle sway — the vendor feels alive while you browse
+        const sway = Math.sin(performance.now() / 1000 * 1.1) * 2;
+        const bob = Math.sin(performance.now() / 1000 * 1.7) * 1.5;
+        ctx.drawImage(full, 0, 0, full.width, srcH, vX + sway, vY + bob + 2, vW, vH);
+      } else {
+        // Fallback: old painted portrait, clipped bottom-right
+        const loadedSprites3 = (this as any).loadedSprites;
+        const vendorImg = loadedSprites3?.vendors?.get(vendor.id) || null;
+        if (vendorImg) {
+          const imgW = vendorImg.naturalWidth || vendorImg.width;
+          const imgH = vendorImg.naturalHeight || vendorImg.height;
+          const scale = Math.max(vW / imgW, vH / imgH);
+          ctx.beginPath();
+          ctx.rect(vX, vY, vW, vH);
+          ctx.clip();
+          ctx.drawImage(vendorImg, vX + (vW - imgW * scale) / 2, vY + (vH - imgH * scale), imgW * scale, imgH * scale);
+        }
+      }
+      ctx.restore();
+
+      // Speech bubble beside the vendor with the nameplate attached to its
+      // top-left corner (visual-novel dialogue box) — keeps the vendor's
+      // name off the item cards above
+      const chipH = Math.floor(L.h * 0.042);
+      {
+        const bubbleW = Math.floor(L.w * 0.24);
+        const bubbleH = Math.floor(L.h * 0.115);
+        const bubbleX = vX - bubbleW - Math.floor(L.w * 0.018);
+        const bubbleY = vY + Math.floor(L.h * 0.075);
+
+        // Nameplate riding the bubble's top edge
+        const chipW = Math.max(130, ctx.measureText(vendor.name).width + 70);
+        const chipX = bubbleX;
+        const chipY = bubbleY - chipH + 2;
+        ctx.fillStyle = 'rgba(8, 8, 18, 0.95)';
+        ctx.fillRect(chipX, chipY, chipW, chipH);
+        ctx.strokeStyle = vendor.color;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(chipX, chipY, chipW, chipH);
+        ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
+        ctx.fillStyle = vendor.color;
+        ctx.textAlign = 'center';
+        ctx.fillText(vendor.name, chipX + chipW / 2, chipY + Math.floor(chipH * 0.48));
+        ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
+        ctx.fillStyle = '#94a3b8';
+        ctx.fillText(vendor.title, chipX + chipW / 2, chipY + Math.floor(chipH * 0.85));
+        ctx.textAlign = 'left';
+        ctx.fillStyle = 'rgba(15, 15, 30, 0.95)';
+        ctx.fillRect(bubbleX, bubbleY, bubbleW, bubbleH);
+        ctx.strokeStyle = vendor.color + '70';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bubbleX, bubbleY, bubbleW, bubbleH);
+        ctx.fillStyle = vendor.color;
+        ctx.fillRect(bubbleX, bubbleY, bubbleW, 3);
+        // Tail
+        ctx.fillStyle = 'rgba(15, 15, 30, 0.95)';
+        ctx.beginPath();
+        ctx.moveTo(bubbleX + bubbleW, bubbleY + bubbleH * 0.4);
+        ctx.lineTo(bubbleX + bubbleW + 12, bubbleY + bubbleH * 0.5);
+        ctx.lineTo(bubbleX + bubbleW, bubbleY + bubbleH * 0.6);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.font = L.fontSmall;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.textAlign = 'left';
+        const words = (game.vendorGreeting || '...').split(' ');
+        let line = '';
+        let ly = bubbleY + Math.floor(bubbleH * 0.24);
+        const maxLineW = bubbleW - 18;
+        for (const word of words) {
+          const testLine = line + word + ' ';
+          if (ctx.measureText(testLine).width > maxLineW && line.length > 0) {
+            ctx.fillText(line.trim(), bubbleX + 9, ly);
+            line = word + ' ';
+            ly += Math.floor(L.h * 0.019);
+            if (ly > bubbleY + bubbleH - 6) break;
+          } else {
+            line = testLine;
+          }
+        }
+        if (ly <= bubbleY + bubbleH - 6) {
+          ctx.fillText(line.trim(), bubbleX + 9, ly);
+        }
+      }
     }
 
     // Vendor feedback phrase (buy/broke)
@@ -5324,6 +5514,24 @@ export class Renderer {
 
   // ─── Codex Phase ──────────────────────────────────────────────────────────
 
+  /** Best available art for a codex entry (real PNGs preferred; procedural
+   * sprites as fallback; null when the category has no visual). */
+  private getCodexArt(id: string, category: string): HTMLImageElement | HTMLCanvasElement | null {
+    const loaded = (this as any).loadedSprites;
+    switch (category) {
+      case 'enemy':
+        return loaded?.enemies?.get(id) || this.sprites.enemies.get(id) || null;
+      case 'boss':
+        return getBossCombatSprite(id) || (getBossPortrait(id) as HTMLImageElement | null);
+      case 'character':
+        return getCharacterPortrait(id);
+      case 'item':
+        return this.sprites.items.get(id) || null;
+      default:
+        return null;
+    }
+  }
+
   private renderCodex(): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
@@ -5416,26 +5624,56 @@ export class Renderer {
       }
       ctx.strokeRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5);
 
+      // Row thumbnail: real art when we have it; locked entries show a pure
+      // black silhouette of the same art (classic "who's that?" tease)
+      const thumbS = entryH - 16;
+      const thumbX = margin + 8;
+      const thumbY = ey + Math.floor((entryH - 5 - thumbS) / 2);
+      const thumb = this.getCodexArt(entry.id, entry.category);
+      let textX = margin + 10;
+      if (thumb) {
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        if (!entry.unlocked) {
+          ctx.filter = 'brightness(0)';
+          ctx.globalAlpha = 0.65;
+        }
+        const tw = (thumb as HTMLImageElement).width || thumbS;
+        const th = (thumb as HTMLImageElement).height || thumbS;
+        const ts = Math.min(thumbS / tw, thumbS / th);
+        ctx.drawImage(thumb, thumbX + (thumbS - tw * ts) / 2, thumbY + (thumbS - th * ts) / 2, tw * ts, th * ts);
+        ctx.restore();
+        textX = thumbX + thumbS + 10;
+      }
+
       if (entry.unlocked) {
+        const maxTextW = margin + Math.floor(L.w * 0.47) - textX - 12;
+        const fitText = (s: string): string => {
+          if (ctx.measureText(s).width <= maxTextW) return s;
+          let lo = 0, hi = s.length;
+          while (lo < hi) {
+            const mid = (lo + hi + 1) >> 1;
+            if (ctx.measureText(s.slice(0, mid) + '...').width <= maxTextW) lo = mid; else hi = mid - 1;
+          }
+          return s.slice(0, lo) + '...';
+        };
         ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
         ctx.fillStyle = '#e2e8f0';
-        ctx.fillText(entry.name, margin + 10, ey + Math.floor(entryH * 0.25));
+        ctx.fillText(entry.name, textX, ey + Math.floor(entryH * 0.25));
         ctx.font = L.fontTiny;
         ctx.fillStyle = '#94a3b8';
-        const loreText = entry.lore1.slice(0, 120) + (entry.lore1.length > 120 ? '...' : '');
-        ctx.fillText(loreText, margin + 10, ey + Math.floor(entryH * 0.5));
+        ctx.fillText(fitText(entry.lore1), textX, ey + Math.floor(entryH * 0.5));
         if (entry.lore2Unlocked && entry.lore2) {
           ctx.fillStyle = '#6366f1';
-          const lore2Text = entry.lore2.slice(0, 100) + (entry.lore2.length > 100 ? '...' : '');
-          ctx.fillText(lore2Text, margin + 10, ey + Math.floor(entryH * 0.75));
+          ctx.fillText(fitText(entry.lore2), textX, ey + Math.floor(entryH * 0.75));
         }
       } else {
         ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
         ctx.fillStyle = '#374151';
-        ctx.fillText('??? — Nao descoberto', margin + 10, ey + Math.floor(entryH * 0.25));
+        ctx.fillText('??? — Nao descoberto', textX, ey + Math.floor(entryH * 0.25));
         ctx.font = L.fontTiny;
         ctx.fillStyle = '#1f2937';
-        ctx.fillText('████████████████████████████', margin + 10, ey + Math.floor(entryH * 0.5));
+        ctx.fillText('████████████████████████', textX, ey + Math.floor(entryH * 0.5));
       }
     }
 
@@ -5476,18 +5714,29 @@ export class Renderer {
         const portraitX = detailX + detailW - portraitSize - Math.floor(detailW * 0.05);
         const portraitY2 = detailY + Math.floor(detailH * 0.05);
 
-        // Try loading real boss/character portrait
+        // Real art, framed with a soft glow pedestal
         const bossImg = getBossPortrait(selEntry.id);
         const charImg = getCharacterPortrait(selEntry.id);
         const realImg = bossImg || charImg;
         if (realImg) {
           ctx.drawImage(realImg, portraitX, portraitY2, portraitSize, portraitSize);
+          ctx.strokeStyle = '#33415577';
+          ctx.lineWidth = 1;
+          ctx.strokeRect(portraitX, portraitY2, portraitSize, portraitSize);
         } else {
           // Draw enlarged sprite or placeholder
-          const sprite = this.sprites.enemies.get(selEntry.id) || this.sprites.items.get(selEntry.id);
+          const sprite = this.getCodexArt(selEntry.id, selEntry.category) as HTMLImageElement | HTMLCanvasElement | null;
           if (sprite) {
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.globalAlpha = 0.35;
+            ctx.drawImage(this.getGlow('#6366f1', Math.floor(portraitSize * 0.55)), portraitX + portraitSize / 2 - Math.floor(portraitSize * 0.55), portraitY2 + portraitSize / 2 - Math.floor(portraitSize * 0.55));
+            ctx.globalAlpha = 1;
+            ctx.globalCompositeOperation = 'source-over';
             ctx.imageSmoothingEnabled = false;
-            ctx.drawImage(sprite, portraitX, portraitY2, portraitSize, portraitSize);
+            const sw = (sprite as HTMLImageElement).width || portraitSize;
+            const sh = (sprite as HTMLImageElement).height || portraitSize;
+            const ss = Math.min(portraitSize / sw, portraitSize / sh);
+            ctx.drawImage(sprite, portraitX + (portraitSize - sw * ss) / 2, portraitY2 + (portraitSize - sh * ss) / 2, sw * ss, sh * ss);
             ctx.imageSmoothingEnabled = true;
           } else {
             ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';

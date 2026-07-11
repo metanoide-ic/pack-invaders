@@ -21,7 +21,7 @@ export interface CodexEntry {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ENEMY LORE (55 enemies — every spawnable enemy has an entry)
+// ENEMY LORE (56 enemies — every spawnable enemy has an entry)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const ENEMY_LORE: Omit<CodexEntry, 'unlocked' | 'lore2Unlocked'>[] = [
@@ -458,6 +458,14 @@ export const ENEMY_LORE: Omit<CodexEntry, 'unlocked' | 'lore2Unlocked'>[] = [
     lore2Threshold: 15,
   },
   {
+    id: 'zyr_spawnling',
+    category: 'enemy',
+    name: 'Cria de Zyr-Goth',
+    lore1: 'Elas nascem gritando. Cada cria rasga o proprio caminho para fora da carne do Deus Caído e despenca do corpo dele ja em queda livre, ja mirando em voce. Sao miniaturas perfeitas do pai — o mesmo cranio, as mesmas garras — e explodem ao morrer, como se ate a morte delas pertencesse a ele.',
+    lore2: 'Dissecacoes revelam que as crias nao tem sistema digestivo, reprodutivo ou qualquer orgao de longo prazo. Vida util estimada: 11 minutos. Zyr-Goth nao gera filhos. Gera municao com pernas. E o pior: analises geneticas mostram que cada cria e identica ao original. Ele nao esta se reproduzindo. Esta se jogando em voce, um pedaco de cada vez.',
+    lore2Threshold: 25,
+  },
+  {
     id: 'leech',
     category: 'enemy',
     name: 'Sanguessuga',
@@ -468,7 +476,7 @@ export const ENEMY_LORE: Omit<CodexEntry, 'unlocked' | 'lore2Unlocked'>[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// BOSS LORE (4 bosses — Drill Sergeant, Hydra, Swarm Queen + 1 new)
+// BOSS LORE (20 bosses — every boss in the rotation has an entry)
 // ═══════════════════════════════════════════════════════════════════════════════
 
 export const BOSS_LORE: Omit<CodexEntry, 'unlocked' | 'lore2Unlocked'>[] = [

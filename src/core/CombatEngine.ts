@@ -328,6 +328,13 @@ export class CombatEngine {
   private _bossEncounterCount = 0;
   /** Seconds remaining of shot-recoil, read by the renderer for the weapon-kick animation */
   recoilTimer = 0;
+  /** Zyr-Goth's entrance cutscene: seconds remaining (0 = not playing).
+   * While > 0 the whole combat sim freezes; the renderer plays the rise+roar. */
+  bossCinematic = 0;
+  /** Total length of the current cinematic (renderer derives progress from this) */
+  bossCinematicTotal = 0;
+  /** Fired once at the roar moment of a boss cinematic (main.ts hooks audio) */
+  onBossRoar: (() => void) | null = null;
   /** Singularidade (Dr. Eon): seconds until the next black hole pulse */
   private _blackHoleTimer = 0;
   /** Singularidade: seconds remaining in an active pull burst */
@@ -511,6 +518,20 @@ export class CombatEngine {
    */
   tick(dt: number, playerDir: number = 0, p2Dir: number = 0): void {
     if (!this.state.isActive) return;
+
+    // Boss entrance cutscene: the world holds its breath while the colossus
+    // rises. Roar (audio + shake) fires once when the timer crosses 1.3s left.
+    if (this.bossCinematic > 0) {
+      const was = this.bossCinematic;
+      this.bossCinematic -= dt;
+      if (was > 1.3 && this.bossCinematic <= 1.3) {
+        this.onBossRoar?.();
+        this.triggerShake(16, 1.1);
+      }
+      this.updateFloatingTexts(dt);
+      this.updateShake(dt);
+      return;
+    }
 
     // Hit-stop: freeze everything briefly
     if (this.state.hitStopTimer > 0) {
@@ -1058,8 +1079,9 @@ export class CombatEngine {
       // Boss special movement: strafe at top while shooting.
       // Skipped while the boss is executing a dive attack (pattern engine
       // steers it below the hover cap and back).
-      if (e.isBoss && e.y > 60 && !(e as any)._diving) {
-        // Bosses hover at top area and strafe
+      if (e.isBoss && e.y > 60 && !(e as any)._diving && e.defId !== 'boss_epoch') {
+        // Bosses hover at top area and strafe (Zyr-Goth is a stationary
+        // colossus — his y/x are pinned at spawn)
         if (e.y > 120) e.y = 120; // Cap boss y-position
         e.x += Math.sin(e.moveTimer * 1.5) * speed * 3 * dt;
       }
@@ -3010,6 +3032,20 @@ export class CombatEngine {
         if (mutation) {
           spawned.affix = mutation.affix;
           spawned.displayName = `${bossSource.name.toUpperCase()} (${mutation.suffix})`;
+        }
+
+        // Zyr-Goth is a screen-tall colossus: parked in the upper-center with
+        // a hitbox covering his torso/head, never moving — his brood does the
+        // chasing. The entrance cutscene freezes combat while he rises.
+        if (bossSource.id === 'boss_epoch') {
+          spawned.y = 250;
+          spawned.speed = 0;
+          spawned.baseSpeed = 0;
+          spawned.width = 360;
+          spawned.height = 380;
+          spawned.explodeOnDeath = false;
+          this.bossCinematic = 3.4;
+          this.bossCinematicTotal = 3.4;
         }
       }
     }

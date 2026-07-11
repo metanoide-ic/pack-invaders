@@ -1306,14 +1306,35 @@ export const BOSS_HARBINGER: EnemyDefinition = {
   spriteId: 'boss_harbinger', minWave: 25, weight: 0,
 };
 
-// 20. Zyr'Goth, the Fallen God
+// 20. Zyr'Goth, the Fallen God — the final boss. Rendered as a screen-tall
+// colossus with a cinematic entrance (see Renderer.renderZyrgothGiant);
+// stands still and vomits broods of spawnlings instead of moving.
 export const BOSS_EPOCH: EnemyDefinition = {
   id: 'boss_epoch', name: 'Zyr-Goth, o Deus Caído',
   tags: ['Explosivo'], hp: 1200, speed: 3, damage: 35,
   width: 72, height: 72, goldReward: 250, armor: 10,
   movement: 'straight',
-  special: { type: 'explode', radius: 150, damage: 50 },
+  special: { type: 'spawn', childId: 'zyr_spawnling', interval: 4.5 },
   spriteId: 'boss_epoch', minWave: 28, weight: 0,
+};
+
+// Zyr-Goth's brood — only ever spawned by the Fallen God himself (weight 0)
+export const ENEMY_ZYR_SPAWNLING: EnemyDefinition = {
+  id: 'zyr_spawnling',
+  name: 'Cria de Zyr-Goth',
+  tags: ['Explosivo', 'Orgânico'],
+  hp: 45,
+  speed: 55,
+  damage: 12,
+  width: 26,
+  height: 26,
+  goldReward: 8,
+  armor: 0,
+  movement: 'sine',
+  special: { type: 'explode', radius: 60, damage: 14 },
+  spriteId: 'zyr_spawnling',
+  minWave: 999,
+  weight: 0,
 };
 
 // ─── Leech — drains HP from player when close ────────────────────────────────
@@ -1353,7 +1374,7 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   ENEMY_KAMIKAZE, ENEMY_HELIX, ENEMY_PHASE_WRAITH, ENEMY_HIVE_MIND, ENEMY_SPORE_CLOUD,
   ENEMY_CRYSTALLINE, ENEMY_MAGNETIC_CORE, ENEMY_FLAME_ELEMENTAL, ENEMY_TIDE_WALKER,
   ENEMY_STORM_DJINN, ENEMY_PLAGUE_CARRIER, ENEMY_ROOT_GOLEM, ENEMY_VOID_DANCER,
-  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF, ENEMY_LEECH,
+  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF, ENEMY_LEECH, ENEMY_ZYR_SPAWNLING,
   BOSS_TITAN_PRIME, BOSS_DEVOURER, BOSS_STORM_KING, BOSS_ARCHITECT, BOSS_KEPLER_PRIME,
   // New bosses (9-20)
   BOSS_TOXAR, BOSS_CRIOX, BOSS_VULKRA, BOSS_PHANTAX, BOSS_TERRAVOX, BOSS_SOLYX,

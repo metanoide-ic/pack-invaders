@@ -1194,16 +1194,15 @@ export class InputHandler {
       return;
     }
 
-    // Check if clicking a shop item to buy
-    const shopAreaW = L.w - L.panelX - Math.floor(L.w * 0.02);
-    const itemW = Math.floor(shopAreaW / Math.max(this.shopItems.length, 1)) - 10;
-    const itemCardW = Math.min(itemW, Math.floor(L.w * 0.13));
-    const itemCardH = Math.floor(L.h * 0.45);
-    const itemTopY = Math.floor(L.h * 0.14);
+    // Check if clicking a shop item to buy — geometry shared with the
+    // renderer so cards are clickable exactly where they're drawn
+    const SL = this.renderer.getShopCardLayout(this.shopItems.length);
+    const itemCardW = SL.cardW;
+    const itemCardH = SL.cardH;
 
     for (let i = 0; i < this.shopItems.length; i++) {
-      const x = L.panelX + i * (itemCardW + 10);
-      const y = itemTopY;
+      const x = SL.x0 + i * (itemCardW + SL.gap);
+      const y = SL.y;
       if (pos.x >= x && pos.x <= x + itemCardW && pos.y >= y && pos.y <= y + itemCardH) {
         const item = this.shopItems[i];
         if (this.game.buyItem(item)) {
