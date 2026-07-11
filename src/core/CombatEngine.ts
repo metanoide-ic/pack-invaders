@@ -787,6 +787,9 @@ export class CombatEngine {
               charDmg *= 0.7;
             }
             break;
+          case 'renegade':       // Sétimo: xeno biology favors organic weaponry
+            if (tags.includes('Orgânico') || tags.includes('Veneno')) charDmg *= 1.3;
+            break;
         }
 
         // Frenzy skill: pets fire 3x faster while active

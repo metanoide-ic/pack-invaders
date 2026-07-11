@@ -228,6 +228,7 @@ export class GameManager {
     // Shield scales with character: tankier chars get more shield
     const shieldAmounts: Record<string, number> = {
       grass_man: 25, fire_lord: 15, aqua_sage: 35, storm_runner: 20, void_walker: 10, beast_tamer: 20, firefighter: 40,
+      scrapper: 15, renegade: 0, // Sétimo's xeno carapace rejects human shield tech
     };
     this.combat.state.playerMaxShield = shieldAmounts[characterId] ?? 25;
     this.combat.state.playerShield = this.combat.state.playerMaxShield;
@@ -897,6 +898,8 @@ export class GameManager {
   /** Final shop price after card discounts and character affinities */
   getItemCost(itemDef: ItemDefinition): number {
     let discount = (this as any)._shopDiscount ?? 0;
+    // Zabel (scrapper): Olho de Lixão — everything is cheaper for her
+    if (this.characterId === 'scrapper') discount += 0.2;
     // Relic: Planta do Arquiteto — permanent shop discount
     discount += (getRelicBonuses().shopDiscountPercent ?? 0) / 100;
     // Insígnia de Mercador: item-based shop discount
@@ -911,7 +914,8 @@ export class GameManager {
 
   /** Sell rate (Reciclador de Sucata raises the base 50%) */
   getSellRate(): number {
-    let rate = 0.5;
+    // Zabel (scrapper): selling is her whole business — 75% back
+    let rate = this.characterId === 'scrapper' ? 0.75 : 0.5;
     for (const it of this.backpack.getAllItems()) {
       const b = (it.state as any).sellBonus ?? 0;
       if (b) rate = Math.max(rate, 0.5 + b);
@@ -936,7 +940,7 @@ export class GameManager {
 
   /** Reroll shop items (costs gold) */
   rerollShop(): boolean {
-    const cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    const cost = this.getRerollCost();
     if (this.gold < cost) return false;
     this.gold -= cost;
     // Force new vendor selection on next getShopItems call
@@ -946,7 +950,9 @@ export class GameManager {
 
   /** Get reroll cost */
   getRerollCost(): number {
-    return 10 + this.totalMonths * 2;
+    const cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    // Zabel (scrapper): rummaging through stock is half price
+    return this.characterId === 'scrapper' ? Math.floor(cost / 2) : cost;
   }
 
   // ─── Card Generation ──────────────────────────────────────────────────────
@@ -1128,6 +1134,13 @@ export class GameManager {
       this.combat.state.playerHp = Math.min(
         this.combat.state.playerMaxHp,
         this.combat.state.playerHp + relicBonus.healPerSecond * dt
+      );
+    }
+    // Sétimo (renegade): Biologia Xeno — constant regeneration in place of a shield
+    if (this.characterId === 'renegade' && this.combat.state.playerHp > 0) {
+      this.combat.state.playerHp = Math.min(
+        this.combat.state.playerMaxHp,
+        this.combat.state.playerHp + 1.5 * dt
       );
     }
     // Relic: skill cooldown reduction
@@ -1405,6 +1418,14 @@ export class GameManager {
     // firefighter: Clear a wave taking zero damage (a perfect, fully-defended wave)
     if (this.combat.state.waveCleared && this.combat.state.damageTakenThisWave === 0 && this.totalMonths >= 5) {
       this.unlockCharacter('firefighter');
+    }
+    // scrapper: Hold 500 gold at once — think like a merchant
+    if (this.gold + this.combat.state.gold >= 500) {
+      this.unlockCharacter('scrapper');
+    }
+    // renegade: Reach Year 4 (month 37) — the year Sétimo surrendered
+    if (this.totalMonths >= 37) {
+      this.unlockCharacter('renegade');
     }
   }
 

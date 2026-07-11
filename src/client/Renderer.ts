@@ -538,6 +538,7 @@ export class Renderer {
     const charNames: Record<string, string> = {
       grass_man: 'Rômulo', fire_lord: 'Kagutsuchi', aqua_sage: 'Mazu',
       storm_runner: 'Frank', void_walker: 'Dr. Eon', beast_tamer: 'Diana', firefighter: 'Florian',
+      scrapper: 'Zabel', renegade: 'Sétimo',
     };
 
     // 4 Save slot cards
@@ -1005,11 +1006,12 @@ export class Renderer {
   /** Shake timer when trying to select locked character */
   private _lockedShakeTimer = 0;
 
-  private readonly CHAR_COLORS = ['#4ade80', '#f97316', '#38bdf8', '#a3e635', '#a855f7', '#ec4899', '#ef4444'];
-  private readonly CHAR_BGS    = ['#052010', '#180800', '#011020', '#0d1400', '#0d0017', '#1a001a', '#1a0500'];
+  private readonly CHAR_COLORS = ['#4ade80', '#f97316', '#38bdf8', '#a3e635', '#a855f7', '#ec4899', '#ef4444', '#f59e0b', '#84cc16'];
+  private readonly CHAR_BGS    = ['#052010', '#180800', '#011020', '#0d1400', '#0d0017', '#1a001a', '#1a0500', '#1a1200', '#0a1505'];
   private readonly CHAR_SPRITE_MAP: Record<string, string> = {
     grass_man: 'raiz', fire_lord: 'favil', aqua_sage: 'pelagia',
     storm_runner: 'arco', void_walker: 'barathro', beast_tamer: 'nex', firefighter: 'fenix',
+    scrapper: 'zabel', renegade: 'setimo',
   };
   private readonly CHAR_ICONS: Record<string, string> = {
     grass_man: '🌿', fire_lord: '🔥', aqua_sage: '🌊',
@@ -3155,7 +3157,7 @@ export class Renderer {
       // P2 has a dedicated model; falls back to a different character than
       // P1 if that art is missing
       const p2Char = charId === 'aqua_sage' ? 'beast_tamer' : 'aqua_sage';
-      const p2Td = getTopdownSprite('coop_p2') || getTopdownSprite(p2Char);
+      const p2Td = (charId === 'scrapper' ? null : getTopdownSprite('coop_p2')) || getTopdownSprite(p2Char);
       ctx.save();
       ctx.translate(state.player2X, canvas.height - 13);
       if (p2Td) {
@@ -5098,6 +5100,7 @@ export class Renderer {
     const charNameMap: Record<string, string> = {
       grass_man: 'Rômulo', fire_lord: 'Kagutsuchi', aqua_sage: 'Mazu',
       storm_runner: 'Frank', void_walker: 'Dr. Eon', beast_tamer: 'Diana', firefighter: 'Florian',
+      scrapper: 'Zabel', renegade: 'Sétimo',
     };
     if (board.length > 0) {
       const lbY = panelY + panelH + Math.floor(L.h * 0.015);

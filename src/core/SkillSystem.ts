@@ -257,6 +257,60 @@ const SKILL_AXE_SPIN: SkillDefinition = {
   },
 };
 
+// ─── Zabel (scrapper) ────────────────────────────────────────────────────────
+
+const SKILL_SCRAP_GRENADE: SkillDefinition = {
+  id: 'scrap_grenade', name: 'Granada de Sucata', description: 'Arremessa uma lata cheia de estilhaços: 10 projéteis de 12 de dano.',
+  icon: '🧨', cooldown: 8, duration: 0,
+  activate(_state, ctx) {
+    ctx.spawnBurst(10, 12, 340, '#f59e0b');
+  },
+};
+
+const SKILL_JURY_RIG: SkillDefinition = {
+  id: 'jury_rig', name: 'Gambiarra', description: 'Conserta a si mesma na marra: cura 30 HP na hora.',
+  icon: '🔧', cooldown: 13, duration: 0,
+  activate(_state, ctx) {
+    ctx.heal(30);
+  },
+};
+
+const SKILL_BOLT_RAIN: SkillDefinition = {
+  id: 'bolt_rain', name: 'Chuva de Parafusos', description: 'Detona o estoque: 40 de dano em todos os inimigos da arena.',
+  icon: '⚙', cooldown: 15, duration: 0,
+  activate(_state, ctx) {
+    ctx.damageArea(ctx.arenaWidth / 2, ctx.arenaHeight / 2, 900, 40);
+  },
+};
+
+// ─── Sétimo (renegade) ───────────────────────────────────────────────────────
+
+const SKILL_SWARM_CRY: SkillDefinition = {
+  id: 'swarm_cry', name: 'Grito do Enxame', description: 'Grita na língua deles: empurra todos os inimigos e os desacelera por 3s.',
+  icon: '📢', cooldown: 11, duration: 3,
+  activate(state, ctx) {
+    ctx.pushEnemies(state.playerX, 600, 260);
+    ctx.slowAll(0.5, 3);
+  },
+};
+
+const SKILL_MOLT: SkillDefinition = {
+  id: 'molt', name: 'Muda de Carapaça', description: 'Troca a pele danificada: cura 35 HP.',
+  icon: '🦎', cooldown: 14, duration: 0,
+  activate(_state, ctx) {
+    ctx.heal(35);
+  },
+};
+
+const SKILL_ANCIENT_HUNGER: SkillDefinition = {
+  id: 'ancient_hunger', name: 'Fome Antiga', description: 'Devora biomassa próxima: 45 de dano em área e cura 15 HP.',
+  icon: '🦷', cooldown: 12, duration: 0,
+  activate(state, ctx) {
+    ctx.damageArea(state.playerX, 560, 300, 45);
+    ctx.heal(15);
+  },
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // SKILL SETS PER CHARACTER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -269,6 +323,8 @@ export const CHARACTER_SKILLS: Record<string, SkillDefinition[]> = {
   void_walker: [SKILL_VOID_RIFT, SKILL_PHASE_SHIFT, SKILL_DARK_HARVEST],
   beast_tamer: [SKILL_SUMMON_SWARM, SKILL_FRENZY, SKILL_REANIMATE],
   firefighter: [SKILL_FOAM_JET, SKILL_RESCUE_SHIELD, SKILL_AXE_SPIN],
+  scrapper: [SKILL_SCRAP_GRENADE, SKILL_JURY_RIG, SKILL_BOLT_RAIN],
+  renegade: [SKILL_SWARM_CRY, SKILL_MOLT, SKILL_ANCIENT_HUNGER],
 };
 
 /**

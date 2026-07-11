@@ -706,6 +706,56 @@ export const FIREFIGHTER_CARDS: CardDefinition[] = [
     apply(game) { for (const i of game.backpack.getAllItems()) { cp(i, { a: 8 / Math.max(1, game.backpack.getAllItems().length) }); } } },
 ];
 
+// ─── Zabel (scrapper) Cards — economia de guerra ─────────────────────────────
+
+export const SCRAPPER_CARDS: CardDefinition[] = [
+  { id: 'sc_liquidacao', name: 'Liquidação', description: '+60 gold instantâneo. Estoque tem que girar.', characterId: 'scrapper', weight: 5,
+    apply(game) { game.gold += 60; } },
+  { id: 'sc_taxa_de_desmonte', name: 'Taxa de Desmonte', description: '+2 gold por kill, permanentemente.', characterId: 'scrapper', weight: 5,
+    apply(game) { (game as any)._goldPerKill = ((game as any)._goldPerKill ?? 0) + 2; } },
+  { id: 'sc_pedagio', name: 'Pedágio', description: 'Cada hit seu tem 20% de chance de soltar 1 gold.', characterId: 'scrapper', weight: 4,
+    apply(game) { (game as any)._goldPerHit = ((game as any)._goldPerHit ?? 0) + 0.2; } },
+  { id: 'sc_ferro_velho', name: 'Ferro-Velho Ambulante', description: '+20 HP máximo — sucata também é blindagem.', characterId: 'scrapper', weight: 5,
+    apply(game) { game.combat.state.playerMaxHp += 20; game.combat.state.playerHp += 20; } },
+  { id: 'sc_pecas_recondicionadas', name: 'Peças Recondicionadas', description: '+12% dano em todos os itens.', characterId: 'scrapper', weight: 5,
+    apply(game) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.12 }); } } },
+  { id: 'sc_motor_turbinado', name: 'Motor Turbinado', description: '+15% cadência em todos os itens.', characterId: 'scrapper', weight: 4,
+    apply(game) { for (const i of game.backpack.getAllItems()) { cp(i, { r: 1.15 }); } } },
+  { id: 'sc_lataria_extra', name: 'Lataria Extra', description: '+15 escudo máximo, recarrega na hora.', characterId: 'scrapper', weight: 4,
+    apply(game) { game.combat.state.playerMaxShield += 15; game.combat.state.playerShield += 15; } },
+  { id: 'sc_investimento_de_risco', name: 'Investimento de Risco', description: 'Perde 40 gold. +25% dano em tudo — qualidade custa.', characterId: 'scrapper', weight: 3,
+    apply(game) { game.gold = Math.max(0, game.gold - 40); for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.25 }); } } },
+  { id: 'sc_sucata_explosiva', name: 'Sucata Explosiva', description: 'Kills explodem, causando 8 de dano em área.', characterId: 'scrapper', weight: 4,
+    apply(game) { (game as any)._explodeOnKill = ((game as any)._explodeOnKill ?? 0) + 8; } },
+  { id: 'sc_ima_de_moedas', name: 'Ímã de Moedas', description: 'Gold e power-ups voam até você de mais longe.', characterId: 'scrapper', weight: 4,
+    apply(game) { (game.combat as any)._relicPickup = ((game.combat as any)._relicPickup ?? 0) + 0.5; } },
+];
+
+// ─── Sétimo (renegade) Cards — biologia xeno ─────────────────────────────────
+
+export const RENEGADE_CARDS: CardDefinition[] = [
+  { id: 'rn_carapaca_espinhosa', name: 'Carapaça Espinhosa', description: 'Quem toca em você leva 12 de dano.', characterId: 'renegade', weight: 5,
+    apply(game) { (game as any)._contactDamage = ((game as any)._contactDamage ?? 0) + 12; } },
+  { id: 'rn_sangue_acido', name: 'Sangue Ácido', description: 'Itens [Veneno] causam +35% de dano.', characterId: 'renegade', weight: 5,
+    apply(game) { for (const i of game.backpack.getAllItems()) { if (i.definition.tags.includes('Veneno')) cp(i, { d: 1.35 }); } } },
+  { id: 'rn_simbiose', name: 'Simbiose', description: 'Itens [Orgânico] causam +25% de dano e curam +1 HP/s.', characterId: 'renegade', weight: 5,
+    apply(game) { for (const i of game.backpack.getAllItems()) { if (i.definition.tags.includes('Orgânico')) cp(i, { d: 1.25, h: 1 }); } } },
+  { id: 'rn_metabolismo_xeno', name: 'Metabolismo Xeno', description: '+2 HP/s de regeneração permanente.', characterId: 'renegade', weight: 4,
+    apply(game) { (game as any)._permanentHealPerSec = ((game as any)._permanentHealPerSec ?? 0) + 2; } },
+  { id: 'rn_instinto_predador', name: 'Instinto Predador', description: 'Executa inimigos abaixo de 12% de HP.', characterId: 'renegade', weight: 4,
+    apply(game) { (game as any)._executeThreshold = Math.max((game as any)._executeThreshold ?? 0, 0.12); } },
+  { id: 'rn_membrana_reflexa', name: 'Membrana Reflexa', description: 'Reflete 20% do dano recebido de volta.', characterId: 'renegade', weight: 4,
+    apply(game) { (game as any)._damageReflect = ((game as any)._damageReflect ?? 0) + 0.2; } },
+  { id: 'rn_crescimento_acelerado', name: 'Crescimento Acelerado', description: '+30 HP máximo — a carapaça engrossa.', characterId: 'renegade', weight: 5,
+    apply(game) { game.combat.state.playerMaxHp += 30; game.combat.state.playerHp += 30; } },
+  { id: 'rn_feromonio_de_medo', name: 'Feromônio de Medo', description: 'Inimigos 12% mais lentos, permanentemente.', characterId: 'renegade', weight: 4,
+    apply(game) { (game as any)._globalSlow = ((game as any)._globalSlow ?? 1) * 0.88; } },
+  { id: 'rn_toxina_de_despedida', name: 'Toxina de Despedida', description: 'Inimigos que morrem envenenam vizinhos (6 de dano).', characterId: 'renegade', weight: 4,
+    apply(game) { (game as any)._deathPoison = ((game as any)._deathPoison ?? 0) + 6; } },
+  { id: 'rn_traicao_total', name: 'Traição Total', description: 'Perde 20 HP. +30% dano em tudo — ele não guarda mais nada do Enxame.', characterId: 'renegade', weight: 3,
+    apply(game) { game.combat.state.playerHp = Math.max(1, game.combat.state.playerHp - 20); for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.3 }); } } },
+];
+
 // ─── Neutral Cards (available to all characters) ─────────────────────────────
 
 export const NEUTRAL_CARDS: CardDefinition[] = [
@@ -826,7 +876,7 @@ export const NEUTRAL_CARDS: CardDefinition[] = [
 // ─── Card Pool Access ────────────────────────────────────────────────────────
 
 export function getCardsForCharacter(characterId: string): CardDefinition[] {
-  const allCards = [...GRASS_MAN_CARDS, ...FIRE_LORD_CARDS, ...AQUA_SAGE_CARDS, ...STORM_RUNNER_CARDS, ...VOID_WALKER_CARDS, ...BEAST_TAMER_CARDS, ...FIREFIGHTER_CARDS, ...NEUTRAL_CARDS];
+  const allCards = [...GRASS_MAN_CARDS, ...FIRE_LORD_CARDS, ...AQUA_SAGE_CARDS, ...STORM_RUNNER_CARDS, ...VOID_WALKER_CARDS, ...BEAST_TAMER_CARDS, ...FIREFIGHTER_CARDS, ...SCRAPPER_CARDS, ...RENEGADE_CARDS, ...NEUTRAL_CARDS];
   return allCards.filter(c => c.characterId === null || c.characterId === characterId);
 }
 

@@ -2127,7 +2127,7 @@ const ENEMY_IDS = [
 
 const SHIP_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
 
-const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
+const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 
 let cachedSprites: SpriteSheet | null = null;
 

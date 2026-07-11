@@ -22,7 +22,7 @@ export interface LoadedSprites {
   menuBg: HTMLImageElement | null;
 }
 
-const CHARACTER_IDS = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex', 'fenix'];
+const CHARACTER_IDS = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex', 'fenix', 'zabel', 'setimo'];
 const VENDOR_IDS = ['luna', 'brutus', 'nyx', 'zikri'];
 const BOSS_IDS = [
   'vrox', 'nydra', 'krix', 'toxar', 'gorvath', 'criox', 'phantax', 'gluthar',
@@ -52,6 +52,8 @@ const CHAR_ID_MAP: Record<string, string> = {
   'void_walker': 'barathro',
   'beast_tamer': 'nex',
   'firefighter': 'fenix',
+  'scrapper': 'zabel',
+  'renegade': 'setimo',
 };
 
 /** Map vendor IDs in code to sprite file names */
@@ -85,7 +87,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
   // In-combat top-down player models (64px tall, transparent bg)
   // 'coop_p2' is Player 2's dedicated CO-OP model (an art-sheet extra, not a
   // playable character) so P2 never looks like a clone of someone else
-  const TOPDOWN_IDS = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'coop_p2'];
+  const TOPDOWN_IDS = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade', 'coop_p2'];
   for (const id of TOPDOWN_IDS) {
     try {
       const img = await loadImage(`./sprites/characters/topdown/${id}.png`);
