@@ -2206,6 +2206,12 @@ export function generateAllSprites(): SpriteSheet {
   enemies.set('void_dancer', generateSpecialEnemy('void_dancer', 'dark'));
   enemies.set('war_drum', generateSpecialEnemy('war_drum', 'normal'));
 
+  // Outline + directional shading so the procedural enemies (the ones
+  // without cut-out art) sit closer to the painted sprites next to them
+  for (const [id, canvas] of enemies) {
+    enemies.set(id, polishSprite(canvas));
+  }
+
   // Item icons
   const items = new Map<string, HTMLCanvasElement>();
   for (const id of ALL_ITEM_IDS) {

@@ -3152,9 +3152,10 @@ export class Renderer {
       ctx.ellipse(state.player2X, canvas.height - 18, 14, 6, 0, 0, Math.PI * 2);
       ctx.fill();
       ctx.globalAlpha = 1;
-      // P2 uses a distinct character model from P1
+      // P2 has a dedicated model; falls back to a different character than
+      // P1 if that art is missing
       const p2Char = charId === 'aqua_sage' ? 'beast_tamer' : 'aqua_sage';
-      const p2Td = getTopdownSprite(p2Char);
+      const p2Td = getTopdownSprite('coop_p2') || getTopdownSprite(p2Char);
       ctx.save();
       ctx.translate(state.player2X, canvas.height - 13);
       if (p2Td) {
