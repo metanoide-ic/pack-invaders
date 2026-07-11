@@ -15,6 +15,10 @@ export interface LoadedSprites {
   topdown: Map<string, HTMLImageElement>;
   /** Item icons with real art, keyed by item definition id */
   items: Map<string, HTMLImageElement>;
+  /** Dedicated in-combat boss cutouts, keyed by boss sprite id */
+  bossCombat: Map<string, HTMLImageElement>;
+  /** Planet rotation frames for the inventory screen (empty = procedural) */
+  planetFrames: HTMLImageElement[];
   menuBg: HTMLImageElement | null;
 }
 
@@ -78,8 +82,8 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
   const enemies = new Map<string, HTMLImageElement | HTMLCanvasElement>();
   const topdown = new Map<string, HTMLImageElement>();
 
-  // In-combat top-down player models (48px tall, transparent bg)
-  const TOPDOWN_IDS = ['grass_man', 'aqua_sage', 'storm_runner', 'beast_tamer'];
+  // In-combat top-down player models (64px tall, transparent bg)
+  const TOPDOWN_IDS = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
   for (const id of TOPDOWN_IDS) {
     try {
       const img = await loadImage(`./sprites/characters/topdown/${id}.png`);
@@ -122,6 +126,24 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback */ }
   }
 
+  // Dedicated in-combat boss cutouts (bosses/combat/) — preferred over the
+  // painted codex portraits during fights
+  const bossCombat = new Map<string, HTMLImageElement>();
+  await Promise.all(BOSS_IDS.map(async id => {
+    try {
+      const img = await loadImage(`./sprites/bosses/combat/${id}.png`);
+      bossCombat.set(id, img);
+    } catch { /* boss stays procedural/cutout-detected in combat */ }
+  }));
+
+  // Planet rotation frames for the inventory screen
+  const planetFrames: HTMLImageElement[] = [];
+  await Promise.all(Array.from({ length: 12 }, (_, i) => i).map(async i => {
+    try {
+      planetFrames[i] = await loadImage(`./sprites/planet/frame_${String(i).padStart(2, '0')}.png`);
+    } catch { /* keep procedural planet */ }
+  }));
+
   // Load enemy sprites (real art cut from the AI-generated sheet; falls
   // back to procedural generation in Renderer when a defId has no file)
   for (const id of ENEMY_SPRITE_IDS) {
@@ -141,7 +163,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, menuBg: null };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), menuBg: null };
 
   // Load menu background
   try {
@@ -225,11 +247,21 @@ function isCutout(img: HTMLImageElement): boolean {
   return transparent / (size * size) > 0.25;
 }
 
-/** Get a boss's in-combat sprite: only bosses with cutout art return one. */
+/** Get a boss's in-combat sprite: the dedicated combat cutout when present,
+ * otherwise a codex portrait that happens to be a cutout. Opaque painted
+ * scenes never render in combat. */
 export function getBossCombatSprite(bossDefId: string): HTMLImageElement | null {
   if (!cachedLoaded) return null;
   const spriteId = BOSS_DEF_MAP[bossDefId];
-  if (!spriteId || !bossCutouts.has(spriteId)) return null;
+  if (!spriteId) return null;
+  const combat = cachedLoaded.bossCombat.get(spriteId);
+  if (combat) return combat;
+  if (!bossCutouts.has(spriteId)) return null;
   const img = cachedLoaded.bosses.get(spriteId);
   return img instanceof HTMLImageElement ? img : null;
+}
+
+/** Planet rotation frames for the inventory screen ([] until loaded) */
+export function getPlanetFrames(): HTMLImageElement[] {
+  return cachedLoaded?.planetFrames ?? [];
 }

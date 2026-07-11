@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -1994,7 +1994,18 @@ export class Renderer {
     const planetX = Math.floor(L.w * 0.78);
     const planetY = Math.floor(L.h * 0.45);
     const planetR = Math.floor(L.h * 0.25);
-    renderPlanetPixelated(ctx, planetX, planetY, planetR, game.totalMonths, performance.now() / 1000);
+    // Rotating painted planet when the frames are loaded; procedural fallback
+    const planetFrames = getPlanetFrames();
+    if (planetFrames.length > 0) {
+      const frame = planetFrames[Math.floor(performance.now() / 700) % planetFrames.length];
+      ctx.save();
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = 0.9;
+      ctx.drawImage(frame, planetX - planetR, planetY - planetR, planetR * 2, planetR * 2);
+      ctx.restore();
+    } else {
+      renderPlanetPixelated(ctx, planetX, planetY, planetR, game.totalMonths, performance.now() / 1000);
+    }
 
     ctx.fillStyle = 'rgba(10,10,18,0.85)';
     ctx.fillRect(L.gridX - 10, L.gridY - 20, L.gridW + 20, L.gridH + 40);
