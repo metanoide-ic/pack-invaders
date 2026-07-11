@@ -1,5 +1,5 @@
 /**
- * CHARACTER DEFINITIONS — 7 playable characters.
+ * CHARACTER DEFINITIONS — 9 playable characters.
  * Post-Apocalyptic Alien Invasion lore. After "O Evento", each survived differently.
  * Only Rômulo is unlocked initially.
  */
@@ -55,7 +55,7 @@ export const GRASS_MAN: CharacterDefinition = {
   advantages: [
     'Itens empilhados: +75% dano por camada',
     'Itens [Planta] curam 1 HP/s',
-    'Começa com 6x6 mochila (maior)',
+    'Começa com mochila 6x6 ampla',
     'Itens [Orgânico] custam -20% na loja',
     'Fusões de planta dão +30% extra',
     '+10 HP ao plantar um item na linha inferior',
@@ -114,14 +114,14 @@ export const AQUA_SAGE: CharacterDefinition = {
   startingGold: 45,
   startingItems: ['basic_gun', 'watering_can'],
   shipColorIndex: 0,
-  unlockCondition: 'Derrote o boss Hidra.',
+  unlockCondition: 'Derrote Nydra, a Multifauce — a "Hidra".',
   unlockedByDefault: false,
   lore1: 'Embaixo d\'agua tudo faz sentido. Ordens. Missoes. Objetivos. La em cima e so caos. E o meu trabalho transformar caos em derrota alien.',
   lore2: 'Mandei meus filhos para um abrigo antes de embarcar. Ainda nao sei se o abrigo existe. Essa incerteza e o que me faz voltar. Todo. Dia.',
   advantages: [
     'Projeteis [Água] desaceleram inimigos 30%',
     '+2 HP/s cura passiva constante',
-    'Começa com 120 HP (o maior)',
+    'Começa com 120 HP sólidos',
     'Itens [Água] ganham +25% cadência',
     'Inimigos [Fogo] recebem 2x dano',
     'Regeneração dobra quando HP < 50%',
@@ -186,7 +186,7 @@ export const VOID_WALKER: CharacterDefinition = {
   lore2: 'Do outro lado eu vi de onde eles vem. Um vazio imenso e faminto. E vi algo pior: eles tambem tem medo. Do vazio. Vieram aqui fugindo de algo maior.',
   advantages: [
     'Chance de ficar intangível e ignorar dano',
-    'Começa com 150 HP (o maior do jogo)',
+    'Começa com 150 HP (segundo maior do jogo)',
     'Mochila 7x5 (alta, posição livre)',
     'Quanto menor o HP, maior o dano (até +100%)',
     'Crits tem +20% chance adicional',
@@ -303,7 +303,7 @@ export const RENEGADE: CharacterDefinition = {
   name: 'Sétimo',
   title: 'O Rendido',
   description: 'O sétimo alien que se rendeu — e o primeiro que não foi dissecado. Luta contra o próprio Enxame.',
-  backstory: 'Ano 4 da guerra: um alien largou as armas diante de um abrigo e esperou. Os seis primeiros casos documentados terminaram em dissecação. O sétimo caiu no abrigo errado — ou certo: ninguém ali tinha estômago para abrir mais um corpo. Chamaram-no de Sétimo. Ele não fala, mas entende. Não explica por que desertou, mas aponta para o céu e depois para o chão: o que vem de lá em cima não poupa nem os próprios. Veste a carapaça de batalha original e mata o Enxame com uma eficiência que nenhum humano alcança. O abrigo confia nele. Quase.',
+  backstory: 'Ano 4 da guerra: um alien largou as armas diante de um abrigo e esperou. Seis já tinham tentado antes — nenhum entrou em registro algum: foram dissecados em silêncio e os relatórios, queimados. O sétimo caiu no abrigo errado — ou certo: ninguém ali tinha estômago para abrir mais um corpo. Virou o primeiro caso documentado da guerra. Chamaram-no de Sétimo. Ele não fala, mas entende. Não explica por que desertou, mas aponta para o céu e depois para o chão: o que vem de lá em cima não poupa nem os próprios. Veste a carapaça de batalha original e mata o Enxame com uma eficiência que nenhum humano alcança. O abrigo confia nele. Quase.',
   passive: 'Biologia Xeno: sem escudo, mas regenera 1.5 HP/s. Itens [Orgânico] e [Veneno] causam +30% de dano.',
   backpackRows: 5,
   backpackCols: 8,

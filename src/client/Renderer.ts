@@ -1721,6 +1721,9 @@ export class Renderer {
     const { ctx } = this;
     const W = sprite.width, H = sprite.height;
     const x0 = -Math.floor(W / 2), y0 = -H;
+    // Characters with living head appendages: Frank's mutant tendrils and
+    // Sétimo's xeno feeding-limbs — their top band never stops moving
+    const tendrils = charId === 'storm_runner' || charId === 'renegade';
     const shoulderY = Math.floor(H * (charId === 'storm_runner' ? 0.40 : 0.35));
     const legsY = Math.floor(H * 0.80);
     const moving = Math.abs(vel) > 40;
@@ -1750,15 +1753,19 @@ export class Renderer {
     ctx.drawImage(sprite, 0, shoulderY, W, legsY - shoulderY, x0, y0 + shoulderY + squash, W, (legsY - shoulderY) - squash);
 
     // Head / tendrils: shifted down by the squash so it rides the torso
-    if (charId === 'storm_runner') {
+    if (tendrils) {
+      // Sétimo's appendages sway slower and subtler — heavy alien muscle,
+      // not Frank's loose mutant strands
+      const speed = charId === 'renegade' ? 2.0 : 2.8;
+      const baseAmp = charId === 'renegade' ? 1.2 : 1.6;
       const strips = 4;
       const stripH = Math.ceil(shoulderY / strips);
       for (let i = 0; i < strips; i++) {
         const sy = i * stripH;
         const sh = Math.min(stripH, shoulderY - sy);
         if (sh <= 0) continue;
-        const amp = 1.6 * (1 - i / strips) + 0.4; // tips sway more than the base
-        const dx = Math.round(Math.sin(now * 2.8 + i * 1.1) * amp);
+        const amp = baseAmp * (1 - i / strips) + 0.4; // tips sway more than the base
+        const dx = Math.round(Math.sin(now * speed + i * 1.1) * amp);
         ctx.drawImage(sprite, 0, sy, W, sh, x0 + dx, y0 + sy + squash, W, sh);
       }
     } else {
@@ -2164,6 +2171,7 @@ export class Renderer {
     const charColors: Record<string, string> = {
       grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
       storm_runner: '#facc15', void_walker: '#a78bfa', beast_tamer: '#ec4899',
+      firefighter: '#ef4444', scrapper: '#f59e0b', renegade: '#84cc16',
     };
     const charColor = charColors[game.characterId] || '#6366f1';
 
@@ -3063,9 +3071,9 @@ export class Renderer {
 
     // Render player character (top-down back view)
     const charId = this.game.characterId;
-    const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
+    const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
     const charIdx = CHARACTER_ORDER.indexOf(charId);
-    // playerShips[0-6] now hold the 7 top-down character sprites
+    // playerShips[0-8] hold the 9 procedural top-down character sprites
     const playerSprite = (charIdx >= 0 ? this.sprites.playerShips[charIdx] : null)
       ?? this.sprites.playerShips[0];
 
@@ -3081,7 +3089,7 @@ export class Renderer {
     const heroGlowColors: Record<string, string> = {
       grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
       storm_runner: '#a3e635', void_walker: '#a855f7', beast_tamer: '#ec4899',
-      firefighter: '#ef4444',
+      firefighter: '#ef4444', scrapper: '#f59e0b', renegade: '#84cc16',
     };
     const heroGlow = heroGlowColors[charId] ?? '#8fb8ff';
     ctx.globalCompositeOperation = 'lighter';

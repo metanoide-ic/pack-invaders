@@ -32,7 +32,7 @@ export interface RelicBonus {
 }
 
 export const ALL_RELICS: Relic[] = [
-  { id: 'r_alien_tooth', name: 'Dente de Vrox', description: '+5% dano base.', icon: '🦷',
+  { id: 'r_alien_tooth', name: 'Dente de Grunto', description: '+5% dano base.', icon: '🦷',
     bonus: { damagePercent: 5 } },
   { id: 'r_hydra_scale', name: 'Escama de Nydra', description: '+10 HP máximo.', icon: '🐍',
     bossId: 'boss_hydra', bonus: { hpBonus: 10 } },
@@ -54,7 +54,7 @@ export const ALL_RELICS: Relic[] = [
     bossId: 'boss_storm_king', bonus: { fireRatePercent: 8 } },
   { id: 'r_solyx_light', name: 'Luz de Solyx', description: '+2 HP/s regeneração.', icon: '☀',
     bossId: 'boss_solyx', bonus: { healPerSecond: 2 } },
-  { id: 'r_epoch_fragment', name: 'Fragmento de Epoch', description: '-15% cooldown skills.', icon: '⏳',
+  { id: 'r_epoch_fragment', name: 'Fragmento de Zyr-Goth', description: '-15% cooldown skills.', icon: '⏳',
     bossId: 'boss_epoch', bonus: { skillCooldownReduction: 15 } },
   { id: 'r_drill_bit', name: 'Broca do Sargento', description: '+5% chance de crítico.', icon: '⛏',
     bossId: 'boss_drill_sergeant', bonus: { critPercent: 5 } },

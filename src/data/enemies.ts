@@ -82,7 +82,7 @@ export const ENEMY_GRUNT: EnemyDefinition = {
 
 export const ENEMY_TANK: EnemyDefinition = {
   id: 'tank',
-  name: 'Coura�a',
+  name: 'Couraça',
   tags: [],
   hp: 60,
   speed: 15,
@@ -351,7 +351,7 @@ export const ENEMY_TELEPORTER: EnemyDefinition = {
 
 export const ENEMY_SPLITTER: EnemyDefinition = {
   id: 'splitter',
-  name: 'Cis�o',
+  name: 'Cisão',
   tags: [],
   hp: 24,
   speed: 30,
@@ -497,7 +497,7 @@ export const ENEMY_GHOST_SHIP: EnemyDefinition = {
 
 export const ENEMY_ACID_BLOB: EnemyDefinition = {
   id: 'acid_blob',
-  name: 'Corr�i',
+  name: 'Corrói',
   tags: ['Veneno', 'Orgânico'],
   hp: 22,
   speed: 20,
@@ -535,7 +535,7 @@ export const ENEMY_SENTINEL: EnemyDefinition = {
 // 26. Frost Archer
 export const ENEMY_FROST_ARCHER: EnemyDefinition = {
   id: 'frost_archer',
-  name: 'Estilha�o',
+  name: 'Estilhaço',
   tags: ['Gelo'],
   hp: 18,
   speed: 28,
@@ -779,7 +779,7 @@ export const ENEMY_IRON_MAIDEN: EnemyDefinition = {
 // 39. Time Warp
 export const ENEMY_TIME_WARP: EnemyDefinition = {
   id: 'time_warp',
-  name: 'Cr�nos',
+  name: 'Crônos',
   tags: [],
   hp: 18,
   speed: 25,
@@ -819,7 +819,7 @@ export const BOSS_SWARM_QUEEN: EnemyDefinition = {
 // 41. Kamikaze
 export const ENEMY_KAMIKAZE: EnemyDefinition = {
   id: 'kamikaze',
-  name: 'Vol�til',
+  name: 'Volátil',
   tags: ['Explosivo'],
   hp: 10,
   speed: 180,
@@ -838,7 +838,7 @@ export const ENEMY_KAMIKAZE: EnemyDefinition = {
 // 42. Helix
 export const ENEMY_HELIX: EnemyDefinition = {
   id: 'helix',
-  name: 'H�lice',
+  name: 'Hélice',
   tags: [],
   hp: 14,
   speed: 40,
@@ -857,7 +857,7 @@ export const ENEMY_HELIX: EnemyDefinition = {
 // 43. Phase Wraith
 export const ENEMY_PHASE_WRAITH: EnemyDefinition = {
   id: 'phase_wraith',
-  name: '�tera',
+  name: 'Étera',
   tags: [],
   hp: 20,
   speed: 35,
@@ -895,7 +895,7 @@ export const ENEMY_HIVE_MIND: EnemyDefinition = {
 // 45. Spore Cloud
 export const ENEMY_SPORE_CLOUD: EnemyDefinition = {
   id: 'spore_cloud',
-  name: 'M�celo',
+  name: 'Micélio',
   tags: ['Orgânico', 'Veneno'],
   hp: 35,
   speed: 5,
@@ -952,7 +952,7 @@ export const ENEMY_MAGNETIC_CORE: EnemyDefinition = {
 // 48. Flame Elemental
 export const ENEMY_FLAME_ELEMENTAL: EnemyDefinition = {
   id: 'flame_elemental',
-  name: 'Ign�voro',
+  name: 'Ignívoro',
   tags: ['Fogo'],
   hp: 30,
   speed: 35,
@@ -1008,7 +1008,7 @@ export const ENEMY_STORM_DJINN: EnemyDefinition = {
 // 51. Plague Carrier
 export const ENEMY_PLAGUE_CARRIER: EnemyDefinition = {
   id: 'plague_carrier',
-  name: 'Pest�fero',
+  name: 'Pestífero',
   tags: ['Veneno'],
   hp: 18,
   speed: 30,
@@ -1046,7 +1046,7 @@ export const ENEMY_ROOT_GOLEM: EnemyDefinition = {
 // 53. Void Dancer
 export const ENEMY_VOID_DANCER: EnemyDefinition = {
   id: 'void_dancer',
-  name: 'Noct�vaga',
+  name: 'Noctívaga',
   tags: [],
   hp: 16,
   speed: 55,

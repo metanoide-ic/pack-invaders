@@ -3003,8 +3003,11 @@ export class CombatEngine {
           defId: bossSource.id,
         });
 
+        // Always show the boss's lore name in combat (the Renderer's fallback
+        // is the English defId, which clashes with the PT-BR universe)
+        const spawned = enemies[enemies.length - 1] as any;
+        spawned.displayName = bossSource.name.toUpperCase();
         if (mutation) {
-          const spawned = enemies[enemies.length - 1] as any;
           spawned.affix = mutation.affix;
           spawned.displayName = `${bossSource.name.toUpperCase()} (${mutation.suffix})`;
         }

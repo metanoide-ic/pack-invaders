@@ -206,7 +206,7 @@ export const MARE_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_mare_dissection',
     name: 'Relatorio de Dissecacao — Especie 07',
-    lore: 'SUBMARINO TUPI — LABORATORIO BIOLOGICO. Especie: 07-"Atirador". Especimen: Capturado vivo na costa de Paraty, incapacitado por pressao submarina. Observacoes: Sistema circulatorio baseado em cobre (sangue azul-esverdeado). Tres coracoes. Cerebro descentralizado — ganglio principal no torax, secundarios nos membros. Implicacao: "tiros na cabeca" sao ineficazes. Mirar no peito. SEMPRE no peito.',
+    lore: 'SUBMARINO TUPI — LABORATORIO BIOLOGICO. Especie: 07-"Agulha". Especimen: Capturado vivo na costa de Paraty, incapacitado por pressao submarina. Observacoes: Sistema circulatorio baseado em cobre (sangue azul-esverdeado). Tres coracoes. Cerebro descentralizado — ganglio principal no torax, secundarios nos membros. Implicacao: "tiros na cabeca" sao ineficazes. Mirar no peito. SEMPRE no peito.',
     characterId: 'aqua_sage',
     order: 3,
     spriteHint: 'document',
@@ -363,7 +363,7 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_domadora_frequencies',
     name: 'Lista de Frequencias EM',
-    lore: 'Folha de caderno coberta de numeros. "FREQUENCIAS DE CONTROLE: Scout: 2.4 GHz (pulso curto). Recruta: 2.4 GHz (pulso longo). Tanque: 1.8 GHz (onda quadrada). Atirador: 3.1 GHz (modulacao AM). NOTA: Frequencia do Enxame (comunicacao): 5.8 GHz. NAO USAR. Risco de atrair vivos. FREQUENCIA PROIBIDA: 7.7 GHz. Causa despertar completo — alien volta a consciencia. Recupera memorias. Recupera RAIVA. Testei uma vez. Nunca mais."',
+    lore: 'Folha de caderno coberta de numeros. "FREQUENCIAS DE CONTROLE: Cuspidor: 2.4 GHz (pulso curto). Grunto: 2.4 GHz (pulso longo). Couraça: 1.8 GHz (onda quadrada). Agulha: 3.1 GHz (modulacao AM). NOTA: Frequencia do Enxame (comunicacao): 5.8 GHz. NAO USAR. Risco de atrair vivos. FREQUENCIA PROIBIDA: 7.7 GHz. Causa despertar completo — alien volta a consciencia. Recupera memorias. Recupera RAIVA. Testei uma vez. Nunca mais."',
     characterId: 'beast_tamer',
     order: 2,
     spriteHint: 'paper',
