@@ -2639,11 +2639,22 @@ export class Renderer {
     const pulse = held ? 0.08 + Math.sin(performance.now() * 0.005) * 0.04 : 0;
     const baseAlpha = isHovering ? 0.35 : (held ? 0.12 + pulse : 0.06);
 
-    ctx.fillStyle = `rgba(239, 68, 68, ${baseAlpha})`;
+    // Gradient wash rising from the bottom + marching dashed border
+    const sellGrad = ctx.createLinearGradient(0, L.sellZoneY, 0, L.h);
+    sellGrad.addColorStop(0, `rgba(239, 68, 68, ${baseAlpha * 0.35})`);
+    sellGrad.addColorStop(1, `rgba(239, 68, 68, ${baseAlpha})`);
+    ctx.fillStyle = sellGrad;
     ctx.fillRect(0, L.sellZoneY, canvas.width, zoneH);
+    ctx.save();
+    ctx.setLineDash([10, 7]);
+    ctx.lineDashOffset = held ? -(performance.now() / 40) % 17 : 0;
     ctx.strokeStyle = isHovering ? '#ef4444' : held ? '#991b1b' : '#4a1515';
     ctx.lineWidth = isHovering ? 2.5 : 1.5;
-    ctx.strokeRect(2, L.sellZoneY + 2, canvas.width - 4, zoneH - 4);
+    ctx.beginPath();
+    ctx.moveTo(4, L.sellZoneY + 2);
+    ctx.lineTo(canvas.width - 4, L.sellZoneY + 2);
+    ctx.stroke();
+    ctx.restore();
 
     ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
     ctx.fillStyle = isHovering ? '#ef4444' : held ? '#b91c1c' : '#7f1d1d';
@@ -3380,6 +3391,14 @@ export class Renderer {
     ice_golem: 'menace', root_golem: 'menace', crystal_guardian: 'menace', sentinel: 'menace',
     shield_bearer: 'menace', mimic: 'menace', plague_doctor: 'menace', vine_creep: 'menace',
     crystalline: 'menace', frost_archer: 'menace',
+    // bosses — organic ones breathe/pulse, armored ones loom and sway
+    boss_drill_sergeant: 'menace', boss_hydra: 'menace', boss_swarm_queen: 'pulse',
+    boss_toxar: 'pulse', boss_titan_prime: 'menace', boss_criox: 'menace',
+    boss_phantax: 'pulse', boss_devourer: 'pulse', boss_vulkra: 'blob',
+    boss_storm_king: 'pulse', boss_terravox: 'menace', boss_solyx: 'pulse',
+    boss_abyssara: 'pulse', boss_architect: 'pulse', boss_mechron: 'menace',
+    boss_voidmaw: 'pulse', boss_astral_serpent: 'menace', boss_harbinger: 'menace',
+    boss_kepler_prime: 'pulse',
   };
 
   private renderEnemy(e: Enemy, dt: number): void {
@@ -3544,8 +3563,9 @@ export class Renderer {
         // orbs spin, slimes gloop, insects flutter, clouds pulse, heavies sway
         const t = performance.now() / 1000;
         const ph = parseFloat(e.id.replace(/\D/g, '') || '0') * 1.7;
-        const anim = e.isBoss ? 'march' : (Renderer.ENEMY_ANIM_MAP[(e as any).defId as string]
-          ?? (e.movement === 'sine' || e.movement === 'erratic' ? 'flutter' : 'march'));
+        const anim = Renderer.ENEMY_ANIM_MAP[(e as any).defId as string]
+          ?? (e.isBoss ? 'menace'
+            : e.movement === 'sine' || e.movement === 'erratic' ? 'flutter' : 'march');
         let rot = 0, sclX = 1, sclY = 1;
         switch (anim) {
           case 'spin':    rot = t * 2.0 + ph; break;
@@ -3835,19 +3855,24 @@ export class Renderer {
     ctx.fillStyle = '#4b5563';
     ctx.fillText('♥  HP', hpBarX, hpBarY - 2);
 
-    // HP bar bg
+    // HP bar: rounded capsule with clipped fill
+    const hpR = Math.floor(hpBarH / 2);
+    ctx.beginPath();
+    ctx.roundRect(hpBarX, hpBarY, hpBarW, hpBarH, hpR);
     ctx.fillStyle = '#111827';
-    ctx.fillRect(hpBarX, hpBarY, hpBarW, hpBarH);
-    // HP fill
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
     ctx.fillStyle = hpColor;
     ctx.fillRect(hpBarX + 1, hpBarY + 1, Math.floor((hpBarW - 2) * hpPct), hpBarH - 2);
-    // HP shine
-    ctx.fillStyle = 'rgba(255,255,255,0.12)';
+    ctx.fillStyle = 'rgba(255,255,255,0.14)';
     ctx.fillRect(hpBarX + 1, hpBarY + 1, Math.floor((hpBarW - 2) * hpPct), Math.floor(hpBarH * 0.38));
-    // HP border
+    ctx.restore();
+    ctx.beginPath();
+    ctx.roundRect(hpBarX, hpBarY, hpBarW, hpBarH, hpR);
     ctx.strokeStyle = hpPct < 0.25 ? '#ef444480' : 'rgba(255,255,255,0.18)';
     ctx.lineWidth = 1;
-    ctx.strokeRect(hpBarX, hpBarY, hpBarW, hpBarH);
+    ctx.stroke();
 
     // HP text inside bar
     ctx.font = `bold ${Math.floor(hpBarH * 0.65)}px monospace`;
@@ -3873,18 +3898,26 @@ export class Renderer {
     if (state.playerMaxShield > 0) {
       const shY = hpBarY + hpBarH + 3;
       const shH = Math.floor(hudH * 0.14);
+      const shR = Math.floor(shH / 2);
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, shY, hpBarW, shH, shR);
       ctx.fillStyle = '#0f172a';
-      ctx.fillRect(hpBarX, shY, hpBarW, shH);
+      ctx.fill();
       const shPct = state.playerShield / state.playerMaxShield;
       if (shPct > 0) {
+        ctx.save();
+        ctx.clip();
         ctx.fillStyle = state.shieldRegenDelay > 0 ? '#1e40af' : '#38bdf8';
         ctx.fillRect(hpBarX + 1, shY + 1, Math.floor((hpBarW - 2) * shPct), shH - 2);
         ctx.fillStyle = 'rgba(255,255,255,0.12)';
         ctx.fillRect(hpBarX + 1, shY + 1, Math.floor((hpBarW - 2) * shPct), Math.floor(shH * 0.4));
+        ctx.restore();
       }
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, shY, hpBarW, shH, shR);
       ctx.strokeStyle = 'rgba(56,189,248,0.35)';
       ctx.lineWidth = 1;
-      ctx.strokeRect(hpBarX, shY, hpBarW, shH);
+      ctx.stroke();
       ctx.font = `${Math.floor(shH * 0.75)}px monospace`;
       ctx.fillStyle = '#67e8f9';
       ctx.textAlign = 'right';
@@ -5311,14 +5344,18 @@ export class Renderer {
     const panelY = Math.floor(L.h * Math.max(0.16, headerY + 0.005));
     const panelH = Math.floor(L.h * 0.44);
 
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelW, panelH, 12);
     ctx.fillStyle = 'rgba(5, 5, 18, 0.92)';
-    ctx.fillRect(panelX, panelY, panelW, panelH);
+    ctx.fill();
     ctx.strokeStyle = victory ? 'rgba(251,191,36,0.3)' : 'rgba(239,68,68,0.3)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(panelX, panelY, panelW, panelH);
-    // Top accent line
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Top accent band
+    ctx.beginPath();
+    ctx.roundRect(panelX, panelY, panelW, 4, [12, 12, 0, 0]);
     ctx.fillStyle = titleColor;
-    ctx.fillRect(panelX, panelY, panelW, 2);
+    ctx.fill();
 
     const lineH = Math.floor(L.h * 0.032);
     let cy = panelY + lineH;
@@ -5671,17 +5708,27 @@ export class Renderer {
     const tabStartX = (L.w - tabs.length * (tabW + tabGap)) / 2;
     const tabY = Math.floor(L.h * 0.11);
     const tabH = Math.floor(L.h * 0.04);
+    const tabColors = ['#ef4444', '#fbbf24', '#4ade80', '#38bdf8', '#a78bfa', '#f472b6', '#f97316', '#67e8f9'];
     for (let i = 0; i < tabs.length; i++) {
       const tx = tabStartX + i * (tabW + tabGap);
       const active = i === this.codexTab;
-      ctx.fillStyle = active ? '#6366f1' : '#1f2937';
-      ctx.fillRect(tx, tabY, tabW, tabH);
-      ctx.strokeStyle = active ? '#818cf8' : '#374151';
-      ctx.lineWidth = 1;
-      ctx.strokeRect(tx, tabY, tabW, tabH);
+      const tc = tabColors[i] ?? '#6366f1';
+      ctx.beginPath();
+      ctx.roundRect(tx, tabY, tabW, tabH, 6);
+      ctx.fillStyle = active ? tc + '30' : 'rgba(20, 24, 38, 0.85)';
+      ctx.fill();
+      ctx.strokeStyle = active ? tc : '#374151';
+      ctx.lineWidth = active ? 2 : 1;
+      ctx.stroke();
+      if (active) {
+        ctx.beginPath();
+        ctx.roundRect(tx, tabY + tabH - 3, tabW, 3, [0, 0, 6, 6]);
+        ctx.fillStyle = tc;
+        ctx.fill();
+      }
       ctx.font = active ? `bold ${Math.floor(L.h * 0.013)}px monospace` : `${Math.floor(L.h * 0.013)}px monospace`;
-      ctx.fillStyle = active ? '#ffffff' : '#94a3b8';
-      ctx.fillText(tabs[i], tx + tabW / 2, tabY + tabH * 0.7);
+      ctx.fillStyle = active ? tc : '#94a3b8';
+      ctx.fillText(tabs[i], tx + tabW / 2, tabY + tabH * 0.66);
     }
 
     // Entries — special handling for Fusion and Relics tabs
@@ -5713,8 +5760,10 @@ export class Renderer {
       const entry = entries[i + this.codexScroll];
       const ey = startY + i * entryH;
 
+      ctx.beginPath();
+      ctx.roundRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5, 8);
       ctx.fillStyle = entry.unlocked ? 'rgba(20, 20, 40, 0.8)' : 'rgba(10, 10, 20, 0.5)';
-      ctx.fillRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5);
+      ctx.fill();
       ctx.strokeStyle = entry.unlocked ? '#374151' : '#1f2937';
       if (i + this.codexScroll === this.codexSelectedEntry) {
         ctx.strokeStyle = '#6366f1';
@@ -5722,7 +5771,7 @@ export class Renderer {
       } else {
         ctx.lineWidth = 1;
       }
-      ctx.strokeRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5);
+      ctx.stroke();
 
       // Row thumbnail: real art when we have it; locked entries show a pure
       // black silhouette of the same art (classic "who's that?" tease)
@@ -5797,11 +5846,13 @@ export class Renderer {
     const detailY = startY;
     const detailH = L.h - startY - Math.floor(L.h * 0.08);
 
+    ctx.beginPath();
+    ctx.roundRect(detailX, detailY, detailW, detailH, 10);
     ctx.fillStyle = 'rgba(8, 8, 18, 0.9)';
-    ctx.fillRect(detailX, detailY, detailW, detailH);
-    ctx.strokeStyle = '#1f2937';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(detailX, detailY, detailW, detailH);
+    ctx.fill();
+    ctx.strokeStyle = '#33415577';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 
     if (this.codexSelectedEntry >= 0 && this.codexSelectedEntry < entries.length) {
       const selEntry = entries[this.codexSelectedEntry];
