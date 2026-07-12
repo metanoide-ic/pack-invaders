@@ -35,6 +35,13 @@ try {
   // Final-boss entrance roar (fired by CombatEngine at the cutscene's peak)
   game.combat.onBossRoar = () => audio.monsterRoar();
 
+  // Kick off the pixel-font downloads now — the canvas re-renders every
+  // frame, so text upgrades from the fallback the moment they arrive
+  if (document.fonts?.load) {
+    document.fonts.load('16px VT323');
+    document.fonts.load("16px 'Press Start 2P'");
+  }
+
   // Debug handles for automated playtests
   (window as any).__game = game;
   (window as any).__renderer = renderer;

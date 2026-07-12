@@ -127,6 +127,28 @@ export class Renderer {
   ) {
     this.sprites = generateAllSprites();
     this.lastTime = performance.now();
+    this.installGameFont();
+  }
+
+  /** Route every `ctx.font = '…px monospace'` in the codebase through the
+   * game's pixel font. One interception point instead of ~300 call sites:
+   * the font setter rewrites the generic `monospace` family to VT323 (with a
+   * size boost, since VT323 renders narrower than system monospace fonts).
+   * Explicit families like "Press Start 2P" pass through untouched. */
+  private installGameFont(): void {
+    const proto = Object.getPrototypeOf(this.ctx);
+    const desc = Object.getOwnPropertyDescriptor(proto, 'font');
+    if (!desc?.set || !desc.get) return;
+    Object.defineProperty(this.ctx, 'font', {
+      configurable: true,
+      set(this: CanvasRenderingContext2D, v: string) {
+        desc.set!.call(this, v.replace(/(\d+(?:\.\d+)?)px monospace\b/,
+          (_m, n: string) => `${Math.round(parseFloat(n) * 1.22)}px VT323, monospace`));
+      },
+      get(this: CanvasRenderingContext2D) {
+        return desc.get!.call(this) as string;
+      },
+    });
   }
 
   /** Compute responsive layout from current canvas dimensions */
@@ -149,11 +171,13 @@ export class Renderer {
       cy: Math.floor(h / 2),
       btnY: Math.floor(h * 0.85),
       sellZoneY: Math.floor(h * 0.88),
-      fontTitle: `bold ${Math.floor(h * 0.04)}px monospace`,
+      // Titles use the chunky arcade face; body text goes through the VT323
+      // remap in installGameFont (which only rewrites bare `monospace`)
+      fontTitle: `${Math.floor(h * 0.028)}px 'Press Start 2P', monospace`,
       fontNormal: `${Math.floor(h * 0.022)}px monospace`,
       fontSmall: `${Math.floor(h * 0.017)}px monospace`,
       fontTiny: `${Math.floor(h * 0.013)}px monospace`,
-      fontHuge: `bold ${Math.floor(h * 0.06)}px monospace`,
+      fontHuge: `${Math.floor(h * 0.042)}px 'Press Start 2P', monospace`,
     };
   }
 
@@ -2175,36 +2199,58 @@ export class Renderer {
     };
     const charColor = charColors[game.characterId] || '#6366f1';
 
+    // Backing plate behind the whole grid — the cells read as slots carved
+    // into a panel instead of floating rectangles
+    const platePad = 7;
+    ctx.beginPath();
+    ctx.roundRect(L.gridX - platePad, L.gridY - platePad, cols * L.cell + platePad * 2 - 2, rows * L.cell + platePad * 2 - 2, 10);
+    const plateGrad = ctx.createLinearGradient(0, L.gridY, 0, L.gridY + rows * L.cell);
+    plateGrad.addColorStop(0, 'rgba(22, 25, 40, 0.92)');
+    plateGrad.addColorStop(1, 'rgba(12, 14, 24, 0.92)');
+    ctx.fillStyle = plateGrad;
+    ctx.fill();
+    ctx.strokeStyle = charColor + '55';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
     for (let r = 0; r < rows; r++) {
       for (let c = 0; c < cols; c++) {
         const x = L.gridX + c * L.cell;
         const y = L.gridY + r * L.cell;
-        // Checker pattern
-        ctx.fillStyle = (r + c) % 2 === 0 ? '#10101a' : '#0c0c14';
-        ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
-        // Subtle inner border
-        ctx.strokeStyle = '#1a1a2a';
+        // Sunken slot: rounded, checkered, with a soft top shadow
+        ctx.beginPath();
+        ctx.roundRect(x + 1, y + 1, L.cell - 4, L.cell - 4, 4);
+        ctx.fillStyle = (r + c) % 2 === 0 ? '#0d0f1c' : '#0a0c16';
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.10)';
         ctx.lineWidth = 1;
-        ctx.strokeRect(x + 0.5, y + 0.5, L.cell - 3, L.cell - 3);
+        ctx.stroke();
 
         // Bottom row highlight for stacking characters
         if (game.backpack.config.requireStacking && r === rows - 1) {
-          ctx.fillStyle = charColor + '10';
-          ctx.fillRect(x, y, L.cell - 2, L.cell - 2);
+          ctx.beginPath();
+          ctx.roundRect(x + 1, y + 1, L.cell - 4, L.cell - 4, 4);
+          ctx.fillStyle = charColor + '14';
+          ctx.fill();
         }
       }
     }
-    // Outer grid border (character-colored)
-    ctx.strokeStyle = charColor + '40';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(L.gridX - 1, L.gridY - 1, cols * L.cell + 1, rows * L.cell + 1);
-    // Corner accents
-    const cornerSize = 8;
-    ctx.fillStyle = charColor + '60';
-    ctx.fillRect(L.gridX - 1, L.gridY - 1, cornerSize, 2);
-    ctx.fillRect(L.gridX - 1, L.gridY - 1, 2, cornerSize);
-    ctx.fillRect(L.gridX + cols * L.cell - cornerSize, L.gridY - 1, cornerSize + 1, 2);
-    ctx.fillRect(L.gridX + cols * L.cell - 1, L.gridY - 1, 2, cornerSize);
+    // Corner accents on the plate
+    const cornerSize = 12;
+    ctx.strokeStyle = charColor;
+    ctx.lineWidth = 2.5;
+    for (const [cx3, cy3, dx3, dy3] of [
+      [L.gridX - platePad, L.gridY - platePad, 1, 1],
+      [L.gridX + cols * L.cell + platePad - 2, L.gridY - platePad, -1, 1],
+      [L.gridX - platePad, L.gridY + rows * L.cell + platePad - 2, 1, -1],
+      [L.gridX + cols * L.cell + platePad - 2, L.gridY + rows * L.cell + platePad - 2, -1, -1],
+    ] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx3 + dx3 * cornerSize, cy3);
+      ctx.lineTo(cx3, cy3);
+      ctx.lineTo(cx3, cy3 + dy3 * cornerSize);
+      ctx.stroke();
+    }
   }
 
   private renderPlacedItems(): void {
@@ -2217,43 +2263,40 @@ export class Renderer {
       const color = this.getItemColor(item.definition.tags);
       const hasFusion = !!(item.state as any).fusedName;
 
+      // The item's footprint reads as ONE piece: translucent tinted cells
+      // with the outline drawn only on the shape's perimeter (no interior
+      // borders slicing multi-cell items into squares)
+      const rarityColors2 = ['', '', '#3b82f6', '#a855f7'];
+      const outline = hasFusion ? '#f472b6'
+        : item.definition.rarity >= 2 ? rarityColors2[item.definition.rarity] : color;
+      const inShape = (r: number, c: number) =>
+        r >= 0 && r < shape.length && c >= 0 && c < shape[0].length && shape[r][c] === 1;
       for (let r = 0; r < shape.length; r++) {
         for (let c = 0; c < shape[r].length; c++) {
           if (shape[r][c] !== 1) continue;
           const x = L.gridX + (item.position.col + c) * L.cell;
           const y = L.gridY + (item.position.row + r) * L.cell;
-
-          // Base cell fill
-          ctx.fillStyle = color;
-          ctx.fillRect(x + 2, y + 2, L.cell - 6, L.cell - 6);
-
-          // Top highlight
-          ctx.fillStyle = 'rgba(255,255,255,0.12)';
-          ctx.fillRect(x + 2, y + 2, L.cell - 6, 3);
-
-          // Border — color based on rarity for rare+ items
-          const rarityColors2 = ['', '', '#3b82f6', '#a855f7'];
-          const rarityBorder = item.definition.rarity >= 2 ? rarityColors2[item.definition.rarity] : '';
-          if (hasFusion) {
-            ctx.strokeStyle = '#f472b6';
-            ctx.lineWidth = 1.5;
-          } else if (rarityBorder) {
-            ctx.strokeStyle = rarityBorder + '80';
-            ctx.lineWidth = 1.5;
-          } else {
-            ctx.strokeStyle = 'rgba(255,255,255,0.18)';
-            ctx.lineWidth = 1;
-          }
-          ctx.strokeRect(x + 2, y + 2, L.cell - 6, L.cell - 6);
-
-          // Rarity corner dot (rare = blue, legendary = purple)
-          if (item.definition.rarity >= 2 && !hasFusion) {
-            ctx.fillStyle = rarityColors2[item.definition.rarity] || '#6366f1';
-            ctx.beginPath();
-            ctx.arc(x + L.cell - 7, y + 6, 3, 0, Math.PI * 2);
-            ctx.fill();
-          }
+          ctx.fillStyle = color + '30';
+          ctx.fillRect(x + 1, y + 1, L.cell - 4, L.cell - 4);
+          // Perimeter segments only
+          ctx.strokeStyle = outline + 'cc';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          if (!inShape(r - 1, c)) { ctx.moveTo(x + 1, y + 1.5); ctx.lineTo(x + L.cell - 3, y + 1.5); }
+          if (!inShape(r + 1, c)) { ctx.moveTo(x + 1, y + L.cell - 3.5); ctx.lineTo(x + L.cell - 3, y + L.cell - 3.5); }
+          if (!inShape(r, c - 1)) { ctx.moveTo(x + 1.5, y + 1); ctx.lineTo(x + 1.5, y + L.cell - 3); }
+          if (!inShape(r, c + 1)) { ctx.moveTo(x + L.cell - 3.5, y + 1); ctx.lineTo(x + L.cell - 3.5, y + L.cell - 3); }
+          ctx.stroke();
         }
+      }
+      // Rarity gem on the shape's top-right corner
+      if (item.definition.rarity >= 2 && !hasFusion) {
+        const gemX = L.gridX + (item.position.col + shape[0].length) * L.cell - 8;
+        const gemY = L.gridY + item.position.row * L.cell + 7;
+        ctx.fillStyle = rarityColors2[item.definition.rarity] || '#6366f1';
+        ctx.beginPath();
+        ctx.arc(gemX, gemY, 3, 0, Math.PI * 2);
+        ctx.fill();
       }
 
       // Fusion glow effect (pulsing border around entire item)
@@ -2274,23 +2317,19 @@ export class Renderer {
         ctx.globalAlpha = 1;
       }
 
-      // Item icon — scaled to fill the first cell nicely
+      // Item icon — big, centered on the whole footprint so the real art is
+      // the star (names live in the hover tooltip, not painted over the art)
       const sprite = this.sprites.items.get(item.definition.id);
       if (sprite) {
-        const spriteSize = Math.floor(L.cell * 0.65);
-        const sx = L.gridX + item.position.col * L.cell + (L.cell - spriteSize) / 2;
-        const sy = L.gridY + item.position.row * L.cell + (L.cell - spriteSize) / 2;
+        const bboxW = shape[0].length * L.cell;
+        const bboxH = shape.length * L.cell;
+        const spriteSize = Math.floor(Math.min(bboxW, bboxH) * 0.8);
+        const sx = L.gridX + item.position.col * L.cell + (bboxW - spriteSize) / 2;
+        const sy = L.gridY + item.position.row * L.cell + (bboxH - spriteSize) / 2;
+        ctx.imageSmoothingEnabled = false;
         ctx.drawImage(sprite, sx, sy, spriteSize, spriteSize);
+        ctx.imageSmoothingEnabled = true;
       }
-
-      // Item name label (bottom of first cell)
-      const lx = L.gridX + item.position.col * L.cell + 3;
-      const ly = L.gridY + item.position.row * L.cell + L.cell - 4;
-      ctx.font = L.fontTiny;
-      ctx.fillStyle = '#ffffff';
-      ctx.globalAlpha = 0.9;
-      ctx.fillText(item.definition.name.slice(0, 8), lx, ly);
-      ctx.globalAlpha = 1;
 
       // Upgrade level badge (gold "+N", top-left corner) — merge-duplicates system
       const upLvl = game.backpack.getUpgradeLevel(item);
@@ -2394,19 +2433,22 @@ export class Renderer {
     if (ty + h > L.h) ty = L.h - h - 5;
     if (ty < 5) ty = 5;
 
-    // Background with subtle gradient effect
-    ctx.fillStyle = 'rgba(6, 6, 18, 0.97)';
-    ctx.fillRect(tx, ty, w, h);
-    // Accent bar at top
+    // Background: rounded plate with rarity accent header
     const rarityColors = ['#94a3b8', '#4ade80', '#3b82f6', '#a855f7'];
     const rarityColor = hasFusion
       ? (((item.state as any).fusionColor as string) || '#f472b6')
       : rarityColors[Math.min(item.definition.rarity, 3)];
+    ctx.beginPath();
+    ctx.roundRect(tx, ty, w, h, 8);
+    ctx.fillStyle = 'rgba(6, 6, 18, 0.97)';
+    ctx.fill();
+    ctx.strokeStyle = rarityColor + '90';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(tx, ty, w, 4, [8, 8, 0, 0]);
     ctx.fillStyle = rarityColor;
-    ctx.fillRect(tx, ty, w, 3);
-    ctx.strokeStyle = rarityColor + '80';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(tx, ty, w, h);
+    ctx.fill();
 
     let cy = ty + 20;
 
@@ -2622,12 +2664,21 @@ export class Renderer {
     const panelW = Math.floor(L.w * 0.20);
     const panelH = Math.floor(L.h * 0.35);
 
-    // Panel background
-    ctx.fillStyle = 'rgba(8, 8, 18, 0.92)';
-    ctx.fillRect(x - 10, y - 20, panelW, panelH);
-    ctx.strokeStyle = '#1e293b';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x - 10, y - 20, panelW, panelH);
+    // Panel background — rounded plate with an accent header band
+    ctx.beginPath();
+    ctx.roundRect(x - 10, y - 20, panelW, panelH, 10);
+    const statGrad = ctx.createLinearGradient(0, y - 20, 0, y - 20 + panelH);
+    statGrad.addColorStop(0, 'rgba(20, 23, 38, 0.94)');
+    statGrad.addColorStop(1, 'rgba(9, 10, 20, 0.94)');
+    ctx.fillStyle = statGrad;
+    ctx.fill();
+    ctx.strokeStyle = '#33415588';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.roundRect(x - 10, y - 20, panelW, 4, [10, 10, 0, 0]);
+    ctx.fillStyle = '#6366f1';
+    ctx.fill();
 
     // Title
     ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
@@ -3628,15 +3679,15 @@ export class Renderer {
       ctx.textAlign = 'left';
     }
 
-    // ── Hit flash (white overlay when damaged) ────────────────────────────
-    if (e.hitFlash && e.hitFlash > 0) {
-      const flashAlpha = Math.min(0.7, e.hitFlash * 10);
-      ctx.globalAlpha = flashAlpha;
-      ctx.fillStyle = '#ffffff';
-      const fw = drawW;
-      const fh = drawH;
-      ctx.fillRect(e.x - fw / 2, e.y - fh / 2, fw, fh);
-      ctx.globalAlpha = 1;
+    // ── Hit flash: sprite-shaped white-out (never a bare rectangle) ──────
+    if (e.hitFlash && e.hitFlash > 0 && sprite) {
+      ctx.save();
+      ctx.globalAlpha = Math.min(0.85, e.hitFlash * 12);
+      ctx.imageSmoothingEnabled = false;
+      ctx.filter = 'brightness(4) saturate(0.3)';
+      ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2, drawW, drawH);
+      ctx.filter = 'none';
+      ctx.restore();
     }
 
     // ── HP bar ────────────────────────────────────────────────────────────
@@ -4566,19 +4617,31 @@ export class Renderer {
       }
 
       // ── Card body ────────────────────────────────────────────────────
-      // Dark background
+      // Dark background (rounded)
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, cardW, cardH, 12);
       ctx.fillStyle = '#09091a';
-      ctx.fillRect(tx, ty, cardW, cardH);
+      ctx.fill();
 
-      // Rarity left-edge bar
+      // Rarity left-edge bar (follows the rounded corner)
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, 4, cardH, [12, 0, 0, 12]);
       ctx.fillStyle = rColor;
-      ctx.fillRect(tx, ty, 3, cardH);
+      ctx.fill();
 
       // Outer border
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, cardW, cardH, 12);
       ctx.strokeStyle = rColor + (isHovered ? 'ff' : '66');
-      ctx.lineWidth = isHovered ? 2 : 1;
-      ctx.strokeRect(tx, ty, cardW, cardH);
+      ctx.lineWidth = isHovered ? 2.5 : 1.5;
+      ctx.stroke();
       ctx.shadowBlur = 0;
+
+      // Clip everything below to the rounded body so square fills can't
+      // poke out of the corners
+      ctx.beginPath();
+      ctx.roundRect(tx, ty, cardW, cardH, 12);
+      ctx.clip();
 
       // Inner card bg (slight gradient top to bottom)
       const cardBgGrad = ctx.createLinearGradient(tx, ty, tx, ty + cardH);
@@ -4813,19 +4876,33 @@ export class Renderer {
     ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'center';
     const shopCenterX = L.panelX + Math.floor((L.w - L.panelX) / 2);
-    ctx.fillText('LOJA', shopCenterX, Math.floor(L.h * 0.055));
+    ctx.fillText('LOJA', shopCenterX, Math.floor(L.h * 0.065));
 
+    // Gold chip under the title
+    const goldStr = `${game.gold}`;
+    ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
+    const chipTextW = ctx.measureText(goldStr).width;
+    const gChipW = Math.floor(chipTextW + L.w * 0.035);
+    const gChipH = Math.floor(L.h * 0.038);
+    const gChipX = shopCenterX - gChipW / 2;
+    const gChipY = Math.floor(L.h * 0.082);
+    ctx.beginPath();
+    ctx.roundRect(gChipX, gChipY, gChipW, gChipH, gChipH / 2);
+    ctx.fillStyle = 'rgba(45, 34, 6, 0.85)';
+    ctx.fill();
+    ctx.strokeStyle = '#fbbf2470';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     const coin = this.sprites.ui.get('gold_coin');
-    if (coin) ctx.drawImage(coin, shopCenterX - Math.floor(L.w * 0.03), Math.floor(L.h * 0.09));
-    ctx.font = L.fontNormal;
-    ctx.fillStyle = '#94a3b8';
+    if (coin) ctx.drawImage(coin, gChipX + 8, gChipY + Math.floor(gChipH / 2) - 5);
+    ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'center';
-    ctx.fillText(`${game.gold}`, shopCenterX, Math.floor(L.h * 0.11));
+    ctx.fillText(goldStr, gChipX + gChipW / 2 + 6, gChipY + Math.floor(gChipH * 0.68));
     // Show last wave gold
     if (game.lastWaveGold > 0) {
       ctx.font = L.fontSmall;
       ctx.fillStyle = '#4ade80';
-      ctx.fillText(`(+${game.lastWaveGold} da última wave)`, shopCenterX, Math.floor(L.h * 0.13));
+      ctx.fillText(`(+${game.lastWaveGold} da última wave)`, shopCenterX, gChipY + gChipH + Math.floor(L.h * 0.02));
     }
     ctx.textAlign = 'left';
 
@@ -4855,44 +4932,60 @@ export class Renderer {
       const rarityColors = ['#94a3b8', '#4ade80', '#3b82f6', '#a855f7'];
       const rarityColor = rarityColors[Math.min(item.rarity, 3)];
 
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(x, y, itemCardW, itemCardH);
+      // Card body: rounded, vertical gradient, rarity-colored frame
+      const cardGrad = ctx.createLinearGradient(x, y, x, y + itemCardH);
+      cardGrad.addColorStop(0, '#1c2033');
+      cardGrad.addColorStop(0.55, '#141828');
+      cardGrad.addColorStop(1, '#0e1120');
+      ctx.beginPath();
+      ctx.roundRect(x, y, itemCardW, itemCardH, 8);
+      ctx.fillStyle = cardGrad;
+      ctx.fill();
       ctx.strokeStyle = rarityColor;
       ctx.lineWidth = 2;
-      ctx.strokeRect(x, y, itemCardW, itemCardH);
-
       if (item.rarity >= 2) {
         ctx.shadowColor = rarityColor;
-        ctx.shadowBlur = 8;
-        ctx.strokeRect(x, y, itemCardW, itemCardH);
-        ctx.shadowBlur = 0;
+        ctx.shadowBlur = 10;
       }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+      // Icon pedestal glow behind the art
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.28;
+      const pedR = Math.floor(itemCardH * 0.11);
+      ctx.drawImage(this.getGlow(rarityColor, pedR), x + itemCardW / 2 - pedR, y + Math.floor(itemCardH * 0.1) - pedR);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
 
-      // "★ BEST" badge for highest synergy pick
+      // "★ BEST" badge for highest synergy pick (rounded to match the card)
       if (i === bestPickIdx && bestPickScore > 0) {
+        ctx.beginPath();
+        ctx.roundRect(x, y, itemCardW, 16, [8, 8, 0, 0]);
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(x, y, itemCardW, 14);
+        ctx.fill();
         ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
-        ctx.fillStyle = '#000000';
+        ctx.fillStyle = '#1a1206';
         ctx.textAlign = 'center';
-        ctx.fillText('★ BEST PICK', x + itemCardW / 2, y + 10);
+        ctx.fillText('★ MELHOR ESCOLHA', x + itemCardW / 2, y + 12);
         ctx.textAlign = 'left';
       }
 
       const sprite = this.sprites.items.get(item.id);
       if (sprite) {
-        const spriteS = Math.floor(itemCardH * 0.12);
-        ctx.drawImage(sprite, x + itemCardW / 2 - spriteS / 2, y + Math.floor(itemCardH * 0.03), spriteS, spriteS);
+        const spriteS = Math.floor(itemCardH * 0.19);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(sprite, x + itemCardW / 2 - spriteS / 2, y + Math.floor(itemCardH * 0.025), spriteS, spriteS);
+        ctx.imageSmoothingEnabled = true;
       }
 
-      ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.font = `bold ${Math.floor(L.h * 0.015)}px monospace`;
       ctx.fillStyle = '#e2e8f0';
       ctx.textAlign = 'center';
-      ctx.fillText(item.name, x + itemCardW / 2, y + Math.floor(itemCardH * 0.2));
+      ctx.fillText(item.name, x + itemCardW / 2, y + Math.floor(itemCardH * 0.28));
 
       ctx.font = L.fontTiny;
       ctx.fillStyle = '#94a3b8';
-      this.wrapText(item.description, x + itemCardW / 2, y + Math.floor(itemCardH * 0.28), itemCardW - 14, Math.floor(L.h * 0.016));
+      this.wrapText(item.description, x + itemCardW / 2, y + Math.floor(itemCardH * 0.35), itemCardW - 14, Math.floor(L.h * 0.016));
 
       ctx.font = L.fontTiny;
       ctx.fillStyle = '#6366f1';
@@ -5008,11 +5101,13 @@ export class Renderer {
       const pbx = L.gridX + pi * (potBtnW + 5);
       const pby = potShopY + Math.floor(L.h * 0.015);
       const canBuy = game.gold >= pot.cost && game.potions.length < 3;
+      ctx.beginPath();
+      ctx.roundRect(pbx, pby, potBtnW, potBtnH, 6);
       ctx.fillStyle = canBuy ? 'rgba(20, 60, 20, 0.8)' : 'rgba(15, 15, 20, 0.6)';
-      ctx.fillRect(pbx, pby, potBtnW, potBtnH);
+      ctx.fill();
       ctx.strokeStyle = canBuy ? '#4ade80' : '#374151';
       ctx.lineWidth = 1;
-      ctx.strokeRect(pbx, pby, potBtnW, potBtnH);
+      ctx.stroke();
       ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
       ctx.fillStyle = canBuy ? '#e2e8f0' : '#475569';
       ctx.textAlign = 'center';
@@ -5469,13 +5564,18 @@ export class Renderer {
     // Hover highlight
     const isHover = this.mouseX >= x && this.mouseX <= x + w &&
                     this.mouseY >= y && this.mouseY <= y + h;
-    ctx.fillStyle = isHover ? this.brightenColor(color) : color;
-    ctx.fillRect(x, y, w, h);
-    ctx.strokeStyle = isHover ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.2)';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(x, y, w, h);
-    ctx.fillStyle = 'rgba(255,255,255,0.1)';
-    ctx.fillRect(x, y, w, 3);
+    const btnBase = isHover ? this.brightenColor(color) : color;
+    const btnGrad = ctx.createLinearGradient(0, y, 0, y + h);
+    btnGrad.addColorStop(0, this.brightenColor(btnBase));
+    btnGrad.addColorStop(0.5, btnBase);
+    btnGrad.addColorStop(1, btnBase);
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, Math.min(10, h / 3));
+    ctx.fillStyle = btnGrad;
+    ctx.fill();
+    ctx.strokeStyle = isHover ? 'rgba(255,255,255,0.45)' : 'rgba(255,255,255,0.22)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
     ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
     ctx.fillStyle = '#ffffff';
     ctx.textAlign = 'center';
