@@ -38,7 +38,7 @@ export const NORMAL_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'acid_rain',
     name: 'Chuva Ácida',
     description: 'Tempestade ácida nas ruínas — fique sob abrigo ou tome dano contínuo a céu aberto.',
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'ground_zero',

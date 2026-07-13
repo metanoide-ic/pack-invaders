@@ -360,6 +360,13 @@ export interface CombatState {
   swarmTideEliteGoal: number;
   /** Enxame em Maré: seconds elapsed in the horde phase (safety-valve cap) */
   swarmTideTimer: number;
+
+  /** Chuva Ácida: true while it's currently raining (damage if exposed) */
+  acidRainActive: boolean;
+  /** Chuva Ácida: seconds remaining in the current dry/wet phase */
+  acidRainTimer: number;
+  /** Chuva Ácida: fixed shelter zones for this wave (safe from rain damage) */
+  acidRainShelters: { x: number; width: number }[];
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -482,6 +489,9 @@ export class CombatEngine {
       swarmTideEliteKills: 0,
       swarmTideEliteGoal: 6,
       swarmTideTimer: 0,
+      acidRainActive: false,
+      acidRainTimer: 7,
+      acidRainShelters: [],
     };
   }
 
@@ -515,6 +525,21 @@ export class CombatEngine {
     this.state.swarmTideEliteGoal = 6 + Math.floor(wave / 12);
     this.state.swarmTideTimer = 0;
     this._swarmTideSpawnTimer = 2.5;
+    this.state.acidRainActive = false;
+    this.state.acidRainTimer = 6 + Math.random() * 3;
+    if (normalVariant === 'acid_rain') {
+      // Two fixed shelter zones, kept apart so there's a real positioning
+      // choice instead of one obvious safe spot
+      const shelterWidth = 130;
+      const leftX = 140 + Math.random() * 200;
+      const rightX = this.arenaWidth - 140 - Math.random() * 200;
+      this.state.acidRainShelters = [
+        { x: leftX, width: shelterWidth },
+        { x: rightX, width: shelterWidth },
+      ];
+    } else {
+      this.state.acidRainShelters = [];
+    }
     this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
@@ -717,10 +742,11 @@ export class CombatEngine {
     // 11. Apply item passive effects (EMP, auras, etc.)
     this.applyItemPassives(dt);
 
-    // 11b. Phase variants: Frostbite hazard / Space asteroids / Swarm Tide
-    // horde-then-Queen / Copycat finale
+    // 11b. Phase variants: Frostbite hazard / Space asteroids / Acid Rain
+    // shelter-hunting / Swarm Tide horde-then-Queen / Copycat finale
     if (this.state.normalVariant === 'frostbite') this.updateFrostbite(dt, playerDir);
     if (this.state.normalVariant === 'space') this.updateSpaceAsteroids(dt);
+    if (this.state.normalVariant === 'acid_rain') this.updateAcidRain(dt);
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
@@ -814,6 +840,32 @@ export class CombatEngine {
       this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '❄ CONGELAMENTO! ❄', '#7dd3fc');
       this.triggerShake(10, 0.5);
       this.triggerPlayerFlash();
+    }
+  }
+
+  /** Chuva Ácida (normal phase variant): the storm cycles between dry and
+   * wet phases — during a wet phase, standing outside a shelter zone eats
+   * continuous chip damage. Inverse of Frostbite: here the safe move is to
+   * hold a position instead of never stopping. */
+  private updateAcidRain(dt: number): void {
+    this.state.acidRainTimer -= dt;
+    if (this.state.acidRainTimer <= 0) {
+      this.state.acidRainActive = !this.state.acidRainActive;
+      if (this.state.acidRainActive) {
+        this.state.acidRainTimer = 5 + Math.random() * 2.5;
+        this.spawnFloatingText(this.state.playerX, 110, '☠ CHUVA ÁCIDA! ABRIGUE-SE! ☠', '#84cc16');
+        this.triggerShake(4, 0.5);
+      } else {
+        this.state.acidRainTimer = 6 + Math.random() * 3;
+      }
+    }
+    if (this.state.acidRainActive) {
+      const inShelter = this.state.acidRainShelters.some(
+        s => Math.abs(this.state.playerX - s.x) < s.width / 2,
+      );
+      if (!inShelter) {
+        this.damagePlayer(14 * dt);
+      }
     }
   }
 

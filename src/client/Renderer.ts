@@ -2887,9 +2887,16 @@ export class Renderer {
     } else if (state.bossVariant === 'swarm_tide') {
       ctx.fillStyle = 'rgba(190, 24, 93, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.normalVariant === 'acid_rain') {
+      ctx.fillStyle = state.acidRainActive ? 'rgba(132, 204, 22, 0.14)' : 'rgba(132, 204, 22, 0.05)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     if (state.normalVariant === 'space') {
       this.renderSpaceDrift(performance.now() / 1000);
+    }
+    if (state.normalVariant === 'acid_rain') {
+      this.renderAcidRainShelters(state);
+      if (state.acidRainActive) this.renderAcidRainStreaks(performance.now() / 1000);
     }
 
     // ── Ground & energy barricade ────────────────────────────────────────
@@ -3703,6 +3710,49 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  /** Chuva Ácida: fixed shelter zones — always visible so the player can
+   * plan ahead, glowing brighter while it's actually raining. */
+  private renderAcidRainShelters(state: CombatState): void {
+    const { ctx, canvas } = this;
+    for (const s of state.acidRainShelters) {
+      const x0 = s.x - s.width / 2;
+      const pulse = state.acidRainActive ? 0.5 + Math.sin(performance.now() * 0.006) * 0.2 : 0.18;
+      ctx.fillStyle = '#4ade80';
+      ctx.globalAlpha = pulse * 0.25;
+      ctx.fillRect(x0, canvas.height - 90, s.width, 90);
+      ctx.globalAlpha = pulse;
+      ctx.strokeStyle = '#4ade80';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([6, 4]);
+      ctx.strokeRect(x0, canvas.height - 90, s.width, 90);
+      ctx.setLineDash([]);
+      ctx.globalAlpha = 1;
+      ctx.font = 'bold 11px monospace';
+      ctx.fillStyle = '#bbf7d0';
+      ctx.textAlign = 'center';
+      ctx.fillText('ABRIGO', s.x, canvas.height - 96);
+      ctx.textAlign = 'left';
+    }
+  }
+
+  /** Chuva Ácida: falling acid streaks while a wet phase is active. */
+  private renderAcidRainStreaks(now: number): void {
+    const { ctx, canvas } = this;
+    ctx.strokeStyle = '#a3e635';
+    ctx.globalAlpha = 0.35;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 60; i++) {
+      const seed = i * 71.3;
+      const x = (seed * 4.1 + now * 40) % canvas.width;
+      const y = (seed * 6.7 + now * 620) % canvas.height;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x - 4, y + 16);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
   private static readonly COPYCAT_CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 
   /** Copycat boss variant: the mirror is rendered with the player's own
@@ -4349,6 +4399,17 @@ export class Renderer {
       ctx.fillStyle = '#f472b6';
       ctx.fillRect(swBarX, swBarY, Math.floor(swBarW * swPct), 6);
       ctx.textAlign = 'left';
+    }
+
+    // Chuva Ácida: dry/wet status + countdown to the next phase change
+    if (state.normalVariant === 'acid_rain') {
+      ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.fillStyle = state.acidRainActive ? '#a3e635' : '#84a98c';
+      ctx.textAlign = 'left';
+      const label = state.acidRainActive
+        ? `☠ CHUVA (${state.acidRainTimer.toFixed(0)}s) — ABRIGUE-SE!`
+        : `☀ SECO (${state.acidRainTimer.toFixed(0)}s até a chuva)`;
+      ctx.fillText(label, hpBarX, hpBarY + hpBarH + (state.playerMaxShield > 0 ? hpBarH * 0.14 + 6 : 3) + Math.floor(hudH * 0.14) - 2);
     }
 
     // Active synergies (below HP area, tiny pills)
