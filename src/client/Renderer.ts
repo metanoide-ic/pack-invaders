@@ -6708,6 +6708,30 @@ export class Renderer {
     }
   }
 
+  /** Hand-drawn-looking closed loop: a jittered circle, seeded per entry so
+   * the same entry always sketches the same "hand", used to frame Codex
+   * portraits like ink pen-work instead of a straight ruled rectangle. */
+  private sketchOval(cx0: number, cy0: number, rx: number, ry: number, seed: number, color: string, lineWidth = 1.6): void {
+    const { ctx } = this;
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = lineWidth;
+    ctx.beginPath();
+    const N = 40;
+    for (let i = 0; i <= N; i++) {
+      const t = (i / N) * Math.PI * 2;
+      const j = Math.sin(seed + i * 12.9898) * 43758.5453;
+      const jitter = (j - Math.floor(j)) * 2 - 1; // -1..1 deterministic pseudo-random
+      const r = 1 + jitter * 0.025;
+      const x = cx0 + Math.cos(t) * rx * r;
+      const y = cy0 + Math.sin(t) * ry * r;
+      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    ctx.restore();
+  }
+
   private renderCodex(): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
@@ -6717,65 +6741,151 @@ export class Renderer {
       'enemy', 'boss', 'character', 'item', 'card', 'fusion', 'collectible', 'relics'
     ];
 
-    // Background
-    ctx.fillStyle = 'rgba(5, 5, 15, 0.95)';
+    // Journal palette — a worn field-journal look, kept within the game's
+    // single global font (VT323 via installGameFont); no second typeface.
+    const INK = '#2b2015';
+    const INK_MUTED = '#5c4a34';
+    const ANNOTATION = '#7a3b2e';
+    const GOLD = '#8a6d2f';
+
+    // ── Backdrop (dark "tabletop" behind the open book) ───────────────────
+    ctx.fillStyle = '#0a0806';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Title
+    // Title, embossed ink-brown with a swash underline
     ctx.font = L.fontTitle;
-    ctx.fillStyle = '#a78bfa';
+    ctx.fillStyle = '#c9a75f';
     ctx.textAlign = 'center';
-    ctx.fillText('ARQUIVO ALIEN', L.cx, Math.floor(L.h * 0.05));
+    ctx.fillText('DIÁRIO DE CAMPO', L.cx, Math.floor(L.h * 0.05));
+    ctx.strokeStyle = '#c9a75f80';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(L.cx - Math.floor(L.w * 0.09), Math.floor(L.h * 0.06));
+    ctx.quadraticCurveTo(L.cx, Math.floor(L.h * 0.068), L.cx + Math.floor(L.w * 0.09), Math.floor(L.h * 0.06));
+    ctx.stroke();
 
     // Progress
     const progress = codex.getProgress();
     ctx.font = L.fontSmall;
-    ctx.fillStyle = '#64748b';
-    ctx.fillText(`${progress.unlocked}/${progress.total} desbloqueados`, L.cx, Math.floor(L.h * 0.08));
-
-    // Progress bar
+    ctx.fillStyle = '#a6926c';
+    ctx.fillText(`${progress.unlocked}/${progress.total} catalogado`, L.cx, Math.floor(L.h * 0.09));
     const barW = Math.floor(L.w * 0.2);
     const barX = (L.w - barW) / 2;
-    ctx.fillStyle = '#1f2937';
-    ctx.fillRect(barX, Math.floor(L.h * 0.09), barW, 6);
-    ctx.fillStyle = '#a78bfa';
-    ctx.fillRect(barX, Math.floor(L.h * 0.09), barW * (progress.unlocked / Math.max(1, progress.total)), 6);
+    ctx.fillStyle = '#241c14';
+    ctx.fillRect(barX, Math.floor(L.h * 0.1), barW, 6);
+    ctx.fillStyle = GOLD;
+    ctx.fillRect(barX, Math.floor(L.h * 0.1), barW * (progress.unlocked / Math.max(1, progress.total)), 6);
 
-    // Tabs
+    // ── Two-page spread background + spine ─────────────────────────────────
+    // startY must match InputHandler.handleCodexClick's hardcoded 0.17 exactly
+    const startY = Math.floor(L.h * 0.17);
+    const margin = Math.floor(L.w * 0.02);
+    const pageTop = startY - Math.floor(L.h * 0.035);
+    const pageBottom = L.h - Math.floor(L.h * 0.02);
+    const pagePad = Math.floor(L.w * 0.012);
+    const leftPageX = margin - pagePad;
+    const leftPageR = margin + Math.floor(L.w * 0.47) + pagePad;
+    const rightPageX = Math.floor(L.w * 0.52) - pagePad;
+    const rightPageR = Math.floor(L.w * 0.52) + Math.floor(L.w * 0.45) + pagePad;
+
+    const drawPage = (px: number, pr: number): void => {
+      const pw = pr - px;
+      const pg = ctx.createLinearGradient(px, pageTop, pr, pageBottom);
+      pg.addColorStop(0, '#c9b183');
+      pg.addColorStop(0.5, '#d6c194');
+      pg.addColorStop(1, '#b89b68');
+      ctx.fillStyle = pg;
+      ctx.fillRect(px, pageTop, pw, pageBottom - pageTop);
+      // Mottled age spots (deterministic per-page, cheap seeded scatter)
+      for (let s = 0; s < 26; s++) {
+        const j1 = Math.abs(Math.sin(px * 0.017 + s * 12.9898)) % 1;
+        const j2 = Math.abs(Math.sin(px * 0.031 + s * 78.233)) % 1;
+        const sx = px + j1 * pw;
+        const sy = pageTop + j2 * (pageBottom - pageTop);
+        ctx.beginPath();
+        ctx.arc(sx, sy, 3 + (s % 4), 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(90, 65, 30, 0.06)';
+        ctx.fill();
+      }
+      // Inner vignette toward the page edges
+      ctx.strokeStyle = 'rgba(43, 32, 21, 0.35)';
+      ctx.lineWidth = 10;
+      ctx.strokeRect(px, pageTop, pw, pageBottom - pageTop);
+      ctx.strokeStyle = '#2b2015aa';
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(px + 4, pageTop + 4, pw - 8, pageBottom - pageTop - 8);
+    };
+    drawPage(leftPageX, leftPageR);
+    drawPage(rightPageX, rightPageR);
+
+    // Binding gutter between the pages, with stitch marks
+    const bindX = leftPageR;
+    const bindW = rightPageX - leftPageR;
+    const bindGrad = ctx.createLinearGradient(bindX, 0, bindX + bindW, 0);
+    bindGrad.addColorStop(0, 'rgba(20,14,8,0.55)');
+    bindGrad.addColorStop(0.5, 'rgba(10,7,4,0.85)');
+    bindGrad.addColorStop(1, 'rgba(20,14,8,0.55)');
+    ctx.fillStyle = bindGrad;
+    ctx.fillRect(bindX, pageTop, bindW, pageBottom - pageTop);
+    ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+    ctx.lineWidth = 1;
+    for (let sy = pageTop + 10; sy < pageBottom - 10; sy += 14) {
+      ctx.beginPath();
+      ctx.moveTo(bindX + bindW * 0.3, sy);
+      ctx.lineTo(bindX + bindW * 0.7, sy);
+      ctx.stroke();
+    }
+
+    // Folded corners (bottom-outer of each page)
+    const foldR = Math.floor(L.h * 0.028);
+    ctx.fillStyle = 'rgba(43,32,21,0.28)';
+    ctx.beginPath();
+    ctx.moveTo(leftPageX, pageBottom);
+    ctx.lineTo(leftPageX + foldR, pageBottom);
+    ctx.lineTo(leftPageX, pageBottom - foldR);
+    ctx.closePath();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(rightPageR, pageBottom);
+    ctx.lineTo(rightPageR - foldR, pageBottom);
+    ctx.lineTo(rightPageR, pageBottom - foldR);
+    ctx.closePath();
+    ctx.fill();
+
+    // ── Tabs — parchment folder tabs along the header, same geometry as before ──
     const tabW = Math.floor(L.w * 0.1);
     const tabGap = Math.floor(L.w * 0.005);
     const tabStartX = (L.w - tabs.length * (tabW + tabGap)) / 2;
     const tabY = Math.floor(L.h * 0.11);
     const tabH = Math.floor(L.h * 0.04);
-    const tabColors = ['#ef4444', '#fbbf24', '#4ade80', '#38bdf8', '#a78bfa', '#f472b6', '#f97316', '#67e8f9'];
     for (let i = 0; i < tabs.length; i++) {
       const tx = tabStartX + i * (tabW + tabGap);
       const active = i === this.codexTab;
-      const tc = tabColors[i] ?? '#6366f1';
       ctx.beginPath();
-      ctx.roundRect(tx, tabY, tabW, tabH, 6);
-      ctx.fillStyle = active ? tc + '30' : 'rgba(20, 24, 38, 0.85)';
+      ctx.roundRect(tx, tabY, tabW, tabH, [6, 6, 2, 2]);
+      ctx.fillStyle = active ? '#d6c194' : '#3a2f22';
       ctx.fill();
-      ctx.strokeStyle = active ? tc : '#374151';
+      ctx.strokeStyle = active ? GOLD : '#241c14';
       ctx.lineWidth = active ? 2 : 1;
       ctx.stroke();
       if (active) {
         ctx.beginPath();
-        ctx.roundRect(tx, tabY + tabH - 3, tabW, 3, [0, 0, 6, 6]);
-        ctx.fillStyle = tc;
+        ctx.roundRect(tx, tabY + tabH - 3, tabW, 3, [0, 0, 2, 2]);
+        ctx.fillStyle = GOLD;
         ctx.fill();
       }
       ctx.font = active ? `bold ${Math.floor(L.h * 0.013)}px monospace` : `${Math.floor(L.h * 0.013)}px monospace`;
-      ctx.fillStyle = active ? tc : '#94a3b8';
+      ctx.fillStyle = active ? INK : '#a6926c';
+      ctx.textAlign = 'center';
       ctx.fillText(tabs[i], tx + tabW / 2, tabY + tabH * 0.66);
     }
+    ctx.textAlign = 'left';
 
-    // Entries — special handling for Fusion and Relics tabs
+    // Entries — special handling for Fusion and Relics tabs (both render on
+    // top of the same parchment spread set up above)
     const currentCat = categories[this.codexTab];
     const isFusionTab = currentCat === 'fusion';
     const isRelicsTab = currentCat === 'relics';
-    const startY = Math.floor(L.h * 0.17);
-    const margin = Math.floor(L.w * 0.02);
 
     if (isFusionTab) {
       this.renderFusionGuide(startY, L, margin);
@@ -6798,22 +6908,18 @@ export class Renderer {
     for (let i = 0; i < visibleCount && (i + this.codexScroll) < entries.length; i++) {
       const entry = entries[i + this.codexScroll];
       const ey = startY + i * entryH;
+      const isSelRow = i + this.codexScroll === this.codexSelectedEntry;
 
       ctx.beginPath();
-      ctx.roundRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5, 8);
-      ctx.fillStyle = entry.unlocked ? 'rgba(20, 20, 40, 0.8)' : 'rgba(10, 10, 20, 0.5)';
+      ctx.roundRect(margin, ey, Math.floor(L.w * 0.47), entryH - 5, 4);
+      ctx.fillStyle = isSelRow ? 'rgba(138,109,47,0.16)' : 'rgba(43,32,21,0.05)';
       ctx.fill();
-      ctx.strokeStyle = entry.unlocked ? '#374151' : '#1f2937';
-      if (i + this.codexScroll === this.codexSelectedEntry) {
-        ctx.strokeStyle = '#6366f1';
-        ctx.lineWidth = 2;
-      } else {
-        ctx.lineWidth = 1;
-      }
+      ctx.strokeStyle = isSelRow ? GOLD : 'rgba(43,32,21,0.3)';
+      ctx.lineWidth = isSelRow ? 2 : 1;
       ctx.stroke();
 
-      // Row thumbnail: real art when we have it; locked entries show a pure
-      // black silhouette of the same art (classic "who's that?" tease)
+      // Row thumbnail: real art in a small ink-sketch frame; locked entries
+      // show a sepia-toned silhouette of the same art (the "who's that?" tease)
       const thumbS = entryH - 16;
       const thumbX = margin + 8;
       const thumbY = ey + Math.floor((entryH - 5 - thumbS) / 2);
@@ -6823,14 +6929,17 @@ export class Renderer {
         ctx.save();
         ctx.imageSmoothingEnabled = false;
         if (!entry.unlocked) {
-          ctx.filter = 'brightness(0)';
-          ctx.globalAlpha = 0.65;
+          ctx.filter = 'brightness(0) sepia(1) saturate(1) hue-rotate(-10deg)';
+          ctx.globalAlpha = 0.55;
         }
         const tw = (thumb as HTMLImageElement).width || thumbS;
         const th = (thumb as HTMLImageElement).height || thumbS;
         const ts = Math.min(thumbS / tw, thumbS / th);
         ctx.drawImage(thumb, thumbX + (thumbS - tw * ts) / 2, thumbY + (thumbS - th * ts) / 2, tw * ts, th * ts);
         ctx.restore();
+        ctx.strokeStyle = 'rgba(43,32,21,0.45)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(thumbX, thumbY, thumbS, thumbS);
         textX = thumbX + thumbS + 10;
       }
 
@@ -6846,21 +6955,21 @@ export class Renderer {
           return s.slice(0, lo) + '...';
         };
         ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-        ctx.fillStyle = '#e2e8f0';
+        ctx.fillStyle = INK;
         ctx.fillText(entry.name, textX, ey + Math.floor(entryH * 0.25));
         ctx.font = L.fontTiny;
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = INK_MUTED;
         ctx.fillText(fitText(entry.lore1), textX, ey + Math.floor(entryH * 0.5));
         if (entry.lore2Unlocked && entry.lore2) {
-          ctx.fillStyle = '#6366f1';
+          ctx.fillStyle = ANNOTATION;
           ctx.fillText(fitText(entry.lore2), textX, ey + Math.floor(entryH * 0.75));
         }
       } else {
         ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-        ctx.fillStyle = '#374151';
+        ctx.fillStyle = '#6b5a3f';
         ctx.fillText('??? — Nao descoberto', textX, ey + Math.floor(entryH * 0.25));
         ctx.font = L.fontTiny;
-        ctx.fillStyle = '#1f2937';
+        ctx.fillStyle = 'rgba(43,32,21,0.35)';
         ctx.fillText('████████████████████████', textX, ey + Math.floor(entryH * 0.5));
       }
     }
@@ -6868,30 +6977,22 @@ export class Renderer {
     // Scroll indicators
     if (this.codexScroll > 0) {
       ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-      ctx.fillStyle = '#6366f1';
+      ctx.fillStyle = GOLD;
       ctx.textAlign = 'center';
       ctx.fillText('▲', margin + Math.floor(L.w * 0.2), startY - Math.floor(L.h * 0.01));
     }
     if (this.codexScroll < scrollMax) {
       ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-      ctx.fillStyle = '#6366f1';
+      ctx.fillStyle = GOLD;
       ctx.textAlign = 'center';
       ctx.fillText('▼', margin + Math.floor(L.w * 0.2), L.h - Math.floor(L.h * 0.04));
     }
 
-    // ─── RIGHT PANEL: Detail View (Hollow Knight style) ────────────────────
+    // ─── RIGHT PAGE: Detail View ────────────────────────────────────────
     const detailX = Math.floor(L.w * 0.52);
     const detailW = Math.floor(L.w * 0.45);
     const detailY = startY;
     const detailH = L.h - startY - Math.floor(L.h * 0.08);
-
-    ctx.beginPath();
-    ctx.roundRect(detailX, detailY, detailW, detailH, 10);
-    ctx.fillStyle = 'rgba(8, 8, 18, 0.9)';
-    ctx.fill();
-    ctx.strokeStyle = '#33415577';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
 
     if (this.codexSelectedEntry >= 0 && this.codexSelectedEntry < entries.length) {
       const selEntry = entries[this.codexSelectedEntry];
@@ -6899,42 +7000,39 @@ export class Renderer {
         const dx = detailX + Math.floor(detailW * 0.05);
         const dw = Math.floor(detailW * 0.9);
 
-        // Large portrait (top right)
+        // Large portrait, framed as a hand-sketched oval medallion (top right)
         const portraitSize = Math.floor(Math.min(detailW * 0.35, L.h * 0.28));
         const portraitX = detailX + detailW - portraitSize - Math.floor(detailW * 0.05);
         const portraitY2 = detailY + Math.floor(detailH * 0.05);
+        const medCx = portraitX + portraitSize / 2;
+        const medCy = portraitY2 + portraitSize / 2;
+        const medR = portraitSize / 2 + 4;
+        const seed = selEntry.id.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
 
-        // Real art, framed with a soft glow pedestal
+        ctx.save();
+        ctx.beginPath();
+        ctx.ellipse(medCx, medCy, medR - 2, medR - 2, 0, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.fillStyle = '#e4d3a0';
+        ctx.fillRect(portraitX - 10, portraitY2 - 10, portraitSize + 20, portraitSize + 20);
+
         const bossImg = getBossPortrait(selEntry.id);
         const charImg = getCharacterPortrait(selEntry.id);
         const realImg = bossImg || charImg;
         if (realImg) {
           ctx.drawImage(realImg, portraitX, portraitY2, portraitSize, portraitSize);
-          ctx.strokeStyle = '#33415577';
-          ctx.lineWidth = 1;
-          ctx.strokeRect(portraitX, portraitY2, portraitSize, portraitSize);
         } else {
-          // Draw enlarged sprite or placeholder
           const sprite = this.getCodexArt(selEntry.id, selEntry.category) as HTMLImageElement | HTMLCanvasElement | null;
           if (sprite) {
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.globalAlpha = 0.35;
-            ctx.drawImage(this.getGlow('#6366f1', Math.floor(portraitSize * 0.55)), portraitX + portraitSize / 2 - Math.floor(portraitSize * 0.55), portraitY2 + portraitSize / 2 - Math.floor(portraitSize * 0.55));
-            ctx.globalAlpha = 1;
-            ctx.globalCompositeOperation = 'source-over';
             ctx.imageSmoothingEnabled = false;
             const sw = (sprite as HTMLImageElement).width || portraitSize;
             const sh = (sprite as HTMLImageElement).height || portraitSize;
-            const ss = Math.min(portraitSize / sw, portraitSize / sh);
-            ctx.drawImage(sprite, portraitX + (portraitSize - sw * ss) / 2, portraitY2 + (portraitSize - sh * ss) / 2, sw * ss, sh * ss);
+            const ss = Math.min(portraitSize / sw, portraitSize / sh) * 1.3;
+            ctx.drawImage(sprite, medCx - (sw * ss) / 2, medCy - (sh * ss) / 2, sw * ss, sh * ss);
             ctx.imageSmoothingEnabled = true;
           } else {
-            ctx.fillStyle = 'rgba(99, 102, 241, 0.1)';
-            ctx.fillRect(portraitX, portraitY2, portraitSize, portraitSize);
-            ctx.strokeStyle = '#374151';
-            ctx.strokeRect(portraitX, portraitY2, portraitSize, portraitSize);
             ctx.font = `${Math.floor(portraitSize * 0.35)}px monospace`;
-            ctx.fillStyle = '#6366f1';
+            ctx.fillStyle = INK_MUTED;
             ctx.textAlign = 'center';
             const icons: Record<string, string> = { enemy: '👾', boss: '🐉', character: '🧑', item: '⚙', card: '🃏', collectible: '📜' };
             // Collectibles carry a spriteHint (paper/photo/lighter/etc.) that was
@@ -6950,26 +7048,29 @@ export class Renderer {
               ? ALL_COLLECTIBLES.find(c => c.id === selEntry.id)?.spriteHint
               : undefined;
             const icon = (collectibleHint && hintIcons[collectibleHint]) || icons[selEntry.category] || '?';
-            ctx.fillText(icon, portraitX + portraitSize / 2, portraitY2 + portraitSize * 0.6);
+            ctx.fillText(icon, medCx, medCy + portraitSize * 0.12);
             ctx.textAlign = 'left';
           }
         }
+        ctx.restore();
+        this.sketchOval(medCx, medCy, medR, medR, seed, INK, 2);
+        this.sketchOval(medCx, medCy, medR + 5, medR + 5, seed + 1, 'rgba(43,32,21,0.35)', 1);
 
         // Entry name
         ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = INK;
         ctx.textAlign = 'left';
         ctx.fillText(selEntry.name, dx, portraitY2 + Math.floor(L.h * 0.02));
 
         // Category
         ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
-        ctx.fillStyle = '#6366f1';
+        ctx.fillStyle = GOLD;
         ctx.fillText(selEntry.category.toUpperCase(), dx, portraitY2 + Math.floor(L.h * 0.045));
 
         // Full lore text (word wrapped)
         const loreStartY = portraitY2 + portraitSize + Math.floor(L.h * 0.03);
         ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
-        ctx.fillStyle = '#e2e8f0';
+        ctx.fillStyle = INK;
         const loreWords = selEntry.lore1.split(' ');
         let loreLine = '';
         let loreCY = loreStartY;
@@ -6989,17 +7090,19 @@ export class Renderer {
           ctx.fillText(loreLine.trim(), dx, loreCY);
         }
 
-        // Lore 2
+        // Lore 2 — annotation ink, slightly slanted like a margin note
         if (selEntry.lore2Unlocked && selEntry.lore2) {
           loreCY += loreLineH * 1.5;
-          ctx.fillStyle = '#a78bfa';
+          ctx.save();
+          ctx.fillStyle = ANNOTATION;
           ctx.font = `italic ${Math.floor(L.h * 0.012)}px monospace`;
+          ctx.transform(1, 0, -0.06, 1, 0, 0);
           const l2Words = selEntry.lore2.split(' ');
           let l2Line = '';
           for (const word of l2Words) {
             const test = l2Line + word + ' ';
             if (ctx.measureText(test).width > dw && l2Line) {
-              ctx.fillText(l2Line.trim(), dx, loreCY);
+              ctx.fillText(l2Line.trim(), dx + loreCY * 0.06, loreCY);
               l2Line = word + ' ';
               loreCY += loreLineH;
               if (loreCY > detailY + detailH - Math.floor(L.h * 0.02)) break;
@@ -7008,21 +7111,32 @@ export class Renderer {
             }
           }
           if (l2Line && loreCY <= detailY + detailH - Math.floor(L.h * 0.02)) {
-            ctx.fillText(l2Line.trim(), dx, loreCY);
+            ctx.fillText(l2Line.trim(), dx + loreCY * 0.06, loreCY);
           }
+          ctx.restore();
         }
       } else {
+        const medCx = detailX + detailW * 0.72;
+        const medCy = detailY + Math.floor(detailH * 0.22);
+        const medR = Math.floor(Math.min(detailW * 0.35, L.h * 0.28)) / 2 + 4;
+        const seed = this.codexSelectedEntry * 97 + 13;
+        ctx.fillStyle = 'rgba(43,32,21,0.12)';
+        ctx.beginPath();
+        ctx.ellipse(medCx, medCy, medR - 2, medR - 2, 0, 0, Math.PI * 2);
+        ctx.fill();
+        this.sketchOval(medCx, medCy, medR, medR, seed, 'rgba(43,32,21,0.5)', 2);
         ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
-        ctx.fillStyle = '#374151';
+        ctx.fillStyle = '#6b5a3f';
         ctx.textAlign = 'center';
-        ctx.fillText('???', detailX + detailW / 2, detailY + detailH / 2);
-        ctx.font = L.fontSmall;
-        ctx.fillText('Ainda não descoberto', detailX + detailW / 2, detailY + detailH / 2 + Math.floor(L.h * 0.04));
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', medCx, medCy);
+        ctx.textBaseline = 'alphabetic';
+        ctx.fillText('Ainda não catalogado', detailX + detailW / 2, detailY + detailH / 2 + Math.floor(L.h * 0.15));
         ctx.textAlign = 'left';
       }
     } else {
       ctx.font = `${Math.floor(L.h * 0.015)}px monospace`;
-      ctx.fillStyle = '#475569';
+      ctx.fillStyle = INK_MUTED;
       ctx.textAlign = 'center';
       ctx.fillText('Selecione uma entrada à esquerda', detailX + detailW / 2, detailY + detailH / 2);
       ctx.textAlign = 'left';
@@ -7033,7 +7147,7 @@ export class Renderer {
     ctx.textAlign = 'left';
     const backBtnW = Math.floor(L.w * 0.1);
     const backBtnH = Math.floor(L.h * 0.05);
-    this.renderButton(margin, L.h - Math.floor(L.h * 0.08), backBtnW, backBtnH, '← VOLTAR', '#374151');
+    this.renderButton(margin, L.h - Math.floor(L.h * 0.08), backBtnW, backBtnH, '← VOLTAR', '#5c4a34');
   }
 
   /** Render the Fusion Guide tab in the Codex */
@@ -7047,7 +7161,7 @@ export class Renderer {
 
     // Header
     ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
-    ctx.fillStyle = '#f472b6';
+    ctx.fillStyle = '#7a3b2e';
     ctx.textAlign = 'left';
     ctx.fillText(`${combos.length} Fusões — adjacentes ativam. Duplicado sobre o igual = UPGRADE!`, margin, startY - Math.floor(L.h * 0.015));
 
@@ -7055,16 +7169,19 @@ export class Renderer {
       const combo = combos[i + this.codexScroll];
       const ey = startY + i * entryH;
 
-      // Row background
-      ctx.fillStyle = i % 2 === 0 ? 'rgba(20, 20, 40, 0.7)' : 'rgba(15, 15, 30, 0.7)';
+      // Row background — ink wash on parchment, alternating slightly
+      ctx.fillStyle = i % 2 === 0 ? 'rgba(43,32,21,0.07)' : 'rgba(43,32,21,0.03)';
       ctx.fillRect(margin, ey, L.w - margin * 2, entryH - 3);
+      ctx.strokeStyle = 'rgba(43,32,21,0.25)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(margin, ey, L.w - margin * 2, entryH - 3);
 
       // Hover highlight
       const isHover = this.mouseY >= ey && this.mouseY <= ey + entryH - 3 &&
                       this.mouseX >= margin && this.mouseX <= L.w - margin;
       if (isHover) {
-        ctx.strokeStyle = '#f472b6';
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = '#8a6d2f';
+        ctx.lineWidth = 2;
         ctx.strokeRect(margin, ey, L.w - margin * 2, entryH - 3);
       }
 
@@ -7074,12 +7191,12 @@ export class Renderer {
 
       // Result name
       ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
-      ctx.fillStyle = combo.fusionColor || '#f472b6';
+      ctx.fillStyle = combo.fusionColor || '#7a3b2e';
       ctx.fillText(`★ ${combo.resultName}`, margin + 12, ey + Math.floor(entryH * 0.35));
 
       // Formula: Item A + Item B
       ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-      ctx.fillStyle = '#94a3b8';
+      ctx.fillStyle = '#5c4a34';
       const nameA = ALL_ITEMS.find(i => i.id === combo.itemA)?.name ?? combo.itemA;
       const nameB = ALL_ITEMS.find(i => i.id === combo.itemB)?.name ?? combo.itemB;
       ctx.fillText(`${nameA} + ${nameB}`, margin + 12, ey + Math.floor(entryH * 0.7));
@@ -7094,13 +7211,13 @@ export class Renderer {
       if (combo.bonuses.healPerSecond) bonusTexts.push(`Cura +${combo.bonuses.healPerSecond}/s`);
 
       ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-      ctx.fillStyle = '#4ade80';
+      ctx.fillStyle = '#2f5c3a';
       ctx.textAlign = 'right';
       ctx.fillText(bonusTexts.join(' | '), L.w - margin - 8, ey + Math.floor(entryH * 0.35));
 
       // Description
       ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-      ctx.fillStyle = '#64748b';
+      ctx.fillStyle = '#8a7857';
       ctx.fillText(combo.description.slice(0, 60), L.w - margin - 8, ey + Math.floor(entryH * 0.7));
       ctx.textAlign = 'left';
 
@@ -7119,13 +7236,13 @@ export class Renderer {
     // Scroll indicators
     if (this.codexScroll > 0) {
       ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-      ctx.fillStyle = '#f472b6';
+      ctx.fillStyle = '#8a6d2f';
       ctx.textAlign = 'center';
       ctx.fillText('▲', L.cx, startY - Math.floor(L.h * 0.002));
     }
     if (this.codexScroll < scrollMax) {
       ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
-      ctx.fillStyle = '#f472b6';
+      ctx.fillStyle = '#8a6d2f';
       ctx.textAlign = 'center';
       ctx.fillText('▼', L.cx, L.h - Math.floor(L.h * 0.04));
     }
@@ -7141,7 +7258,7 @@ export class Renderer {
 
     // Summary header
     ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
-    ctx.fillStyle = '#fbbf24';
+    ctx.fillStyle = '#7a3b2e';
     ctx.textAlign = 'left';
     ctx.fillText(
       `${collectedCount}/${ALL_RELICS.length} Relíquias coletadas — Equipadas: ${equipped.length}/5`,
@@ -7164,7 +7281,7 @@ export class Renderer {
       if (totalHeal > 0) bonusParts.push(`+${totalHeal} HP/s`);
       if (bonusParts.length > 0) {
         ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
-        ctx.fillStyle = '#4ade80';
+        ctx.fillStyle = '#2f5c3a';
         ctx.fillText(`Bônus ativo: ${bonusParts.join(' | ')}`, margin, startY - Math.floor(L.h * 0.002));
       }
     }
@@ -7187,20 +7304,20 @@ export class Renderer {
 
       // Card bg
       ctx.fillStyle = isEquipped
-        ? 'rgba(251,191,36,0.12)'
+        ? 'rgba(138,109,47,0.18)'
         : isCollected
-          ? 'rgba(20,60,40,0.7)'
-          : 'rgba(10,10,24,0.6)';
+          ? 'rgba(47,92,58,0.14)'
+          : 'rgba(43,32,21,0.08)';
       ctx.fillRect(cx, cy, cardW, cardH);
 
       // Border
-      ctx.strokeStyle = isEquipped ? '#fbbf24' : isCollected ? '#4ade80' : '#1f2937';
+      ctx.strokeStyle = isEquipped ? '#8a6d2f' : isCollected ? '#2f5c3a' : 'rgba(43,32,21,0.3)';
       ctx.lineWidth = isEquipped ? 2 : 1;
       ctx.strokeRect(cx, cy, cardW, cardH);
 
       // Top accent bar
       if (isCollected) {
-        ctx.fillStyle = isEquipped ? '#fbbf24' : '#4ade80';
+        ctx.fillStyle = isEquipped ? '#8a6d2f' : '#2f5c3a';
         ctx.fillRect(cx, cy, cardW, 2);
       }
 
@@ -7213,18 +7330,18 @@ export class Renderer {
 
       // Name
       ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-      ctx.fillStyle = isCollected ? '#e2e8f0' : '#374151';
+      ctx.fillStyle = isCollected ? '#2b2015' : '#6b5a3f';
       ctx.fillText(isCollected ? relic.name : '???', cx + cardW / 2, cy + Math.floor(cardH * 0.58));
 
       // Description / bonus
       ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-      ctx.fillStyle = isCollected ? '#94a3b8' : '#1f2937';
+      ctx.fillStyle = isCollected ? '#5c4a34' : 'rgba(43,32,21,0.4)';
       ctx.fillText(isCollected ? relic.description : 'Derrote bosses', cx + cardW / 2, cy + Math.floor(cardH * 0.74));
 
       // "EQUIPADA" badge
       if (isEquipped) {
         ctx.font = `bold ${Math.floor(L.h * 0.009)}px monospace`;
-        ctx.fillStyle = '#fbbf24';
+        ctx.fillStyle = '#8a6d2f';
         ctx.fillText('EQUIPADA', cx + cardW / 2, cy + Math.floor(cardH * 0.90));
       }
     }
