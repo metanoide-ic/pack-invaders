@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -2262,13 +2262,27 @@ export class Renderer {
     // Backing plate behind the whole grid — the cells read as slots carved
     // into a panel instead of floating rectangles
     const platePad = 7;
+    const plateW = cols * L.cell + platePad * 2 - 2;
+    const plateH = rows * L.cell + platePad * 2 - 2;
     ctx.beginPath();
-    ctx.roundRect(L.gridX - platePad, L.gridY - platePad, cols * L.cell + platePad * 2 - 2, rows * L.cell + platePad * 2 - 2, 10);
-    const plateGrad = ctx.createLinearGradient(0, L.gridY, 0, L.gridY + rows * L.cell);
-    plateGrad.addColorStop(0, 'rgba(22, 25, 40, 0.92)');
-    plateGrad.addColorStop(1, 'rgba(12, 14, 24, 0.92)');
-    ctx.fillStyle = plateGrad;
-    ctx.fill();
+    ctx.roundRect(L.gridX - platePad, L.gridY - platePad, plateW, plateH, 10);
+    const plateArt = getUiPanel('backpack_panel');
+    if (plateArt) {
+      ctx.save();
+      ctx.clip();
+      const scl = Math.max(plateW / plateArt.width, plateH / plateArt.height);
+      ctx.drawImage(plateArt, L.gridX - platePad + (plateW - plateArt.width * scl) / 2,
+        L.gridY - platePad + (plateH - plateArt.height * scl) / 2, plateArt.width * scl, plateArt.height * scl);
+      ctx.fillStyle = 'rgba(8, 9, 16, 0.35)'; // darken slightly so cells stay legible
+      ctx.fillRect(L.gridX - platePad, L.gridY - platePad, plateW, plateH);
+      ctx.restore();
+    } else {
+      const plateGrad = ctx.createLinearGradient(0, L.gridY, 0, L.gridY + rows * L.cell);
+      plateGrad.addColorStop(0, 'rgba(22, 25, 40, 0.92)');
+      plateGrad.addColorStop(1, 'rgba(12, 14, 24, 0.92)');
+      ctx.fillStyle = plateGrad;
+      ctx.fill();
+    }
     ctx.strokeStyle = charColor + '55';
     ctx.lineWidth = 2;
     ctx.stroke();
@@ -3026,6 +3040,19 @@ export class Renderer {
     ctx.globalCompositeOperation = 'source-over';
     for (const p of state.projectiles) {
       const element = this.getProjectileElement(p.tags);
+      const realArt = getWeaponProjectileArt(element);
+      if (realArt) {
+        // Real art is a bolt drawn nose-up; rotate to face its velocity
+        const angle = Math.atan2(p.vy, p.vx) + Math.PI / 2;
+        const size = 20;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(angle);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(realArt, -size / 2, -size / 2, size, size);
+        ctx.restore();
+        continue;
+      }
       const projSprite = this.sprites.projectiles.get(element);
       if (projSprite) {
         ctx.drawImage(projSprite, p.x - 4, p.y - 4);
@@ -3080,7 +3107,9 @@ export class Renderer {
     ctx.globalCompositeOperation = 'source-over';
     for (const ep of state.enemyProjectiles) {
       if ((ep as any).bomb) {
-        // Bomb: dark shell, blinking fuse, dashed drop line to the impact point
+        // Bomb: dashed drop line to the impact point always shows (gameplay
+        // telegraph); the shell itself prefers real art, blinking fuse kept
+        // as an overlay either way since it's the "about to burst" tell
         ctx.strokeStyle = 'rgba(249, 115, 22, 0.25)';
         ctx.setLineDash([4, 8]);
         ctx.lineWidth = 1;
@@ -3089,19 +3118,38 @@ export class Renderer {
         ctx.lineTo(ep.x, canvas.height - 45);
         ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = '#1f2937';
-        ctx.beginPath();
-        ctx.arc(ep.x, ep.y, 7, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = '#f97316';
-        ctx.lineWidth = 2;
-        ctx.stroke();
+        const bombArt = getEnemyProjectileArt('bomb');
+        if (bombArt) {
+          ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(bombArt, ep.x - 10, ep.y - 10, 20, 20);
+        } else {
+          ctx.fillStyle = '#1f2937';
+          ctx.beginPath();
+          ctx.arc(ep.x, ep.y, 7, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.strokeStyle = '#f97316';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        }
         if (Math.floor(now * 8) % 2 === 0) {
           ctx.fillStyle = '#fde047';
           ctx.beginPath();
           ctx.arc(ep.x, ep.y - 9, 2, 0, Math.PI * 2);
           ctx.fill();
         }
+        continue;
+      }
+      const style = this.getEnemyProjectileStyle(ep.tags);
+      const enemyArt = getEnemyProjectileArt(style);
+      if (enemyArt) {
+        const angle = Math.atan2(ep.vy, ep.vx) + Math.PI / 2;
+        const size = (ep.bounces && ep.bounces > 0) ? 20 : 16;
+        ctx.save();
+        ctx.translate(ep.x, ep.y);
+        ctx.rotate(angle);
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(enemyArt, -size / 2, -size / 2, size, size);
+        ctx.restore();
         continue;
       }
       if (ep.bounces && ep.bounces > 0) {
@@ -4767,6 +4815,14 @@ export class Renderer {
       ctx.roundRect(tx, ty, cardW, cardH, 12);
       ctx.clip();
 
+      // Optional decorative card texture, cover-fit; the rarity gradient
+      // below still layers on top so the rColor identity always reads
+      const rewardCardArt = getUiPanel('reward_card');
+      if (rewardCardArt) {
+        const scl = Math.max(cardW / rewardCardArt.width, cardH / rewardCardArt.height);
+        ctx.drawImage(rewardCardArt, tx + (cardW - rewardCardArt.width * scl) / 2, ty + (cardH - rewardCardArt.height * scl) / 2, rewardCardArt.width * scl, rewardCardArt.height * scl);
+      }
+
       // Inner card bg (slight gradient top to bottom)
       const cardBgGrad = ctx.createLinearGradient(tx, ty, tx, ty + cardH);
       cardBgGrad.addColorStop(0, rColor + '18');
@@ -5056,15 +5112,27 @@ export class Renderer {
       const rarityColors = ['#94a3b8', '#4ade80', '#3b82f6', '#a855f7'];
       const rarityColor = rarityColors[Math.min(item.rarity, 3)];
 
-      // Card body: rounded, vertical gradient, rarity-colored frame
-      const cardGrad = ctx.createLinearGradient(x, y, x, y + itemCardH);
-      cardGrad.addColorStop(0, '#1c2033');
-      cardGrad.addColorStop(0.55, '#141828');
-      cardGrad.addColorStop(1, '#0e1120');
+      // Card body: rounded, rarity-colored frame — cover-fit texture when
+      // available, otherwise the flat vertical gradient
       ctx.beginPath();
       ctx.roundRect(x, y, itemCardW, itemCardH, 8);
-      ctx.fillStyle = cardGrad;
-      ctx.fill();
+      const shopCardArt = getUiPanel('shop_card');
+      if (shopCardArt) {
+        ctx.save();
+        ctx.clip();
+        const scl = Math.max(itemCardW / shopCardArt.width, itemCardH / shopCardArt.height);
+        ctx.drawImage(shopCardArt, x + (itemCardW - shopCardArt.width * scl) / 2, y + (itemCardH - shopCardArt.height * scl) / 2, shopCardArt.width * scl, shopCardArt.height * scl);
+        ctx.fillStyle = 'rgba(6, 7, 14, 0.4)';
+        ctx.fillRect(x, y, itemCardW, itemCardH);
+        ctx.restore();
+      } else {
+        const cardGrad = ctx.createLinearGradient(x, y, x, y + itemCardH);
+        cardGrad.addColorStop(0, '#1c2033');
+        cardGrad.addColorStop(0.55, '#141828');
+        cardGrad.addColorStop(1, '#0e1120');
+        ctx.fillStyle = cardGrad;
+        ctx.fill();
+      }
       ctx.strokeStyle = rarityColor;
       ctx.lineWidth = 2;
       if (item.rarity >= 2) {
@@ -6308,9 +6376,27 @@ export class Renderer {
     if (tags.includes('Fogo')) return 'fire';
     if (tags.includes('Gelo')) return 'ice';
     if (tags.includes('Água')) return 'water';
+    if (tags.includes('Elétrico')) return 'electric';
+    if (tags.includes('Veneno')) return 'poison';
+    if (tags.includes('Orgânico')) return 'organic';
+    if (tags.includes('Explosivo')) return 'explosive';
+    if (tags.includes('Perfurante')) return 'piercing';
+    if (tags.includes('Vento')) return 'wind';
+    if (tags.includes('AoE')) return 'arcane';
+    return 'normal';
+  }
+
+  /** Enemy projectiles collapse their shooter's tags into a smaller style
+   * set than weapons — most enemies just spit bio-matter, so 'organic' is
+   * the default rather than 'normal'. */
+  private getEnemyProjectileStyle(tags: readonly string[] | undefined): string {
+    if (!tags) return 'organic';
+    if (tags.includes('Fogo')) return 'fire';
+    if (tags.includes('Gelo')) return 'ice';
     if (tags.includes('Veneno')) return 'poison';
     if (tags.includes('Elétrico')) return 'electric';
-    return 'normal';
+    if (tags.includes('Explosivo')) return 'explosive';
+    return 'organic';
   }
 
   // ─── Twitch Vote Phase ────────────────────────────────────────────────────

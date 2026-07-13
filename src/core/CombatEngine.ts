@@ -151,6 +151,8 @@ export interface EnemyProjectile {
   bounces?: number;
   /** Bomb (Zepelim): explodes with area damage when it reaches the ground */
   bomb?: boolean;
+  /** Tags of the enemy that fired this shot (drives which art/element the renderer picks) */
+  tags?: readonly string[];
 }
 
 // ─── Floating Text (damage numbers, gold) ────────────────────────────────────
@@ -1200,6 +1202,7 @@ export class CombatEngine {
             vy: vy * projSlowMult,
             damage: Math.ceil(e.damage * 0.5),
             alive: true,
+            tags: e.tags,
           });
           // Muzzle flash on shoot
           e.hitFlash = 0.05;
@@ -1219,6 +1222,7 @@ export class CombatEngine {
                 damage: Math.ceil(e.damage * 0.4),
                 alive: true,
                 bounces: 2, // Boss projectiles bounce off walls twice
+                tags: e.tags,
               });
             }
           }
@@ -1239,6 +1243,7 @@ export class CombatEngine {
             damage: e.special.damage,
             alive: true,
             bomb: true,
+            tags: e.tags,
           });
           e.hitFlash = 0.05;
         }
@@ -1261,6 +1266,7 @@ export class CombatEngine {
             vy: dist > 0 ? (dy / dist) * projSpeed : projSpeed,
             damage: Math.ceil(e.damage * 0.4),
             alive: true,
+            tags: e.tags,
           });
         }
       }
@@ -1366,6 +1372,7 @@ export class CombatEngine {
                 vy: Math.sin(ang) * spd,
                 damage: Math.ceil(e.damage * 0.35),
                 alive: true,
+                tags: e.tags,
               });
             }
             e.hitFlash = 0.1;
@@ -1974,6 +1981,7 @@ export class CombatEngine {
               vy: (rdy / rdist) * rSpeed,
               damage: Math.ceil(e.damage * 0.6),
               alive: true,
+              tags: e.tags,
             });
             e.hitFlash = 0.12;
           }
@@ -2280,6 +2288,7 @@ export class CombatEngine {
           vy: Math.sin(ang) * 150,
           damage: Math.ceil(e.damage * 0.35),
           alive: true,
+          tags: e.tags,
         });
       }
       this.spawnFloatingText(e.x, e.y - 10, '💥 VOLÁTIL', '#f97316');

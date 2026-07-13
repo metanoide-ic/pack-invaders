@@ -24,8 +24,36 @@ export interface LoadedSprites {
   vendorsFull: Map<string, HTMLImageElement>;
   /** Screen-filling art for the final boss's cinematic entrance */
   zyrgothGiant: HTMLImageElement | null;
+  /** Player weapon projectile art, keyed by element (see PROJECTILE_WEAPON_ELEMENTS) */
+  projectilesWeapon: Map<string, HTMLImageElement>;
+  /** Enemy projectile art, keyed by style (see PROJECTILE_ENEMY_STYLES) */
+  projectilesEnemy: Map<string, HTMLImageElement>;
+  /** Decorative UI panel textures — cover-fit behind the procedural chrome,
+   * so a missing file just keeps today's flat-gradient look */
+  uiPanels: Map<string, HTMLImageElement>;
   menuBg: HTMLImageElement | null;
 }
+
+/** Optional decorative background textures for UI panels. Each is drawn
+ * cover-fit behind the existing procedural border/corner accents, so panels
+ * degrade gracefully to today's flat gradient when the file is absent. */
+export const UI_PANEL_IDS = ['backpack_panel', 'shop_card', 'reward_card'];
+
+/** Player weapon projectile elements — every weapon's tags collapse into one
+ * of these (see getProjectileElement in Renderer.ts). Order matters there,
+ * not here. */
+export const PROJECTILE_WEAPON_ELEMENTS = [
+  'fire', 'ice', 'water', 'electric', 'poison', 'organic',
+  'explosive', 'piercing', 'wind', 'arcane', 'normal',
+];
+
+/** Enemy projectile styles — every shooting enemy's tags collapse into one
+ * of these (see getEnemyProjectileStyle in Renderer.ts). 'bomb' is the
+ * Zeppelin's dropped mine; 'organic' is the default fallback (most enemies
+ * spit bio-matter, not bullets). */
+export const PROJECTILE_ENEMY_STYLES = [
+  'organic', 'fire', 'ice', 'poison', 'electric', 'explosive', 'bomb',
+];
 
 const CHARACTER_IDS = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex', 'fenix', 'zabel', 'setimo'];
 const VENDOR_IDS = ['luna', 'brutus', 'nyx', 'zikri'];
@@ -172,6 +200,29 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     zyrgothGiant = await loadImage('./sprites/bosses/zyrgoth_giant.png');
   } catch { /* boss falls back to the normal combat cutout */ }
 
+  // Projectile art — small set of element/style sprites (see the constants
+  // above); missing files keep the current procedural glow+shape
+  const projectilesWeapon = new Map<string, HTMLImageElement>();
+  await Promise.all(PROJECTILE_WEAPON_ELEMENTS.map(async id => {
+    try {
+      projectilesWeapon.set(id, await loadImage(`./sprites/projectiles/weapons/${id}.png`));
+    } catch { /* fallback to procedural */ }
+  }));
+  const projectilesEnemy = new Map<string, HTMLImageElement>();
+  await Promise.all(PROJECTILE_ENEMY_STYLES.map(async id => {
+    try {
+      projectilesEnemy.set(id, await loadImage(`./sprites/projectiles/enemies/${id}.png`));
+    } catch { /* fallback to procedural */ }
+  }));
+
+  // Optional decorative UI panel textures (backpack plate, shop/reward cards)
+  const uiPanels = new Map<string, HTMLImageElement>();
+  await Promise.all(UI_PANEL_IDS.map(async id => {
+    try {
+      uiPanels.set(id, await loadImage(`./sprites/ui/${id}.png`));
+    } catch { /* keep the flat procedural gradient */ }
+  }));
+
   // Load item icons (main.ts swaps these into the procedural icon map).
   // All 150 in parallel — sequential awaits would add seconds to startup.
   const items = new Map<string, HTMLImageElement>();
@@ -182,7 +233,7 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, menuBg: null };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null };
 
   // Load menu background
   try {
@@ -293,4 +344,19 @@ export function getVendorFullBody(vendorId: string): HTMLImageElement | null {
 /** Giant Zyr-Goth art for the final boss cinematic (null → normal sprite) */
 export function getZyrgothGiant(): HTMLImageElement | null {
   return cachedLoaded?.zyrgothGiant ?? null;
+}
+
+/** Real art for a player weapon projectile element (null → procedural glow) */
+export function getWeaponProjectileArt(element: string): HTMLImageElement | null {
+  return cachedLoaded?.projectilesWeapon.get(element) ?? null;
+}
+
+/** Real art for an enemy projectile style (null → procedural glow) */
+export function getEnemyProjectileArt(style: string): HTMLImageElement | null {
+  return cachedLoaded?.projectilesEnemy.get(style) ?? null;
+}
+
+/** Decorative UI panel texture (null → today's flat procedural gradient) */
+export function getUiPanel(id: string): HTMLImageElement | null {
+  return cachedLoaded?.uiPanels.get(id) ?? null;
 }
