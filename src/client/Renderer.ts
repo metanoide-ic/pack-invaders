@@ -5096,6 +5096,26 @@ export class Renderer {
     const shopCenterX = L.panelX + Math.floor((L.w - L.panelX) / 2);
     ctx.fillText('LOJA', shopCenterX, Math.floor(L.h * 0.065));
 
+    // Collectible/relic found last wave, carried over from a card-skipped
+    // month (boss-only months have no CARDS screen to show this on — see
+    // GameManager.endCombat) — a compact corner badge so it doesn't crowd
+    // the already-tight header.
+    if (game.pendingCollectible || game.pendingRelic) {
+      ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
+      ctx.textAlign = 'right';
+      let badgeY = boardY + Math.floor(L.h * 0.035);
+      if (game.pendingRelic) {
+        ctx.fillStyle = '#fbbf24';
+        ctx.fillText(`${game.pendingRelic.icon} ${game.pendingRelic.name}`, boardX + boardW - 14, badgeY);
+        badgeY += Math.floor(L.h * 0.02);
+      }
+      if (game.pendingCollectible) {
+        ctx.fillStyle = '#a78bfa';
+        ctx.fillText(`★ ${game.pendingCollectible.name}`, boardX + boardW - 14, badgeY);
+      }
+      ctx.textAlign = 'left';
+    }
+
     // Gold chip under the title
     const goldStr = `${game.gold}`;
     ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;

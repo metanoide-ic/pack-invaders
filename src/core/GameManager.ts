@@ -839,9 +839,11 @@ export class GameManager {
       this.cardChoices = this.generateCardChoices();
       this.phase = 'CARDS';
     } else {
+      // No CARDS screen this month to show the collectible/relic toast on —
+      // every card-skipped month has a shop (see MONTH_SCHEDULE), so keep
+      // pendingCollectible/pendingRelic alive and let the shop screen render
+      // them instead of silently dropping the notification.
       this.cardChoices = [];
-      this.pendingCollectible = null;
-      this.pendingRelic = null;
       this.goToShop();
     }
   }
@@ -892,6 +894,8 @@ export class GameManager {
 
   exitShop(): void {
     this.currentVendor = null; // Reset for next shop visit
+    this.pendingCollectible = null;
+    this.pendingRelic = null;
     this.updateActiveSynergies();
     this.phase = 'INVENTORY';
   }
