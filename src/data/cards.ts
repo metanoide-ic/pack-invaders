@@ -8,6 +8,7 @@
  */
 
 import { GameManager } from '../core/GameManager';
+import { getItemWeight } from '../core/ItemSystem';
 
 export interface CardDefinition {
   id: string;
@@ -871,6 +872,52 @@ export const NEUTRAL_CARDS: CardDefinition[] = [
     } },
   { id: 'n_minimalist', name: 'Minimalista', description: 'Se tem 3 ou menos itens: +100% dano em todos.', characterId: null, weight: 2,
     apply(game) { if (game.backpack.getAllItems().length <= 3) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 2.0 }); } } } },
+
+  // ─── Capacidade de Peso ──────────────────────────────────────────────────
+  { id: 'n_weight_cap_small', name: 'Mochila Reforçada', description: '+6 capacidade de peso máxima da mochila.', characterId: null, weight: 6,
+    apply(game) { game.backpack.addWeightCapacity(6); } },
+  { id: 'n_weight_cap_big', name: 'Compressão Espacial', description: '+10 capacidade de peso máxima, mas -10% dano global.', characterId: null, weight: 3,
+    apply(game) { game.backpack.addWeightCapacity(10); for (const i of game.backpack.getAllItems()) { cp(i, { d: 0.9 }); } } },
+  { id: 'n_weight_cap_synergy', name: 'Bolso Dimensional', description: '+4 capacidade de peso máxima. +8 HP máximo.', characterId: null, weight: 5,
+    apply(game) { game.backpack.addWeightCapacity(4); game.combat.state.playerMaxHp += 8; game.combat.state.playerHp += 8; } },
+
+  // ─── Mais cartas neutras ─────────────────────────────────────────────────
+  { id: 'n_dash_master', name: 'Mestre do Dash', description: 'Recarga de dash -30% permanente.', characterId: null, weight: 4,
+    apply(game) { (game as any)._dashCooldownMult = ((game as any)._dashCooldownMult ?? 1) * 0.7; } },
+  { id: 'n_move_speed', name: 'Pés Ligeiros', description: '+15% velocidade de movimento permanente.', characterId: null, weight: 4,
+    apply(game) { (game as any)._speedBonus = ((game as any)._speedBonus ?? 0) + 0.15; game.combat.setSpeedBonus((game as any)._speedBonus); } },
+  { id: 'n_shield_boost', name: 'Barreira Extra', description: '+15 escudo máximo, regenera 50% mais rápido.', characterId: null, weight: 4,
+    apply(game) { game.combat.state.playerMaxShield += 15; game.combat.state.playerShield += 15; (game as any)._shieldRegenMult = ((game as any)._shieldRegenMult ?? 1) * 1.5; } },
+  { id: 'n_boss_slayer', name: 'Caçador de Chefes', description: '+40% dano contra chefes.', characterId: null, weight: 3,
+    apply(game) { (game as any)._bossDamageMult = ((game as any)._bossDamageMult ?? 1) * 1.4; } },
+  { id: 'n_boss_gold', name: 'Saque de Guerra', description: 'Chefes derrotados dão o dobro de ouro.', characterId: null, weight: 3,
+    apply(game) { (game as any)._bossGoldMult = ((game as any)._bossGoldMult ?? 1) * 2; } },
+  { id: 'n_elite_hunter', name: 'Caçador de Elites', description: '+30% dano contra inimigos elite.', characterId: null, weight: 3,
+    apply(game) { (game as any)._eliteDamageMult = ((game as any)._eliteDamageMult ?? 1) * 1.3; } },
+  { id: 'n_reroll_free', name: 'Estoque Rotativo', description: 'Rerolls da loja custam -50% permanente.', characterId: null, weight: 3,
+    apply(game) { (game as any)._rerollDiscount = ((game as any)._rerollDiscount ?? 0) + 0.5; } },
+  { id: 'n_sell_bonus', name: 'Faro de Comerciante', description: 'Vender itens dá +15% ouro permanente.', characterId: null, weight: 3,
+    apply(game) { (game as any)._sellBonusGlobal = ((game as any)._sellBonusGlobal ?? 0) + 0.15; } },
+  { id: 'n_early_bonus', name: 'Impulso Inicial', description: '+25% dano e cadência nos primeiros 6 meses.', characterId: null, weight: 3,
+    apply(game) { if (game.totalMonths <= 6) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.25, r: 1.25 }); } } } },
+  { id: 'n_late_bonus', name: 'Veterania', description: 'Após o mês 12: +25% dano permanente.', characterId: null, weight: 3,
+    apply(game) { if (game.totalMonths > 12) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 1.25 }); } } } },
+  { id: 'n_heavy_hitter', name: 'Golpe Pesado', description: 'Itens de peso 5+: +30% dano.', characterId: null, weight: 3,
+    apply(game) {
+      for (const i of game.backpack.getAllItems()) { if (getItemWeight(i.definition) >= 5) cp(i, { d: 1.3 }); }
+    } },
+  { id: 'n_light_swarm', name: 'Enxame Leve', description: 'Itens de peso 2 ou menos: +25% cadência.', characterId: null, weight: 3,
+    apply(game) {
+      for (const i of game.backpack.getAllItems()) { if (getItemWeight(i.definition) <= 2) cp(i, { r: 1.25 }); }
+    } },
+  { id: 'n_interest_boost', name: 'Investimento Sábio', description: 'Juros entre waves +50% (máximo maior).', characterId: null, weight: 3,
+    apply(game) { (game as any)._interestBonusMult = ((game as any)._interestBonusMult ?? 1) * 1.5; } },
+  { id: 'n_heal_on_kill', name: 'Absorção Vital', description: '10% de chance de curar 3 HP por kill.', characterId: null, weight: 3,
+    apply(game) { (game as any)._healOnKillChance = ((game as any)._healOnKillChance ?? 0) + 0.1; (game as any)._healOnKillAmount = 3; } },
+  { id: 'n_armor_pierce', name: 'Munição Perfurante', description: 'Ignora 50% da armadura inimiga.', characterId: null, weight: 3,
+    apply(game) { (game as any)._armorPierce = ((game as any)._armorPierce ?? 0) + 0.5; } },
+  { id: 'n_extra_life', name: 'Fôlego Extra', description: '+30 HP máximo. +1 escudo regenerado por segundo.', characterId: null, weight: 4,
+    apply(game) { game.combat.state.playerMaxHp += 30; game.combat.state.playerHp += 30; (game as any)._shieldRegenFlat = ((game as any)._shieldRegenFlat ?? 0) + 1; } },
 ];
 
 // ─── Card Pool Access ────────────────────────────────────────────────────────

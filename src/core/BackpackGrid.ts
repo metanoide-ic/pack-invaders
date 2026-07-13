@@ -12,7 +12,7 @@
 import {
   PlacedItem, ItemDefinition, GridPosition, SynergyContext,
   getOccupiedCells, getShapeWidth, getShapeHeight,
-  defaultStats, ItemStats,
+  defaultStats, ItemStats, getItemWeight,
 } from './ItemSystem';
 import { ALL_COMBINATIONS } from './ItemCombinations';
 
@@ -26,6 +26,8 @@ export interface BackpackConfig {
   requireStacking: boolean;
   /** Backpack placement rule */
   backpackRule?: 'stacking' | 'freeform' | 'columns_only' | 'diagonal' | 'rows_only' | 'tetris';
+  /** Base weight capacity (before card bonuses) — see BackpackGrid.getMaxWeight() */
+  baseMaxWeight: number;
 }
 
 // ─── Backpack Grid Class ─────────────────────────────────────────────────────
@@ -41,12 +43,36 @@ export class BackpackGrid {
   private items: Map<string, PlacedItem> = new Map();
   /** Counter for unique instance IDs */
   private nextId = 0;
+  /** Permanent weight-capacity bonus from cards (Mochila Reforçada etc.) —
+   * additive on top of config.baseMaxWeight, survives recalculateSynergies()
+   * since it lives here rather than in any item's state. */
+  private weightCapacityBonus = 0;
 
   constructor(config: BackpackConfig) {
     this.cols = config.cols;
     this.rows = config.rows;
     this.config = config;
     this.grid = Array.from({ length: config.rows }, () => Array(config.cols).fill(null));
+  }
+
+  // ─── Weight ─────────────────────────────────────────────────────────────
+
+  /** Total weight capacity: base (per-character, set at construction) plus
+   * any permanent bonuses granted by cards. */
+  getMaxWeight(): number {
+    return this.config.baseMaxWeight + this.weightCapacityBonus;
+  }
+
+  /** Sum of getItemWeight() across every currently placed item. */
+  getTotalWeight(): number {
+    let total = 0;
+    for (const item of this.items.values()) total += getItemWeight(item.definition);
+    return total;
+  }
+
+  /** Permanently raises the weight cap (weight-capacity cards call this). */
+  addWeightCapacity(amount: number): void {
+    this.weightCapacityBonus += amount;
   }
 
   // ─── Placement ──────────────────────────────────────────────────────────
@@ -66,6 +92,13 @@ export class BackpackGrid {
       if (this.grid[cell.row][cell.col] !== null) {
         return false;
       }
+    }
+
+    // Weight limit: the whole point of the system is to cap loadout size
+    // independent of physical grid space, so this applies regardless of
+    // backpack rule.
+    if (this.getTotalWeight() + getItemWeight(def) > this.getMaxWeight()) {
+      return false;
     }
 
     // Stacking rule (Grass Man): item must rest on bottom row or on top of another item

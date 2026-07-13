@@ -190,8 +190,7 @@ export class GameManager {
   getNextWavePreview(): { count: number; isBoss: boolean } {
     const nextTotal = this.totalMonths + 1;
     const m = this.month + 1 > 12 ? 1 : this.month + 1;
-    const y = this.month + 1 > 12 ? this.year + 1 : this.year;
-    const isBoss = y >= 3 || (y >= 2 && (m === 3 || m === 9)) || m === 6 || m === 12;
+    const isBoss = this.monthSchedule(m).boss;
     const count = nextTotal === 1 ? 4 : computeWaveCount(nextTotal);
     return { count: Math.floor(count), isBoss };
   }
@@ -217,6 +216,11 @@ export class GameManager {
         : charDef.backpackRule === 'columns_only' ? 'columns_only'
         : charDef.backpackRule === 'diagonal' ? 'diagonal'
         : 'freeform',
+      // Base weight cap scales gently with grid size (bigger backpacks get a
+      // little more room) but is far from 1:1 with cell count — the point is
+      // to cap loadout power independent of physical space. ~21-25 for the
+      // 25-56 cell grids in the roster; weight-capacity cards add on top.
+      baseMaxWeight: 18 + Math.floor((charDef.backpackRows * charDef.backpackCols) / 8),
     };
 
     this.backpack = new BackpackGrid(config);
@@ -292,15 +296,72 @@ export class GameManager {
     return getMonthlyFlavorText(this.totalMonths);
   }
 
-  /** Check if current month should have a boss based on timeline schedule */
+  /** Per-wave gold multiplier — shop visits went from every month to ~every
+   * 3rd, so raw income is cut to roughly what 3 old waves' worth would have
+   * been across those 3 waves combined (not 3x it), keeping each shop trip's
+   * buying power close to before while total gold earned over a run drops
+   * for real. Tune here if runs feel too rich or too broke. */
+  private static readonly GOLD_ECONOMY_SCALE = 0.35;
+
+  /** Soft cap on a single wave's post-multiplier gold, keyed to totalMonths
+   * (progression) instead of enemy count. Enemy count alone climbs to 80/wave
+   * by year 3+ and each kill's reward also grows with wave, so uncapped gold
+   * compounds into the thousands per wave while the shop's item catalog stays
+   * flat (30-300g) — a run would end up sitting on tens of thousands of idle
+   * gold with nothing worth buying. Square-root growth keeps early/mid-game
+   * rewards close to their natural value (where the cap rarely binds) while
+   * damping the late-game runaway so the shop stays meaningful all the way
+   * through a long run. */
+  private static waveGoldCap(totalMonths: number): number {
+    return Math.floor(50 + 130 * Math.sqrt(totalMonths));
+  }
+
+  /**
+   * Fixed 12-month schedule, identical every year: boss + shop every 3
+   * months (3/6/9/12), a shop-only stop at 11 to gear up before the big
+   * fight, cards every month except the three boss-only ones, and month 12
+   * is always the giant screen-filling boss instead of a regular one.
+   * Index 0 = month 1 ... index 11 = month 12.
+   */
+  private static readonly MONTH_SCHEDULE: { boss: boolean; megaBoss: boolean; cards: boolean; shop: boolean }[] = [
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 1
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 2
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 3
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 4
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 5
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 6
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 7
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 8
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 9
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 10
+    { boss: false, megaBoss: false, cards: false, shop: true },  // 11
+    { boss: true, megaBoss: true, cards: true, shop: true },     // 12
+  ];
+
+  private monthSchedule(month: number): { boss: boolean; megaBoss: boolean; cards: boolean; shop: boolean } {
+    return GameManager.MONTH_SCHEDULE[Math.max(1, Math.min(12, month)) - 1];
+  }
+
+  /** Check if current month should have a boss based on the fixed schedule */
   isBossMonth(): boolean {
-    // Year 3+: boss EVERY month
-    if (this.year >= 3) return true;
-    // Year 2+: months 3, 6, 9, 12
-    if (this.year >= 2 && (this.month === 3 || this.month === 9)) return true;
-    // All years: months 6 and 12
-    if (this.month === 6 || this.month === 12) return true;
-    return false;
+    return this.monthSchedule(this.month).boss;
+  }
+
+  /** The giant screen-filling boss (always month 12) instead of a regular one */
+  isMegaBossMonth(): boolean {
+    return this.monthSchedule(this.month).megaBoss;
+  }
+
+  /** Whether this month offers a card choice after combat */
+  hasCardsThisMonth(): boolean {
+    return this.monthSchedule(this.month).cards;
+  }
+
+  /** Whether this month's post-combat flow includes a shop visit. Month 1 of
+   * the very first run gets a one-time bonus shop so the player isn't stuck
+   * with zero purchases until month 3 — later years' month 1 does not repeat it. */
+  hasShopThisMonth(): boolean {
+    return this.monthSchedule(this.month).shop || this.totalMonths === 1;
   }
 
   // ─── Phase Transitions ────────────────────────────────────────────────────
@@ -400,8 +461,10 @@ export class GameManager {
     this.totalMonths++;
     this.wave = this.totalMonths; // legacy compat
 
-    // Determine if boss month (can be forced by Twitch)
+    // Determine if boss month (can be forced by Twitch — always a regular
+    // boss when forced this way, never the scheduled mega boss)
     const isBoss = this.isBossMonth() || this.twitch.bossNextWave;
+    const isMegaBoss = this.isMegaBossMonth();
     this.twitch.bossNextWave = false;
 
     // ─── Year Anomaly (Year 2+): rolled once per year, shapes every wave ──
@@ -429,7 +492,7 @@ export class GameManager {
     }
 
     this.phase = 'COMBAT';
-    this.combat.startWave(this.totalMonths, isBoss);
+    this.combat.startWave(this.totalMonths, isBoss, isMegaBoss);
 
     // Announce the anomaly at the start of each year
     if (this.currentAnomaly && this.month === 1) {
@@ -519,6 +582,13 @@ export class GameManager {
 
     // Neutral cards
     if (g._comboDmgPerHit) c._comboDmgPerHit = g._comboDmgPerHit;
+    if (g._bossDamageMult) c._bossDamageMult = g._bossDamageMult;
+    if (g._eliteDamageMult) c._eliteDamageMult = g._eliteDamageMult;
+    if (g._dashCooldownMult) c._dashCooldownMult = g._dashCooldownMult;
+    if (g._shieldRegenMult) c._shieldRegenMult = g._shieldRegenMult;
+    if (g._shieldRegenFlat) c._shieldRegenFlat = g._shieldRegenFlat;
+    if (g._armorPierce) c._armorPierce = g._armorPierce;
+    if (g._healOnKillChance) { c._healOnKillChance = g._healOnKillChance; c._healOnKillAmount = g._healOnKillAmount; }
 
     // Apply Aliencore mode effects
     if (this.aliencoreMode) {
@@ -636,7 +706,16 @@ export class GameManager {
     const relicGoldBonus = 1 + (getRelicBonuses().goldPercent ?? 0) / 100;
     // Difficulty: harder settings promise more gold (Veterano +20% .. Extinção +150%)
     const difficultyGoldMult = getDifficultyById(this.currentDifficulty).goldMult;
-    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus * difficultyGoldMult);
+    // Shop visits dropped from every month to ~every 3rd (MONTH_SCHEDULE) —
+    // per-wave income is cut to match, so total gold earned over a run is
+    // genuinely lower (not just "the same money, less often to spend it").
+    // A single scale point here covers every gold source above, since they
+    // all funnel through combat.state.gold before this line.
+    this.lastWaveGold = Math.min(
+      Math.floor(this.combat.state.gold * GameManager.GOLD_ECONOMY_SCALE
+        * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus * difficultyGoldMult),
+      GameManager.waveGoldCap(this.totalMonths),
+    );
     this.gold += this.lastWaveGold;
 
     // Track stats
@@ -713,7 +792,9 @@ export class GameManager {
 
     // Juros: reward banking gold between waves (capped so it doesn't snowball).
     // Creates a real spend-vs-save decision at the shop.
-    this.lastInterest = Math.min(20, Math.floor(this.gold * 0.08));
+    // Investimento Sábio card raises both the rate and the cap together.
+    const interestMult = (this as any)._interestBonusMult ?? 1;
+    this.lastInterest = Math.min(Math.floor(20 * interestMult), Math.floor(this.gold * 0.08 * interestMult));
     this.gold += this.lastInterest;
 
     // No victory condition — endless roguelike until death
@@ -743,16 +824,26 @@ export class GameManager {
       }
     }
 
-    // Go to card selection
-    this.cardChoices = this.generateCardChoices();
-
     // Mid-run achievement check (stats already updated above, pre-game-over)
     const newAchs = checkAchievements();
     if (newAchs.length > 0) {
       this.newAchievements.push(...newAchs);
     }
 
-    this.phase = 'CARDS';
+    // Card selection only on scheduled months (skipped on the regular boss
+    // months 3/6/9 and the shop-only stop at 11 — see MONTH_SCHEDULE). On a
+    // skipped month go straight to goToShop()'s own gate instead, same as
+    // skipCards() would, but with no gold bonus since the player didn't
+    // choose to skip anything.
+    if (this.hasCardsThisMonth()) {
+      this.cardChoices = this.generateCardChoices();
+      this.phase = 'CARDS';
+    } else {
+      this.cardChoices = [];
+      this.pendingCollectible = null;
+      this.pendingRelic = null;
+      this.goToShop();
+    }
   }
 
   selectCard(index: number): void {
@@ -770,8 +861,17 @@ export class GameManager {
     this.goToShop();
   }
 
-  /** Go to shop (or skip if vendor ghost chance triggers or no-shop waves) */
+  /** Go to shop (or skip if it's not a shop month, vendor ghost chance
+   * triggers, or a "Febre do Ouro"-style no-shop-waves card is active) */
   private goToShop(): void {
+    // Shop cadence: only scheduled months (3/6/9/11/12, plus the very first
+    // month of a fresh run) offer a shop at all — see MONTH_SCHEDULE.
+    if (!this.hasShopThisMonth()) {
+      this.phase = 'INVENTORY';
+      this.updateActiveSynergies();
+      return;
+    }
+
     // Febre do Ouro: skip shop for N waves
     if ((this as any)._noShopWaves && (this as any)._noShopWaves > 0) {
       (this as any)._noShopWaves--;
@@ -920,6 +1020,8 @@ export class GameManager {
       const b = (it.state as any).sellBonus ?? 0;
       if (b) rate = Math.max(rate, 0.5 + b);
     }
+    // Faro de Comerciante card
+    rate += (this as any)._sellBonusGlobal ?? 0;
     return Math.min(0.8, rate);
   }
 
@@ -950,7 +1052,9 @@ export class GameManager {
 
   /** Get reroll cost */
   getRerollCost(): number {
-    const cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    let cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    // Estoque Rotativo card
+    cost = Math.floor(cost * (1 - ((this as any)._rerollDiscount ?? 0)));
     // Zabel (scrapper): rummaging through stock is half price
     return this.characterId === 'scrapper' ? Math.floor(cost / 2) : cost;
   }

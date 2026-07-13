@@ -6,7 +6,7 @@
 
 import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
-import { getEnemiesForWave, getBossForEncounter, BOSSES, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
+import { getEnemiesForWave, getBossForEncounter, getMegaBossForEncounter, REGULAR_BOSSES, MEGA_BOSSES, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
 
 /**
  * Continuous accelerating growth curve, anchored to a known value at
@@ -335,8 +335,13 @@ export class CombatEngine {
   private _droneKillCounter = 0;
   /** Strongest enemy killed so far this wave (for the Reanimar skill) */
   private _strongestKillThisWave: { x: number; y: number; damage: number; maxHp: number } | null = null;
-  /** How many boss fights have happened this run — drives boss rotation (see getBossForEncounter) */
+  /** How many *regular* boss fights (months 3/6/9) have happened this run —
+   * drives boss rotation (see getBossForEncounter) */
   private _bossEncounterCount = 0;
+  /** How many *mega* boss fights (month 12) have happened this run — own
+   * counter so its rotation/mutation-lap escalation is independent of the
+   * regular boss pool's (see getMegaBossForEncounter) */
+  private _megaBossEncounterCount = 0;
   /** Seconds remaining of shot-recoil, read by the renderer for the weapon-kick animation */
   recoilTimer = 0;
   /** Zyr-Goth's entrance cutscene: seconds remaining (0 = not playing).
@@ -424,11 +429,11 @@ export class CombatEngine {
     this.state.player2DashVelocity = 0;
   }
 
-  startWave(wave: number, isBossMonth: boolean = false): void {
+  startWave(wave: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false): void {
     this.state.wave = wave;
     this.state.isActive = true;
     this.state.waveCleared = false;
-    this.state.enemies = this.generateWave(wave, isBossMonth);
+    this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
     this.state.combo = 0;
@@ -690,7 +695,8 @@ export class CombatEngine {
     if (this.backpack.config.characterId === 'beast_tamer') return;
     if (this.dashCooldown <= 0) {
       this.dashActive = 0.15;
-      this.dashCooldown = 1.0;
+      // Mestre do Dash card: lower multiplier = shorter cooldown
+      this.dashCooldown = 1.0 * ((this as any)._dashCooldownMult ?? 1);
       // Instant velocity boost in current direction
       if (this.playerVelocity !== 0) {
         this.playerVelocity = Math.sign(this.playerVelocity) * this.playerSpeed * 2.5;
@@ -1888,10 +1894,17 @@ export class CombatEngine {
         if (hit) {
           let damage = p.damage;
 
+          // Caçador de Chefes / Caçador de Elites cards
+          if (e.isBoss) damage *= (this as any)._bossDamageMult ?? 1;
+          if ((e as any).isElite) damage *= (this as any)._eliteDamageMult ?? 1;
+
           // Armor system: reduce incoming hits
           if (e.armorHits !== undefined && e.armorHits > 0) {
             e.armorHits--;
-            damage *= 0.3; // Heavily reduced damage while armored
+            // Munição Perfurante card: blends the 0.3x armored penalty back
+            // toward full damage (0 pierce = old 0.3x, 1.0 pierce = no penalty)
+            const armorPierce = Math.min(1, (this as any)._armorPierce ?? 0);
+            damage *= 0.3 + 0.7 * armorPierce;
             this.spawnFloatingText(e.x, e.y - e.height / 2, 'ARMORED', '#94a3b8');
           }
 
@@ -2330,6 +2343,13 @@ export class CombatEngine {
       (this as any)._rageDamageBonus = Math.min(1.0, ((this as any)._rageDamageBonus ?? 0) + (this as any)._rageModePerKill);
     }
 
+    // Card: Absorção Vital — chance to heal a flat amount per kill
+    const healOnKillChance = (this as any)._healOnKillChance ?? 0;
+    if (healOnKillChance > 0 && Math.random() < healOnKillChance && this.state.playerHp < this.state.playerMaxHp) {
+      const healAmt = (this as any)._healOnKillAmount ?? 0;
+      this.state.playerHp = Math.min(this.state.playerMaxHp, this.state.playerHp + healAmt);
+    }
+
     // Floating gold text
     const goldText = comboBonus > 1.1 ? `+${goldReward}g (x${comboBonus.toFixed(1)})` : `+${goldReward}g`;
     this.spawnFloatingText(e.x, e.y, goldText, '#4ade80');
@@ -2585,9 +2605,12 @@ export class CombatEngine {
     if (this.state.shieldRegenDelay > 0) {
       this.state.shieldRegenDelay -= dt;
     } else if (this.state.playerShield < this.state.playerMaxShield) {
+      // Barreira Extra / Fôlego Extra cards: faster and/or flat-boosted regen
+      const regenMult = (this as any)._shieldRegenMult ?? 1;
+      const regenFlat = (this as any)._shieldRegenFlat ?? 0;
       this.state.playerShield = Math.min(
         this.state.playerMaxShield,
-        this.state.playerShield + 5 * dt // 5 shield/s regen
+        this.state.playerShield + (5 * regenMult + regenFlat) * dt // base 5 shield/s regen
       );
     }
 
@@ -2983,7 +3006,7 @@ export class CombatEngine {
     return { x: Math.max(40, Math.min(W - 40, x + jitter)), y };
   }
 
-  private generateWave(totalMonths: number, isBossMonth: boolean = false): Enemy[] {
+  private generateWave(totalMonths: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false): Enemy[] {
     const enemies: Enemy[] = [];
 
     // Map totalMonths to a "virtual wave" for enemy pool access
@@ -3105,18 +3128,38 @@ export class CombatEngine {
       }
     }
 
-    // Boss spawning: uses timeline schedule
+    // Boss spawning: uses timeline schedule. Regular boss months (3/6/9) and
+    // the mega-boss month (12) draw from separate pools with independent
+    // encounter counters, so rotating through REGULAR_BOSSES doesn't skip
+    // entries just because Zyr-Goth also showed up that year, and Zyr-Goth's
+    // own repeat-mutation escalation doesn't depend on how many regular
+    // bosses have been fought.
     if (isBossMonth) {
-      this._bossEncounterCount++;
-      const bossSource = getBossForEncounter(this._bossEncounterCount);
+      let bossSource: EnemyDefinition;
+      let encounterCount: number;
+      let lapDivisor: number;
+      if (isMegaBossMonth) {
+        this._megaBossEncounterCount++;
+        encounterCount = this._megaBossEncounterCount;
+        bossSource = getMegaBossForEncounter(encounterCount);
+        lapDivisor = MEGA_BOSSES.length;
+      } else {
+        this._bossEncounterCount++;
+        encounterCount = this._bossEncounterCount;
+        bossSource = getBossForEncounter(encounterCount);
+        lapDivisor = REGULAR_BOSSES.length;
+      }
       if (bossSource) {
-        // Past the first full lap through the 20-boss roster, apply a mutation
-        // so repeats feel different instead of just numerically bigger. Each
+        // Past the first full lap through the pool, apply a mutation so
+        // repeats feel different instead of just numerically bigger. Each
         // further lap escalates that SAME mutation's own multipliers too —
         // otherwise a lap-1 and a lap-10 fight are mechanically identical,
         // just with bigger HP from the ambient year scaling above. Capped at
         // +4 stacks (lap 5+) so it stays fair instead of spiraling forever.
-        const lap = Math.floor((this._bossEncounterCount - 1) / BOSSES.length);
+        // (With only one mega boss in the pool today, every repeat year is
+        // its own lap — Zyr-Goth mutates every single return until more
+        // mega bosses join MEGA_BOSSES and dilute the rotation.)
+        const lap = Math.floor((encounterCount - 1) / lapDivisor);
         const mutation = lap >= 1 ? BOSS_MUTATIONS[Math.floor(Math.random() * BOSS_MUTATIONS.length)] : null;
         const mutationTier = mutation ? Math.min(4, lap - 1) : 0;
         const mutationEsc = 1 + mutationTier * 0.12;

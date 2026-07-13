@@ -1381,6 +1381,8 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   BOSS_ABYSSARA, BOSS_MECHRON, BOSS_VOIDMAW, BOSS_ASTRAL_SERPENT, BOSS_HARBINGER, BOSS_EPOCH,
 ];
 
+/** All bosses, including the giant Zyr-Goth — kept for anything (codex,
+ * relics-per-boss lookups, etc.) that needs the full historical roster. */
 export const BOSSES: EnemyDefinition[] = [
   BOSS_DRILL_SERGEANT, BOSS_HYDRA, BOSS_SWARM_QUEEN, BOSS_TOXAR,
   BOSS_TITAN_PRIME, BOSS_CRIOX, BOSS_PHANTAX, BOSS_DEVOURER,
@@ -1389,20 +1391,38 @@ export const BOSSES: EnemyDefinition[] = [
   BOSS_ASTRAL_SERPENT, BOSS_HARBINGER, BOSS_KEPLER_PRIME, BOSS_EPOCH,
 ];
 
+/** Regular boss-month roster (months 3/6/9 of every year) — everything
+ * except the giant screen-filling boss(es), which get their own dedicated
+ * pool below so they don't get diluted into this rotation. */
+export const REGULAR_BOSSES: EnemyDefinition[] = BOSSES.filter(b => b.id !== 'boss_epoch');
+
+/** Giant, screen-filling, month-12-only bosses. Currently just Zyr-Goth —
+ * more will join this pool later so month 12 isn't the same fight every
+ * single year; getMegaBossForEncounter() already rotates/mutates it like
+ * any other boss pool, so adding entries here is the only step needed. */
+export const MEGA_BOSSES: EnemyDefinition[] = [BOSS_EPOCH];
+
 /** Get enemies available for a given wave */
 export function getEnemiesForWave(wave: number): EnemyDefinition[] {
   return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0);
 }
 
 /**
- * Get the boss for the Nth boss encounter of a run (1-indexed), rotating
- * through the full roster in order before repeating. Boss *months* are
- * decided elsewhere (GameManager.isBossMonth) and their cadence isn't a
- * fixed interval — it starts at every 6 months and becomes every month by
- * year 3 — so selection is keyed off how many boss fights have actually
- * happened, not the month number itself.
+ * Get the regular boss for the Nth *regular* boss encounter of a run
+ * (1-indexed, months 3/6/9), rotating through REGULAR_BOSSES before
+ * repeating. Kept separate from the mega-boss pool/counter so laps and
+ * mutation escalation for the two don't interfere with each other.
  */
 export function getBossForEncounter(encounterNumber: number): EnemyDefinition {
-  const idx = Math.max(0, encounterNumber - 1) % BOSSES.length;
-  return BOSSES[idx];
+  const idx = Math.max(0, encounterNumber - 1) % REGULAR_BOSSES.length;
+  return REGULAR_BOSSES[idx];
+}
+
+/**
+ * Get the mega boss for the Nth mega-boss encounter of a run (1-indexed,
+ * always month 12) — rotates through MEGA_BOSSES once more than one exists.
+ */
+export function getMegaBossForEncounter(encounterNumber: number): EnemyDefinition {
+  const idx = Math.max(0, encounterNumber - 1) % MEGA_BOSSES.length;
+  return MEGA_BOSSES[idx];
 }
