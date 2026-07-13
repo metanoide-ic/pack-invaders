@@ -8,6 +8,7 @@ import { InputHandler } from './InputHandler';
 import { AudioManager } from './AudioManager';
 import { isPaused } from './PauseState';
 import { loadAllSprites } from './SpriteLoader';
+import { ALL_COMBINATIONS, markFusionDiscovered } from '../core/ItemCombinations';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -140,6 +141,8 @@ function gameLoop(): void {
           if (!game.stats.fusionsDiscovered.includes(fname)) {
             game.stats.fusionsDiscovered.push(fname);
           }
+          const combo = ALL_COMBINATIONS.find(c => c.resultName === fname);
+          if (combo) markFusionDiscovered(combo.id);
           renderer.showFusionNotif(fname, fcolor);
         }
       }
@@ -349,6 +352,8 @@ function gameLoop(): void {
         if (!game.stats.fusionsDiscovered.includes(fname)) {
           game.stats.fusionsDiscovered.push(fname);
         }
+        const combo = ALL_COMBINATIONS.find(c => c.resultName === fname);
+        if (combo) markFusionDiscovered(combo.id);
         renderer.showFusionNotif(fname, fcolor);
       }
     }

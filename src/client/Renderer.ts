@@ -17,7 +17,7 @@ import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus,
 import { getDifficultyById } from '../data/difficulties';
 import { getLeaderboard } from '../data/leaderboard';
 import { renderPlanetPixelated } from './PlanetRenderer';
-import { countPossibleCombinations, countPossibleBuffs, ALL_COMBINATIONS } from '../core/ItemCombinations';
+import { countPossibleCombinations, countPossibleBuffs, ALL_COMBINATIONS, findCombinationsFor, getDiscoveredFusions } from '../core/ItemCombinations';
 import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
@@ -2519,15 +2519,33 @@ export class Renderer {
     // Calculate tooltip dimensions
     const w = Math.floor(L.w * 0.24);
     const lineH = Math.floor(L.h * 0.018);
-    const hasFusion = !!(item.state as any).fusedName;
-    const fusionName = hasFusion ? String((item.state as any).fusedName) : '';
+
+    // Active fusions this item currently participates in — either as the
+    // beneficiary (itemA, has state.fusedName) or the passive partner (itemB,
+    // which never gets its own fusedName set by applyCombinations). Either
+    // way, hovering it should always show what it's fusing with.
+    const adjItemsForFusion = game.backpack.getAdjacentItems(item.instanceId);
+    const adjacentDefIds = adjItemsForFusion.map(a => a.definition.id);
+    const activeCombos = findCombinationsFor(item.definition.id, adjacentDefIds);
+    const primaryActiveCombo = (item.state as any).fusedName
+      ? ALL_COMBINATIONS.find(c => c.itemA === item.definition.id && c.resultName === (item.state as any).fusedName)
+      : activeCombos[0];
+    const hasFusion = !!primaryActiveCombo;
+    const fusionName = primaryActiveCombo?.resultName ?? '';
+    const fusionColor = primaryActiveCombo?.fusionColor || '#f472b6';
+
     const upLvl = game.backpack.getUpgradeLevel(item);
     const maxUp = game.backpack.maxUpgrade;
     const hasStats = item.stats.damage > 0 || item.stats.fireRate > 0 || item.stats.healPerSecond > 0;
-    // Find possible fusions not yet active
+
+    // Possible-but-not-yet-active fusions: only surfaced as hints once the
+    // player has actually triggered that exact combo before, in any run.
+    const discoveredFusions = getDiscoveredFusions();
     const allBackpackIds = game.backpack.getAllItems().map(i => i.definition.id);
+    const activeComboIds = new Set(activeCombos.map(c => c.id));
     const pendingFusions = ALL_COMBINATIONS.filter(c => {
-      if ((item.state as any).fusedName) return false; // already fused
+      if (activeComboIds.has(c.id)) return false; // already active, not "pending"
+      if (!discoveredFusions.has(c.id)) return false; // never triggered before — no hint
       const isA = c.itemA === item.definition.id;
       const isB = c.itemB === item.definition.id;
       if (!isA && !isB) return false;
@@ -2535,6 +2553,39 @@ export class Renderer {
       return allBackpackIds.includes(partnerId);
     });
     const h = Math.floor(L.h * 0.22) + (hasFusion ? lineH * 2 : 0) + (hasStats ? lineH * 3 : 0) + (pendingFusions.length > 0 ? lineH * (pendingFusions.length + 1) : 0) + lineH;
+
+    // ─── Highlight fusion partner cells directly on the grid ─────────────
+    // Active partners get a strong pulsing highlight; discovered-but-pending
+    // partners get a dimmer dashed one, so the player can always SEE who
+    // an item is (or could be) fusing with, not just read it in text.
+    const drawPartnerHighlight = (partnerId: string, color: string, strength: number, dashed: boolean) => {
+      for (const placed of game.backpack.getAllItems()) {
+        if (placed.definition.id !== partnerId) continue;
+        const gx = L.gridX + placed.position.col * L.cell;
+        const gy = L.gridY + placed.position.row * L.cell;
+        const gw = placed.definition.gridShape[0].length * L.cell;
+        const gh = placed.definition.gridShape.length * L.cell;
+        ctx.save();
+        ctx.globalAlpha = strength + Math.sin(performance.now() * 0.005) * (strength * 0.5);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2;
+        if (dashed) ctx.setLineDash([4, 3]);
+        ctx.strokeRect(gx, gy, gw - 2, gh - 2);
+        ctx.setLineDash([]);
+        ctx.fillStyle = color;
+        ctx.globalAlpha *= 0.25;
+        ctx.fillRect(gx, gy, gw - 2, gh - 2);
+        ctx.restore();
+      }
+    };
+    for (const combo of activeCombos) {
+      const partnerId = combo.itemA === item.definition.id ? combo.itemB : combo.itemA;
+      drawPartnerHighlight(partnerId, combo.fusionColor || '#f472b6', 0.45, false);
+    }
+    for (const combo of pendingFusions) {
+      const partnerId = combo.itemA === item.definition.id ? combo.itemB : combo.itemA;
+      drawPartnerHighlight(partnerId, combo.fusionColor || '#f472b6', 0.22, true);
+    }
 
     // Position tooltip (avoid clipping edges)
     let tx = this.mouseX + 15;
@@ -2545,9 +2596,7 @@ export class Renderer {
 
     // Background: rounded plate with rarity accent header
     const rarityColors = ['#94a3b8', '#4ade80', '#3b82f6', '#a855f7'];
-    const rarityColor = hasFusion
-      ? (((item.state as any).fusionColor as string) || '#f472b6')
-      : rarityColors[Math.min(item.definition.rarity, 3)];
+    const rarityColor = hasFusion ? fusionColor : rarityColors[Math.min(item.definition.rarity, 3)];
     ctx.beginPath();
     ctx.roundRect(tx, ty, w, h, 8);
     ctx.fillStyle = 'rgba(6, 6, 18, 0.97)';
@@ -2572,7 +2621,7 @@ export class Renderer {
     // Name (or fusion name if fused)
     ctx.font = `bold ${Math.floor(L.h * 0.016)}px monospace`;
     if (hasFusion) {
-      ctx.fillStyle = '#f472b6';
+      ctx.fillStyle = fusionColor;
       ctx.fillText(`★ ${fusionName}`, tx + 8, cy);
       cy += lineH;
       ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
@@ -6035,6 +6084,10 @@ export class Renderer {
       // Fade-in animation per item
       ctx.globalAlpha = 1;
     }
+
+    // Backpack item tooltip — same as the inventory screen, so hovering an
+    // equipped item always shows its info + fusion partners while shopping too
+    this.renderTooltip();
 
     // Sell zone
     this.renderSellZone();

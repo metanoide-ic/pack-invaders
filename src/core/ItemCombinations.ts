@@ -665,3 +665,28 @@ export function countPossibleBuffs(itemTags: string[], existingItemTags: string[
   }
   return count;
 }
+
+// ─── Discovered Fusions (persistent) ────────────────────────────────────────
+// A fusion's hint ("item A + item B makes a combo") only appears in tooltips
+// once the player has actually triggered it at least once, in any run ever.
+// This is separate from GameManager's per-run `stats.fusionsDiscovered` list,
+// which resets every run and only feeds the death-screen summary.
+
+const DISCOVERED_FUSIONS_KEY = 'packinvaders_fusions_discovered';
+
+/** IDs of combinations the player has triggered at least once, ever. */
+export function getDiscoveredFusions(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISCOVERED_FUSIONS_KEY);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch { return new Set(); }
+}
+
+/** Mark a combination as discovered. Returns true if it was newly discovered. */
+export function markFusionDiscovered(comboId: string): boolean {
+  const discovered = getDiscoveredFusions();
+  if (discovered.has(comboId)) return false;
+  discovered.add(comboId);
+  localStorage.setItem(DISCOVERED_FUSIONS_KEY, JSON.stringify([...discovered]));
+  return true;
+}
