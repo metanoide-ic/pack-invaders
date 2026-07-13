@@ -2993,19 +2993,27 @@ export class CombatEngine {
       const bossSource = getBossForEncounter(this._bossEncounterCount);
       if (bossSource) {
         // Past the first full lap through the 20-boss roster, apply a mutation
-        // so repeats feel different instead of just numerically bigger.
+        // so repeats feel different instead of just numerically bigger. Each
+        // further lap escalates that SAME mutation's own multipliers too —
+        // otherwise a lap-1 and a lap-10 fight are mechanically identical,
+        // just with bigger HP from the ambient year scaling above. Capped at
+        // +4 stacks (lap 5+) so it stays fair instead of spiraling forever.
         const lap = Math.floor((this._bossEncounterCount - 1) / BOSSES.length);
         const mutation = lap >= 1 ? BOSS_MUTATIONS[Math.floor(Math.random() * BOSS_MUTATIONS.length)] : null;
+        const mutationTier = mutation ? Math.min(4, lap - 1) : 0;
+        const mutationEsc = 1 + mutationTier * 0.12;
 
         // Exponential HP scaling: each year multiplies base by ~1.4x
         const baseHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
         const baseDamage = bossSource.damage + Math.floor(totalMonths * 0.8);
         const baseSpeed = bossSource.speed * (1 + (year - 1) * 0.1);
-        const bossHp = mutation ? Math.floor(baseHp * mutation.hpMult) : baseHp;
-        const bossDamage = mutation ? Math.floor(baseDamage * mutation.dmgMult) : baseDamage;
-        const bossSpeed = mutation ? baseSpeed * mutation.speedMult : baseSpeed;
+        const bossHp = mutation ? Math.floor(baseHp * mutation.hpMult * mutationEsc) : baseHp;
+        const bossDamage = mutation ? Math.floor(baseDamage * mutation.dmgMult * mutationEsc) : baseDamage;
+        // Speed escalates gently (half rate) — a boss that's both faster
+        // AND stacked-tough shouldn't also outrun the player's dash
+        const bossSpeed = mutation ? baseSpeed * mutation.speedMult * (1 + mutationTier * 0.06) : baseSpeed;
         const baseArmor = bossSource.special?.type === 'armor' ? bossSource.special.hits : 0;
-        const totalArmor = baseArmor + (mutation?.extraArmor ?? 0);
+        const totalArmor = baseArmor + (mutation ? mutation.extraArmor + mutationTier * 2 : 0);
 
         enemies.push({
           id: `enemy_${this.nextEnemyId++}`,
@@ -3018,7 +3026,7 @@ export class CombatEngine {
           tags: [...bossSource.tags],
           width: bossSource.width,
           height: bossSource.height,
-          goldReward: Math.floor((bossSource.goldReward + totalMonths * 2) * (mutation ? 1.5 : 1)),
+          goldReward: Math.floor((bossSource.goldReward + totalMonths * 2) * (mutation ? 1.5 + mutationTier * 0.15 : 1)),
           shootTimer: bossSource.special?.type === 'shoot' ? 1 / bossSource.special.fireRate : 2,
           special: bossSource.special,
           isBoss: true,
@@ -3040,7 +3048,8 @@ export class CombatEngine {
         spawned.displayName = bossSource.name.toUpperCase();
         if (mutation) {
           spawned.affix = mutation.affix;
-          spawned.displayName = `${bossSource.name.toUpperCase()} (${mutation.suffix})`;
+          const stars = mutationTier > 0 ? ' ' + '★'.repeat(mutationTier) : '';
+          spawned.displayName = `${bossSource.name.toUpperCase()} (${mutation.suffix}${stars})`;
         }
 
         // Zyr-Goth is a screen-tall colossus: parked in the upper-center with

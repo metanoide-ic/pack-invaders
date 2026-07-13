@@ -111,6 +111,7 @@ export class Renderer {
   private glowCache = new Map<string, HTMLCanvasElement>();
   /** Pre-rendered scanline pattern for CRT effect */
   private scanlinePattern: CanvasPattern | null = null;
+  private vignetteGradient: CanvasGradient | null = null;
   /** Enemy HP memo for hit-flash detection */
   private enemyHpMemo = new Map<string, number>();
   /** Per-enemy hit flash timers */
@@ -1901,14 +1902,19 @@ export class Renderer {
       ctx.fillStyle = this.scanlinePattern;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
-    // Subtle corner darkening (CRT glass curvature feel)
-    const vig = ctx.createRadialGradient(
-      canvas.width / 2, canvas.height / 2, canvas.height * 0.55,
-      canvas.width / 2, canvas.height / 2, canvas.height * 0.95
-    );
-    vig.addColorStop(0, 'rgba(0,0,0,0)');
-    vig.addColorStop(1, 'rgba(0,0,10,0.28)');
-    ctx.fillStyle = vig;
+    // Subtle corner darkening (CRT glass curvature feel) — cached since the
+    // canvas dimensions are fixed for the session, no need to rebuild it
+    // every single frame
+    if (!this.vignetteGradient) {
+      const vig = ctx.createRadialGradient(
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.55,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.95
+      );
+      vig.addColorStop(0, 'rgba(0,0,0,0)');
+      vig.addColorStop(1, 'rgba(0,0,10,0.28)');
+      this.vignetteGradient = vig;
+    }
+    ctx.fillStyle = this.vignetteGradient;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
 

@@ -300,11 +300,17 @@ export class SpaceBackground {
     // 4. Shooting star
     this.updateShootingStar(ctx, dt);
 
-    // 5. Horizon glow above the skyline
+    // 5. Horizon glow above the skyline (cached per theme — only the year
+    // changes which one is picked, the gradient itself never needs rebuilding)
     const glowH = Math.floor(h * 0.28);
-    const glowGrad = ctx.createLinearGradient(0, h - glowH, 0, h);
-    glowGrad.addColorStop(0, 'rgba(0,0,0,0)');
-    glowGrad.addColorStop(1, theme.glow);
+    const glowKey = `glow_${themeIdx}_${h}`;
+    let glowGrad = this.skyGradCache.get(glowKey);
+    if (!glowGrad) {
+      glowGrad = ctx.createLinearGradient(0, h - glowH, 0, h);
+      glowGrad.addColorStop(0, 'rgba(0,0,0,0)');
+      glowGrad.addColorStop(1, theme.glow);
+      this.skyGradCache.set(glowKey, glowGrad);
+    }
     ctx.fillStyle = glowGrad;
     ctx.fillRect(0, h - glowH, w, glowH);
 
