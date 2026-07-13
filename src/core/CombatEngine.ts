@@ -1072,9 +1072,9 @@ export class CombatEngine {
     const def = available[Math.floor(Math.random() * available.length)];
     const fromLeft = Math.random() < 0.5;
     const y = 220 + Math.random() * 120;
-    const hpScale = totalMonths <= 6 ? 1 + totalMonths * 0.1
+    const hpScale = (totalMonths <= 6 ? 1 + totalMonths * 0.1
       : totalMonths <= 12 ? 1.5 + (totalMonths - 6) * 0.2
-      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1)) * ((this as any)._anomalyHpMult ?? 1);
 
     const enemy: Enemy = {
       id: `enemy_${this.nextEnemyId++}`,
@@ -1223,9 +1223,9 @@ export class CombatEngine {
   private spawnPitLimbs(totalMonths: number): void {
     const fractions = [...CombatEngine.PIT_EMERGE_X_FRACTIONS].sort(() => Math.random() - 0.5);
     const count = 2 + Math.floor(Math.random() * 2);
-    const hpScale = totalMonths <= 6 ? 1 + totalMonths * 0.1
+    const hpScale = (totalMonths <= 6 ? 1 + totalMonths * 0.1
       : totalMonths <= 12 ? 1.5 + (totalMonths - 6) * 0.2
-      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1)) * ((this as any)._anomalyHpMult ?? 1);
     const hp = Math.floor((40 + totalMonths * 6) * hpScale);
 
     this.spawnFloatingText(this.arenaWidth / 2, 200, '🕳 MEMBROS EMERGINDO!', '#a16207');
@@ -1392,13 +1392,15 @@ export class CombatEngine {
     if (totalMonths <= 6) hpScale = 1 + totalMonths * 0.1;
     else if (totalMonths <= 12) hpScale = 1.5 + (totalMonths - 6) * 0.2;
     else hpScale = continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+    hpScale *= (this as any)._anomalyHpMult ?? 1;
 
     const batchSize = 2 + Math.floor(Math.random() * 3);
     for (let i = 0; i < batchSize; i++) {
       const def = weightedPool[Math.floor(Math.random() * weightedPool.length)];
       // Elevated elite rate — "hunt enough elites" only works as an
-      // objective if they actually turn up at a findable pace.
-      const isElite = Math.random() < 0.35;
+      // objective if they actually turn up at a findable pace. Anomaly
+      // years (Ano das Elites) nudge it further, same as the main wave loop.
+      const isElite = Math.random() < 0.35 + ((this as any)._anomalyEliteBonus ?? 0);
       const eliteMult = isElite ? 2.5 : 1;
       const baseSpeed = (totalMonths <= 6 ? Math.max(20, def.speed * 0.5)
         : totalMonths <= 12 ? def.speed * (0.7 + (totalMonths - 6) * 0.05)
