@@ -74,6 +74,14 @@ export const ALL_RELICS: Relic[] = [
     bossId: 'boss_astral_serpent', bonus: { goldPercent: 8 } },
   { id: 'r_harbinger_sigil', name: 'Sígilo do Arauto', description: '+10% dano.', icon: '🔱',
     bossId: 'boss_harbinger', bonus: { damagePercent: 10 } },
+  { id: 'r_copycat_echo', name: 'Eco da Cópia', description: '+5% chance de crítico.', icon: '🪞',
+    bossId: 'boss_copycat', bonus: { critPercent: 5 } },
+  { id: 'r_mothership_plate', name: 'Placa da Nave-Mãe', description: '+8 escudo máximo.', icon: '🛰',
+    bossId: 'boss_mothership', bonus: { shieldBonus: 8 } },
+  { id: 'r_rail_duel_engine', name: 'Motor do Rival', description: '+7% cadência.', icon: '⚙',
+    bossId: 'boss_rail_duel', bonus: { fireRatePercent: 7 } },
+  { id: 'r_pit_shell', name: 'Casca do Poço', description: '-6% dano recebido.', icon: '🪨',
+    bossId: 'boss_the_pit', bonus: { damageReductionPercent: 6 } },
 ];
 
 const RELIC_STORAGE_KEY = 'packinvaders_relics';
