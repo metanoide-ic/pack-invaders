@@ -789,31 +789,26 @@ export class CombatEngine {
         const tags = emitter.definition.tags;
         let charDmg = 1;
         let charRate = 1;
+        // fire_lord, storm_runner, beast_tamer's pet bonus, and firefighter
+        // were ALSO being applied here, on top of the identical multipliers
+        // BackpackGrid.applyCharacterPassives() already bakes permanently
+        // into item.stats.damageMultiplier/fireRateMultiplier (which
+        // weaponTick reads to build proj.damage below) — silently squaring
+        // each character's signature passive every frame (e.g. beast_tamer's
+        // pets ended up at 4x damage / 2.25x rate instead of the intended
+        // 2x / 1.5x). Only grass_man (Fogo penalty; its stacking-height bonus
+        // is separate, via onSynergyUpdate), aqua_sage, renegade, and
+        // beast_tamer's non-pet penalty live solely here — everyone else's
+        // identity multiplier now applies exactly once, via BackpackGrid.
         switch (charId) {
-          case 'fire_lord':      // Kagutsuchi: +50% fire damage
-            if (tags.includes('Fogo')) charDmg *= 1.5;
-            break;
           case 'grass_man':      // Rômulo: -20% fire damage
             if (tags.includes('Fogo')) charDmg *= 0.8;
-            break;
-          case 'firefighter':    // Florian: fire trauma -30% dmg; defensive -15% rate
-            if (tags.includes('Fogo')) charDmg *= 0.7;
-            charRate *= 0.85;
             break;
           case 'aqua_sage':      // Mazu: water weapons +25% rate
             if (tags.includes('Água')) charRate *= 1.25;
             break;
-          case 'storm_runner':   // Frank: everything +40% rate / -20% dmg
-            charRate *= 1.4;
-            charDmg *= 0.8;
-            break;
-          case 'beast_tamer':    // Diana: pets +100% dmg +50% rate, others -30% dmg
-            if (tags.includes('Pet') || tags.includes('Animal')) {
-              charDmg *= 2;
-              charRate *= 1.5;
-            } else {
-              charDmg *= 0.7;
-            }
+          case 'beast_tamer':    // Diana: non-pets -30% dmg (pet bonus baked in BackpackGrid)
+            if (!tags.includes('Pet') && !tags.includes('Animal')) charDmg *= 0.7;
             break;
           case 'renegade':       // Sétimo: xeno biology favors organic weaponry
             if (tags.includes('Orgânico') || tags.includes('Veneno')) charDmg *= 1.3;

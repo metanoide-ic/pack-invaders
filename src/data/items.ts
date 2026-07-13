@@ -253,9 +253,15 @@ export const OWL: ItemDefinition = {
   rarity: 1,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    // Divide the fixed interval by fireRateMultiplier so rate synergies
+    // (Cat, beast_tamer, Speed Coil, ...) actually speed this up — a plain
+    // `if (timer >= 3)` ignored the stat entirely (see items.ts audit notes
+    // on OWL/ICE_FAIRY/THUNDER_HAWK/POISON_FROG/TESLA_COIL/FROST_NOVA/SOLAR_BEAM).
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 3 / item.stats.fireRateMultiplier;
     item.state.burstTimer = (item.state.burstTimer ?? 0) + dt;
-    if (item.state.burstTimer >= 3) {
-      item.state.burstTimer -= 3;
+    if (item.state.burstTimer >= interval) {
+      item.state.burstTimer -= interval;
       for (let i = 0; i < 3; i++) {
         const angle = (i - 1) * 15;
         const rad = angle * Math.PI / 180;
@@ -701,9 +707,11 @@ export const TESLA_COIL: ItemDefinition = {
   rarity: 2,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 1.5 / item.stats.fireRateMultiplier;
     item.state.zapTimer = (item.state.zapTimer ?? 0) + dt;
-    if (item.state.zapTimer >= 1.5) {
-      item.state.zapTimer -= 1.5;
+    if (item.state.zapTimer >= interval) {
+      item.state.zapTimer -= interval;
       const angle = (Math.random() - 0.5) * 60 * Math.PI / 180;
       emit({
         x: 400, y: 500,
@@ -1043,9 +1051,11 @@ export const FROST_NOVA: ItemDefinition = {
   rarity: 3,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 8 / item.stats.fireRateMultiplier;
     item.state.novaTimer = (item.state.novaTimer ?? 0) + dt;
-    if (item.state.novaTimer >= 8) {
-      item.state.novaTimer -= 8;
+    if (item.state.novaTimer >= interval) {
+      item.state.novaTimer -= interval;
       for (let i = 0; i < 8; i++) {
         const angle = (i / 8) * Math.PI * 2;
         emit({
@@ -1074,9 +1084,11 @@ export const SOLAR_BEAM: ItemDefinition = {
   rarity: 3,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 3 / item.stats.fireRateMultiplier;
     item.state.chargeTimer = (item.state.chargeTimer ?? 0) + dt;
-    if (item.state.chargeTimer >= 3) {
-      item.state.chargeTimer -= 3;
+    if (item.state.chargeTimer >= interval) {
+      item.state.chargeTimer -= interval;
       emit({
         x: 400, y: 500,
         vx: 0, vy: -item.stats.projectileSpeed,
@@ -1266,9 +1278,11 @@ export const ICE_FAIRY: ItemDefinition = {
   rarity: 2,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 4 / item.stats.fireRateMultiplier;
     item.state.freezeTimer = (item.state.freezeTimer ?? 0) + dt;
-    if (item.state.freezeTimer >= 4) {
-      item.state.freezeTimer -= 4;
+    if (item.state.freezeTimer >= interval) {
+      item.state.freezeTimer -= interval;
       const angle = (Math.random() - 0.5) * 90 * Math.PI / 180;
       emit({
         x: 400, y: 500,
@@ -1295,9 +1309,11 @@ export const THUNDER_HAWK: ItemDefinition = {
   rarity: 2,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 6 / item.stats.fireRateMultiplier;
     item.state.diveTimer = (item.state.diveTimer ?? 0) + dt;
-    if (item.state.diveTimer >= 6) {
-      item.state.diveTimer -= 6;
+    if (item.state.diveTimer >= interval) {
+      item.state.diveTimer -= interval;
       emit({
         x: 400, y: 500,
         vx: 0, vy: -item.stats.projectileSpeed,
@@ -1322,9 +1338,11 @@ export const POISON_FROG: ItemDefinition = {
   rarity: 1,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
   onTick(item, dt, emit) {
+    if (item.stats.fireRateMultiplier <= 0) return;
+    const interval = 3 / item.stats.fireRateMultiplier;
     item.state.hopTimer = (item.state.hopTimer ?? 0) + dt;
-    if (item.state.hopTimer >= 3) {
-      item.state.hopTimer -= 3;
+    if (item.state.hopTimer >= interval) {
+      item.state.hopTimer -= interval;
       const xOffset = (Math.random() - 0.5) * 300;
       emit({
         x: 400 + xOffset, y: 400,
@@ -2008,10 +2026,39 @@ export const PULSE_RIFLE: ItemDefinition = {
   id: 'pulse_rifle', name: 'Rifle de Pulso',
   description: 'Rajada de 3 tiros rapidos, pausa, repete.',
   tags: ['Arma', 'Emissor', 'Elétrico'],
-  gridShape: [[1, 1]], baseStats: { damage: 8, fireRate: 5, projectileSpeed: 450 },
+  // fireRate:0 — the real cadence is the hand-rolled burst/pause loop below,
+  // not weaponTick's flat cooldown (see onTick comment for why)
+  gridShape: [[1, 1]], baseStats: { damage: 8, fireRate: 0, projectileSpeed: 450 },
   cost: 55, rarity: 1,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
-  onTick(item, dt, emit) { weaponTick(item, dt, emit); },
+  // The description promises "3 quick shots, pause, repeat" but this used to
+  // be a plain weaponTick(fireRate:5) — a flat continuous 5 shots/sec with no
+  // burst or pause at all. That gave it 34 DPS, comfortably beating every
+  // other rarity-1 weapon (17-25.5 for pure-damage ones) and most rarity-3
+  // legendaries. Implementing the actual burst cadence — 3 shots ~0.08s
+  // apart, then a ~0.96s pause, 1.2s cycle — brings it to 20 DPS, right in
+  // the rarity-1 pure-damage band, while finally matching its own text.
+  onTick(item, dt, emit) {
+    const rateMult = item.stats.fireRateMultiplier;
+    if (rateMult <= 0) return;
+    const cycleTime = 1.2 / rateMult;
+    const burstGap = 0.08 / rateMult;
+    item.state.burstTimer = (item.state.burstTimer ?? 0) + dt;
+    item.state.shotsThisCycle = item.state.shotsThisCycle ?? 0;
+    while (item.state.shotsThisCycle < 3 && item.state.burstTimer >= item.state.shotsThisCycle * burstGap) {
+      emit({
+        x: 400, y: 500, vx: 0, vy: -item.stats.projectileSpeed,
+        damage: item.stats.damage * item.stats.damageMultiplier,
+        piercing: item.state.piercingBonus ?? 0, aoeRadius: item.stats.aoeRadius,
+        tags: [...item.definition.tags], ownerId: item.instanceId,
+      });
+      item.state.shotsThisCycle++;
+    }
+    if (item.state.burstTimer >= cycleTime) {
+      item.state.burstTimer -= cycleTime;
+      item.state.shotsThisCycle = 0;
+    }
+  },
 };
 
 // 106. Thorn Cannon
