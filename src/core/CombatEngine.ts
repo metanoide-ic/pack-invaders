@@ -140,6 +140,10 @@ export interface Projectile {
    * flamethrower; undefined = flies until it hits something or exits, same
    * as every other weapon). */
   life?: number;
+  /** Multi-Target Lock (splitOnHit): whether this shot has already split into
+   * two on its first hit — prevents the split children (and re-hits from the
+   * same piercing shot) from splitting again. */
+  hasSplit?: boolean;
 }
 
 // ─── Enemy Projectile ────────────────────────────────────────────────────────
@@ -1836,18 +1840,27 @@ export class CombatEngine {
     for (const p of this.state.projectiles) {
       if (!p.alive) continue;
 
+      // Looked up once per projectile (not once per enemy below) — used both
+      // to size the hitbox here (Size Enhancer) and for the per-item hit
+      // effects further down, so there's a single source of truth per shot.
+      const ownerItem = p.ownerId ? this.backpack.getItem(p.ownerId) : undefined;
+
       // Swept hitbox spanning this frame's whole travel path, not just its
       // current point. At normal speeds (a few px/frame) this is the same
       // ~8x8 box as before — invisible change. But very fast shots (the
       // laser's ~9999px/s bolt covers ~165px in one frame) used to tunnel
       // straight through anything between last frame's position and this
       // one's, since a point-sized box can't catch what it jumped over.
+      // Size Enhancer (Amplificador de Tamanho) grows this same margin —
+      // its state.projectileSizeBonus used to be set and never read anywhere.
+      const sizeBonus = (ownerItem?.state as any)?.projectileSizeBonus ?? 1;
+      const margin = 4 * sizeBonus;
       const travelX = p.vx * dt;
       const travelY = p.vy * dt;
-      const hbX = Math.min(p.x, p.x - travelX) - 4;
-      const hbY = Math.min(p.y, p.y - travelY) - 4;
-      const hbW = Math.abs(travelX) + 8;
-      const hbH = Math.abs(travelY) + 8;
+      const hbX = Math.min(p.x, p.x - travelX) - margin;
+      const hbY = Math.min(p.y, p.y - travelY) - margin;
+      const hbW = Math.abs(travelX) + margin * 2;
+      const hbH = Math.abs(travelY) + margin * 2;
 
       for (let i = this.state.enemies.length - 1; i >= 0; i--) {
         const e = this.state.enemies[i];
@@ -1920,7 +1933,12 @@ export class CombatEngine {
           let isCrit = false;
           const critChance = this.getCritChance();
           if (Math.random() < critChance) {
-            damage *= 2;
+            // Núcleo Crítico promises "3x dano" but this used to be a flat
+            // *2 that never looked at state.critMultiplier at all — use the
+            // strongest multiplier granted by any item, default to the
+            // original 2x when nothing sets one (e.g. Void Walker's passive
+            // crit chance, which carries no multiplier of its own).
+            damage *= this.getCritMultiplier();
             isCrit = true;
             this.triggerHitStop(0.03); // Micro freeze on crit
             // Kagutsuchi: crits ignite the target (burn DoT)
@@ -1961,6 +1979,23 @@ export class CombatEngine {
             }
           }
           if (auraSoak > 0) damage *= 1 - auraSoak;
+
+          // Motor de Momentum: +5%/hit while the weapon keeps landing shots,
+          // decaying back to zero after a gap with no hits (approximates
+          // "reseta ao errar" — this engine has no explicit per-shot miss
+          // event to hook, so a short idle window stands in for a miss).
+          // state.momentumActive/momentumPerHit used to be set and never
+          // read anywhere — this weapon did literally nothing before.
+          if (ownerItem?.state.momentumActive) {
+            const os = ownerItem.state as any;
+            const perHit = os.momentumPerHit ?? 0.05;
+            const lastHit = os.momentumLastHitTime ?? -999;
+            if (this.state.waveTime - lastHit > 1.5) os.momentumStacks = 0;
+            const stacks = os.momentumStacks ?? 0;
+            damage *= 1 + stacks * perHit;
+            os.momentumStacks = Math.min(20, stacks + 1);
+            os.momentumLastHitTime = this.state.waveTime;
+          }
 
           e.hp -= damage;
           e.hitFlash = 0.08;
@@ -2014,7 +2049,6 @@ export class CombatEngine {
           }
 
           // ─── Per-item hit effects (cards that buff a specific weapon) ────
-          const ownerItem = p.ownerId ? this.backpack.getItem(p.ownerId) : undefined;
           if (ownerItem) {
             // Onda de Pressão (Mazu): water shots push enemies back (bosses resist)
             const pushback = ownerItem.state.pushback as number | undefined;
@@ -2059,6 +2093,27 @@ export class CombatEngine {
             if (os.leechRatio) {
               this.state.playerHp = Math.min(this.state.playerMaxHp,
                 this.state.playerHp + damage * os.leechRatio);
+            }
+            // Trava Multi-alvo: the shot splits into 2 on its first hit only —
+            // state.splitOnHit used to be set by the modifier and never read
+            // anywhere, so the weapon just ate the -15% damage penalty next
+            // to it for nothing. Children carry no ownerId (same convention
+            // as Arma de Fragmentos' kill-shatter shards) so they can't
+            // re-split or re-trigger this same effect.
+            if (os.splitOnHit && !p.hasSplit) {
+              p.hasSplit = true;
+              const baseAngle = Math.atan2(p.vy, p.vx);
+              const speed = Math.hypot(p.vx, p.vy);
+              for (const off of [-0.35, 0.35]) {
+                const ang = baseAngle + off;
+                this.state.projectiles.push({
+                  id: `proj_split_${this.nextProjectileId++}`,
+                  x: p.x, y: p.y,
+                  vx: Math.cos(ang) * speed, vy: Math.sin(ang) * speed,
+                  damage: p.damage, piercing: 0, aoeRadius: 0,
+                  tags: [...p.tags], alive: true, trail: [],
+                });
+              }
             }
           }
 
@@ -2108,6 +2163,13 @@ export class CombatEngine {
           }
 
           if (e.hp <= 0) {
+            // Sifão Vampírico: heal a flat amount on kill — state.vampiricHeal
+            // used to be set by the modifier and never read anywhere, so
+            // equipping it healed exactly 0 HP over an entire run.
+            if (ownerItem?.state.vampiricHeal) {
+              this.state.playerHp = Math.min(this.state.playerMaxHp,
+                this.state.playerHp + ownerItem.state.vampiricHeal);
+            }
             // Curto-Circuito (Frank): chance to chain lightning to a nearby enemy on kill.
             // Resolve the chain target BEFORE splicing `e` out (indices below `i` would
             // shift and invalidate `i`), but apply/kill it AFTER — using a fresh indexOf,
@@ -2854,6 +2916,18 @@ export class CombatEngine {
     // Relic crit bonus (Broca do Sargento)
     crit += (this as any)._relicCrit ?? 0;
     return Math.min(0.8, crit); // Cap at 80%
+  }
+
+  /** Strongest crit multiplier granted by any item (Núcleo Crítico sets 3);
+   * falls back to the original flat 2x when nothing in the backpack sets one. */
+  private getCritMultiplier(): number {
+    let mult = 2;
+    for (const item of this.backpack.getAllItems()) {
+      if (item.state.critMultiplier) {
+        mult = Math.max(mult, item.state.critMultiplier);
+      }
+    }
+    return mult;
   }
 
   /** Spawn position for enemy #i in a given formation (above the arena) */
