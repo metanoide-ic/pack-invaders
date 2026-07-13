@@ -44,7 +44,7 @@ export const NORMAL_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'ground_zero',
     name: 'Zona-Zero',
     description: 'Um telhado prestes a desabar — o chão cede em pedaços e a área segura encolhe com o tempo.',
-    implemented: false,
+    implemented: true,
   },
 ];
 

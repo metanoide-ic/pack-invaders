@@ -367,6 +367,14 @@ export interface CombatState {
   acidRainTimer: number;
   /** Chuva Ácida: fixed shelter zones for this wave (safe from rain damage) */
   acidRainShelters: { x: number; width: number }[];
+
+  /** Zona-Zero: sections of the roof that have already collapsed — standing
+   * in one deals continuous damage */
+  groundZeroZones: { x0: number; x1: number }[];
+  /** Zona-Zero: the section currently cracking, about to collapse */
+  groundZeroTelegraphZone: { x0: number; x1: number } | null;
+  /** Zona-Zero: seconds left before the telegraphed section collapses */
+  groundZeroTelegraphTimer: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -383,6 +391,8 @@ export class CombatEngine {
   private _spaceAsteroidTimer = 1.5;
   /** Enxame em Maré: seconds until the next trickle-spawn batch */
   private _swarmTideSpawnTimer = 2.5;
+  /** Zona-Zero: seconds until the next section starts cracking */
+  private _groundZeroNextTimer = 6;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -492,6 +502,9 @@ export class CombatEngine {
       acidRainActive: false,
       acidRainTimer: 7,
       acidRainShelters: [],
+      groundZeroZones: [],
+      groundZeroTelegraphZone: null,
+      groundZeroTelegraphTimer: 0,
     };
   }
 
@@ -540,6 +553,10 @@ export class CombatEngine {
     } else {
       this.state.acidRainShelters = [];
     }
+    this.state.groundZeroZones = [];
+    this.state.groundZeroTelegraphZone = null;
+    this.state.groundZeroTelegraphTimer = 0;
+    this._groundZeroNextTimer = 6 + Math.random() * 3;
     this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
@@ -747,6 +764,7 @@ export class CombatEngine {
     if (this.state.normalVariant === 'frostbite') this.updateFrostbite(dt, playerDir);
     if (this.state.normalVariant === 'space') this.updateSpaceAsteroids(dt);
     if (this.state.normalVariant === 'acid_rain') this.updateAcidRain(dt);
+    if (this.state.normalVariant === 'ground_zero') this.updateGroundZero(dt);
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
@@ -867,6 +885,71 @@ export class CombatEngine {
         this.damagePlayer(14 * dt);
       }
     }
+  }
+
+  /** Zona-Zero (normal phase variant): sections of the floor crack (3s
+   * telegraph), then collapse into a permanent damage zone — the safe
+   * footing shrinks as the fight goes on, forcing repositioning under
+   * pressure instead of camping one spot. */
+  private updateGroundZero(dt: number): void {
+    const st = this.state;
+
+    // Continuous damage for standing in an already-collapsed section
+    for (const z of st.groundZeroZones) {
+      if (this.state.playerX > z.x0 && this.state.playerX < z.x1) {
+        this.damagePlayer(12 * dt);
+        break;
+      }
+    }
+
+    if (st.groundZeroTelegraphZone) {
+      st.groundZeroTelegraphTimer -= dt;
+      if (st.groundZeroTelegraphTimer <= 0) {
+        const zone = st.groundZeroTelegraphZone;
+        st.groundZeroZones.push(zone);
+        st.groundZeroTelegraphZone = null;
+        this.spawnFloatingText((zone.x0 + zone.x1) / 2, this.arenaHeight - 100, '💥 DESABOU!', '#f97316');
+        this.triggerShake(8, 0.5);
+        if (this.state.playerX > zone.x0 && this.state.playerX < zone.x1) {
+          this.damagePlayer(Math.max(20, this.state.playerMaxHp * 0.25));
+          const distLeft = this.state.playerX - zone.x0;
+          const distRight = zone.x1 - this.state.playerX;
+          this.state.playerX = distLeft < distRight
+            ? Math.max(20, zone.x0 - 6)
+            : Math.min(this.arenaWidth - 20, zone.x1 + 6);
+        }
+      }
+      return;
+    }
+
+    this._groundZeroNextTimer -= dt;
+    if (this._groundZeroNextTimer <= 0) {
+      this._groundZeroNextTimer = 9 + Math.random() * 4;
+      const totalCollapsed = st.groundZeroZones.reduce((s, z) => s + (z.x1 - z.x0), 0);
+      const maxCollapsed = (this.arenaWidth - 40) * 0.55;
+      if (st.groundZeroZones.length < 4 && totalCollapsed < maxCollapsed) {
+        const zone = this.pickGroundZeroZone();
+        if (zone) {
+          st.groundZeroTelegraphZone = zone;
+          st.groundZeroTelegraphTimer = 3.0;
+          this.spawnFloatingText((zone.x0 + zone.x1) / 2, this.arenaHeight - 100, '⚠ RACHANDO...', '#fbbf24');
+        }
+      }
+    }
+  }
+
+  /** Picks a section of floor that doesn't overlap any already-collapsed
+   * (or currently telegraphed) section, with a buffer so the player always
+   * has room to squeeze past. Returns null if nothing fits. */
+  private pickGroundZeroZone(): { x0: number; x1: number } | null {
+    const width = 100 + Math.random() * 60;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      const x0 = 20 + Math.random() * (this.arenaWidth - 40 - width);
+      const x1 = x0 + width;
+      const overlaps = this.state.groundZeroZones.some(z => x0 < z.x1 + 30 && x1 > z.x0 - 30);
+      if (!overlaps) return { x0, x1 };
+    }
+    return null;
   }
 
   /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a

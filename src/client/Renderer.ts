@@ -2890,6 +2890,9 @@ export class Renderer {
     } else if (state.normalVariant === 'acid_rain') {
       ctx.fillStyle = state.acidRainActive ? 'rgba(132, 204, 22, 0.14)' : 'rgba(132, 204, 22, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.normalVariant === 'ground_zero') {
+      ctx.fillStyle = 'rgba(154, 92, 43, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     if (state.normalVariant === 'space') {
       this.renderSpaceDrift(performance.now() / 1000);
@@ -2933,6 +2936,38 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
+
+    // Zona-Zero: collapsed sections (dark gaps, damage if you stand in one)
+    // and the currently-cracking section (pulsing warning before it goes)
+    if (state.normalVariant === 'ground_zero') {
+      for (const z of state.groundZeroZones) {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(z.x0, canvas.height - 90, z.x1 - z.x0, 90);
+        ctx.strokeStyle = '#7c2d12';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(z.x0, canvas.height - 90, z.x1 - z.x0, 90);
+        ctx.fillStyle = '#f97316';
+        ctx.globalAlpha = 0.15 + Math.sin(now * 3) * 0.08;
+        ctx.fillRect(z.x0, canvas.height - 90, z.x1 - z.x0, 8);
+        ctx.globalAlpha = 1;
+      }
+      if (state.groundZeroTelegraphZone) {
+        const z = state.groundZeroTelegraphZone;
+        const crackPulse = 0.4 + Math.abs(Math.sin(now * 8)) * 0.5;
+        ctx.strokeStyle = '#fbbf24';
+        ctx.globalAlpha = crackPulse;
+        ctx.lineWidth = 3;
+        ctx.setLineDash([5, 3]);
+        ctx.strokeRect(z.x0, canvas.height - 90, z.x1 - z.x0, 90);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+        ctx.font = 'bold 11px monospace';
+        ctx.fillStyle = '#fbbf24';
+        ctx.textAlign = 'center';
+        ctx.fillText(`⚠ ${state.groundZeroTelegraphTimer.toFixed(1)}s`, (z.x0 + z.x1) / 2, canvas.height - 96);
+        ctx.textAlign = 'left';
+      }
+    }
 
     // Track enemy deaths for explosion effects
     const currentEnemyIds = new Set(state.enemies.map(e => e.id));
