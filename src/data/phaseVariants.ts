@@ -65,7 +65,7 @@ export const BOSS_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'swarm_tide',
     name: 'Enxame em Maré',
     description: 'Sem boss único — uma Rainha escondida comanda uma horda crescente por tempo limitado até ser forçada a se expor.',
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'rail_duel',

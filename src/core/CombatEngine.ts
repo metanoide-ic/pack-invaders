@@ -6,7 +6,7 @@
 
 import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
-import { getEnemiesForWave, getBossForEncounter, getMegaBossForEncounter, REGULAR_BOSSES, MEGA_BOSSES, EnemyDefinition, ALL_ENEMIES } from '../data/enemies';
+import { getEnemiesForWave, getBossForEncounter, getMegaBossForEncounter, REGULAR_BOSSES, MEGA_BOSSES, EnemyDefinition, ALL_ENEMIES, BOSS_SWARM_QUEEN } from '../data/enemies';
 
 /**
  * Continuous accelerating growth curve, anchored to a known value at
@@ -350,6 +350,16 @@ export interface CombatState {
   copycatAdrenalineBurstTimer: number;
   /** Vácuo Aberto: incoming asteroids — collision deals heavy damage */
   asteroids: Asteroid[];
+
+  /** Enxame em Maré: true while the Queen is still hidden, directing the
+   * trickle-spawned horde instead of fighting directly */
+  swarmTideActive: boolean;
+  /** Enxame em Maré: elites killed so far this wave (counts toward the goal) */
+  swarmTideEliteKills: number;
+  /** Enxame em Maré: elites required before the Queen exposes herself */
+  swarmTideEliteGoal: number;
+  /** Enxame em Maré: seconds elapsed in the horde phase (safety-valve cap) */
+  swarmTideTimer: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -364,6 +374,8 @@ export class CombatEngine {
   private nextAsteroidId = 0;
   /** Vácuo Aberto: seconds until the next asteroid spawns */
   private _spaceAsteroidTimer = 1.5;
+  /** Enxame em Maré: seconds until the next trickle-spawn batch */
+  private _swarmTideSpawnTimer = 2.5;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -466,6 +478,10 @@ export class CombatEngine {
       copycatAdrenalineTotal: 0,
       copycatAdrenalineBurstTimer: 0,
       asteroids: [],
+      swarmTideActive: false,
+      swarmTideEliteKills: 0,
+      swarmTideEliteGoal: 6,
+      swarmTideTimer: 0,
     };
   }
 
@@ -494,6 +510,11 @@ export class CombatEngine {
     this.state.copycatAdrenalineTotal = characterId === 'renegade' ? 0 : characterId === 'storm_runner' ? 5 : 10;
     this.state.asteroids = [];
     this._spaceAsteroidTimer = 1.5;
+    this.state.swarmTideActive = isBossMonth && !isMegaBossMonth && bossVariant === 'swarm_tide';
+    this.state.swarmTideEliteKills = 0;
+    this.state.swarmTideEliteGoal = 6 + Math.floor(wave / 12);
+    this.state.swarmTideTimer = 0;
+    this._swarmTideSpawnTimer = 2.5;
     this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
@@ -696,9 +717,11 @@ export class CombatEngine {
     // 11. Apply item passive effects (EMP, auras, etc.)
     this.applyItemPassives(dt);
 
-    // 11b. Phase variants: Frostbite hazard / Space asteroids / Copycat finale
+    // 11b. Phase variants: Frostbite hazard / Space asteroids / Swarm Tide
+    // horde-then-Queen / Copycat finale
     if (this.state.normalVariant === 'frostbite') this.updateFrostbite(dt, playerDir);
     if (this.state.normalVariant === 'space') this.updateSpaceAsteroids(dt);
+    if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
     // 12. Update floating texts
@@ -836,6 +859,127 @@ export class CombatEngine {
         st.asteroids.splice(i, 1);
       }
     }
+  }
+
+  /** Enxame em Maré (boss phase variant): the Queen stays hidden while a
+   * trickle of reinforcements (elevated elite rate) keeps the fight going;
+   * enough elite kills — or a time safety-valve — forces her to expose
+   * herself as an actual targetable boss. */
+  private updateSwarmTide(dt: number): void {
+    this.state.swarmTideTimer += dt;
+    this._swarmTideSpawnTimer -= dt;
+    if (this._swarmTideSpawnTimer <= 0) {
+      this._swarmTideSpawnTimer = 2.6 + Math.random() * 1.4;
+      this.spawnSwarmTideBatch(this.state.wave);
+    }
+    if (this.state.swarmTideEliteKills >= this.state.swarmTideEliteGoal || this.state.swarmTideTimer >= 90) {
+      this.state.swarmTideActive = false;
+      this.spawnSwarmTideQueen(this.state.wave);
+    }
+  }
+
+  /** Lightweight trash-mob spawn for the Swarm Tide horde phase — simplified
+   * version of generateWave's per-enemy formula (no formation shapes, spawns
+   * trickle in over time instead of all at once). */
+  private spawnSwarmTideBatch(totalMonths: number): void {
+    const virtualWave = Math.min(20, Math.ceil(totalMonths * 0.6));
+    const available = getEnemiesForWave(virtualWave);
+    const weightedPool: EnemyDefinition[] = [];
+    for (const def of available) {
+      for (let i = 0; i < def.weight; i++) weightedPool.push(def);
+    }
+    if (weightedPool.length === 0) return;
+
+    const year = Math.ceil(totalMonths / 12);
+    let hpScale: number;
+    if (totalMonths <= 6) hpScale = 1 + totalMonths * 0.1;
+    else if (totalMonths <= 12) hpScale = 1.5 + (totalMonths - 6) * 0.2;
+    else hpScale = continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+
+    const batchSize = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < batchSize; i++) {
+      const def = weightedPool[Math.floor(Math.random() * weightedPool.length)];
+      // Elevated elite rate — "hunt enough elites" only works as an
+      // objective if they actually turn up at a findable pace.
+      const isElite = Math.random() < 0.35;
+      const eliteMult = isElite ? 2.5 : 1;
+      const baseSpeed = (totalMonths <= 6 ? Math.max(20, def.speed * 0.5)
+        : totalMonths <= 12 ? def.speed * (0.7 + (totalMonths - 6) * 0.05)
+        : def.speed * (1 + (year - 1) * 0.1)) * (isElite ? 1.2 : 1);
+
+      const enemy: Enemy = {
+        id: `enemy_${this.nextEnemyId++}`,
+        x: 60 + Math.random() * (this.arenaWidth - 120),
+        y: -30,
+        hp: Math.floor(def.hp * hpScale * eliteMult),
+        maxHp: Math.floor(def.hp * hpScale * eliteMult),
+        speed: baseSpeed,
+        damage: (def.damage + Math.floor(totalMonths * 0.4)) * (isElite ? 1.5 : 1),
+        tags: [...def.tags],
+        width: Math.floor(def.width * (isElite ? 1.3 : 1)),
+        height: Math.floor(def.height * (isElite ? 1.3 : 1)),
+        goldReward: Math.floor(def.goldReward * (isElite ? 3 : 1)),
+        shootTimer: def.special?.type === 'shoot' ? 1 / def.special.fireRate : 2,
+        special: def.special,
+        isBoss: false,
+        movement: def.movement,
+        armorHits: def.special?.type === 'armor' ? def.special.hits : undefined,
+        phased: false,
+        phaseTimer: def.special?.type === 'phase' ? 1.5 + Math.random() * 2.0 : undefined,
+        spawnTimer: def.special?.type === 'spawn' ? def.special.interval : undefined,
+        moveTimer: Math.random() * 5,
+        moveDir: Math.random() > 0.5 ? 1 : -1,
+        explodeOnDeath: def.special?.type === 'explode',
+        baseSpeed,
+        defId: def.id,
+      };
+      if (isElite) {
+        (enemy as any).isElite = true;
+        const affixes = ['regen', 'armored', 'volatile', 'swift', 'split'];
+        (enemy as any).affix = affixes[Math.floor(Math.random() * affixes.length)];
+      }
+      this.state.enemies.push(enemy);
+      this.state.totalEnemies++;
+    }
+  }
+
+  /** Reveals the Queen (reuses the existing Matriarca Krix boss) once the
+   * horde phase's elite goal (or time cap) is met. */
+  private spawnSwarmTideQueen(totalMonths: number): void {
+    const year = Math.ceil(totalMonths / 12);
+    const hpScale = totalMonths <= 12
+      ? 1.5 + Math.max(0, totalMonths - 6) * 0.2
+      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+    const hp = Math.floor(BOSS_SWARM_QUEEN.hp * hpScale * 1.4);
+    const speed = BOSS_SWARM_QUEEN.speed * (1 + (year - 1) * 0.1);
+    const queen: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: this.arenaWidth / 2,
+      y: -60,
+      hp, maxHp: hp,
+      speed,
+      damage: BOSS_SWARM_QUEEN.damage + Math.floor(totalMonths * 0.5),
+      tags: [...BOSS_SWARM_QUEEN.tags],
+      width: BOSS_SWARM_QUEEN.width,
+      height: BOSS_SWARM_QUEEN.height,
+      goldReward: Math.floor((BOSS_SWARM_QUEEN.goldReward + totalMonths * 2) * 1.5),
+      shootTimer: 2,
+      special: BOSS_SWARM_QUEEN.special,
+      isBoss: true,
+      movement: BOSS_SWARM_QUEEN.movement,
+      phased: false,
+      spawnTimer: BOSS_SWARM_QUEEN.special?.type === 'spawn' ? BOSS_SWARM_QUEEN.special.interval : undefined,
+      moveTimer: 0,
+      moveDir: 1,
+      baseSpeed: speed,
+      defId: BOSS_SWARM_QUEEN.id,
+    };
+    (queen as any).displayName = BOSS_SWARM_QUEEN.name.toUpperCase();
+    this.state.enemies.push(queen);
+    this.state.totalEnemies++;
+    this.state.bossWarningTimer = 2.0;
+    this.triggerShake(10, 0.8);
+    this.spawnFloatingText(this.arenaWidth / 2, 140, '👑 A RAINHA SE EXPÕE! 👑', '#f472b6');
   }
 
   /** Copycat (boss phase variant): once the mirror is defeated, a short
@@ -2443,6 +2587,11 @@ export class CombatEngine {
       this.triggerShake(10, 0.6);
     }
 
+    // Enxame em Maré: elite kills count toward forcing the Queen to expose herself
+    if (this.state.swarmTideActive && (e as any).isElite) {
+      this.state.swarmTideEliteKills++;
+    }
+
     // Track for codex
     this.state.killedEnemyIds.push(e.defId);
 
@@ -3218,6 +3367,13 @@ export class CombatEngine {
     let count = computeWaveCount(totalMonths);
     count = Math.floor(count * ((this as any)._anomalyCountMult ?? 1));
 
+    // Enxame em Maré: the wave opens with just a modest trickle instead of
+    // the full formula's count — the horde keeps building via
+    // spawnSwarmTideBatch in tick() until enough elites are found and the
+    // Queen exposes herself (see updateSwarmTide).
+    const isSwarmTide = isBossMonth && !isMegaBossMonth && bossVariant === 'swarm_tide';
+    if (isSwarmTide) count = Math.min(count, 8);
+
     // Spawn formation: readable shape variety instead of always the same
     // 10-wide grid. Deep shapes are only used for small/medium waves.
     const formationPool = count > 34 ? ['grid', 'grid', 'wall']
@@ -3268,9 +3424,12 @@ export class CombatEngine {
       }
       baseSpeed *= (this as any)._anomalySpeedMult ?? 1;
 
-      // Elite chance: 10% per enemy after month 6, increases over time
+      // Elite chance: 10% per enemy after month 6, increases over time.
+      // Enxame em Maré bumps this hard — "hunt the elites" only works as an
+      // objective if they actually show up at a findable rate.
       const eliteChance = (totalMonths > 6 ? Math.min(0.25, 0.05 + totalMonths * 0.005) : 0)
-        + ((this as any)._anomalyEliteBonus ?? 0);
+        + ((this as any)._anomalyEliteBonus ?? 0)
+        + (isSwarmTide ? 0.3 : 0);
       const isElite = Math.random() < eliteChance;
       const eliteMult = isElite ? 2.5 : 1;
       const eliteGoldMult = isElite ? 3 : 1;
@@ -3325,7 +3484,7 @@ export class CombatEngine {
     // entries just because Zyr-Goth also showed up that year, and Zyr-Goth's
     // own repeat-mutation escalation doesn't depend on how many regular
     // bosses have been fought.
-    if (isBossMonth) {
+    if (isBossMonth && !isSwarmTide) {
       let bossSource: EnemyDefinition;
       let encounterCount: number;
       let lapDivisor: number;

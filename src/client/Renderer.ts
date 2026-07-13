@@ -2884,6 +2884,9 @@ export class Renderer {
     } else if (state.bossVariant === 'copycat') {
       ctx.fillStyle = 'rgba(127, 29, 29, 0.10)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.bossVariant === 'swarm_tide') {
+      ctx.fillStyle = 'rgba(190, 24, 93, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     if (state.normalVariant === 'space') {
       this.renderSpaceDrift(performance.now() / 1000);
@@ -4328,6 +4331,23 @@ export class Renderer {
       ctx.fillRect(advBarX, advBarY, advBarW, 6);
       ctx.fillStyle = '#facc15';
       ctx.fillRect(advBarX, advBarY, Math.floor(advBarW * advPct), 6);
+      ctx.textAlign = 'left';
+    }
+
+    // Enxame em Maré: elite-hunt progress toward the Queen exposing herself
+    if (state.swarmTideActive) {
+      const swPct = Math.min(1, state.swarmTideEliteKills / Math.max(1, state.swarmTideEliteGoal));
+      ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f472b6';
+      ctx.fillText(`👑 ACHE OS ELITES: ${state.swarmTideEliteKills}/${state.swarmTideEliteGoal}`, L.cx, Math.floor(L.h * 0.09));
+      const swBarW = Math.floor(L.w * 0.26);
+      const swBarX = L.cx - swBarW / 2;
+      const swBarY = Math.floor(L.h * 0.1);
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(swBarX, swBarY, swBarW, 6);
+      ctx.fillStyle = '#f472b6';
+      ctx.fillRect(swBarX, swBarY, Math.floor(swBarW * swPct), 6);
       ctx.textAlign = 'left';
     }
 
