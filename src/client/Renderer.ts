@@ -132,10 +132,11 @@ export class Renderer {
   }
 
   /** Route every `ctx.font = '…px monospace'` in the codebase through the
-   * game's pixel font. One interception point instead of ~300 call sites:
-   * the font setter rewrites the generic `monospace` family to VT323 (with a
-   * size boost, since VT323 renders narrower than system monospace fonts).
-   * Explicit families like "Press Start 2P" pass through untouched. */
+   * game's single pixel font (VT323, everywhere — HUD, menus and titles
+   * alike). One interception point instead of ~300 call sites: the font
+   * setter rewrites the generic `monospace` family to VT323 (with a size
+   * boost, since VT323 renders narrower than system monospace fonts). Titles
+   * use `bold ...px monospace` instead of a second typeface for weight. */
   private installGameFont(): void {
     const proto = Object.getPrototypeOf(this.ctx);
     const desc = Object.getOwnPropertyDescriptor(proto, 'font');
@@ -172,13 +173,15 @@ export class Renderer {
       cy: Math.floor(h / 2),
       btnY: Math.floor(h * 0.85),
       sellZoneY: Math.floor(h * 0.88),
-      // Titles use the chunky arcade face; body text goes through the VT323
-      // remap in installGameFont (which only rewrites bare `monospace`)
-      fontTitle: `${Math.floor(h * 0.028)}px 'Press Start 2P', monospace`,
+      // Every font in the game — titles included — goes through the single
+      // VT323 remap in installGameFont (bare `monospace` only). Titles just
+      // add `bold` for weight instead of switching to a second typeface, so
+      // the whole game reads as one consistent font.
+      fontTitle: `bold ${Math.floor(h * 0.028)}px monospace`,
       fontNormal: `${Math.floor(h * 0.022)}px monospace`,
       fontSmall: `${Math.floor(h * 0.017)}px monospace`,
       fontTiny: `${Math.floor(h * 0.013)}px monospace`,
-      fontHuge: `${Math.floor(h * 0.042)}px 'Press Start 2P', monospace`,
+      fontHuge: `bold ${Math.floor(h * 0.042)}px monospace`,
     };
   }
 

@@ -39,7 +39,6 @@ try {
   // frame, so text upgrades from the fallback the moment they arrive
   if (document.fonts?.load) {
     document.fonts.load('16px VT323');
-    document.fonts.load("16px 'Press Start 2P'");
   }
 
   // Debug handles for automated playtests
@@ -71,10 +70,10 @@ try {
     if (errCtx) {
       errCtx.fillStyle = '#000';
       errCtx.fillRect(0, 0, 1280, 720);
-      errCtx.font = '20px monospace';
+      errCtx.font = '24px VT323, monospace';
       errCtx.fillStyle = '#ef4444';
       errCtx.fillText('ERRO NA INICIALIZAÇÃO:', 50, 100);
-      errCtx.font = '14px monospace';
+      errCtx.font = '17px VT323, monospace';
       errCtx.fillStyle = '#fbbf24';
       errCtx.fillText(String(err), 50, 140);
       errCtx.fillStyle = '#94a3b8';
