@@ -10,6 +10,9 @@ function weaponTick(item: PlacedItem, dt: number, emit: EmitProjectile, opts?: {
   spreadAngle?: number;
   homing?: boolean;
   element?: string;
+  /** Short-range weapons only: max travel distance in px before the shot
+   * fizzles out on its own (see ProjectileData.range) */
+  range?: number;
 }): void {
   const rate = item.stats.fireRate * item.stats.fireRateMultiplier;
   if (rate <= 0) return;
@@ -37,6 +40,7 @@ function weaponTick(item: PlacedItem, dt: number, emit: EmitProjectile, opts?: {
         aoeRadius: item.stats.aoeRadius,
         tags: [...item.definition.tags, ...extraTags],
         ownerId: item.instanceId,
+        range: opts?.range,
       });
     }
   }
@@ -635,13 +639,19 @@ export const CROWN_OF_THORNS: ItemDefinition = {
 export const LASER_BEAM: ItemDefinition = {
   id: 'laser_beam',
   name: 'Raio Laser',
-  description: 'Dano continuo na linha reta. Sem projeteis, atinge o primeiro inimigo.',
+  description: 'Feixe continuo que atravessa todos os inimigos na linha reta.',
   tags: ['Arma', 'Emissor'],
   gridShape: [[1, 1, 1]],
-  baseStats: { damage: 8, fireRate: 5, projectileSpeed: 9999 },
+  baseStats: { damage: 2, fireRate: 14, projectileSpeed: 9999 },
   cost: 75,
   rarity: 2,
-  onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
+  onSynergyUpdate(item, ctx) {
+    applyGrassManBonus(item, ctx);
+    // Full pierce: a single pulse hits every enemy in its column, not just
+    // the first — same mechanism as the Lança de Ossos (bone_spear), but
+    // fired 12x faster so a stream of them reads as one continuous beam
+    item.state.piercingBonus = 999;
+  },
   onTick(item, dt, emit) { weaponTick(item, dt, emit); },
 };
 
@@ -666,14 +676,17 @@ export const BOOMERANG: ItemDefinition = {
 export const FLAMETHROWER: ItemDefinition = {
   id: 'flamethrower',
   name: 'Lanca-chamas',
-  description: 'Cone de fogo de curto alcance. DPS altissimo.',
+  description: 'Cone de fogo de curto alcance. Rajada rapida contra quem chegar perto.',
   tags: ['Arma', 'Emissor', 'Fogo'],
   gridShape: [[1, 1], [1, 1]],
-  baseStats: { damage: 3, fireRate: 8, projectileSpeed: 150, projectileCount: 3, aoeRadius: 15 },
+  baseStats: { damage: 2, fireRate: 6, projectileSpeed: 150, projectileCount: 3, aoeRadius: 15 },
   cost: 80,
   rarity: 2,
   onSynergyUpdate(item, ctx) { applyGrassManBonus(item, ctx); },
-  onTick(item, dt, emit) { weaponTick(item, dt, emit, { spreadAngle: 40 }); },
+  // range: 240px — the flames actually fizzle out a third of the way up the
+  // arena instead of flying the full screen like every other gun; that's
+  // what "curto alcance" in the description was always supposed to mean
+  onTick(item, dt, emit) { weaponTick(item, dt, emit, { spreadAngle: 40, range: 240 }); },
 };
 
 // 34. Tesla Coil

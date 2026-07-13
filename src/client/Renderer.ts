@@ -3024,9 +3024,22 @@ export class Renderer {
       }
     }
 
+    // Which live projectiles belong to the laser (full-pierce, near-instant
+    // speed, high fire rate) — those render as a persistent beam line
+    // instead of a bolt, since a stream of near-instant shots is how a
+    // "continuous" beam is simulated within the per-shot projectile system
+    const laserOwnerIds = new Set<string>();
+    for (const p of state.projectiles) {
+      if (p.ownerId && !laserOwnerIds.has(p.ownerId) &&
+          this.game.backpack.getItem(p.ownerId)?.definition.id === 'laser_beam') {
+        laserOwnerIds.add(p.ownerId);
+      }
+    }
+
     // Render player projectiles: additive glow + core sprite + trail
     ctx.globalCompositeOperation = 'lighter';
     for (const p of state.projectiles) {
+      if (p.ownerId && laserOwnerIds.has(p.ownerId)) { this.renderLaserBeam(p, now); continue; }
       const element = this.getProjectileElement(p.tags);
       const trailColor = element === 'fire' ? '#f97316'
         : element === 'ice' ? '#67e8f9'
@@ -3045,6 +3058,7 @@ export class Renderer {
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     for (const p of state.projectiles) {
+      if (p.ownerId && laserOwnerIds.has(p.ownerId)) continue; // drawn above as a beam
       const element = this.getProjectileElement(p.tags);
       const realArt = getWeaponProjectileArt(element);
       if (realArt) {
@@ -6376,6 +6390,41 @@ export class Renderer {
     if (e.width >= 32) return 'tank';
     if (e.width >= 24) return 'grunt';
     return 'scout';
+  }
+
+  /** Draws the laser as a persistent violet-cyan column from the muzzle to
+   * the top of the arena, instead of the small per-shot bolt icon. Each
+   * underlying projectile still only lives a few frames (near-instant
+   * speed), but at the item's high fire rate consecutive shots overlap
+   * enough that this reads as one continuous beam, not a strobe. */
+  private renderLaserBeam(p: { x: number; y: number }, now: number): void {
+    const { ctx, canvas } = this;
+    const flicker = 0.82 + Math.sin(now * 55 + p.x) * 0.18;
+    const muzzleY = canvas.height - 45;
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    // Outer violet glow
+    ctx.globalAlpha = 0.30 * flicker;
+    ctx.strokeStyle = '#a78bfa';
+    ctx.lineWidth = 9;
+    ctx.beginPath();
+    ctx.moveTo(p.x, muzzleY);
+    ctx.lineTo(p.x, -10);
+    ctx.stroke();
+    // Mid cyan-violet body
+    ctx.globalAlpha = 0.55 * flicker;
+    ctx.strokeStyle = '#c4b5fd';
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    // White-hot core
+    ctx.globalAlpha = flicker;
+    ctx.strokeStyle = '#f5f3ff';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    // Muzzle flare
+    ctx.globalAlpha = 0.8 * flicker;
+    ctx.drawImage(this.getGlow('#c4b5fd', 14), p.x - 14, muzzleY - 14);
+    ctx.restore();
   }
 
   private getProjectileElement(tags: string[] | readonly string[]): string {

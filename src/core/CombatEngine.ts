@@ -135,6 +135,11 @@ export interface Projectile {
   ownerId?: string;
   /** Wall bounces remaining (Frank/storm_runner: electric shots ricochet once) */
   bounces?: number;
+  /** Seconds of flight remaining before the shot fizzles out on its own,
+   * regardless of whether it's left the arena (short-range weapons like the
+   * flamethrower; undefined = flies until it hits something or exits, same
+   * as every other weapon). */
+  life?: number;
 }
 
 // ─── Enemy Projectile ────────────────────────────────────────────────────────
@@ -601,7 +606,7 @@ export class CombatEngine {
     this.updateAllyTurrets(dt);
 
     // 6. Check collisions (projectile vs enemy)
-    this.checkCollisions();
+    this.checkCollisions(dt);
 
     // 6b. Anti-Matéria: player shots intercept enemy shots
     if ((this as any)._antiMatter) this.checkAntiMatter();
@@ -828,6 +833,11 @@ export class CombatEngine {
           const finalDamage = proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
             * (this.state.combo >= 30 ? 1.2 : 1); // OVERDRIVE
           this.recoilTimer = 0.12; // drives the character's shot-recoil animation
+          // Short-range weapons (e.g. the flamethrower's cone) carry a range
+          // in px; convert to seconds-of-flight at this shot's own speed so
+          // it fizzles out mid-air instead of flying the length of the arena
+          const speed = Math.hypot(proj.vx, proj.vy);
+          const life = proj.range && speed > 0 ? proj.range / speed : undefined;
           this.state.projectiles.push({
             id: `proj_${this.nextProjectileId++}`,
             x: this.state.playerX + (proj.x - 400) * 0.05,
@@ -841,6 +851,7 @@ export class CombatEngine {
             alive: true,
             trail: [],
             ownerId: proj.ownerId,
+            life,
           });
           // CO-OP: the backpack is shared, so every shot fires twin-barrel —
           // once from each player's position — instead of P2 standing around
@@ -855,6 +866,7 @@ export class CombatEngine {
               damage: finalDamage,
               piercing: proj.piercing,
               aoeRadius: proj.aoeRadius,
+              life,
               tags: [...proj.tags],
               alive: true,
               trail: [],
@@ -938,6 +950,13 @@ export class CombatEngine {
       // Remove if off-screen
       if (p.y < -20 || p.y > this.arenaHeight + 20 || p.x < -20 || p.x > this.arenaWidth + 20) {
         p.alive = false;
+      }
+
+      // Short-range shots (flamethrower cone, etc.) fizzle out mid-air once
+      // their life runs out, regardless of arena bounds
+      if (p.life !== undefined) {
+        p.life -= dt;
+        if (p.life <= 0) p.alive = false;
       }
     }
     this.state.projectiles = this.state.projectiles.filter(p => p.alive);
@@ -1816,11 +1835,24 @@ export class CombatEngine {
     }
   }
 
-  private checkCollisions(): void {
+  private checkCollisions(dt: number): void {
     const charId = this.backpack.config.characterId;
 
     for (const p of this.state.projectiles) {
       if (!p.alive) continue;
+
+      // Swept hitbox spanning this frame's whole travel path, not just its
+      // current point. At normal speeds (a few px/frame) this is the same
+      // ~8x8 box as before — invisible change. But very fast shots (the
+      // laser's ~9999px/s bolt covers ~165px in one frame) used to tunnel
+      // straight through anything between last frame's position and this
+      // one's, since a point-sized box can't catch what it jumped over.
+      const travelX = p.vx * dt;
+      const travelY = p.vy * dt;
+      const hbX = Math.min(p.x, p.x - travelX) - 4;
+      const hbY = Math.min(p.y, p.y - travelY) - 4;
+      const hbW = Math.abs(travelX) + 8;
+      const hbH = Math.abs(travelY) + 8;
 
       for (let i = this.state.enemies.length - 1; i >= 0; i--) {
         const e = this.state.enemies[i];
@@ -1829,7 +1861,7 @@ export class CombatEngine {
         if (e.phased) continue;
 
         const hit = this.rectCollision(
-          p.x - 4, p.y - 4, 8, 8,
+          hbX, hbY, hbW, hbH,
           e.x - e.width / 2, e.y - e.height / 2, e.width, e.height
         );
 
@@ -2120,7 +2152,12 @@ export class CombatEngine {
               }
             }
           }
-          break;
+          // Stop checking further enemies for this shot only once it's
+          // actually spent (piercing exhausted). A piercing shot — bone_spear,
+          // sniper, or the laser's swept hitbox spanning many enemies in one
+          // frame — must keep scanning so it can hit everything in its box
+          // this frame instead of trickling out one enemy per frame.
+          if (!p.alive) break;
         }
       }
     }

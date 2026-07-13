@@ -109,6 +109,10 @@ export interface ProjectileData {
   aoeRadius: number;
   tags: Tag[];
   ownerId: string;
+  /** Max travel distance in px before the shot fizzles out (short-range
+   * weapons only — undefined flies until it hits something or exits the
+   * arena, same as before). */
+  range?: number;
 }
 
 export type EmitProjectile = (proj: ProjectileData) => void;
