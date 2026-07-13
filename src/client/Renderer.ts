@@ -2887,6 +2887,9 @@ export class Renderer {
     } else if (state.bossVariant === 'swarm_tide') {
       ctx.fillStyle = 'rgba(190, 24, 93, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.bossVariant === 'mothership') {
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.16)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.normalVariant === 'acid_rain') {
       ctx.fillStyle = state.acidRainActive ? 'rgba(132, 204, 22, 0.14)' : 'rgba(132, 204, 22, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3788,6 +3791,83 @@ export class Renderer {
     ctx.globalAlpha = 1;
   }
 
+  /** Nave-Mãe boss variant: a huge procedural hull (no art needed) with
+   * glowing weak-point markers that track the game's mothershipWeakPoints
+   * state — bright + pulsing while exposed, dim while dormant. */
+  private renderMothership(e: Enemy): void {
+    const { ctx } = this;
+    const w = e.width, h = e.height;
+    const vulnerable = !!(e as any).mothershipVulnerable;
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+
+    ctx.save();
+    ctx.translate(e.x, e.y);
+
+    // Hull silhouette
+    ctx.fillStyle = flash > 0 ? '#94a3b8' : '#1e293b';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, -h * 0.15);
+    ctx.lineTo(-w * 0.3, -h / 2);
+    ctx.lineTo(w * 0.3, -h / 2);
+    ctx.lineTo(w / 2, -h * 0.15);
+    ctx.lineTo(w / 2, h * 0.35);
+    ctx.lineTo(w * 0.2, h / 2);
+    ctx.lineTo(-w * 0.2, h / 2);
+    ctx.lineTo(-w / 2, h * 0.35);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = vulnerable ? '#ef4444' : '#475569';
+    ctx.lineWidth = vulnerable ? 3 : 2;
+    ctx.globalAlpha = vulnerable ? 0.7 + Math.sin(performance.now() * 0.01) * 0.3 : 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Panel greebling for readability at this scale
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * (w / 8), -h * 0.4);
+      ctx.lineTo(i * (w / 8), h * 0.4);
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // Weak point markers
+    const state = this.game.combat.state;
+    for (const wp of state.mothershipWeakPoints) {
+      const wx = e.x + wp.dx, wy = e.y + wp.dy;
+      if (wp.exposed) {
+        const pulse = 0.6 + Math.sin(performance.now() * 0.012) * 0.4;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = pulse * 0.6;
+        ctx.drawImage(this.getGlow('#f87171', 22), wx - 22, wy - 22);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = '#fca5a5';
+        ctx.beginPath();
+        ctx.arc(wx, wy, 10, 0, Math.PI * 2);
+        ctx.fill();
+      } else {
+        ctx.fillStyle = '#3f3f46';
+        ctx.beginPath();
+        ctx.arc(wx, wy, 8, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.strokeStyle = wp.exposed ? '#ef4444' : '#52525b';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.arc(wx, wy, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = vulnerable ? '#fca5a5' : '#94a3b8';
+    ctx.textAlign = 'center';
+    ctx.fillText(vulnerable ? 'VULNERÁVEL — ATIRE!' : 'NAVE-MÃE', e.x, e.y - h / 2 - 12);
+    ctx.textAlign = 'left';
+  }
+
   private static readonly COPYCAT_CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 
   /** Copycat boss variant: the mirror is rendered with the player's own
@@ -3834,6 +3914,7 @@ export class Renderer {
     const { ctx } = this;
     // Copycat boss variant: mirror of the player, own dedicated draw path
     if ((e as any).isCopycat) { this.renderCopycatMirror(e, dt); return; }
+    if ((e as any).isMothership) { this.renderMothership(e); return; }
     // Zyr-Goth's body is the screen-tall colossus layer (renderZyrgothGiant);
     // skip the normal sprite so he isn't drawn twice
     if ((e as any).defId === 'boss_epoch' && getZyrgothGiant()) return;

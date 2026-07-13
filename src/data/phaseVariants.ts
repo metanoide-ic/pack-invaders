@@ -59,7 +59,7 @@ export const BOSS_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'mothership',
     name: 'Nave-Mãe',
     description: 'Uma nave gigante parada dispara sem parar enquanto inimigos vazam pelas laterais — acerte os pontos fracos quando brilharem.',
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'swarm_tide',

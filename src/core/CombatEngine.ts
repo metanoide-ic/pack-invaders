@@ -117,6 +117,9 @@ export interface Enemy {
   /** Copycat boss variant: this enemy is a mirror of the player's own
    * character/build, rendered with the player's own sprite (see Renderer). */
   isCopycat?: boolean;
+  /** Nave-Mãe boss variant: the giant stationary hull — only damageable
+   * while at least one of its weak points is exposed (see updateMothership) */
+  isMothership?: boolean;
 }
 
 // ─── Projectile (in-flight) ──────────────────────────────────────────────────
@@ -375,6 +378,12 @@ export interface CombatState {
   groundZeroTelegraphZone: { x0: number; x1: number } | null;
   /** Zona-Zero: seconds left before the telegraphed section collapses */
   groundZeroTelegraphTimer: number;
+
+  /** Nave-Mãe: the hull's weak points — only vulnerable while `exposed` */
+  mothershipWeakPoints: { dx: number; dy: number; exposed: boolean; timer: number }[];
+  /** Nave-Mãe: raiders entering from the sides — reaching the far edge
+   * un-killed leaks through and hits the player */
+  mothershipRaiders: { id: string; x: number; y: number; vx: number; vy: number; radius: number; damage: number }[];
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -393,6 +402,8 @@ export class CombatEngine {
   private _swarmTideSpawnTimer = 2.5;
   /** Zona-Zero: seconds until the next section starts cracking */
   private _groundZeroNextTimer = 6;
+  /** Nave-Mãe: seconds until the next side raider spawns */
+  private _mothershipRaiderTimer = 3;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -505,6 +516,8 @@ export class CombatEngine {
       groundZeroZones: [],
       groundZeroTelegraphZone: null,
       groundZeroTelegraphTimer: 0,
+      mothershipWeakPoints: [],
+      mothershipRaiders: [],
     };
   }
 
@@ -557,6 +570,17 @@ export class CombatEngine {
     this.state.groundZeroTelegraphZone = null;
     this.state.groundZeroTelegraphTimer = 0;
     this._groundZeroNextTimer = 6 + Math.random() * 3;
+    this.state.mothershipRaiders = [];
+    this._mothershipRaiderTimer = 3;
+    if (isBossMonth && !isMegaBossMonth && bossVariant === 'mothership') {
+      this.state.mothershipWeakPoints = [
+        { dx: -100, dy: 0, exposed: false, timer: 2 + Math.random() * 3 },
+        { dx: 0, dy: 20, exposed: false, timer: 4 + Math.random() * 3 },
+        { dx: 100, dy: 0, exposed: false, timer: 6 + Math.random() * 3 },
+      ];
+    } else {
+      this.state.mothershipWeakPoints = [];
+    }
     this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
@@ -766,6 +790,7 @@ export class CombatEngine {
     if (this.state.normalVariant === 'acid_rain') this.updateAcidRain(dt);
     if (this.state.normalVariant === 'ground_zero') this.updateGroundZero(dt);
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
+    if (this.state.bossVariant === 'mothership') this.updateMothership(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
     // 12. Update floating texts
@@ -950,6 +975,95 @@ export class CombatEngine {
       if (!overlaps) return { x0, x1 };
     }
     return null;
+  }
+
+  /** Nave-Mãe (boss phase variant): cycles the hull's weak points between
+   * dormant/exposed, and spawns raiders that cross laterally from one side
+   * to the other — killed for normal rewards like any enemy, or leaking off
+   * the far edge to hit the player ("damage to the ship"). */
+  private updateMothership(dt: number): void {
+    const st = this.state;
+
+    for (const wp of st.mothershipWeakPoints) {
+      wp.timer -= dt;
+      if (wp.timer <= 0) {
+        wp.exposed = !wp.exposed;
+        wp.timer = wp.exposed ? (2 + Math.random() * 1.5) : (4 + Math.random() * 3);
+      }
+    }
+    const ship = st.enemies.find(e => (e as any).isMothership);
+    if (ship) {
+      (ship as any).mothershipVulnerable = st.mothershipWeakPoints.some(w => w.exposed);
+
+      // Only keep sending raiders while the ship itself is still up — once
+      // it's down, any stragglers already in flight just finish crossing
+      // instead of the fight dragging out on an endless stream.
+      this._mothershipRaiderTimer -= dt;
+      if (this._mothershipRaiderTimer <= 0) {
+        this._mothershipRaiderTimer = 2.2 + Math.random() * 1.6;
+        this.spawnMothershipRaider(st.wave);
+      }
+    }
+
+    // Move raiders laterally, overriding the vertical drift updateEnemies
+    // already applied to them this frame (raiders use 'straight' movement
+    // purely so the rest of the enemy pipeline — shooting, hit-flash,
+    // collisions — treats them like any other enemy).
+    for (let i = st.enemies.length - 1; i >= 0; i--) {
+      const e = st.enemies[i];
+      if (!(e as any).isRaider) continue;
+      e.x += ((e as any).lateralVX ?? 0) * dt;
+      e.y = (e as any).raiderY ?? e.y;
+      if (e.x < -50 || e.x > this.arenaWidth + 50) {
+        st.enemies.splice(i, 1);
+        st.totalEnemies = Math.max(0, st.totalEnemies - 1);
+        this.damagePlayer(Math.max(10, st.playerMaxHp * 0.12));
+        this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '🛸 NAVE ATINGIDA!', '#f87171');
+        this.triggerShake(5, 0.3);
+      }
+    }
+  }
+
+  /** Spawns one raider entering from a random side. */
+  private spawnMothershipRaider(totalMonths: number): void {
+    const virtualWave = Math.min(20, Math.ceil(totalMonths * 0.6));
+    const available = getEnemiesForWave(virtualWave);
+    if (available.length === 0) return;
+    const def = available[Math.floor(Math.random() * available.length)];
+    const fromLeft = Math.random() < 0.5;
+    const y = 220 + Math.random() * 120;
+    const hpScale = totalMonths <= 6 ? 1 + totalMonths * 0.1
+      : totalMonths <= 12 ? 1.5 + (totalMonths - 6) * 0.2
+      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+
+    const enemy: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: fromLeft ? -30 : this.arenaWidth + 30,
+      y,
+      hp: Math.floor(def.hp * hpScale),
+      maxHp: Math.floor(def.hp * hpScale),
+      speed: 0,
+      damage: def.damage + Math.floor(totalMonths * 0.4),
+      tags: [...def.tags],
+      width: def.width,
+      height: def.height,
+      goldReward: def.goldReward,
+      shootTimer: def.special?.type === 'shoot' ? 1 / def.special.fireRate : 2,
+      special: def.special,
+      isBoss: false,
+      movement: 'straight',
+      phased: false,
+      spawnTimer: def.special?.type === 'spawn' ? def.special.interval : undefined,
+      moveTimer: 0,
+      moveDir: 1,
+      baseSpeed: 0,
+      defId: def.id,
+    };
+    (enemy as any).isRaider = true;
+    (enemy as any).lateralVX = (fromLeft ? 1 : -1) * (70 + Math.random() * 40);
+    (enemy as any).raiderY = y;
+    this.state.enemies.push(enemy);
+    this.state.totalEnemies++;
   }
 
   /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a
@@ -1604,8 +1718,12 @@ export class CombatEngine {
         }
       }
 
-      // Clamp to arena
-      e.x = Math.max(e.width / 2, Math.min(this.arenaWidth - e.width / 2, e.x));
+      // Clamp to arena — except Nave-Mãe raiders, which are supposed to
+      // cross all the way off one edge (that's how updateMothership detects
+      // a leak); this clamp would otherwise pin them at the wall forever.
+      if (!(e as any).isRaider) {
+        e.x = Math.max(e.width / 2, Math.min(this.arenaWidth - e.width / 2, e.x));
+      }
       e.y = Math.min(this.arenaHeight + 50, e.y); // Allow going a bit past bottom for reach-bottom check
     }
   }
@@ -2332,6 +2450,13 @@ export class CombatEngine {
 
         if (hit) {
           let damage = p.damage;
+
+          // Nave-Mãe: the hull only takes damage while a weak point is
+          // exposed — otherwise every hit still flashes/impacts for
+          // feedback but deals 0, teaching "wait for the glow"
+          if ((e as any).isMothership && !(e as any).mothershipVulnerable) {
+            damage = 0;
+          }
 
           // Caçador de Chefes / Caçador de Elites cards
           if (e.isBoss) damage *= (this as any)._bossDamageMult ?? 1;
@@ -3619,7 +3744,9 @@ export class CombatEngine {
     // entries just because Zyr-Goth also showed up that year, and Zyr-Goth's
     // own repeat-mutation escalation doesn't depend on how many regular
     // bosses have been fought.
-    if (isBossMonth && !isSwarmTide) {
+    if (isBossMonth && !isMegaBossMonth && bossVariant === 'mothership') {
+      enemies.push(this.generateMothership(totalMonths));
+    } else if (isBossMonth && !isSwarmTide) {
       let bossSource: EnemyDefinition;
       let encounterCount: number;
       let lapDivisor: number;
@@ -3757,6 +3884,43 @@ export class CombatEngine {
     };
     (enemy as any).displayName = 'CÓPIA SOMBRIA';
     (enemy as any).copycatCharacterId = characterId;
+    return enemy;
+  }
+
+  /** Nave-Mãe boss variant: a huge stationary hull that only takes damage
+   * while a weak point is exposed (see updateMothership) — HP is set lower
+   * than a normal boss of this era to compensate for that gated window, or
+   * the fight would drag on forever. */
+  private generateMothership(totalMonths: number): Enemy {
+    const year = Math.ceil(totalMonths / 12);
+    const baseHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
+    const hp = Math.floor(baseHp * 0.65);
+    const damage = 14 + Math.floor(totalMonths * 0.6);
+
+    const enemy: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: this.arenaWidth / 2,
+      y: 120,
+      hp, maxHp: hp,
+      speed: 0,
+      damage,
+      tags: [],
+      width: 320,
+      height: 140,
+      goldReward: Math.floor(150 + totalMonths * 3),
+      shootTimer: 0.5,
+      special: { type: 'shoot', fireRate: 4.5, projectileSpeed: 240 },
+      isBoss: true,
+      movement: 'straight',
+      phased: false,
+      moveTimer: 0,
+      moveDir: 1,
+      baseSpeed: 0,
+      defId: 'boss_mothership',
+    };
+    (enemy as any).isMothership = true;
+    (enemy as any).mothershipVulnerable = false;
+    (enemy as any).displayName = 'NAVE-MÃE';
     return enemy;
   }
 }
