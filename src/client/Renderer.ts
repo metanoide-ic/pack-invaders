@@ -2885,6 +2885,9 @@ export class Renderer {
       ctx.fillStyle = 'rgba(127, 29, 29, 0.10)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
+    if (state.normalVariant === 'space') {
+      this.renderSpaceDrift(performance.now() / 1000);
+    }
 
     // ── Ground & energy barricade ────────────────────────────────────────
     const now = performance.now() / 1000;
@@ -3230,6 +3233,11 @@ export class Renderer {
       }
     }
 
+    // ── Vácuo Aberto: incoming asteroids ─────────────────────────────────
+    if (state.normalVariant === 'space' && state.asteroids.length > 0) {
+      this.renderSpaceAsteroids(state);
+    }
+
     // ── Power-up drops ───────────────────────────────────────────────────
     const puStyle: Record<string, { color: string; icon: string }> = {
       heal:   { color: '#4ade80', icon: '♥' },
@@ -3350,7 +3358,11 @@ export class Renderer {
     }
 
     const tdSprite = getTopdownSprite(charId);
-    if (tdSprite || playerSprite) {
+    if (state.normalVariant === 'space') {
+      // Vácuo Aberto: a procedural ship instead of the character — no new
+      // art needed, and it reads as "you're flying now" at a glance.
+      this.renderSpaceShip(state, now);
+    } else if (tdSprite || playerSprite) {
       const vel = (game.combat as any).playerVelocity ?? 0;
       const lean = Math.max(-0.09, Math.min(0.09, vel * 0.00012));
       ctx.save();
@@ -3565,6 +3577,128 @@ export class Renderer {
     boss_voidmaw: 'pulse', boss_astral_serpent: 'menace', boss_harbinger: 'menace',
     boss_kepler_prime: 'pulse',
   };
+
+  private static readonly HERO_GLOW_COLORS: Record<string, string> = {
+    grass_man: '#4ade80', fire_lord: '#f97316', aqua_sage: '#38bdf8',
+    storm_runner: '#a3e635', void_walker: '#a855f7', beast_tamer: '#ec4899',
+    firefighter: '#ef4444', scrapper: '#f59e0b', renegade: '#84cc16',
+  };
+
+  /** Vácuo Aberto (normal phase variant): a procedural ship instead of the
+   * character sprite — no new art needed, and the silhouette alone reads as
+   * "you're flying" instead of walking. */
+  private renderSpaceShip(state: CombatState, now: number): void {
+    const { ctx, canvas } = this;
+    const charId = this.game.characterId;
+    const color = Renderer.HERO_GLOW_COLORS[charId] ?? '#8fb8ff';
+    const vel = (this.game.combat as any).playerVelocity ?? 0;
+    const lean = Math.max(-0.3, Math.min(0.3, vel * 0.0005));
+    const x = state.playerX;
+    const y = canvas.height - 40;
+    const bob = Math.sin(now * 3) * 1.5;
+
+    // Engine trail
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.55;
+    ctx.fillStyle = color;
+    const trailLen = 14 + Math.min(20, Math.abs(vel) * 0.03);
+    ctx.beginPath();
+    ctx.moveTo(x - 7, y + 14 + bob);
+    ctx.lineTo(x, y + 14 + bob + trailLen);
+    ctx.lineTo(x + 7, y + 14 + bob);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.rotate(lean);
+    // Hull
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.moveTo(0, -22);
+    ctx.lineTo(16, 14);
+    ctx.lineTo(0, 6);
+    ctx.lineTo(-16, 14);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    // Cockpit
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.ellipse(0, -4, 4, 7, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.restore();
+  }
+
+  /** Vácuo Aberto: tumbling asteroids on a collision course. */
+  private renderSpaceAsteroids(state: CombatState): void {
+    const { ctx } = this;
+    for (const a of state.asteroids) {
+      ctx.save();
+      ctx.translate(a.x, a.y);
+      ctx.rotate(a.rotation);
+      ctx.fillStyle = '#57534e';
+      ctx.beginPath();
+      const spikes = 8;
+      for (let i = 0; i < spikes; i++) {
+        const ang = (Math.PI * 2 * i) / spikes;
+        const r = a.radius * (0.8 + ((i % 3) * 0.08));
+        const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,0.25)';
+      ctx.beginPath();
+      ctx.arc(-a.radius * 0.25, -a.radius * 0.2, a.radius * 0.28, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(a.radius * 0.3, a.radius * 0.15, a.radius * 0.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#f97316';
+      ctx.globalAlpha = 0.5;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+  }
+
+  /** Vácuo Aberto: drifting debris + streaking stars for a "dynamic scenario" —
+   * decorative only, no collision. */
+  private renderSpaceDrift(now: number): void {
+    const { ctx, canvas } = this;
+    ctx.globalAlpha = 0.5;
+    ctx.strokeStyle = '#8fb8ff';
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 14; i++) {
+      const seed = i * 137.5;
+      const x = (seed * 3.7 + now * (30 + (i % 5) * 18)) % (canvas.width + 60) - 30;
+      const y = ((seed * 5.3) % canvas.height);
+      const len = 10 + (i % 4) * 6;
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+      ctx.lineTo(x, y + len);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 0.15;
+    ctx.fillStyle = '#a78bfa';
+    for (let i = 0; i < 4; i++) {
+      const seed = i * 911.3;
+      const x = (seed * 1.9 + now * (6 + i * 3)) % (canvas.width + 200) - 100;
+      const y = 80 + ((seed * 2.7) % (canvas.height - 200));
+      ctx.beginPath();
+      ctx.arc(x, y, 60 + i * 20, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
 
   private static readonly COPYCAT_CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 

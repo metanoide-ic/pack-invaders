@@ -167,6 +167,20 @@ export interface EnemyProjectile {
   tags?: readonly string[];
 }
 
+// ─── Asteroid (Vácuo Aberto phase variant) ────────────────────────────────────
+
+export interface Asteroid {
+  id: string;
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  damage: number;
+  rotation: number;
+  rotSpeed: number;
+}
+
 // ─── Floating Text (damage numbers, gold) ────────────────────────────────────
 
 export interface FloatingText {
@@ -334,6 +348,8 @@ export interface CombatState {
   copycatAdrenalineTotal: number;
   /** Copycat: accumulates time between Adrenaline projectile bursts */
   copycatAdrenalineBurstTimer: number;
+  /** Vácuo Aberto: incoming asteroids — collision deals heavy damage */
+  asteroids: Asteroid[];
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -345,6 +361,9 @@ export class CombatEngine {
   private nextEnemyId = 0;
   private nextEnemyProjId = 0;
   private nextAllyId = 0;
+  private nextAsteroidId = 0;
+  /** Vácuo Aberto: seconds until the next asteroid spawns */
+  private _spaceAsteroidTimer = 1.5;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -446,6 +465,7 @@ export class CombatEngine {
       copycatAdrenalineTimer: 0,
       copycatAdrenalineTotal: 0,
       copycatAdrenalineBurstTimer: 0,
+      asteroids: [],
     };
   }
 
@@ -472,6 +492,8 @@ export class CombatEngine {
     this.state.copycatAdrenalineTimer = 0;
     this.state.copycatAdrenalineBurstTimer = 0;
     this.state.copycatAdrenalineTotal = characterId === 'renegade' ? 0 : characterId === 'storm_runner' ? 5 : 10;
+    this.state.asteroids = [];
+    this._spaceAsteroidTimer = 1.5;
     this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
@@ -674,8 +696,9 @@ export class CombatEngine {
     // 11. Apply item passive effects (EMP, auras, etc.)
     this.applyItemPassives(dt);
 
-    // 11b. Phase variants: Frostbite hazard / Copycat survive-only finale
+    // 11b. Phase variants: Frostbite hazard / Space asteroids / Copycat finale
     if (this.state.normalVariant === 'frostbite') this.updateFrostbite(dt, playerDir);
+    if (this.state.normalVariant === 'space') this.updateSpaceAsteroids(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
     // 12. Update floating texts
@@ -768,6 +791,50 @@ export class CombatEngine {
       this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '❄ CONGELAMENTO! ❄', '#7dd3fc');
       this.triggerShake(10, 0.5);
       this.triggerPlayerFlash();
+    }
+  }
+
+  /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a
+   * collision course — dodge with the same horizontal movement used to
+   * avoid everything else, or eat a heavy hit. Missed asteroids (reach the
+   * bottom without hitting the player) just despawn, no penalty. */
+  private updateSpaceAsteroids(dt: number): void {
+    this._spaceAsteroidTimer -= dt;
+    if (this._spaceAsteroidTimer <= 0) {
+      this._spaceAsteroidTimer = 1.6 + Math.random() * 1.2;
+      const radius = 16 + Math.random() * 14;
+      this.state.asteroids.push({
+        id: `asteroid_${this.nextAsteroidId++}`,
+        x: 60 + Math.random() * (this.arenaWidth - 120),
+        y: -radius,
+        vx: (Math.random() - 0.5) * 40,
+        vy: 190 + Math.random() * 90,
+        radius,
+        damage: Math.max(16, this.state.playerMaxHp * 0.2),
+        rotation: 0,
+        rotSpeed: (Math.random() - 0.5) * 2.5,
+      });
+    }
+
+    const st = this.state;
+    for (let i = st.asteroids.length - 1; i >= 0; i--) {
+      const a = st.asteroids[i];
+      a.x += a.vx * dt;
+      a.y += a.vy * dt;
+      a.rotation += a.rotSpeed * dt;
+
+      const hitPlayer = Math.abs(a.x - st.playerX) < a.radius + 16 && a.y > this.arenaHeight - 60 && a.y < this.arenaHeight - 20;
+      if (hitPlayer) {
+        this.damagePlayer(a.damage);
+        this.spawnFloatingText(st.playerX, this.arenaHeight - 90, '☄ IMPACTO!', '#fca5a5');
+        this.triggerShake(9, 0.4);
+        this.triggerPlayerFlash();
+        st.asteroids.splice(i, 1);
+        continue;
+      }
+      if (a.y > this.arenaHeight + 60) {
+        st.asteroids.splice(i, 1);
+      }
     }
   }
 

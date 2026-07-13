@@ -32,7 +32,7 @@ export const NORMAL_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'space',
     name: 'Vácuo Aberto',
     description: 'Controle uma nave no espaço aberto — destroços e asteroides vêm em rota de colisão e causam dano pesado.',
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'acid_rain',
