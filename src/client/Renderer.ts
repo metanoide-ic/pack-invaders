@@ -583,14 +583,17 @@ export class Renderer {
     const { ctx, canvas } = this;
     const L = this.getLayout();
     this.menuFloatTimer += dt;
+    const GOLD = '#d4af37';
 
     ctx.fillStyle = '#050510';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.font = L.fontTitle;
-    ctx.fillStyle = '#fbbf24';
+    ctx.fillStyle = GOLD;
     ctx.textAlign = 'center';
-    ctx.fillText('SELECIONE UM SAVE', L.cx, Math.floor(L.h * 0.08));
+    ctx.shadowColor = GOLD; ctx.shadowBlur = 8;
+    ctx.fillText('CRÔNICAS DE SOBREVIVÊNCIA', L.cx, Math.floor(L.h * 0.08));
+    ctx.shadowBlur = 0;
     ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
     ctx.fillStyle = '#64748b';
     ctx.fillText('Clique em um slot vazio para novo jogo, ou em um existente para continuar', L.cx, Math.floor(L.h * 0.12));
@@ -611,7 +614,10 @@ export class Renderer {
     const startX = (L.w - totalW) / 2;
     const slotY = Math.floor(L.h * 0.18);
 
+    this.drawOrnateFrame(startX - 14, slotY - 14, totalW + 28, slotH + 28, GOLD);
+
     const slots = SaveManager.getSlots();
+    const loadedSp = (this as any).loadedSprites;
 
     for (let i = 0; i < 4; i++) {
       const x = startX + i * (slotW + slotGap);
@@ -628,12 +634,40 @@ export class Renderer {
       ctx.fillStyle = slotGrad;
       ctx.fill();
 
+      // Character portrait as card art (occupied slots only), clipped to the
+      // rounded card shape, with a dark gradient plate for text legibility
+      if (slot.exists) {
+        const portrait = loadedSp?.characters?.get(this.CHAR_SPRITE_MAP[slot.characterId]) || null;
+        if (portrait) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.roundRect(x, slotY, slotW, slotH, 10);
+          ctx.clip();
+          ctx.globalAlpha = 0.55;
+          const iw = portrait.naturalWidth || portrait.width;
+          const ih = portrait.naturalHeight || portrait.height;
+          const sc2 = Math.max(slotW / iw, slotH / ih);
+          const dw = iw * sc2; const dh = ih * sc2;
+          ctx.drawImage(portrait, x + (slotW - dw) / 2, slotY + (slotH - dh) * 0.15, dw, dh);
+          ctx.globalAlpha = 1;
+          const plate = ctx.createLinearGradient(0, slotY, 0, slotY + slotH);
+          plate.addColorStop(0, 'rgba(5,5,16,0.55)');
+          plate.addColorStop(0.62, 'rgba(5,5,16,0.72)');
+          plate.addColorStop(1, 'rgba(5,5,16,0.96)');
+          ctx.fillStyle = plate;
+          ctx.fillRect(x, slotY, slotW, slotH);
+          ctx.restore();
+        }
+      }
+
       // Border with glow on hover
       if (isHover) {
-        ctx.shadowColor = slot.exists ? '#6366f1' : '#4ade80';
+        ctx.shadowColor = slot.exists ? GOLD : '#4ade80';
         ctx.shadowBlur = 10;
       }
-      ctx.strokeStyle = slot.exists ? '#6366f1' : '#374151';
+      ctx.beginPath();
+      ctx.roundRect(x, slotY, slotW, slotH, 10);
+      ctx.strokeStyle = slot.exists ? GOLD : '#374151';
       ctx.lineWidth = isHover ? 2 : 1.5;
       ctx.stroke();
       ctx.shadowBlur = 0;
@@ -641,12 +675,12 @@ export class Renderer {
       // Top accent band
       ctx.beginPath();
       ctx.roundRect(x, slotY, slotW, 4, [10, 10, 0, 0]);
-      ctx.fillStyle = slot.exists ? '#6366f1' : '#1e293b';
+      ctx.fillStyle = slot.exists ? GOLD : '#1e293b';
       ctx.fill();
 
       ctx.textAlign = 'center';
       ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
-      ctx.fillStyle = '#a78bfa';
+      ctx.fillStyle = GOLD;
       ctx.fillText(`SLOT ${i + 1}`, x + slotW / 2, slotY + Math.floor(slotH * 0.08));
 
       if (slot.exists) {
@@ -658,18 +692,18 @@ export class Renderer {
 
         // Character title
         ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-        ctx.fillStyle = '#64748b';
+        ctx.fillStyle = '#94a3b8';
         ctx.fillText(`(${slot.characterId})`, x + slotW / 2, slotY + Math.floor(slotH * 0.24));
 
         // Stats
         ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
-        ctx.fillStyle = '#94a3b8';
+        ctx.fillStyle = '#cbd5e1';
         ctx.fillText(`Ano ${slot.year} — Mês ${slot.month}`, x + slotW / 2, slotY + Math.floor(slotH * 0.35));
         ctx.fillStyle = '#fbbf24';
         ctx.fillText(`💰 ${slot.gold} gold`, x + slotW / 2, slotY + Math.floor(slotH * 0.44));
-        ctx.fillStyle = '#6366f1';
+        ctx.fillStyle = '#93c5fd';
         ctx.fillText(`📦 ${slot.itemCount} itens`, x + slotW / 2, slotY + Math.floor(slotH * 0.53));
-        ctx.fillStyle = '#4ade80';
+        ctx.fillStyle = '#86efac';
         ctx.fillText(`${slot.totalMonths} meses jogados`, x + slotW / 2, slotY + Math.floor(slotH * 0.62));
 
         if (slot.aliencore) {
@@ -680,7 +714,7 @@ export class Renderer {
 
         // Action hint
         ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = '#94a3b8';
         ctx.fillText('Clique para continuar', x + slotW / 2, slotY + Math.floor(slotH * 0.82));
 
         // Delete button
@@ -702,13 +736,13 @@ export class Renderer {
       } else {
         // Empty slot
         ctx.font = `${Math.floor(L.h * 0.04)}px monospace`;
-        ctx.fillStyle = '#1e293b';
+        ctx.fillStyle = '#292524';
         ctx.fillText('+', x + slotW / 2, slotY + Math.floor(slotH * 0.4));
         ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
-        ctx.fillStyle = '#475569';
+        ctx.fillStyle = '#57534e';
         ctx.fillText('Vazio', x + slotW / 2, slotY + Math.floor(slotH * 0.52));
         ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-        ctx.fillStyle = '#374151';
+        ctx.fillStyle = '#44403c';
         ctx.fillText('Clique para novo jogo', x + slotW / 2, slotY + Math.floor(slotH * 0.60));
       }
     }
@@ -1203,6 +1237,22 @@ export class Renderer {
     ctx.restore();
   }
 
+  /** Grid geometry for the character-select screen — 3×3 portrait grid.
+   * Shared constants also duplicated in InputHandler.handleTitleClick for
+   * hit-testing (same pattern as the rest of the codebase's click handlers). */
+  private getTitleGridLayout() {
+    const L = this.getLayout();
+    const cols = 3, rows = 3;
+    const gridY = Math.floor(L.h * 0.10);
+    const gridH = Math.floor(L.h * 0.48);
+    const gap = Math.floor(L.w * 0.008);
+    const gridW = Math.floor(L.w * 0.58);
+    const gridX = Math.floor(L.cx - gridW / 2);
+    const cellW = Math.floor((gridW - gap * (cols - 1)) / cols);
+    const cellH = Math.floor((gridH - gap * (rows - 1)) / rows);
+    return { L, cols, rows, gridX, gridY, gridW, gridH, gap, cellW, cellH };
+  }
+
   private renderTitle(dt: number): void {
     const { ctx, canvas } = this;
     const L = this.getLayout();
@@ -1215,6 +1265,7 @@ export class Renderer {
     const charBgs   = this.CHAR_BGS;
     const color = charColors[idx] || '#94a3b8';
     const bg    = charBgs[idx]    || '#0a0a1a';
+    const GOLD = '#d4af37';
 
     // ── Fade between characters ───────────────────────────────────────────
     if ((this as any)._charFadeTimer === undefined) (this as any)._charFadeTimer = 1;
@@ -1225,18 +1276,6 @@ export class Renderer {
     }
     if ((this as any)._charFadeTimer < 1) (this as any)._charFadeTimer = Math.min(1, (this as any)._charFadeTimer + dt * 5);
     const fadeIn = (this as any)._charFadeTimer as number;
-
-    // ── Carousel slide offset ─────────────────────────────────────────────
-    if ((this as any)._carouselOff === undefined) (this as any)._carouselOff = 0;
-    if ((this as any)._prevCIdx === undefined) (this as any)._prevCIdx = idx;
-    if ((this as any)._prevCIdx !== idx) {
-      const dir = idx > (this as any)._prevCIdx ? -1 : 1;
-      (this as any)._carouselOff = dir * 0.55;
-      (this as any)._prevCIdx = idx;
-    }
-    const off = (this as any)._carouselOff as number;
-    if (Math.abs(off) > 0.002) (this as any)._carouselOff = off * 0.72;
-    else (this as any)._carouselOff = 0;
 
     // ── Locked shake ──────────────────────────────────────────────────────
     if (this._lockedShakeTimer > 0) this._lockedShakeTimer -= dt;
@@ -1270,43 +1309,44 @@ export class Renderer {
     }
     ctx.globalAlpha = 1;
 
-    // ── CAROUSEL CARDS ───────────────────────────────────────────────────
-    const CARD_W    = Math.floor(L.w * 0.265);
-    const CARD_H    = Math.floor(L.h * 0.638);
-    const CARD_Y    = Math.floor(L.h * 0.048);
-    const SPACING   = Math.floor(L.w * 0.296);
-    const loadedSp  = (this as any).loadedSprites;
+    // Title
+    ctx.font = `bold ${Math.floor(L.h * 0.026)}px monospace`;
+    ctx.fillStyle = GOLD;
+    ctx.textAlign = 'center';
+    ctx.shadowColor = GOLD; ctx.shadowBlur = 8;
+    ctx.fillText('ESCOLHA SEU SOBREVIVENTE', L.cx, Math.floor(L.h * 0.06));
+    ctx.shadowBlur = 0;
+    ctx.textAlign = 'left';
 
-    const drawCard = (ci: number, centerX: number, scale: number, alpha: number): void => {
-      if (ci < 0 || ci >= chars.length) return;
+    // ── PORTRAIT GRID (3×3) ─────────────────────────────────────────────
+    const G = this.getTitleGridLayout();
+    const loadedSp = (this as any).loadedSprites;
+
+    this.drawOrnateFrame(G.gridX - 12, G.gridY - 12, G.gridW + 24, G.gridH + 24, GOLD);
+
+    for (let ci = 0; ci < chars.length && ci < G.cols * G.rows; ci++) {
       const ch = chars[ci];
       const chColor = charColors[ci] || '#94a3b8';
-      const cw  = Math.floor(CARD_W * scale);
-      const ch2 = Math.floor(CARD_H * scale);
-      const cx2 = Math.floor(centerX - cw / 2);
-      const cy2 = Math.floor(CARD_Y + (CARD_H - ch2) / 2);
+      const row = Math.floor(ci / G.cols);
+      const col = ci % G.cols;
+      const cx2 = G.gridX + col * (G.cellW + G.gap);
+      const cy2 = G.gridY + row * (G.cellH + G.gap);
+      const cw = G.cellW, ch2 = G.cellH;
       const chUnlocked = this.game.isCharacterUnlocked(ch.id);
-      const isCenter = scale > 0.85;
+      const isSel = ci === idx;
 
       ctx.save();
-      ctx.globalAlpha = alpha;
 
-      // Drop shadow
-      if (isCenter) {
-        ctx.shadowColor = chColor + '99';
-        ctx.shadowBlur = 28;
-      }
+      if (isSel) { ctx.shadowColor = chColor + 'cc'; ctx.shadowBlur = 18; }
 
-      // Card bg
       const cardGrad = ctx.createLinearGradient(cx2, cy2, cx2, cy2 + ch2);
       cardGrad.addColorStop(0, '#0e0e1c');
       cardGrad.addColorStop(1, '#06060f');
       ctx.fillStyle = cardGrad;
       ctx.fillRect(cx2, cy2, cw, ch2);
 
-      // Border
-      ctx.strokeStyle = isCenter ? chColor : chColor + '50';
-      ctx.lineWidth = isCenter ? 2 : 1;
+      ctx.strokeStyle = isSel ? GOLD : chColor + '55';
+      ctx.lineWidth = isSel ? 3 : 1;
       ctx.strokeRect(cx2, cy2, cw, ch2);
       ctx.shadowBlur = 0;
 
@@ -1315,7 +1355,6 @@ export class Renderer {
       ctx.beginPath();
       ctx.rect(cx2 + 1, cy2 + 1, cw - 2, ch2 - 2);
       ctx.clip();
-      // Fallback: generated pixel art character sprite (scaled up)
       const genCharSprite = this.sprites.characters?.get(ch.id);
 
       if (portrait) {
@@ -1323,18 +1362,16 @@ export class Renderer {
         const ih = portrait.naturalHeight || portrait.height;
         const sc2 = Math.max(cw / iw, ch2 / ih);
         const dw = iw * sc2; const dh = ih * sc2;
-        ctx.drawImage(portrait, cx2 + (cw - dw) / 2, cy2 + (ch2 - dh), dw, dh);
+        ctx.drawImage(portrait, cx2 + (cw - dw) / 2, cy2 + (ch2 - dh) * 0.35, dw, dh);
       } else if (genCharSprite) {
-        // Draw pixel art character scaled to fill bottom 55% of card, crisp pixels
         ctx.imageSmoothingEnabled = false;
         const pxW = genCharSprite.width;
         const pxH = genCharSprite.height;
         const maxW = cw * 0.75;
-        const maxH = ch2 * 0.62;
+        const maxH = ch2 * 0.75;
         const scChar = Math.min(maxW / pxW, maxH / pxH);
         const dw2 = Math.floor(pxW * scChar);
         const dh2 = Math.floor(pxH * scChar);
-        // Position: horizontally centered, vertically in lower half
         const drawX = cx2 + Math.floor((cw - dw2) / 2);
         const drawY = cy2 + ch2 - dh2 - Math.floor(ch2 * 0.05);
         ctx.drawImage(genCharSprite, drawX, drawY, dw2, dh2);
@@ -1343,102 +1380,78 @@ export class Renderer {
         this.drawCharPlaceholder(ctx, cx2, cy2, cw, ch2, chColor, ch.id);
       }
 
-      // Bottom gradient name overlay (center card only)
-      if (isCenter) {
-        const nameGrad = ctx.createLinearGradient(0, cy2 + ch2 * 0.56, 0, cy2 + ch2);
-        nameGrad.addColorStop(0, 'transparent');
-        nameGrad.addColorStop(1, 'rgba(4,4,16,0.97)');
-        ctx.fillStyle = nameGrad;
-        ctx.fillRect(cx2, cy2, cw, ch2);
-      }
+      // Bottom name plate
+      const nameGrad = ctx.createLinearGradient(0, cy2 + ch2 * 0.62, 0, cy2 + ch2);
+      nameGrad.addColorStop(0, 'transparent');
+      nameGrad.addColorStop(1, 'rgba(4,4,16,0.95)');
+      ctx.fillStyle = nameGrad;
+      ctx.fillRect(cx2, cy2, cw, ch2);
 
-      // Locked overlay
       if (!chUnlocked) {
-        ctx.fillStyle = 'rgba(0,0,0,0.75)';
+        ctx.fillStyle = 'rgba(0,0,0,0.72)';
         ctx.fillRect(cx2, cy2, cw, ch2);
-        ctx.font = `${Math.floor(ch2 * 0.13)}px monospace`;
-        ctx.fillStyle = '#374151';
+        ctx.font = `${Math.floor(ch2 * 0.22)}px monospace`;
+        ctx.fillStyle = '#52525b';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('🔒', cx2 + cw / 2, cy2 + ch2 * 0.45);
+        ctx.fillText('🔒', cx2 + cw / 2, cy2 + ch2 * 0.42);
         ctx.textBaseline = 'alphabetic';
-        ctx.textAlign = 'left';
       }
+
+      ctx.font = `bold ${Math.floor(L.h * 0.0145)}px monospace`;
+      ctx.fillStyle = isSel ? GOLD : (chUnlocked ? '#e2e8f0' : '#52525b');
+      ctx.textAlign = 'center';
+      ctx.fillText(ch.name, cx2 + cw / 2 + (isSel ? lockedShake : 0), cy2 + ch2 - Math.floor(ch2 * 0.08));
+      ctx.textAlign = 'left';
 
       ctx.restore();
+    }
 
-      // Name + title on center card (outside clip)
-      if (isCenter) {
-        ctx.save();
-        ctx.globalAlpha = alpha * fadeIn;
-        ctx.font = `bold ${Math.floor(L.h * 0.042)}px monospace`;
-        ctx.fillStyle = chColor;
-        ctx.textAlign = 'center';
-        ctx.shadowColor = chColor;
-        ctx.shadowBlur = 14;
-        ctx.fillText(ch.name.toUpperCase(), cx2 + cw / 2 + lockedShake, cy2 + ch2 - Math.floor(ch2 * 0.115));
-        ctx.shadowBlur = 0;
-        ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
-        ctx.fillStyle = chColor + 'bb';
-        ctx.fillText(ch.title, cx2 + cw / 2, cy2 + ch2 - Math.floor(ch2 * 0.046));
-        ctx.textAlign = 'left';
-        ctx.restore();
+    // ── PROGRESSION TRAIL (unlock order, one node per character) ─────────
+    const trailY = G.gridY + G.gridH + Math.floor(L.h * 0.045);
+    const trailW = Math.floor(L.w * 0.5);
+    const trailX = Math.floor(L.cx - trailW / 2);
+    const nSeg = chars.length - 1;
+    ctx.strokeStyle = '#3f3f46';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(trailX, trailY); ctx.lineTo(trailX + trailW, trailY);
+    ctx.stroke();
+    for (let i = 0; i < nSeg; i++) {
+      const aU = this.game.isCharacterUnlocked(chars[i].id);
+      const bU = this.game.isCharacterUnlocked(chars[i + 1].id);
+      if (aU && bU) {
+        ctx.strokeStyle = GOLD;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(trailX + (i / nSeg) * trailW, trailY);
+        ctx.lineTo(trailX + ((i + 1) / nSeg) * trailW, trailY);
+        ctx.stroke();
       }
-    };
-
-    const slideOff = (this as any)._carouselOff as number;
-    // Draw side cards behind center
-    drawCard(idx - 1, L.cx - SPACING + slideOff * SPACING, 0.70, 0.40);
-    drawCard(idx + 1, L.cx + SPACING + slideOff * SPACING, 0.70, 0.40);
-    // Draw center card on top
-    drawCard(idx, L.cx + slideOff * SPACING, 1.00, 1.00);
-
-    // ── NAVIGATION ARROWS ─────────────────────────────────────────────────
-    const arrowCY = CARD_Y + Math.floor(CARD_H * 0.44);
-    const arrowSize = Math.floor(L.h * 0.06);
-    const pulse = 0.68 + Math.sin(now * 2.2) * 0.18;
-    ctx.font = `bold ${arrowSize}px monospace`;
-    ctx.textBaseline = 'middle';
-    ctx.textAlign = 'center';
-    if (idx > 0) {
-      ctx.globalAlpha = pulse;
-      ctx.fillStyle = charColors[idx - 1];
-      ctx.shadowColor = charColors[idx - 1];
-      ctx.shadowBlur = 10;
-      ctx.fillText('◀', Math.floor(L.cx - SPACING * 0.54), arrowCY);
-      ctx.shadowBlur = 0;
     }
-    if (idx < chars.length - 1) {
-      ctx.globalAlpha = pulse;
-      ctx.fillStyle = charColors[idx + 1];
-      ctx.shadowColor = charColors[idx + 1];
-      ctx.shadowBlur = 10;
-      ctx.fillText('▶', Math.floor(L.cx + SPACING * 0.54), arrowCY);
-      ctx.shadowBlur = 0;
-    }
-    ctx.globalAlpha = 1;
-    ctx.textBaseline = 'alphabetic';
-    ctx.textAlign = 'left';
-
-    // ── DOT INDICATORS ────────────────────────────────────────────────────
-    const dotY  = CARD_Y + CARD_H + Math.floor(L.h * 0.022);
-    const dotR  = Math.floor(L.h * 0.007);
-    const dotGap = Math.floor(L.w * 0.016);
-    const dotsW = chars.length * (dotR * 2 + dotGap) - dotGap;
-    const dotStartX = Math.floor(L.cx - dotsW / 2 + dotR);
-    for (let di = 0; di < chars.length; di++) {
-      const dx = dotStartX + di * (dotR * 2 + dotGap);
-      const dActive = di === idx;
+    for (let ci = 0; ci < chars.length; ci++) {
+      const nx = trailX + (ci / nSeg) * trailW;
+      const unlocked = this.game.isCharacterUnlocked(chars[ci].id);
+      const isSel = ci === idx;
       ctx.beginPath();
-      ctx.arc(dx, dotY, dActive ? dotR * 1.5 : dotR, 0, Math.PI * 2);
-      ctx.fillStyle = dActive ? charColors[di] : charColors[di] + '40';
-      if (dActive) { ctx.shadowColor = charColors[di]; ctx.shadowBlur = 8; }
+      ctx.arc(nx, trailY, isSel ? Math.floor(L.h * 0.011) : Math.floor(L.h * 0.007), 0, Math.PI * 2);
+      ctx.fillStyle = unlocked ? GOLD : '#27272a';
+      if (isSel) { ctx.shadowColor = GOLD; ctx.shadowBlur = 8; }
       ctx.fill();
       ctx.shadowBlur = 0;
+      ctx.strokeStyle = isSel ? '#ffffff' : (unlocked ? '#fbbf2490' : '#52525b');
+      ctx.lineWidth = isSel ? 2 : 1;
+      ctx.stroke();
     }
+    ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+    ctx.fillStyle = '#71717a';
+    ctx.textAlign = 'center';
+    const unlockedCount = chars.filter(c => this.game.isCharacterUnlocked(c.id)).length;
+    ctx.fillText(`${unlockedCount}/${chars.length} sobreviventes recrutados`, L.cx, trailY + Math.floor(L.h * 0.028));
+    ctx.textAlign = 'left';
 
-    // ── INFO PANEL (below cards) ──────────────────────────────────────────
-    const infoY = dotY + Math.floor(L.h * 0.038);
+    // ── INFO PANEL (below trail) ──────────────────────────────────────────
+    const infoY = trailY + Math.floor(L.h * 0.05);
     const infoW = Math.floor(L.w * 0.58);
     const infoX = Math.floor(L.cx - infoW / 2);
 
@@ -1548,7 +1561,7 @@ export class Renderer {
     ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
     ctx.fillStyle = '#1f2937';
     ctx.textAlign = 'center';
-    ctx.fillText('← → navegar  |  ENTER jogar  |  ESC voltar', L.cx, L.h - Math.floor(L.h * 0.006));
+    ctx.fillText('setas navegam a grade  |  ENTER jogar  |  ESC voltar', L.cx, L.h - Math.floor(L.h * 0.006));
     ctx.textAlign = 'left';
   }
 
@@ -6584,6 +6597,42 @@ export class Renderer {
   }
 
   // ─── Helpers ────────────────────────────────────────────────────────────
+
+  /** 9-Kings-style ornate frame: double border + diamond corner medallions.
+   * Purely decorative, drawn over/around an existing panel — used by the
+   * save-select and character-select screens. Procedural (no art asset yet;
+   * see the "moldura ornamentada" prompt in the generation-prompts doc). */
+  private drawOrnateFrame(x: number, y: number, w: number, h: number, accentColor = '#d4af37'): void {
+    const { ctx } = this;
+    ctx.save();
+    ctx.strokeStyle = accentColor;
+    ctx.lineWidth = 2;
+    ctx.strokeRect(x, y, w, h);
+    ctx.strokeStyle = accentColor + '70';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x + 5, y + 5, w - 10, h - 10);
+
+    const s = Math.max(6, Math.min(w, h) * 0.018);
+    const corners: [number, number][] = [[x, y], [x + w, y], [x, y + h], [x + w, y + h]];
+    for (const [cx0, cy0] of corners) {
+      ctx.save();
+      ctx.translate(cx0, cy0);
+      ctx.beginPath();
+      ctx.moveTo(0, -s); ctx.lineTo(s, 0); ctx.lineTo(0, s); ctx.lineTo(-s, 0);
+      ctx.closePath();
+      ctx.fillStyle = accentColor;
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 0.75;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(0, 0, s * 0.32, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+  }
 
   private renderButton(x: number, y: number, w: number, h: number, text: string, color: string): void {
     const { ctx } = this;
