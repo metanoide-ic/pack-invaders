@@ -2876,6 +2876,16 @@ export class Renderer {
     // Smooth HP
     this.displayHp += (state.playerHp - this.displayHp) * Math.min(1, dt * 8);
 
+    // Phase variant atmosphere wash — subtle full-screen tint so the fight
+    // reads as a different place at a glance, without touching the layout.
+    if (state.normalVariant === 'frostbite') {
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.10)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.bossVariant === 'copycat') {
+      ctx.fillStyle = 'rgba(127, 29, 29, 0.10)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+
     // ── Ground & energy barricade ────────────────────────────────────────
     const now = performance.now() / 1000;
     // Danger glow rising from the ground zone
@@ -3556,8 +3566,52 @@ export class Renderer {
     boss_kepler_prime: 'pulse',
   };
 
+  private static readonly COPYCAT_CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
+
+  /** Copycat boss variant: the mirror is rendered with the player's own
+   * top-down sprite (flipped to face down) instead of a generic enemy
+   * sprite — no new art needed, it's literally a copy of you. */
+  private renderCopycatMirror(e: Enemy, dt: number): void {
+    const { ctx } = this;
+    const charId = (e as any).copycatCharacterId ?? this.game.characterId;
+    const idx = Renderer.COPYCAT_CHARACTER_ORDER.indexOf(charId);
+    const sprite = (idx >= 0 ? this.sprites.playerShips[idx] : null) ?? this.sprites.playerShips[0];
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+    const bobY = Math.sin(e.moveTimer * 2) * 3;
+
+    // Dark pulsing aura — reads as "wrong", not just a palette-swapped ally
+    const pulse = Math.sin(performance.now() * 0.005) * 0.3 + 0.5;
+    ctx.globalAlpha = pulse * 0.35;
+    ctx.fillStyle = '#7f1d1d';
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, 52, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    if (sprite) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.save();
+      ctx.translate(e.x, e.y + bobY);
+      ctx.scale(1, -1); // face down toward the player instead of away
+      if (flash > 0) ctx.filter = 'brightness(2.8) saturate(0.4)';
+      else ctx.filter = 'brightness(0.75) saturate(1.3) hue-rotate(-20deg)';
+      ctx.drawImage(sprite, -32, -60, 64, 64);
+      ctx.filter = 'none';
+      ctx.restore();
+      ctx.imageSmoothingEnabled = true;
+    }
+
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#f87171';
+    ctx.textAlign = 'center';
+    ctx.fillText('CÓPIA SOMBRIA', e.x, e.y - 46);
+    ctx.textAlign = 'left';
+  }
+
   private renderEnemy(e: Enemy, dt: number): void {
     const { ctx } = this;
+    // Copycat boss variant: mirror of the player, own dedicated draw path
+    if ((e as any).isCopycat) { this.renderCopycatMirror(e, dt); return; }
     // Zyr-Goth's body is the screen-tall colossus layer (renderZyrgothGiant);
     // skip the normal sprite so he isn't drawn twice
     if ((e as any).defId === 'boss_epoch' && getZyrgothGiant()) return;
@@ -3695,6 +3749,19 @@ export class Renderer {
       ctx.beginPath();
       ctx.arc(e.x, e.y, drawW * 0.45, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    // Frostbite (normal phase variant): every enemy this wave reads as icy,
+    // even ones outside the small canonical "Gelo" roster — a translucent
+    // frost halo behind the sprite instead of risking the fragile multi-path
+    // draw-filter logic below.
+    if (this.game.combat.state.normalVariant === 'frostbite') {
+      ctx.globalAlpha = (e.phased ? 0.15 : 0.28);
+      ctx.fillStyle = '#7dd3fc';
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, drawW * 0.55, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = e.phased ? 0.25 : 1;
     }
 
     // Idle hover bob (subtle, per-enemy phase from moveTimer)
@@ -4077,6 +4144,56 @@ export class Renderer {
       ctx.fillStyle = '#67e8f9';
       ctx.textAlign = 'right';
       ctx.fillText(`🛡 ${Math.ceil(state.playerShield)}`, hpBarX + hpBarW - 2, shY + shH - 1);
+      ctx.textAlign = 'left';
+    }
+
+    // Frostbite meter (normal phase variant): fills while the player stands
+    // still, bleeds down while moving/dashing — a burst of massive damage
+    // fires and resets it once full.
+    if (state.normalVariant === 'frostbite') {
+      const fbY = hpBarY + hpBarH + (state.playerMaxShield > 0 ? hpBarH * 0.14 + 6 : 3);
+      const fbH = Math.floor(hudH * 0.14);
+      const fbR = Math.floor(fbH / 2);
+      const fbPct = Math.min(1, state.frostbiteTimer / state.frostbiteMax);
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, fbY, hpBarW, fbH, fbR);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      if (fbPct > 0) {
+        ctx.save();
+        ctx.clip();
+        ctx.fillStyle = fbPct > 0.75 ? '#e0f2fe' : '#38bdf8';
+        ctx.fillRect(hpBarX + 1, fbY + 1, Math.floor((hpBarW - 2) * fbPct), fbH - 2);
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, fbY, hpBarW, fbH, fbR);
+      ctx.strokeStyle = 'rgba(125,211,252,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = `${Math.floor(fbH * 0.75)}px monospace`;
+      ctx.fillStyle = fbPct > 0.75 ? '#fef2f2' : '#bae6fd';
+      ctx.textAlign = 'right';
+      ctx.fillText(fbPct > 0.75 ? '❄ CONGELANDO!' : '❄ frio', hpBarX + hpBarW - 2, fbY + fbH - 1);
+      ctx.textAlign = 'left';
+    }
+
+    // Copycat Adrenaline countdown (boss phase variant): survive-only finale
+    if (state.copycatAdrenalineActive) {
+      const advPct = Math.max(0, state.copycatAdrenalineTimer / Math.max(0.001, state.copycatAdrenalineTotal));
+      ctx.font = `bold ${Math.floor(L.h * 0.024)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#facc15';
+      ctx.globalAlpha = 0.7 + Math.sin(performance.now() * 0.008) * 0.3;
+      ctx.fillText(`⚡ ADRENALINA — SOBREVIVA! ${state.copycatAdrenalineTimer.toFixed(1)}s ⚡`, L.cx, Math.floor(L.h * 0.09));
+      ctx.globalAlpha = 1;
+      const advBarW = Math.floor(L.w * 0.3);
+      const advBarX = L.cx - advBarW / 2;
+      const advBarY = Math.floor(L.h * 0.1);
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(advBarX, advBarY, advBarW, 6);
+      ctx.fillStyle = '#facc15';
+      ctx.fillRect(advBarX, advBarY, Math.floor(advBarW * advPct), 6);
       ctx.textAlign = 'left';
     }
 

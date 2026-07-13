@@ -114,6 +114,9 @@ export interface Enemy {
   defId: string;
   /** Hit flash timer (brief white flash when taking damage) */
   hitFlash?: number;
+  /** Copycat boss variant: this enemy is a mirror of the player's own
+   * character/build, rendered with the player's own sprite (see Renderer). */
+  isCopycat?: boolean;
 }
 
 // ─── Projectile (in-flight) ──────────────────────────────────────────────────
@@ -313,6 +316,24 @@ export interface CombatState {
   player2MaxHp?: number;
   player2DashCooldown?: number;
   player2DashVelocity?: number;
+
+  // ─── Phase Variants ────────────────────────────────────────────────────
+  /** Active normal-variant id for this wave (e.g. 'frostbite'), or null */
+  normalVariant: string | null;
+  /** Active boss-variant id for this wave (e.g. 'copycat'), or null */
+  bossVariant: string | null;
+  /** Frostbite: seconds the player has gone without moving/dashing */
+  frostbiteTimer: number;
+  /** Frostbite: threshold at which the cold burst fires and the timer resets */
+  frostbiteMax: number;
+  /** Copycat: true once the mirror is defeated and the survive-only finale is running */
+  copycatAdrenalineActive: boolean;
+  /** Copycat: seconds remaining in the Adrenaline finale */
+  copycatAdrenalineTimer: number;
+  /** Copycat: total Adrenaline duration this fight (for HUD progress) */
+  copycatAdrenalineTotal: number;
+  /** Copycat: accumulates time between Adrenaline projectile bursts */
+  copycatAdrenalineBurstTimer: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -417,6 +438,14 @@ export class CombatEngine {
       allyTurrets: [],
       bossBeams: [],
       regenShieldUsed: false,
+      normalVariant: null,
+      bossVariant: null,
+      frostbiteTimer: 0,
+      frostbiteMax: 4,
+      copycatAdrenalineActive: false,
+      copycatAdrenalineTimer: 0,
+      copycatAdrenalineTotal: 0,
+      copycatAdrenalineBurstTimer: 0,
     };
   }
 
@@ -429,11 +458,21 @@ export class CombatEngine {
     this.state.player2DashVelocity = 0;
   }
 
-  startWave(wave: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false): void {
+  startWave(
+    wave: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false,
+    normalVariant: string | null = null, bossVariant: string | null = null, characterId: string = '',
+  ): void {
     this.state.wave = wave;
     this.state.isActive = true;
     this.state.waveCleared = false;
-    this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth);
+    this.state.normalVariant = normalVariant;
+    this.state.bossVariant = bossVariant;
+    this.state.frostbiteTimer = 0;
+    this.state.copycatAdrenalineActive = false;
+    this.state.copycatAdrenalineTimer = 0;
+    this.state.copycatAdrenalineBurstTimer = 0;
+    this.state.copycatAdrenalineTotal = characterId === 'renegade' ? 0 : characterId === 'storm_runner' ? 5 : 10;
+    this.state.enemies = this.generateWave(wave, isBossMonth, isMegaBossMonth, normalVariant, bossVariant, characterId);
     this.state.projectiles = [];
     this.state.enemyProjectiles = [];
     this.state.combo = 0;
@@ -635,6 +674,10 @@ export class CombatEngine {
     // 11. Apply item passive effects (EMP, auras, etc.)
     this.applyItemPassives(dt);
 
+    // 11b. Phase variants: Frostbite hazard / Copycat survive-only finale
+    if (this.state.normalVariant === 'frostbite') this.updateFrostbite(dt, playerDir);
+    if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
+
     // 12. Update floating texts
     this.updateFloatingTexts(dt);
 
@@ -642,7 +685,7 @@ export class CombatEngine {
     this.updateShake(dt);
 
     // 13. Check win/lose
-    if (this.state.enemies.length === 0) {
+    if (this.state.enemies.length === 0 && !this.state.copycatAdrenalineActive) {
       this.state.waveCleared = true;
       this.state.isActive = false;
       // Reset shake to prevent infinite trembling
@@ -704,6 +747,56 @@ export class CombatEngine {
         // If standing still, dash in last input direction or right
         this.playerVelocity = this.playerSpeed * 2;
       }
+    }
+  }
+
+  /** Frostbite (normal phase variant): standing still bleeds cold up, moving
+   * or dashing bleeds it back down — hitting the cap fires a heavy burst and
+   * resets. Forces constant repositioning instead of camping a safe spot. */
+  private updateFrostbite(dt: number, playerDir: number): void {
+    const isMoving = playerDir !== 0 || Math.abs(this.playerVelocity) > 40;
+    const isDashing = this.dashActive > 0;
+    if (isMoving || isDashing) {
+      this.state.frostbiteTimer = Math.max(0, this.state.frostbiteTimer - dt * 2.5);
+    } else {
+      this.state.frostbiteTimer += dt;
+    }
+    if (this.state.frostbiteTimer >= this.state.frostbiteMax) {
+      this.state.frostbiteTimer = 0;
+      const burstDamage = Math.max(18, this.state.playerMaxHp * 0.22);
+      this.damagePlayer(burstDamage);
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '❄ CONGELAMENTO! ❄', '#7dd3fc');
+      this.triggerShake(10, 0.5);
+      this.triggerPlayerFlash();
+    }
+  }
+
+  /** Copycat (boss phase variant): once the mirror is defeated, a short
+   * survive-only finale — dodge fanned volleys until the timer runs out.
+   * No kill requirement, just don't get hit too much. */
+  private updateCopycatAdrenaline(dt: number): void {
+    this.state.copycatAdrenalineTimer -= dt;
+    this.state.copycatAdrenalineBurstTimer -= dt;
+    if (this.state.copycatAdrenalineBurstTimer <= 0) {
+      this.state.copycatAdrenalineBurstTimer = 0.55;
+      const burstCount = 8 + Math.floor(Math.random() * 4);
+      const originX = 100 + Math.random() * (this.arenaWidth - 200);
+      for (let i = 0; i < burstCount; i++) {
+        const angle = (Math.PI / Math.max(1, burstCount - 1)) * i + Math.PI * 0.15;
+        const speed = 220 + Math.random() * 60;
+        this.state.enemyProjectiles.push({
+          id: `eproj_adrenaline_${this.nextEnemyProjId++}`,
+          x: originX, y: 100,
+          vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed,
+          damage: 7,
+          alive: true,
+        });
+      }
+    }
+    if (this.state.copycatAdrenalineTimer <= 0) {
+      this.state.copycatAdrenalineActive = false;
+      this.spawnFloatingText(this.state.playerX, this.arenaHeight - 100, 'SOBREVIVEU!', '#4ade80');
+      this.triggerShake(6, 0.4);
     }
   }
 
@@ -2272,6 +2365,17 @@ export class CombatEngine {
   }
 
   private killEnemy(e: Enemy, index: number): void {
+    // Copycat: defeating the mirror doesn't end the wave outright — a short
+    // survive-only Adrenaline finale runs first (skipped entirely when the
+    // duration is 0, i.e. playing as a full alien character; see startWave).
+    if (e.isCopycat && this.state.copycatAdrenalineTotal > 0) {
+      this.state.copycatAdrenalineActive = true;
+      this.state.copycatAdrenalineTimer = this.state.copycatAdrenalineTotal;
+      this.state.copycatAdrenalineBurstTimer = 0;
+      this.spawnFloatingText(e.x, e.y - 40, '⚡ ADRENALINA! SOBREVIVA! ⚡', '#facc15');
+      this.triggerShake(10, 0.6);
+    }
+
     // Track for codex
     this.state.killedEnemyIds.push(e.defId);
 
@@ -3006,7 +3110,17 @@ export class CombatEngine {
     return { x: Math.max(40, Math.min(W - 40, x + jitter)), y };
   }
 
-  private generateWave(totalMonths: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false): Enemy[] {
+  private generateWave(
+    totalMonths: number, isBossMonth: boolean = false, isMegaBossMonth: boolean = false,
+    normalVariant: string | null = null, bossVariant: string | null = null, characterId: string = '',
+  ): Enemy[] {
+    // Copycat: a single mirror enemy built from the player's own build —
+    // skip the entire trash-mob/boss spawn pipeline below, this wave is a
+    // pure 1v1.
+    if (isBossMonth && !isMegaBossMonth && bossVariant === 'copycat') {
+      return [this.generateCopycatMirror(totalMonths, characterId)];
+    }
+
     const enemies: Enemy[] = [];
 
     // Map totalMonths to a "virtual wave" for enemy pool access
@@ -3015,7 +3129,17 @@ export class CombatEngine {
     // Year 2: all types (minWave 7-8)
     // Year 3+: everything
     const virtualWave = Math.min(20, Math.ceil(totalMonths * 0.6));
-    const available = getEnemiesForWave(virtualWave);
+    let available = getEnemiesForWave(virtualWave);
+
+    // Frostbite: everything on screen this wave reads as an ice enemy. The
+    // canon "Gelo"-tagged roster is only 2 entries (too thin to fill a whole
+    // wave on its own), so they're weighted heavily and the rest of the
+    // usual pool fills the gaps — the renderer applies a frost tint to every
+    // enemy this wave regardless of source, so it still reads as "only ice".
+    const iceEnemies = available.filter(e => e.tags.includes('Gelo'));
+    if (normalVariant === 'frostbite' && iceEnemies.length > 0) {
+      available = [...iceEnemies, ...iceEnemies, ...iceEnemies, ...available];
+    }
 
     // Difficulty curve based on timeline era
     const year = Math.ceil(totalMonths / 12);
@@ -3230,5 +3354,48 @@ export class CombatEngine {
     }
 
     return enemies;
+  }
+
+  /** Copycat boss variant: a single enemy mirroring the player's own
+   * character and current backpack build — 1.5x the player's max HP, damage
+   * output derived from the player's own estimated DPS so the fight feels
+   * like an even duel instead of a normal stat-scaled boss. */
+  private generateCopycatMirror(totalMonths: number, characterId: string): Enemy {
+    const power = this.backpack.calculateBackpackPower();
+    const emitterCount = Math.max(1, power.emitters.length);
+    const estDps = power.totalDamage * (power.totalFireRate / emitterCount) * power.totalProjectiles;
+    const fireRate = Math.min(3, Math.max(0.5, power.totalFireRate / emitterCount));
+    const perShotDamage = Math.max(4, estDps / Math.max(0.5, fireRate));
+    const mirrorMaxHp = Math.floor(this.state.playerMaxHp * 1.5);
+
+    const enemy: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: this.arenaWidth / 2,
+      y: 120,
+      hp: mirrorMaxHp,
+      maxHp: mirrorMaxHp,
+      speed: 110,
+      damage: Math.floor(perShotDamage),
+      tags: [],
+      width: 44,
+      height: 60,
+      goldReward: Math.floor(90 + totalMonths * 4),
+      shootTimer: 1 / fireRate,
+      special: { type: 'shoot', fireRate, projectileSpeed: 260 },
+      isBoss: true,
+      movement: 'zigzag',
+      phased: false,
+      moveTimer: 0,
+      moveDir: Math.random() > 0.5 ? 1 : -1,
+      baseSpeed: 110,
+      // "boss_" prefix so the existing relic-drop / bossesKilled stat
+      // tracking (which key off that prefix) picks this up like any other
+      // boss kill, without needing a dedicated codex/lore entry.
+      defId: 'boss_copycat',
+      isCopycat: true,
+    };
+    (enemy as any).displayName = 'CÓPIA SOMBRIA';
+    (enemy as any).copycatCharacterId = characterId;
+    return enemy;
   }
 }

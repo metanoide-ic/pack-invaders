@@ -24,6 +24,7 @@ import { addToLeaderboard } from '../data/leaderboard';
 import { getRelicBonuses, getRandomNewRelic, getRelicForBoss, addRelic, Relic, getEquippedRelics } from '../data/relics';
 import { VersusEngine } from './VersusEngine';
 import { getDailyChallenge, getDailyBest, setDailyBest } from '../data/dailyChallenge';
+import { NORMAL_PHASE_VARIANTS, BOSS_PHASE_VARIANTS } from '../data/phaseVariants';
 
 export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
 
@@ -364,6 +365,71 @@ export class GameManager {
     return this.monthSchedule(this.month).shop || this.totalMonths === 1;
   }
 
+  // ─── Phase Variants (alternate month layouts) ──────────────────────────────
+  // Each year rolls a fixed plan up front: 2 of that year's normal-fight
+  // months get a normal-variant layout (Frostbite, etc.), and 1 of that
+  // year's regular boss months (3/6/9 — never 12, the mega boss) gets a
+  // boss-variant layout (Copycat, etc.). Only `implemented` pool entries are
+  // eligible, so the schedule never rolls a variant whose gameplay hasn't
+  // shipped yet — see src/data/phaseVariants.ts.
+
+  yearPhasePlan: { normalMonths: number[]; normalVariantIds: (string | null)[]; bossMonth: number | null; bossVariantId: string | null } =
+    { normalMonths: [], normalVariantIds: [], bossMonth: null, bossVariantId: null };
+  private phaseVariantPlanYear = 0;
+  private usedNormalVariants: string[] = [];
+  private usedBossVariants: string[] = [];
+
+  /** Picks a pool entry not used in the immediately preceding roll(s) when
+   * possible, so the same variant doesn't show up two years running — resets
+   * once the whole pool has been used, same shuffle-bag idea as the boss
+   * lap-mutation system. */
+  private pickPhaseVariant(pool: { id: string }[], used: string[]): string | null {
+    if (pool.length === 0) return null;
+    let available = pool.filter(v => !used.includes(v.id));
+    if (available.length === 0) {
+      used.length = 0;
+      available = pool;
+    }
+    const pick = available[Math.floor(Math.random() * available.length)];
+    used.push(pick.id);
+    return pick.id;
+  }
+
+  private rollYearPhasePlan(): void {
+    const eligibleNormalMonths: number[] = [];
+    const eligibleBossMonths: number[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const s = GameManager.MONTH_SCHEDULE[m - 1];
+      if (!s.boss) eligibleNormalMonths.push(m);
+      else if (!s.megaBoss) eligibleBossMonths.push(m);
+    }
+
+    const shuffled = [...eligibleNormalMonths].sort(() => Math.random() - 0.5);
+    const normalMonths = shuffled.slice(0, 2).sort((a, b) => a - b);
+
+    const implementedNormal = NORMAL_PHASE_VARIANTS.filter(v => v.implemented);
+    const implementedBoss = BOSS_PHASE_VARIANTS.filter(v => v.implemented);
+
+    const normalVariantIds = normalMonths.map(() => this.pickPhaseVariant(implementedNormal, this.usedNormalVariants));
+    const bossMonth = implementedBoss.length > 0 && eligibleBossMonths.length > 0
+      ? eligibleBossMonths[Math.floor(Math.random() * eligibleBossMonths.length)]
+      : null;
+    const bossVariantId = bossMonth !== null ? this.pickPhaseVariant(implementedBoss, this.usedBossVariants) : null;
+
+    this.yearPhasePlan = { normalMonths, normalVariantIds, bossMonth, bossVariantId };
+  }
+
+  /** Normal-variant id active this month, or null for a standard fight */
+  getActiveNormalVariant(month: number = this.month): string | null {
+    const idx = this.yearPhasePlan.normalMonths.indexOf(month);
+    return idx >= 0 ? this.yearPhasePlan.normalVariantIds[idx] : null;
+  }
+
+  /** Boss-variant id active this month, or null for a standard boss fight */
+  getActiveBossVariant(month: number = this.month): string | null {
+    return this.yearPhasePlan.bossMonth === month ? this.yearPhasePlan.bossVariantId : null;
+  }
+
   // ─── Phase Transitions ────────────────────────────────────────────────────
 
   startFromTitle(characterId: string): void {
@@ -491,8 +557,16 @@ export class GameManager {
       case 'bounty': ca._anomalyDropMult = 2; ca._anomalyHpMult = 1.15; break;
     }
 
+    // ─── Phase Variant plan: rolled once per year alongside the anomaly ───
+    if (this.month === 1 && this.phaseVariantPlanYear !== this.year) {
+      this.phaseVariantPlanYear = this.year;
+      this.rollYearPhasePlan();
+    }
+    const normalVariant = !isBoss ? this.getActiveNormalVariant() : null;
+    const bossVariant = (isBoss && !isMegaBoss) ? this.getActiveBossVariant() : null;
+
     this.phase = 'COMBAT';
-    this.combat.startWave(this.totalMonths, isBoss, isMegaBoss);
+    this.combat.startWave(this.totalMonths, isBoss, isMegaBoss, normalVariant, bossVariant, this.characterId);
 
     // Announce the anomaly at the start of each year
     if (this.currentAnomaly && this.month === 1) {
@@ -500,9 +574,9 @@ export class GameManager {
       this.combat.spawnFloatingText(640, 260, this.currentAnomaly.description, '#e2e8f0');
     }
 
-    // Wave Event (20% chance after month 4, never on boss months)
+    // Wave Event (20% chance after month 4, never on boss months or phase-variant months)
     this.currentWaveEvent = null;
-    if (!isBoss && this.totalMonths > 4 && Math.random() < 0.2) {
+    if (!isBoss && !normalVariant && this.totalMonths > 4 && Math.random() < 0.2) {
       this.currentWaveEvent = WAVE_EVENTS[Math.floor(Math.random() * WAVE_EVENTS.length)];
       // Apply event modifiers
       switch (this.currentWaveEvent.id) {
