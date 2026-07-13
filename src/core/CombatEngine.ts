@@ -829,8 +829,20 @@ export class CombatEngine {
         emitter.stats.fireRateMultiplier *= skillRateMult * charRate;
 
         emitter.definition.onTick(emitter, dt, (proj) => {
-          const finalDamage = proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
+          let finalDamage = proj.damage * voidBonus * skillDmgMult * charDmg * itemDmg
             * (this.state.combo >= 30 ? 1.2 : 1); // OVERDRIVE
+          // Motor do Caos: 50%-200% random damage swing per shot —
+          // state.chaosMode used to be set on adjacent weapons and never read.
+          if (emitter.state.chaosMode) {
+            finalDamage *= 0.5 + Math.random() * 1.5;
+          }
+          // Paradoxo Temporal: fires at 2x rate (real, via fireRateMultiplier)
+          // but half those shots deal zero damage — state.missChance used to
+          // be set and never read, so this was a pure +100% fire rate item
+          // with no downside at all.
+          if (emitter.state.missChance && Math.random() < emitter.state.missChance) {
+            finalDamage = 0;
+          }
           this.recoilTimer = 0.12; // drives the character's shot-recoil animation
           // Short-range weapons (e.g. the flamethrower's cone) carry a range
           // in px; convert to seconds-of-flight at this shot's own speed so
