@@ -7018,11 +7018,17 @@ export class Renderer {
       ['DICA:', 'Cada personagem tem 3 skills únicas!'],
       ['DICA:', 'Combo de kills = mais gold!'],
       ['DICA:', 'Item duplicado sobre o igual na mochila = UPGRADE (+dano)!'],
+      ['DICA:', 'Loja e boss aparecem de 3 em 3 meses — cartas vêm todo mês!'],
+      ['DICA:', 'Cada item tem um peso — passar do limite da mochila trava a compra!'],
     ];
 
     ctx.font = L.fontNormal;
-    const startY = Math.floor(L.h * 0.26);
-    const lineH = Math.floor(L.h * 0.055);
+    const startY = Math.floor(L.h * 0.24);
+    // Line height (and everything below) scales down to fit however many
+    // lines the list holds, instead of a fixed spacing that would push the
+    // footer text off-screen or under the last line as tips get added.
+    const maxListH = Math.floor(L.h * 0.58);
+    const lineH = Math.min(Math.floor(L.h * 0.055), Math.floor(maxListH / Math.max(1, lines.length - 1)));
     for (let i = 0; i < lines.length; i++) {
       const [key, desc] = lines[i];
       if (key) {
@@ -7034,17 +7040,19 @@ export class Renderer {
         ctx.fillText(desc, L.cx + 10, startY + i * lineH);
       }
     }
+    const listEndY = startY + (lines.length - 1) * lineH;
 
     ctx.textAlign = 'center';
     ctx.font = L.fontSmall;
     ctx.fillStyle = '#94a3b8';
-    ctx.fillText('Sobreviva. Monte sua mochila. Detone os aliens.', L.cx, Math.floor(L.h * 0.73));
+    const taglineY = listEndY + Math.floor(L.h * 0.06);
+    ctx.fillText('Sobreviva. Monte sua mochila. Detone os aliens.', L.cx, taglineY);
 
     const alpha = 0.5 + Math.sin(Date.now() * 0.003) * 0.4;
     ctx.globalAlpha = alpha;
     ctx.font = L.fontNormal;
     ctx.fillStyle = '#64748b';
-    ctx.fillText('Clique ou pressione qualquer tecla para continuar', L.cx, Math.floor(L.h * 0.85));
+    ctx.fillText('Clique ou pressione qualquer tecla para continuar', L.cx, taglineY + Math.floor(L.h * 0.055));
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
   }
