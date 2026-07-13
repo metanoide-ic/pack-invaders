@@ -197,7 +197,7 @@ export interface FloatingText {
 
 // ─── Power-Up Drops ──────────────────────────────────────────────────────────
 
-export type PowerUpType = 'heal' | 'gold' | 'shield' | 'rapid' | 'freeze' | 'nuke';
+export type PowerUpType = 'heal' | 'gold' | 'shield' | 'rapid' | 'freeze' | 'nuke' | 'fuel';
 
 export interface PowerUp {
   id: string;
@@ -394,6 +394,12 @@ export interface CombatState {
   pitPhase: 'pause' | 'limbs' | 'core';
   /** O Poço: seconds left in the current phase */
   pitPhaseTimer: number;
+
+  /** Estrada de Fuga: current fuel — hits 0 and the truck stalls (damage
+   * until refueled by a passing gas can) */
+  truckFuel: number;
+  /** Estrada de Fuga: fuel tank capacity */
+  truckFuelMax: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -414,6 +420,8 @@ export class CombatEngine {
   private _groundZeroNextTimer = 6;
   /** Nave-Mãe: seconds until the next side raider spawns */
   private _mothershipRaiderTimer = 3;
+  /** Estrada de Fuga: seconds until the next gas can drops */
+  private _truckGasTimer = 4;
   readonly arenaWidth = 1280;
   readonly arenaHeight = 720;
   private playerSpeed = 350;
@@ -532,6 +540,8 @@ export class CombatEngine {
       pitCycleTotal: 3,
       pitPhase: 'pause',
       pitPhaseTimer: 2,
+      truckFuel: 100,
+      truckFuelMax: 100,
     };
   }
 
@@ -590,6 +600,8 @@ export class CombatEngine {
     this.state.pitCycleTotal = 3;
     this.state.pitPhase = 'pause';
     this.state.pitPhaseTimer = 2.5;
+    this.state.truckFuel = this.state.truckFuelMax;
+    this._truckGasTimer = 5;
     if (isBossMonth && !isMegaBossMonth && bossVariant === 'mothership') {
       this.state.mothershipWeakPoints = [
         { dx: -100, dy: 0, exposed: false, timer: 2 + Math.random() * 3 },
@@ -807,6 +819,7 @@ export class CombatEngine {
     if (this.state.normalVariant === 'space') this.updateSpaceAsteroids(dt);
     if (this.state.normalVariant === 'acid_rain') this.updateAcidRain(dt);
     if (this.state.normalVariant === 'ground_zero') this.updateGroundZero(dt);
+    if (this.state.normalVariant === 'truck') this.updateTruck(dt);
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.bossVariant === 'mothership') this.updateMothership(dt);
     if (this.state.bossVariant === 'rail_duel') this.updateRailDuel(dt);
@@ -866,9 +879,13 @@ export class CombatEngine {
     }
 
     this.state.playerX += this.playerVelocity * dt;
-    // Wall bounce (soft clamp)
-    if (this.state.playerX < 20) { this.state.playerX = 20; this.playerVelocity = 0; }
-    if (this.state.playerX > this.arenaWidth - 20) { this.state.playerX = this.arenaWidth - 20; this.playerVelocity = 0; }
+    // Wall bounce (soft clamp) — Estrada de Fuga confines the player to the
+    // truck bed's width instead of the full arena, since the truck itself
+    // is what's moving side to side, not the player within it
+    const laneMin = this.state.normalVariant === 'truck' ? this.arenaWidth * 0.32 : 20;
+    const laneMax = this.state.normalVariant === 'truck' ? this.arenaWidth * 0.68 : this.arenaWidth - 20;
+    if (this.state.playerX < laneMin) { this.state.playerX = laneMin; this.playerVelocity = 0; }
+    if (this.state.playerX > laneMax) { this.state.playerX = laneMax; this.playerVelocity = 0; }
   }
 
   /** Activate dash if available (beast_tamer has no dash) */
@@ -1270,6 +1287,31 @@ export class CombatEngine {
     };
     (enemy as any).displayName = 'O NÚCLEO DO POÇO';
     return enemy;
+  }
+
+  /** Estrada de Fuga (normal phase variant): fuel drains continuously —
+   * gas cans drop periodically (reusing the power-up fall/catch pipeline)
+   * to keep the tank up. Running dry deals continuous damage until
+   * refueled, same "hazard" shape as Frostbite/Chuva Ácida. */
+  private updateTruck(dt: number): void {
+    const st = this.state;
+    st.truckFuel = Math.max(0, st.truckFuel - (st.truckFuelMax / 55) * dt);
+    if (st.truckFuel <= 0) {
+      this.damagePlayer(9 * dt);
+    }
+
+    this._truckGasTimer -= dt;
+    if (this._truckGasTimer <= 0) {
+      this._truckGasTimer = 5 + Math.random() * 3;
+      const laneMin = this.arenaWidth * 0.32, laneMax = this.arenaWidth * 0.68;
+      st.powerUps.push({
+        id: `pu_fuel_${this.nextPowerUpId++}`,
+        x: laneMin + Math.random() * (laneMax - laneMin),
+        y: -20,
+        type: 'fuel',
+        life: 10,
+      });
+    }
   }
 
   /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a
@@ -2314,6 +2356,10 @@ export class CombatEngine {
         }
         break;
       }
+      case 'fuel':
+        st.truckFuel = Math.min(st.truckFuelMax, st.truckFuel + 32);
+        this.spawnFloatingText(pu.x, pu.y - 20, '+COMBUSTÍVEL', '#fbbf24');
+        break;
     }
     // Signal for audio feedback (consumed by main loop)
     (st as any)._powerupCaughtType = pu.type;
@@ -3954,6 +4000,17 @@ export class CombatEngine {
           elite.speed *= 1.5;
           elite.baseSpeed *= 1.5;
         }
+      }
+    }
+
+    // Estrada de Fuga: squeeze the whole formation into the truck bed's
+    // lane so enemies stay visually inside the rails instead of falling
+    // past them — a simple post-process rescale rather than touching
+    // formationPos, which every other wave in the game also relies on.
+    if (normalVariant === 'truck') {
+      const laneMin = this.arenaWidth * 0.32, laneMax = this.arenaWidth * 0.68;
+      for (const en of enemies) {
+        en.x = laneMin + (en.x / this.arenaWidth) * (laneMax - laneMin);
       }
     }
 

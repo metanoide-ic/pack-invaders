@@ -26,7 +26,10 @@ export const NORMAL_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'truck',
     name: 'Estrada de Fuga',
     description: 'Na caçamba de uma caminhonete em movimento, inimigos vêm de cima e o combustível precisa ser coletado antes de acabar.',
-    implemented: false, // aguardando sprites dos 8 inimigos novos
+    // Mecânica pronta (pista estreita, medidor de combustível, cenário de
+    // estrada) usando o roster de inimigos normal como placeholder. Troque
+    // por um pool dedicado quando os 8 sprites novos chegarem.
+    implemented: true,
   },
   {
     id: 'space',

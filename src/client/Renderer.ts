@@ -2902,6 +2902,9 @@ export class Renderer {
     } else if (state.normalVariant === 'ground_zero') {
       ctx.fillStyle = 'rgba(154, 92, 43, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.normalVariant === 'truck') {
+      ctx.fillStyle = 'rgba(41, 37, 36, 0.1)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     if (state.normalVariant === 'space') {
       this.renderSpaceDrift(performance.now() / 1000);
@@ -2909,6 +2912,9 @@ export class Renderer {
     if (state.normalVariant === 'acid_rain') {
       this.renderAcidRainShelters(state);
       if (state.acidRainActive) this.renderAcidRainStreaks(performance.now() / 1000);
+    }
+    if (state.normalVariant === 'truck') {
+      this.renderTruckBed(performance.now() / 1000);
     }
 
     // ── Ground & energy barricade ────────────────────────────────────────
@@ -3300,6 +3306,7 @@ export class Renderer {
       rapid:  { color: '#22d3ee', icon: '»' },
       freeze: { color: '#93c5fd', icon: '❄' },
       nuke:   { color: '#a855f7', icon: '☢' },
+      fuel:   { color: '#fbbf24', icon: '⛽' },
     };
     for (const pu of state.powerUps) {
       const style = puStyle[pu.type] ?? puStyle.gold;
@@ -3752,6 +3759,46 @@ export class Renderer {
       ctx.fill();
     }
     ctx.globalAlpha = 1;
+  }
+
+  /** Estrada de Fuga: truck bed rails framing the lane, road scrolling
+   * underneath to sell "moving vehicle" — the character itself still
+   * renders normally, riding in the back and shooting. */
+  private renderTruckBed(now: number): void {
+    const { ctx, canvas } = this;
+    const laneMin = canvas.width * 0.32, laneMax = canvas.width * 0.68;
+
+    // Road strip scrolling toward the camera
+    ctx.fillStyle = '#1c1917';
+    ctx.fillRect(laneMin, 0, laneMax - laneMin, canvas.height);
+    ctx.strokeStyle = 'rgba(250, 204, 21, 0.35)';
+    ctx.lineWidth = 3;
+    ctx.setLineDash([22, 18]);
+    ctx.lineDashOffset = -((now * 260) % 40);
+    ctx.beginPath();
+    ctx.moveTo((laneMin + laneMax) / 2, 0);
+    ctx.lineTo((laneMin + laneMax) / 2, canvas.height);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Truck bed rails
+    ctx.fillStyle = '#292524';
+    ctx.fillRect(laneMin - 14, 0, 14, canvas.height);
+    ctx.fillRect(laneMax, 0, 14, canvas.height);
+    ctx.strokeStyle = '#57534e';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(laneMin, 0); ctx.lineTo(laneMin, canvas.height);
+    ctx.moveTo(laneMax, 0); ctx.lineTo(laneMax, canvas.height);
+    ctx.stroke();
+    // Rail rivets, scrolling with the road for a moving-vehicle feel
+    ctx.fillStyle = '#78716c';
+    const rivetOffset = (now * 260) % 48;
+    for (let y = -48; y < canvas.height; y += 48) {
+      const yy = y + rivetOffset;
+      ctx.fillRect(laneMin - 9, yy, 4, 4);
+      ctx.fillRect(laneMax + 5, yy, 4, 4);
+    }
   }
 
   /** Chuva Ácida: fixed shelter zones — always visible so the player can
@@ -4639,6 +4686,35 @@ export class Renderer {
       ctx.fillStyle = fbPct > 0.75 ? '#fef2f2' : '#bae6fd';
       ctx.textAlign = 'right';
       ctx.fillText(fbPct > 0.75 ? '❄ CONGELANDO!' : '❄ frio', hpBarX + hpBarW - 2, fbY + fbH - 1);
+      ctx.textAlign = 'left';
+    }
+
+    // Estrada de Fuga: fuel gauge — drains continuously, gas cans refill it
+    if (state.normalVariant === 'truck') {
+      const fuY = hpBarY + hpBarH + (state.playerMaxShield > 0 ? hpBarH * 0.14 + 6 : 3);
+      const fuH = Math.floor(hudH * 0.14);
+      const fuR = Math.floor(fuH / 2);
+      const fuPct = Math.max(0, state.truckFuel / state.truckFuelMax);
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, fuY, hpBarW, fuH, fuR);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      if (fuPct > 0) {
+        ctx.save();
+        ctx.clip();
+        ctx.fillStyle = fuPct < 0.25 ? '#ef4444' : '#fbbf24';
+        ctx.fillRect(hpBarX + 1, fuY + 1, Math.floor((hpBarW - 2) * fuPct), fuH - 2);
+        ctx.restore();
+      }
+      ctx.beginPath();
+      ctx.roundRect(hpBarX, fuY, hpBarW, fuH, fuR);
+      ctx.strokeStyle = 'rgba(251,191,36,0.5)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+      ctx.font = `${Math.floor(fuH * 0.75)}px monospace`;
+      ctx.fillStyle = fuPct <= 0 ? '#fecaca' : '#fef3c7';
+      ctx.textAlign = 'right';
+      ctx.fillText(fuPct <= 0 ? '⛽ SEM COMBUSTÍVEL!' : '⛽ combustível', hpBarX + hpBarW - 2, fuY + fuH - 1);
       ctx.textAlign = 'left';
     }
 
