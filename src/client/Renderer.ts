@@ -2893,6 +2893,9 @@ export class Renderer {
     } else if (state.bossVariant === 'rail_duel') {
       ctx.fillStyle = 'rgba(120, 53, 15, 0.08)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.bossVariant === 'the_pit') {
+      ctx.fillStyle = 'rgba(69, 26, 3, 0.12)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.normalVariant === 'acid_rain') {
       ctx.fillStyle = state.acidRainActive ? 'rgba(132, 204, 22, 0.14)' : 'rgba(132, 204, 22, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3875,6 +3878,94 @@ export class Renderer {
    * (dark, riveted) most of the time, glowing exposed core panel while its
    * plating is open. Telegraph/ram feedback reuses floating text + shake,
    * so no extra state needed here beyond the two visual modes. */
+  /** O Poço: a clawed limb bursting from a ground crack, with a countdown
+   * ring (shared with the rest of its batch) showing time left before it
+   * retreats unpunished. */
+  private renderPitLimb(e: Enemy): void {
+    const { ctx } = this;
+    const state = this.game.combat.state;
+    const pct = Math.max(0, Math.min(1, state.pitPhaseTimer / 5.0));
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+
+    // Ground crack
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(e.x, e.y + 18, 26, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.fillStyle = flash > 0 ? '#fca5a5' : '#78350f';
+    for (const dir of [-1, 0, 1]) {
+      ctx.beginPath();
+      ctx.moveTo(dir * 12, 18);
+      ctx.lineTo(dir * 12 - 5, -14);
+      ctx.lineTo(dir * 12 + 5, -14);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.strokeStyle = '#451a03';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    // Countdown ring
+    ctx.strokeStyle = pct < 0.3 ? '#ef4444' : '#f97316';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(e.x, e.y, 24, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * pct);
+    ctx.stroke();
+  }
+
+  /** O Poço: the core, exposed once every limb cycle is spent — a menacing
+   * pulsing eye at the center of a jagged rock cluster. */
+  private renderPitCore(e: Enemy): void {
+    const { ctx } = this;
+    const w = e.width, h = e.height;
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+    const pulse = 0.6 + Math.sin(performance.now() * 0.006) * 0.4;
+
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    ctx.fillStyle = flash > 0 ? '#94a3b8' : '#44403c';
+    ctx.beginPath();
+    const spikes = 10;
+    for (let i = 0; i < spikes; i++) {
+      const ang = (Math.PI * 2 * i) / spikes;
+      const r = (w / 2) * (i % 2 === 0 ? 1 : 0.72);
+      const px = Math.cos(ang) * r, py = Math.sin(ang) * r;
+      if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#ef4444';
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.6 + pulse * 0.3;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = pulse * 0.5;
+    ctx.drawImage(this.getGlow('#f87171', h * 0.28), -h * 0.28, -h * 0.28);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#fca5a5';
+    ctx.beginPath();
+    ctx.ellipse(0, 0, h * 0.14, h * 0.1, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#450a0a';
+    ctx.beginPath();
+    ctx.arc(0, 0, h * 0.055, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = '#fca5a5';
+    ctx.textAlign = 'center';
+    ctx.fillText('O NÚCLEO DO POÇO', e.x, e.y - h / 2 - 12);
+    ctx.textAlign = 'left';
+  }
+
   private renderRailDuel(e: Enemy): void {
     const { ctx } = this;
     const w = e.width, h = e.height;
@@ -3983,6 +4074,8 @@ export class Renderer {
     if ((e as any).isCopycat) { this.renderCopycatMirror(e, dt); return; }
     if ((e as any).isMothership) { this.renderMothership(e); return; }
     if ((e as any).isRailDuel) { this.renderRailDuel(e); return; }
+    if ((e as any).isPitLimb) { this.renderPitLimb(e); return; }
+    if ((e as any).defId === 'boss_the_pit') { this.renderPitCore(e); return; }
     // Zyr-Goth's body is the screen-tall colossus layer (renderZyrgothGiant);
     // skip the normal sprite so he isn't drawn twice
     if ((e as any).defId === 'boss_epoch' && getZyrgothGiant()) return;
@@ -4582,6 +4675,25 @@ export class Renderer {
       ctx.fillRect(swBarX, swBarY, swBarW, 6);
       ctx.fillStyle = '#f472b6';
       ctx.fillRect(swBarX, swBarY, Math.floor(swBarW * swPct), 6);
+      ctx.textAlign = 'left';
+    }
+
+    // O Poço: cycle progress + phase status
+    if (state.bossVariant === 'the_pit' && state.pitPhase !== 'core') {
+      ctx.font = `bold ${Math.floor(L.h * 0.02)}px monospace`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#f97316';
+      const label = state.pitPhase === 'limbs'
+        ? `🕳 DESTRUA OS MEMBROS! (${state.pitPhaseTimer.toFixed(1)}s)`
+        : `🕳 CICLO ${state.pitCycle + 1}/${state.pitCycleTotal}`;
+      ctx.fillText(label, L.cx, Math.floor(L.h * 0.09));
+      const pitBarW = Math.floor(L.w * 0.24);
+      const pitBarX = L.cx - pitBarW / 2;
+      const pitBarY = Math.floor(L.h * 0.1);
+      ctx.fillStyle = '#1f2937';
+      ctx.fillRect(pitBarX, pitBarY, pitBarW, 6);
+      ctx.fillStyle = '#f97316';
+      ctx.fillRect(pitBarX, pitBarY, Math.floor(pitBarW * ((state.pitCycle) / Math.max(1, state.pitCycleTotal))), 6);
       ctx.textAlign = 'left';
     }
 

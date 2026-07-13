@@ -77,7 +77,7 @@ export const BOSS_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'the_pit',
     name: 'O Poço',
     description: 'O boss fica soterrado, erguendo membros de pontos fixos da arena que precisam ser destruídos antes de recuarem.',
-    implemented: false,
+    implemented: true,
   },
 ];
 

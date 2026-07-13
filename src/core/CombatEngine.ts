@@ -384,6 +384,16 @@ export interface CombatState {
   /** Nave-Mãe: raiders entering from the sides — reaching the far edge
    * un-killed leaks through and hits the player */
   mothershipRaiders: { id: string; x: number; y: number; vx: number; vy: number; radius: number; damage: number }[];
+
+  /** O Poço: current whack-a-mole cycle (0-indexed) */
+  pitCycle: number;
+  /** O Poço: total cycles before the core exposes itself */
+  pitCycleTotal: number;
+  /** O Poço: 'pause' between cycles, 'limbs' while a batch is up, 'core'
+   * once the real boss is exposed */
+  pitPhase: 'pause' | 'limbs' | 'core';
+  /** O Poço: seconds left in the current phase */
+  pitPhaseTimer: number;
 }
 
 // ─── Combat Engine ───────────────────────────────────────────────────────────
@@ -518,6 +528,10 @@ export class CombatEngine {
       groundZeroTelegraphTimer: 0,
       mothershipWeakPoints: [],
       mothershipRaiders: [],
+      pitCycle: 0,
+      pitCycleTotal: 3,
+      pitPhase: 'pause',
+      pitPhaseTimer: 2,
     };
   }
 
@@ -572,6 +586,10 @@ export class CombatEngine {
     this._groundZeroNextTimer = 6 + Math.random() * 3;
     this.state.mothershipRaiders = [];
     this._mothershipRaiderTimer = 3;
+    this.state.pitCycle = 0;
+    this.state.pitCycleTotal = 3;
+    this.state.pitPhase = 'pause';
+    this.state.pitPhaseTimer = 2.5;
     if (isBossMonth && !isMegaBossMonth && bossVariant === 'mothership') {
       this.state.mothershipWeakPoints = [
         { dx: -100, dy: 0, exposed: false, timer: 2 + Math.random() * 3 },
@@ -792,6 +810,7 @@ export class CombatEngine {
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.bossVariant === 'mothership') this.updateMothership(dt);
     if (this.state.bossVariant === 'rail_duel') this.updateRailDuel(dt);
+    if (this.state.bossVariant === 'the_pit') this.updatePit(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
     // 12. Update floating texts
@@ -801,7 +820,10 @@ export class CombatEngine {
     this.updateShake(dt);
 
     // 13. Check win/lose
-    if (this.state.enemies.length === 0 && !this.state.copycatAdrenalineActive) {
+    // O Poço has empty-enemies stretches between limb cycles by design —
+    // only counts as cleared once the core boss itself is down.
+    const pitStillPending = this.state.bossVariant === 'the_pit' && this.state.pitPhase !== 'core';
+    if (this.state.enemies.length === 0 && !this.state.copycatAdrenalineActive && !pitStillPending) {
       this.state.waveCleared = true;
       this.state.isActive = false;
       // Reset shake to prevent infinite trembling
@@ -1128,6 +1150,126 @@ export class CombatEngine {
         e.rdTimer = 5 + Math.random() * 2;
       }
     }
+  }
+
+  private static readonly PIT_EMERGE_X_FRACTIONS = [0.2, 0.4, 0.6, 0.8];
+
+  /** O Poço (boss phase variant): whack-a-mole limb cycles before the core
+   * exposes itself. Each cycle spawns 2-3 limbs at random fixed points;
+   * killing all of them ends the cycle early, otherwise the timer runs out
+   * and survivors retreat, punishing the player a little for each miss. */
+  private updatePit(dt: number): void {
+    const st = this.state;
+    st.pitPhaseTimer -= dt;
+
+    if (st.pitPhase === 'pause') {
+      if (st.pitPhaseTimer <= 0) {
+        if (st.pitCycle < st.pitCycleTotal) {
+          this.spawnPitLimbs(st.wave);
+          st.pitPhase = 'limbs';
+          st.pitPhaseTimer = 5.0;
+        } else {
+          st.enemies.push(this.generatePitCore(st.wave));
+          st.totalEnemies++;
+          st.pitPhase = 'core';
+          st.bossWarningTimer = 2.0;
+          this.triggerShake(10, 0.8);
+        }
+      }
+      return;
+    }
+
+    if (st.pitPhase === 'limbs') {
+      const limbsLeft = st.enemies.filter(e => (e as any).isPitLimb);
+      if (limbsLeft.length === 0) {
+        st.pitCycle++;
+        st.pitPhase = 'pause';
+        st.pitPhaseTimer = 2.0;
+        return;
+      }
+      if (st.pitPhaseTimer <= 0) {
+        for (const limb of limbsLeft) {
+          const idx = st.enemies.indexOf(limb);
+          if (idx >= 0) st.enemies.splice(idx, 1);
+          this.spawnFloatingText(limb.x, limb.y, 'RECUOU!', '#94a3b8');
+        }
+        this.damagePlayer(Math.max(8, st.playerMaxHp * 0.08) * limbsLeft.length);
+        this.spawnFloatingText(st.playerX, this.arenaHeight - 90, '💢 ATACADO PELOS MEMBROS!', '#f97316');
+        st.pitCycle++;
+        st.pitPhase = 'pause';
+        st.pitPhaseTimer = 2.0;
+      }
+    }
+  }
+
+  /** Spawns 2-3 limbs at a random subset of the fixed emergence points. */
+  private spawnPitLimbs(totalMonths: number): void {
+    const fractions = [...CombatEngine.PIT_EMERGE_X_FRACTIONS].sort(() => Math.random() - 0.5);
+    const count = 2 + Math.floor(Math.random() * 2);
+    const hpScale = totalMonths <= 6 ? 1 + totalMonths * 0.1
+      : totalMonths <= 12 ? 1.5 + (totalMonths - 6) * 0.2
+      : continuousYearScale(totalMonths, 12, 2.7, 0.3, 0.1);
+    const hp = Math.floor((40 + totalMonths * 6) * hpScale);
+
+    this.spawnFloatingText(this.arenaWidth / 2, 200, '🕳 MEMBROS EMERGINDO!', '#a16207');
+    for (let i = 0; i < count; i++) {
+      const x = this.arenaWidth * fractions[i];
+      const y = 380 + Math.random() * 80;
+      const enemy: Enemy = {
+        id: `enemy_${this.nextEnemyId++}`,
+        x, y,
+        hp, maxHp: hp,
+        speed: 0,
+        damage: 10 + Math.floor(totalMonths * 0.4),
+        tags: [],
+        width: 34,
+        height: 34,
+        goldReward: 12,
+        shootTimer: 2,
+        special: undefined,
+        isBoss: false,
+        movement: 'straight',
+        phased: false,
+        moveTimer: 0,
+        moveDir: 1,
+        baseSpeed: 0,
+        defId: 'pit_limb',
+      };
+      (enemy as any).isPitLimb = true;
+      (enemy as any).pitLimbLife = this.state.pitPhaseTimer;
+      this.state.enemies.push(enemy);
+      this.state.totalEnemies++;
+    }
+  }
+
+  /** The Pit's core, exposed once every limb cycle is spent. */
+  private generatePitCore(totalMonths: number): Enemy {
+    const year = Math.ceil(totalMonths / 12);
+    const baseHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
+    const hp = Math.floor(baseHp * 0.9);
+    const enemy: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: this.arenaWidth / 2,
+      y: 130,
+      hp, maxHp: hp,
+      speed: 0,
+      damage: 16 + Math.floor(totalMonths * 0.6),
+      tags: [],
+      width: 110,
+      height: 110,
+      goldReward: Math.floor(160 + totalMonths * 3),
+      shootTimer: 1,
+      special: { type: 'shoot', fireRate: 2.5, projectileSpeed: 240 },
+      isBoss: true,
+      movement: 'straight',
+      phased: false,
+      moveTimer: 0,
+      moveDir: 1,
+      baseSpeed: 0,
+      defId: 'boss_the_pit',
+    };
+    (enemy as any).displayName = 'O NÚCLEO DO POÇO';
+    return enemy;
   }
 
   /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a
@@ -3666,6 +3808,12 @@ export class CombatEngine {
     // pure 1v1.
     if (isBossMonth && !isMegaBossMonth && bossVariant === 'copycat') {
       return [this.generateCopycatMirror(totalMonths, characterId)];
+    }
+
+    // O Poço: nothing spawns up front — the whole encounter (limb cycles,
+    // then the core) is driven by updatePit in tick().
+    if (isBossMonth && !isMegaBossMonth && bossVariant === 'the_pit') {
+      return [];
     }
 
     const enemies: Enemy[] = [];
