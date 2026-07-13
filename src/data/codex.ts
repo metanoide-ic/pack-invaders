@@ -640,6 +640,38 @@ export const BOSS_LORE: Omit<CodexEntry, 'unlocked' | 'lore2Unlocked'>[] = [
     lore2: 'Registros nas cicatrizes dimensionais mapeadas por Dr. Eon sugerem que Zyr-Goth não é um invasor — é um refugiado. Um deus, ou algo próximo disso, de uma realidade que já não existe mais, escondendo-se na nossa como último recurso. "Caído" não é metáfora. É literal. E se o que o derrubou um dia encontrar o caminho até aqui também, Zyr-Goth vai ser o menor dos nossos problemas.',
     lore2Threshold: 3,
   },
+  {
+    id: 'boss_copycat',
+    category: 'boss',
+    name: 'Cópia Sombria',
+    lore1: 'Todo cuspidor que você mata transmite dados até o último instante — é sabido desde o Dia 1. O que ninguém previu foi o Enxame guardando esses dados por tempo suficiente pra construir alguma coisa com eles. A Cópia entra em campo já vestindo sua cara, seu equipamento, seus reflexos. Ela não imita. Ela aprendeu.',
+    lore2: 'Dissecação pós-combate (nas raras vezes que sobra o suficiente pra dissecar) não encontra órgãos — encontra uma estrutura orgânica que se reconfigura em tempo real, tentando convergir pro alvo que está copiando. Quanto mais tempo o combate dura, mais perfeita a cópia fica. A teoria mais aceita no abrigo é a mais desconfortável: ela não para de aprender só porque perdeu. Ela lembra.',
+    lore2Threshold: 3,
+  },
+  {
+    id: 'boss_mothership',
+    category: 'boss',
+    name: 'Nave-Mãe',
+    lore1: 'Mencionada em quase todo relatório de campo desde o Dia 1 — "a nave-mãe" pra onde os dados vão, pra onde os cuspidores reportam, de onde tudo desceu. Nunca tinha sido vista de perto. Agora está aqui, parada no céu, grande demais pra caber no campo de visão de qualquer sentinela. Ela não persegue. Não precisa.',
+    lore2: 'Os pontos que brilham no casco não são falhas — são onde ela está, ativamente, prestando atenção. O resto do tempo, o casco inteiro é só blindagem morta. Os batedores que ela solta pelas laterais não são reforço; são o que sobra de recursos que ela decidiu gastar em nós, e cada um que passa batido é contado, arquivado, usado pra recalibrar o próximo ataque. Estar diante dela é entender, pela primeira vez, a escala real da coisa que chegou.',
+    lore2Threshold: 3,
+  },
+  {
+    id: 'boss_rail_duel',
+    category: 'boss',
+    name: 'Rival das Trilhas',
+    lore1: 'Nem todo mundo que sobreviveu ao Dia 1 continuou humano por dentro. Alguns fizeram acordo. O veículo que emparelha na estrada foi de alguém — ainda tem placa, ainda tem adesivo de time de futebol no para-choque — mas quem dirige hoje trabalha pro Enxame, cobrando pedágio em sangue de quem tenta fugir pelas rotas que ele patrulha.',
+    lore2: 'A blindagem que abre e fecha não é defesa — é fome. Registros de rádio interceptados (voz humana, degradada, repetindo a mesma frase) sugerem que o motorista original ainda está lá dentro, consciente, e a blindagem some exatamente quando ele consegue, por um segundo, lutar contra o que o Enxame enfiou nele. Cada vitória contra o Rival é, também, uma pequena morte de alguém que já tinha perdido tudo antes de nos ver na estrada.',
+    lore2Threshold: 3,
+  },
+  {
+    id: 'boss_the_pit',
+    category: 'boss',
+    name: 'O Núcleo do Poço',
+    lore1: 'Não desce do céu como os outros — sempre esteve aqui, embaixo, muito antes do Dia 1. Os membros que emergem em pontos fixos do chão não são ataques isolados: são a mesma criatura, testando onde a resistência é mais fraca antes de decidir se vale a pena se expor de verdade.',
+    lore2: 'Perfurações geológicas no entorno de cada Poço confirmado mostram túneis com dezenas de anos de idade — mais velhos que a própria invasão. A hipótese que ninguém quer confirmar: o Enxame não trouxe essa coisa. Encontrou ela aqui, dormindo, e decidiu que valia mais acordá-la do que arriscar que acordasse sozinha. O núcleo só se expõe por completo quando entende que não tem mais membros sobrando pra perder primeiro.',
+    lore2Threshold: 3,
+  },
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
