@@ -791,6 +791,7 @@ export class CombatEngine {
     if (this.state.normalVariant === 'ground_zero') this.updateGroundZero(dt);
     if (this.state.swarmTideActive) this.updateSwarmTide(dt);
     if (this.state.bossVariant === 'mothership') this.updateMothership(dt);
+    if (this.state.bossVariant === 'rail_duel') this.updateRailDuel(dt);
     if (this.state.copycatAdrenalineActive) this.updateCopycatAdrenaline(dt);
 
     // 12. Update floating texts
@@ -1064,6 +1065,69 @@ export class CombatEngine {
     (enemy as any).raiderY = y;
     this.state.enemies.push(enemy);
     this.state.totalEnemies++;
+  }
+
+  /** Duelo nas Trilhas (boss phase variant): the rival vehicle cycles
+   * between racing alongside (loosely tracking the player's lane),
+   * telegraphing then executing a ram (heavy contact damage once per
+   * charge), and returning to its hover height — independent of the
+   * plating cycle that gates whether it can actually be damaged. */
+  private updateRailDuel(dt: number): void {
+    const ship = this.state.enemies.find(e => (e as any).isRailDuel);
+    if (!ship) return;
+    const e = ship as any;
+
+    e.railDuelPlateTimer -= dt;
+    if (e.railDuelPlateTimer <= 0) {
+      e.railDuelVulnerable = !e.railDuelVulnerable;
+      e.railDuelPlateTimer = e.railDuelVulnerable ? (2 + Math.random()) : (5 + Math.random() * 2);
+      if (e.railDuelVulnerable) {
+        this.spawnFloatingText(ship.x, ship.y - 40, '⚡ BLINDAGEM ABERTA!', '#facc15');
+      }
+    }
+
+    e.rdTimer -= dt;
+    if (e.rdPhase === 'racing') {
+      const dx = this.state.playerX - ship.x;
+      ship.x += Math.sign(dx) * Math.min(Math.abs(dx), 90 * dt);
+      if (e.rdTimer <= 0) {
+        e.rdPhase = 'telegraph';
+        e.rdTimer = 0.8;
+        this.spawnFloatingText(ship.x, ship.y - 40, '⚠ ATAQUE!', '#ef4444');
+        this.triggerShake(3, 0.3);
+      }
+    } else if (e.rdPhase === 'telegraph') {
+      if (e.rdTimer <= 0) {
+        e.rdPhase = 'ramming';
+        e.rdTargetX = this.state.playerX;
+        e.rdHasHitThisRam = false;
+      }
+    } else if (e.rdPhase === 'ramming') {
+      const targetY = this.arenaHeight - 90;
+      const dx = (e.rdTargetX ?? this.state.playerX) - ship.x;
+      const dy = targetY - ship.y;
+      const dist = Math.max(1, Math.hypot(dx, dy));
+      ship.x += (dx / dist) * 420 * dt;
+      ship.y += (dy / dist) * 420 * dt;
+      if (!e.rdHasHitThisRam && Math.abs(ship.x - this.state.playerX) < 50 && ship.y > this.arenaHeight - 150) {
+        this.damagePlayer(Math.max(22, this.state.playerMaxHp * 0.28));
+        this.spawnFloatingText(this.state.playerX, this.arenaHeight - 90, '💥 ABALROADO!', '#ef4444');
+        this.triggerShake(10, 0.4);
+        e.rdHasHitThisRam = true;
+      }
+      if (ship.y >= targetY - 4) {
+        e.rdPhase = 'returning';
+      }
+    } else if (e.rdPhase === 'returning') {
+      const dy = e.rdHomeY - ship.y;
+      const step = Math.min(Math.abs(dy), 260 * dt);
+      ship.y += Math.sign(dy) * step;
+      if (Math.abs(dy) < 4) {
+        ship.y = e.rdHomeY;
+        e.rdPhase = 'racing';
+        e.rdTimer = 5 + Math.random() * 2;
+      }
+    }
   }
 
   /** Vácuo Aberto (normal phase variant): asteroids fall from the top on a
@@ -1669,8 +1733,10 @@ export class CombatEngine {
 
       // Boss special movement: strafe at top while shooting.
       // Skipped while the boss is executing a dive attack (pattern engine
-      // steers it below the hover cap and back).
-      if (e.isBoss && e.y > 60 && !(e as any)._diving && e.defId !== 'boss_epoch') {
+      // steers it below the hover cap and back). Also skipped for Nave-Mãe
+      // (fully stationary by design) and Duelo nas Trilhas (drives its own
+      // racing/ram/return cycle in updateRailDuel).
+      if (e.isBoss && e.y > 60 && !(e as any)._diving && e.defId !== 'boss_epoch' && !(e as any).isRailDuel) {
         // Bosses hover at top area and strafe (Zyr-Goth is a stationary
         // colossus — his y/x are pinned at spawn)
         if (e.y > 120) e.y = 120; // Cap boss y-position
@@ -2455,6 +2521,11 @@ export class CombatEngine {
           // exposed — otherwise every hit still flashes/impacts for
           // feedback but deals 0, teaching "wait for the glow"
           if ((e as any).isMothership && !(e as any).mothershipVulnerable) {
+            damage = 0;
+          }
+          // Duelo nas Trilhas: same idea, gated by the plating cycle instead
+          // of hull weak points
+          if ((e as any).isRailDuel && !(e as any).railDuelVulnerable) {
             damage = 0;
           }
 
@@ -3746,6 +3817,8 @@ export class CombatEngine {
     // bosses have been fought.
     if (isBossMonth && !isMegaBossMonth && bossVariant === 'mothership') {
       enemies.push(this.generateMothership(totalMonths));
+    } else if (isBossMonth && !isMegaBossMonth && bossVariant === 'rail_duel') {
+      enemies.push(this.generateRailDuel(totalMonths));
     } else if (isBossMonth && !isSwarmTide) {
       let bossSource: EnemyDefinition;
       let encounterCount: number;
@@ -3921,6 +3994,46 @@ export class CombatEngine {
     (enemy as any).isMothership = true;
     (enemy as any).mothershipVulnerable = false;
     (enemy as any).displayName = 'NAVE-MÃE';
+    return enemy;
+  }
+
+  /** Duelo nas Trilhas boss variant: a rival vehicle that races alongside,
+   * only damageable while its plating is open (see updateRailDuel), and
+   * periodically rams the player for heavy contact damage. */
+  private generateRailDuel(totalMonths: number): Enemy {
+    const year = Math.ceil(totalMonths / 12);
+    const baseHp = Math.floor(300 + totalMonths * 55 + (year - 1) * totalMonths * 18);
+    const hp = Math.floor(baseHp * 0.75);
+    const damage = 12 + Math.floor(totalMonths * 0.5);
+
+    const enemy: Enemy = {
+      id: `enemy_${this.nextEnemyId++}`,
+      x: this.arenaWidth / 2,
+      y: 130,
+      hp, maxHp: hp,
+      speed: 0,
+      damage,
+      tags: [],
+      width: 90,
+      height: 50,
+      goldReward: Math.floor(130 + totalMonths * 3),
+      shootTimer: 0.6,
+      special: { type: 'shoot', fireRate: 2.2, projectileSpeed: 260 },
+      isBoss: true,
+      movement: 'straight',
+      phased: false,
+      moveTimer: 0,
+      moveDir: 1,
+      baseSpeed: 0,
+      defId: 'boss_rail_duel',
+    };
+    (enemy as any).isRailDuel = true;
+    (enemy as any).railDuelVulnerable = false;
+    (enemy as any).railDuelPlateTimer = 5 + Math.random() * 2;
+    (enemy as any).rdPhase = 'racing';
+    (enemy as any).rdTimer = 5 + Math.random() * 2;
+    (enemy as any).rdHomeY = 130;
+    (enemy as any).displayName = 'RIVAL DAS TRILHAS';
     return enemy;
   }
 }

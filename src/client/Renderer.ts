@@ -2890,6 +2890,9 @@ export class Renderer {
     } else if (state.bossVariant === 'mothership') {
       ctx.fillStyle = 'rgba(30, 41, 59, 0.16)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else if (state.bossVariant === 'rail_duel') {
+      ctx.fillStyle = 'rgba(120, 53, 15, 0.08)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
     } else if (state.normalVariant === 'acid_rain') {
       ctx.fillStyle = state.acidRainActive ? 'rgba(132, 204, 22, 0.14)' : 'rgba(132, 204, 22, 0.05)';
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -3868,6 +3871,70 @@ export class Renderer {
     ctx.textAlign = 'left';
   }
 
+  /** Duelo nas Trilhas boss variant: a sleek rival vehicle — armored plating
+   * (dark, riveted) most of the time, glowing exposed core panel while its
+   * plating is open. Telegraph/ram feedback reuses floating text + shake,
+   * so no extra state needed here beyond the two visual modes. */
+  private renderRailDuel(e: Enemy): void {
+    const { ctx } = this;
+    const w = e.width, h = e.height;
+    const vulnerable = !!(e as any).railDuelVulnerable;
+    const ramming = (e as any).rdPhase === 'ramming';
+    const flash = this.enemyHitFlash.get(e.id) ?? 0;
+
+    ctx.save();
+    ctx.translate(e.x, e.y);
+    if (ramming) ctx.rotate(Math.atan2(420, ((e as any).rdTargetX ?? e.x) - e.x) - Math.PI / 2);
+
+    // Hull
+    ctx.fillStyle = flash > 0 ? '#94a3b8' : '#292524';
+    ctx.beginPath();
+    ctx.moveTo(-w / 2, 0);
+    ctx.lineTo(-w * 0.32, -h / 2);
+    ctx.lineTo(w * 0.32, -h / 2);
+    ctx.lineTo(w / 2, 0);
+    ctx.lineTo(w * 0.32, h / 2);
+    ctx.lineTo(-w * 0.32, h / 2);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = vulnerable ? '#facc15' : '#57534e';
+    ctx.lineWidth = vulnerable ? 3 : 2;
+    ctx.globalAlpha = vulnerable ? 0.7 + Math.sin(performance.now() * 0.012) * 0.3 : 1;
+    ctx.stroke();
+    ctx.globalAlpha = 1;
+
+    // Exposed core panel (only reads while vulnerable)
+    if (vulnerable) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.6;
+      ctx.drawImage(this.getGlow('#facc15', 20), -20, -20);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = '#fde68a';
+      ctx.beginPath();
+      ctx.arc(0, 0, 9, 0, Math.PI * 2);
+      ctx.fill();
+    } else {
+      ctx.fillStyle = '#44403c';
+      ctx.fillRect(-14, -6, 28, 12);
+    }
+
+    // Side-mounted gun nubs — cosmetic, sell "firing side guns"
+    ctx.fillStyle = '#78716c';
+    ctx.fillRect(-w / 2 - 4, -6, 8, 12);
+    ctx.fillRect(w / 2 - 4, -6, 8, 12);
+    ctx.restore();
+
+    ctx.font = 'bold 12px monospace';
+    ctx.fillStyle = ramming ? '#ef4444' : vulnerable ? '#fde68a' : '#a8a29e';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      ramming ? '💥 ABALROANDO!' : vulnerable ? 'BLINDAGEM ABERTA!' : 'RIVAL DAS TRILHAS',
+      e.x, e.y - h / 2 - 12,
+    );
+    ctx.textAlign = 'left';
+  }
+
   private static readonly COPYCAT_CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 
   /** Copycat boss variant: the mirror is rendered with the player's own
@@ -3915,6 +3982,7 @@ export class Renderer {
     // Copycat boss variant: mirror of the player, own dedicated draw path
     if ((e as any).isCopycat) { this.renderCopycatMirror(e, dt); return; }
     if ((e as any).isMothership) { this.renderMothership(e); return; }
+    if ((e as any).isRailDuel) { this.renderRailDuel(e); return; }
     // Zyr-Goth's body is the screen-tall colossus layer (renderZyrgothGiant);
     // skip the normal sprite so he isn't drawn twice
     if ((e as any).defId === 'boss_epoch' && getZyrgothGiant()) return;

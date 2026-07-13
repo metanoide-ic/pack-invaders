@@ -71,7 +71,7 @@ export const BOSS_PHASE_VARIANTS: PhaseVariantDef[] = [
     id: 'rail_duel',
     name: 'Duelo nas Trilhas',
     description: 'Um veículo rival acompanha na estrada, tentando abalroar e atirando pelas laterais — só vulnerável quando a blindagem abre.',
-    implemented: false,
+    implemented: true,
   },
   {
     id: 'the_pit',
