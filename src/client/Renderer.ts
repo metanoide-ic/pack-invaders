@@ -293,6 +293,31 @@ export class Renderer {
 
     this.renderScreenFX();
 
+    // Gamepad virtual cursor — drawn on top of everything outside combat
+    const pad = this.inputHandler?.gamepad;
+    if (pad?.connected && pad.cursorVisible &&
+        this.game.phase !== 'COMBAT' && this.game.phase !== 'COOP') {
+      const cx4 = pad.cursorX, cy4 = pad.cursorY;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
+      ctx.shadowBlur = 4;
+      ctx.fillStyle = '#f8fafc';
+      ctx.strokeStyle = '#0f172a';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx4, cy4);
+      ctx.lineTo(cx4 + 13, cy4 + 15);
+      ctx.lineTo(cx4 + 7.5, cy4 + 14.5);
+      ctx.lineTo(cx4 + 10, cy4 + 21);
+      ctx.lineTo(cx4 + 6.5, cy4 + 22.5);
+      ctx.lineTo(cx4 + 4, cy4 + 16);
+      ctx.lineTo(cx4, cy4 + 20);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
     ctx.restore();
   }
 
@@ -395,45 +420,54 @@ export class Renderer {
       ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
 
-    // ─── Character idle bounce (Castle Crashers style) ───────────────────
+    // ─── Character showcase: framed portraits with a slow drift (no more
+    // squash-and-stretch bouncing — the painted art reads as a poster) ────
     const charSpriteIds = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex'];
     const charSprites = loadedSpritesMenu?.characters as Map<string, HTMLImageElement> | undefined;
     if (charSprites && charSprites.size > 0) {
       const charCount = Math.min(charSprites.size, 4);
       const charStartX = Math.floor(L.w * 0.50);
-      const charSpacing = Math.floor(L.w * 0.12);
-      const charY = Math.floor(L.h * 0.35);
-      const charH = Math.floor(L.h * 0.50);
+      const charSpacing = Math.floor(L.w * 0.115);
+      const charY = Math.floor(L.h * 0.33);
+      const charH = Math.floor(L.h * 0.5);
+      const charW = Math.floor(charH * 0.62);
 
       for (let i = 0; i < charCount; i++) {
-        const sprId = charSpriteIds[i];
-        const spr = charSprites.get(sprId);
+        const spr = charSprites.get(charSpriteIds[i]);
         if (!spr) continue;
-
-        // Castle Crashers bounce: each char bounces at different phase
-        const bouncePhase = this.menuFloatTimer * 2.5 + i * 1.2;
-        const bounceY = Math.abs(Math.sin(bouncePhase)) * 12;
-        // Slight squash and stretch
-        const squash = 1 + Math.sin(bouncePhase) * 0.03;
-        const stretch = 1 - Math.sin(bouncePhase) * 0.02;
-
+        // Gentle staggered float, 3px max — alive, never cartoonish
+        const drift = Math.sin(this.menuFloatTimer * 0.9 + i * 1.4) * 3;
         const cx = charStartX + i * charSpacing;
-        const cy = charY - bounceY;
-        const drawH2 = Math.floor(charH * squash);
-        const drawW2 = Math.floor(charH * 0.5 * stretch);
+        const cy = charY + drift;
 
         ctx.save();
-        ctx.globalAlpha = 0.9;
-        ctx.drawImage(spr, cx - drawW2 / 2, cy, drawW2, drawH2);
-        ctx.restore();
-
-        // Shadow below character
-        ctx.globalAlpha = 0.2;
-        ctx.fillStyle = '#000000';
         ctx.beginPath();
-        ctx.ellipse(cx, charY + charH + 5, drawW2 * 0.4, 4, 0, 0, Math.PI * 2);
+        ctx.roundRect(cx - charW / 2, cy, charW, charH, 10);
+        // Soft drop shadow behind the frame
+        ctx.shadowColor = 'rgba(0,0,0,0.65)';
+        ctx.shadowBlur = 18;
+        ctx.shadowOffsetY = 6;
+        ctx.fillStyle = '#0a0a14';
         ctx.fill();
-        ctx.globalAlpha = 1;
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetY = 0;
+        ctx.clip();
+        // Cover-fit the portrait inside the frame
+        const scl = Math.max(charW / spr.width, charH / spr.height);
+        ctx.drawImage(spr, cx - (spr.width * scl) / 2, cy + (charH - spr.height * scl) / 2, spr.width * scl, spr.height * scl);
+        // Bottom fade so frames blend into the scene
+        const fGrad = ctx.createLinearGradient(0, cy + charH * 0.72, 0, cy + charH);
+        fGrad.addColorStop(0, 'rgba(5,5,15,0)');
+        fGrad.addColorStop(1, 'rgba(5,5,15,0.85)');
+        ctx.fillStyle = fGrad;
+        ctx.fillRect(cx - charW / 2, cy + charH * 0.7, charW, charH * 0.3);
+        ctx.restore();
+        ctx.beginPath();
+        ctx.roundRect(cx - charW / 2, cy, charW, charH, 10);
+        ctx.strokeStyle = 'rgba(148, 163, 184, 0.25)';
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       }
     }
 
@@ -581,23 +615,30 @@ export class Renderer {
       const isHover = this.mouseX >= x && this.mouseX <= x + slotW &&
                       this.mouseY >= slotY && this.mouseY <= slotY + slotH;
 
-      // Card background
-      ctx.fillStyle = isHover ? '#12122a' : '#0a0a18';
-      ctx.fillRect(x, slotY, slotW, slotH);
+      // Card background (rounded, subtle vertical gradient)
+      const slotGrad = ctx.createLinearGradient(x, slotY, x, slotY + slotH);
+      slotGrad.addColorStop(0, isHover ? '#181832' : '#0e0e1e');
+      slotGrad.addColorStop(1, isHover ? '#0f0f24' : '#080814');
+      ctx.beginPath();
+      ctx.roundRect(x, slotY, slotW, slotH, 10);
+      ctx.fillStyle = slotGrad;
+      ctx.fill();
 
       // Border with glow on hover
       if (isHover) {
         ctx.shadowColor = slot.exists ? '#6366f1' : '#4ade80';
-        ctx.shadowBlur = 8;
+        ctx.shadowBlur = 10;
       }
       ctx.strokeStyle = slot.exists ? '#6366f1' : '#374151';
-      ctx.lineWidth = isHover ? 2 : 1;
-      ctx.strokeRect(x, slotY, slotW, slotH);
+      ctx.lineWidth = isHover ? 2 : 1.5;
+      ctx.stroke();
       ctx.shadowBlur = 0;
 
-      // Top accent bar
+      // Top accent band
+      ctx.beginPath();
+      ctx.roundRect(x, slotY, slotW, 4, [10, 10, 0, 0]);
       ctx.fillStyle = slot.exists ? '#6366f1' : '#1e293b';
-      ctx.fillRect(x, slotY, slotW, 3);
+      ctx.fill();
 
       ctx.textAlign = 'center';
       ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
@@ -845,12 +886,14 @@ export class Renderer {
       const isClaimed = claimed.has(m.id);
       const rowY = startY + i * (rowH + gap);
 
-      // Row background
+      // Row background (rounded)
+      ctx.beginPath();
+      ctx.roundRect(listX, rowY, listW, rowH, 8);
       ctx.fillStyle = isClaimed ? 'rgba(20,40,24,0.6)' : (prog.complete ? 'rgba(42,34,8,0.75)' : 'rgba(14,14,24,0.7)');
-      ctx.fillRect(listX, rowY, listW, rowH);
+      ctx.fill();
       ctx.strokeStyle = isClaimed ? 'rgba(34,197,94,0.4)' : (prog.complete ? '#fbbf24' : '#1e293b');
       ctx.lineWidth = 1;
-      ctx.strokeRect(listX, rowY, listW, rowH);
+      ctx.stroke();
 
       // Icon
       ctx.font = `${Math.floor(rowH * 0.5)}px monospace`;
@@ -871,10 +914,15 @@ export class Renderer {
       const barX = listX + Math.floor(listW * 0.46);
       const barW = Math.floor(listW * 0.26);
       const barY = rowY + rowH * 0.5 - 3;
+      ctx.beginPath();
+      ctx.roundRect(barX, barY, barW, 8, 4);
       ctx.fillStyle = '#0f1420';
-      ctx.fillRect(barX, barY, barW, 8);
+      ctx.fill();
+      ctx.save();
+      ctx.clip();
       ctx.fillStyle = prog.complete ? '#22c55e' : '#6366f1';
       ctx.fillRect(barX, barY, Math.floor(barW * prog.pct), 8);
+      ctx.restore();
       ctx.font = `${Math.floor(L.h * 0.0098)}px monospace`;
       ctx.fillStyle = '#94a3b8';
       ctx.textAlign = 'center';
@@ -885,8 +933,10 @@ export class Renderer {
       const cx = listX + listW - claimW - 8;
       const cy = rowY + (rowH - claimH) / 2;
       if (isClaimed) {
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, claimW, claimH, 6);
         ctx.fillStyle = '#14532d';
-        ctx.fillRect(cx, cy, claimW, claimH);
+        ctx.fill();
         ctx.fillStyle = '#86efac';
         ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
         ctx.textAlign = 'center';
@@ -896,8 +946,10 @@ export class Renderer {
         ctx.globalAlpha = pulse;
         ctx.shadowColor = '#fbbf24';
         ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, claimW, claimH, 6);
         ctx.fillStyle = '#fbbf24';
-        ctx.fillRect(cx, cy, claimW, claimH);
+        ctx.fill();
         ctx.shadowBlur = 0;
         ctx.globalAlpha = 1;
         ctx.fillStyle = '#000000';
@@ -905,8 +957,10 @@ export class Renderer {
         ctx.textAlign = 'center';
         ctx.fillText('COLETAR', cx + claimW / 2, cy + claimH * 0.65);
       } else {
+        ctx.beginPath();
+        ctx.roundRect(cx, cy, claimW, claimH, 6);
         ctx.fillStyle = '#1e293b';
-        ctx.fillRect(cx, cy, claimW, claimH);
+        ctx.fill();
         ctx.fillStyle = '#475569';
         ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
         ctx.textAlign = 'center';
@@ -967,18 +1021,24 @@ export class Renderer {
 
       const isUnlocked = unlocked.has(ach.id);
 
-      // Card background
+      // Card background (rounded)
+      ctx.beginPath();
+      ctx.roundRect(x, y, achW, achH, 8);
       ctx.fillStyle = isUnlocked ? 'rgba(20, 35, 20, 0.9)' : 'rgba(12, 12, 20, 0.8)';
-      ctx.fillRect(x, y, achW, achH);
+      ctx.fill();
 
-      // Left accent bar (gold if unlocked)
+      // Left accent bar (gold if unlocked), following the rounded corner
+      ctx.beginPath();
+      ctx.roundRect(x, y, 4, achH, [8, 0, 0, 8]);
       ctx.fillStyle = isUnlocked ? '#fbbf24' : '#1f2937';
-      ctx.fillRect(x, y, 3, achH);
+      ctx.fill();
 
       // Border
+      ctx.beginPath();
+      ctx.roundRect(x, y, achW, achH, 8);
       ctx.strokeStyle = isUnlocked ? '#4ade80' : '#1e293b';
       ctx.lineWidth = isUnlocked ? 1.5 : 1;
-      ctx.strokeRect(x, y, achW, achH);
+      ctx.stroke();
 
       // Icon
       ctx.font = `${Math.floor(L.h * 0.028)}px monospace`;
@@ -4225,7 +4285,10 @@ export class Renderer {
     ctx.font = L.fontTiny;
     ctx.fillStyle = '#374151';
     ctx.textAlign = 'right';
-    ctx.fillText('A/D | SHIFT dash | 1-2-3 skills | 4-5-6 poções', canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
+    const padHint = this.inputHandler?.gamepad;
+    ctx.fillText(
+      padHint?.connected ? `🎮 ${padHint.hudHint()}` : 'A/D | SHIFT dash | 1-2-3 skills | 4-5-6 poções',
+      canvas.width - Math.floor(L.w * 0.01), Math.floor(hudH * 0.88));
     ctx.textAlign = 'left';
 
     // ── Pause button (tappable; matches InputHandler.tryCombatButton) ────
@@ -4267,8 +4330,8 @@ export class Renderer {
       const radarX = canvas.width - radarW - Math.floor(L.w * 0.012);
       const radarY = canvas.height - radarH - Math.floor(L.h * 0.07);
 
-      // Background panel
-      ctx.globalAlpha = 0.82;
+      // Background panel (translucent — gameplay stays visible through it)
+      ctx.globalAlpha = 0.62;
       ctx.fillStyle = '#050510';
       ctx.fillRect(radarX - 2, radarY - 14, radarW + 4, radarH + 16);
       ctx.globalAlpha = 1;
@@ -4533,6 +4596,34 @@ export class Renderer {
       ctx.textAlign = 'left';
       ctx.globalAlpha = 1;
     }
+
+    // The skill bar (bottom-left) and radar (bottom-right) sit exactly where
+    // the player walks — repaint him on top whenever he's under one so the
+    // character never vanishes behind the HUD
+    const pxNow = state.playerX;
+    if (pxNow < L.w * 0.22 || pxNow > L.w * 0.82) {
+      this.redrawPlayerOnTop();
+    }
+  }
+
+  /** Repaint the player sprite above the HUD (same transform/animation as
+   * the in-world draw; drawTopdownAnimated is idempotent within a frame). */
+  private redrawPlayerOnTop(): void {
+    const { ctx, canvas, game } = this;
+    const state = game.combat.state;
+    const charId = game.characterId;
+    const tdSprite = getTopdownSprite(charId);
+    if (!tdSprite) return;
+    const now = performance.now() / 1000;
+    const vel = (game.combat as any).playerVelocity ?? 0;
+    const lean = Math.max(-0.09, Math.min(0.09, vel * 0.00012));
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.translate(state.playerX, canvas.height - 13);
+    ctx.rotate(lean);
+    const recoil01 = Math.min(1, ((game.combat as any).recoilTimer ?? 0) / 0.12);
+    this.drawTopdownAnimated(tdSprite, charId, vel, recoil01, now, 0);
+    ctx.restore();
   }
 
   // ─── Cards Phase ────────────────────────────────────────────────────────
@@ -5005,38 +5096,38 @@ export class Renderer {
 
       const sprite = this.sprites.items.get(item.id);
       if (sprite) {
-        const spriteS = Math.floor(itemCardH * 0.19);
+        const spriteS = Math.floor(itemCardH * 0.24);
         ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(sprite, x + itemCardW / 2 - spriteS / 2, y + Math.floor(itemCardH * 0.025), spriteS, spriteS);
+        ctx.drawImage(sprite, x + itemCardW / 2 - spriteS / 2, y + Math.floor(itemCardH * 0.03), spriteS, spriteS);
         ctx.imageSmoothingEnabled = true;
       }
 
-      ctx.font = `bold ${Math.floor(L.h * 0.015)}px monospace`;
-      ctx.fillStyle = '#e2e8f0';
+      ctx.font = `bold ${Math.floor(L.h * 0.017)}px monospace`;
+      ctx.fillStyle = '#f1f5f9';
       ctx.textAlign = 'center';
-      ctx.fillText(item.name, x + itemCardW / 2, y + Math.floor(itemCardH * 0.28));
+      ctx.fillText(item.name, x + itemCardW / 2, y + Math.floor(itemCardH * 0.335));
 
-      ctx.font = L.fontTiny;
-      ctx.fillStyle = '#94a3b8';
-      this.wrapText(item.description, x + itemCardW / 2, y + Math.floor(itemCardH * 0.35), itemCardW - 14, Math.floor(L.h * 0.016));
+      ctx.font = `${Math.floor(L.h * 0.0145)}px monospace`;
+      ctx.fillStyle = '#cbd5e1';
+      this.wrapText(item.description, x + itemCardW / 2, y + Math.floor(itemCardH * 0.40), itemCardW - 12, Math.floor(L.h * 0.0185));
 
-      ctx.font = L.fontTiny;
-      ctx.fillStyle = '#6366f1';
-      ctx.fillText(item.tags.slice(0, 3).join(', '), x + itemCardW / 2, y + Math.floor(itemCardH * 0.75));
+      ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
+      ctx.fillStyle = '#818cf8';
+      ctx.fillText(item.tags.slice(0, 3).join(', '), x + itemCardW / 2, y + Math.floor(itemCardH * 0.755));
 
       const finalCost = game.getItemCost(item);
       const discount = finalCost < item.cost ? 1 : 0;
-      ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+      ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
       ctx.fillStyle = game.gold >= finalCost ? '#4ade80' : '#ef4444';
       if (discount > 0) {
-        ctx.fillText(`${finalCost}g`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.88));
-        ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+        ctx.fillText(`${finalCost}g`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.885));
+        ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
         ctx.fillStyle = '#64748b';
         ctx.globalAlpha = 0.6;
-        ctx.fillText(`${item.cost}g`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.93));
+        ctx.fillText(`${item.cost}g`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.94));
         ctx.globalAlpha = 1;
       } else {
-        ctx.fillText(`${item.cost} gold`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.9));
+        ctx.fillText(`${item.cost}g`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.9));
       }
       ctx.textAlign = 'left';
 
@@ -5047,16 +5138,13 @@ export class Renderer {
       const buffs = countPossibleBuffs(item.tags, existingTags);
 
       if (combos > 0 || buffs > 0) {
-        ctx.font = `bold ${Math.floor(L.h * 0.01)}px monospace`;
+        ctx.font = `bold ${Math.floor(L.h * 0.0125)}px monospace`;
         ctx.textAlign = 'center';
-        if (combos > 0) {
-          ctx.fillStyle = '#f472b6';
-          ctx.fillText(`Fusões: ${combos}`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.80));
-        }
-        if (buffs > 0) {
-          ctx.fillStyle = '#a78bfa';
-          ctx.fillText(`Buffs: ${buffs}`, x + itemCardW / 2, y + Math.floor(itemCardH * 0.84));
-        }
+        const parts: string[] = [];
+        if (combos > 0) parts.push(`★ Fusões: ${combos}`);
+        if (buffs > 0) parts.push(`◆ Buffs: ${buffs}`);
+        ctx.fillStyle = combos > 0 ? '#f472b6' : '#a78bfa';
+        ctx.fillText(parts.join('  '), x + itemCardW / 2, y + Math.floor(itemCardH * 0.815));
         ctx.textAlign = 'left';
       }
 
@@ -5069,7 +5157,7 @@ export class Renderer {
         const previewW = shapeCols * previewCellSize;
         const previewH = shapeRows * previewCellSize;
         const previewX = x + (itemCardW - previewW) / 2;
-        const previewY = y + Math.floor(itemCardH * 0.56);
+        const previewY = y + Math.floor(itemCardH * 0.585);
         const color = this.getItemColor(item.tags);
         for (let sr = 0; sr < shapeRows; sr++) {
           for (let sc = 0; sc < shapeCols; sc++) {
@@ -5088,8 +5176,8 @@ export class Renderer {
         }
         // Cell count
         const cellCount = shape.flat().filter(c => c === 1).length;
-        ctx.font = `${Math.floor(L.h * 0.008)}px monospace`;
-        ctx.fillStyle = '#64748b';
+        ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
+        ctx.fillStyle = '#7c8aa0';
         ctx.textAlign = 'center';
         ctx.fillText(`${cellCount} cel`, x + itemCardW / 2, previewY + previewH + Math.floor(L.h * 0.012));
         ctx.textAlign = 'left';
@@ -6479,6 +6567,22 @@ export class Renderer {
 
   // ─── Settings Screen ───────────────────────────────────────────────────────
 
+  /** Small rounded ON/OFF pill toggle used throughout the settings screen */
+  private drawToggle(x: number, y: number, w: number, h: number, on: boolean): void {
+    const { ctx } = this;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, h / 2);
+    ctx.fillStyle = on ? '#4ade80' : '#374151';
+    ctx.fill();
+    ctx.strokeStyle = on ? '#22c55e' : '#64748b';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+    ctx.font = `bold ${Math.floor(h * 0.42)}px monospace`;
+    ctx.fillStyle = '#ffffff';
+    ctx.textAlign = 'center';
+    ctx.fillText(on ? 'LIGADO' : 'DESLIGADO', x + w / 2, y + h * 0.68);
+  }
+
   private renderSettings(): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
@@ -6510,10 +6614,15 @@ export class Renderer {
     const volStored = parseInt(localStorage.getItem('packinvaders_volume') || '40', 10) / 100;
     const volBarY = cy + Math.floor(lineH * 0.35);
     const volBarH = Math.floor(L.h * 0.02);
+    ctx.beginPath();
+    ctx.roundRect(sliderX, volBarY, sliderW, volBarH, volBarH / 2);
     ctx.fillStyle = '#1f2937';
-    ctx.fillRect(sliderX, volBarY, sliderW, volBarH);
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
     ctx.fillStyle = '#6366f1';
     ctx.fillRect(sliderX, volBarY, sliderW * volStored, volBarH);
+    ctx.restore();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(sliderX + sliderW * volStored, volBarY + volBarH / 2, 7, 0, Math.PI * 2);
@@ -6531,10 +6640,15 @@ export class Renderer {
     ctx.fillText('🔊 Volume SFX', labelX, cy);
     const sfxStored = parseInt(localStorage.getItem('packinvaders_sfx_volume') || '60', 10) / 100;
     const sfxBarY = cy + Math.floor(lineH * 0.35);
+    ctx.beginPath();
+    ctx.roundRect(sliderX, sfxBarY, sliderW, volBarH, volBarH / 2);
     ctx.fillStyle = '#1f2937';
-    ctx.fillRect(sliderX, sfxBarY, sliderW, volBarH);
+    ctx.fill();
+    ctx.save();
+    ctx.clip();
     ctx.fillStyle = '#4ade80';
     ctx.fillRect(sliderX, sfxBarY, sliderW * sfxStored, volBarH);
+    ctx.restore();
     ctx.fillStyle = '#ffffff';
     ctx.beginPath();
     ctx.arc(sliderX + sliderW * sfxStored, sfxBarY + volBarH / 2, 7, 0, Math.PI * 2);
@@ -6552,15 +6666,7 @@ export class Renderer {
     ctx.fillText('📳 Screen Shake', labelX, cy);
     const shakeEnabled = localStorage.getItem('packinvaders_shake') !== 'off';
     const shakeBtn = { x: sliderX, y: cy + Math.floor(lineH * 0.15), w: Math.floor(sliderW * 0.3), h: Math.floor(L.h * 0.035) };
-    ctx.fillStyle = shakeEnabled ? '#4ade80' : '#374151';
-    ctx.fillRect(shakeBtn.x, shakeBtn.y, shakeBtn.w, shakeBtn.h);
-    ctx.strokeStyle = shakeEnabled ? '#22c55e' : '#64748b';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(shakeBtn.x, shakeBtn.y, shakeBtn.w, shakeBtn.h);
-    ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(shakeEnabled ? 'LIGADO' : 'DESLIGADO', shakeBtn.x + shakeBtn.w / 2, shakeBtn.y + shakeBtn.h * 0.7);
+    this.drawToggle(shakeBtn.x, shakeBtn.y, shakeBtn.w, shakeBtn.h, shakeEnabled);
     cy += lineH;
 
     // ─── Particles ───────────────────────────────────────────────────────
@@ -6570,15 +6676,7 @@ export class Renderer {
     ctx.fillText('✨ Partículas', labelX, cy);
     const particlesEnabled = localStorage.getItem('packinvaders_particles') !== 'off';
     const partBtn = { x: sliderX, y: cy + Math.floor(lineH * 0.15), w: Math.floor(sliderW * 0.3), h: Math.floor(L.h * 0.035) };
-    ctx.fillStyle = particlesEnabled ? '#4ade80' : '#374151';
-    ctx.fillRect(partBtn.x, partBtn.y, partBtn.w, partBtn.h);
-    ctx.strokeStyle = particlesEnabled ? '#22c55e' : '#64748b';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(partBtn.x, partBtn.y, partBtn.w, partBtn.h);
-    ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(particlesEnabled ? 'LIGADO' : 'DESLIGADO', partBtn.x + partBtn.w / 2, partBtn.y + partBtn.h * 0.7);
+    this.drawToggle(partBtn.x, partBtn.y, partBtn.w, partBtn.h, particlesEnabled);
     cy += lineH;
 
     // ─── CRT / Scanlines ─────────────────────────────────────────────────
@@ -6588,15 +6686,7 @@ export class Renderer {
     ctx.fillText('📺 Efeito CRT', labelX, cy);
     const crtEnabled = localStorage.getItem('packinvaders_crt') !== 'off';
     const crtBtn = { x: sliderX, y: cy + Math.floor(lineH * 0.15), w: Math.floor(sliderW * 0.3), h: Math.floor(L.h * 0.035) };
-    ctx.fillStyle = crtEnabled ? '#4ade80' : '#374151';
-    ctx.fillRect(crtBtn.x, crtBtn.y, crtBtn.w, crtBtn.h);
-    ctx.strokeStyle = crtEnabled ? '#22c55e' : '#64748b';
-    ctx.lineWidth = 1;
-    ctx.strokeRect(crtBtn.x, crtBtn.y, crtBtn.w, crtBtn.h);
-    ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-    ctx.fillStyle = '#ffffff';
-    ctx.textAlign = 'center';
-    ctx.fillText(crtEnabled ? 'LIGADO' : 'DESLIGADO', crtBtn.x + crtBtn.w / 2, crtBtn.y + crtBtn.h * 0.7);
+    this.drawToggle(crtBtn.x, crtBtn.y, crtBtn.w, crtBtn.h, crtEnabled);
     cy += lineH;
 
     // ─── Fullscreen ──────────────────────────────────────────────────────
@@ -6612,11 +6702,13 @@ export class Renderer {
     const resetBtnH = Math.floor(L.h * 0.045);
     const resetBtnX = L.cx - resetBtnW / 2;
     const isResetConfirm = !!(this.inputHandler as any)?._resetConfirm;
+    ctx.beginPath();
+    ctx.roundRect(resetBtnX, cy, resetBtnW, resetBtnH, 8);
     ctx.fillStyle = isResetConfirm ? '#dc2626' : '#7f1d1d';
-    ctx.fillRect(resetBtnX, cy, resetBtnW, resetBtnH);
+    ctx.fill();
     ctx.strokeStyle = isResetConfirm ? '#fbbf24' : '#ef4444';
     ctx.lineWidth = isResetConfirm ? 2 : 1;
-    ctx.strokeRect(resetBtnX, cy, resetBtnW, resetBtnH);
+    ctx.stroke();
     ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
     ctx.fillStyle = isResetConfirm ? '#fbbf24' : '#ffffff';
     ctx.textAlign = 'center';
@@ -6850,13 +6942,25 @@ export class Renderer {
       const isHover = this.mouseX >= cx && this.mouseX <= cx + cardW &&
                       this.mouseY >= cardY && this.mouseY <= cardY + cardH;
 
-      // Card background
-      ctx.fillStyle = isHover && mode.available ? `${mode.color}22` : 'rgba(10,10,30,0.9)';
-      ctx.fillRect(cx, cardY, cardW, cardH);
+      // Card background (rounded, gradient)
+      const modeGrad = ctx.createLinearGradient(cx, cardY, cx, cardY + cardH);
+      if (isHover && mode.available) {
+        modeGrad.addColorStop(0, `${mode.color}2e`);
+        modeGrad.addColorStop(1, `${mode.color}12`);
+      } else {
+        modeGrad.addColorStop(0, 'rgba(18,18,36,0.9)');
+        modeGrad.addColorStop(1, 'rgba(8,8,20,0.9)');
+      }
+      ctx.beginPath();
+      ctx.roundRect(cx, cardY, cardW, cardH, 12);
+      ctx.fillStyle = modeGrad;
+      ctx.fill();
       // Card border
+      if (isHover && mode.available) { ctx.shadowColor = mode.color; ctx.shadowBlur = 12; }
       ctx.strokeStyle = isHover && mode.available ? mode.color : (mode.available ? `${mode.color}66` : '#374151');
       ctx.lineWidth = 2;
-      ctx.strokeRect(cx, cardY, cardW, cardH);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
 
       // Icon
       ctx.font = `${Math.floor(L.h * 0.07)}px monospace`;
@@ -6883,14 +6987,25 @@ export class Renderer {
       const btnW = Math.floor(cardW * 0.8);
 
       if (mode.available) {
-        ctx.fillStyle = isHover ? mode.color : `${mode.color}88`;
-        ctx.fillRect(btnX, btnY, btnW, btnH);
+        const btnGrad2 = ctx.createLinearGradient(0, btnY, 0, btnY + btnH);
+        const baseC = isHover ? mode.color : `${mode.color}aa`;
+        btnGrad2.addColorStop(0, this.brightenColor(baseC));
+        btnGrad2.addColorStop(1, baseC);
+        ctx.beginPath();
+        ctx.roundRect(btnX, btnY, btnW, btnH, 8);
+        ctx.fillStyle = btnGrad2;
+        ctx.fill();
+        ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+        ctx.lineWidth = 1;
+        ctx.stroke();
         ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
         ctx.fillStyle = '#000000';
         ctx.fillText('JOGAR', cx + cardW / 2, btnY + btnH * 0.65);
       } else {
+        ctx.beginPath();
+        ctx.roundRect(btnX, btnY, btnW, btnH, 8);
         ctx.fillStyle = '#1f2937';
-        ctx.fillRect(btnX, btnY, btnW, btnH);
+        ctx.fill();
         ctx.font = `${Math.floor(L.h * 0.014)}px monospace`;
         ctx.fillStyle = '#4b5563';
         ctx.fillText('EM BREVE', cx + cardW / 2, btnY + btnH * 0.65);
@@ -6898,10 +7013,7 @@ export class Renderer {
     }
 
     // Back button
-    const backY = Math.floor(L.h * 0.88);
-    ctx.font = `${Math.floor(L.h * 0.016)}px monospace`;
-    ctx.fillStyle = '#6366f1';
-    ctx.fillText('← VOLTAR', L.cx, backY);
+    this.renderButton(Math.floor(L.w * 0.03), Math.floor(L.h * 0.88), Math.floor(L.w * 0.12), Math.floor(L.h * 0.05), '← VOLTAR', '#374151');
     ctx.textAlign = 'left';
   }
 

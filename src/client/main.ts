@@ -98,6 +98,14 @@ function gameLoop(): void {
   const dt = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
 
+  // Gamepad: poll once per frame (combat = direct control, menus = cursor)
+  const inCombatPhase = game.phase === 'COMBAT' || game.phase === 'COOP';
+  input.gamepad.poll(dt, inCombatPhase && !isPaused());
+  if (input.gamepad.consumeJustConnected()) {
+    const brandNames = { xbox: 'Xbox', playstation: 'PlayStation', switch: 'Switch', generic: 'Arcade' } as const;
+    renderer.showFusionNotif(`🎮 Controle ${brandNames[input.gamepad.brand]} conectado!`, '#4ade80');
+  }
+
   // Phase transition audio & effects
   if (game.phase !== prevPhase) {
     renderer.phaseTransitionTimer = 0.3; // Brief fade on any phase change

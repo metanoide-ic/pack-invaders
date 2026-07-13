@@ -10,6 +10,7 @@ import { ItemDefinition } from '../core/ItemSystem';
 import { AudioManager } from './AudioManager';
 import { TwitchIntegration } from './TwitchIntegration';
 import { togglePause, isPaused, setPaused } from './PauseState';
+import { GamepadInput } from './GamepadInput';
 import { SaveManager } from '../core/SaveManager';
 import { ALL_DIFFICULTIES, getUnlockedDifficulties } from '../data/difficulties';
 import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, claimMission } from '../data/missions';
@@ -75,12 +76,20 @@ export class InputHandler {
   /** Whether any touch has ever happened (to show touch hints) */
   touchModeUsed = false;
 
+  /** Gamepad support: PS/Xbox/Switch/arcade via the standard mapping */
+  readonly gamepad: GamepadInput;
+
   constructor(
     private canvas: HTMLCanvasElement,
     private game: GameManager,
     private renderer: Renderer,
     private audio: AudioManager
   ) {
+    this.gamepad = new GamepadInput(canvas);
+    // A real mouse move takes the cursor back from the pad
+    canvas.addEventListener('mousemove', (e) => {
+      if (e.isTrusted) this.gamepad.cursorVisible = false;
+    });
     canvas.addEventListener('click', (e) => this.onClick(e));
     canvas.addEventListener('contextmenu', (e) => this.onRightClick(e));
     canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
@@ -250,6 +259,11 @@ export class InputHandler {
   /** Get current player movement direction: -1, 0, or 1 */
   getPlayerDir(): number {
     let dir = 0;
+    // Gamepad: left stick / d-pad drive P1 directly (analog wins over keys)
+    if (this.gamepad.connected) {
+      const gDir = this.gamepad.moveDir();
+      if (gDir !== 0) return gDir;
+    }
     const isCoopP2Active = this.game.phase === 'COOP' && this.game.combat.state.player2Active;
     // In COOP mode P1 uses only A/D; otherwise A/D and arrow keys work for P1
     if (isCoopP2Active) {
@@ -296,6 +310,7 @@ export class InputHandler {
       this.queuedDash = false;
       return true;
     }
+    if (this.gamepad.connected && this.gamepad.dashPressed()) return true;
     const shiftDown = this.keysDown.has('shift') || this.keysDown.has(' ');
     if (shiftDown && !this.dashPressed) {
       this.dashPressed = true;
@@ -314,6 +329,10 @@ export class InputHandler {
       const s = this.queuedSkill;
       this.queuedSkill = -1;
       return s;
+    }
+    if (this.gamepad.connected) {
+      const gs = this.gamepad.skillPressed();
+      if (gs >= 0) return gs;
     }
     const keys = ['1', '2', '3'];
     for (let i = 0; i < keys.length; i++) {
@@ -334,6 +353,10 @@ export class InputHandler {
       const p = this.queuedPotion;
       this.queuedPotion = -1;
       return p;
+    }
+    if (this.gamepad.connected) {
+      const gp = this.gamepad.potionPressed();
+      if (gp >= 0) return gp;
     }
     const keys = ['4', '5', '6'];
     for (let i = 0; i < keys.length; i++) {
