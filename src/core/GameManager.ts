@@ -187,12 +187,12 @@ export class GameManager {
   dailyBest: number = 0;
 
   /** Preview of next month's wave for the inventory screen */
-  getNextWavePreview(): { count: number; isBoss: boolean } {
+  getNextWavePreview(): { count: number; isBoss: boolean; isMegaBoss: boolean } {
     const nextTotal = this.totalMonths + 1;
     const m = this.month + 1 > 12 ? 1 : this.month + 1;
-    const isBoss = this.monthSchedule(m).boss;
+    const schedule = this.monthSchedule(m);
     const count = nextTotal === 1 ? 4 : computeWaveCount(nextTotal);
-    return { count: Math.floor(count), isBoss };
+    return { count: Math.floor(count), isBoss: schedule.boss, isMegaBoss: schedule.megaBoss };
   }
 
   constructor(characterId: string = 'grass_man') {

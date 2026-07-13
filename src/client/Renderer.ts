@@ -2134,7 +2134,10 @@ export class Renderer {
     const BOSS_MONTHS = [3, 6, 9, 12];
     const nextBossMonth = BOSS_MONTHS.find(m => m > currentMonth) ?? (BOSS_MONTHS[0] + 12);
     const monthsUntilBoss = nextBossMonth - currentMonth;
-    const bossHint = monthsUntilBoss <= 2 ? ` | ⚠ Boss em ${monthsUntilBoss}` : '';
+    const nextBossIsMega = nextBossMonth % 12 === 0;
+    const bossHint = monthsUntilBoss <= 2
+      ? (nextBossIsMega ? ` | ☠ BOSS GRANDÃO em ${monthsUntilBoss}` : ` | ⚠ Boss em ${monthsUntilBoss}`)
+      : '';
     const anomalyHint = game.currentAnomaly ? ` | ${game.currentAnomaly.icon} ${game.currentAnomaly.name}` : '';
     const totalWeight = game.backpack.getTotalWeight();
     const maxWeight = game.backpack.getMaxWeight();
@@ -2213,7 +2216,13 @@ export class Renderer {
     const preview = game.getNextWavePreview();
     ctx.font = `bold ${Math.floor(L.h * 0.013)}px monospace`;
     ctx.textAlign = 'center';
-    if (preview.isBoss) {
+    if (preview.isMegaBoss) {
+      const bossPulse = 0.6 + Math.sin(performance.now() * 0.005) * 0.4;
+      ctx.globalAlpha = bossPulse;
+      ctx.fillStyle = '#f97316';
+      ctx.fillText(`☠ PRÓXIMO MÊS: O BOSS GRANDÃO + ~${preview.count} inimigos ☠`, L.cx, L.btnY - Math.floor(L.h * 0.014));
+      ctx.globalAlpha = 1;
+    } else if (preview.isBoss) {
       const bossPulse = 0.6 + Math.sin(performance.now() * 0.005) * 0.4;
       ctx.globalAlpha = bossPulse;
       ctx.fillStyle = '#ef4444';
