@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HUMANOCRACY — Posto de Triagem 7, Osteria</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <!-- ===== TELA DE TÍTULO ===== -->
+    <div id="screen-title" class="screen active">
+      <div class="title-inner">
+        <div class="title-emblem">✦</div>
+        <h1 class="title-logo">HUMANOCRACY</h1>
+        <div class="title-sub">MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA</div>
+        <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
+        <div class="title-menu">
+          <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
+          <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
+        </div>
+        <div class="title-warning">
+          Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
+          perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
+        </div>
+        <div class="title-version">v1.0 — 48 dias — Posto de Triagem Nº 7, Fronteira Leste</div>
+      </div>
+    </div>
+
+    <!-- ===== TELA DA MANHÃ (jornal + família) ===== -->
+    <div id="screen-morning" class="screen">
+      <div class="morning-grid">
+        <div class="newspaper" id="newspaper">
+          <div class="np-masthead" id="np-masthead">A VOZ DE OSTERIA</div>
+          <div class="np-date" id="np-date"></div>
+          <div class="np-headline" id="np-headline"></div>
+          <div class="np-body" id="np-body"></div>
+          <div class="np-minor" id="np-minor"></div>
+          <div class="np-ad" id="np-ad"></div>
+        </div>
+        <div class="home-panel">
+          <div class="home-title">SEU APARTAMENTO — BLOCO 14, VALGRADO</div>
+          <div id="family-status"></div>
+          <div id="home-events"></div>
+          <div class="home-budget" id="home-budget"></div>
+          <div class="home-shop" id="home-shop"></div>
+          <button id="btn-gowork" class="btn-big">IR AO TRABALHO →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TELA DO TURNO ===== -->
+    <div id="screen-shift" class="screen">
+      <div class="shift-top" id="shift-top">
+        <div class="shift-clock"><span id="clock">08:00</span></div>
+        <div class="shift-day" id="shift-day">DIA 1</div>
+        <div class="shift-info">
+          <span id="processed-count">Atendidos: 0</span>
+          <span id="money-hud">₴ 0</span>
+        </div>
+        <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
+        <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
+      </div>
+
+      <div class="shift-main">
+        <!-- Guichê: cidadão -->
+        <div class="booth" id="booth">
+          <div class="booth-window">
+            <div class="queue-view" id="queue-view"></div>
+            <div class="npc-stage" id="npc-stage">
+              <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
+            </div>
+          </div>
+          <div class="npc-name" id="npc-name">—</div>
+          <div class="speech" id="speech"></div>
+          <div class="talk-log" id="talk-log"></div>
+          <div class="ask-row" id="ask-row"></div>
+        </div>
+
+        <!-- Mesa: documentos -->
+        <div class="desk" id="desk">
+          <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
+        </div>
+
+        <!-- Painel direito: regulamento + ferramentas -->
+        <div class="sidebar">
+          <div class="tools">
+            <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
+            <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
+            <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
+            <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
+          </div>
+          <div class="scan-result" id="scan-result"></div>
+          <div class="rulebook" id="rulebook">
+            <div class="rb-title">REGULAMENTO DO DIA</div>
+            <div id="rb-rules"></div>
+            <div class="rb-title">REFERÊNCIA DE PAÍSES</div>
+            <div id="rb-countries"></div>
+          </div>
+          <div class="decision">
+            <button id="btn-approve" class="stamp stamp-approve">APROVAR</button>
+            <button id="btn-reject" class="stamp stamp-reject">REJEITAR</button>
+            <button id="btn-detain" class="stamp stamp-detain" disabled>DETER</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="inspect-bar" id="inspect-bar"></div>
+    </div>
+
+    <!-- ===== FIM DE DIA ===== -->
+    <div id="screen-endday" class="screen">
+      <div class="endday-panel">
+        <div class="endday-title" id="endday-title">FIM DO EXPEDIENTE</div>
+        <div id="endday-report"></div>
+        <button id="btn-gohome" class="btn-big">VOLTAR PARA CASA →</button>
+      </div>
+    </div>
+
+    <!-- ===== FIM DE JOGO ===== -->
+    <div id="screen-ending" class="screen">
+      <div class="ending-panel">
+        <div class="ending-title" id="ending-title"></div>
+        <div class="ending-body" id="ending-body"></div>
+        <div class="ending-stats" id="ending-stats"></div>
+        <button id="btn-restart" class="btn-big">COMEÇAR DE NOVO</button>
+      </div>
+    </div>
+
+    <!-- ===== MODAIS ===== -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal" id="modal">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+
+    <div id="citation" class="citation">
+      <div class="citation-head">⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
+      <div class="citation-body" id="citation-body"></div>
+    </div>
+
+    <div id="whisper" class="whisper"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
