@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel, getLogoTitle, getScreenVictory, getScreenGameover } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -349,10 +349,17 @@ export class Renderer {
 
     // Title with gentle float
     const floatY = Math.sin(this.titlePulse * 1.5) * 4;
-    ctx.font = `bold ${Math.floor(L.h * 0.07)}px monospace`;
-    ctx.fillStyle = '#fbbf24';
-    ctx.textAlign = 'center';
-    ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.38) + floatY);
+    const splashLogo = getLogoTitle();
+    if (splashLogo) {
+      const logoW = Math.floor(L.w * 0.5);
+      const logoH = Math.floor(logoW * (splashLogo.height / splashLogo.width));
+      ctx.drawImage(splashLogo, L.cx - logoW / 2, Math.floor(L.h * 0.3) - logoH / 2 + floatY, logoW, logoH);
+    } else {
+      ctx.font = `bold ${Math.floor(L.h * 0.07)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'center';
+      ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.38) + floatY);
+    }
 
     // Subtitle
     ctx.font = `${Math.floor(L.h * 0.016)}px monospace`;
@@ -490,21 +497,36 @@ export class Renderer {
     const titleX = Math.floor(panelW * 0.1);
     const floatY = Math.sin(this.menuFloatTimer * 1.1) * 3;
     const titleGlow = 8 + Math.sin(this.menuFloatTimer * 1.8) * 5;
-    ctx.shadowColor = '#fbbf24';
-    ctx.shadowBlur = titleGlow;
-    ctx.font = `bold ${Math.floor(L.h * 0.056)}px monospace`;
-    ctx.fillStyle = '#fbbf24';
-    ctx.textAlign = 'left';
-    ctx.fillText('PACK', titleX, Math.floor(L.h * 0.115) + floatY);
-    ctx.shadowColor = '#f97316';
-    ctx.shadowBlur = titleGlow * 0.7;
-    ctx.fillStyle = '#fb923c';
-    ctx.fillText('INVADERS', titleX, Math.floor(L.h * 0.178) + floatY);
-    ctx.shadowBlur = 0;
+    const menuLogo = getLogoTitle();
+    let taglineY: number;
+    if (menuLogo) {
+      const logoW = Math.floor(panelW * 0.82);
+      const logoH = Math.floor(logoW * (menuLogo.height / menuLogo.width));
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = titleGlow;
+      ctx.drawImage(menuLogo, titleX, Math.floor(L.h * 0.075) + floatY, logoW, logoH);
+      ctx.restore();
+      taglineY = Math.floor(L.h * 0.075) + logoH + Math.floor(L.h * 0.03);
+    } else {
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = titleGlow;
+      ctx.font = `bold ${Math.floor(L.h * 0.056)}px monospace`;
+      ctx.fillStyle = '#fbbf24';
+      ctx.textAlign = 'left';
+      ctx.fillText('PACK', titleX, Math.floor(L.h * 0.115) + floatY);
+      ctx.shadowColor = '#f97316';
+      ctx.shadowBlur = titleGlow * 0.7;
+      ctx.fillStyle = '#fb923c';
+      ctx.fillText('INVADERS', titleX, Math.floor(L.h * 0.178) + floatY);
+      ctx.shadowBlur = 0;
+      taglineY = Math.floor(L.h * 0.215);
+    }
 
     ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
     ctx.fillStyle = '#4b5563';
-    ctx.fillText('Mochila  ◆  Roguelike  ◆  Arcade', titleX, Math.floor(L.h * 0.215));
+    ctx.textAlign = 'left';
+    ctx.fillText('Mochila  ◆  Roguelike  ◆  Arcade', titleX, taglineY);
 
     // ─── Menu buttons ────────────────────────────────────────────────────
     const menuItems = ['JOGAR', 'MODOS EXTRAS', 'ARQUIVO', 'CONQUISTAS', 'MISSÕES', 'CONTROLES', 'OPÇÕES', 'CRÉDITOS', 'SAIR'];
@@ -801,16 +823,30 @@ export class Renderer {
     // Title with glow
     const floatY = Math.sin(this.menuFloatTimer * 0.9) * 4;
     ctx.textAlign = 'center';
-    ctx.shadowColor = '#fbbf24';
-    ctx.shadowBlur = 18 + Math.sin(this.menuFloatTimer * 1.5) * 6;
-    ctx.font = L.fontHuge;
-    ctx.fillStyle = '#fbbf24';
-    ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.14) + floatY);
-    ctx.shadowBlur = 0;
+    const creditsLogo = getLogoTitle();
+    let creditsTaglineY: number;
+    if (creditsLogo) {
+      const logoW = Math.floor(L.w * 0.32);
+      const logoH = Math.floor(logoW * (creditsLogo.height / creditsLogo.width));
+      ctx.save();
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 18 + Math.sin(this.menuFloatTimer * 1.5) * 6;
+      ctx.drawImage(creditsLogo, L.cx - logoW / 2, Math.floor(L.h * 0.08) + floatY, logoW, logoH);
+      ctx.restore();
+      creditsTaglineY = Math.floor(L.h * 0.08) + logoH + Math.floor(L.h * 0.03) + floatY;
+    } else {
+      ctx.shadowColor = '#fbbf24';
+      ctx.shadowBlur = 18 + Math.sin(this.menuFloatTimer * 1.5) * 6;
+      ctx.font = L.fontHuge;
+      ctx.fillStyle = '#fbbf24';
+      ctx.fillText('PACK INVADERS', L.cx, Math.floor(L.h * 0.14) + floatY);
+      ctx.shadowBlur = 0;
+      creditsTaglineY = Math.floor(L.h * 0.20) + floatY;
+    }
 
     ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
     ctx.fillStyle = '#475569';
-    ctx.fillText('Mochila • Roguelike • Arcade', L.cx, Math.floor(L.h * 0.20) + floatY);
+    ctx.fillText('Mochila • Roguelike • Arcade', L.cx, creditsTaglineY);
 
     // Divider line
     const lineW = Math.floor(L.w * 0.35);
@@ -5849,8 +5885,22 @@ export class Renderer {
     const boardY = Math.floor(L.h * 0.025);
     const boardW = L.w - boardX - Math.floor(L.w * 0.006);
     const boardH = Math.floor(L.h * 0.945);
-    ctx.fillStyle = 'rgba(12, 12, 24, 0.72)';
-    ctx.fillRect(boardX, boardY, boardW, boardH);
+    const shopPanelArt = getUiPanel('shop_panel');
+    if (shopPanelArt) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(boardX, boardY, boardW, boardH);
+      ctx.clip();
+      const spScl = Math.max(boardW / shopPanelArt.width, boardH / shopPanelArt.height);
+      ctx.drawImage(shopPanelArt, boardX + (boardW - shopPanelArt.width * spScl) / 2,
+        boardY + (boardH - shopPanelArt.height * spScl) / 2, shopPanelArt.width * spScl, shopPanelArt.height * spScl);
+      ctx.fillStyle = 'rgba(6, 6, 14, 0.42)';
+      ctx.fillRect(boardX, boardY, boardW, boardH);
+      ctx.restore();
+    } else {
+      ctx.fillStyle = 'rgba(12, 12, 24, 0.72)';
+      ctx.fillRect(boardX, boardY, boardW, boardH);
+    }
     ctx.strokeStyle = (vendor?.color ?? '#6366f1') + '55';
     ctx.lineWidth = 2;
     ctx.strokeRect(boardX, boardY, boardW, boardH);
@@ -6293,8 +6343,18 @@ export class Renderer {
     const now = performance.now();
 
     // ── Dramatic background ──────────────────────────────────────────────
-    ctx.fillStyle = 'rgba(0,0,0,0.88)';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const sceneArt = victory ? getScreenVictory() : getScreenGameover();
+    if (sceneArt) {
+      const scArtScl = Math.max(canvas.width / sceneArt.width, canvas.height / sceneArt.height);
+      ctx.drawImage(sceneArt, (canvas.width - sceneArt.width * scArtScl) / 2,
+        (canvas.height - sceneArt.height * scArtScl) / 2, sceneArt.width * scArtScl, sceneArt.height * scArtScl);
+      // Darken so the stats panel and text overlaid below stay legible
+      ctx.fillStyle = 'rgba(0,0,0,0.5)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    } else {
+      ctx.fillStyle = 'rgba(0,0,0,0.88)';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
 
     // Atmospheric gradient overlay
     const bgGrad = ctx.createRadialGradient(L.cx, L.cy * 0.5, 0, L.cx, L.cy * 0.5, L.h * 0.6);

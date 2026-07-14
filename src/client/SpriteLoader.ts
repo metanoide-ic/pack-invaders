@@ -32,12 +32,17 @@ export interface LoadedSprites {
    * so a missing file just keeps today's flat-gradient look */
   uiPanels: Map<string, HTMLImageElement>;
   menuBg: HTMLImageElement | null;
+  /** "PACK INVADERS" wordmark, transparent PNG — replaces the plain text title */
+  logoTitle: HTMLImageElement | null;
+  /** Full-scene art for the victory/defeat overlays */
+  screenVictory: HTMLImageElement | null;
+  screenGameover: HTMLImageElement | null;
 }
 
 /** Optional decorative background textures for UI panels. Each is drawn
  * cover-fit behind the existing procedural border/corner accents, so panels
  * degrade gracefully to today's flat gradient when the file is absent. */
-export const UI_PANEL_IDS = ['backpack_panel', 'shop_card', 'reward_card'];
+export const UI_PANEL_IDS = ['backpack_panel', 'shop_card', 'reward_card', 'shop_panel'];
 
 /** Player weapon projectile elements — every weapon's tags collapse into one
  * of these (see getProjectileElement in Renderer.ts). Order matters there,
@@ -61,6 +66,7 @@ const BOSS_IDS = [
   'vrox', 'nydra', 'krix', 'toxar', 'gorvath', 'criox', 'phantax', 'gluthar',
   'vulkra', 'zethar', 'terravox', 'solyx', 'abyssara', 'nexus', 'mechron',
   'voidmaw', 'astral_serpent', 'harbinger', 'xalvor', 'zyrgoth',
+  'mothership', 'rail_duel', 'the_pit', 'copycat',
 ];
 
 /** Every spawnable enemy now has real cut-out art in
@@ -233,14 +239,33 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null, logoTitle: null, screenVictory: null, screenGameover: null };
 
   // Load menu background
   try {
     cachedLoaded.menuBg = await loadImage('./sprites/menu_bg.png');
   } catch { /* fallback to procedural */ }
 
+  // Logo wordmark + victory/defeat scene art (all optional, fall back to
+  // the existing procedural text/gradient when missing)
+  try { cachedLoaded.logoTitle = await loadImage('./sprites/logo_title.png'); } catch { /* fallback to text */ }
+  try { cachedLoaded.screenVictory = await loadImage('./sprites/screen_victory.png'); } catch { /* fallback to gradient */ }
+  try { cachedLoaded.screenGameover = await loadImage('./sprites/screen_gameover.png'); } catch { /* fallback to gradient */ }
+
   return cachedLoaded;
+}
+
+/** "PACK INVADERS" wordmark art (null → keep the procedural text title) */
+export function getLogoTitle(): HTMLImageElement | null {
+  return cachedLoaded?.logoTitle ?? null;
+}
+
+/** Victory/defeat full-scene art (null → keep the procedural gradient) */
+export function getScreenVictory(): HTMLImageElement | null {
+  return cachedLoaded?.screenVictory ?? null;
+}
+export function getScreenGameover(): HTMLImageElement | null {
+  return cachedLoaded?.screenGameover ?? null;
 }
 
 /** Get in-combat top-down player sprite by character ID (null → use procedural) */
@@ -287,6 +312,10 @@ const BOSS_DEF_MAP: Record<string, string> = {
   'boss_harbinger': 'harbinger',
   'boss_kepler_prime': 'xalvor',
   'boss_epoch': 'zyrgoth',
+  'boss_mothership': 'mothership',
+  'boss_rail_duel': 'rail_duel',
+  'boss_the_pit': 'the_pit',
+  'boss_copycat': 'copycat',
 };
 
 /** Get boss portrait by boss definition ID */
