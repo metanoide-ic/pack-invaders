@@ -37,6 +37,12 @@ export interface LoadedSprites {
   /** Full-scene art for the victory/defeat overlays */
   screenVictory: HTMLImageElement | null;
   screenGameover: HTMLImageElement | null;
+  /** Small icon sheets (potions, powerups, difficulties, extra modes), keyed
+   * by category then by id — see ICON_CATEGORIES. Missing entries fall back
+   * to the existing emoji/procedural rendering. */
+  icons: Map<string, Map<string, HTMLImageElement>>;
+  /** Core HUD glyphs (coin, heart, shield) — see HUD_ICON_IDS */
+  hud: Map<string, HTMLImageElement>;
 }
 
 /** Optional decorative background textures for UI panels. Each is drawn
@@ -59,6 +65,19 @@ export const PROJECTILE_WEAPON_ELEMENTS = [
 export const PROJECTILE_ENEMY_STYLES = [
   'organic', 'fire', 'ice', 'poison', 'electric', 'explosive', 'bomb',
 ];
+
+/** Small icon sheets, loaded from ./sprites/icons/{category}/{id}.png.
+ * Each category maps 1:1 onto an existing emoji/color lookup elsewhere in
+ * the game — see the corresponding getIcon() call sites in Renderer.ts. */
+export const ICON_CATEGORIES: Record<string, string[]> = {
+  potions: ['health', 'shield', 'rage', 'gold'],
+  powerups: ['heal', 'gold', 'shield', 'rapid', 'freeze', 'nuke', 'fuel'],
+  difficulties: ['recruit', 'soldier', 'veteran', 'elite', 'nightmare', 'extinction'],
+  extras: ['coop', 'versus_ships', 'versus_pvp', 'daily'],
+};
+
+/** Core HUD glyphs, loaded from ./sprites/hud/{id}.png */
+export const HUD_ICON_IDS = ['coin', 'heart', 'shield'];
 
 const CHARACTER_IDS = ['raiz', 'favil', 'pelagia', 'arco', 'barathro', 'nex', 'fenix', 'zabel', 'setimo'];
 const VENDOR_IDS = ['luna', 'brutus', 'nyx', 'zikri'];
@@ -239,7 +258,27 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null, logoTitle: null, screenVictory: null, screenGameover: null };
+  // Small icon sheets (potions, powerups, difficulties, extra modes)
+  const icons = new Map<string, Map<string, HTMLImageElement>>();
+  await Promise.all(Object.entries(ICON_CATEGORIES).map(async ([category, ids]) => {
+    const catMap = new Map<string, HTMLImageElement>();
+    icons.set(category, catMap);
+    await Promise.all(ids.map(async id => {
+      try {
+        catMap.set(id, await loadImage(`./sprites/icons/${category}/${id}.png`));
+      } catch { /* fallback to emoji */ }
+    }));
+  }));
+
+  // Core HUD glyphs
+  const hud = new Map<string, HTMLImageElement>();
+  await Promise.all(HUD_ICON_IDS.map(async id => {
+    try {
+      hud.set(id, await loadImage(`./sprites/hud/${id}.png`));
+    } catch { /* fallback to procedural/emoji */ }
+  }));
+
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null, logoTitle: null, screenVictory: null, screenGameover: null, icons, hud };
 
   // Load menu background
   try {
@@ -368,6 +407,16 @@ export function getPlanetFrames(): HTMLImageElement[] {
 /** Full-body vendor art for the shop overlay (null → no overlay) */
 export function getVendorFullBody(vendorId: string): HTMLImageElement | null {
   return cachedLoaded?.vendorsFull.get(vendorId) ?? null;
+}
+
+/** Small icon art (potions/powerups/difficulties/extras), null → keep emoji */
+export function getIcon(category: string, id: string): HTMLImageElement | null {
+  return cachedLoaded?.icons.get(category)?.get(id) ?? null;
+}
+
+/** Core HUD glyph art (coin/heart/shield), null → keep procedural/emoji */
+export function getHudIcon(id: string): HTMLImageElement | null {
+  return cachedLoaded?.hud.get(id) ?? null;
 }
 
 /** Giant Zyr-Goth art for the final boss cinematic (null → normal sprite) */

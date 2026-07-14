@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel, getLogoTitle, getScreenVictory, getScreenGameover } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel, getLogoTitle, getScreenVictory, getScreenGameover, getIcon, getHudIcon } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -1586,7 +1586,14 @@ export class Renderer {
     ctx.fillText('DIFICULDADE ▼', diffX, diffBY - Math.floor(L.h * 0.03));
     ctx.font = `bold ${Math.floor(L.h * 0.019)}px monospace`;
     ctx.fillStyle = currentDiff.color;
-    ctx.fillText(`${currentDiff.icon} ${currentDiff.name}`, diffX, diffBY);
+    const diffIcon = getIcon('difficulties', currentDiff.id);
+    if (diffIcon) {
+      const diS = Math.floor(L.h * 0.028);
+      ctx.drawImage(diffIcon, diffX, diffBY - diS + Math.floor(L.h * 0.005), diS, diS);
+      ctx.fillText(currentDiff.name, diffX + diS + 6, diffBY);
+    } else {
+      ctx.fillText(`${currentDiff.icon} ${currentDiff.name}`, diffX, diffBY);
+    }
 
     // ◀ ESC (top-left)
     ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
@@ -2955,8 +2962,14 @@ export class Renderer {
 
     // Gold
     cy += 4;
+    const hudCoin = getHudIcon('coin');
     const coin = this.sprites.ui.get('gold_coin');
-    if (coin) {
+    if (hudCoin) {
+      ctx.drawImage(hudCoin, x - 2, cy - 10, 16, 16);
+      ctx.fillStyle = '#fbbf24';
+      ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+      ctx.fillText(`${game.gold}`, x + 16, cy);
+    } else if (coin) {
       ctx.drawImage(coin, x - 2, cy - 6);
       ctx.fillStyle = '#fbbf24';
       ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
@@ -3419,18 +3432,23 @@ export class Renderer {
       ctx.drawImage(this.getGlow(style.color, 14), pu.x - 14, pu.y - 14);
       ctx.globalAlpha = 1;
       ctx.globalCompositeOperation = 'source-over';
-      // Diamond capsule
-      ctx.fillStyle = style.color;
-      ctx.save();
-      ctx.translate(pu.x, pu.y);
-      ctx.rotate(Math.PI / 4);
-      ctx.fillRect(-6, -6, 12, 12);
-      ctx.restore();
-      ctx.fillStyle = '#0a0e1a';
-      ctx.font = 'bold 10px monospace';
-      ctx.textAlign = 'center';
-      ctx.fillText(style.icon, pu.x, pu.y + 3.5);
-      ctx.textAlign = 'left';
+      const puArt = getIcon('powerups', pu.type);
+      if (puArt) {
+        ctx.drawImage(puArt, pu.x - 10, pu.y - 10, 20, 20);
+      } else {
+        // Diamond capsule
+        ctx.fillStyle = style.color;
+        ctx.save();
+        ctx.translate(pu.x, pu.y);
+        ctx.rotate(Math.PI / 4);
+        ctx.fillRect(-6, -6, 12, 12);
+        ctx.restore();
+        ctx.fillStyle = '#0a0e1a';
+        ctx.font = 'bold 10px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(style.icon, pu.x, pu.y + 3.5);
+        ctx.textAlign = 'left';
+      }
     }
 
     // Rapid-fire buff indicator above the player
@@ -5959,8 +5977,10 @@ export class Renderer {
     ctx.strokeStyle = '#fbbf2470';
     ctx.lineWidth = 1.5;
     ctx.stroke();
+    const hudCoinShop = getHudIcon('coin');
     const coin = this.sprites.ui.get('gold_coin');
-    if (coin) ctx.drawImage(coin, gChipX + 8, gChipY + Math.floor(gChipH / 2) - 5);
+    if (hudCoinShop) ctx.drawImage(hudCoinShop, gChipX + 6, gChipY + Math.floor(gChipH / 2) - 9, 18, 18);
+    else if (coin) ctx.drawImage(coin, gChipX + 8, gChipY + Math.floor(gChipH / 2) - 5);
     ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'center';
     ctx.fillText(goldStr, gChipX + gChipW / 2 + 6, gChipY + Math.floor(gChipH * 0.68));
@@ -6178,9 +6198,9 @@ export class Renderer {
     const potBtnW = Math.floor(L.w * 0.08);
     const potBtnH = Math.floor(L.h * 0.035);
     const potions = [
-      { id: 'health_potion', name: '❤ Vida', cost: 25 },
-      { id: 'shield_potion', name: '🛡 Escudo', cost: 20 },
-      { id: 'rage_potion', name: '💢 Fúria', cost: 35 },
+      { id: 'health_potion', icon: 'health', name: '❤ Vida', label: 'Vida', cost: 25 },
+      { id: 'shield_potion', icon: 'shield', name: '🛡 Escudo', label: 'Escudo', cost: 20 },
+      { id: 'rage_potion', icon: 'rage', name: '💢 Fúria', label: 'Fúria', cost: 35 },
     ];
     for (let pi = 0; pi < potions.length; pi++) {
       const pot = potions[pi];
@@ -6197,9 +6217,23 @@ export class Renderer {
       ctx.font = `${Math.floor(L.h * 0.009)}px monospace`;
       ctx.fillStyle = canBuy ? '#e2e8f0' : '#475569';
       ctx.textAlign = 'center';
-      ctx.fillText(pot.name, pbx + potBtnW / 2, pby + potBtnH * 0.45);
-      ctx.fillStyle = canBuy ? '#fbbf24' : '#374151';
-      ctx.fillText(`${pot.cost}g`, pbx + potBtnW / 2, pby + potBtnH * 0.8);
+      const potIconArt = getIcon('potions', pot.icon);
+      if (potIconArt) {
+        if (!canBuy) ctx.globalAlpha = 0.4;
+        const piS = Math.floor(potBtnH * 0.6);
+        ctx.drawImage(potIconArt, pbx + 4, pby + Math.floor((potBtnH - piS) / 2), piS, piS);
+        ctx.globalAlpha = 1;
+        const textX = pbx + 4 + piS + Math.floor(potBtnW * 0.06);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = canBuy ? '#e2e8f0' : '#475569';
+        ctx.fillText(pot.label, textX, pby + potBtnH * 0.42);
+        ctx.fillStyle = canBuy ? '#fbbf24' : '#374151';
+        ctx.fillText(`${pot.cost}g`, textX, pby + potBtnH * 0.78);
+      } else {
+        ctx.fillText(pot.name, pbx + potBtnW / 2, pby + potBtnH * 0.45);
+        ctx.fillStyle = canBuy ? '#fbbf24' : '#374151';
+        ctx.fillText(`${pot.cost}g`, pbx + potBtnW / 2, pby + potBtnH * 0.8);
+      }
       ctx.textAlign = 'left';
     }
 
@@ -8152,10 +8186,19 @@ export class Renderer {
       ctx.shadowBlur = 0;
 
       // Icon
-      ctx.font = `${Math.floor(L.h * 0.07)}px monospace`;
-      ctx.fillStyle = mode.available ? mode.color : '#374151';
+      const modeIconArt = getIcon('extras', mode.id.toLowerCase());
+      if (modeIconArt) {
+        const miS = Math.floor(cardH * 0.24);
+        ctx.globalAlpha = mode.available ? 1 : 0.35;
+        ctx.drawImage(modeIconArt, cx + cardW / 2 - miS / 2, cardY + Math.floor(cardH * 0.1), miS, miS);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.font = `${Math.floor(L.h * 0.07)}px monospace`;
+        ctx.fillStyle = mode.available ? mode.color : '#374151';
+        ctx.textAlign = 'center';
+        ctx.fillText(mode.icon, cx + cardW / 2, cardY + Math.floor(cardH * 0.22));
+      }
       ctx.textAlign = 'center';
-      ctx.fillText(mode.icon, cx + cardW / 2, cardY + Math.floor(cardH * 0.22));
 
       // Title
       ctx.font = `bold ${Math.floor(L.h * 0.022)}px monospace`;
