@@ -3,8 +3,9 @@
 > *"A verdade existe. Você só nunca terá acesso completo a ela."*
 
 Jogo original de inspeção documental, paranoia e colapso da verdade, ambientado na
-República de **Osteria** durante os 48 dias que destruíram três governos. Inspirado
-apenas na *estrutura* de inspeção de fronteira de Papers, Please — mundo, narrativa,
+República de **Osteria** durante os 48 dias que destruíram três governos. A vibe é a
+soma de duas estruturas: a fronteira burocrática de *Papers, Please* e o horror de
+inspeção corporal e visitas noturnas de *No, I'm Not a Human* — mundo, narrativa,
 mecânicas e estética são propriedade intelectual inédita.
 
 ## ▶ Como jogar
@@ -32,6 +33,10 @@ Sem instalação, sem build, sem internet.
   apenas com evidências imperfeitas;
 - **IA adaptativa:** cada discrepância que você detecta ensina a espécie a não repeti-la;
 - **Leis vivas:** regras surgem, somem, voltam e se contradizem (de propósito);
+- **Exame físico:** close-up de olhos, boca, pele, mãos e pescoço — com o "boato do dia"
+  sobre sinais físicos que pode ser verdade, lenda… ou lei;
+- **Noites:** onze visitas à sua porta, do vizinho sem aquecimento à voz que não devia
+  estar do lado de fora;
 - **Ecos:** consequências tardias e ambíguas de cada aprovação nos jornais dos dias seguintes;
 - **Três regimes + colapso:** interface, jornal, comunicados e cores mudam com cada governo;
 - **Dia 47:** você vai entender quando chegar. Ou não.

@@ -69,6 +69,30 @@ probabilidade de eventos — nada disso é exibido; o jogador percebe pelo mundo
 
 ---
 
+## 6.1b As Noites — a segunda fronteira
+
+Onze noites da campanha têm visitas à porta do apartamento (tela dedicada: escuridão,
+olho mágico, escolhas). A escalada é projetada do social ao impossível:
+
+| Noite | Quem bate | O horror |
+|---|---|---|
+| 3 | Bruno do 12, sem aquecimento | recusar tem eco no jornal; abrir tem um "quase" |
+| 6 | "Vistoria de rotina" | não abrir = risco de auditoria; abrir = pranchetas vazias |
+| 10 | Mulher com bebê às 2h | o bebê nunca chora |
+| 13 | Não é na sua porta | levam o professor do 9; subiram seis, desceram sete |
+| 19 | **Ninguém** | a maçaneta gira. com paciência. o olho mágico mostra o corredor vazio |
+| 22 | "Amigo do Tomi", altura do joelho | Tomi dorme no quarto. *"Pai, o Nico veio aqui ontem?"* |
+| 28 | Polícia Política | delatar o vizinho ou virar "quem não notou nada" (anotado) |
+| 32 | A realocada pede sal | eles cozinham todas as noites. nunca há cheiro. o pote volta cheio |
+| 39 | ₴60 pelo seu carimbo, "só para fotografar" | o preço que bate na porta certa |
+| 43 | Batidas a noite toda, corredor vazio | a última batida vem de dentro do apartamento |
+| 46 | **A voz da sua mãe** — que dorme lá dentro | "amanhã, então." |
+
+Regras: nunca explicar; nunca repetir o mesmo tipo de medo; consequências mecânicas
+(dinheiro, auditoria, ecos, flags) apenas onde a escolha é social — o sobrenatural nunca
+tem custo mecânico, só custo de sono. O olho mágico vazio (noites 19, 22 e 43) é o
+recurso mais barato e mais eficaz do jogo.
+
 ## 6.2 Finais (protótipo: 6; produção: matriz expandida)
 
 Selecionados pela **Memória do Mundo** — não por uma escolha final isolada:

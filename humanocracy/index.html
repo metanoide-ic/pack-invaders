@@ -87,6 +87,7 @@
         <div class="sidebar">
           <div class="tools">
             <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
+            <button id="btn-exam" class="btn-tool" title="Exame Físico aproximado (10 min)">👁 EXAME FÍSICO</button>
             <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
             <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
             <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
@@ -128,6 +129,36 @@
       </div>
     </div>
 
+    <!-- ===== NOITE (visitas à porta) ===== -->
+    <div id="screen-night" class="screen">
+      <div class="night-inner">
+        <div class="night-hour" id="night-hour"></div>
+        <div class="peephole-ring">
+          <div class="peephole" id="peephole"><svg id="night-portrait" viewBox="0 0 100 120"></svg></div>
+        </div>
+        <div class="night-text" id="night-text"></div>
+        <div class="night-choices" id="night-choices"></div>
+        <div class="night-after" id="night-after"></div>
+      </div>
+    </div>
+
+    <!-- ===== EXAME FÍSICO (close-up) ===== -->
+    <div id="exam-overlay" class="exam-overlay">
+      <div class="exam-panel">
+        <div class="exam-head">
+          <span>EXAME FÍSICO APROXIMADO — clique nas regiões</span>
+          <button id="btn-exam-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="exam-grid">
+          <div class="exam-face"><svg id="exam-face-svg" viewBox="0 0 200 240"></svg></div>
+          <div class="exam-right">
+            <div class="exam-zones" id="exam-zones"></div>
+            <div class="exam-log" id="exam-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== MODAIS ===== -->
     <div id="modal-overlay" class="modal-overlay">
       <div class="modal" id="modal">
@@ -143,6 +174,7 @@
     </div>
 
     <div id="whisper" class="whisper"></div>
+    <div id="vignette"></div>
   </div>
 
   <script src="data.js"></script>

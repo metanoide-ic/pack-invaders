@@ -22,6 +22,19 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
 - **Documentos:** cada país com cor, selo e tipografia próprios; desgaste procedural
   (dobras, manchas, carimbos sobrepostos) na produção.
 
+### Camada de horror (No, I'm Not a Human)
+
+- **Vinheta permanente** com flicker de grão em passos (steps) — a tela nunca está
+  totalmente confortável;
+- **Close-up do exame:** o rosto ocupa metade da tela contra fundo de lâmpada fraca;
+  pálpebras animadas (quem não pisca, não pisca), veias na esclera, dentes desenhados
+  um a um — o detalhe existe para ser encarado;
+- **A noite:** preto quase total, um único círculo de olho mágico com aro metálico;
+  o retrato dentro dele escurecido e contrastado; três noites o círculo está **vazio**;
+- **O tique do retrato:** transform de 1,5px por 0,04s — abaixo do limiar de certeza;
+- **Batidas:** três tons de 58Hz espaçados — o som mais grave do jogo, reservado só
+  para a porta.
+
 ## 8.2 UI/UX
 
 - **A mesa é o jogo:** documentos arrastáveis com sombra e empilhamento (z-index);

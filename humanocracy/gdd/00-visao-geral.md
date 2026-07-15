@@ -8,7 +8,7 @@
 |---|---|
 | Título | **Humanocracy** |
 | Gênero | Thriller burocrático / simulador de decisão sob incerteza / horror psicológico |
-| Inspiração estrutural | Apenas o conceito de inspeção documental (Papers, Please). Nenhum personagem, país, estética, narrativa ou mecânica específica é reaproveitada. |
+| Inspiração estrutural | O conceito de inspeção documental (Papers, Please) **+** o horror de inspeção corporal e visitas noturnas (No, I'm Not a Human). Nenhum personagem, país, estética, narrativa ou mecânica específica é reaproveitada de nenhum dos dois. |
 | Plataformas | PC (protótipo web jogável incluso neste repositório; produção em Unity — ver Volume 9) |
 | Duração da campanha | 48 dias in-game (~8–12h de jogo) |
 | Classificação | 16+ — temas de totalitarismo, perseguição, luto |
@@ -101,7 +101,15 @@ cada situação** — e então destrói essa crença metodicamente, sem nunca me
 6. **Você também é inspecionado.** Governo, resistência, cientistas, mercado negro e os
    próprios Alternados constroem um perfil psicológico do jogador. O desfecho depende de
    quem ele se tornou aos olhos de cada facção. *Ninguém observa sem ser observado.*
-7. **Crítica, nunca glorificação.** O regime Mehrvolk é retratado como mecanismo de
+7. **O corpo também é um documento.** Além dos papéis, o jogador examina a pessoa em
+   close-up: olhos, boca, pele, mãos, pescoço. Alguns "sinais" circulam como boato do dia
+   ("dizem que eles não piscam") — **alguns têm correlação real, outros são pura lenda, e
+   o jogo nunca diz quais**. Sob o regime, boatos viram doutrina oficial: deter com base
+   neles passa a ser premiado. A pseudociência não é cenário; é mecânica.
+8. **A noite é a segunda fronteira.** Depois do expediente, batem na sua porta. O olho
+   mágico é o guichê da sua casa — e nem sempre mostra alguém. O horror doméstico escala
+   até batidas que não deviam ser possíveis.
+9. **Crítica, nunca glorificação.** O regime Mehrvolk é retratado como mecanismo de
    propaganda, repressão e pseudociência — jamais como ideologia correta, desejável ou
    eficaz. O jogo mostra como burocracia, medo e "estudos" fabricados transformam pessoas
    comuns em peças de um sistema de opressão. Nenhum símbolo, nome, uniforme ou organização

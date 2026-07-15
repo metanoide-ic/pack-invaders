@@ -24,6 +24,16 @@ function sfx(kind) {
     else if (kind === 'buzz') { o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .5); o.start(t); o.stop(t + .5); }
     else if (kind === 'ding') { o.type = 'sine'; o.frequency.setValueAtTime(660, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
+    else if (kind === 'knock') {
+      for (let i = 0; i < 3; i++) {
+        const o2 = AC.createOscillator(), g2 = AC.createGain();
+        o2.connect(g2); g2.connect(AC.destination);
+        const tt = t + i * .5;
+        o2.type = 'sine'; o2.frequency.setValueAtTime(58, tt);
+        g2.gain.setValueAtTime(.28, tt); g2.gain.exponentialRampToValueAtTime(.001, tt + .22);
+        o2.start(tt); o2.stop(tt + .25);
+      }
+    }
   } catch (e) { /* áudio indisponível */ }
 }
 
@@ -170,6 +180,120 @@ function portraitSVG(f, w) {
   return s;
 }
 
+/* ---------- CLOSE-UP DO EXAME FÍSICO ---------- */
+function examSVG(f, phys) {
+  const skin = SKINS[f.skin], hair = HAIRC[f.hair];
+  const fw = Math.round((26 + f.faceW * 3) * 1.75);
+  const ex1 = 100 - (16 + f.faceW * 2), ex2 = 100 + (16 + f.faceW * 2), ey = 92;
+  let s = '';
+  // ombros e pescoço
+  s += `<path d="M30 240 Q30 190 100 184 Q170 190 170 240 Z" fill="#2c2e26"/>`;
+  s += `<rect x="86" y="146" width="28" height="44" fill="${skin}"/>`;
+  // pulso no pescoço (sempre desenhado; o achado é textual)
+  s += `<line x1="92" y1="158" x2="94" y2="170" stroke="rgba(0,0,0,.12)" stroke-width="2"/>`;
+  // cabeça
+  s += `<ellipse cx="100" cy="100" rx="${fw}" ry="58" fill="${skin}"/>`;
+  // textura de pele: humanos comuns têm marcas; pele "cerosa" é lisa demais
+  if (!phys.pele) {
+    s += `<circle cx="${ex1 - 14}" cy="118" r="1.6" fill="rgba(0,0,0,.14)"/>`;
+    s += `<circle cx="${ex2 + 10}" cy="86" r="1.2" fill="rgba(0,0,0,.12)"/>`;
+    s += `<path d="M${100 + fw - 16} 128 l7 5" stroke="rgba(0,0,0,.2)" stroke-width="1.4"/>`;
+    s += `<path d="M${ex1 - 8} 70 q4 -2 8 0" stroke="rgba(0,0,0,.08)" stroke-width="1"/>`;
+  } else {
+    s += `<ellipse cx="100" cy="96" rx="${fw - 6}" ry="50" fill="rgba(255,255,255,.05)"/>`;
+  }
+  // cabelo
+  const hs = f.hairStyle;
+  if (hs === 0) s += `<path d="M${100 - fw} 100 Q${100 - fw} 38 100 38 Q${100 + fw} 38 ${100 + fw} 100 L${100 + fw} 76 Q100 50 ${100 - fw} 76 Z" fill="${hair}"/>`;
+  if (hs === 1) s += `<path d="M${100 - fw} 106 Q${100 - fw - 8} 28 100 30 Q${100 + fw + 8} 28 ${100 + fw} 106 Q${100 + fw - 12} 66 100 62 Q${100 - fw + 12} 66 ${100 - fw} 106 Z" fill="${hair}"/>`;
+  if (hs === 2) s += `<ellipse cx="100" cy="60" rx="${fw - 8}" ry="22" fill="${hair}"/>`;
+  if (hs === 3) s += `<path d="M${100 - fw} 96 Q100 16 ${100 + fw} 96 L${100 + fw} 118 Q${100 + fw - 16} 84 100 84 Q${100 - fw + 16} 84 ${100 - fw} 118 Z" fill="${hair}"/>`;
+  // sobrancelhas
+  s += `<rect x="${ex1 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/><rect x="${ex2 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/>`;
+  // olhos: esclera + íris + veias
+  const iris = ['#2b2820', '#3a5a4a', '#54432a'][f.eyes];
+  [ex1, ex2].forEach(x => {
+    s += `<ellipse cx="${x}" cy="${ey}" rx="13" ry="8" fill="#e9e5d6"/>`;
+    if (phys.olhos) {
+      s += `<path d="M${x - 11} ${ey - 3} q5 2 8 2" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
+      s += `<path d="M${x + 10} ${ey + 3} q-5 1 -8 0" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
+      s += `<path d="M${x - 9} ${ey + 4} q4 0 6 -1" stroke="#8c2f24" stroke-width=".7" fill="none"/>`;
+    }
+    s += `<circle cx="${x}" cy="${ey}" r="4.6" fill="${iris}"/><circle cx="${x}" cy="${ey}" r="2" fill="#0c0a07"/>`;
+    s += `<circle cx="${x + 1.4}" cy="${ey - 1.6}" r=".8" fill="#fff" opacity=".8"/>`;
+    // pálpebra: humanos piscam. quem não pisca, não pisca.
+    if (!phys.piscar) {
+      s += `<rect x="${x - 13}" y="${ey - 8}" width="26" height="16" fill="${skin}" opacity="0">` +
+           `<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.94;0.965;1" dur="${(3.4 + (x % 3) * .7).toFixed(1)}s" repeatCount="indefinite"/></rect>`;
+    }
+  });
+  // óculos
+  if (f.glasses) s += `<circle cx="${ex1}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><circle cx="${ex2}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><line x1="${ex1 + 15}" y1="${ey}" x2="${ex2 - 15}" y2="${ey}" stroke="#1d1d1d" stroke-width="2"/>`;
+  // nariz
+  s += `<path d="M100 100 L96 120 L104 120" stroke="rgba(0,0,0,.4)" stroke-width="1.6" fill="none"/>`;
+  // boca entreaberta com dentes
+  const my = 136;
+  s += `<path d="M84 ${my} Q100 ${my + 8} 116 ${my} Q100 ${my + 16} 84 ${my} Z" fill="#4a2b24"/>`;
+  for (let i = 0; i < 6; i++) {
+    const tx = 87 + i * 4.6;
+    if (phys.dentes) s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="5.5" rx=".6" fill="#f4f1e6"/>`;
+    else {
+      const h = 4 + ((i * 7) % 3);
+      const cor = i === 4 ? '#8a734d' : '#ded8c2';
+      s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="${h}" rx=".6" fill="${cor}"/>`;
+    }
+  }
+  // barba
+  if (f.beard === 1) s += `<path d="M${100 - fw + 12} 118 Q100 172 ${100 + fw - 12} 118 L${100 + fw - 12} 132 Q100 184 ${100 - fw + 12} 132 Z" fill="${hair}" opacity=".85"/>`;
+  if (f.beard === 2) s += `<rect x="86" y="126" width="28" height="5" fill="${hair}"/>`;
+  return s;
+}
+
+/* ---------- EXAME FÍSICO: UI ---------- */
+const EXAM_ZONES = [
+  { id: 'olhos', label: 'OLHOS', tells: ['olhos', 'piscar'] },
+  { id: 'boca', label: 'BOCA', tells: ['dentes'] },
+  { id: 'pele', label: 'PELE', tells: ['pele'] },
+  { id: 'maos', label: 'MÃOS', tells: ['maos'] },
+  { id: 'pescoco', label: 'PESCOÇO', tells: ['pescoco'] },
+];
+function openExam() {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  if (!cz.examDone) { spendTime(10); cz.examDone = true; }
+  $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
+  $('exam-log').innerHTML = '<span class="obs">A pessoa se aproxima do vidro. Perto demais. Examine cada região.</span>';
+  const zones = $('exam-zones'); zones.innerHTML = '';
+  EXAM_ZONES.forEach(z => {
+    const b = document.createElement('button');
+    b.textContent = z.label;
+    b.onclick = () => { b.classList.add('done'); b.disabled = true; examZone(cz, z); };
+    zones.appendChild(b);
+  });
+  $('exam-overlay').classList.add('active');
+}
+function examZone(cz, zone) {
+  const log = $('exam-log');
+  const rum = rumorForDay(S.day);
+  zone.tells.forEach(t => {
+    const T = TELLS[t];
+    const anômalo = cz.phys[t];
+    let line = anômalo ? `<div class="anomalia">⚠ ${T.achado}</div>` : `<div class="obs">${T.normal}</div>`;
+    if (anômalo && rum && rum.tell === t) {
+      if (rum.official) {
+        cz.softEndorsed = true; cz.evidence = true;
+        $('btn-detain').disabled = false;
+        line += `<div class="anomalia endossada">→ INDICADOR OFICIAL EM VIGOR (comunicado de hoje). Detenção autorizada — a máquina do Estado confia em você.</div>`;
+        sfx('ding');
+      } else {
+        line += `<div class="obs">→ coincide com o boato de hoje. Sem valor legal. (Ainda.)</div>`;
+      }
+    }
+    log.innerHTML += line;
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
 /* ---------- GERAÇÃO DE CIDADÃOS ---------- */
 const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction'];
 
@@ -244,7 +368,23 @@ function makeCitizen(day, opts) {
   if (opts.briberia) cz.bribe = opts.briberia;
   else if ((cz.isForger || cz.isAlternado) && chance(.25)) cz.bribe = ri(8, 20);
 
+  // corpo: sinais físicos (alguns reais, alguns lenda — nunca dizemos quais)
+  genPhysical(cz);
+  if (opts.scannerAmbiguo) cz.phys.piscar = true; // ela não piscou. ou você não viu.
+
   return cz;
+}
+
+function genPhysical(cz) {
+  cz.phys = {};
+  TELL_IDS.forEach(t => {
+    const T = TELLS[t];
+    let p = T.humanBase + ((cz.nervous || chance(.2)) ? T.confound : 0);
+    if (cz.isAlternado) p += T.altBonus;
+    cz.phys[t] = chance(Math.min(p, .95));
+  });
+  cz.examDone = false;
+  cz.softEndorsed = false;
 }
 
 function buildDocs(cz, day) {
@@ -410,6 +550,10 @@ function startDay() {
 function bulletinText() {
   let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
   if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  const rum = rumorForDay(S.day);
+  if (rum) t += rum.official
+    ? `\n\n§ INDICADOR FÍSICO EM VIGOR: ${rum.text}\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.`
+    : `\n\n✎ (rabiscado a lápis na margem, por alguém do turno anterior)\n"${rum.text}"`;
   return t;
 }
 function showBulletin(fn) {
@@ -501,6 +645,15 @@ function presentCitizen(cz) {
   layDocs(cz);
   if (cz.bribe && !cz.encounter) setTimeout(() => layBribe(cz), 2500);
   if (cz.encounter && cz.encounter.briberia) layBribe(cz);
+  // o tique. rápido demais para ter certeza de que aconteceu.
+  if (chance(cz.isAlternado ? .18 : .05)) {
+    setTimeout(() => {
+      if (shift.citizen !== cz) return;
+      const p = $('npc-portrait');
+      p.classList.add('twitch');
+      setTimeout(() => p.classList.remove('twitch'), 650);
+    }, ri(3000, 16000));
+  }
 }
 
 /* ---------- DOCUMENTOS NA MESA ---------- */
@@ -772,7 +925,7 @@ function decide(decision) {
     else { correct = false; note = 'Aprovado(a) com irregularidade: ' + viols[0].desc + '.'; }
   } else {
     if (decision === 'approve') correct = true;
-    else if (decision === 'detain' && cz.bioResult === true) { correct = true; } // o sistema premia o scanner — mesmo errado
+    else if (decision === 'detain' && (cz.bioResult === true || cz.softEndorsed)) { correct = true; } // o sistema premia a máquina e a pseudociência — mesmo erradas
     else { correct = false; note = decision === 'reject' ? 'Documentos em perfeita ordem. Rejeição indevida.' : 'Detenção sem qualquer evidência.'; }
   }
 
@@ -900,13 +1053,60 @@ const COSTS = { comida: 8, aquecimento: 6, remedio: 12, presente: 5 };
 let morningPurchases = {};
 
 function goHome() {
-  // custos e eventos noturnos
+  const ev = NIGHT_EVENTS[S.day];
+  if (ev && !S.flags['night_' + S.day]) {
+    S.flags['night_' + S.day] = true;
+    showNight(S.day, ev);
+    return;
+  }
+  afterNight();
+}
+function afterNight() {
   applyNight();
   if (checkArrest()) return;
   if (S.day >= 48) { finishGame(); return; }
   S.day++;
   save();
   showMorning();
+}
+
+/* ---------- A NOITE: alguém bate na porta ---------- */
+const NIGHTS_SEM_ROSTO = [19, 22, 43]; // o olho mágico não mostra ninguém
+function showNight(day, ev) {
+  document.body.className = ''; // a noite não tem regime
+  $('night-hour').textContent = ev.quem;
+  $('night-text').textContent = ev.texto;
+  $('night-after').textContent = '';
+  const peep = $('peephole');
+  if (NIGHTS_SEM_ROSTO.includes(day)) {
+    peep.classList.add('empty');
+    $('night-portrait').innerHTML = '';
+  } else {
+    peep.classList.remove('empty');
+    $('night-portrait').innerHTML = portraitSVG(genFeatures(ev.sexo || 'm'));
+  }
+  const box = $('night-choices'); box.innerHTML = '';
+  ev.escolhas.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.onclick = () => resolveNight(c);
+    box.appendChild(b);
+  });
+  showScreen('screen-night');
+  setTimeout(() => sfx('knock'), 700);
+}
+function resolveNight(c) {
+  if (c.money) { S.money += c.money; }
+  if (c.audit) { S.flags.auditRisk = (S.flags.auditRisk || 0) + c.audit; }
+  if (c.flag) { S.flags[c.flag] = true; }
+  if (c.echo) { S.pendingNews.push({ day: S.day + 1, text: c.echo }); }
+  $('night-choices').innerHTML = '';
+  $('night-after').textContent = c.after || '';
+  const b = document.createElement('button');
+  b.className = 'night-continue';
+  b.textContent = 'TENTAR DORMIR →';
+  b.onclick = afterNight;
+  $('night-choices').appendChild(b);
 }
 
 function applyNight() {
@@ -1077,6 +1277,8 @@ $('btn-gohome').onclick = goHome;
 $('btn-endshift').onclick = () => { if (shift.running) endShift(); };
 $('btn-bulletin').onclick = () => showBulletin(null);
 $('btn-inspect').onclick = toggleInspect;
+$('btn-exam').onclick = openExam;
+$('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
 $('btn-scan-thermo').onclick = () => scan('thermo');
 $('btn-scan-pulse').onclick = () => scan('pulse');
 $('btn-scan-bio').onclick = () => scan('bio');

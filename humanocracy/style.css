@@ -274,6 +274,78 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 /* Apagão (colapso) */
 body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 
+/* ============ VINHETA + GRÃO (horror ambiente) ============ */
+#vignette {
+  position:absolute; inset:0; pointer-events:none; z-index:40;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+  animation: grain-flicker 4s steps(3) infinite;
+}
+@keyframes grain-flicker { 0%,100% { opacity:.9 } 50% { opacity:1 } 75% { opacity:.95 } }
+
+/* tique raríssimo no retrato — rápido demais para ter certeza */
+@keyframes twitch {
+  0%, 100% { transform: none; }
+  46% { transform: none; }
+  50% { transform: translateX(1.5px) skewX(2.5deg); }
+  54% { transform: none; }
+}
+#npc-portrait.twitch { animation: twitch .55s linear 1; }
+
+/* ============ NOITE ============ */
+#screen-night { background:#050505; }
+#screen-night.active { display:flex; align-items:center; justify-content:center; }
+.night-inner { max-width:560px; width:94vw; text-align:center; display:flex; flex-direction:column; gap:18px; align-items:center; }
+.night-hour { color:#6b6557; letter-spacing:3px; font-size:13px; }
+.peephole-ring {
+  width:190px; height:190px; border-radius:50%;
+  background: radial-gradient(circle, #1a1812 60%, #000 72%);
+  box-shadow: 0 0 0 8px #0d0c09, 0 0 60px rgba(0,0,0,.9) inset, 0 0 30px rgba(201,163,74,.06);
+  display:flex; align-items:center; justify-content:center;
+}
+.peephole {
+  width:150px; height:150px; border-radius:50%; overflow:hidden;
+  background:#0a0a08; display:flex; align-items:flex-end; justify-content:center;
+  filter: brightness(.7) contrast(1.15);
+}
+.peephole svg { width:120px; height:144px; }
+.peephole.empty svg { display:none; }
+.night-text { color:#b5ae9c; font-size:14px; line-height:1.8; min-height:90px; }
+.night-choices { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.night-choices button { padding:12px 18px; letter-spacing:1px; background:#111; border-color:#4a463c; }
+.night-choices button:hover { background:#3a2c1a; color:#e8d8b0; }
+.night-after { color:#8f8875; font-style:italic; font-size:13px; line-height:1.8; min-height:60px; max-width:520px; }
+.night-continue { margin-top:8px; }
+
+/* ============ EXAME FÍSICO ============ */
+.exam-overlay {
+  display:none; position:absolute; inset:0; background:rgba(0,0,0,.82);
+  align-items:center; justify-content:center; z-index:45;
+}
+.exam-overlay.active { display:flex; }
+.exam-panel {
+  width:min(760px, 96vw); max-height:92vh; background:#12140f;
+  border:1px solid var(--ink-dim); display:flex; flex-direction:column;
+}
+.exam-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 12px; background:var(--panel); color:var(--accent2);
+  letter-spacing:2px; font-size:11px; border-bottom:1px solid var(--ink-dim);
+}
+.exam-grid { display:grid; grid-template-columns: 1fr 1fr; min-height:0; }
+.exam-face {
+  background: radial-gradient(circle at 50% 40%, #23251c, #0a0b08 80%);
+  display:flex; align-items:center; justify-content:center; padding:10px;
+}
+.exam-face svg { width:100%; max-width:330px; height:auto; filter: contrast(1.08); }
+.exam-right { display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0; }
+.exam-zones { display:flex; flex-wrap:wrap; gap:6px; }
+.exam-zones button { font-size:11px; padding:6px 10px; }
+.exam-zones button.done { opacity:.5; }
+.exam-log { flex:1; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--ink); }
+.exam-log .anomalia { color:#d98b7c; }
+.exam-log .anomalia.endossada { text-decoration: underline; cursor:pointer; }
+.exam-log .obs { color:var(--ink-dim); }
+
 @media (max-width: 900px) {
   .shift-main { grid-template-columns: 220px 1fr 240px; }
   .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }

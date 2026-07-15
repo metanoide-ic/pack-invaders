@@ -372,6 +372,153 @@ const ENDINGS = {
   },
 };
 
+/* ============================================================
+   EXAME FÍSICO, BOATOS E NOITES
+   (a camada "No, I'm Not a Human": o corpo como documento —
+   e o boato como lei. Alguns sinais têm correlação real com
+   Alternados. Outros são pura lenda. O jogo NUNCA diz quais.)
+   ============================================================ */
+
+/* ---------- SINAIS FÍSICOS (tells) ----------
+   humanBase: chance em humanos comuns
+   confound:  acréscimo em humanos doentes/nervosos/exaustos
+   altBonus:  acréscimo REAL em Alternados (0 = boato sem fundamento) */
+const TELLS = {
+  piscar:  { zona: 'olhos', humanBase: .04, confound: .02, altBonus: .45,
+    achado: 'Não piscou uma única vez durante todo o exame.',
+    normal: 'Pisca em ritmo comum. Um pouco rápido, talvez. Frio faz isso.' },
+  olhos:   { zona: 'olhos', humanBase: .12, confound: .18, altBonus: .15,
+    achado: 'Escleras injetadas, vasos escuros demais. (Choro recente? Insônia? Outra coisa?)',
+    normal: 'Olhos cansados. Como os de todo mundo nesta fila.' },
+  dentes:  { zona: 'boca', humanBase: .08, confound: .05, altBonus: .15,
+    achado: 'Dentição perfeita demais. Gengivas pálidas, sem irrigação visível.',
+    normal: 'Dentes gastos, um canino lascado. Uma boca que comeu pão duro a vida inteira.' },
+  pele:    { zona: 'pele', humanBase: .07, confound: .08, altBonus: 0,
+    achado: 'Pele cerosa, quase sem poros. (Ou apenas sabão de má qualidade e vento norte.)',
+    normal: 'Pele rachada de frio. Cicatriz antiga no queixo.' },
+  maos:    { zona: 'maos', humanBase: .06, confound: .04, altBonus: 0,
+    achado: 'Dedos compridos demais para as mãos. Unhas sem meia-lua.',
+    normal: 'Mãos calejadas. Aliança apertada demais para sair.' },
+  pescoco: { zona: 'pescoco', humanBase: .04, confound: .03, altBonus: .40,
+    achado: 'O pulso no pescoço é visível. Lento. Lento demais. Você conta seis batimentos no minuto.',
+    normal: 'Pulso acelerado sob a pele. Gente com medo tem coração audível.' },
+};
+const TELL_IDS = Object.keys(TELLS);
+const TELL_LABEL = { piscar: 'piscar', olhos: 'olhos', dentes: 'dentes', pele: 'pele', maos: 'mãos', pescoco: 'pescoço' };
+
+/* ---------- BOATO DO DIA ----------
+   A partir do dia 3, todo comunicado traz um "sinal". Sob o regime
+   Mehrvolk (14–42) o boato vira doutrina OFICIAL: deter com base
+   nele deixa de gerar advertência — mesmo quando o sinal é lenda. */
+const RUMOR_TEXT = {
+  piscar:  ['Dizem nas filas: "eles não piscam".', 'O Instituto de Fenotipia CONFIRMA: ausência de reflexo palpebral é indicador Classe-2.'],
+  olhos:   ['Boato de rádio clandestina: "olho vermelho, sangue trocado".', 'Circular oficial: hiperemia ocular consta como indicador Classe-3.'],
+  dentes:  ['Um dentista de Miralta jura: "dente perfeito, gente falsa".', 'Nota técnica: dentição íntegra em adultos de baixa renda é estatisticamente anômala.'],
+  pele:    ['Dizem que a pele deles não tem poros. Minha avó dizia o mesmo de anjos.', 'O Ministério lista "epiderme atípica" como indicador auxiliar.'],
+  maos:    ['"Olha as mãos. Eles erram as mãos." — pichação na Praça do Sal.', 'Manual revisado: proporção falangeana irregular deve ser reportada.'],
+  pescoco: ['Um enfermeiro desertor: "o coração deles bate devagar. Muito devagar."', 'Boletim médico-estatal: bradicardia extrema é indicador Classe-1.'],
+};
+function rumorForDay(d) {
+  if (d < 3 || d >= 47) return null;
+  const tell = TELL_IDS[(d * 7 + 3) % TELL_IDS.length];
+  const official = d >= 14 && d <= 42;
+  return { tell, official, text: RUMOR_TEXT[tell][official ? 1 : 0] };
+}
+
+/* ---------- VISITAS NOTURNAS ----------
+   Entre o expediente e a manhã. O olho mágico. A porta.
+   efeitos: money, audit, flag, echo (jornal), after (texto pós-escolha) */
+const NIGHT_EVENTS = {
+  3: {
+    quem: 'Batidas educadas. 22h40.', sexo: 'm',
+    texto: 'É Bruno, do 12. O aquecimento do bloco dele quebrou. Ele segura um cobertor dobrado como quem segura um pedido de desculpas. "Só esta noite. A Vessa me conhece."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'Ele dorme no sofá sem se mexer. De manhã, dobra o cobertor em silêncio e agradece três vezes. Vessa diz que você fez certo. Você concorda. Quase.' },
+      { label: 'NÃO ABRIR', after: 'Os passos se afastam. No dia seguinte, Bruno não te cumprimenta. Nunca mais.', echo: 'Um morador do Bloco 14 passou a noite no vão da escada. Vizinhos "não ouviram nada".' },
+    ],
+  },
+  6: {
+    quem: 'Três batidas firmes. 23h15.', sexo: 'm',
+    texto: 'Dois homens de casaco comprido. "Vistoria de rotina, inspetor. O senhor entende." Pela fresta, você vê que um deles não olha para você — olha para DENTRO.',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'Eles andam pelo apartamento anotando nada em pranchetas vazias. Na saída: "Tudo em ordem. Por enquanto." Vessa não dorme mais essa noite.' },
+      { label: 'NÃO ABRIR', audit: 1, after: '"Anotado", diz a voz, sem raiva nenhuma. É a falta de raiva que fica com você.' },
+    ],
+  },
+  10: {
+    quem: 'Batidas fracas. 2h da manhã.', sexo: 'f',
+    texto: 'Uma mulher com um bebê enrolado. "Água. Só água, por favor." O corredor está gelado. O bebê não chora. Em nenhum momento o bebê chora.',
+    escolhas: [
+      { label: 'ABRIR E DAR ÁGUA', after: 'Ela bebe, agradece com a testa encostada no batente e desce a escada. Você fica ouvindo. Os passos são só dela. Só dela?' },
+      { label: 'FALAR PELA PORTA: "NÃO POSSO"', after: '"Eu entendo", diz ela. E o pior é que a voz parece entender mesmo.', echo: 'Uma mulher não identificada foi encontrada dormindo no saguão do Bloco 14. Ao amanhecer, já não estava.' },
+    ],
+  },
+  13: {
+    quem: 'Não é na sua porta. 3h20.', sexo: 'm',
+    texto: 'Botas no corredor. Muitas. A porta do 9 — o professor aposentado que não pendurou a bandeira — abre e fecha. Depois, o silêncio organizado de gente treinada. Vessa aperta sua mão no escuro.',
+    escolhas: [
+      { label: 'OLHAR PELO OLHO MÁGICO', after: 'Você vê costas de uniforme e, entre elas, os chinelos do professor. Um dos homens PARA. Vira o rosto para a sua porta. Você para de respirar até os passos acabarem.' },
+      { label: 'NÃO OLHAR', after: 'Você conta os passos. Sete pessoas descem. Subiram seis. Você refaz a conta a noite inteira e ela nunca fecha.' },
+    ],
+  },
+  19: {
+    quem: '—', sexo: 'm',
+    texto: 'Você acorda sem saber por quê. Então percebe: a maçaneta da porta da frente está girando. Devagar. Com paciência. Quem tem chave não gira assim. Quem não tem, não deveria girar.',
+    escolhas: [
+      { label: 'ACENDER A LUZ', after: 'A maçaneta para no meio do giro. Nenhum passo se afasta — e isso é o que você vai contar ao médico quando ele perguntar da insônia: NENHUM passo se afastou.' },
+      { label: 'FICAR IMÓVEL NO ESCURO', after: 'O giro completa. A porta, trancada, não abre. A maçaneta volta à posição com um cuidado quase gentil. De manhã, há um risco fino no metal. Sempre houve?' },
+    ],
+  },
+  22: {
+    quem: 'Batidinhas na altura do joelho. 1h50.', sexo: 'm',
+    texto: 'Uma voz de criança: "Moço, eu me perdi. Sou amigo do Tomi." Você olha para o quarto: Tomi dorme, respiração funda. A voz insiste, paciente: "Moço. Eu conheço o Tomi."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'O corredor está vazio. Frio, e vazio. No dia seguinte, Tomi pergunta do nada: "Pai, o Nico veio aqui ontem?" Você não pergunta quem é Nico.' },
+      { label: 'NÃO ABRIR', after: 'As batidinhas continuam por vinte minutos exatos. Depois: "tá bom. outro dia." Você não conta para a Vessa. Não existe frase para contar isso.' },
+    ],
+  },
+  28: {
+    quem: 'Uma batida só. Pesada. 23h55.', sexo: 'm',
+    texto: 'Casaco cinza, pasta de couro, sorriso de repartição. "Polícia Política. Rotina. O senhor notou algo... incomum nos seus vizinhos? Qualquer detalhe ajuda. Qualquer um."',
+    escolhas: [
+      { label: 'DIZER QUE NÃO NOTOU NADA', after: '"Curioso", diz ele anotando, "todo mundo neste bloco não notou nada." Ele agradece com uma cortesia que pesa como intimação.', audit: 1 },
+      { label: 'MENCIONAR O 7 (a família nova, quieta demais)', flag: 'denunciouVizinho', after: 'Ele nem anota — já sabia. "Excelente memória, inspetor." Três dias depois, o 7 está vazio e você atravessa o corredor olhando o chão.', echo: 'Uma família do Bloco 14 foi "convidada a colaborar". Os móveis saíram de manhã. Ninguém viu as pessoas saírem.' },
+    ],
+  },
+  32: {
+    quem: 'Batem do LADO DE DENTRO da parede da cozinha. Não. Batem na porta. Claro que é na porta. 0h30.', sexo: 'f',
+    texto: 'É a mulher da família realocada que divide seu apartamento. "Sal", diz ela, com a mão estendida. Vessa entrega o pote. A mulher agradece com um aceno perfeito e volta ao quarto onde eles cozinham todas as noites. Sem cheiro. Nunca há cheiro.',
+    escolhas: [
+      { label: 'PERGUNTAR O QUE ESTÃO COZINHANDO', after: '"Sopa", responde ela, depois de um segundo a mais. "De quê?" — "Sopa." A porta do quarto fecha com o clique mais educado do mundo.' },
+      { label: 'NÃO PERGUNTAR NADA', after: 'Você fica olhando o pote de sal na mão dela até a porta fechar. No dia seguinte o pote está de volta na prateleira. Cheio. Exatamente como estava. Exatamente.' },
+    ],
+  },
+  39: {
+    quem: 'Batidas rápidas, nervosas. 23h10.', sexo: 'm',
+    texto: 'Um homem magro, suando frio. Abre um pano: ₴60 em notas miúdas. "Pelo seu carimbo. Uma noite. Devolvo antes do turno. Ninguém carimba nada, eu juro — é só para FOTOGRAFAR."',
+    escolhas: [
+      { label: 'ACEITAR ₴60', money: 60, audit: 2, after: 'O carimbo volta de madrugada, embrulhado em jornal, com um fio de tinta que você não usou. Você lava três vezes. O cheiro de tinta fica.' },
+      { label: 'FECHAR A PORTA', after: '"Todo mundo tem preço, inspetor", diz a voz descendo a escada. "O seu só ainda não bateu na porta certa."' },
+    ],
+  },
+  43: {
+    quem: 'Batidas. Espaçadas. A noite inteira.', sexo: 'm',
+    texto: 'Uma a cada vinte minutos, aproximadamente. Você olha pelo olho mágico: corredor vazio. A batida seguinte soa ENQUANTO você olha. No corredor vazio. Tomi acorda. Sua mãe reza baixo. Vessa olha para você como quem cobra uma profissão inteira: você não sabia inspecionar?',
+    escolhas: [
+      { label: 'ABRIR A PORTA DE UMA VEZ', after: 'Nada. Ar frio. E na parede em frente, escrito a dedo no gelo da janela do corredor: uma palavra que derrete antes de você terminar de ler. Começava com a sua inicial.' },
+      { label: 'SENTAR CONTRA A PORTA ATÉ AMANHECER', after: 'Às 5h13 as batidas param. Às 5h14, uma última — suave, quase um pedido de desculpas — na porta do quarto do Tomi. Do lado de dentro do apartamento.' },
+    ],
+  },
+  46: {
+    quem: 'A voz da sua mãe. 2h33.', sexo: 'f',
+    texto: '"Filho. Abre. Esqueci a chave." Você atravessa o corredor do apartamento. O quarto da sua mãe está fechado. Você abre uma fresta: ela dorme, respiração miúda, o terço na mão. Na porta da frente, a voz repete, idêntica, paciente: "Filho. Está frio aqui fora."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'O corredor está vazio até onde a luz alcança. Do vão da escada, ainda com a voz dela: "amanhã, então." Você tranca a porta com as duas mãos, porque uma só não obedece.' },
+      { label: 'ENCOSTAR A TESTA NA PORTA E ESPERAR', after: 'A voz espera junto. Você sente — sem som nenhum — que do outro lado alguém encostou a testa também. Vocês ficam assim muito tempo. De manhã, sua mãe pergunta por que você dormiu no chão da sala.' },
+    ],
+  },
+};
+
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
 const QUEUE_CHATTER = [
   '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',

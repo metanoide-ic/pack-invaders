@@ -127,6 +127,46 @@ advertência — o Estado confia na máquina). O contador invisível `inocentesD
 O jogador só encontra esse número no relatório final. Essa assimetria é intencional: é
 assim que máquinas de opressão recrutam pessoas razoáveis.
 
+## 3.6b Exame Físico — o corpo como documento (camada No, I'm Not a Human)
+
+Nova ferramenta (10 min): a pessoa **se aproxima do vidro, perto demais**, e o jogador
+inspeciona cinco regiões em close-up — olhos, boca, pele, mãos, pescoço.
+
+### Sinais físicos (tells)
+
+| Sinal | Base humana | Confusor (doente/nervoso) | Bônus real em Alternados |
+|---|---|---|---|
+| Não pisca | 4% | +2% | **+45%** |
+| Olhos injetados | 12% | +18% (choro, insônia) | +15% |
+| Dentes perfeitos demais | 8% | +5% | +15% |
+| Pele cerosa, sem poros | 7% | +8% | **0% — pura lenda** |
+| Dedos longos, sem meia-lua | 6% | +4% | **0% — pura lenda** |
+| Pulso lento demais | 4% | +3% | **+40%** |
+
+O jogador **nunca vê esta tabela**. Aprende — errado — pela experiência, pelos boatos e
+pelo custo dos próprios enganos. O close-up mostra os sinais visualmente: pálpebras que
+piscam em animação (ou não), veias na esclera, dentição gasta ou uniforme demais, pele
+com cicatrizes ou lisa como cera.
+
+### O Boato do Dia
+
+A partir do Dia 3, todo comunicado carrega um "sinal" — primeiro como rabisco a lápis na
+margem (*"dizem nas filas: eles não piscam"*), depois, sob o Mehrvolk (Dias 14–42), como
+**INDICADOR OFICIAL** com classe e número. A mecânica-tese:
+
+- boato **não oficial** + anomalia encontrada = "sem valor legal (ainda)";
+- boato **oficial** + anomalia correspondente = **detenção autorizada e premiada, sem
+  advertência — mesmo quando o sinal é lenda e a pessoa é inocente**.
+
+O Estado transforma folclore em doutrina, e o jogador em instrumento. O contador
+invisível de inocentes detidos não perdoa; o relatório final, menos ainda.
+
+### O tique
+
+Raramente (5% humanos, 18% Alternados), o retrato no guichê sofre um espasmo de meio
+segundo — rápido demais para o jogador ter certeza de que viu. Sem som, sem destaque,
+sem registro. Não é evidência de nada. É paranoia jogável.
+
 ## 3.7 Suborno e corrupção — a escada
 
 Nunca começa explícito: primeiro um café, depois um presente, depois o envelope, depois
