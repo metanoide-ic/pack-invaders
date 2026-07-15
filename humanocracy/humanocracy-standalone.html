@@ -61,9 +61,11 @@ button:hover:not(:disabled) { background: var(--accent); color:#fff; }
 button:disabled { opacity:.35; cursor:not-allowed; }
 
 /* ============ TÍTULO ============ */
-#screen-title { display:none; align-items:center; justify-content:center; }
+#screen-title { display:none; align-items:center; justify-content:center; position:relative; }
 #screen-title.active { display:flex; }
-.title-inner { text-align:center; max-width:640px; padding:24px; }
+#title-snow { position:absolute; inset:0; width:100%; height:100%; }
+.title-inner { text-align:center; max-width:640px; padding:24px; position:relative; z-index:2; animation: title-in 2.4s ease both; }
+@keyframes title-in { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
 .title-emblem { font-size:64px; color:var(--accent2); }
 .title-logo {
   font-size:56px; letter-spacing:12px; color:var(--ink);
@@ -137,6 +139,14 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   background:#0d0f0c; border:6px solid #3a3c33; height:230px; position:relative; overflow:hidden;
 }
 #queue-canvas { position:absolute; inset:0; width:100%; height:100%; }
+#queue-toast {
+  display:none; position:absolute; left:50%; top:8px; transform:translateX(-50%);
+  z-index:3; max-width:90%; padding:5px 10px; background:#000d; color:#b5ae9c;
+  font-size:10px; line-height:1.4; font-style:italic; border-left:2px solid var(--accent2);
+  animation: toast-in .4s ease;
+}
+#queue-toast.on { display:block; }
+@keyframes toast-in { from { opacity:0; transform:translate(-50%,-8px); } }
 .queue-view {
   position:absolute; left:6px; bottom:4px; font-size:9px; color:#6c7162cc; line-height:1.3; z-index:2;
   text-shadow: 0 1px 2px #000;
@@ -402,6 +412,13 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 /* abajures / velas */
 .lamp-glow { position:absolute; pointer-events:none; mix-blend-mode:screen;
   background: radial-gradient(circle, rgba(201,164,90,.13), transparent 65%); }
+.lamp-glow.flickering { animation: lampflick 7s steps(1) infinite; }
+@keyframes lampflick {
+  0%, 100% { opacity:1; } 62% { opacity:1; } 63% { opacity:.2; } 64% { opacity:1; }
+  65% { opacity:.4; } 66% { opacity:1; } 91% { opacity:1; } 92% { opacity:.3; } 93% { opacity:1; }
+}
+.pendulum { animation: pend 2s ease-in-out infinite alternate; transform-origin: 18px 32px; }
+@keyframes pend { from { transform: rotate(9deg); } to { transform: rotate(-9deg); } }
 
 /* jogador */
 #house-player { position:absolute; bottom:11%; width:44px; height:96px; z-index:5; pointer-events:none; }
@@ -536,6 +553,7 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 
     <!-- ===== TELA DE TÍTULO ===== -->
     <div id="screen-title" class="screen active">
+      <canvas id="title-snow"></canvas>
       <div class="title-inner">
         <div class="title-emblem">✦</div>
         <h1 class="title-logo">HUMANOCRACY</h1>
@@ -584,6 +602,7 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
           <span id="processed-count">Atendidos: 0</span>
           <span id="money-hud">₴ 0</span>
         </div>
+        <button id="btn-music" class="btn-small" title="Música ligada/desligada">♪</button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -594,6 +613,7 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
           <div class="booth-window">
             <canvas id="queue-canvas"></canvas>
             <div class="queue-view" id="queue-view"></div>
+            <div id="queue-toast"></div>
             <div class="npc-stage" id="npc-stage">
               <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
             </div>
@@ -1326,6 +1346,19 @@ const RADIO = {
   ],
 };
 
+/* ---------- EVENTOS DA FILA (durante o turno) ---------- */
+const QUEUE_EVENTS = [
+  { t: 'Uma mulher desmaiou na fila. Os guardas afastam os curiosos com a coronha.', delay: 10 },
+  { t: 'Discussão lá fora. Um nome gritado três vezes. Depois, um silêncio pior que o grito.', delay: 0 },
+  { t: 'Um vendedor de pão quente passa pela fila. Por um minuto, todo mundo parece gente de novo.', delay: 0 },
+  { t: 'Alguém tentou furar a fila. A própria fila resolveu. Os guardas nem se mexeram.', delay: 8 },
+  { t: 'Uma criança na fila acena para você. A mãe abaixa o braço dela devagar, sem tirar os olhos do guichê.', delay: 0 },
+  { t: 'Duas pessoas na fila trocaram de casaco discretamente. Você viu. Você acha que viu.', delay: 0 },
+  { t: 'Um velho desistiu. Dobrou os documentos com cuidado de quem dobra uma bandeira e foi embora.', delay: 0 },
+  { t: 'A fila inteira olhou para o mesmo ponto do céu ao mesmo tempo. Você não viu nada lá. A fila voltou a olhar para frente.', delay: 6 },
+  { t: 'Um guarda novo pergunta ao antigo se "é sempre assim". O antigo não responde. É sempre assim.', delay: 0 },
+];
+
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
 const QUEUE_CHATTER = [
   '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',
@@ -1373,6 +1406,85 @@ function sfx(kind) {
     }
   } catch (e) { /* áudio indisponível */ }
 }
+
+/* ---------- MÚSICA (trilha melancólica procedural) ---------- */
+const MUSIC = { on: true, playing: false, timer: null };
+const M_NOTES = [110, 130.81, 146.83, 164.81, 196, 220]; // lá menor, esparso
+function musicNote() {
+  if (!MUSIC.on || !MUSIC.playing) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') return;
+    const t = AC.currentTime;
+    const f = pick(M_NOTES) * (chance(.3) ? 2 : 1);
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const g = AC.createGain(); g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.032, t + 1.3);
+    g.gain.linearRampToValueAtTime(0, t + 4.6);
+    lp.connect(g); g.connect(AC.destination);
+    [f, f * 1.003].forEach(fr => {
+      const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
+      o.connect(lp); o.start(t); o.stop(t + 4.8);
+    });
+  } catch (e) {}
+}
+function startMusic() {
+  if (MUSIC.playing) return;
+  MUSIC.playing = true;
+  clearInterval(MUSIC.timer);
+  MUSIC.timer = setInterval(musicNote, 3200);
+  musicNote();
+}
+function stopMusic() {
+  MUSIC.playing = false;
+  clearInterval(MUSIC.timer);
+}
+
+/* ---------- NEVE DO TÍTULO ---------- */
+const TS = { raf: null, flakes: [], t: 0 };
+function startTitleSnow() {
+  const cv = $('title-snow');
+  if (!cv) return;
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ctx = cv.getContext('2d');
+  TS.flakes = [];
+  for (let i = 0; i < 90; i++) TS.flakes.push({ x: Math.random() * cv.width, y: Math.random() * cv.height, v: .4 + Math.random() * 1.1, w: Math.random() * .6 - .3, r: .8 + Math.random() * 1.4 });
+  cancelAnimationFrame(TS.raf);
+  const loop = () => {
+    if (!$('screen-title').classList.contains('active')) { TS.raf = null; return; }
+    TS.t += .016;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const gy = cv.height * .86;
+    // muro e torre do posto no horizonte
+    ctx.fillStyle = '#0e100c';
+    ctx.fillRect(0, gy - 26, cv.width, 26 + cv.height * .14);
+    const tx = cv.width * .82;
+    ctx.fillRect(tx, gy - 120, 34, 120);
+    ctx.fillRect(tx - 8, gy - 132, 50, 14);
+    // luz da torre varrendo
+    const ang = Math.sin(TS.t * .35) * .9;
+    const lx = tx + 17, ly = gy - 126;
+    const grad = ctx.createLinearGradient(lx, ly, lx + Math.sin(ang) * 500, ly + 400);
+    grad.addColorStop(0, 'rgba(201,180,120,.10)'); grad.addColorStop(1, 'rgba(201,180,120,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.moveTo(lx, ly);
+    ctx.lineTo(lx + Math.sin(ang - .18) * 620, ly + 480);
+    ctx.lineTo(lx + Math.sin(ang + .18) * 620, ly + 480);
+    ctx.closePath(); ctx.fill();
+    // neve
+    ctx.fillStyle = 'rgba(215,215,208,.55)';
+    TS.flakes.forEach(s => {
+      s.y += s.v; s.x += s.w + Math.sin(TS.t + s.y * .01) * .2;
+      if (s.y > cv.height) { s.y = -3; s.x = Math.random() * cv.width; }
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    });
+    TS.raf = requestAnimationFrame(loop);
+  };
+  TS.raf = requestAnimationFrame(loop);
+}
+
+/* ---------- SALÁRIO POR REGIME (os reajustes que a inflação come) ---------- */
+function salaryForDay(d) { return d >= 31 ? 8 : d >= 13 ? 6 : 5; }
 
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
@@ -1427,6 +1539,9 @@ const $ = (id) => document.getElementById(id);
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
+  // trilha: toca fora do expediente; no posto, só o drone e o rádio
+  if (id === 'screen-shift' || id === 'screen-night') stopMusic();
+  else if (MUSIC.on) startMusic();
 }
 function setRegimeClass(day) {
   document.body.className = '';
@@ -1958,6 +2073,8 @@ function startDay() {
 function bulletinText() {
   let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
   if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  if (S.day === 13) t += `\n\n§ REAJUSTE PATRIÓTICO: ${MOEDA} 6 por decisão correta. O Estado Nacional cuida dos seus.`;
+  if (S.day === 31) t += `\n\n§ O CONSELHO VALORIZA O TRABALHADOR: ${MOEDA} 8 por decisão correta. (Nota: o aluguel do espaço requisitado passa a ${MOEDA} 25.)`;
   const rum = rumorForDay(S.day);
   if (rum) t += rum.official
     ? `\n\n§ INDICADOR FÍSICO EM VIGOR: ${rum.text}\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.`
@@ -2156,6 +2273,15 @@ function nextCitizen() {
 
   shift.citizen = cz;
   presentCitizen(cz);
+  // a fila também vive
+  if (!cz.encounter && shift.processed > 0 && chance(.12)) {
+    const qe = pick(QUEUE_EVENTS);
+    const toast = $('queue-toast');
+    toast.textContent = qe.t + (qe.delay ? ` (a fila parou por ${qe.delay} min)` : '');
+    toast.classList.add('on');
+    if (qe.delay) spendTime(qe.delay);
+    setTimeout(() => toast.classList.remove('on'), 5200);
+  }
   // apagão no colapso
   if (S.day >= 43 && S.day <= 46 && chance(.25)) {
     document.body.classList.add('blackout');
@@ -2495,7 +2621,7 @@ function decide(decision) {
     if (cz.encounter) encounterOutcome(cz.encounter, 'detain');
   }
 
-  if (correct) { S.counters.correct++; S.money += 5; }
+  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); }
   else { S.counters.wrong++; citation(note || 'Decisão em desacordo com o regulamento.'); }
 
   stampDocs(decision);
@@ -2845,11 +2971,26 @@ $('btn-approve').onclick = () => decide('approve');
 $('btn-reject').onclick = () => decide('reject');
 $('btn-detain').onclick = () => decide('detain');
 $('btn-restart').onclick = () => { location.reload(); };
+$('btn-music').onclick = () => {
+  MUSIC.on = !MUSIC.on;
+  $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
+  if (!MUSIC.on) stopMusic();
+};
 
 /* ---------- INICIALIZAÇÃO ---------- */
 (function init() {
   if (loadSave()) $('btn-continue').style.display = '';
   showScreen('screen-title');
+  startTitleSnow();
+  // o primeiro clique em qualquer lugar destrava o áudio do navegador
+  document.addEventListener('pointerdown', function unlock() {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+    } catch (e) {}
+    if (MUSIC.on && !$('screen-shift').classList.contains('active')) startMusic();
+    document.removeEventListener('pointerdown', unlock);
+  });
 })();
 
 </script>
@@ -2882,6 +3023,7 @@ const H_ROOMS = [
 ];
 const H_SPOTS = {
   door: { x: 70, label: 'A PORTA' },
+  retrato: { x: 300, label: 'O RETRATO' },
   mae: { x: 470, label: 'MÃE' },
   vessa: { x: 930, label: 'VESSA' },
   tomi: { x: 1390, label: 'TOMI' },
@@ -2957,6 +3099,29 @@ function hFurniture() {
       <circle cx="50" cy="78" r="3" fill="#8a734d"/>
       <circle cx="32" cy="52" r="2.4" fill="#0a0908" stroke="#3a3324"/>
     </svg></div>`;
+  // luz fraca do corredor da entrada, piscando
+  w += `<div class="lamp-glow flickering" style="left:20px;bottom:14%;width:180px;height:160px"></div>`;
+  // retrato de família na parede da sala (conte as silhuetas)
+  w += `<div class="furn hchar" data-spot="retrato" style="left:272px;bottom:52%;width:64px;height:78px;cursor:pointer">
+    <svg viewBox="0 0 64 78" width="64" height="78">
+      <rect x="2" y="2" width="60" height="74" fill="#241f16" stroke="#3a3021" stroke-width="3"/>
+      <rect x="8" y="8" width="48" height="62" fill="#c9c2ab"/>
+      <circle cx="18" cy="30" r="5" fill="#3a332a"/><rect x="14" y="36" width="8" height="16" fill="#3a332a"/>
+      <circle cx="30" cy="28" r="5.4" fill="#3a332a"/><rect x="26" y="35" width="9" height="18" fill="#3a332a"/>
+      <circle cx="42" cy="31" r="4.4" fill="#3a332a"/><rect x="38" y="36" width="8" height="14" fill="#3a332a"/>
+      <circle cx="24" cy="50" r="3.6" fill="#3a332a"/><rect x="21" y="54" width="6" height="10" fill="#3a332a"/>
+      <circle cx="50" cy="52" r="3.2" fill="#3a332a" opacity=".35"/><rect x="47" y="56" width="6" height="9" fill="#3a332a" opacity=".35"/>
+    </svg></div>`;
+  // janela da sala: neve caindo lá fora
+  w += `<div class="furn" style="left:560px;bottom:46%;width:80px;height:100px">
+    <svg viewBox="0 0 80 100" width="80" height="100">
+      <rect x="4" y="4" width="72" height="92" fill="#05070a" stroke="#241f16" stroke-width="5"/>
+      <line x1="40" y1="4" x2="40" y2="96" stroke="#241f16" stroke-width="4"/>
+      <line x1="4" y1="50" x2="76" y2="50" stroke="#241f16" stroke-width="4"/>
+      ${[10, 24, 33, 48, 58, 68].map((x, i) => `<circle cx="${x}" cy="0" r="1.3" fill="#d7d7d0" opacity=".7">
+        <animate attributeName="cy" values="0;100" dur="${(3 + i * .8).toFixed(1)}s" repeatCount="indefinite" begin="${(i * .7).toFixed(1)}s"/>
+      </circle>`).join('')}
+    </svg></div>`;
   // ------- SALA: TV + sofá + mãe -------
   w += `<div class="furn" style="left:150px;bottom:11%;width:90px;height:88px">
     <svg viewBox="0 0 90 88" width="90" height="88">
@@ -2988,6 +3153,17 @@ function hFurniture() {
       <rect x="52" y="12" width="26" height="12" rx="5" fill="#26231d"/>
     </svg></div>`;
   w += `<div class="steam" style="left:1018px;bottom:22%"></div><div class="steam s2" style="left:1018px;bottom:22%"></div>`;
+  // relógio de pêndulo da cozinha — o barulho que Tomi mencionou no jantar
+  w += `<div class="furn" style="left:760px;bottom:48%;width:36px;height:84px">
+    <svg viewBox="0 0 36 84" width="36" height="84">
+      <rect x="4" y="2" width="28" height="80" fill="#2c2115" stroke="#1a130b" stroke-width="2"/>
+      <circle cx="18" cy="18" r="10" fill="#c9c2ab"/>
+      <line x1="18" y1="18" x2="18" y2="11" stroke="#241f16" stroke-width="1.6"/>
+      <line x1="18" y1="18" x2="23" y2="18" stroke="#241f16" stroke-width="1.2"/>
+      <rect x="10" y="32" width="16" height="44" fill="#0f0b07"/>
+      <g class="pendulum"><line x1="18" y1="32" x2="18" y2="66" stroke="#8a734d" stroke-width="2"/>
+      <circle cx="18" cy="68" r="4.4" fill="#8a734d"/></g>
+    </svg></div>`;
   w += `<div class="lamp-glow" style="left:860px;bottom:14%;width:220px;height:140px"></div>`;
   if (F.vessa.alive) w += `<div class="hchar" id="h-vessa" data-spot="vessa" style="left:905px;bottom:12%">${hFig('vessa', F.vessa)}</div>`;
   // ------- QUARTO DO TOMI -------
@@ -3427,7 +3603,9 @@ function houseLoop(ts) {
     prompt.classList.add('on');
     const label = near.id === 'door'
       ? (HOUSE.knock && HOUSE.knock.active ? '[E] ATENDER A PORTA' : '[E] Olhar pelo olho mágico')
-      : near.id === 'bed' ? '[E] Dormir' : `[E] Falar com ${H_SPOTS[near.id].label}`;
+      : near.id === 'bed' ? '[E] Dormir'
+      : H_PROMPT_LABEL[near.id] ? H_PROMPT_LABEL[near.id]
+      : `[E] Falar com ${H_SPOTS[near.id].label}`;
     prompt.textContent = label;
     prompt.style.left = (H_SPOTS[near.id].x - cam) + 'px';
     prompt.style.top = '30%';
@@ -3463,8 +3641,20 @@ function nearestSpot() {
   }
   return best;
 }
+/* rótulo do prompt para spots não-personagem */
+const H_PROMPT_LABEL = { door: null, bed: null, retrato: '[E] Olhar o retrato da família' };
 function interactWith(id) {
   if (id === 'door') { answerDoor(); return; }
+  if (id === 'retrato') {
+    if (HOUSE.spoke.retrato) { hSay('O RETRATO', ['Cinco silhuetas. Como sempre. Pare de contar.']); return; }
+    HOUSE.spoke.retrato = true;
+    hSay('O RETRATO DA FAMÍLIA', [
+      'Cinco silhuetas atrás do vidro empoeirado: Vessa, Dario, você, sua mãe, Tomi. Cinco. A conta fecha.',
+      'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.',
+      S.day >= 20 ? 'A quinta silhueta — a menorzinha, do canto — está mais clara que as outras. Sempre esteve? Fotografias desbotam do canto para o centro. É física. Deve ser física.' : 'A moldura está torta meio centímetro. Você não arruma. Arrumar seria admitir que mediu.',
+    ]);
+    return;
+  }
   if (id === 'bed') {
     hSay('VOCÊ', ['Encerrar o dia?'], [
       { label: 'DORMIR', fn: () => houseSleep(false) },

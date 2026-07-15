@@ -26,6 +26,7 @@ const H_ROOMS = [
 ];
 const H_SPOTS = {
   door: { x: 70, label: 'A PORTA' },
+  retrato: { x: 300, label: 'O RETRATO' },
   mae: { x: 470, label: 'MÃE' },
   vessa: { x: 930, label: 'VESSA' },
   tomi: { x: 1390, label: 'TOMI' },
@@ -101,6 +102,29 @@ function hFurniture() {
       <circle cx="50" cy="78" r="3" fill="#8a734d"/>
       <circle cx="32" cy="52" r="2.4" fill="#0a0908" stroke="#3a3324"/>
     </svg></div>`;
+  // luz fraca do corredor da entrada, piscando
+  w += `<div class="lamp-glow flickering" style="left:20px;bottom:14%;width:180px;height:160px"></div>`;
+  // retrato de família na parede da sala (conte as silhuetas)
+  w += `<div class="furn hchar" data-spot="retrato" style="left:272px;bottom:52%;width:64px;height:78px;cursor:pointer">
+    <svg viewBox="0 0 64 78" width="64" height="78">
+      <rect x="2" y="2" width="60" height="74" fill="#241f16" stroke="#3a3021" stroke-width="3"/>
+      <rect x="8" y="8" width="48" height="62" fill="#c9c2ab"/>
+      <circle cx="18" cy="30" r="5" fill="#3a332a"/><rect x="14" y="36" width="8" height="16" fill="#3a332a"/>
+      <circle cx="30" cy="28" r="5.4" fill="#3a332a"/><rect x="26" y="35" width="9" height="18" fill="#3a332a"/>
+      <circle cx="42" cy="31" r="4.4" fill="#3a332a"/><rect x="38" y="36" width="8" height="14" fill="#3a332a"/>
+      <circle cx="24" cy="50" r="3.6" fill="#3a332a"/><rect x="21" y="54" width="6" height="10" fill="#3a332a"/>
+      <circle cx="50" cy="52" r="3.2" fill="#3a332a" opacity=".35"/><rect x="47" y="56" width="6" height="9" fill="#3a332a" opacity=".35"/>
+    </svg></div>`;
+  // janela da sala: neve caindo lá fora
+  w += `<div class="furn" style="left:560px;bottom:46%;width:80px;height:100px">
+    <svg viewBox="0 0 80 100" width="80" height="100">
+      <rect x="4" y="4" width="72" height="92" fill="#05070a" stroke="#241f16" stroke-width="5"/>
+      <line x1="40" y1="4" x2="40" y2="96" stroke="#241f16" stroke-width="4"/>
+      <line x1="4" y1="50" x2="76" y2="50" stroke="#241f16" stroke-width="4"/>
+      ${[10, 24, 33, 48, 58, 68].map((x, i) => `<circle cx="${x}" cy="0" r="1.3" fill="#d7d7d0" opacity=".7">
+        <animate attributeName="cy" values="0;100" dur="${(3 + i * .8).toFixed(1)}s" repeatCount="indefinite" begin="${(i * .7).toFixed(1)}s"/>
+      </circle>`).join('')}
+    </svg></div>`;
   // ------- SALA: TV + sofá + mãe -------
   w += `<div class="furn" style="left:150px;bottom:11%;width:90px;height:88px">
     <svg viewBox="0 0 90 88" width="90" height="88">
@@ -132,6 +156,17 @@ function hFurniture() {
       <rect x="52" y="12" width="26" height="12" rx="5" fill="#26231d"/>
     </svg></div>`;
   w += `<div class="steam" style="left:1018px;bottom:22%"></div><div class="steam s2" style="left:1018px;bottom:22%"></div>`;
+  // relógio de pêndulo da cozinha — o barulho que Tomi mencionou no jantar
+  w += `<div class="furn" style="left:760px;bottom:48%;width:36px;height:84px">
+    <svg viewBox="0 0 36 84" width="36" height="84">
+      <rect x="4" y="2" width="28" height="80" fill="#2c2115" stroke="#1a130b" stroke-width="2"/>
+      <circle cx="18" cy="18" r="10" fill="#c9c2ab"/>
+      <line x1="18" y1="18" x2="18" y2="11" stroke="#241f16" stroke-width="1.6"/>
+      <line x1="18" y1="18" x2="23" y2="18" stroke="#241f16" stroke-width="1.2"/>
+      <rect x="10" y="32" width="16" height="44" fill="#0f0b07"/>
+      <g class="pendulum"><line x1="18" y1="32" x2="18" y2="66" stroke="#8a734d" stroke-width="2"/>
+      <circle cx="18" cy="68" r="4.4" fill="#8a734d"/></g>
+    </svg></div>`;
   w += `<div class="lamp-glow" style="left:860px;bottom:14%;width:220px;height:140px"></div>`;
   if (F.vessa.alive) w += `<div class="hchar" id="h-vessa" data-spot="vessa" style="left:905px;bottom:12%">${hFig('vessa', F.vessa)}</div>`;
   // ------- QUARTO DO TOMI -------
@@ -571,7 +606,9 @@ function houseLoop(ts) {
     prompt.classList.add('on');
     const label = near.id === 'door'
       ? (HOUSE.knock && HOUSE.knock.active ? '[E] ATENDER A PORTA' : '[E] Olhar pelo olho mágico')
-      : near.id === 'bed' ? '[E] Dormir' : `[E] Falar com ${H_SPOTS[near.id].label}`;
+      : near.id === 'bed' ? '[E] Dormir'
+      : H_PROMPT_LABEL[near.id] ? H_PROMPT_LABEL[near.id]
+      : `[E] Falar com ${H_SPOTS[near.id].label}`;
     prompt.textContent = label;
     prompt.style.left = (H_SPOTS[near.id].x - cam) + 'px';
     prompt.style.top = '30%';
@@ -607,8 +644,20 @@ function nearestSpot() {
   }
   return best;
 }
+/* rótulo do prompt para spots não-personagem */
+const H_PROMPT_LABEL = { door: null, bed: null, retrato: '[E] Olhar o retrato da família' };
 function interactWith(id) {
   if (id === 'door') { answerDoor(); return; }
+  if (id === 'retrato') {
+    if (HOUSE.spoke.retrato) { hSay('O RETRATO', ['Cinco silhuetas. Como sempre. Pare de contar.']); return; }
+    HOUSE.spoke.retrato = true;
+    hSay('O RETRATO DA FAMÍLIA', [
+      'Cinco silhuetas atrás do vidro empoeirado: Vessa, Dario, você, sua mãe, Tomi. Cinco. A conta fecha.',
+      'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.',
+      S.day >= 20 ? 'A quinta silhueta — a menorzinha, do canto — está mais clara que as outras. Sempre esteve? Fotografias desbotam do canto para o centro. É física. Deve ser física.' : 'A moldura está torta meio centímetro. Você não arruma. Arrumar seria admitir que mediu.',
+    ]);
+    return;
+  }
   if (id === 'bed') {
     hSay('VOCÊ', ['Encerrar o dia?'], [
       { label: 'DORMIR', fn: () => houseSleep(false) },

@@ -583,6 +583,19 @@ const RADIO = {
   ],
 };
 
+/* ---------- EVENTOS DA FILA (durante o turno) ---------- */
+const QUEUE_EVENTS = [
+  { t: 'Uma mulher desmaiou na fila. Os guardas afastam os curiosos com a coronha.', delay: 10 },
+  { t: 'Discussão lá fora. Um nome gritado três vezes. Depois, um silêncio pior que o grito.', delay: 0 },
+  { t: 'Um vendedor de pão quente passa pela fila. Por um minuto, todo mundo parece gente de novo.', delay: 0 },
+  { t: 'Alguém tentou furar a fila. A própria fila resolveu. Os guardas nem se mexeram.', delay: 8 },
+  { t: 'Uma criança na fila acena para você. A mãe abaixa o braço dela devagar, sem tirar os olhos do guichê.', delay: 0 },
+  { t: 'Duas pessoas na fila trocaram de casaco discretamente. Você viu. Você acha que viu.', delay: 0 },
+  { t: 'Um velho desistiu. Dobrou os documentos com cuidado de quem dobra uma bandeira e foi embora.', delay: 0 },
+  { t: 'A fila inteira olhou para o mesmo ponto do céu ao mesmo tempo. Você não viu nada lá. A fila voltou a olhar para frente.', delay: 6 },
+  { t: 'Um guarda novo pergunta ao antigo se "é sempre assim". O antigo não responde. É sempre assim.', delay: 0 },
+];
+
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
 const QUEUE_CHATTER = [
   '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',

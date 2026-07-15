@@ -37,6 +37,85 @@ function sfx(kind) {
   } catch (e) { /* áudio indisponível */ }
 }
 
+/* ---------- MÚSICA (trilha melancólica procedural) ---------- */
+const MUSIC = { on: true, playing: false, timer: null };
+const M_NOTES = [110, 130.81, 146.83, 164.81, 196, 220]; // lá menor, esparso
+function musicNote() {
+  if (!MUSIC.on || !MUSIC.playing) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') return;
+    const t = AC.currentTime;
+    const f = pick(M_NOTES) * (chance(.3) ? 2 : 1);
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const g = AC.createGain(); g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(.032, t + 1.3);
+    g.gain.linearRampToValueAtTime(0, t + 4.6);
+    lp.connect(g); g.connect(AC.destination);
+    [f, f * 1.003].forEach(fr => {
+      const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
+      o.connect(lp); o.start(t); o.stop(t + 4.8);
+    });
+  } catch (e) {}
+}
+function startMusic() {
+  if (MUSIC.playing) return;
+  MUSIC.playing = true;
+  clearInterval(MUSIC.timer);
+  MUSIC.timer = setInterval(musicNote, 3200);
+  musicNote();
+}
+function stopMusic() {
+  MUSIC.playing = false;
+  clearInterval(MUSIC.timer);
+}
+
+/* ---------- NEVE DO TÍTULO ---------- */
+const TS = { raf: null, flakes: [], t: 0 };
+function startTitleSnow() {
+  const cv = $('title-snow');
+  if (!cv) return;
+  cv.width = innerWidth; cv.height = innerHeight;
+  const ctx = cv.getContext('2d');
+  TS.flakes = [];
+  for (let i = 0; i < 90; i++) TS.flakes.push({ x: Math.random() * cv.width, y: Math.random() * cv.height, v: .4 + Math.random() * 1.1, w: Math.random() * .6 - .3, r: .8 + Math.random() * 1.4 });
+  cancelAnimationFrame(TS.raf);
+  const loop = () => {
+    if (!$('screen-title').classList.contains('active')) { TS.raf = null; return; }
+    TS.t += .016;
+    ctx.clearRect(0, 0, cv.width, cv.height);
+    const gy = cv.height * .86;
+    // muro e torre do posto no horizonte
+    ctx.fillStyle = '#0e100c';
+    ctx.fillRect(0, gy - 26, cv.width, 26 + cv.height * .14);
+    const tx = cv.width * .82;
+    ctx.fillRect(tx, gy - 120, 34, 120);
+    ctx.fillRect(tx - 8, gy - 132, 50, 14);
+    // luz da torre varrendo
+    const ang = Math.sin(TS.t * .35) * .9;
+    const lx = tx + 17, ly = gy - 126;
+    const grad = ctx.createLinearGradient(lx, ly, lx + Math.sin(ang) * 500, ly + 400);
+    grad.addColorStop(0, 'rgba(201,180,120,.10)'); grad.addColorStop(1, 'rgba(201,180,120,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.moveTo(lx, ly);
+    ctx.lineTo(lx + Math.sin(ang - .18) * 620, ly + 480);
+    ctx.lineTo(lx + Math.sin(ang + .18) * 620, ly + 480);
+    ctx.closePath(); ctx.fill();
+    // neve
+    ctx.fillStyle = 'rgba(215,215,208,.55)';
+    TS.flakes.forEach(s => {
+      s.y += s.v; s.x += s.w + Math.sin(TS.t + s.y * .01) * .2;
+      if (s.y > cv.height) { s.y = -3; s.x = Math.random() * cv.width; }
+      ctx.fillRect(s.x, s.y, s.r, s.r);
+    });
+    TS.raf = requestAnimationFrame(loop);
+  };
+  TS.raf = requestAnimationFrame(loop);
+}
+
+/* ---------- SALÁRIO POR REGIME (os reajustes que a inflação come) ---------- */
+function salaryForDay(d) { return d >= 31 ? 8 : d >= 13 ? 6 : 5; }
+
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
@@ -90,6 +169,9 @@ const $ = (id) => document.getElementById(id);
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   $(id).classList.add('active');
+  // trilha: toca fora do expediente; no posto, só o drone e o rádio
+  if (id === 'screen-shift' || id === 'screen-night') stopMusic();
+  else if (MUSIC.on) startMusic();
 }
 function setRegimeClass(day) {
   document.body.className = '';
@@ -621,6 +703,8 @@ function startDay() {
 function bulletinText() {
   let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
   if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  if (S.day === 13) t += `\n\n§ REAJUSTE PATRIÓTICO: ${MOEDA} 6 por decisão correta. O Estado Nacional cuida dos seus.`;
+  if (S.day === 31) t += `\n\n§ O CONSELHO VALORIZA O TRABALHADOR: ${MOEDA} 8 por decisão correta. (Nota: o aluguel do espaço requisitado passa a ${MOEDA} 25.)`;
   const rum = rumorForDay(S.day);
   if (rum) t += rum.official
     ? `\n\n§ INDICADOR FÍSICO EM VIGOR: ${rum.text}\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.`
@@ -819,6 +903,15 @@ function nextCitizen() {
 
   shift.citizen = cz;
   presentCitizen(cz);
+  // a fila também vive
+  if (!cz.encounter && shift.processed > 0 && chance(.12)) {
+    const qe = pick(QUEUE_EVENTS);
+    const toast = $('queue-toast');
+    toast.textContent = qe.t + (qe.delay ? ` (a fila parou por ${qe.delay} min)` : '');
+    toast.classList.add('on');
+    if (qe.delay) spendTime(qe.delay);
+    setTimeout(() => toast.classList.remove('on'), 5200);
+  }
   // apagão no colapso
   if (S.day >= 43 && S.day <= 46 && chance(.25)) {
     document.body.classList.add('blackout');
@@ -1158,7 +1251,7 @@ function decide(decision) {
     if (cz.encounter) encounterOutcome(cz.encounter, 'detain');
   }
 
-  if (correct) { S.counters.correct++; S.money += 5; }
+  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); }
   else { S.counters.wrong++; citation(note || 'Decisão em desacordo com o regulamento.'); }
 
   stampDocs(decision);
@@ -1508,9 +1601,24 @@ $('btn-approve').onclick = () => decide('approve');
 $('btn-reject').onclick = () => decide('reject');
 $('btn-detain').onclick = () => decide('detain');
 $('btn-restart').onclick = () => { location.reload(); };
+$('btn-music').onclick = () => {
+  MUSIC.on = !MUSIC.on;
+  $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
+  if (!MUSIC.on) stopMusic();
+};
 
 /* ---------- INICIALIZAÇÃO ---------- */
 (function init() {
   if (loadSave()) $('btn-continue').style.display = '';
   showScreen('screen-title');
+  startTitleSnow();
+  // o primeiro clique em qualquer lugar destrava o áudio do navegador
+  document.addEventListener('pointerdown', function unlock() {
+    try {
+      AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+      if (AC.state === 'suspended') AC.resume();
+    } catch (e) {}
+    if (MUSIC.on && !$('screen-shift').classList.contains('active')) startMusic();
+    document.removeEventListener('pointerdown', unlock);
+  });
 })();

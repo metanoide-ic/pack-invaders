@@ -11,6 +11,7 @@
 
     <!-- ===== TELA DE TÍTULO ===== -->
     <div id="screen-title" class="screen active">
+      <canvas id="title-snow"></canvas>
       <div class="title-inner">
         <div class="title-emblem">✦</div>
         <h1 class="title-logo">HUMANOCRACY</h1>
@@ -59,6 +60,7 @@
           <span id="processed-count">Atendidos: 0</span>
           <span id="money-hud">₴ 0</span>
         </div>
+        <button id="btn-music" class="btn-small" title="Música ligada/desligada">♪</button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -69,6 +71,7 @@
           <div class="booth-window">
             <canvas id="queue-canvas"></canvas>
             <div class="queue-view" id="queue-view"></div>
+            <div id="queue-toast"></div>
             <div class="npc-stage" id="npc-stage">
               <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
             </div>
