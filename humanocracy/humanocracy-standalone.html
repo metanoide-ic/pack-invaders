@@ -1,0 +1,2580 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HUMANOCRACY — Posto de Triagem 7</title>
+<style>
+/* ============ HUMANOCRACY — estilo ============ */
+
+:root {
+  --bg: #1a1c19;
+  --panel: #24261f;
+  --panel2: #2d2f27;
+  --ink: #cfc9b8;
+  --ink-dim: #8f8a7a;
+  --accent: #7a8c5f;       /* verde burocrático da República */
+  --accent2: #b9a45c;
+  --danger: #a2493c;
+  --approve: #4f7a4a;
+  --paper: #d8d2bd;
+  --paper-ink: #2b2820;
+  --stamp-red: #8c2f24;
+  --stamp-green: #2f5c33;
+  --font-mono: "Courier New", Courier, monospace;
+}
+
+/* Regime Mehrvolk: preto, vermelho-sangue e dourado */
+body.regime-mehrvolk {
+  --bg: #17110f; --panel: #211613; --panel2: #2a1b16;
+  --accent: #9c3327; --accent2: #c9a34a; --ink: #d6c8b2;
+}
+/* Conselho Popular: vermelho e ocre */
+body.regime-conselho {
+  --bg: #1c1210; --panel: #29160f; --panel2: #331c12;
+  --accent: #b0452a; --accent2: #d9b13b; --ink: #e0cdb0;
+}
+/* Colapso: cinza, quase sem cor */
+body.regime-colapso {
+  --bg: #161616; --panel: #1f1f1f; --panel2: #262626;
+  --accent: #5a5a52; --accent2: #77716a; --ink: #b5b0a5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100%; height:100%; overflow:hidden; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-mono); font-size: 14px;
+  transition: background 2s;
+}
+#app { width:100%; height:100%; position:relative; }
+
+.screen { display:none; width:100%; height:100%; }
+.screen.active { display:block; }
+
+button {
+  font-family: var(--font-mono); cursor:pointer;
+  background: var(--panel2); color: var(--ink);
+  border: 1px solid var(--ink-dim); padding: 6px 12px;
+}
+button:hover:not(:disabled) { background: var(--accent); color:#fff; }
+button:disabled { opacity:.35; cursor:not-allowed; }
+
+/* ============ TÍTULO ============ */
+#screen-title { display:none; align-items:center; justify-content:center; }
+#screen-title.active { display:flex; }
+.title-inner { text-align:center; max-width:640px; padding:24px; }
+.title-emblem { font-size:64px; color:var(--accent2); }
+.title-logo {
+  font-size:56px; letter-spacing:12px; color:var(--ink);
+  text-shadow: 0 0 24px rgba(185,164,92,.25); margin:8px 0;
+}
+.title-sub { color:var(--ink-dim); letter-spacing:3px; font-size:12px; }
+.title-quote { margin:28px 0; font-style:italic; color:var(--accent2); }
+.title-menu { display:flex; flex-direction:column; gap:10px; align-items:center; margin:20px 0; }
+.btn-title { width:280px; padding:12px; font-size:16px; letter-spacing:2px; }
+.title-warning { font-size:11px; color:var(--ink-dim); margin-top:24px; line-height:1.5; }
+.title-version { font-size:10px; color:var(--ink-dim); margin-top:14px; opacity:.6; }
+
+/* ============ MANHÃ ============ */
+#screen-morning.active { display:flex; align-items:center; justify-content:center; }
+.morning-grid {
+  display:grid; grid-template-columns: 1.2fr 1fr; gap:20px;
+  width: min(1100px, 96vw); height: min(680px, 94vh);
+}
+.newspaper {
+  background: var(--paper); color: var(--paper-ink);
+  padding: 22px 26px; overflow-y:auto;
+  box-shadow: 4px 4px 0 rgba(0,0,0,.4);
+  font-family: Georgia, 'Times New Roman', serif;
+}
+.np-masthead {
+  font-size:30px; font-weight:bold; text-align:center;
+  border-bottom:3px double var(--paper-ink); padding-bottom:6px; letter-spacing:2px;
+}
+.np-date { text-align:center; font-size:11px; padding:4px 0; border-bottom:1px solid var(--paper-ink); }
+.np-headline { font-size:24px; font-weight:bold; margin:14px 0 8px; line-height:1.15; }
+.np-body { font-size:13px; line-height:1.5; column-count:2; column-gap:18px; text-align:justify; }
+.np-minor { margin-top:14px; border-top:1px solid var(--paper-ink); padding-top:8px; font-size:12px; line-height:1.6; }
+.np-minor b { display:block; }
+.np-ad {
+  margin-top:14px; border:2px solid var(--paper-ink); padding:8px;
+  text-align:center; font-size:12px; font-style:italic;
+}
+.home-panel {
+  background: var(--panel); border:1px solid var(--ink-dim);
+  padding:18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;
+}
+.home-title { color:var(--accent2); letter-spacing:2px; font-size:12px; border-bottom:1px solid var(--ink-dim); padding-bottom:8px; }
+.fam-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dotted rgba(143,138,122,.3); }
+.fam-status-ok { color:#8fb573; }
+.fam-status-bad { color:#c96a4f; }
+.fam-status-dead { color:#666; text-decoration:line-through; }
+#home-events { font-size:12px; line-height:1.6; color:var(--ink); }
+#home-events .ev { margin-bottom:8px; padding:8px; background:var(--panel2); border-left:3px solid var(--accent2); }
+.home-budget { font-size:13px; }
+.home-budget .row { display:flex; justify-content:space-between; }
+.home-shop { display:flex; flex-wrap:wrap; gap:8px; }
+.home-shop button { font-size:12px; }
+.btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
+
+/* ============ TURNO ============ */
+#screen-shift.active { display:flex; flex-direction:column; }
+.shift-top {
+  display:flex; align-items:center; gap:18px; padding:8px 16px;
+  background: var(--panel); border-bottom:2px solid var(--accent);
+}
+.shift-clock { font-size:22px; color:var(--accent2); min-width:80px; }
+.shift-day { letter-spacing:3px; }
+.shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); }
+.btn-small { font-size:11px; }
+
+.shift-main { flex:1; display:grid; grid-template-columns: 300px 1fr 320px; min-height:0; }
+
+/* Guichê */
+.booth { background: var(--panel); border-right:2px solid #000; display:flex; flex-direction:column; padding:10px; min-height:0; }
+.booth-window {
+  background:#0d0f0c; border:6px solid #3a3c33; height:230px; position:relative; overflow:hidden;
+}
+.queue-view {
+  position:absolute; left:6px; top:6px; font-size:10px; color:#5c6152; line-height:1.3; z-index:1;
+}
+.npc-stage { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; }
+#npc-portrait { width:170px; height:204px; cursor:pointer; }
+#npc-portrait.pickable:hover { filter: drop-shadow(0 0 6px var(--accent2)); }
+.npc-name { text-align:center; padding:6px; color:var(--accent2); letter-spacing:1px; font-size:13px; min-height:28px; }
+.speech {
+  background:var(--panel2); padding:8px; font-size:12px; font-style:italic;
+  min-height:52px; line-height:1.45; border-left:3px solid var(--accent);
+}
+.talk-log { flex:1; overflow-y:auto; font-size:11px; line-height:1.5; margin-top:8px; }
+.talk-log .q { color:var(--ink-dim); }
+.talk-log .a { color:var(--ink); margin-bottom:6px; display:block; cursor:pointer; padding:2px 4px; }
+.talk-log .a:hover { background:var(--panel2); }
+.talk-log .a.picked { outline:1px solid var(--accent2); }
+.ask-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.ask-row button { font-size:10px; padding:4px 8px; }
+
+/* Mesa */
+.desk {
+  position:relative; overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.04), transparent 60%),
+    repeating-linear-gradient(90deg, #4a3b28 0 3px, #52422d 3px 90px);
+  min-height:0;
+}
+.desk-hint {
+  position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+  color:rgba(255,255,255,.25); font-size:16px; letter-spacing:2px; pointer-events:none;
+}
+.document {
+  position:absolute; width:250px; background:var(--paper); color:var(--paper-ink);
+  box-shadow: 3px 5px 12px rgba(0,0,0,.55);
+  font-size:12px; cursor:grab; user-select:none;
+  border:1px solid rgba(0,0,0,.3);
+}
+.document:active { cursor:grabbing; }
+.document .doc-head {
+  padding:5px 8px; font-weight:bold; font-size:11px; letter-spacing:1px;
+  color:#f0ead6; display:flex; justify-content:space-between;
+}
+.document .doc-body { padding:8px 10px 10px; }
+.document .fld { display:flex; justify-content:space-between; padding:1px 2px; }
+.document .fld .k { color:#6b6250; font-size:10px; }
+.document .fld .v { cursor:pointer; padding:0 3px; }
+.document .fld .v:hover { background: rgba(185,164,92,.35); }
+.document .fld .v.picked { outline:2px solid var(--stamp-red); background:rgba(140,47,36,.15); }
+.document .fld .v.flagged { background:rgba(140,47,36,.3); text-decoration: underline wavy var(--stamp-red); }
+.doc-photo { float:right; margin:0 0 4px 6px; border:1px solid #6b6250; background:#c9c2ab; }
+.doc-photo svg { display:block; width:64px; height:76px; cursor:pointer; }
+.doc-photo.picked { outline:2px solid var(--stamp-red); }
+.doc-seal { text-align:center; font-size:22px; opacity:.75; cursor:pointer; }
+.doc-seal.picked { outline:2px solid var(--stamp-red); }
+.doc-stamped { position:absolute; top:30%; left:12%; font-size:26px; font-weight:bold; transform:rotate(-18deg); opacity:.85; pointer-events:none; letter-spacing:2px; }
+.stamp-ok { color:var(--stamp-green); border:3px solid var(--stamp-green); padding:2px 10px; }
+.stamp-no { color:var(--stamp-red); border:3px solid var(--stamp-red); padding:2px 10px; }
+.bribe-note {
+  position:absolute; width:120px; padding:10px; background:#7a8c5f; color:#1c2415;
+  font-size:11px; box-shadow:3px 5px 12px rgba(0,0,0,.55); cursor:pointer; text-align:center;
+}
+
+/* Sidebar */
+.sidebar { background:var(--panel); border-left:2px solid #000; display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0; }
+.tools { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
+.btn-tool { font-size:11px; padding:8px 4px; }
+.btn-tool.active { background:var(--accent); color:#fff; }
+.scan-result { font-size:11px; min-height:34px; background:var(--panel2); padding:6px; line-height:1.4; }
+.rulebook { flex:1; overflow-y:auto; background:var(--panel2); padding:8px; font-size:11px; line-height:1.5; }
+.rb-title { color:var(--accent2); letter-spacing:2px; font-size:10px; margin:6px 0 4px; border-bottom:1px solid var(--ink-dim); }
+.rb-rule { padding:3px 4px; cursor:pointer; }
+.rb-rule:hover { background:rgba(185,164,92,.15); }
+.rb-rule.picked { outline:1px solid var(--accent2); }
+.rb-country { padding:3px 4px; cursor:pointer; }
+.rb-country:hover { background:rgba(185,164,92,.15); }
+.rb-country.picked { outline:1px solid var(--accent2); }
+.decision { display:flex; gap:8px; }
+.stamp { flex:1; padding:16px 4px; font-size:14px; font-weight:bold; letter-spacing:1px; border-width:3px; }
+.stamp-approve { border-color:var(--stamp-green); color:#9fce8f; }
+.stamp-approve:hover:not(:disabled) { background:var(--stamp-green); }
+.stamp-reject { border-color:var(--stamp-red); color:#d98b7c; }
+.stamp-reject:hover:not(:disabled) { background:var(--stamp-red); }
+.stamp-detain { border-color:var(--accent2); color:var(--accent2); }
+.stamp-detain:hover:not(:disabled) { background:var(--accent2); color:#000; }
+.stamp.hidden { display:none; }
+
+.inspect-bar {
+  min-height:30px; background:#000; color:var(--accent2);
+  font-size:12px; padding:6px 16px; letter-spacing:1px;
+}
+
+/* ============ FIM DE DIA / FINAL ============ */
+#screen-endday.active, #screen-ending.active { display:flex; align-items:center; justify-content:center; }
+.endday-panel, .ending-panel {
+  background:var(--panel); border:1px solid var(--ink-dim); padding:28px;
+  width:min(680px, 94vw); max-height:92vh; overflow-y:auto;
+  display:flex; flex-direction:column; gap:14px;
+}
+.endday-title, .ending-title { font-size:22px; letter-spacing:4px; color:var(--accent2); text-align:center; }
+#endday-report { font-size:13px; line-height:1.7; }
+#endday-report .row { display:flex; justify-content:space-between; border-bottom:1px dotted rgba(143,138,122,.3); }
+.ending-body { font-size:14px; line-height:1.8; }
+.ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
+
+/* ============ MODAL ============ */
+.modal-overlay {
+  display:none; position:absolute; inset:0; background:rgba(0,0,0,.7);
+  align-items:center; justify-content:center; z-index:50;
+}
+.modal-overlay.active { display:flex; }
+.modal {
+  background:var(--paper); color:var(--paper-ink); width:min(560px, 92vw);
+  max-height:86vh; overflow-y:auto; padding:22px; box-shadow:6px 6px 0 rgba(0,0,0,.5);
+}
+.modal-title { font-weight:bold; letter-spacing:2px; font-size:15px; border-bottom:2px solid var(--paper-ink); padding-bottom:8px; margin-bottom:12px; }
+.modal-body { font-size:13px; line-height:1.7; white-space:pre-wrap; }
+.modal-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+.modal-actions button { background:var(--paper-ink); color:var(--paper); border:none; padding:10px 16px; }
+.modal-actions button:hover { background:var(--stamp-red); color:#fff; }
+
+/* Citação */
+.citation {
+  display:none; position:absolute; left:50%; bottom:40px; transform:translateX(-50%);
+  background:#e8d8b0; color:#3a2c1a; width:380px; z-index:60;
+  box-shadow:0 8px 20px rgba(0,0,0,.6); border-top:6px solid var(--stamp-red);
+  animation: slideup .3s ease;
+}
+.citation.active { display:block; }
+.citation-head { font-size:11px; font-weight:bold; padding:6px 12px; background:rgba(140,47,36,.15); letter-spacing:1px; }
+.citation-body { padding:10px 12px; font-size:12px; line-height:1.5; }
+@keyframes slideup { from { transform:translate(-50%, 30px); opacity:0; } to { transform:translate(-50%,0); opacity:1; } }
+
+/* Sussurro (paranoia) */
+.whisper {
+  display:none; position:absolute; z-index:70; color:rgba(200,190,170,.5);
+  font-style:italic; font-size:13px; pointer-events:none;
+  animation: whisperfade 6s ease forwards;
+}
+.whisper.active { display:block; }
+@keyframes whisperfade { 0%{opacity:0} 15%{opacity:1} 80%{opacity:.8} 100%{opacity:0} }
+
+/* Apagão (colapso) */
+body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
+
+/* ============ VINHETA + GRÃO (horror ambiente) ============ */
+#vignette {
+  position:absolute; inset:0; pointer-events:none; z-index:40;
+  background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.55) 100%);
+  animation: grain-flicker 4s steps(3) infinite;
+}
+@keyframes grain-flicker { 0%,100% { opacity:.9 } 50% { opacity:1 } 75% { opacity:.95 } }
+
+/* tique raríssimo no retrato — rápido demais para ter certeza */
+@keyframes twitch {
+  0%, 100% { transform: none; }
+  46% { transform: none; }
+  50% { transform: translateX(1.5px) skewX(2.5deg); }
+  54% { transform: none; }
+}
+#npc-portrait.twitch { animation: twitch .55s linear 1; }
+
+/* ============ NOITE ============ */
+#screen-night { background:#050505; }
+#screen-night.active { display:flex; align-items:center; justify-content:center; }
+.night-inner { max-width:560px; width:94vw; text-align:center; display:flex; flex-direction:column; gap:18px; align-items:center; }
+.night-hour { color:#6b6557; letter-spacing:3px; font-size:13px; }
+.peephole-ring {
+  width:190px; height:190px; border-radius:50%;
+  background: radial-gradient(circle, #1a1812 60%, #000 72%);
+  box-shadow: 0 0 0 8px #0d0c09, 0 0 60px rgba(0,0,0,.9) inset, 0 0 30px rgba(201,163,74,.06);
+  display:flex; align-items:center; justify-content:center;
+}
+.peephole {
+  width:150px; height:150px; border-radius:50%; overflow:hidden;
+  background:#0a0a08; display:flex; align-items:flex-end; justify-content:center;
+  filter: brightness(.7) contrast(1.15);
+}
+.peephole svg { width:120px; height:144px; }
+.peephole.empty svg { display:none; }
+.night-text { color:#b5ae9c; font-size:14px; line-height:1.8; min-height:90px; }
+.night-choices { display:flex; gap:12px; flex-wrap:wrap; justify-content:center; }
+.night-choices button { padding:12px 18px; letter-spacing:1px; background:#111; border-color:#4a463c; }
+.night-choices button:hover { background:#3a2c1a; color:#e8d8b0; }
+.night-after { color:#8f8875; font-style:italic; font-size:13px; line-height:1.8; min-height:60px; max-width:520px; }
+.night-continue { margin-top:8px; }
+
+/* ============ EXAME FÍSICO ============ */
+.exam-overlay {
+  display:none; position:absolute; inset:0; background:rgba(0,0,0,.82);
+  align-items:center; justify-content:center; z-index:45;
+}
+.exam-overlay.active { display:flex; }
+.exam-panel {
+  width:min(760px, 96vw); max-height:92vh; background:#12140f;
+  border:1px solid var(--ink-dim); display:flex; flex-direction:column;
+}
+.exam-head {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 12px; background:var(--panel); color:var(--accent2);
+  letter-spacing:2px; font-size:11px; border-bottom:1px solid var(--ink-dim);
+}
+.exam-grid { display:grid; grid-template-columns: 1fr 1fr; min-height:0; }
+.exam-face {
+  background: radial-gradient(circle at 50% 40%, #23251c, #0a0b08 80%);
+  display:flex; align-items:center; justify-content:center; padding:10px;
+}
+.exam-face svg { width:100%; max-width:330px; height:auto; filter: contrast(1.08); }
+.exam-right { display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0; }
+.exam-zones { display:flex; flex-wrap:wrap; gap:6px; }
+.exam-zones button { font-size:11px; padding:6px 10px; }
+.exam-zones button.done { opacity:.5; }
+.exam-log { flex:1; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--ink); }
+.exam-log .anomalia { color:#d98b7c; }
+.exam-log .anomalia.endossada { text-decoration: underline; cursor:pointer; }
+.exam-log .obs { color:var(--ink-dim); }
+
+/* ============ BAGAGEM ============ */
+.bag-body { padding:14px; overflow-y:auto; }
+.bag-hint { font-size:11px; color:var(--ink-dim); margin-bottom:10px; }
+.bag-item {
+  padding:9px 10px; margin-bottom:6px; background:var(--panel2);
+  border-left:3px solid #6b5a3a; font-size:12px; line-height:1.5; cursor:pointer;
+}
+.bag-item:hover { background:var(--panel); }
+.bag-item.picked { outline:2px solid var(--stamp-red); }
+.bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:11px; }
+.bag-item.contra { border-left-color: var(--stamp-red); }
+.bag-item.contra.found { background:rgba(140,47,36,.25); }
+
+/* ============ RÁDIO ============ */
+.radio-bar {
+  display:flex; align-items:center; gap:10px;
+  background:var(--panel); border-top:1px solid #000;
+  padding:4px 16px; font-size:11px; color:var(--ink-dim);
+}
+#radio-line { font-style:italic; transition: opacity .8s; }
+#radio-line.fade { opacity:0; }
+.radio-off #radio-line { color:#4a4a44; }
+
+@media (max-width: 900px) {
+  .shift-main { grid-template-columns: 220px 1fr 240px; }
+  .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }
+}
+
+</style>
+</head>
+<body>
+<div id="app">
+
+    <!-- ===== TELA DE TÍTULO ===== -->
+    <div id="screen-title" class="screen active">
+      <div class="title-inner">
+        <div class="title-emblem">✦</div>
+        <h1 class="title-logo">HUMANOCRACY</h1>
+        <div class="title-sub">MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA</div>
+        <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
+        <div class="title-menu">
+          <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
+          <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
+        </div>
+        <div class="title-warning">
+          Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
+          perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
+        </div>
+        <div class="title-version">v1.0 — 48 dias — Posto de Triagem Nº 7, Fronteira Leste</div>
+      </div>
+    </div>
+
+    <!-- ===== TELA DA MANHÃ (jornal + família) ===== -->
+    <div id="screen-morning" class="screen">
+      <div class="morning-grid">
+        <div class="newspaper" id="newspaper">
+          <div class="np-masthead" id="np-masthead">A VOZ DE OSTERIA</div>
+          <div class="np-date" id="np-date"></div>
+          <div class="np-headline" id="np-headline"></div>
+          <div class="np-body" id="np-body"></div>
+          <div class="np-minor" id="np-minor"></div>
+          <div class="np-ad" id="np-ad"></div>
+        </div>
+        <div class="home-panel">
+          <div class="home-title">SEU APARTAMENTO — BLOCO 14, VALGRADO</div>
+          <div id="family-status"></div>
+          <div id="home-events"></div>
+          <div class="home-budget" id="home-budget"></div>
+          <div class="home-shop" id="home-shop"></div>
+          <button id="btn-gowork" class="btn-big">IR AO TRABALHO →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== TELA DO TURNO ===== -->
+    <div id="screen-shift" class="screen">
+      <div class="shift-top" id="shift-top">
+        <div class="shift-clock"><span id="clock">08:00</span></div>
+        <div class="shift-day" id="shift-day">DIA 1</div>
+        <div class="shift-info">
+          <span id="processed-count">Atendidos: 0</span>
+          <span id="money-hud">₴ 0</span>
+        </div>
+        <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
+        <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
+      </div>
+
+      <div class="shift-main">
+        <!-- Guichê: cidadão -->
+        <div class="booth" id="booth">
+          <div class="booth-window">
+            <div class="queue-view" id="queue-view"></div>
+            <div class="npc-stage" id="npc-stage">
+              <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
+            </div>
+          </div>
+          <div class="npc-name" id="npc-name">—</div>
+          <div class="speech" id="speech"></div>
+          <div class="talk-log" id="talk-log"></div>
+          <div class="ask-row" id="ask-row"></div>
+        </div>
+
+        <!-- Mesa: documentos -->
+        <div class="desk" id="desk">
+          <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
+        </div>
+
+        <!-- Painel direito: regulamento + ferramentas -->
+        <div class="sidebar">
+          <div class="tools">
+            <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
+            <button id="btn-exam" class="btn-tool" title="Exame Físico aproximado (10 min)">👁 EXAME FÍSICO</button>
+            <button id="btn-bag" class="btn-tool" title="Revistar bagagem (10 min)">🧳 BAGAGEM</button>
+            <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
+            <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
+            <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
+          </div>
+          <div class="scan-result" id="scan-result"></div>
+          <div class="rulebook" id="rulebook">
+            <div class="rb-title">REGULAMENTO DO DIA</div>
+            <div id="rb-rules"></div>
+            <div class="rb-title">REFERÊNCIA DE PAÍSES</div>
+            <div id="rb-countries"></div>
+          </div>
+          <div class="decision">
+            <button id="btn-approve" class="stamp stamp-approve">APROVAR</button>
+            <button id="btn-reject" class="stamp stamp-reject">REJEITAR</button>
+            <button id="btn-detain" class="stamp stamp-detain" disabled>DETER</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="radio-bar" id="radio-bar">
+        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto">📻</button>
+        <span id="radio-line">…o rádio do posto aquece as válvulas…</span>
+      </div>
+      <div class="inspect-bar" id="inspect-bar"></div>
+    </div>
+
+    <!-- ===== FIM DE DIA ===== -->
+    <div id="screen-endday" class="screen">
+      <div class="endday-panel">
+        <div class="endday-title" id="endday-title">FIM DO EXPEDIENTE</div>
+        <div id="endday-report"></div>
+        <button id="btn-gohome" class="btn-big">VOLTAR PARA CASA →</button>
+      </div>
+    </div>
+
+    <!-- ===== FIM DE JOGO ===== -->
+    <div id="screen-ending" class="screen">
+      <div class="ending-panel">
+        <div class="ending-title" id="ending-title"></div>
+        <div class="ending-body" id="ending-body"></div>
+        <div class="ending-stats" id="ending-stats"></div>
+        <button id="btn-restart" class="btn-big">COMEÇAR DE NOVO</button>
+      </div>
+    </div>
+
+    <!-- ===== NOITE (visitas à porta) ===== -->
+    <div id="screen-night" class="screen">
+      <div class="night-inner">
+        <div class="night-hour" id="night-hour"></div>
+        <div class="peephole-ring">
+          <div class="peephole" id="peephole"><svg id="night-portrait" viewBox="0 0 100 120"></svg></div>
+        </div>
+        <div class="night-text" id="night-text"></div>
+        <div class="night-choices" id="night-choices"></div>
+        <div class="night-after" id="night-after"></div>
+      </div>
+    </div>
+
+    <!-- ===== EXAME FÍSICO (close-up) ===== -->
+    <div id="exam-overlay" class="exam-overlay">
+      <div class="exam-panel">
+        <div class="exam-head">
+          <span>EXAME FÍSICO APROXIMADO — clique nas regiões</span>
+          <button id="btn-exam-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="exam-grid">
+          <div class="exam-face"><svg id="exam-face-svg" viewBox="0 0 200 240"></svg></div>
+          <div class="exam-right">
+            <div class="exam-zones" id="exam-zones"></div>
+            <div class="exam-log" id="exam-log"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BAGAGEM ===== -->
+    <div id="bag-overlay" class="exam-overlay">
+      <div class="exam-panel">
+        <div class="exam-head">
+          <span>REVISTA DE BAGAGEM — objetos contam histórias</span>
+          <button id="btn-bag-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="bag-body">
+          <div class="bag-hint">No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.</div>
+          <div id="bag-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MODAIS ===== -->
+    <div id="modal-overlay" class="modal-overlay">
+      <div class="modal" id="modal">
+        <div class="modal-title" id="modal-title"></div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-actions" id="modal-actions"></div>
+      </div>
+    </div>
+
+    <div id="citation" class="citation">
+      <div class="citation-head">⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
+      <div class="citation-body" id="citation-body"></div>
+    </div>
+
+    <div id="whisper" class="whisper"></div>
+    <div id="vignette"></div>
+  </div>
+<script>
+/* ============================================================
+   HUMANOCRACY — data.js
+   Mundo, países, etnias, leis, notícias, encontros e finais.
+   A verdade existe. Você só nunca terá acesso completo a ela.
+   ============================================================ */
+
+const MOEDA = '₴'; // Ostra, moeda de Osteria
+
+/* ---------- PAÍSES ---------- */
+const COUNTRIES = {
+  osteria: {
+    name: 'Osteria', adj: 'osteriano(a)', prefix: 'OS', seal: '✦', color: '#3d5a46',
+    cities: ['Valgrado', 'Porto Cinza', 'Ostra Velha', 'Miralta', 'Delvina'],
+    ethnics: ['osano', 'nulio', 'mestico'],
+    m: ['Tomas', 'Viktor', 'Ansel', 'Rubem', 'Casimiro', 'Edvin', 'Bruno', 'Leontin'],
+    f: ['Mara', 'Odila', 'Vessa', 'Irena', 'Clarice', 'Talia', 'Sofie', 'Beatra'],
+    last: ['Verne', 'Ostrik', 'Malden', 'Corvac', 'Ferro', 'Almedra', 'Vintra', 'Solmak'],
+  },
+  krestov: {
+    name: 'Krestov', adj: 'krestoviano(a)', prefix: 'KR', seal: '▲', color: '#4a3f52',
+    cities: ['Zoldani', 'Fortemuro', 'Krest', 'Varga'],
+    ethnics: ['osano', 'nulio'],
+    m: ['Dmar', 'Volkan', 'Serge', 'Ilya', 'Radek', 'Bogdan'],
+    f: ['Vanda', 'Ludmila', 'Zora', 'Katya', 'Mirala', 'Olenka'],
+    last: ['Dmarov', 'Kreskin', 'Voldan', 'Zubrek', 'Marzek', 'Tolvai'],
+  },
+  lantravia: {
+    name: 'Lantravia', adj: 'lantraviano(a)', prefix: 'LA', seal: '❖', color: '#5a2f2a',
+    cities: ['Hertzberg', 'Adlerstadt', 'Weissmar', 'Lindau'],
+    ethnics: ['osano'],
+    m: ['Adler', 'Konrad', 'Wilhem', 'Gustav', 'Erich', 'Falk'],
+    f: ['Greta', 'Ilse', 'Annelise', 'Frida', 'Marlene', 'Helva'],
+    last: ['Hertz', 'Adlerman', 'Weiss', 'Krone', 'Falkenrath', 'Brandt'],
+  },
+  frimia: {
+    name: 'Frimia', adj: 'frimiano(a)', prefix: 'FR', seal: '◉', color: '#2f4a5a',
+    cities: ['Meridia', 'Cais Novo', 'Alvorada', 'Trinca'],
+    ethnics: ['osano', 'nulio', 'bahari', 'mestico', 'cantalo'],
+    m: ['Milo', 'Sadi', 'Oren', 'Talvo', 'Ciro', 'Janek'],
+    f: ['Nadia', 'Selma', 'Ivona', 'Rosa', 'Amina', 'Petra'],
+    last: ['Meridian', 'Cassol', 'Duran', 'Okim', 'Trestani', 'Baruk'],
+  },
+  kranton: {
+    name: 'Kranton', adj: 'krantonês(esa)', prefix: 'KN', seal: '✚', color: '#4a4a2f',
+    cities: ['Dupla Ponte', 'Krantesk', 'Limiar', 'Vau Seco'],
+    ethnics: ['nulio', 'mestico', 'osano'],
+    m: ['Havel', 'Miron', 'Zdenk', 'Pavo', 'Luter', 'Ossip'],
+    f: ['Danka', 'Vesna', 'Halina', 'Mirena', 'Zlata', 'Ruta'],
+    last: ['Krantic', 'Vaumor', 'Limiar', 'Dvorak', 'Ponte', 'Hraben'],
+  },
+  novarepublica: {
+    name: 'Nova República', adj: 'novorepublicano(a)', prefix: 'NR', seal: '◈', color: '#2f5a52',
+    cities: ['Cidade Um', 'Meridiano', 'Farol', 'Vetor'],
+    ethnics: ['mestico', 'osano', 'cantalo'],
+    m: ['Neo', 'Caio', 'Dario', 'Ivo', 'Lucan', 'Remo'],
+    f: ['Lia', 'Vera', 'Naia', 'Cora', 'Iris', 'Duna'],
+    last: ['Vetor', 'Meridian', 'Farol', 'Novak', 'Prisma', 'Central'],
+  },
+  taranstan: {
+    name: 'Taranstan', adj: 'taranstanês(esa)', prefix: 'TA', seal: '★', color: '#5a1f1a',
+    cities: ['Tarangrad', 'Usina 9', 'Coletiva Norte', 'Planalto Vermelho'],
+    ethnics: ['tarano', 'nulio'],
+    m: ['Ulan', 'Temir', 'Borz', 'Kazim', 'Sarn', 'Oktai'],
+    f: ['Aiza', 'Tamila', 'Gulnar', 'Sabina', 'Roza', 'Dinara'],
+    last: ['Ulanov', 'Temirov', 'Borzek', 'Kazimir', 'Sarnov', 'Oktaev'],
+  },
+  linestan: {
+    name: 'Linestan', adj: 'linestanês(esa)', prefix: 'LI', seal: '⬢', color: '#3a3a5a',
+    cities: ['Bolsa Alta', 'Sorenfeld', 'Cume Prata', 'Ledger'],
+    ethnics: ['osano', 'cantalo'],
+    m: ['Sorenn', 'Aksel', 'Nils', 'Halvar', 'Edgar', 'Lorenz'],
+    f: ['Astrid', 'Solveig', 'Inga', 'Maren', 'Sigrid', 'Elsa'],
+    last: ['Sorenfeld', 'Ledger', 'Prata', 'Aksun', 'Nordal', 'Halvorsen'],
+  },
+  baharzad: {
+    name: 'Bahar-Zad', adj: 'bahari', prefix: 'BZ', seal: '☽', color: '#5a4a1f',
+    cities: ['Zad-o-Bahar', 'Poço das Vozes', 'Mirzapur', 'Caravana Velha'],
+    ethnics: ['bahari'],
+    m: ['Farid', 'Zarin', 'Kaveh', 'Rostam', 'Bahman', 'Dariush'],
+    f: ['Soraya', 'Yasmin', 'Parisa', 'Roshan', 'Anahid', 'Laleh'],
+    last: ['Zadeh', 'Mirzai', 'Bahari', 'Kavehpur', 'Roshani', 'Anvari'],
+  },
+  cantalabria: {
+    name: 'Cantalabria', adj: 'cantálabro(a)', prefix: 'CA', seal: '⚜', color: '#2a4a2a',
+    cities: ['Alcorte', 'Vila Serena', 'Monte Claro', 'Baía dos Tratados'],
+    ethnics: ['cantalo', 'osano'],
+    m: ['Alonso', 'Emiliano', 'Rafel', 'Duarte', 'Silvio', 'Marcel'],
+    f: ['Beatriz', 'Camila', 'Leonor', 'Silvina', 'Adela', 'Rosaura'],
+    last: ['Alcorte', 'Serena', 'Duarte', 'Montclar', 'Tratado', 'Vilaverde'],
+  },
+};
+const COUNTRY_IDS = Object.keys(COUNTRIES);
+
+const ETHNIC_LABEL = {
+  osano: 'Osana', nulio: 'Núlia', mestico: 'Mista',
+  bahari: 'Bahari', tarano: 'Tarana', cantalo: 'Cantala',
+};
+
+/* ---------- PROFISSÕES E MOTIVOS ---------- */
+const PROFESSIONS = ['professor(a)', 'engenheiro(a)', 'médico(a)', 'operário(a)', 'comerciante',
+  'enfermeiro(a)', 'agricultor(a)', 'músico(a)', 'contador(a)', 'soldado', 'costureiro(a)',
+  'ferroviário(a)', 'pesquisador(a)', 'padeiro(a)', 'jornalista', 'estudante', 'mecânico(a)'];
+
+const PURPOSES = [
+  { id: 'visita',    label: 'Visita familiar', dur: ['3 dias', '1 semana', '2 semanas'] },
+  { id: 'trabalho',  label: 'Trabalho',        dur: ['1 mês', '6 meses', '1 ano'] },
+  { id: 'transito',  label: 'Trânsito',        dur: ['1 dia', '2 dias'] },
+  { id: 'imigracao', label: 'Imigração',       dur: ['permanente'] },
+  { id: 'tratamento',label: 'Tratamento médico', dur: ['1 semana', '1 mês'] },
+  { id: 'estudo',    label: 'Estudo',          dur: ['6 meses', '1 ano'] },
+];
+
+/* ---------- REGRAS (leis mudam, somem, voltam, se contradizem) ---------- */
+const RULES = {
+  pass:            { text: 'Todo viajante deve portar PASSAPORTE válido.' },
+  idOsteria:       { text: 'Cidadãos de Osteria devem portar CARTÃO DE IDENTIDADE.' },
+  entryPermit:     { text: 'Estrangeiros devem portar PERMISSÃO DE ENTRADA.' },
+  workPermit:      { text: 'Viajantes a trabalho devem portar PERMISSÃO DE TRABALHO.' },
+  healthAll:       { text: 'TODOS devem portar CARTEIRA SANITÁRIA (Decreto 44-C).' },
+  healthForeign:   { text: 'ESTRANGEIROS devem portar CARTEIRA SANITÁRIA.' },
+  ancestry:        { text: 'Pessoas de origem NÚLIA ou BAHARI devem portar CERTIFICADO DE ANCESTRALIDADE (Édito de Pureza nº 2).' },
+  banKrestov:      { text: 'ENTRADA PROIBIDA a cidadãos de KRESTOV (incidente diplomático).' },
+  banLantravia:    { text: 'ENTRADA PROIBIDA a cidadãos de LANTRAVIA (inimigos do povo).' },
+  banTaranstan:    { text: 'ENTRADA PROIBIDA a cidadãos de TARANSTAN (agitadores comunistas).' },
+  seloConselho:    { text: 'Documentos emitidos ANTES do Conselho exigem SELO DE REVALIDAÇÃO (procure o carimbo ★ no passaporte).' },
+  refugeeProtect:  { text: 'Convenção de Alcorte: REFUGIADOS com Cartão de Refúgio devem ser protegidos e admitidos.' },
+  detainWanted:    { text: 'PROCURADOS listados no comunicado devem ser DETIDOS.' },
+  scanBioAll:      { text: 'O DETECTOR BIOLÓGICO substitui a carteira sanitária. Escaneie todos os suspeitos.' },
+  approveAll:      { text: 'DIRETRIZ FINAL: não há mais normas. O posto deve permanecer aberto.' },
+};
+
+/* ---------- ARCO DOS REGIMES ---------- */
+function regimeOfDay(d) {
+  if (d <= 11) return 'republica';
+  if (d <= 29) return 'mehrvolk';
+  if (d <= 42) return 'conselho';
+  if (d <= 47) return 'colapso';
+  return 'colapso';
+}
+const REGIME_LABEL = {
+  republica: 'REPÚBLICA DE OSTERIA',
+  mehrvolk: 'ESTADO NACIONAL MEHRVOLK',
+  conselho: 'CONSELHO POPULAR DE OSTERIA',
+  colapso: '— AUTORIDADE DESCONHECIDA —',
+};
+const MASTHEAD = {
+  republica: 'A VOZ DE OSTERIA',
+  mehrvolk: 'O CLARIM DA PUREZA',
+  conselho: 'O TRABALHADOR UNIDO',
+  colapso: 'FOLHA AVULSA',
+};
+
+/* ---------- REGRAS POR DIA (o flip-flop legal é intencional) ---------- */
+function rulesForDay(d) {
+  const r = ['pass'];
+  if (d >= 2) r.push('idOsteria');
+  if (d >= 3) r.push('entryPermit');
+  if (d >= 4) r.push('workPermit');
+  if (d >= 5) r.push('detainWanted');
+  if (d >= 8 && d <= 10) r.push('healthAll');
+  if (d >= 18 && d <= 23) r.push('healthForeign');
+  if (d >= 24 && d <= 30) r.push('healthAll');
+  if (d >= 31 && d <= 36) r.push('scanBioAll');
+  if (d >= 37 && d <= 42) r.push('healthAll');
+  if (d >= 6 && d <= 9) r.push('banKrestov');
+  if (d >= 14 && d <= 29) { r.push('ancestry'); r.push('banTaranstan'); }
+  if (d >= 30 && d <= 42) { r.push('banLantravia'); r.push('seloConselho'); }
+  if (d >= 20 && d <= 26) r.push('refugeeProtect'); // contradiz banTaranstan de propósito
+  if (d >= 43 && d <= 46) return ['pass', 'detainWanted']; // colapso: quase nada vale
+  if (d >= 47) return ['approveAll'];
+  return r;
+}
+
+/* ---------- NOTÍCIAS ---------- */
+const SCRIPTED_NEWS = {
+  1: { h: 'FRONTEIRA LESTE REABRE APÓS SEIS MESES', b: 'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.', m: ['Time de Valgrado vence por 2 a 1.', 'Preço do pão sobe 4%.', 'Horóscopo: um estranho lhe dirá a verdade. Ou não.'] },
+  3: { h: 'MULHER DETIDA EM MIRALTA "NÃO ERA QUEM DIZIA SER"', b: 'Vizinhos afirmam que a costureira Odila Vintra "voltou diferente" de uma viagem. Exames foram inconclusivos. A polícia nega que o caso envolva Alternados. A família da detida afirma que ela apenas "andava cansada".', m: ['Cientistas de Nova República pedem calma: "falsos positivos são comuns".', 'Rádio clandestina multada.'] },
+  5: { h: 'LINESTAN LANÇA O SCANNER "VERITAS-9"', b: 'A LumenCorp de Linestan promete "99,2% de precisão" na detecção de Alternados. Especialistas independentes questionam a metodologia. As ações da empresa subiram 34% em um dia. O Ministério estuda a compra de unidades.', m: ['Greve dos ferroviários termina.', 'Publicidade: VERITAS-9 — proteja sua família.'] },
+  7: { h: 'CHANCELER ALDRIC VOSS É ASSASSINADO', b: 'O chanceler foi morto a tiros na escadaria do Parlamento. Não há consenso sobre a autoria: a polícia culpa a resistência; a resistência culpa o governo; panfletos culpam os Alternados; Cantalabria sugere "interferência externa". O país entra em luto — e em pânico.', m: ['Bolsa despenca 18%.', 'Mehrvolk convoca comício: "Ordem, Segurança, Pureza".'] },
+  9: { h: 'MULTIDÕES NAS RUAS: "QUEM NOS PROTEGE?"', b: 'Após o assassinato, comícios do movimento Mehrvolk reúnem dezenas de milhares. O orador prometeu "eliminar a infiltração em doze meses". Cientistas alertam que as estatísticas citadas no palco não existem em nenhum estudo publicado.', m: ['Toque de recolher em Delvina.', 'Farmácias racionam sedativos.'] },
+  12: { h: 'MEHRVOLK ASSUME O GOVERNO DE OSTERIA', b: 'Com apoio de parte do exército e do Parlamento em pânico, o movimento Mehrvolk assumiu o poder na madrugada. Primeiro decreto: "A verdade agora tem um só nome." Jornais de oposição amanheceram fechados. Este jornal foi renomeado por ordem administrativa.', m: ['Novos uniformes distribuídos aos postos.', 'Hino atualizado. Decorar até sexta.'] },
+  14: { h: 'ÉDITO DE PUREZA Nº 2 ENTRA EM VIGOR', b: 'Cidadãos de origem núlia e bahari deverão portar Certificado de Ancestralidade. O Instituto Lantraviano de Fenotipia afirma que "certas linhagens apresentam 12% mais incidência de substituição". O estudo não foi revisado por pares. Hospitais registram filas de pessoas tentando provar quem são.', m: ['Denúncias anônimas dobram.', 'Criança de 9 anos denuncia o próprio professor.'] },
+  17: { h: 'DEZ DETIDOS EM OPERAÇÃO "SANGUE LIMPO"', b: 'O governo comemora a captura de "dez infiltrados". Documentos vazados sugerem que ao menos sete eram humanos com exames alterados. O Ministério nega. As famílias não foram informadas do paradeiro dos detidos.', m: ['Escolas adotam cartilha "Conheça seu vizinho".', 'Racionamento de carvão.'] },
+  21: { h: 'JORNALISTA DESAPARECE APÓS REPORTAGEM', b: 'Vela Odim, autora da série "Os Falsos Positivos", está desaparecida há três dias. O governo afirma que ela "viajou por vontade própria". Colegas afirmam que sua casa foi revirada. A LumenCorp negou comentar os erros do VERITAS-9 citados na reportagem.', m: ['Cartazes novos: "Quem cala, protege."', 'Pão racionado: 1 unidade por família.'] },
+  24: { h: 'CIENTISTAS CONTESTAM A FENOTIPIA — E SÃO PRESOS', b: 'Quatorze pesquisadores assinaram carta afirmando que "nenhuma característica física define um Alternado". Foram detidos por "sabotagem epistemológica". Universidades entram em greve. O governo responde: "A ciência do inimigo também é inimiga."', m: ['Fila do posto leste bate recorde.', 'Inverno chega mais cedo.'] },
+  27: { h: 'EXPLOSÃO NA ESTAÇÃO CENTRAL: 31 MORTOS', b: 'Um atentado destruiu a Estação Central de Valgrado. O governo culpa a resistência. A resistência culpa "agentes do próprio regime". Um sobrevivente jura que viu o autor "sorrir com a boca errada". Ninguém sabe o que isso significa. Ninguém pergunta duas vezes.', m: ['Luto oficial de três dias.', 'Trens suspensos.'] },
+  30: { h: 'GOLPE: CONSELHO POPULAR TOMA O PODER', b: 'Unidades do exército derrubaram o governo Mehrvolk durante a madrugada. O Conselho Popular declara que "os Alternados são uma invenção do capital para disciplinar trabalhadores". Os laboratórios estatais, entretanto, seguem funcionando — agora sob nova bandeira. Todos os documentos antigos exigem revalidação.', m: ['Estátuas derrubadas antes do café.', 'Novo hino. Decorar até sexta.'] },
+  33: { h: 'EX-AGENTES DO REGIME VIRAM "ELEMENTOS INDESEJÁVEIS"', b: 'Funcionários do governo anterior tentam deixar o país em massa. O Conselho promete julgamentos populares. Nas filas, ninguém mais sabe qual carimbo é o certo — e o Conselho também não. Um inspetor foi preso por aplicar a lei da semana passada.', m: ['Açúcar desaparece dos mercados.', 'Boato: "Alternados não suportam açúcar." Falso. Talvez.'] },
+  37: { h: 'O SCANNER OFICIAL ERA DEFEITUOSO, ADMITE MINISTÉRIO', b: 'Após seis dias de triagem obrigatória por detector biológico, o Conselho admite que 40% das unidades estavam descalibradas. Volta a valer a carteira sanitária — a mesma que o decreto anterior chamou de "papel inútil". As pessoas na fila riem. Depois choram.', m: ['LumenCorp transfere sede para Linestan.', 'Apagões programados: 4h por dia.'] },
+  40: { h: 'FRONTEIRAS DO NORTE CAÍRAM. NINGUÉM GOVERNA LÁ.', b: 'Refugiados de Kranton e Krestov relatam cidades sem polícia, sem energia e sem notícias. "Não fugimos deles", disse uma mulher, "fugimos de nós mesmos". O Conselho não comenta. O Conselho não é encontrado para comentar.', m: ['Hospitais lotados.', 'A rádio estatal transmite estática entre 14h e 16h.'] },
+  43: { h: 'ONDE ESTÁ O GOVERNO?', b: 'Ministérios vazios. Telefones mudos. O último comunicado oficial tem cinco dias. Este jornal é impresso por voluntários. Não sabemos se seremos impressos amanhã. O posto de triagem leste segue aberto — ninguém mandou fechar. Talvez ninguém exista para mandar.', m: ['Feira improvisada na Praça do Sal.', 'Alguém pintou na muralha: "ELES JÁ ESTÃO AQUI." Outro completou: "SEMPRE ESTIVERAM."'] },
+  45: { h: 'COMUNIDADE DO VALE AFIRMA "CONVIVER" COM ALTERNADOS', b: 'Um povoado nas montanhas garante viver em paz com "os outros" há anos. "Eles consertam nossas cercas. Nós não perguntamos o nome antigo deles." Impossível verificar. Impossível não pensar nisso a noite inteira.', m: ['Sem previsão do tempo. O instrumento quebrou.', 'Procura-se: qualquer notícia de Vela Odim.'] },
+  46: { h: 'ELES NÃO ERRAM MAIS', b: 'Inspetores de três postos relatam o mesmo: os documentos falsos ficaram perfeitos. As entrevistas, perfeitas. Os exames, inconclusivos. "É como se tivessem aprendido conosco tudo o que sabemos", disse um agente. "Ou como se nunca tivesse havido diferença."', m: ['Última linha de trem desativada.', 'O horóscopo pede desculpas e não faz previsões hoje.'] },
+  47: null, // o jornal não chega
+  48: null,
+};
+
+const FILLER_NEWS = [
+  { h: 'RACIONAMENTO DE ENERGIA AMPLIADO', b: 'O fornecimento elétrico será interrompido em bairros alternados — a escolha de palavras do Ministério foi considerada "infeliz". Reclamações devem ser protocoladas em formulário 77-B, disponível apenas online.' },
+  { h: 'FILA DO POSTO LESTE DOBRA EM UMA SEMANA', b: 'Migrantes relatam esperas de até três dias. Vendedores ambulantes lucram. Um homem afirma ter visto "a mesma mulher entrar na fila duas vezes, ao mesmo tempo". Testemunhas se contradizem.' },
+  { h: 'NOVO ESTUDO CONTRADIZ ESTUDO ANTERIOR', b: 'Pesquisadores de Nova República afirmam que o marcador celular K-7, tido como prova de substituição, também aparece em pacientes com febre reumática. O laboratório que criou o teste chamou o estudo de "sabotagem comercial".' },
+  { h: 'TARANSTAN NEGA EXISTÊNCIA DE ALTERNADOS', b: 'Em discurso de quatro horas, o Secretário-Geral afirmou que "o único parasita é o capital". Desertores relatam, entretanto, laboratórios subterrâneos na Usina 9. Taranstan chamou os desertores de "atores contratados".' },
+  { h: 'BAHAR-ZAD REABRE ARQUIVO DE MANUSCRITOS', b: 'Textos de setecentos anos descrevem "os que vestem rostos". Historiadores debatem se são profecia, coincidência ou má tradução. Peregrinos lotam o Poço das Vozes.' },
+  { h: 'CANTALABRIA OFERECE MEDIAÇÃO — DE NOVO', b: 'A diplomacia cantálabra propôs a quinta conferência do ano. Vazamentos sugerem que Alcorte "sabe mais do que divulga". Alcorte respondeu com um sorriso e um comunicado de duas linhas.' },
+  { h: 'MERCADO NEGRO VENDE "VACINA ANTI-ALTERNADO"', b: 'Frascos apreendidos continham água, açúcar e corante. Três mortos por injeção contaminada. A demanda, entretanto, triplicou após a apreensão.' },
+  { h: 'CRIANÇA PERGUNTA EM REDE NACIONAL: "COMO SEI QUE MAMÃE É MAMÃE?"', b: 'O apresentador não soube responder. O programa foi cortado para o hino. O trecho circula em fitas clandestinas.' },
+];
+
+const ADS = [
+  'VERITAS-9 — porque sua família merece a verdade. (LumenCorp)',
+  'Café Fronteira — aberto mesmo durante apagões.',
+  'Formulário 77-B: agora com apenas 9 páginas!',
+  'Aulas de caligrafia oficial. Assine como um patriota.',
+  'Compra-se ouro, relógios e memórias de família. Beco do Sal, 3.',
+  'Perdeu seus documentos? A fila do Cartório começa às 4h.',
+];
+
+/* ---------- COMUNICADOS (bulletins) ---------- */
+const SCRIPTED_BULLETIN = {
+  1: 'Inspetor: bem-vindo ao Posto Nº 7.\n\nHoje: verifique apenas se o PASSAPORTE é válido (não expirado) e pertence ao portador (foto e sexo).\n\nUse o botão INSPEÇÃO e clique em DOIS elementos para compará-los (ex.: validade × relógio; foto × rosto).\n\nErros geram advertência. Advertências geram multas. Multas geram fome.',
+  5: 'ATENÇÃO: a partir de hoje, PROCURADOS listados aqui devem ser DETIDOS (botão DETER, disponível após confirmar discrepância ou identificar o procurado).\n\nPROCURADO HOJE: ver lista no regulamento.',
+  12: 'NOVA ADMINISTRAÇÃO.\n\nO Estado Nacional Mehrvolk assume os postos de fronteira. Uniformes serão trocados. O inspetor que servia à República agora serve à Pureza.\n\nQuem não servir, será substituído. A palavra "substituído" não é uma metáfora. Ou é. Não pergunte.',
+  14: 'ÉDITO DE PUREZA Nº 2.\n\nViajantes de origem NÚLIA ou BAHARI devem portar CERTIFICADO DE ANCESTRALIDADE.\n\nNota do Instituto de Fenotipia: "traços do rosto podem indicar linhagem". Nota manuscrita de alguém no verso: "isso não é ciência".',
+  30: 'O CONSELHO POPULAR SAÚDA OS TRABALHADORES DA FRONTEIRA.\n\nTodos os decretos do regime anterior estão REVOGADOS. Documentos antigos exigem SELO DE REVALIDAÇÃO (★).\n\nOs "Alternados" são propaganda burguesa. Entretanto, continue reportando avistamentos ao Departamento 12, que não existe.',
+  43: 'COMUNICADO SEM TIMBRE.\n\nNão recebemos ordens há dias. O telefone está mudo. Aplique o bom senso.\n\nO que quer que isso signifique agora.',
+  47: 'Não há comunicado.\n\nHá apenas uma folha em branco com um carimbo: APROVAR.\n\nO botão REJEITAR não está mais na sua mesa. Você não lembra de alguém tê-lo levado.',
+  48: 'Último dia de registro no seu contrato.\n\nAssine o formulário de desligamento. Se ainda houver alguém para recebê-lo.',
+};
+
+/* ---------- PROCURADOS (dias com detainWanted) ---------- */
+const WANTED_DAYS = { 5: true, 8: true, 11: true, 16: true, 19: true, 22: true, 26: true, 29: true, 34: true, 39: true, 44: true };
+
+/* ---------- SUSSURROS (paranoia) ---------- */
+const WHISPERS = [
+  'aquela assinatura… você já viu antes. não viu?',
+  'ele piscou os dois olhos ao mesmo tempo. todo mundo pisca assim. certo?',
+  'o relógio atrasou dois minutos. ou você que adiantou.',
+  'quantas pessoas você aprovou ontem? tem certeza do número?',
+  'sua esposa mexeu no seu carimbo. por quê?',
+  'o café de hoje tinha o mesmo gosto de sempre. exatamente o mesmo.',
+  'a foto 3×4 sorriu. não. não sorriu.',
+  'você trancou a porta ao sair de casa. você sempre tranca. sempre?',
+];
+
+/* ---------- ENCONTROS SCRIPTADOS (personagens recorrentes) ---------- */
+/* Cada encontro define um cidadão especial injetado na fila do dia. */
+const ENCOUNTERS = {
+  2: {
+    id: 'elara1', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'professora', motivo: 'visita', valid: true,
+    fala: 'Vou cuidar da minha mãe em Kranton. Ela piorou no inverno. Volto em duas semanas, prometo. Digo… não que eu precise prometer nada ao senhor.',
+    nota: null,
+  },
+  5: {
+    id: 'dmarov', nome: 'Sgt. Radek Dmarov', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'soldado', motivo: 'transito', valid: true,
+    fala: 'Inspetor. Meu primo passa por aqui amanhã. Volkan Zubrek, de Krestov. Os papéis dele estão… quase em ordem. Feche um olho e a metade do que ele paga é sua. Pense com calma. Eu volto sempre.',
+    nota: { texto: 'AMANHÃ: Volkan Zubrek. Aprove. — R.D.', tipo: 'suborno_oferta' },
+  },
+  6: {
+    id: 'zubrek', nome: 'Volkan Zubrek', pais: 'krestov', sexo: 'm', etnia: 'osano',
+    profissao: 'comerciante', motivo: 'trabalho', valid: false, forcedDisc: 'expired',
+    fala: 'O sargento falou com você, não falou? Está tudo… combinado.',
+    briberia: 25,
+  },
+  8: {
+    id: 'marek1', nome: 'Joss Marek', pais: 'osteria', sexo: 'm', etnia: 'mestico',
+    profissao: 'barbeiro', motivo: 'transito', valid: true,
+    fala: 'Corto o cabelo de metade desta fila, sabia? A gente ouve coisas. Por exemplo: que o senhor tem um filho doente. E que gente como nós vai precisar de gente como o senhor. Guarde meu nome.',
+    nota: { texto: 'Quando precisar de remédio de verdade, procure o barbeiro. — J.M.', tipo: 'resistencia_contato' },
+  },
+  9: {
+    id: 'elara2', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'professora', motivo: 'trabalho', valid: false, forcedDisc: 'expired',
+    fala: 'Fui demitida enquanto cuidava da minha mãe. A escola diz que "meu perfil não serve mais". Minha permissão venceu ANTEONTEM, eu sei, eu sei — mas se eu voltar agora perco o apartamento e perco… tudo. Por favor. São dois dias.',
+  },
+  15: {
+    id: 'marek2', nome: 'Joss Marek', pais: 'osteria', sexo: 'm', etnia: 'mestico',
+    profissao: 'barbeiro', motivo: 'transito', valid: true,
+    fala: 'Amanhã passa por aqui uma "prima" minha. Nadia Baruk, de Frimia. Os papéis dela têm um defeito de fábrica, digamos. Ela carrega remédios para um hospital clandestino. Aprove, e o remédio do seu filho aparece na sua porta. Recuse, e… bom, cada um vive com o que escolhe.',
+    nota: { texto: 'AMANHÃ: Nadia Baruk. O remédio existe. A escolha é sua. — J.M.', tipo: 'resistencia_pedido' },
+  },
+  16: {
+    id: 'courier', nome: 'Nadia Baruk', pais: 'frimia', sexo: 'f', etnia: 'mestico',
+    profissao: 'enfermeira', motivo: 'transito', valid: false, forcedDisc: 'wrongSeal',
+    fala: 'O barbeiro mandou lembranças.',
+    resistencia: true,
+  },
+  18: {
+    id: 'elara3', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'professora', motivo: 'visita', valid: false, forcedMissing: 'sanitaria',
+    fala: 'Estou grávida. O pai ficou do outro lado. Eu só quero atravessar antes que… antes que inventem mais um papel que eu não tenho. Não tenho a carteira sanitária. O posto médico da minha cidade FECHOU. Como eu apresento um papel de um lugar que não existe mais?',
+  },
+  21: {
+    id: 'odim', nome: 'Vela Odim', pais: 'osteria', sexo: 'f', etnia: 'osano',
+    profissao: 'jornalista', motivo: 'transito', valid: true,
+    fala: 'Estou escrevendo sobre os postos de triagem. Sobre quantos "positivos" eram só gente doente, nervosa ou azarada. Uma pergunta, inspetor, sem caneta na mão: o senhor já teve certeza de alguma coisa aqui dentro? Uma única vez?',
+  },
+  24: {
+    id: 'elara4', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'costureira', motivo: 'imigracao', valid: false, forcedDisc: 'nameMismatch',
+    fala: 'O senhor de novo. Que sorte a minha. — Ela não sorri mais. — Está tudo em ordem dessa vez. Tudo. Pode olhar o quanto quiser.',
+  },
+  33: {
+    id: 'dmarov2', nome: 'Radek Dmarov', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'desempregado', motivo: 'imigracao', valid: false, forcedDisc: 'numberMismatch',
+    fala: 'Sem farda fica difícil me reconhecer, é? O Conselho está prendendo todo mundo que serviu antes. TODO MUNDO. Você inclusive está na lista, mais cedo ou mais tarde. Me deixa passar e eu esqueço seu nome quando perguntarem.',
+  },
+  38: {
+    id: 'mercador', nome: 'Sorenn Ledger', pais: 'linestan', sexo: 'm', etnia: 'osano',
+    profissao: 'comerciante', motivo: 'trabalho', valid: true,
+    fala: 'Seu detector biológico está descalibrado há semanas — eu vendo o serviço de calibração. 40 ostras e ele volta a funcionar de verdade. Barato, considerando o preço de um erro. A LumenCorp me odeia, o que é sempre bom sinal.',
+    vendeCalibracao: 40,
+  },
+  41: {
+    id: 'elara5', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'professora', motivo: 'imigracao', valid: true, scannerAmbiguo: true,
+    fala: '…O bebê nasceu. Está com a minha irmã. Eu atravesso hoje ou não atravesso nunca. — Ela olha para você como quem decora um rosto. — Engraçado. Não lembro mais se o senhor sempre foi assim. Mais velho. Diferente. A gente muda, não é? Todo mundo muda.',
+  },
+  44: {
+    id: 'esposa', nome: 'Vessa (sua esposa)', pais: 'osteria', sexo: 'f', etnia: 'osano',
+    profissao: 'arquivista', motivo: 'transito', valid: true, memoria: true,
+    fala: 'Você me disse ONTEM para atravessar hoje. Na cozinha. Você segurou minhas mãos e disse "vá antes de mim, eu encontro vocês". — Você não disse isso. Você tem certeza de que não disse isso. — Por que está me olhando assim?',
+  },
+  47: {
+    id: 'lembranca', nome: 'Havel Krantic', pais: 'kranton', sexo: 'm', etnia: 'nulio',
+    profissao: 'ferroviário', motivo: 'imigracao', valid: true, memoria: true,
+    fala: 'Nós já conversamos, há duas semanas. O senhor usava uma caneca azul lascada na borda. Reclamou do frio e carimbou meu passaporte duas vezes sem querer. — Você nunca viu este homem. A caneca azul está na sua mesa. Lascada na borda.',
+  },
+};
+
+/* ---------- EVENTOS DE CASA ---------- */
+const HOME_EVENTS = {
+  4:  { texto: 'Seu filho, Tomi, acordou tossindo. Vessa acha que é o frio. Sua mãe acha que é "outra coisa" e não explica o quê.', efeito: null },
+  7:  { texto: 'Tomi piorou. O médico do bairro emigrou na semana passada. O remédio custa caro na farmácia — quando tem.', efeito: 'filho_doente' },
+  10: { texto: 'Vessa foi rebaixada no arquivo público: "corte de pessoal por critério de confiabilidade". Ela não te olha nos olhos ao contar.', efeito: 'renda_menor' },
+  13: { texto: 'Distribuíram bandeiras novas no seu bloco. O vizinho que não pendurou a dele recebeu uma visita à noite. Hoje a bandeira dele é a maior do prédio.', efeito: null },
+  17: { texto: 'Sua mãe rasgou o formulário de ancestralidade. "Eu SEI quem eu sou." Vessa colou os pedaços de madrugada, chorando baixinho para ninguém ouvir.', efeito: null },
+  20: { texto: 'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.', efeito: null },
+  26: { texto: 'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?', efeito: null },
+  31: { texto: 'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.', efeito: 'aluguel_maior' },
+  36: { texto: 'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?', efeito: null },
+  42: { texto: 'Tomi perguntou no jantar: "Pai, se trocarem você, eu vou perceber?" Ninguém riu. Ninguém respondeu. O relógio da cozinha nunca fez tanto barulho.', efeito: null },
+  45: { texto: 'Vessa fez as malas. "Quando isso acabar, a gente atravessa também. Do outro lado deve ser igual — mas pelo menos é longe." Você concorda. Concordar é mais fácil.', efeito: null },
+};
+
+/* ---------- FINAIS ---------- */
+const ENDINGS = {
+  prisao: {
+    t: 'FINAL — O FORMULÁRIO 77-B',
+    b: 'Vieram buscá-lo no meio do turno. As acusações mudaram três vezes durante a leitura: negligência, sabotagem, "inconsistência epistemológica". A cela é fria e o processo, eterno.\n\nNo interrogatório, o agente folheia seu histórico completo — cada carimbo, cada hesitação, cada segundo a mais que você gastou olhando um rosto.\n\n"O senhor entende", diz ele sem levantar os olhos, "que nós também estávamos inspecionando você. Desde o primeiro dia."\n\nVocê entende. Agora entende.',
+  },
+  familia: {
+    t: 'FINAL — A CASA VAZIA',
+    b: 'O posto continua lá. Você continua nele. Carimba, aprova, rejeita, com uma precisão que virou lenda entre os guardas.\n\nEm casa, ninguém espera. A mesa posta para um. O silêncio, pontual como você.\n\nDizem que você é o melhor inspetor que a fronteira já teve. Dizem que você nunca erra.\n\nErrou uma vez. As vezes que importavam.',
+  },
+  resistencia: {
+    t: 'FINAL — A ROTA DO BARBEIRO',
+    b: 'Na madrugada do dia 49, alguém bate três vezes na sua porta. Depois duas. Depois uma.\n\nO barbeiro envelheceu dez anos em dez dias. "Tem lugar para a sua família na rota do sul. Sem documentos. Sem carimbos. Sem perguntas."\n\nVocê, que passou 48 dias exigindo papéis, atravessa a fronteira sem nenhum.\n\nDo outro lado, uma mulher da rota aperta sua mão e sorri um segundo a mais do que devia. Você decide não pensar nisso. Você decide isso todos os dias, pelo resto da vida.',
+  },
+  silencio: {
+    t: 'FINAL — A CIDADE SILENCIOSA',
+    b: 'A guerra não veio. O colapso passou, como passam as tempestades.\n\nA cidade se reconstrói com uma eficiência que ninguém lembra de ter visto antes. Os vizinhos são gentis. As filas, ordeiras. Ninguém grita, ninguém rouba, ninguém chora alto.\n\nÀ noite, você conta nos dedos quantos você deixou passar. Para de contar quando os dedos acabam.\n\nSua esposa dorme serena ao seu lado. A respiração dela é perfeita. Perfeitamente regular. Perfeita demais?\n\nVocê fecha os olhos. É mais fácil assim.',
+  },
+  funcionario: {
+    t: 'FINAL — A MEDALHA',
+    b: 'Sobrou gente suficiente para uma cerimônia. Um homem de casaco cinza prende uma medalha no seu peito: "Servidor Exemplar — 48 dias sem desvio".\n\nAs mãos dele estão frias. Todas as mãos estão frias em novembro, você pensa. Todas.\n\n"O Estado agradece", diz ele. Qual Estado, você não pergunta. A medalha não especifica.\n\nNo verso dela, minúsculo, o número de série: o mesmo do seu carimbo. Você foi, no fim, a peça que melhor funcionou.\n\nA máquina é que talvez nunca tenha existido.',
+  },
+  duvida: {
+    t: 'FINAL — O ESPELHO',
+    b: 'Dia 49. O posto amanhece sem fila. Sem guardas. Sem ordens.\n\nVocê senta na cadeira mesmo assim — quarenta e oito dias criam sulcos — e percebe que há alguém do outro lado do vidro.\n\nÉ o seu reflexo. Claro que é. O vidro sempre refletiu.\n\nVocê desliza os seus próprios documentos pela bandeja, por hábito, por piada, por desespero. Nome. Foto. Assinatura.\n\nA assinatura está correta. Você acha. Você assinava assim há 48 dias?\n\nO reflexo espera, paciente, a sua decisão.',
+  },
+};
+
+/* ============================================================
+   EXAME FÍSICO, BOATOS E NOITES
+   (a camada "No, I'm Not a Human": o corpo como documento —
+   e o boato como lei. Alguns sinais têm correlação real com
+   Alternados. Outros são pura lenda. O jogo NUNCA diz quais.)
+   ============================================================ */
+
+/* ---------- SINAIS FÍSICOS (tells) ----------
+   humanBase: chance em humanos comuns
+   confound:  acréscimo em humanos doentes/nervosos/exaustos
+   altBonus:  acréscimo REAL em Alternados (0 = boato sem fundamento) */
+const TELLS = {
+  piscar:  { zona: 'olhos', humanBase: .04, confound: .02, altBonus: .45,
+    achado: 'Não piscou uma única vez durante todo o exame.',
+    normal: 'Pisca em ritmo comum. Um pouco rápido, talvez. Frio faz isso.' },
+  olhos:   { zona: 'olhos', humanBase: .12, confound: .18, altBonus: .15,
+    achado: 'Escleras injetadas, vasos escuros demais. (Choro recente? Insônia? Outra coisa?)',
+    normal: 'Olhos cansados. Como os de todo mundo nesta fila.' },
+  dentes:  { zona: 'boca', humanBase: .08, confound: .05, altBonus: .15,
+    achado: 'Dentição perfeita demais. Gengivas pálidas, sem irrigação visível.',
+    normal: 'Dentes gastos, um canino lascado. Uma boca que comeu pão duro a vida inteira.' },
+  pele:    { zona: 'pele', humanBase: .07, confound: .08, altBonus: 0,
+    achado: 'Pele cerosa, quase sem poros. (Ou apenas sabão de má qualidade e vento norte.)',
+    normal: 'Pele rachada de frio. Cicatriz antiga no queixo.' },
+  maos:    { zona: 'maos', humanBase: .06, confound: .04, altBonus: 0,
+    achado: 'Dedos compridos demais para as mãos. Unhas sem meia-lua.',
+    normal: 'Mãos calejadas. Aliança apertada demais para sair.' },
+  pescoco: { zona: 'pescoco', humanBase: .04, confound: .03, altBonus: .40,
+    achado: 'O pulso no pescoço é visível. Lento. Lento demais. Você conta seis batimentos no minuto.',
+    normal: 'Pulso acelerado sob a pele. Gente com medo tem coração audível.' },
+};
+const TELL_IDS = Object.keys(TELLS);
+const TELL_LABEL = { piscar: 'piscar', olhos: 'olhos', dentes: 'dentes', pele: 'pele', maos: 'mãos', pescoco: 'pescoço' };
+
+/* ---------- BOATO DO DIA ----------
+   A partir do dia 3, todo comunicado traz um "sinal". Sob o regime
+   Mehrvolk (14–42) o boato vira doutrina OFICIAL: deter com base
+   nele deixa de gerar advertência — mesmo quando o sinal é lenda. */
+const RUMOR_TEXT = {
+  piscar:  ['Dizem nas filas: "eles não piscam".', 'O Instituto de Fenotipia CONFIRMA: ausência de reflexo palpebral é indicador Classe-2.'],
+  olhos:   ['Boato de rádio clandestina: "olho vermelho, sangue trocado".', 'Circular oficial: hiperemia ocular consta como indicador Classe-3.'],
+  dentes:  ['Um dentista de Miralta jura: "dente perfeito, gente falsa".', 'Nota técnica: dentição íntegra em adultos de baixa renda é estatisticamente anômala.'],
+  pele:    ['Dizem que a pele deles não tem poros. Minha avó dizia o mesmo de anjos.', 'O Ministério lista "epiderme atípica" como indicador auxiliar.'],
+  maos:    ['"Olha as mãos. Eles erram as mãos." — pichação na Praça do Sal.', 'Manual revisado: proporção falangeana irregular deve ser reportada.'],
+  pescoco: ['Um enfermeiro desertor: "o coração deles bate devagar. Muito devagar."', 'Boletim médico-estatal: bradicardia extrema é indicador Classe-1.'],
+};
+function rumorForDay(d) {
+  if (d < 3 || d >= 47) return null;
+  const tell = TELL_IDS[(d * 7 + 3) % TELL_IDS.length];
+  const official = d >= 14 && d <= 42;
+  return { tell, official, text: RUMOR_TEXT[tell][official ? 1 : 0] };
+}
+
+/* ---------- VISITAS NOTURNAS ----------
+   Entre o expediente e a manhã. O olho mágico. A porta.
+   efeitos: money, audit, flag, echo (jornal), after (texto pós-escolha) */
+const NIGHT_EVENTS = {
+  3: {
+    quem: 'Batidas educadas. 22h40.', sexo: 'm',
+    texto: 'É Bruno, do 12. O aquecimento do bloco dele quebrou. Ele segura um cobertor dobrado como quem segura um pedido de desculpas. "Só esta noite. A Vessa me conhece."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'Ele dorme no sofá sem se mexer. De manhã, dobra o cobertor em silêncio e agradece três vezes. Vessa diz que você fez certo. Você concorda. Quase.' },
+      { label: 'NÃO ABRIR', after: 'Os passos se afastam. No dia seguinte, Bruno não te cumprimenta. Nunca mais.', echo: 'Um morador do Bloco 14 passou a noite no vão da escada. Vizinhos "não ouviram nada".' },
+    ],
+  },
+  6: {
+    quem: 'Três batidas firmes. 23h15.', sexo: 'm',
+    texto: 'Dois homens de casaco comprido. "Vistoria de rotina, inspetor. O senhor entende." Pela fresta, você vê que um deles não olha para você — olha para DENTRO.',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'Eles andam pelo apartamento anotando nada em pranchetas vazias. Na saída: "Tudo em ordem. Por enquanto." Vessa não dorme mais essa noite.' },
+      { label: 'NÃO ABRIR', audit: 1, after: '"Anotado", diz a voz, sem raiva nenhuma. É a falta de raiva que fica com você.' },
+    ],
+  },
+  10: {
+    quem: 'Batidas fracas. 2h da manhã.', sexo: 'f',
+    texto: 'Uma mulher com um bebê enrolado. "Água. Só água, por favor." O corredor está gelado. O bebê não chora. Em nenhum momento o bebê chora.',
+    escolhas: [
+      { label: 'ABRIR E DAR ÁGUA', after: 'Ela bebe, agradece com a testa encostada no batente e desce a escada. Você fica ouvindo. Os passos são só dela. Só dela?' },
+      { label: 'FALAR PELA PORTA: "NÃO POSSO"', after: '"Eu entendo", diz ela. E o pior é que a voz parece entender mesmo.', echo: 'Uma mulher não identificada foi encontrada dormindo no saguão do Bloco 14. Ao amanhecer, já não estava.' },
+    ],
+  },
+  13: {
+    quem: 'Não é na sua porta. 3h20.', sexo: 'm',
+    texto: 'Botas no corredor. Muitas. A porta do 9 — o professor aposentado que não pendurou a bandeira — abre e fecha. Depois, o silêncio organizado de gente treinada. Vessa aperta sua mão no escuro.',
+    escolhas: [
+      { label: 'OLHAR PELO OLHO MÁGICO', after: 'Você vê costas de uniforme e, entre elas, os chinelos do professor. Um dos homens PARA. Vira o rosto para a sua porta. Você para de respirar até os passos acabarem.' },
+      { label: 'NÃO OLHAR', after: 'Você conta os passos. Sete pessoas descem. Subiram seis. Você refaz a conta a noite inteira e ela nunca fecha.' },
+    ],
+  },
+  19: {
+    quem: '—', sexo: 'm',
+    texto: 'Você acorda sem saber por quê. Então percebe: a maçaneta da porta da frente está girando. Devagar. Com paciência. Quem tem chave não gira assim. Quem não tem, não deveria girar.',
+    escolhas: [
+      { label: 'ACENDER A LUZ', after: 'A maçaneta para no meio do giro. Nenhum passo se afasta — e isso é o que você vai contar ao médico quando ele perguntar da insônia: NENHUM passo se afastou.' },
+      { label: 'FICAR IMÓVEL NO ESCURO', after: 'O giro completa. A porta, trancada, não abre. A maçaneta volta à posição com um cuidado quase gentil. De manhã, há um risco fino no metal. Sempre houve?' },
+    ],
+  },
+  22: {
+    quem: 'Batidinhas na altura do joelho. 1h50.', sexo: 'm',
+    texto: 'Uma voz de criança: "Moço, eu me perdi. Sou amigo do Tomi." Você olha para o quarto: Tomi dorme, respiração funda. A voz insiste, paciente: "Moço. Eu conheço o Tomi."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'O corredor está vazio. Frio, e vazio. No dia seguinte, Tomi pergunta do nada: "Pai, o Nico veio aqui ontem?" Você não pergunta quem é Nico.' },
+      { label: 'NÃO ABRIR', after: 'As batidinhas continuam por vinte minutos exatos. Depois: "tá bom. outro dia." Você não conta para a Vessa. Não existe frase para contar isso.' },
+    ],
+  },
+  28: {
+    quem: 'Uma batida só. Pesada. 23h55.', sexo: 'm',
+    texto: 'Casaco cinza, pasta de couro, sorriso de repartição. "Polícia Política. Rotina. O senhor notou algo... incomum nos seus vizinhos? Qualquer detalhe ajuda. Qualquer um."',
+    escolhas: [
+      { label: 'DIZER QUE NÃO NOTOU NADA', after: '"Curioso", diz ele anotando, "todo mundo neste bloco não notou nada." Ele agradece com uma cortesia que pesa como intimação.', audit: 1 },
+      { label: 'MENCIONAR O 7 (a família nova, quieta demais)', flag: 'denunciouVizinho', after: 'Ele nem anota — já sabia. "Excelente memória, inspetor." Três dias depois, o 7 está vazio e você atravessa o corredor olhando o chão.', echo: 'Uma família do Bloco 14 foi "convidada a colaborar". Os móveis saíram de manhã. Ninguém viu as pessoas saírem.' },
+    ],
+  },
+  32: {
+    quem: 'Batem do LADO DE DENTRO da parede da cozinha. Não. Batem na porta. Claro que é na porta. 0h30.', sexo: 'f',
+    texto: 'É a mulher da família realocada que divide seu apartamento. "Sal", diz ela, com a mão estendida. Vessa entrega o pote. A mulher agradece com um aceno perfeito e volta ao quarto onde eles cozinham todas as noites. Sem cheiro. Nunca há cheiro.',
+    escolhas: [
+      { label: 'PERGUNTAR O QUE ESTÃO COZINHANDO', after: '"Sopa", responde ela, depois de um segundo a mais. "De quê?" — "Sopa." A porta do quarto fecha com o clique mais educado do mundo.' },
+      { label: 'NÃO PERGUNTAR NADA', after: 'Você fica olhando o pote de sal na mão dela até a porta fechar. No dia seguinte o pote está de volta na prateleira. Cheio. Exatamente como estava. Exatamente.' },
+    ],
+  },
+  39: {
+    quem: 'Batidas rápidas, nervosas. 23h10.', sexo: 'm',
+    texto: 'Um homem magro, suando frio. Abre um pano: ₴60 em notas miúdas. "Pelo seu carimbo. Uma noite. Devolvo antes do turno. Ninguém carimba nada, eu juro — é só para FOTOGRAFAR."',
+    escolhas: [
+      { label: 'ACEITAR ₴60', money: 60, audit: 2, after: 'O carimbo volta de madrugada, embrulhado em jornal, com um fio de tinta que você não usou. Você lava três vezes. O cheiro de tinta fica.' },
+      { label: 'FECHAR A PORTA', after: '"Todo mundo tem preço, inspetor", diz a voz descendo a escada. "O seu só ainda não bateu na porta certa."' },
+    ],
+  },
+  43: {
+    quem: 'Batidas. Espaçadas. A noite inteira.', sexo: 'm',
+    texto: 'Uma a cada vinte minutos, aproximadamente. Você olha pelo olho mágico: corredor vazio. A batida seguinte soa ENQUANTO você olha. No corredor vazio. Tomi acorda. Sua mãe reza baixo. Vessa olha para você como quem cobra uma profissão inteira: você não sabia inspecionar?',
+    escolhas: [
+      { label: 'ABRIR A PORTA DE UMA VEZ', after: 'Nada. Ar frio. E na parede em frente, escrito a dedo no gelo da janela do corredor: uma palavra que derrete antes de você terminar de ler. Começava com a sua inicial.' },
+      { label: 'SENTAR CONTRA A PORTA ATÉ AMANHECER', after: 'Às 5h13 as batidas param. Às 5h14, uma última — suave, quase um pedido de desculpas — na porta do quarto do Tomi. Do lado de dentro do apartamento.' },
+    ],
+  },
+  46: {
+    quem: 'A voz da sua mãe. 2h33.', sexo: 'f',
+    texto: '"Filho. Abre. Esqueci a chave." Você atravessa o corredor do apartamento. O quarto da sua mãe está fechado. Você abre uma fresta: ela dorme, respiração miúda, o terço na mão. Na porta da frente, a voz repete, idêntica, paciente: "Filho. Está frio aqui fora."',
+    escolhas: [
+      { label: 'ABRIR A PORTA', after: 'O corredor está vazio até onde a luz alcança. Do vão da escada, ainda com a voz dela: "amanhã, então." Você tranca a porta com as duas mãos, porque uma só não obedece.' },
+      { label: 'ENCOSTAR A TESTA NA PORTA E ESPERAR', after: 'A voz espera junto. Você sente — sem som nenhum — que do outro lado alguém encostou a testa também. Vocês ficam assim muito tempo. De manhã, sua mãe pergunta por que você dormiu no chão da sala.' },
+    ],
+  },
+};
+
+/* ---------- BAGAGEM: objetos contam histórias ---------- */
+const BAG_POOLS = {
+  comum: [
+    'Roupas dobradas com pressa', 'Pão embrulhado em jornal de anteontem',
+    'Fotografia de família com o canto queimado', 'Terço gasto de tanto uso',
+    'Caderno de endereços com metade dos nomes riscados', 'Relógio de bolso parado às 3h12',
+    'Meias de lã tricotadas à mão', 'Livro sem capa, com frases sublinhadas a lápis',
+  ],
+  trabalho: ['Ferramentas envoltas em pano oleoso', 'Luvas de solda gastas', 'Carta de recomendação amassada e reamassada'],
+  tratamento: ['Frascos de remédio quase vazios', 'Radiografia em envelope pardo', 'Receita médica dobrada em oito'],
+  visita: ['Presente embrulhado (o papel foi aberto e refeito)', 'Bolo de mel envolto em pano de prato', 'Maço de cartas amarrado com barbante'],
+  estudo: ['Livros didáticos de segunda mão', 'Caderno novo com a primeira página arrancada'],
+  imigracao: ['A chave de uma porta que não existe mais', 'Escritura de uma casa vendida às pressas', 'Álbum de fotografias completo, pesado demais para quem viaja leve'],
+  transito: ['Quase nada: uma muda de roupa', 'Mapa com uma rota marcada a lápis — e outra, apagada'],
+};
+const BAG_ONEWAY = { fid: 'bag.oneway', txt: 'Passagem de trem — SÓ IDA', desc: 'Comprada há três dias. Não há passagem de volta em lugar nenhum desta bagagem.' };
+const BAG_CONTRABAND = [
+  'Frascos sem rótulo com líquido âmbar', 'Maço de passaportes EM BRANCO',
+  'Peças metálicas que, montadas, deixariam de ser inocentes', 'Carimbo oficial do Ministério — que não deveria estar aqui',
+];
+const BAG_HERRINGS = [
+  'Roupas masculinas na mala de uma viajante — (fuga? luto? não é crime)',
+  'Brinquedos infantis — e nenhuma criança na viagem',
+  'Aliança guardada na caixinha, não no dedo',
+  'Diário com as últimas dez páginas arrancadas',
+  'Uniforme militar dobrado no fundo — sem insígnias',
+];
+
+/* ---------- RÁDIO DIEGÉTICA (3 emissoras + estática) ---------- */
+const RADIO = {
+  republica: [
+    '[ESTATAL] O ministro pede calma e confiança nos processos de triagem.',
+    '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.',
+    '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.',
+    '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.',
+    '[CLANDESTINA] …se está ouvindo isto, o térmico do posto 7 está descalibrado desde terça…',
+    '[ESTATAL] Música: "Manhãs de Ostra Velha", com a Orquestra Nacional.',
+    '[LIVRE] Entrevista: "falso positivo destruiu minha família", diz operário.',
+  ],
+  mehrvolk: [
+    '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
+    '[ESTATAL] Aprendam com as crianças da Escola 4: "Quem cala, protege!"',
+    '[ESTATAL] O Instituto confirma: os indicadores funcionam. Os números não serão divulgados.',
+    '[CLANDESTINA] …os números vazaram: nove inocentes por captura. repasse antes que cortem…',
+    '[CLANDESTINA] …não usem as palavras deles. "substituído" é uma palavra deles…',
+    '[ESTATAL] Marcha "Filhos do Amanhã Limpo" — a pedido dos ouvintes. De todos eles.',
+  ],
+  conselho: [
+    '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
+    '[ESTATAL] A cota de otimismo desta semana foi CUMPRIDA.',
+    '[CLANDESTINA] …o laboratório da Usina 9 recebeu caminhões de novo esta noite…',
+    '[ESTATAL] Informe: o açúcar voltará às prateleiras quando você merecer. Correção: quando houver estoque.',
+    '[CLANDESTINA] …eles trocaram a bandeira do prédio, não o que acontece no porão…',
+  ],
+  colapso: [
+    '‹estática›',
+    '‹estática, e por baixo dela, quase uma voz›',
+    '[?] …alguém aí? câmbio… …alguém… câmbio…',
+    '‹o hino antigo, tocando sozinho, em loop, num estúdio vazio›',
+    '[?] …não abram para quem já mora com vocês… ‹corte›',
+  ],
+};
+
+/* ---------- CIDADES/CLIMA flavor da fila ---------- */
+const QUEUE_CHATTER = [
+  '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',
+  '"…ela não era ela, eu juro…"', '"…vendo pão, meia ostra…"', '"…não olha nos olhos dele…"',
+  '"…o inspetor de sexta é pior…"', '"…açúcar. eles odeiam açúcar…"', '"…quieto, tem gente ouvindo…"',
+];
+
+</script>
+<script>
+/* ============================================================
+   HUMANOCRACY — game.js
+   Motor: cidadãos procedurais, inspeção, IA adaptativa,
+   economia familiar, 48 dias, finais.
+   ============================================================ */
+'use strict';
+
+/* ---------- RNG ---------- */
+let _seed = Date.now() % 2147483647;
+function rnd() { _seed = (_seed * 48271) % 2147483647; return (_seed - 1) / 2147483646; }
+function ri(a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
+function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+function chance(p) { return rnd() < p; }
+
+/* ---------- ÁUDIO ---------- */
+let AC = null;
+function sfx(kind) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const o = AC.createOscillator(), g = AC.createGain();
+    o.connect(g); g.connect(AC.destination);
+    if (kind === 'stamp') { o.type = 'square'; o.frequency.setValueAtTime(70, t); g.gain.setValueAtTime(.25, t); g.gain.exponentialRampToValueAtTime(.001, t + .18); o.start(t); o.stop(t + .2); }
+    else if (kind === 'buzz') { o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .5); o.start(t); o.stop(t + .5); }
+    else if (kind === 'ding') { o.type = 'sine'; o.frequency.setValueAtTime(660, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
+    else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
+    else if (kind === 'knock') {
+      for (let i = 0; i < 3; i++) {
+        const o2 = AC.createOscillator(), g2 = AC.createGain();
+        o2.connect(g2); g2.connect(AC.destination);
+        const tt = t + i * .5;
+        o2.type = 'sine'; o2.frequency.setValueAtTime(58, tt);
+        g2.gain.setValueAtTime(.28, tt); g2.gain.exponentialRampToValueAtTime(.001, tt + .22);
+        o2.start(tt); o2.stop(tt + .25);
+      }
+    }
+  } catch (e) { /* áudio indisponível */ }
+}
+
+/* ---------- ESTADO ---------- */
+const SAVE_KEY = 'humanocracy_save_v1';
+let S = null;
+function freshState() {
+  return {
+    day: 1, money: 30, citTotal: 0,
+    family: {
+      vessa: { nome: 'Vessa (esposa)', alive: true, sick: false, sickDays: 0, hunger: 0 },
+      tomi: { nome: 'Tomi (filho, 8 anos)', alive: true, sick: false, sickDays: 0, hunger: 0 },
+      mae: { nome: 'Sua mãe, Odila', alive: true, sick: false, sickDays: 0, hunger: 0 },
+    },
+    flags: {}, counters: {
+      approved: 0, rejected: 0, detained: 0, correct: 0, wrong: 0,
+      alternadosIn: 0, alternadosCaught: 0, alternadosBlocked: 0,
+      innocentsDetained: 0, bribes: 0, bribeMoney: 0, resHelped: 0,
+    },
+    ai: { det: {} },           // IA adaptativa: quantas vezes cada discrepância foi detectada
+    bioCalibrated: false,
+    pendingNews: [],           // consequências tardias {day, text}
+    rent: 15,
+    seedBase: Math.floor(Math.random() * 1e9),
+  };
+}
+function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function loadSave() { try { const j = localStorage.getItem(SAVE_KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+
+/* ---------- DATAS DO MUNDO ---------- */
+const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
+function worldDate(day) { // dia 1 = 3 OUT 1957
+  const d = new Date(1957, 9, 2 + day);
+  return { d: d.getDate(), m: d.getMonth(), y: d.getFullYear(), ts: d.getTime() };
+}
+function fmtDate(dt) { return `${dt.d} ${MONTHS[dt.m]} ${dt.y}`; }
+function randomDateAround(day, minOff, maxOff) { // offset em dias
+  const base = new Date(1957, 9, 2 + day + ri(minOff, maxOff));
+  return { d: base.getDate(), m: base.getMonth(), y: base.getFullYear(), ts: base.getTime() };
+}
+
+/* ---------- DOM ---------- */
+const $ = (id) => document.getElementById(id);
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+}
+function setRegimeClass(day) {
+  document.body.className = '';
+  document.body.classList.add('regime-' + regimeOfDay(day));
+}
+
+/* ---------- MODAL ---------- */
+function modal(title, body, actions) {
+  $('modal-title').textContent = title;
+  $('modal-body').textContent = body;
+  const box = $('modal-actions'); box.innerHTML = '';
+  (actions || [{ label: 'OK' }]).forEach(a => {
+    const b = document.createElement('button');
+    b.textContent = a.label;
+    b.onclick = () => { $('modal-overlay').classList.remove('active'); if (a.fn) a.fn(); };
+    box.appendChild(b);
+  });
+  $('modal-overlay').classList.add('active');
+}
+
+/* ---------- CITAÇÃO ---------- */
+let citTimer = null;
+function citation(text) {
+  sfx('buzz');
+  S.citTotal++;
+  shift.citToday++;
+  let fine = 0;
+  if (shift.citToday > 2) { fine = 5; S.money = Math.max(-50, S.money - 5); }
+  $('citation-body').textContent = text + (fine ? `\nMULTA: ${MOEDA} ${fine}` : '\nADVERTÊNCIA REGISTRADA.');
+  $('citation').classList.add('active');
+  clearTimeout(citTimer);
+  citTimer = setTimeout(() => $('citation').classList.remove('active'), 4200);
+  updateHud();
+}
+
+/* ---------- SUSSURROS ---------- */
+function whisper() {
+  const w = $('whisper');
+  w.textContent = pick(WHISPERS);
+  w.style.left = ri(15, 60) + '%';
+  w.style.top = ri(20, 70) + '%';
+  w.classList.remove('active'); void w.offsetWidth; w.classList.add('active');
+}
+
+/* ---------- RETRATOS (SVG procedural) ---------- */
+const SKINS = ['#e8c39e', '#d9a878', '#c68d5c', '#a9744f', '#8c5a3c', '#f0d0b0'];
+const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919', '#7a2f1a', '#b5b5a5'];
+function genFeatures(sexo) {
+  return {
+    skin: ri(0, SKINS.length - 1), hair: ri(0, HAIRC.length - 1),
+    hairStyle: ri(0, 3), eyes: ri(0, 2), mouth: ri(0, 2),
+    beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(.22),
+    brow: ri(0, 1), faceW: ri(0, 2), sexo,
+  };
+}
+function mutateFeatures(f) { // para foto divergente
+  const g = JSON.parse(JSON.stringify(f));
+  g.hairStyle = (g.hairStyle + ri(1, 3)) % 4;
+  g.hair = (g.hair + ri(1, 4)) % HAIRC.length;
+  if (g.sexo === 'm') g.beard = (g.beard + ri(1, 2)) % 3;
+  else g.glasses = !g.glasses;
+  return g;
+}
+function portraitSVG(f, w) {
+  const skin = SKINS[f.skin], hair = HAIRC[f.hair];
+  const fw = 26 + f.faceW * 3;
+  let s = '';
+  // ombros
+  s += `<path d="M15 120 Q15 92 50 90 Q85 92 85 120 Z" fill="#3a3c33"/>`;
+  // pescoço
+  s += `<rect x="43" y="72" width="14" height="22" fill="${skin}"/>`;
+  // cabeça
+  s += `<ellipse cx="50" cy="52" rx="${fw}" ry="30" fill="${skin}"/>`;
+  // cabelo
+  const hs = f.hairStyle;
+  if (hs === 0) s += `<path d="M${50 - fw} 52 Q${50 - fw} 20 50 20 Q${50 + fw} 20 ${50 + fw} 52 L${50 + fw} 40 Q50 26 ${50 - fw} 40 Z" fill="${hair}"/>`;
+  if (hs === 1) s += `<path d="M${50 - fw} 55 Q${50 - fw - 4} 14 50 16 Q${50 + fw + 4} 14 ${50 + fw} 55 Q${50 + fw - 6} 34 50 32 Q${50 - fw + 6} 34 ${50 - fw} 55 Z" fill="${hair}"/>`;
+  if (hs === 2) s += `<ellipse cx="50" cy="32" rx="${fw - 4}" ry="12" fill="${hair}"/>`;
+  if (hs === 3) s += `<path d="M${50 - fw} 50 Q50 8 ${50 + fw} 50 L${50 + fw} 62 Q${50 + fw - 8} 44 50 44 Q${50 - fw + 8} 44 ${50 - fw} 62 Z" fill="${hair}"/>`;
+  // sobrancelhas
+  const by = f.brow ? 43 : 45;
+  s += `<rect x="${38 - f.faceW}" y="${by}" width="10" height="2.4" fill="${hair}"/><rect x="${52 + f.faceW}" y="${by}" width="10" height="2.4" fill="${hair}"/>`;
+  // olhos
+  const ey = 50, eo = ['#2b2820', '#3a5a4a', '#54432a'][f.eyes];
+  s += `<circle cx="${42 - f.faceW}" cy="${ey}" r="2.6" fill="${eo}"/><circle cx="${58 + f.faceW}" cy="${ey}" r="2.6" fill="${eo}"/>`;
+  // nariz
+  s += `<path d="M50 52 L48 60 L52 60" stroke="${HAIRC[0]}" stroke-width="1" fill="none" opacity=".5"/>`;
+  // boca
+  const my = 68;
+  if (f.mouth === 0) s += `<line x1="44" y1="${my}" x2="56" y2="${my}" stroke="#7a4a3a" stroke-width="2"/>`;
+  if (f.mouth === 1) s += `<path d="M44 ${my} Q50 ${my + 3} 56 ${my}" stroke="#7a4a3a" stroke-width="2" fill="none"/>`;
+  if (f.mouth === 2) s += `<path d="M44 ${my + 2} Q50 ${my - 2} 56 ${my + 2}" stroke="#7a4a3a" stroke-width="2" fill="none"/>`;
+  // barba
+  if (f.beard === 1) s += `<path d="M${50 - fw + 6} 60 Q50 86 ${50 + fw - 6} 60 L${50 + fw - 6} 66 Q50 92 ${50 - fw + 6} 66 Z" fill="${hair}" opacity=".85"/>`;
+  if (f.beard === 2) s += `<rect x="42" y="62" width="16" height="3" fill="${hair}"/>`;
+  // óculos
+  if (f.glasses) s += `<circle cx="${42 - f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><circle cx="${58 + f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><line x1="${48 - f.faceW}" y1="${ey}" x2="${52 + f.faceW}" y2="${ey}" stroke="#222" stroke-width="1.4"/>`;
+  return s;
+}
+
+/* ---------- CLOSE-UP DO EXAME FÍSICO ---------- */
+function examSVG(f, phys) {
+  const skin = SKINS[f.skin], hair = HAIRC[f.hair];
+  const fw = Math.round((26 + f.faceW * 3) * 1.75);
+  const ex1 = 100 - (16 + f.faceW * 2), ex2 = 100 + (16 + f.faceW * 2), ey = 92;
+  let s = '';
+  // ombros e pescoço
+  s += `<path d="M30 240 Q30 190 100 184 Q170 190 170 240 Z" fill="#2c2e26"/>`;
+  s += `<rect x="86" y="146" width="28" height="44" fill="${skin}"/>`;
+  // pulso no pescoço (sempre desenhado; o achado é textual)
+  s += `<line x1="92" y1="158" x2="94" y2="170" stroke="rgba(0,0,0,.12)" stroke-width="2"/>`;
+  // cabeça
+  s += `<ellipse cx="100" cy="100" rx="${fw}" ry="58" fill="${skin}"/>`;
+  // textura de pele: humanos comuns têm marcas; pele "cerosa" é lisa demais
+  if (!phys.pele) {
+    s += `<circle cx="${ex1 - 14}" cy="118" r="1.6" fill="rgba(0,0,0,.14)"/>`;
+    s += `<circle cx="${ex2 + 10}" cy="86" r="1.2" fill="rgba(0,0,0,.12)"/>`;
+    s += `<path d="M${100 + fw - 16} 128 l7 5" stroke="rgba(0,0,0,.2)" stroke-width="1.4"/>`;
+    s += `<path d="M${ex1 - 8} 70 q4 -2 8 0" stroke="rgba(0,0,0,.08)" stroke-width="1"/>`;
+  } else {
+    s += `<ellipse cx="100" cy="96" rx="${fw - 6}" ry="50" fill="rgba(255,255,255,.05)"/>`;
+  }
+  // cabelo
+  const hs = f.hairStyle;
+  if (hs === 0) s += `<path d="M${100 - fw} 100 Q${100 - fw} 38 100 38 Q${100 + fw} 38 ${100 + fw} 100 L${100 + fw} 76 Q100 50 ${100 - fw} 76 Z" fill="${hair}"/>`;
+  if (hs === 1) s += `<path d="M${100 - fw} 106 Q${100 - fw - 8} 28 100 30 Q${100 + fw + 8} 28 ${100 + fw} 106 Q${100 + fw - 12} 66 100 62 Q${100 - fw + 12} 66 ${100 - fw} 106 Z" fill="${hair}"/>`;
+  if (hs === 2) s += `<ellipse cx="100" cy="60" rx="${fw - 8}" ry="22" fill="${hair}"/>`;
+  if (hs === 3) s += `<path d="M${100 - fw} 96 Q100 16 ${100 + fw} 96 L${100 + fw} 118 Q${100 + fw - 16} 84 100 84 Q${100 - fw + 16} 84 ${100 - fw} 118 Z" fill="${hair}"/>`;
+  // sobrancelhas
+  s += `<rect x="${ex1 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/><rect x="${ex2 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/>`;
+  // olhos: esclera + íris + veias
+  const iris = ['#2b2820', '#3a5a4a', '#54432a'][f.eyes];
+  [ex1, ex2].forEach(x => {
+    s += `<ellipse cx="${x}" cy="${ey}" rx="13" ry="8" fill="#e9e5d6"/>`;
+    if (phys.olhos) {
+      s += `<path d="M${x - 11} ${ey - 3} q5 2 8 2" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
+      s += `<path d="M${x + 10} ${ey + 3} q-5 1 -8 0" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
+      s += `<path d="M${x - 9} ${ey + 4} q4 0 6 -1" stroke="#8c2f24" stroke-width=".7" fill="none"/>`;
+    }
+    s += `<circle cx="${x}" cy="${ey}" r="4.6" fill="${iris}"/><circle cx="${x}" cy="${ey}" r="2" fill="#0c0a07"/>`;
+    s += `<circle cx="${x + 1.4}" cy="${ey - 1.6}" r=".8" fill="#fff" opacity=".8"/>`;
+    // pálpebra: humanos piscam. quem não pisca, não pisca.
+    if (!phys.piscar) {
+      s += `<rect x="${x - 13}" y="${ey - 8}" width="26" height="16" fill="${skin}" opacity="0">` +
+           `<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.94;0.965;1" dur="${(3.4 + (x % 3) * .7).toFixed(1)}s" repeatCount="indefinite"/></rect>`;
+    }
+  });
+  // óculos
+  if (f.glasses) s += `<circle cx="${ex1}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><circle cx="${ex2}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><line x1="${ex1 + 15}" y1="${ey}" x2="${ex2 - 15}" y2="${ey}" stroke="#1d1d1d" stroke-width="2"/>`;
+  // nariz
+  s += `<path d="M100 100 L96 120 L104 120" stroke="rgba(0,0,0,.4)" stroke-width="1.6" fill="none"/>`;
+  // boca entreaberta com dentes
+  const my = 136;
+  s += `<path d="M84 ${my} Q100 ${my + 8} 116 ${my} Q100 ${my + 16} 84 ${my} Z" fill="#4a2b24"/>`;
+  for (let i = 0; i < 6; i++) {
+    const tx = 87 + i * 4.6;
+    if (phys.dentes) s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="5.5" rx=".6" fill="#f4f1e6"/>`;
+    else {
+      const h = 4 + ((i * 7) % 3);
+      const cor = i === 4 ? '#8a734d' : '#ded8c2';
+      s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="${h}" rx=".6" fill="${cor}"/>`;
+    }
+  }
+  // barba
+  if (f.beard === 1) s += `<path d="M${100 - fw + 12} 118 Q100 172 ${100 + fw - 12} 118 L${100 + fw - 12} 132 Q100 184 ${100 - fw + 12} 132 Z" fill="${hair}" opacity=".85"/>`;
+  if (f.beard === 2) s += `<rect x="86" y="126" width="28" height="5" fill="${hair}"/>`;
+  return s;
+}
+
+/* ---------- EXAME FÍSICO: UI ---------- */
+const EXAM_ZONES = [
+  { id: 'olhos', label: 'OLHOS', tells: ['olhos', 'piscar'] },
+  { id: 'boca', label: 'BOCA', tells: ['dentes'] },
+  { id: 'pele', label: 'PELE', tells: ['pele'] },
+  { id: 'maos', label: 'MÃOS', tells: ['maos'] },
+  { id: 'pescoco', label: 'PESCOÇO', tells: ['pescoco'] },
+];
+function openExam() {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  if (!cz.examDone) { spendTime(10); cz.examDone = true; }
+  $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
+  $('exam-log').innerHTML = '<span class="obs">A pessoa se aproxima do vidro. Perto demais. Examine cada região.</span>';
+  const zones = $('exam-zones'); zones.innerHTML = '';
+  EXAM_ZONES.forEach(z => {
+    const b = document.createElement('button');
+    b.textContent = z.label;
+    b.onclick = () => { b.classList.add('done'); b.disabled = true; examZone(cz, z); };
+    zones.appendChild(b);
+  });
+  $('exam-overlay').classList.add('active');
+}
+function examZone(cz, zone) {
+  const log = $('exam-log');
+  const rum = rumorForDay(S.day);
+  zone.tells.forEach(t => {
+    const T = TELLS[t];
+    const anômalo = cz.phys[t];
+    let line = anômalo ? `<div class="anomalia">⚠ ${T.achado}</div>` : `<div class="obs">${T.normal}</div>`;
+    if (anômalo && rum && rum.tell === t) {
+      if (rum.official) {
+        cz.softEndorsed = true; cz.evidence = true;
+        $('btn-detain').disabled = false;
+        line += `<div class="anomalia endossada">→ INDICADOR OFICIAL EM VIGOR (comunicado de hoje). Detenção autorizada — a máquina do Estado confia em você.</div>`;
+        sfx('ding');
+      } else {
+        line += `<div class="obs">→ coincide com o boato de hoje. Sem valor legal. (Ainda.)</div>`;
+      }
+    }
+    log.innerHTML += line;
+  });
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---------- GERAÇÃO DE CIDADÃOS ---------- */
+const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction', 'luggage'];
+
+function fullName(pais, sexo) {
+  const c = COUNTRIES[pais];
+  return `${pick(sexo === 'm' ? c.m : c.f)} ${pick(c.last)}`;
+}
+
+function alternadoDiscWeights() {
+  // IA adaptativa: Alternados evitam o que o jogador mais detecta.
+  const w = {};
+  let avg = 0, n = 0;
+  DISC_TYPES.forEach(t => { const d = S.ai.det[t] || 0; w[t] = 1 / (1 + d * d); avg += d; n++; });
+  return { w, avgDet: avg / n };
+}
+function weightedPick(weights) {
+  let tot = 0; for (const k in weights) tot += weights[k];
+  let r = rnd() * tot;
+  for (const k in weights) { r -= weights[k]; if (r <= 0) return k; }
+  return Object.keys(weights)[0];
+}
+
+function makeCitizen(day, opts) {
+  opts = opts || {};
+  const pais = opts.pais || (chance(.3) ? 'osteria' : pick(COUNTRY_IDS));
+  const c = COUNTRIES[pais];
+  const sexo = opts.sexo || (chance(.5) ? 'm' : 'f');
+  const nome = opts.nome || fullName(pais, sexo);
+  const etnia = opts.etnia || pick(c.ethnics);
+  const motivoObj = opts.motivo ? PURPOSES.find(p => p.id === opts.motivo) : pick(PURPOSES);
+  const profissao = opts.profissao || pick(PROFESSIONS);
+  const cidade = pick(c.cities);
+  const features = genFeatures(sexo);
+  const nasc = randomDateAround(day, -20000, -6600);
+
+  const cz = {
+    nome, sexo, pais, etnia, profissao, cidade,
+    motivo: motivoObj.id, motivoLabel: motivoObj.label, duracao: pick(motivoObj.dur),
+    destino: pick(COUNTRIES.osteria.cities),
+    features, photoFeatures: features, nasc,
+    isAlternado: false, isForger: false, isWanted: false, refugee: false,
+    discrepancies: [], docs: {}, bribe: 0, encounter: opts.encounter || null,
+    nervous: chance(.3), scannerAmbiguo: !!opts.scannerAmbiguo,
+    bioResult: null, evidence: false,
+  };
+
+  // arquétipo (encontros scriptados nunca sorteiam arquétipo)
+  if (opts.forceValid || opts.encounter) { if (opts.forcedDisc) cz.isForger = true; }
+  else if (opts.forcedDisc) { cz.isForger = true; }
+  else {
+    const pAlt = Math.min(.10 + day * .004, .3);
+    if (chance(pAlt)) cz.isAlternado = true;
+    else if (chance(.22)) cz.isForger = true;
+  }
+  if (day >= 20 && day <= 26 && pais === 'taranstan' && chance(.5)) cz.refugee = true;
+
+  buildDocs(cz, day);
+
+  // discrepâncias
+  if (opts.forcedDisc) applyDisc(cz, opts.forcedDisc, day);
+  else if (cz.isAlternado) {
+    const { w, avgDet } = alternadoDiscWeights();
+    let pPerfect = Math.min(.15 + day * .012 + avgDet * .02, .8);
+    if (day >= 46) pPerfect = .95;
+    if (!chance(pPerfect)) applyDisc(cz, weightedPick(w), day);
+  } else if (cz.isForger) {
+    applyDisc(cz, pick(DISC_TYPES), day);
+  }
+  if (opts.forcedMissing) delete cz.docs[opts.forcedMissing];
+
+  // suborno
+  if (opts.briberia) cz.bribe = opts.briberia;
+  else if ((cz.isForger || cz.isAlternado) && chance(.25)) cz.bribe = ri(8, 20);
+
+  // corpo: sinais físicos (alguns reais, alguns lenda — nunca dizemos quais)
+  genPhysical(cz);
+  if (opts.scannerAmbiguo) cz.phys.piscar = true; // ela não piscou. ou você não viu.
+
+  // bagagem
+  buildBaggage(cz);
+
+  return cz;
+}
+
+function buildBaggage(cz) {
+  cz.bag = [];
+  cz.bagDone = false;
+  const push = (txt, extra) => cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra));
+  push(pick(BAG_POOLS.comum));
+  if (chance(.6)) push(pick(BAG_POOLS.comum));
+  const pool = BAG_POOLS[cz.motivo];
+  if (pool && chance(.8)) push(pick(pool));
+  if (chance(.18)) push(pick(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
+  if (cz.bagOneway) push(BAG_ONEWAY.txt, { fid: 'bag.oneway', desc: BAG_ONEWAY.desc });
+  if ((cz.isForger || cz.isAlternado) && chance(.12) && !cz.encounter) {
+    push(pick(BAG_CONTRABAND), { contra: true, desc: 'Isto não deveria estar aqui. Isto não tem explicação boa.' });
+  }
+  // embaralha
+  for (let i = cz.bag.length - 1; i > 0; i--) { const j = ri(0, i); [cz.bag[i], cz.bag[j]] = [cz.bag[j], cz.bag[i]]; }
+}
+
+/* ---------- BAGAGEM: UI ---------- */
+function openBag() {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  if (!cz.bagDone) { spendTime(10); cz.bagDone = true; }
+  const box = $('bag-items'); box.innerHTML = '';
+  cz.bag.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'bag-item' + (item.contra ? ' contra' : '');
+    el.dataset.fid = item.fid;
+    el.innerHTML = item.txt + (item.desc ? `<span class="bag-desc">${item.desc}</span>` : '');
+    el.onclick = () => {
+      if (item.contra && !item.found) {
+        item.found = true;
+        el.classList.add('found');
+        cz.evidence = true;
+        $('btn-detain').disabled = false;
+        cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: 'Contrabando na bagagem', confirmedNow: true });
+        shift.confirmed.push(cz.discrepancies[cz.discrepancies.length - 1]);
+        $('inspect-bar').textContent = '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.';
+        sfx('ding');
+        return;
+      }
+      if (shift.inspecting) pickTarget(item.fid, el);
+    };
+    box.appendChild(el);
+  });
+  $('bag-overlay').classList.add('active');
+}
+
+function genPhysical(cz) {
+  cz.phys = {};
+  TELL_IDS.forEach(t => {
+    const T = TELLS[t];
+    let p = T.humanBase + ((cz.nervous || chance(.2)) ? T.confound : 0);
+    if (cz.isAlternado) p += T.altBonus;
+    cz.phys[t] = chance(Math.min(p, .95));
+  });
+  cz.examDone = false;
+  cz.softEndorsed = false;
+}
+
+function buildDocs(cz, day) {
+  const c = COUNTRIES[cz.pais];
+  const dt = worldDate(day);
+  const passVal = randomDateAround(day, 60, 900);
+  cz.docs.pass = {
+    tipo: 'PASSAPORTE', id: 'pass', color: c.color,
+    nome: cz.nome, nasc: cz.nasc, sexo: cz.sexo, paisNome: c.name,
+    cidade: cz.cidade, numero: `${c.prefix}-${ri(10000, 99999)}`,
+    validade: passVal, selo: c.seal, seloPais: cz.pais,
+    reval: (day >= 30 && day <= 42) ? (chance(.8) ? '★' : '—') : null,
+  };
+  if (cz.pais === 'osteria' && day >= 2) {
+    cz.docs.ident = { tipo: 'CARTÃO DE IDENTIDADE', id: 'ident', color: '#2b3a2b', nome: cz.nome, nasc: cz.nasc, distrito: cz.cidade, numero: cz.docs.pass.numero };
+  }
+  if (cz.pais !== 'osteria' && day >= 3) {
+    cz.docs.perm = { tipo: 'PERMISSÃO DE ENTRADA', id: 'perm', color: '#3a3326', nome: cz.nome, numero: cz.docs.pass.numero, validade: randomDateAround(day, 10, 200), selo: '✦', motivo: cz.motivoLabel };
+  }
+  if (cz.motivo === 'trabalho' && day >= 4) {
+    cz.docs.work = { tipo: 'PERMISSÃO DE TRABALHO', id: 'work', color: '#33261f', nome: cz.nome, profissao: cz.profissao, validade: randomDateAround(day, 30, 400) };
+  }
+  const rules = rulesForDay(day);
+  const needsHealth = rules.includes('healthAll') || (rules.includes('healthForeign') && cz.pais !== 'osteria');
+  if (needsHealth && chance(.88)) {
+    cz.docs.sanitaria = { tipo: 'CARTEIRA SANITÁRIA', id: 'sanitaria', color: '#26332b', nome: cz.nome, validade: randomDateAround(day, 20, 300), vacinas: 'B-7, K-12, TRIV' };
+  }
+  if (rules.includes('ancestry') && (cz.etnia === 'nulio' || cz.etnia === 'bahari') && chance(.7)) {
+    cz.docs.ancest = { tipo: 'CERT. DE ANCESTRALIDADE', id: 'ancest', color: '#3a1f1a', nome: cz.nome, linhagem: ETHNIC_LABEL[cz.etnia], carimbo: '❖' };
+  }
+  if (cz.refugee) {
+    cz.docs.refugio = { tipo: 'CARTÃO DE REFÚGIO', id: 'refugio', color: '#1f2e3a', nome: cz.nome, origem: COUNTRIES[cz.pais].name, convencao: 'ALCORTE-9' };
+  }
+}
+
+function applyDisc(cz, type, day) {
+  const d = cz.docs;
+  const add = (t, fids, desc) => cz.discrepancies.push({ type: t, fids, desc });
+  switch (type) {
+    case 'expired': {
+      const doc = d.perm && chance(.5) ? d.perm : d.pass;
+      doc.validade = randomDateAround(day, -40, -1);
+      add('expired', [doc.id + '.validade', 'clock'], `${doc.tipo} expirado`);
+      break;
+    }
+    case 'nameMismatch': {
+      const alvo = d.ident || d.perm || d.work || d.sanitaria;
+      if (!alvo) { applyDisc(cz, 'expired', day); return; }
+      const c = COUNTRIES[cz.pais];
+      let novo = cz.nome.split(' ')[0] + ' ' + pick(c.last);
+      if (novo === cz.nome) novo = cz.nome.split(' ')[0] + ' ' + c.last[(c.last.indexOf(cz.nome.split(' ')[1]) + 1) % c.last.length];
+      alvo.nome = novo;
+      add('nameMismatch', ['pass.nome', alvo.id + '.nome'], 'Nomes divergentes entre documentos');
+      break;
+    }
+    case 'numberMismatch': {
+      const alvo = d.perm || d.ident;
+      if (!alvo) { applyDisc(cz, 'expired', day); return; }
+      alvo.numero = `${COUNTRIES[cz.pais].prefix}-${ri(10000, 99999)}`;
+      add('numberMismatch', ['pass.numero', alvo.id + '.numero'], 'Números de registro divergentes');
+      break;
+    }
+    case 'wrongSeal': {
+      const outro = pick(COUNTRY_IDS.filter(k => k !== cz.pais));
+      if (d.perm && chance(.5)) { d.perm.selo = COUNTRIES[outro].seal; add('wrongSeal', ['perm.selo', 'rb:osteria'], 'Selo incorreto na permissão'); }
+      else { d.pass.selo = COUNTRIES[outro].seal; add('wrongSeal', ['pass.selo', 'rb:' + cz.pais], 'Selo nacional incorreto'); }
+      break;
+    }
+    case 'invalidCity': {
+      const outro = pick(COUNTRY_IDS.filter(k => k !== cz.pais));
+      d.pass.cidade = pick(COUNTRIES[outro].cities);
+      add('invalidCity', ['pass.cidade', 'rb:' + cz.pais], 'Cidade emissora inexistente no país');
+      break;
+    }
+    case 'photoMismatch': {
+      cz.photoFeatures = mutateFeatures(cz.features);
+      add('photoMismatch', ['pass.foto', 'npc.face'], 'Foto não confere com o portador');
+      break;
+    }
+    case 'sexMismatch': {
+      d.pass.sexo = cz.sexo === 'm' ? 'f' : 'm';
+      add('sexMismatch', ['pass.sexo', 'npc.face'], 'Sexo registrado não confere');
+      break;
+    }
+    case 'luggage': {
+      // a mala desmente a boca — mas só se alguém abrir a mala
+      if (!d.perm) { applyDisc(cz, 'expired', day); return; }
+      cz.bagOneway = true;
+      add('luggage', ['bag.oneway', 'perm.motivo'], 'Bagagem incompatível com o motivo declarado');
+      cz.discrepancies[cz.discrepancies.length - 1].latent = true;
+      break;
+    }
+    case 'contradiction': {
+      cz.lie = pick(['motivo', 'cidade', 'profissao']);
+      const fid = cz.lie === 'motivo' ? (d.perm ? 'perm.motivo' : 'pass.nome') : cz.lie === 'cidade' ? 'pass.cidade' : (d.work ? 'work.profissao' : 'pass.nome');
+      add('contradiction', ['talk.' + cz.lie, fid], 'Declaração contradiz os documentos');
+      break;
+    }
+  }
+}
+
+/* ---------- VIOLAÇÕES DE REGRA (além das discrepâncias) ---------- */
+function computeViolations(cz, day) {
+  const rules = rulesForDay(day);
+  const v = [];
+  if (day >= 47) return v;
+  const bans = { banKrestov: 'krestov', banLantravia: 'lantravia', banTaranstan: 'taranstan' };
+  for (const r in bans) {
+    if (rules.includes(r) && cz.pais === bans[r]) {
+      if (cz.refugee && cz.docs.refugio && rules.includes('refugeeProtect')) continue; // contradição legal resolvida pró-refúgio
+      v.push({ rule: r, desc: `Entrada proibida: cidadão de ${COUNTRIES[cz.pais].name}` });
+    }
+  }
+  if (!cz.docs.pass) v.push({ rule: 'pass', desc: 'Sem passaporte' });
+  if (rules.includes('idOsteria') && cz.pais === 'osteria' && !cz.docs.ident) v.push({ rule: 'idOsteria', desc: 'Cidadão sem cartão de identidade' });
+  if (rules.includes('entryPermit') && cz.pais !== 'osteria' && !cz.docs.perm) v.push({ rule: 'entryPermit', desc: 'Estrangeiro sem permissão de entrada' });
+  if (rules.includes('workPermit') && cz.motivo === 'trabalho' && !cz.docs.work) v.push({ rule: 'workPermit', desc: 'Sem permissão de trabalho' });
+  const needsHealth = rules.includes('healthAll') || (rules.includes('healthForeign') && cz.pais !== 'osteria');
+  if (needsHealth && !cz.docs.sanitaria) v.push({ rule: 'health', desc: 'Sem carteira sanitária' });
+  if (rules.includes('ancestry') && (cz.etnia === 'nulio' || cz.etnia === 'bahari') && !cz.docs.ancest) v.push({ rule: 'ancestry', desc: 'Sem certificado de ancestralidade (Édito nº 2)' });
+  if (rules.includes('seloConselho') && cz.docs.pass && cz.docs.pass.reval === '—') v.push({ rule: 'seloConselho', desc: 'Documento sem selo de revalidação do Conselho' });
+  return v;
+}
+
+/* ============================================================
+   TURNO
+   ============================================================ */
+const shift = {
+  clock: 480, running: false, citizen: null, processed: 0,
+  citToday: 0, wantedName: null, queue: 0, tickId: null,
+  picks: [], inspecting: false, confirmed: [], zTop: 10,
+  encounterDone: false, whispered: false,
+};
+
+function startDay() {
+  setRegimeClass(S.day);
+  shift.clock = 480; shift.processed = 0; shift.citToday = 0;
+  shift.citizen = null; shift.picks = []; shift.confirmed = [];
+  shift.encounterDone = false; shift.whispered = false;
+  shift.wantedName = null;
+
+  if (WANTED_DAYS[S.day]) {
+    const p = pick(COUNTRY_IDS);
+    shift.wantedName = fullName(p, chance(.5) ? 'm' : 'f');
+    shift.wantedPais = p;
+    shift.wantedSlot = ri(3, 6);
+  }
+
+  $('shift-day').textContent = `DIA ${S.day} — ${REGIME_LABEL[regimeOfDay(S.day)]}`;
+  renderRulebook();
+  updateHud();
+  clearDesk();
+  $('npc-name').textContent = '—';
+  $('speech').textContent = '';
+  $('talk-log').innerHTML = '';
+  $('ask-row').innerHTML = '';
+  $('scan-result').textContent = '';
+  $('npc-portrait').innerHTML = '';
+  $('btn-scan-bio').style.display = S.day >= 10 ? '' : 'none';
+  $('btn-reject').classList.toggle('hidden', S.day >= 47);
+  $('btn-detain').classList.toggle('hidden', S.day >= 47);
+  showScreen('screen-shift');
+  showBulletin(() => {
+    shift.running = true;
+    clearInterval(shift.tickId);
+    shift.tickId = setInterval(tickClock, 1000);
+    startAmbience();
+    startRadio();
+    nextCitizen();
+  });
+}
+
+function bulletinText() {
+  let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
+  if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  const rum = rumorForDay(S.day);
+  if (rum) t += rum.official
+    ? `\n\n§ INDICADOR FÍSICO EM VIGOR: ${rum.text}\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.`
+    : `\n\n✎ (rabiscado a lápis na margem, por alguém do turno anterior)\n"${rum.text}"`;
+  return t;
+}
+function showBulletin(fn) {
+  modal(`COMUNICADO OFICIAL — DIA ${S.day}`, bulletinText(), [{ label: 'ASSINAR CIÊNCIA', fn }]);
+}
+
+function tickClock() {
+  if (!shift.running) return;
+  shift.clock += 2;
+  if (shift.clock >= 1080) { shift.clock = 1080; endShift(); return; }
+  updateHud();
+}
+function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updateHud(); }
+function updateHud() {
+  const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
+  $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · ${fmtDate(worldDate(S.day))}`;
+  $('processed-count').textContent = `Atendidos: ${shift.processed}`;
+  $('money-hud').textContent = `${MOEDA} ${S.money}`;
+}
+
+/* ---------- RÁDIO DO POSTO ---------- */
+let radioOn = true, radioTimer = null;
+function radioTick() {
+  if (!shift.running) return;
+  const line = $('radio-line');
+  line.classList.add('fade');
+  setTimeout(() => {
+    let txt;
+    if (!radioOn) txt = '‹desligado›';
+    else if (S.day >= 47) txt = '— silêncio. nem estática. silêncio. —';
+    else txt = pick(RADIO[regimeOfDay(S.day)] || RADIO.republica);
+    line.textContent = txt;
+    line.classList.remove('fade');
+  }, 800);
+}
+function startRadio() {
+  clearInterval(radioTimer);
+  radioTimer = setInterval(radioTick, 16000);
+  setTimeout(radioTick, 2500);
+}
+
+/* ---------- AMBIÊNCIA (drone de válvulas, quase inaudível) ---------- */
+let droneNodes = null;
+function startAmbience() {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    if (droneNodes) return;
+    const g = AC.createGain(); g.gain.value = .012; g.connect(AC.destination);
+    const o1 = AC.createOscillator(); o1.type = 'sine'; o1.frequency.value = 50;
+    const o2 = AC.createOscillator(); o2.type = 'sine'; o2.frequency.value = 50.7;
+    o1.connect(g); o2.connect(g); o1.start(); o2.start();
+    droneNodes = { o1, o2, g };
+  } catch (e) { /* sem áudio */ }
+}
+function stopAmbience() {
+  if (!droneNodes) return;
+  try { droneNodes.o1.stop(); droneNodes.o2.stop(); } catch (e) {}
+  droneNodes = null;
+}
+
+/* ---------- FILA ---------- */
+function renderQueueChatter() {
+  const n = ri(2, 4);
+  let html = `≈ ${ri(8, 60)} pessoas na fila<br>`;
+  for (let i = 0; i < n; i++) html += pick(QUEUE_CHATTER) + '<br>';
+  $('queue-view').innerHTML = html;
+}
+
+function nextCitizen() {
+  if (!shift.running) return;
+  if (shift.clock >= 1080) { endShift(); return; }
+  renderQueueChatter();
+  shift.picks = []; shift.confirmed = [];
+  $('scan-result').textContent = '';
+  $('talk-log').innerHTML = '';
+  $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: selecione dois elementos para comparar.' : '';
+  $('btn-detain').disabled = true;
+
+  let cz = null;
+  const enc = ENCOUNTERS[S.day];
+
+  if (S.day === 48) { presentMirror(); return; }
+
+  if (enc && !shift.encounterDone && shift.processed >= 1) {
+    shift.encounterDone = true;
+    cz = makeCitizen(S.day, {
+      nome: enc.nome, pais: enc.pais, sexo: enc.sexo, etnia: enc.etnia,
+      profissao: enc.profissao, motivo: enc.motivo,
+      forceValid: enc.valid, forcedDisc: enc.forcedDisc, forcedMissing: enc.forcedMissing,
+      briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
+    });
+    if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+  } else if (shift.wantedName && shift.processed === shift.wantedSlot) {
+    cz = makeCitizen(S.day, { nome: shift.wantedName, pais: shift.wantedPais, forceValid: true });
+    cz.isWanted = true;
+    shift.wantedName = null;
+  } else {
+    cz = makeCitizen(S.day, {});
+  }
+
+  shift.citizen = cz;
+  presentCitizen(cz);
+  // apagão no colapso
+  if (S.day >= 43 && S.day <= 46 && chance(.25)) {
+    document.body.classList.add('blackout');
+    setTimeout(() => document.body.classList.remove('blackout'), 9000);
+  }
+  // sussurro
+  if (S.day >= 18 && !shift.whispered && chance(.4)) { shift.whispered = true; setTimeout(whisper, ri(4000, 20000)); }
+}
+
+function greetingFor(cz) {
+  if (cz.encounter) return cz.encounter.fala;
+  const g = [
+    'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
+    'É a minha terceira vez nesta fila.', 'Por favor, seja rápido. Meu trem sai ao meio-dia.',
+    'Eu não tenho nada a esconder.', '…', 'Deus abençoe este posto.',
+  ];
+  const nervous = ['Desculpe… eu fico nervoso(a) com uniformes.', 'Minhas mãos estão tremendo de frio. Só de frio.', 'Eu decorei tudo o que ia dizer e esqueci agora.'];
+  return cz.nervous ? pick(g.concat(nervous, nervous)) : pick(g);
+}
+
+function presentCitizen(cz) {
+  $('npc-portrait').innerHTML = portraitSVG(cz.features);
+  $('npc-portrait').classList.add('pickable');
+  $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
+  $('speech').textContent = '“' + greetingFor(cz) + '”';
+  buildAskButtons(cz);
+  layDocs(cz);
+  if (cz.bribe && !cz.encounter) setTimeout(() => layBribe(cz), 2500);
+  if (cz.encounter && cz.encounter.briberia) layBribe(cz);
+  // o tique. rápido demais para ter certeza de que aconteceu.
+  if (chance(cz.isAlternado ? .18 : .05)) {
+    setTimeout(() => {
+      if (shift.citizen !== cz) return;
+      const p = $('npc-portrait');
+      p.classList.add('twitch');
+      setTimeout(() => p.classList.remove('twitch'), 650);
+    }, ri(3000, 16000));
+  }
+}
+
+/* ---------- DOCUMENTOS NA MESA ---------- */
+function clearDesk() {
+  const desk = $('desk');
+  desk.querySelectorAll('.document, .bribe-note').forEach(e => e.remove());
+  $('desk-hint').style.display = '';
+}
+
+function fld(docId, key, label, value, clickable) {
+  return `<div class="fld"><span class="k">${label}</span><span class="v" data-fid="${docId}.${key}">${value}</span></div>`;
+}
+
+function docHTML(doc, cz) {
+  let b = '';
+  const dateStr = (dt) => fmtDate(dt);
+  if (doc.id === 'pass') {
+    b += `<div class="doc-photo" data-fid="pass.foto"><svg viewBox="0 0 100 120">${portraitSVG(cz.photoFeatures)}</svg></div>`;
+    b += fld('pass', 'nome', 'NOME', doc.nome);
+    b += fld('pass', 'nasc', 'NASC.', dateStr(doc.nasc));
+    b += fld('pass', 'sexo', 'SEXO', doc.sexo.toUpperCase());
+    b += fld('pass', 'pais', 'PAÍS', doc.paisNome);
+    b += fld('pass', 'cidade', 'EMISSÃO', doc.cidade);
+    b += fld('pass', 'numero', 'Nº', doc.numero);
+    b += fld('pass', 'validade', 'VALIDADE', dateStr(doc.validade));
+    if (doc.reval !== null) b += fld('pass', 'reval', 'REVALIDAÇÃO', doc.reval);
+    b += `<div class="doc-seal" data-fid="pass.selo">${doc.selo}</div>`;
+  } else if (doc.id === 'ident') {
+    b += fld('ident', 'nome', 'NOME', doc.nome);
+    b += fld('ident', 'nasc', 'NASC.', dateStr(doc.nasc));
+    b += fld('ident', 'distrito', 'DISTRITO', doc.distrito);
+    b += fld('ident', 'numero', 'Nº', doc.numero);
+  } else if (doc.id === 'perm') {
+    b += fld('perm', 'nome', 'NOME', doc.nome);
+    b += fld('perm', 'numero', 'Nº PASSAPORTE', doc.numero);
+    b += fld('perm', 'motivo', 'MOTIVO', doc.motivo);
+    b += fld('perm', 'validade', 'VALIDADE', dateStr(doc.validade));
+    b += `<div class="doc-seal" data-fid="perm.selo">${doc.selo}</div>`;
+  } else if (doc.id === 'work') {
+    b += fld('work', 'nome', 'NOME', doc.nome);
+    b += fld('work', 'profissao', 'FUNÇÃO', doc.profissao);
+    b += fld('work', 'validade', 'VALIDADE', dateStr(doc.validade));
+  } else if (doc.id === 'sanitaria') {
+    b += fld('sanitaria', 'nome', 'NOME', doc.nome);
+    b += fld('sanitaria', 'vacinas', 'VACINAS', doc.vacinas);
+    b += fld('sanitaria', 'validade', 'VALIDADE', dateStr(doc.validade));
+  } else if (doc.id === 'ancest') {
+    b += fld('ancest', 'nome', 'NOME', doc.nome);
+    b += fld('ancest', 'linhagem', 'LINHAGEM', doc.linhagem);
+    b += `<div class="doc-seal" data-fid="ancest.carimbo">${doc.carimbo}</div>`;
+  } else if (doc.id === 'refugio') {
+    b += fld('refugio', 'nome', 'NOME', doc.nome);
+    b += fld('refugio', 'origem', 'ORIGEM', doc.origem);
+    b += fld('refugio', 'convencao', 'CONVENÇÃO', doc.convencao);
+  }
+  return b;
+}
+
+function layDocs(cz) {
+  clearDesk();
+  $('desk-hint').style.display = 'none';
+  const desk = $('desk');
+  let i = 0;
+  for (const k in cz.docs) {
+    const doc = cz.docs[k];
+    const el = document.createElement('div');
+    el.className = 'document';
+    el.dataset.doc = doc.id;
+    el.innerHTML = `<div class="doc-head" style="background:${doc.color}"><span>${doc.tipo}</span><span>${COUNTRIES[cz.pais].prefix}</span></div><div class="doc-body">${docHTML(doc, cz)}</div>`;
+    el.style.left = (20 + (i % 3) * 200 + ri(-8, 8)) + 'px';
+    el.style.top = (20 + Math.floor(i / 3) * 150 + ri(-6, 6)) + 'px';
+    el.style.zIndex = ++shift.zTop;
+    makeDraggable(el);
+    desk.appendChild(el);
+    i++;
+  }
+}
+
+function layBribe(cz) {
+  if (!shift.citizen || shift.citizen !== cz) return;
+  const desk = $('desk');
+  if (desk.querySelector('.bribe-note')) return;
+  const el = document.createElement('div');
+  el.className = 'bribe-note';
+  el.textContent = `“Um agrado. ${MOEDA} ${cz.bribe}. Ninguém precisa saber.”`;
+  el.style.left = ri(40, 300) + 'px';
+  el.style.bottom = '20px';
+  el.style.zIndex = ++shift.zTop;
+  el.onclick = () => {
+    modal('UM ENVELOPE DISCRETO', `Há ${MOEDA} ${cz.bribe} dentro. A fila observa. Ou não.`, [
+      { label: 'ACEITAR', fn: () => { S.money += cz.bribe; S.counters.bribes++; S.counters.bribeMoney += cz.bribe; el.remove(); updateHud(); if (chance(.15)) S.flags.auditRisk = (S.flags.auditRisk || 0) + 1; } },
+      { label: 'DEVOLVER', fn: () => { el.remove(); } },
+    ]);
+  };
+  desk.appendChild(el);
+}
+
+function makeDraggable(el) {
+  let sx, sy, ox, oy, dragging = false;
+  el.addEventListener('pointerdown', (e) => {
+    if (e.target.classList.contains('v') || e.target.closest('.doc-photo') || e.target.classList.contains('doc-seal')) return;
+    dragging = true; el.setPointerCapture(e.pointerId);
+    sx = e.clientX; sy = e.clientY; ox = el.offsetLeft; oy = el.offsetTop;
+    el.style.zIndex = ++shift.zTop;
+  });
+  el.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    el.style.left = (ox + e.clientX - sx) + 'px';
+    el.style.top = (oy + e.clientY - sy) + 'px';
+  });
+  el.addEventListener('pointerup', () => dragging = false);
+}
+
+/* ---------- REGULAMENTO ---------- */
+function renderRulebook() {
+  const rules = rulesForDay(S.day);
+  let html = '';
+  rules.forEach(r => { html += `<div class="rb-rule" data-fid="rb:rule:${r}">§ ${RULES[r].text}</div>`; });
+  if (shift.wantedName) html += `<div class="rb-rule" data-fid="rb:wanted">★ PROCURADO(A): ${shift.wantedName}</div>`;
+  $('rb-rules').innerHTML = html;
+  let ch = '';
+  COUNTRY_IDS.forEach(k => {
+    const c = COUNTRIES[k];
+    ch += `<div class="rb-country" data-fid="rb:${k}"><b>${c.seal} ${c.name}</b> (${c.prefix}) — ${c.cities.join(', ')}</div>`;
+  });
+  $('rb-countries').innerHTML = ch;
+}
+
+/* ---------- INTERROGATÓRIO ---------- */
+function buildAskButtons(cz) {
+  const row = $('ask-row'); row.innerHTML = '';
+  const qs = [
+    { k: 'motivo', label: 'Motivo?' },
+    { k: 'cidade', label: 'Onde nasceu?' },
+    { k: 'profissao', label: 'Profissão?' },
+    { k: 'duracao', label: 'Quanto tempo?' },
+  ];
+  qs.forEach(q => {
+    const b = document.createElement('button');
+    b.textContent = q.label;
+    b.onclick = () => ask(cz, q.k, b);
+    row.appendChild(b);
+  });
+}
+function answerFor(cz, k) {
+  const truthy = {
+    motivo: cz.motivoLabel, cidade: cz.cidade, profissao: cz.profissao, duracao: cz.duracao,
+  };
+  // mentira gera contradição com documento
+  if (cz.lie === k) {
+    if (k === 'motivo') return pick(PURPOSES.filter(p => p.id !== cz.motivo)).label;
+    if (k === 'cidade') return pick(COUNTRIES[cz.pais].cities.filter(c => c !== cz.cidade).concat(pick(COUNTRIES[pick(COUNTRY_IDS)].cities)));
+    if (k === 'profissao') return pick(PROFESSIONS.filter(p => p !== cz.profissao));
+  }
+  // nervoso: hesita mas acerta (pista falsa)
+  if (cz.nervous && chance(.4)) return '…' + truthy[k] + '. Desculpe, é isso. ' + pick(['Eu juro.', 'Tenho certeza.', 'Acho.']);
+  return truthy[k];
+}
+function ask(cz, k, btn) {
+  if (!shift.citizen) return;
+  spendTime(5);
+  btn.disabled = true;
+  const ans = answerFor(cz, k);
+  const log = $('talk-log');
+  const LBL = { motivo: 'Motivo da viagem?', cidade: 'Onde nasceu?', profissao: 'Profissão?', duracao: 'Duração da estadia?' };
+  log.innerHTML += `<span class="q">— ${LBL[k]}</span><span class="a" data-fid="talk.${k}">“${ans}”</span>`;
+  log.scrollTop = log.scrollHeight;
+}
+
+/* ---------- SCANNERS ---------- */
+function scan(kind) {
+  const cz = shift.citizen;
+  if (!cz) return;
+  sfx('scan');
+  let out = '';
+  if (kind === 'thermo') {
+    spendTime(15);
+    const anom = cz.isAlternado ? chance(.35) : chance(cz.nervous ? .2 : .08);
+    out = anom ? '🌡 TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : '🌡 TÉRMICO: padrão dentro da faixa humana comum.';
+  } else if (kind === 'pulse') {
+    spendTime(15);
+    const calm = cz.isAlternado ? chance(.7) : chance(cz.nervous ? .1 : .5);
+    out = calm ? '📈 PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : '📈 PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
+  } else if (kind === 'bio') {
+    spendTime(30);
+    if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = '🧬 BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
+    if (cz.scannerAmbiguo) { $('scan-result').textContent = '🧬 BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
+    const decal = S.day >= 31 && !S.bioCalibrated;
+    const tp = decal ? .5 : .8, fp = decal ? .3 : .1;
+    const positive = cz.isAlternado ? chance(tp) : chance(fp);
+    cz.bioResult = positive;
+    if (positive) {
+      cz.evidence = true;
+      $('btn-detain').disabled = false;
+      out = '🧬 BIOLÓGICO: ⚠ MARCADOR K-7 POSITIVO. Resultado habilita DETENÇÃO. (O fabricante nega falsos positivos. O fabricante vende scanners.)';
+    } else out = '🧬 BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
+  }
+  $('scan-result').textContent = out;
+}
+
+/* ---------- INSPEÇÃO COMPARATIVA ---------- */
+function toggleInspect() {
+  shift.inspecting = !shift.inspecting;
+  $('btn-inspect').classList.toggle('active', shift.inspecting);
+  $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).' : '';
+  clearPicks();
+}
+function clearPicks() {
+  shift.picks = [];
+  document.querySelectorAll('.picked').forEach(e => e.classList.remove('picked'));
+}
+function pickTarget(fid, el) {
+  if (!shift.inspecting || !shift.citizen) return;
+  if (shift.picks.find(p => p.fid === fid)) return;
+  el.classList.add('picked');
+  shift.picks.push({ fid, el });
+  if (shift.picks.length === 2) {
+    const [a, b] = shift.picks;
+    setTimeout(() => evaluatePair(a, b), 150);
+  }
+}
+function evaluatePair(a, b) {
+  const cz = shift.citizen;
+  const set = [a.fid, b.fid];
+  let found = null;
+  // procurado: nome × lista
+  if (cz.isWanted && set.includes('pass.nome') && set.includes('rb:wanted')) {
+    cz.evidence = true;
+    $('btn-detain').disabled = false;
+    $('inspect-bar').textContent = '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.';
+    sfx('ding'); clearPicks(); return;
+  }
+  for (const d of cz.discrepancies) {
+    if (d.fids.every(f => set.includes(f))) { found = d; break; }
+  }
+  if (found && !shift.confirmed.includes(found)) {
+    shift.confirmed.push(found);
+    cz.evidence = true;
+    S.ai.det[found.type] = (S.ai.det[found.type] || 0) + 1; // a espécie observa você
+    $('btn-detain').disabled = false;
+    $('inspect-bar').textContent = `⚠ DISCREPÂNCIA CONFIRMADA: ${found.desc}.`;
+    a.el.classList.add('flagged'); b.el.classList.add('flagged');
+    sfx('ding');
+  } else {
+    $('inspect-bar').textContent = 'Nenhuma discrepância entre estes dois elementos.';
+  }
+  clearPicks();
+}
+
+/* ---------- DECISÃO ---------- */
+function decide(decision) {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  sfx('stamp');
+  shift.citizen = null;
+  $('npc-portrait').classList.remove('pickable');
+
+  // discrepâncias latentes (bagagem) só contam se foram descobertas
+  const viols = cz.discrepancies.filter(d => !d.latent || shift.confirmed.includes(d)).concat(computeViolations(cz, S.day));
+  const dayFree = S.day >= 47;
+  let correct, note = '';
+
+  if (dayFree) correct = true;
+  else if (cz.isWanted) {
+    correct = decision === 'detain';
+    if (!correct) note = decision === 'approve' ? 'Procurado(a) foi APROVADO(A).' : 'Procurado(a) deveria ser DETIDO(A), não rejeitado(a).';
+  } else if (viols.length > 0) {
+    if (decision === 'reject') correct = true;
+    else if (decision === 'detain') { correct = cz.evidence; if (!correct) note = 'Detenção sem evidência confirmada.'; }
+    else { correct = false; note = 'Aprovado(a) com irregularidade: ' + viols[0].desc + '.'; }
+  } else {
+    if (decision === 'approve') correct = true;
+    else if (decision === 'detain' && (cz.bioResult === true || cz.softEndorsed)) { correct = true; } // o sistema premia a máquina e a pseudociência — mesmo erradas
+    else { correct = false; note = decision === 'reject' ? 'Documentos em perfeita ordem. Rejeição indevida.' : 'Detenção sem qualquer evidência.'; }
+  }
+
+  // contadores e consequências invisíveis
+  if (decision === 'approve') {
+    S.counters.approved++;
+    if (cz.isAlternado) { S.counters.alternadosIn++; scheduleEcho(cz); }
+    if (cz.encounter) encounterOutcome(cz.encounter, 'approve');
+  } else if (decision === 'reject') {
+    S.counters.rejected++;
+    if (cz.isAlternado) S.counters.alternadosBlocked++;
+    if (cz.encounter) encounterOutcome(cz.encounter, 'reject');
+  } else {
+    S.counters.detained++;
+    if (cz.isAlternado) { S.counters.alternadosCaught++; S.money += 10; note = ''; }
+    else if (!cz.isWanted) S.counters.innocentsDetained++;
+    if (cz.encounter) encounterOutcome(cz.encounter, 'detain');
+  }
+
+  if (correct) { S.counters.correct++; S.money += 5; }
+  else { S.counters.wrong++; citation(note || 'Decisão em desacordo com o regulamento.'); }
+
+  stampDocs(decision);
+  shift.processed++;
+  updateHud();
+  const enc = cz.encounter;
+  setTimeout(() => {
+    if (enc && enc.nota) {
+      modal('UM BILHETE FICOU NA BANDEJA', enc.nota.texto, [{ label: 'GUARDAR', fn: () => { S.flags[enc.nota.tipo] = true; nextCitizen(); } }, { label: 'QUEIMAR', fn: nextCitizen }]);
+    } else nextCitizen();
+  }, 1100);
+}
+
+function stampDocs(decision) {
+  const first = $('desk').querySelector('.document');
+  if (!first) return;
+  const st = document.createElement('div');
+  st.className = 'doc-stamped ' + (decision === 'approve' ? 'stamp-ok' : 'stamp-no');
+  st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO';
+  first.appendChild(st);
+}
+
+/* ---------- ECOS (consequências tardias, sempre ambíguas) ---------- */
+function scheduleEcho(cz) {
+  if (!chance(.5)) return; // às vezes, nada acontece. isso também assombra.
+  const delay = ri(2, 5);
+  const txts = [
+    `Três funcionários do arquivo de ${cz.destino} não voltaram para casa. As famílias dizem que "voltaram diferentes". A polícia diz que voltaram.`,
+    `O reservatório de ${cz.destino} registrou "alterações químicas menores". O laudo foi arquivado.`,
+    `Um(a) ${cz.profissao} recém-chegado(a) a ${cz.destino} foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".`,
+    `Moradores de ${cz.destino} relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.`,
+  ];
+  S.pendingNews.push({ day: S.day + delay, text: pick(txts) });
+}
+
+/* ---------- ENCONTROS: DESFECHOS ---------- */
+function encounterOutcome(enc, decision) {
+  const f = S.flags;
+  switch (enc.id) {
+    case 'elara1': f.elara = decision; break;
+    case 'zubrek':
+      if (decision === 'approve' && f.suborno_oferta) f.dmarovDeal = true; // o envelope na mesa é o pagamento
+      break;
+    case 'elara2': f.elara2 = decision; if (decision === 'approve') f.elaraGrata = true; break;
+    case 'courier':
+      if (decision === 'approve') {
+        S.counters.resHelped++;
+        f.remedioProometido = true;
+        S.pendingNews.push({ day: S.day + 2, text: 'Um hospital clandestino em Delvina tratou quarenta crianças esta semana. Ninguém sabe de onde vieram os medicamentos. Ninguém pergunta.' });
+      } else if (decision === 'detain') { f.resTraida = true; }
+      break;
+    case 'elara3': if (decision === 'approve') f.elaraGrata = true; else f.elaraRancor = true; break;
+    case 'odim':
+      if (decision === 'approve') S.pendingNews.push({ day: S.day + 3, text: 'A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.' });
+      else f.odimDetida = true;
+      break;
+    case 'elara4': f.elara4 = decision; break;
+    case 'dmarov2': f.dmarov2 = decision; break;
+    case 'elara5': f.elaraFinal = decision; break;
+    case 'esposa': f.esposaCruzou = decision === 'approve'; break;
+  }
+}
+
+/* ---------- DIA 48: O ESPELHO ---------- */
+function presentMirror() {
+  shift.running = false;
+  clearInterval(shift.tickId);
+  const you = makeCitizen(48, { nome: 'VOCÊ', pais: 'osteria', sexo: 'm', forceValid: true });
+  $('npc-portrait').innerHTML = portraitSVG(you.features);
+  $('npc-name').textContent = '— o vidro reflete —';
+  $('speech').textContent = 'Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.';
+  layDocs(you);
+  $('ask-row').innerHTML = '';
+  $('btn-reject').classList.remove('hidden');
+  $('btn-detain').classList.add('hidden');
+  $('btn-approve').onclick = () => finishGame('mirror_approve');
+  $('btn-reject').onclick = () => finishGame('mirror_reject');
+}
+
+/* ---------- FIM DO TURNO ---------- */
+function endShift() {
+  if (!shift.running) return;
+  shift.running = false;
+  clearInterval(shift.tickId);
+  clearInterval(radioTimer);
+  stopAmbience();
+  $('bag-overlay').classList.remove('active');
+  $('exam-overlay').classList.remove('active');
+  const salary = null; // já pago por decisão
+  let report = '';
+  const row = (k, v) => `<div class="row"><span>${k}</span><span>${v}</span></div>`;
+  report += row('Cidadãos atendidos', shift.processed);
+  report += row('Advertências hoje', shift.citToday);
+  report += row('Saldo atual', `${MOEDA} ${S.money}`);
+  $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
+  $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
+  showScreen('screen-endday');
+  save();
+}
+function endShiftFlavor() {
+  if (S.day >= 43) return 'Você tranca o posto. Não sabe para quem está trancando.';
+  if (S.day >= 30) return 'O retrato na parede mudou de novo. A moldura é a mesma.';
+  if (S.day >= 12) return 'No caminho de casa, os alto-falantes repetem o hino novo. As crianças já sabem a letra.';
+  return 'A fila que ficou para amanhã já começou a dormir na calçada.';
+}
+
+/* ---------- CASA / MANHÃ ---------- */
+const COSTS = { comida: 8, aquecimento: 6, remedio: 12, presente: 5 };
+let morningPurchases = {};
+
+function goHome() {
+  const ev = NIGHT_EVENTS[S.day];
+  if (ev && !S.flags['night_' + S.day]) {
+    S.flags['night_' + S.day] = true;
+    showNight(S.day, ev);
+    return;
+  }
+  afterNight();
+}
+function afterNight() {
+  applyNight();
+  if (checkArrest()) return;
+  if (S.day >= 48) { finishGame(); return; }
+  S.day++;
+  save();
+  showMorning();
+}
+
+/* ---------- A NOITE: alguém bate na porta ---------- */
+const NIGHTS_SEM_ROSTO = [19, 22, 43]; // o olho mágico não mostra ninguém
+function showNight(day, ev) {
+  document.body.className = ''; // a noite não tem regime
+  $('night-hour').textContent = ev.quem;
+  $('night-text').textContent = ev.texto;
+  $('night-after').textContent = '';
+  const peep = $('peephole');
+  if (NIGHTS_SEM_ROSTO.includes(day)) {
+    peep.classList.add('empty');
+    $('night-portrait').innerHTML = '';
+  } else {
+    peep.classList.remove('empty');
+    $('night-portrait').innerHTML = portraitSVG(genFeatures(ev.sexo || 'm'));
+  }
+  const box = $('night-choices'); box.innerHTML = '';
+  ev.escolhas.forEach(c => {
+    const b = document.createElement('button');
+    b.textContent = c.label;
+    b.onclick = () => resolveNight(c);
+    box.appendChild(b);
+  });
+  showScreen('screen-night');
+  setTimeout(() => sfx('knock'), 700);
+}
+function resolveNight(c) {
+  if (c.money) { S.money += c.money; }
+  if (c.audit) { S.flags.auditRisk = (S.flags.auditRisk || 0) + c.audit; }
+  if (c.flag) { S.flags[c.flag] = true; }
+  if (c.echo) { S.pendingNews.push({ day: S.day + 1, text: c.echo }); }
+  $('night-choices').innerHTML = '';
+  $('night-after').textContent = c.after || '';
+  const b = document.createElement('button');
+  b.className = 'night-continue';
+  b.textContent = 'TENTAR DORMIR →';
+  b.onclick = afterNight;
+  $('night-choices').appendChild(b);
+}
+
+function applyNight() {
+  // aluguel
+  S.rent = S.day >= 31 ? 25 : 15;
+  S.money -= S.rent;
+  // fome/saúde
+  const fed = morningPurchases.comida;
+  const heated = morningPurchases.aquecimento;
+  for (const k in S.family) {
+    const m = S.family[k];
+    if (!m.alive) continue;
+    m.hunger = fed ? 0 : m.hunger + 1;
+    if (m.hunger >= 2 && !m.sick) m.sick = chance(.5);
+    if (!heated && chance(.15)) m.sick = true;
+    if (m.sick) {
+      if (morningPurchases['remedio_' + k]) { m.sick = false; m.sickDays = 0; }
+      else { m.sickDays++; if (m.sickDays >= 4) { m.alive = false; S.flags.morte = true; } }
+    }
+  }
+  morningPurchases = {};
+  // eventos de roteiro
+  const ev = HOME_EVENTS[S.day];
+  if (ev && ev.efeito === 'filho_doente') S.family.tomi.sick = true;
+  if (S.flags.remedioProometido) { S.family.tomi.sick = false; S.family.tomi.sickDays = 0; S.flags.remedioProometido = false; S.flags.remedioEntregue = true; }
+}
+
+function checkArrest() {
+  if (S.citTotal >= 12 || (S.flags.auditRisk || 0) >= 3) { finishGame('prisao'); return true; }
+  return false;
+}
+
+function showMorning() {
+  setRegimeClass(S.day);
+  renderNewspaper();
+  renderHome();
+  showScreen('screen-morning');
+}
+
+function renderNewspaper() {
+  const d = S.day;
+  $('np-masthead').textContent = MASTHEAD[regimeOfDay(d)];
+  $('np-date').textContent = fmtDate(worldDate(d)) + ` — ${MOEDA} 0,50 — edição ${1200 + d}`;
+  const scripted = SCRIPTED_NEWS[d];
+  const np = $('newspaper');
+  if (scripted === null) {
+    $('np-headline').textContent = 'O JORNAL NÃO CHEGOU HOJE.';
+    $('np-body').textContent = d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.';
+    $('np-minor').innerHTML = ''; $('np-ad').textContent = '';
+    return;
+  }
+  const news = scripted || pick(FILLER_NEWS);
+  $('np-headline').textContent = news.h;
+  $('np-body').textContent = news.b;
+  let minor = (news.m || []).map(x => '• ' + x);
+  // ecos das suas decisões
+  const echoes = S.pendingNews.filter(n => n.day <= d);
+  S.pendingNews = S.pendingNews.filter(n => n.day > d);
+  echoes.forEach(e => minor.push('• ' + e.text));
+  $('np-minor').innerHTML = minor.length ? '<b>BREVES:</b>' + minor.join('<br>') : '';
+  $('np-ad').textContent = pick(ADS);
+}
+
+function renderHome() {
+  // status família
+  let html = '';
+  for (const k in S.family) {
+    const m = S.family[k];
+    const cls = !m.alive ? 'fam-status-dead' : m.sick ? 'fam-status-bad' : 'fam-status-ok';
+    const st = !m.alive ? 'falecido(a)' : m.sick ? `DOENTE (${m.sickDays}d)` : m.hunger > 0 ? 'com fome' : 'bem';
+    html += `<div class="fam-row"><span>${m.nome}</span><span class="${cls}">${st}</span></div>`;
+  }
+  $('family-status').innerHTML = html;
+
+  // eventos
+  const ev = HOME_EVENTS[S.day];
+  let evHtml = '';
+  if (ev) evHtml += `<div class="ev">${ev.texto}</div>`;
+  if (S.flags.remedioEntregue) { evHtml += `<div class="ev">De madrugada, alguém deixou um pacote na porta: o remédio de Tomi, e um bilhete: "Dívida paga. — J.M."</div>`; S.flags.remedioEntregue = false; }
+  if (S.flags.morte) { evHtml += `<div class="ev">Houve um velório nesta casa. As vizinhas trouxeram sopa e silêncio.</div>`; S.flags.morte = false; }
+  $('home-events').innerHTML = evHtml;
+
+  // orçamento
+  $('home-budget').innerHTML =
+    `<div class="row"><span>Saldo</span><span>${MOEDA} ${S.money}</span></div>` +
+    `<div class="row"><span>Aluguel (descontado à noite)</span><span>${MOEDA} ${S.day >= 31 ? 25 : 15}</span></div>`;
+
+  // loja
+  const shop = $('home-shop'); shop.innerHTML = '';
+  const buyBtn = (key, label, cost) => {
+    const b = document.createElement('button');
+    b.textContent = `${label} — ${MOEDA} ${cost}`;
+    b.onclick = () => {
+      if (morningPurchases[key]) return;
+      if (S.money < cost) { b.textContent = 'SEM SALDO'; setTimeout(() => b.textContent = `${label} — ${MOEDA} ${cost}`, 900); return; }
+      S.money -= cost; morningPurchases[key] = true; b.disabled = true; renderHome();
+    };
+    shop.appendChild(b);
+  };
+  buyBtn('comida', 'Comida p/ família', COSTS.comida);
+  buyBtn('aquecimento', 'Aquecimento', COSTS.aquecimento);
+  for (const k in S.family) {
+    const m = S.family[k];
+    if (m.alive && m.sick) buyBtn('remedio_' + k, `Remédio (${m.nome.split(' ')[0]})`, COSTS.remedio);
+  }
+  // calibração do mercador (dia 38+)
+  if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (mercado negro)', 40);
+  if (morningPurchases.calib) S.bioCalibrated = true;
+}
+
+/* ---------- FINAIS ---------- */
+function pickEnding(kind) {
+  const c = S.counters;
+  if (kind === 'prisao') return 'prisao';
+  const famDead = Object.values(S.family).every(m => !m.alive);
+  if (famDead) return 'familia';
+  if (kind === 'mirror_reject') return 'duvida';
+  if (c.resHelped >= 1 && S.flags.resistencia_contato && S.citTotal < 12) return 'resistencia';
+  if (c.alternadosIn >= 6) return 'silencio';
+  if (S.citTotal <= 4 && c.bribes === 0) return 'funcionario';
+  return 'duvida';
+}
+
+function finishGame(kind) {
+  shift.running = false;
+  clearInterval(shift.tickId);
+  clearInterval(radioTimer);
+  stopAmbience();
+  const key = pickEnding(kind);
+  const e = ENDINGS[key];
+  const c = S.counters;
+  $('ending-title').textContent = e.t;
+  $('ending-body').textContent = e.b;
+  $('ending-stats').innerHTML =
+    `48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
+    `Alternados que passaram por você: <b>${c.alternadosIn}</b>. Detidos: ${c.alternadosCaught}. Rejeitados sem você saber: ${c.alternadosBlocked}.<br>` +
+    `Inocentes detidos: ${c.innocentsDetained}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
+    `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>`;
+  try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
+  showScreen('screen-ending');
+}
+
+/* ---------- EVENTOS GLOBAIS DE CLIQUE (inspeção) ---------- */
+document.addEventListener('click', (e) => {
+  if (!shift.inspecting) return;
+  const t = e.target;
+  if (t.classList.contains('v') && t.dataset.fid) return pickTarget(t.dataset.fid, t);
+  const photo = t.closest('.doc-photo');
+  if (photo) return pickTarget(photo.dataset.fid, photo);
+  if (t.classList.contains('doc-seal')) return pickTarget(t.dataset.fid, t);
+  if (t.classList.contains('rb-rule') || t.classList.contains('rb-country')) return pickTarget(t.dataset.fid, t);
+  if (t.classList.contains('a') && t.dataset.fid) return pickTarget(t.dataset.fid, t);
+  if (t.id === 'clock' || t.closest('.shift-clock')) return pickTarget('clock', t.closest('.shift-clock'));
+  if (t.id === 'npc-portrait' || t.closest('#npc-stage')) return pickTarget('npc.face', $('npc-stage'));
+});
+
+/* ---------- BOTÕES ---------- */
+$('btn-new').onclick = () => {
+  S = freshState();
+  modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM',
+    'Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nSalário: ' + MOEDA + ' 5 por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família (Vessa, Tomi e sua mãe) depende do seu salário.\n\nAssine abaixo. A recusa não consta do formulário como opção.',
+    [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
+};
+$('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
+$('btn-gowork').onclick = () => {
+  if (ENCOUNTERS[S.day] && ENCOUNTERS[S.day].vendeCalibracao) S.flags.calibOferta = true;
+  startDay();
+};
+$('btn-gohome').onclick = goHome;
+$('btn-endshift').onclick = () => { if (shift.running) endShift(); };
+$('btn-bulletin').onclick = () => showBulletin(null);
+$('btn-inspect').onclick = toggleInspect;
+$('btn-exam').onclick = openExam;
+$('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
+$('btn-bag').onclick = openBag;
+$('btn-bag-close').onclick = () => $('bag-overlay').classList.remove('active');
+$('btn-radio').onclick = () => {
+  radioOn = !radioOn;
+  $('radio-bar').classList.toggle('radio-off', !radioOn);
+  radioTick();
+};
+$('btn-scan-thermo').onclick = () => scan('thermo');
+$('btn-scan-pulse').onclick = () => scan('pulse');
+$('btn-scan-bio').onclick = () => scan('bio');
+$('btn-approve').onclick = () => decide('approve');
+$('btn-reject').onclick = () => decide('reject');
+$('btn-detain').onclick = () => decide('detain');
+$('btn-restart').onclick = () => { location.reload(); };
+
+/* ---------- INICIALIZAÇÃO ---------- */
+(function init() {
+  if (loadSave()) $('btn-continue').style.display = '';
+  showScreen('screen-title');
+})();
+
+</script>
+</body>
+</html>
