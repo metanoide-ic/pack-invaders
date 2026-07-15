@@ -35,6 +35,10 @@ Sem instalação, sem build, sem internet.
 - **Leis vivas:** regras surgem, somem, voltam e se contradizem (de propósito);
 - **Exame físico:** close-up de olhos, boca, pele, mãos e pescoço — com o "boato do dia"
   sobre sinais físicos que pode ser verdade, lenda… ou lei;
+- **Bagagem:** objetos que contam histórias — pistas falsas, passagens só de ida que
+  desmentem o motivo declarado, e contrabando que não tem explicação boa;
+- **Rádio do posto:** três emissoras disputando a sua cabeça durante o expediente
+  (desligável — mas o silêncio também diz coisas);
 - **Noites:** onze visitas à sua porta, do vizinho sem aquecimento à voz que não devia
   estar do lado de fora;
 - **Ecos:** consequências tardias e ambíguas de cada aprovação nos jornais dos dias seguintes;

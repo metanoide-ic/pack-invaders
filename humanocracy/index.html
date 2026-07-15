@@ -88,6 +88,7 @@
           <div class="tools">
             <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
             <button id="btn-exam" class="btn-tool" title="Exame Físico aproximado (10 min)">👁 EXAME FÍSICO</button>
+            <button id="btn-bag" class="btn-tool" title="Revistar bagagem (10 min)">🧳 BAGAGEM</button>
             <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
             <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
             <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
@@ -107,6 +108,10 @@
         </div>
       </div>
 
+      <div class="radio-bar" id="radio-bar">
+        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto">📻</button>
+        <span id="radio-line">…o rádio do posto aquece as válvulas…</span>
+      </div>
       <div class="inspect-bar" id="inspect-bar"></div>
     </div>
 
@@ -155,6 +160,20 @@
             <div class="exam-zones" id="exam-zones"></div>
             <div class="exam-log" id="exam-log"></div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== BAGAGEM ===== -->
+    <div id="bag-overlay" class="exam-overlay">
+      <div class="exam-panel">
+        <div class="exam-head">
+          <span>REVISTA DE BAGAGEM — objetos contam histórias</span>
+          <button id="btn-bag-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="bag-body">
+          <div class="bag-hint">No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.</div>
+          <div id="bag-items"></div>
         </div>
       </div>
     </div>

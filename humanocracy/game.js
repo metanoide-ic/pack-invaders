@@ -295,7 +295,7 @@ function examZone(cz, zone) {
 }
 
 /* ---------- GERAÇÃO DE CIDADÃOS ---------- */
-const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction'];
+const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction', 'luggage'];
 
 function fullName(pais, sexo) {
   const c = COUNTRIES[pais];
@@ -372,7 +372,57 @@ function makeCitizen(day, opts) {
   genPhysical(cz);
   if (opts.scannerAmbiguo) cz.phys.piscar = true; // ela não piscou. ou você não viu.
 
+  // bagagem
+  buildBaggage(cz);
+
   return cz;
+}
+
+function buildBaggage(cz) {
+  cz.bag = [];
+  cz.bagDone = false;
+  const push = (txt, extra) => cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra));
+  push(pick(BAG_POOLS.comum));
+  if (chance(.6)) push(pick(BAG_POOLS.comum));
+  const pool = BAG_POOLS[cz.motivo];
+  if (pool && chance(.8)) push(pick(pool));
+  if (chance(.18)) push(pick(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
+  if (cz.bagOneway) push(BAG_ONEWAY.txt, { fid: 'bag.oneway', desc: BAG_ONEWAY.desc });
+  if ((cz.isForger || cz.isAlternado) && chance(.12) && !cz.encounter) {
+    push(pick(BAG_CONTRABAND), { contra: true, desc: 'Isto não deveria estar aqui. Isto não tem explicação boa.' });
+  }
+  // embaralha
+  for (let i = cz.bag.length - 1; i > 0; i--) { const j = ri(0, i); [cz.bag[i], cz.bag[j]] = [cz.bag[j], cz.bag[i]]; }
+}
+
+/* ---------- BAGAGEM: UI ---------- */
+function openBag() {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  if (!cz.bagDone) { spendTime(10); cz.bagDone = true; }
+  const box = $('bag-items'); box.innerHTML = '';
+  cz.bag.forEach(item => {
+    const el = document.createElement('div');
+    el.className = 'bag-item' + (item.contra ? ' contra' : '');
+    el.dataset.fid = item.fid;
+    el.innerHTML = item.txt + (item.desc ? `<span class="bag-desc">${item.desc}</span>` : '');
+    el.onclick = () => {
+      if (item.contra && !item.found) {
+        item.found = true;
+        el.classList.add('found');
+        cz.evidence = true;
+        $('btn-detain').disabled = false;
+        cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: 'Contrabando na bagagem', confirmedNow: true });
+        shift.confirmed.push(cz.discrepancies[cz.discrepancies.length - 1]);
+        $('inspect-bar').textContent = '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.';
+        sfx('ding');
+        return;
+      }
+      if (shift.inspecting) pickTarget(item.fid, el);
+    };
+    box.appendChild(el);
+  });
+  $('bag-overlay').classList.add('active');
 }
 
 function genPhysical(cz) {
@@ -469,6 +519,14 @@ function applyDisc(cz, type, day) {
       add('sexMismatch', ['pass.sexo', 'npc.face'], 'Sexo registrado não confere');
       break;
     }
+    case 'luggage': {
+      // a mala desmente a boca — mas só se alguém abrir a mala
+      if (!d.perm) { applyDisc(cz, 'expired', day); return; }
+      cz.bagOneway = true;
+      add('luggage', ['bag.oneway', 'perm.motivo'], 'Bagagem incompatível com o motivo declarado');
+      cz.discrepancies[cz.discrepancies.length - 1].latent = true;
+      break;
+    }
     case 'contradiction': {
       cz.lie = pick(['motivo', 'cidade', 'profissao']);
       const fid = cz.lie === 'motivo' ? (d.perm ? 'perm.motivo' : 'pass.nome') : cz.lie === 'cidade' ? 'pass.cidade' : (d.work ? 'work.profissao' : 'pass.nome');
@@ -543,6 +601,8 @@ function startDay() {
     shift.running = true;
     clearInterval(shift.tickId);
     shift.tickId = setInterval(tickClock, 1000);
+    startAmbience();
+    startRadio();
     nextCitizen();
   });
 }
@@ -572,6 +632,47 @@ function updateHud() {
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · ${fmtDate(worldDate(S.day))}`;
   $('processed-count').textContent = `Atendidos: ${shift.processed}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;
+}
+
+/* ---------- RÁDIO DO POSTO ---------- */
+let radioOn = true, radioTimer = null;
+function radioTick() {
+  if (!shift.running) return;
+  const line = $('radio-line');
+  line.classList.add('fade');
+  setTimeout(() => {
+    let txt;
+    if (!radioOn) txt = '‹desligado›';
+    else if (S.day >= 47) txt = '— silêncio. nem estática. silêncio. —';
+    else txt = pick(RADIO[regimeOfDay(S.day)] || RADIO.republica);
+    line.textContent = txt;
+    line.classList.remove('fade');
+  }, 800);
+}
+function startRadio() {
+  clearInterval(radioTimer);
+  radioTimer = setInterval(radioTick, 16000);
+  setTimeout(radioTick, 2500);
+}
+
+/* ---------- AMBIÊNCIA (drone de válvulas, quase inaudível) ---------- */
+let droneNodes = null;
+function startAmbience() {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    if (droneNodes) return;
+    const g = AC.createGain(); g.gain.value = .012; g.connect(AC.destination);
+    const o1 = AC.createOscillator(); o1.type = 'sine'; o1.frequency.value = 50;
+    const o2 = AC.createOscillator(); o2.type = 'sine'; o2.frequency.value = 50.7;
+    o1.connect(g); o2.connect(g); o1.start(); o2.start();
+    droneNodes = { o1, o2, g };
+  } catch (e) { /* sem áudio */ }
+}
+function stopAmbience() {
+  if (!droneNodes) return;
+  try { droneNodes.o1.stop(); droneNodes.o2.stop(); } catch (e) {}
+  droneNodes = null;
 }
 
 /* ---------- FILA ---------- */
@@ -911,7 +1012,8 @@ function decide(decision) {
   shift.citizen = null;
   $('npc-portrait').classList.remove('pickable');
 
-  const viols = cz.discrepancies.concat(computeViolations(cz, S.day));
+  // discrepâncias latentes (bagagem) só contam se foram descobertas
+  const viols = cz.discrepancies.filter(d => !d.latent || shift.confirmed.includes(d)).concat(computeViolations(cz, S.day));
   const dayFree = S.day >= 47;
   let correct, note = '';
 
@@ -1030,6 +1132,10 @@ function endShift() {
   if (!shift.running) return;
   shift.running = false;
   clearInterval(shift.tickId);
+  clearInterval(radioTimer);
+  stopAmbience();
+  $('bag-overlay').classList.remove('active');
+  $('exam-overlay').classList.remove('active');
   const salary = null; // já pago por decisão
   let report = '';
   const row = (k, v) => `<div class="row"><span>${k}</span><span>${v}</span></div>`;
@@ -1233,6 +1339,8 @@ function pickEnding(kind) {
 function finishGame(kind) {
   shift.running = false;
   clearInterval(shift.tickId);
+  clearInterval(radioTimer);
+  stopAmbience();
   const key = pickEnding(kind);
   const e = ENDINGS[key];
   const c = S.counters;
@@ -1279,6 +1387,13 @@ $('btn-bulletin').onclick = () => showBulletin(null);
 $('btn-inspect').onclick = toggleInspect;
 $('btn-exam').onclick = openExam;
 $('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
+$('btn-bag').onclick = openBag;
+$('btn-bag-close').onclick = () => $('bag-overlay').classList.remove('active');
+$('btn-radio').onclick = () => {
+  radioOn = !radioOn;
+  $('radio-bar').classList.toggle('radio-off', !radioOn);
+  radioTick();
+};
 $('btn-scan-thermo').onclick = () => scan('thermo');
 $('btn-scan-pulse').onclick = () => scan('pulse');
 $('btn-scan-bio').onclick = () => scan('bio');

@@ -346,6 +346,29 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 .exam-log .anomalia.endossada { text-decoration: underline; cursor:pointer; }
 .exam-log .obs { color:var(--ink-dim); }
 
+/* ============ BAGAGEM ============ */
+.bag-body { padding:14px; overflow-y:auto; }
+.bag-hint { font-size:11px; color:var(--ink-dim); margin-bottom:10px; }
+.bag-item {
+  padding:9px 10px; margin-bottom:6px; background:var(--panel2);
+  border-left:3px solid #6b5a3a; font-size:12px; line-height:1.5; cursor:pointer;
+}
+.bag-item:hover { background:var(--panel); }
+.bag-item.picked { outline:2px solid var(--stamp-red); }
+.bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:11px; }
+.bag-item.contra { border-left-color: var(--stamp-red); }
+.bag-item.contra.found { background:rgba(140,47,36,.25); }
+
+/* ============ RÁDIO ============ */
+.radio-bar {
+  display:flex; align-items:center; gap:10px;
+  background:var(--panel); border-top:1px solid #000;
+  padding:4px 16px; font-size:11px; color:var(--ink-dim);
+}
+#radio-line { font-style:italic; transition: opacity .8s; }
+#radio-line.fade { opacity:0; }
+.radio-off #radio-line { color:#4a4a44; }
+
 @media (max-width: 900px) {
   .shift-main { grid-template-columns: 220px 1fr 240px; }
   .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }

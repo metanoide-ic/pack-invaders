@@ -519,6 +519,69 @@ const NIGHT_EVENTS = {
   },
 };
 
+/* ---------- BAGAGEM: objetos contam histórias ---------- */
+const BAG_POOLS = {
+  comum: [
+    'Roupas dobradas com pressa', 'Pão embrulhado em jornal de anteontem',
+    'Fotografia de família com o canto queimado', 'Terço gasto de tanto uso',
+    'Caderno de endereços com metade dos nomes riscados', 'Relógio de bolso parado às 3h12',
+    'Meias de lã tricotadas à mão', 'Livro sem capa, com frases sublinhadas a lápis',
+  ],
+  trabalho: ['Ferramentas envoltas em pano oleoso', 'Luvas de solda gastas', 'Carta de recomendação amassada e reamassada'],
+  tratamento: ['Frascos de remédio quase vazios', 'Radiografia em envelope pardo', 'Receita médica dobrada em oito'],
+  visita: ['Presente embrulhado (o papel foi aberto e refeito)', 'Bolo de mel envolto em pano de prato', 'Maço de cartas amarrado com barbante'],
+  estudo: ['Livros didáticos de segunda mão', 'Caderno novo com a primeira página arrancada'],
+  imigracao: ['A chave de uma porta que não existe mais', 'Escritura de uma casa vendida às pressas', 'Álbum de fotografias completo, pesado demais para quem viaja leve'],
+  transito: ['Quase nada: uma muda de roupa', 'Mapa com uma rota marcada a lápis — e outra, apagada'],
+};
+const BAG_ONEWAY = { fid: 'bag.oneway', txt: 'Passagem de trem — SÓ IDA', desc: 'Comprada há três dias. Não há passagem de volta em lugar nenhum desta bagagem.' };
+const BAG_CONTRABAND = [
+  'Frascos sem rótulo com líquido âmbar', 'Maço de passaportes EM BRANCO',
+  'Peças metálicas que, montadas, deixariam de ser inocentes', 'Carimbo oficial do Ministério — que não deveria estar aqui',
+];
+const BAG_HERRINGS = [
+  'Roupas masculinas na mala de uma viajante — (fuga? luto? não é crime)',
+  'Brinquedos infantis — e nenhuma criança na viagem',
+  'Aliança guardada na caixinha, não no dedo',
+  'Diário com as últimas dez páginas arrancadas',
+  'Uniforme militar dobrado no fundo — sem insígnias',
+];
+
+/* ---------- RÁDIO DIEGÉTICA (3 emissoras + estática) ---------- */
+const RADIO = {
+  republica: [
+    '[ESTATAL] O ministro pede calma e confiança nos processos de triagem.',
+    '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.',
+    '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.',
+    '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.',
+    '[CLANDESTINA] …se está ouvindo isto, o térmico do posto 7 está descalibrado desde terça…',
+    '[ESTATAL] Música: "Manhãs de Ostra Velha", com a Orquestra Nacional.',
+    '[LIVRE] Entrevista: "falso positivo destruiu minha família", diz operário.',
+  ],
+  mehrvolk: [
+    '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
+    '[ESTATAL] Aprendam com as crianças da Escola 4: "Quem cala, protege!"',
+    '[ESTATAL] O Instituto confirma: os indicadores funcionam. Os números não serão divulgados.',
+    '[CLANDESTINA] …os números vazaram: nove inocentes por captura. repasse antes que cortem…',
+    '[CLANDESTINA] …não usem as palavras deles. "substituído" é uma palavra deles…',
+    '[ESTATAL] Marcha "Filhos do Amanhã Limpo" — a pedido dos ouvintes. De todos eles.',
+  ],
+  conselho: [
+    '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
+    '[ESTATAL] A cota de otimismo desta semana foi CUMPRIDA.',
+    '[CLANDESTINA] …o laboratório da Usina 9 recebeu caminhões de novo esta noite…',
+    '[ESTATAL] Informe: o açúcar voltará às prateleiras quando você merecer. Correção: quando houver estoque.',
+    '[CLANDESTINA] …eles trocaram a bandeira do prédio, não o que acontece no porão…',
+  ],
+  colapso: [
+    '‹estática›',
+    '‹estática, e por baixo dela, quase uma voz›',
+    '[?] …alguém aí? câmbio… …alguém… câmbio…',
+    '‹o hino antigo, tocando sozinho, em loop, num estúdio vazio›',
+    '[?] …não abram para quem já mora com vocês… ‹corte›',
+  ],
+};
+
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
 const QUEUE_CHATTER = [
   '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',

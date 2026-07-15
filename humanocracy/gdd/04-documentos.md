@@ -91,13 +91,27 @@ Digitais (apagadas, queimadas, parciais), retina (doenças, cirurgias), voz (gri
 imitação), estrutura óssea (próteses honestas confundem), DNA (confiável — e demora dias:
 o resultado raramente chega durante o atendimento; quando chega, o cidadão já foi embora).
 
-## 4.6 Bagagem e objetos pessoais (produção)
+## 4.6 Bagagem e objetos pessoais (implementado no protótipo)
 
-Objetos contam histórias, não apenas escondem contrabando: aliança gasta, relógio militar,
-fotografia rasgada, urso de pelúcia, carta de amor, remédio vencido, bilhete de trem só de
-ida. **Caso-modelo:** mulher diz visitar a mãe doente; na mala, roupas masculinas,
-brinquedos, contrato de aluguel, ferramentas, passagem só de ida. Está mentindo — ou
-fugindo do marido. O jogo sabe qual das duas (Estado Verdadeiro). O jogador, não.
+Ferramenta 🧳 REVISTAR BAGAGEM (10 min): cada cidadão carrega 2–5 objetos sorteados por
+motivo de viagem + pool comum + **pistas falsas** deliberadas (18%: "roupas masculinas na
+mala de uma viajante — fuga? luto? não é crime"; "diário com as últimas dez páginas
+arrancadas"). Objetos contam histórias, não apenas escondem contrabando.
 
-Cartas e diários revelam personalidade, conflitos, saudades — e também mentem, porque
-pessoas mentem até para os próprios diários.
+Três categorias mecânicas:
+
+1. **Objetos narrativos** — nunca são evidência; só contexto (e tentação de julgar);
+2. **Discrepância latente** — a "passagem SÓ IDA" que desmente o motivo declarado.
+   *Latente* significa: **só conta como violação se o jogador a descobriu** (comparando,
+   em modo inspeção, o objeto × campo "motivo" da permissão). Rejeitar sem abrir a mala
+   = advertência ("documentos em ordem"); descobrir primeiro = rejeição justificada.
+   O tipo `luggage` participa da IA adaptativa: Alternados aprendem a fazer malas melhores;
+3. **Contrabando** (12% de falsários/Alternados) — "frascos sem rótulo", "passaportes em
+   branco": clicar no objeto o revela, autoriza DETER e nunca gera advertência.
+
+**Caso-modelo:** mulher diz visitar a mãe doente; na mala, roupas masculinas, brinquedos,
+passagem só de ida. Está mentindo — ou fugindo do marido. O jogo sabe qual das duas
+(Estado Verdadeiro). O jogador, não.
+
+Cartas e diários (produção) revelam personalidade, conflitos, saudades — e também mentem,
+porque pessoas mentem até para os próprios diários.

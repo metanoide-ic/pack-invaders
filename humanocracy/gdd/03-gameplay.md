@@ -45,7 +45,7 @@ O posto não é uma mesa: é uma rotina. Elementos implementados e planejados:
 | Comunicado matinal assinado | ✔ | ✔ + arquivo consultável de comunicados antigos |
 | Fila visível com conversas | ✔ (janela com falas) | ✔ simulação completa: brigas, desmaios, vendedores, fura-filas |
 | Quedas de energia (colapso) | ✔ (escurecimento) | ✔ + gerador manual, lampião, scanners mortos |
-| Rádio durante o expediente | — | ✔ 3 emissoras com linha editorial própria |
+| Rádio durante o expediente | ✔ ticker com 3 emissoras ([ESTATAL]/[LIVRE]/[CLANDESTINA]) por regime; desligável; no colapso vira estática com quase-vozes; no Dia 47, silêncio | ✔ emissoras completas com locutores e música |
 | Telefone do posto | — | ✔ ordens, trotes, ameaças, a voz que sabe seu nome |
 | Inspeções-surpresa de superiores | — | ✔ auditorias que reagem ao seu histórico |
 | Burocracia interna (relatórios 77-B) | — | ✔ formulários que consomem tempo; ignorá-los cobra juros |
