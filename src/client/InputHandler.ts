@@ -175,27 +175,18 @@ export class InputHandler {
         if (e.key === 'ArrowDown') this.renderer.codexScroll += 1;
         if (e.key === 'Escape') this.game.closeCodex();
       }
-      // Title screen: arrow keys navigate the 3×3 portrait grid, Enter to play
+      // Title screen: arrow keys for character navigation, Enter to play
       if (this.game.phase === 'TITLE') {
         const chars = this.game.characters;
         const currentIdx = (this.renderer as any).selectedCharIdx ?? 0;
-        const gridCols = 3;
-        const row = Math.floor(currentIdx / gridCols);
-        const col = currentIdx % gridCols;
-        if (e.key === 'ArrowLeft' && col > 0) {
+        if (e.key === 'ArrowLeft' && currentIdx > 0) {
+          (this.renderer as any)._charSlideOffset = 1;
           (this.renderer as any).selectedCharIdx = currentIdx - 1;
           this.audio.buttonClick();
         }
-        if (e.key === 'ArrowRight' && col < gridCols - 1 && currentIdx + 1 < chars.length) {
+        if (e.key === 'ArrowRight' && currentIdx < chars.length - 1) {
+          (this.renderer as any)._charSlideOffset = -1;
           (this.renderer as any).selectedCharIdx = currentIdx + 1;
-          this.audio.buttonClick();
-        }
-        if (e.key === 'ArrowUp' && row > 0) {
-          (this.renderer as any).selectedCharIdx = currentIdx - gridCols;
-          this.audio.buttonClick();
-        }
-        if (e.key === 'ArrowDown' && currentIdx + gridCols < chars.length) {
-          (this.renderer as any).selectedCharIdx = currentIdx + gridCols;
           this.audio.buttonClick();
         }
         if (e.key === 'Enter') {
@@ -814,27 +805,26 @@ export class InputHandler {
       return;
     }
 
-    // Portrait grid (3×3) — geometry must match Renderer.getTitleGridLayout()
-    const cols = 3, rows = 3;
-    const gridY = Math.floor(L.h * 0.10);
-    const gridH = Math.floor(L.h * 0.48);
-    const gap = Math.floor(L.w * 0.008);
-    const gridW = Math.floor(L.w * 0.58);
-    const gridX = Math.floor(L.cx - gridW / 2);
-    const cellW = Math.floor((gridW - gap * (cols - 1)) / cols);
-    const cellH = Math.floor((gridH - gap * (rows - 1)) / rows);
-    if (pos.x >= gridX && pos.x <= gridX + gridW && pos.y >= gridY && pos.y <= gridY + gridH) {
-      const col = Math.floor((pos.x - gridX) / (cellW + gap));
-      const row = Math.floor((pos.y - gridY) / (cellH + gap));
-      // Reject clicks that land in the gap between cells
-      const cellLocalX = (pos.x - gridX) - col * (cellW + gap);
-      const cellLocalY = (pos.y - gridY) - row * (cellH + gap);
-      if (cellLocalX <= cellW && cellLocalY <= cellH && col >= 0 && col < cols && row >= 0 && row < rows) {
-        const ci = row * cols + col;
-        if (ci < chars.length) {
-          (this.renderer as any).selectedCharIdx = ci;
-          this.audio.buttonClick();
-        }
+    // Carousel geometry — must match Renderer constants
+    const CARD_W  = Math.floor(L.w * 0.265);
+    const CARD_H  = Math.floor(L.h * 0.638);
+    const CARD_Y  = Math.floor(L.h * 0.048);
+    const SPACING = Math.floor(L.w * 0.296);
+
+    // Left arrow / left card area
+    if (pos.y >= CARD_Y && pos.y <= CARD_Y + CARD_H && pos.x < L.cx - Math.floor(CARD_W * 0.5)) {
+      if (currentIdx > 0) {
+        (this.renderer as any).selectedCharIdx = currentIdx - 1;
+        this.audio.buttonClick();
+      }
+      return;
+    }
+
+    // Right arrow / right card area
+    if (pos.y >= CARD_Y && pos.y <= CARD_Y + CARD_H && pos.x > L.cx + Math.floor(CARD_W * 0.5)) {
+      if (currentIdx < chars.length - 1) {
+        (this.renderer as any).selectedCharIdx = currentIdx + 1;
+        this.audio.buttonClick();
       }
       return;
     }
