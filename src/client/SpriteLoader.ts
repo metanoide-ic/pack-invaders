@@ -43,6 +43,9 @@ export interface LoadedSprites {
   icons: Map<string, Map<string, HTMLImageElement>>;
   /** Core HUD glyphs (coin, heart, shield) — see HUD_ICON_IDS */
   hud: Map<string, HTMLImageElement>;
+  /** Settings-screen toggle switch art (on/off) */
+  toggleOn: HTMLImageElement | null;
+  toggleOff: HTMLImageElement | null;
 }
 
 /** Optional decorative background textures for UI panels. Each is drawn
@@ -299,7 +302,10 @@ export async function loadAllSprites(): Promise<LoadedSprites> {
     } catch { /* fallback to procedural/emoji */ }
   }));
 
-  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null, logoTitle: null, screenVictory: null, screenGameover: null, icons, hud };
+  cachedLoaded = { characters, vendors, bosses, enemies, topdown, items, bossCombat, planetFrames: planetFrames.filter(Boolean), vendorsFull, zyrgothGiant, projectilesWeapon, projectilesEnemy, uiPanels, menuBg: null, logoTitle: null, screenVictory: null, screenGameover: null, icons, hud, toggleOn: null, toggleOff: null };
+
+  try { cachedLoaded.toggleOn = await loadImage('./sprites/ui/toggle_on.png'); } catch { /* fallback to pill */ }
+  try { cachedLoaded.toggleOff = await loadImage('./sprites/ui/toggle_off.png'); } catch { /* fallback to pill */ }
 
   // Load menu background
   try {
@@ -458,4 +464,9 @@ export function getEnemyProjectileArt(style: string): HTMLImageElement | null {
 /** Decorative UI panel texture (null → today's flat procedural gradient) */
 export function getUiPanel(id: string): HTMLImageElement | null {
   return cachedLoaded?.uiPanels.get(id) ?? null;
+}
+
+/** Settings-screen toggle switch art (null → the plain on/off pill) */
+export function getUiToggle(on: boolean): HTMLImageElement | null {
+  return (on ? cachedLoaded?.toggleOn : cachedLoaded?.toggleOff) ?? null;
 }

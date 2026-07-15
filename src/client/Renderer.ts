@@ -22,7 +22,7 @@ import { ALL_ITEMS } from '../data/items';
 import { CHARACTER_SKILLS } from '../core/SkillSystem';
 import { getEquippedRelics, getCollectedRelics, ALL_RELICS } from '../data/relics';
 import { ALL_COLLECTIBLES } from '../data/collectibles';
-import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel, getLogoTitle, getScreenVictory, getScreenGameover, getIcon, getHudIcon } from './SpriteLoader';
+import { getCharacterPortrait, getVendorPortrait, getBossPortrait, getBossCombatSprite, getTopdownSprite, getPlanetFrames, getVendorFullBody, getZyrgothGiant, getWeaponProjectileArt, getEnemyProjectileArt, getUiPanel, getLogoTitle, getScreenVictory, getScreenGameover, getIcon, getHudIcon, getUiToggle } from './SpriteLoader';
 import { ALL_CHARACTERS } from '../data/characters';
 import { getDailyChallenge, getDailyBest, getDailyStreak } from '../data/dailyChallenge';
 
@@ -7841,6 +7841,14 @@ export class Renderer {
   /** Small rounded ON/OFF pill toggle used throughout the settings screen */
   private drawToggle(x: number, y: number, w: number, h: number, on: boolean): void {
     const { ctx } = this;
+    const toggleArt = getUiToggle(on);
+    if (toggleArt) {
+      const scale = Math.min(w / toggleArt.width, h / toggleArt.height);
+      const dw = toggleArt.width * scale;
+      const dh = toggleArt.height * scale;
+      ctx.drawImage(toggleArt, x + (w - dw) / 2, y + (h - dh) / 2, dw, dh);
+      return;
+    }
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, h / 2);
     ctx.fillStyle = on ? '#4ade80' : '#374151';
