@@ -2107,9 +2107,15 @@ export class Renderer {
       ctx.textAlign = 'center';
       ctx.fillText(`${i + 1}`, sx + Math.floor(slot * 0.15), panelY + Math.floor(slot * 0.23));
       // Icon
-      ctx.font = `${Math.floor(slot * 0.4)}px monospace`;
-      ctx.fillStyle = '#e2e8f0';
-      ctx.fillText(sk.definition.icon, sx + slot / 2, panelY + slot * 0.6);
+      const skillPreviewArt = getIcon('skills', sk.definition.id);
+      if (skillPreviewArt) {
+        const spS = Math.floor(slot * 0.62);
+        ctx.drawImage(skillPreviewArt, sx + (slot - spS) / 2, panelY + slot * 0.6 - spS * 0.72, spS, spS);
+      } else {
+        ctx.font = `${Math.floor(slot * 0.4)}px monospace`;
+        ctx.fillStyle = '#e2e8f0';
+        ctx.fillText(sk.definition.icon, sx + slot / 2, panelY + slot * 0.6);
+      }
       // Name below
       ctx.font = `${Math.floor(L.h * 0.0092)}px monospace`;
       ctx.fillStyle = '#c7d2fe';
@@ -2333,9 +2339,15 @@ export class Renderer {
         // Wrap into rows of 6 so a big collection stays on screen
         const col = ri % 6;
         const row = Math.floor(ri / 6);
-        ctx.fillText(equippedRelics[ri].icon,
-          relicX + col * Math.floor(L.w * 0.02),
-          relicY + Math.floor(L.h * 0.02) + row * Math.floor(L.h * 0.024));
+        const rx = relicX + col * Math.floor(L.w * 0.02);
+        const ry = relicY + Math.floor(L.h * 0.02) + row * Math.floor(L.h * 0.024);
+        const relicIconArt = getIcon('relics', equippedRelics[ri].id);
+        if (relicIconArt) {
+          const reS = Math.floor(L.h * 0.018);
+          ctx.drawImage(relicIconArt, rx, ry - reS + Math.floor(L.h * 0.004), reS, reS);
+        } else {
+          ctx.fillText(equippedRelics[ri].icon, rx, ry);
+        }
       }
     }
   }
@@ -5359,10 +5371,18 @@ export class Renderer {
 
         // Icon
         if (!onCd || sk.cooldownRemaining < sk.definition.cooldown * 0.3) {
-          ctx.font = `${Math.floor(skillSize * 0.45)}px monospace`;
-          ctx.fillStyle = onCd ? '#475569' : '#ffffff';
-          ctx.textAlign = 'center';
-          ctx.fillText(sk.definition.icon, sx + skillSize / 2, sy + skillSize * 0.55);
+          const skillArt = getIcon('skills', sk.definition.id);
+          if (skillArt) {
+            const siS = Math.floor(skillSize * 0.72);
+            if (onCd) ctx.globalAlpha = 0.5;
+            ctx.drawImage(skillArt, sx + (skillSize - siS) / 2, sy + (skillSize - siS) / 2, siS, siS);
+            ctx.globalAlpha = 1;
+          } else {
+            ctx.font = `${Math.floor(skillSize * 0.45)}px monospace`;
+            ctx.fillStyle = onCd ? '#475569' : '#ffffff';
+            ctx.textAlign = 'center';
+            ctx.fillText(sk.definition.icon, sx + skillSize / 2, sy + skillSize * 0.55);
+          }
         }
 
         // Key binding label
@@ -6797,6 +6817,10 @@ export class Renderer {
         return getCharacterPortrait(id);
       case 'item':
         return this.sprites.items.get(id) || null;
+      case 'collectible': {
+        const hint = ALL_COLLECTIBLES.find(c => c.id === id)?.spriteHint;
+        return (hint && getIcon('collectibleHints', hint)) || null;
+      }
       default:
         return null;
     }
@@ -7125,25 +7149,28 @@ export class Renderer {
             ctx.drawImage(sprite, medCx - (sw * ss) / 2, medCy - (sh * ss) / 2, sw * ss, sh * ss);
             ctx.imageSmoothingEnabled = true;
           } else {
-            ctx.font = `${Math.floor(portraitSize * 0.35)}px monospace`;
-            ctx.fillStyle = INK_MUTED;
-            ctx.textAlign = 'center';
-            const icons: Record<string, string> = { enemy: '👾', boss: '🐉', character: '🧑', item: '⚙', card: '🃏', collectible: '📜' };
-            // Collectibles carry a spriteHint (paper/photo/lighter/etc.) that was
-            // written for exactly this — never looked up until now, so all 48
-            // rendered as the same generic scroll regardless of what they are.
-            const hintIcons: Record<string, string> = {
-              paper: '📄', document: '📋', radio: '📻', book: '📖', letter: '✉',
-              photo: '📷', diagram: '📈', map: '🗺', blueprint: '📐', vial: '🧪',
-              seed: '🌱', teddy: '🧸', badge: '🎖', lighter: '🔥', tag: '🏷',
-              watch: '⌚', mirror: '🪞', device: '📟', tape: '📼', helmet: '⛑',
-            };
             const collectibleHint = selEntry.category === 'collectible'
               ? ALL_COLLECTIBLES.find(c => c.id === selEntry.id)?.spriteHint
               : undefined;
-            const icon = (collectibleHint && hintIcons[collectibleHint]) || icons[selEntry.category] || '?';
-            ctx.fillText(icon, medCx, medCy + portraitSize * 0.12);
-            ctx.textAlign = 'left';
+            const hintArt = collectibleHint ? getIcon('collectibleHints', collectibleHint) : null;
+            if (hintArt) {
+              const hiS = Math.floor(portraitSize * 0.66);
+              ctx.drawImage(hintArt, medCx - hiS / 2, medCy - hiS / 2, hiS, hiS);
+            } else {
+              ctx.font = `${Math.floor(portraitSize * 0.35)}px monospace`;
+              ctx.fillStyle = INK_MUTED;
+              ctx.textAlign = 'center';
+              const icons: Record<string, string> = { enemy: '👾', boss: '🐉', character: '🧑', item: '⚙', card: '🃏', collectible: '📜' };
+              const hintIcons: Record<string, string> = {
+                paper: '📄', document: '📋', radio: '📻', book: '📖', letter: '✉',
+                photo: '📷', diagram: '📈', map: '🗺', blueprint: '📐', vial: '🧪',
+                seed: '🌱', teddy: '🧸', badge: '🎖', lighter: '🔥', tag: '🏷',
+                watch: '⌚', mirror: '🪞', device: '📟', tape: '📼', helmet: '⛑',
+              };
+              const icon = (collectibleHint && hintIcons[collectibleHint]) || icons[selEntry.category] || '?';
+              ctx.fillText(icon, medCx, medCy + portraitSize * 0.12);
+              ctx.textAlign = 'left';
+            }
           }
         }
         ctx.restore();
@@ -7416,10 +7443,16 @@ export class Renderer {
       }
 
       // Icon
-      ctx.font = `${Math.floor(L.h * 0.045)}px monospace`;
       ctx.textAlign = 'center';
       ctx.globalAlpha = isCollected ? 1 : 0.25;
-      ctx.fillText(relic.icon, cx + cardW / 2, cy + Math.floor(cardH * 0.4));
+      const relicArt = getIcon('relics', relic.id);
+      if (relicArt) {
+        const riS = Math.floor(cardH * 0.32);
+        ctx.drawImage(relicArt, cx + cardW / 2 - riS / 2, cy + Math.floor(cardH * 0.14), riS, riS);
+      } else {
+        ctx.font = `${Math.floor(L.h * 0.045)}px monospace`;
+        ctx.fillText(relic.icon, cx + cardW / 2, cy + Math.floor(cardH * 0.4));
+      }
       ctx.globalAlpha = 1;
 
       // Name

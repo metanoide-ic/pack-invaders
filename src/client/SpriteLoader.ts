@@ -74,6 +74,23 @@ export const ICON_CATEGORIES: Record<string, string[]> = {
   powerups: ['heal', 'gold', 'shield', 'rapid', 'freeze', 'nuke', 'fuel'],
   difficulties: ['recruit', 'soldier', 'veteran', 'elite', 'nightmare', 'extinction'],
   extras: ['coop', 'versus_ships', 'versus_pvp', 'daily'],
+  skills: [
+    'thunder_strike', 'overclock', 'emp_blast', 'void_rift', 'phase_shift', 'dark_harvest',
+    'summon_swarm', 'frenzy', 'reanimate_skill', 'foam_jet', 'rescue_shield', 'axe_spin',
+    'scrap_grenade', 'jury_rig', 'bolt_rain', 'swarm_cry', 'molt', 'ancient_hunger',
+  ],
+  relics: [
+    'r_alien_tooth', 'r_hydra_scale', 'r_swarm_core', 'r_toxar_gland', 'r_titan_shard',
+    'r_criox_crystal', 'r_phantax_eye', 'r_gluthar_heart', 'r_vulkra_flame',
+    'r_voidmaw_fang', 'r_astral_scale', 'r_harbinger_sigil', 'r_copycat_echo',
+    'r_mothership_plate', 'r_rail_duel_engine', 'r_pit_shell',
+  ],
+  collectibleHints: [
+    'paper', 'document', 'radio', 'book', 'letter',
+    'photo', 'diagram', 'map', 'blueprint', 'vial',
+    'seed', 'teddy', 'badge', 'lighter', 'tag',
+    'watch', 'mirror', 'device', 'tape', 'helmet',
+  ],
 };
 
 /** Core HUD glyphs, loaded from ./sprites/hud/{id}.png */
