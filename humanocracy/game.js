@@ -46,6 +46,7 @@ function freshState() {
     family: {
       vessa: { nome: 'Vessa (esposa)', alive: true, sick: false, sickDays: 0, hunger: 0 },
       tomi: { nome: 'Tomi (filho, 8 anos)', alive: true, sick: false, sickDays: 0, hunger: 0 },
+      dario: { nome: 'Dario (filho, 15 — do seu primeiro casamento)', alive: true, sick: false, sickDays: 0, hunger: 0 },
       mae: { nome: 'Sua mãe, Odila', alive: true, sick: false, sickDays: 0, hunger: 0 },
     },
     flags: {}, counters: {
@@ -61,7 +62,16 @@ function freshState() {
   };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
-function loadSave() { try { const j = localStorage.getItem(SAVE_KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; } }
+function loadSave() {
+  try {
+    const j = localStorage.getItem(SAVE_KEY);
+    if (!j) return null;
+    const s = JSON.parse(j);
+    // migração: saves antigos não tinham o Dario
+    if (s.family && !s.family.dario) s.family.dario = { nome: 'Dario (filho, 15 — do seu primeiro casamento)', alive: true, sick: false, sickDays: 0, hunger: 0 };
+    return s;
+  } catch (e) { return null; }
+}
 
 /* ---------- DATAS DO MUNDO ---------- */
 const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
@@ -603,6 +613,7 @@ function startDay() {
     shift.tickId = setInterval(tickClock, 1000);
     startAmbience();
     startRadio();
+    initQueueCanvas();
     nextCitizen();
   });
 }
@@ -675,9 +686,100 @@ function stopAmbience() {
   droneNodes = null;
 }
 
-/* ---------- FILA ---------- */
+/* ---------- FILA VIVA (canvas) ---------- */
+const Q = { figs: [], snow: [], raf: null, t: 0, walker: null };
+const COAT_COLORS = ['#2e2a24', '#33302a', '#3a3128', '#2a2e33', '#38332e', '#403428', '#2c3230'];
+function makeFig(x) {
+  return {
+    x, tx: x, phase: rnd() * 6.28, h: 30 + ri(0, 8),
+    coat: pick(COAT_COLORS), hat: chance(.5), skin: pick(SKINS),
+    fidget: rnd(), speed: .35 + rnd() * .25,
+  };
+}
+function queueSpots(w) { const s = []; for (let i = 0; i < 9; i++) s.push(w * .58 - i * 26); return s; }
+function initQueueCanvas() {
+  const cv = $('queue-canvas');
+  const win = cv.parentElement;
+  cv.width = win.clientWidth; cv.height = win.clientHeight;
+  const spots = queueSpots(cv.width);
+  Q.figs = spots.map(x => makeFig(x - ri(0, 6)));
+  Q.snow = [];
+  for (let i = 0; i < 26; i++) Q.snow.push({ x: rnd() * cv.width, y: rnd() * cv.height, v: .3 + rnd() * .6, w: rnd() * .5 - .25 });
+  Q.walker = null;
+  cancelAnimationFrame(Q.raf);
+  const ctx = cv.getContext('2d');
+  const loop = () => {
+    Q.t += .016;
+    drawQueue(ctx, cv.width, cv.height);
+    Q.raf = requestAnimationFrame(loop);
+  };
+  Q.raf = requestAnimationFrame(loop);
+}
+function drawFig(ctx, f, groundY) {
+  const bob = Math.sin(Q.t * 2 + f.phase) * 1.1;
+  const sway = Math.sin(Q.t * .7 + f.phase * 2) * (f.fidget > .7 ? 1.6 : .5);
+  const x = f.x + sway, top = groundY - f.h + bob;
+  ctx.fillStyle = f.coat;
+  ctx.beginPath(); // corpo (casaco)
+  ctx.moveTo(x - 6, groundY); ctx.lineTo(x - 5, top + 10); ctx.quadraticCurveTo(x, top + 6, x + 5, top + 10); ctx.lineTo(x + 6, groundY); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = f.skin; // cabeça
+  ctx.beginPath(); ctx.arc(x, top + 4, 4.2, 0, 6.29); ctx.fill();
+  if (f.hat) { ctx.fillStyle = '#1d1a16'; ctx.fillRect(x - 5, top - 2, 10, 3); ctx.fillRect(x - 3.4, top - 6, 6.8, 5); }
+  // fôlego no frio
+  if (Math.sin(Q.t * .9 + f.phase * 3) > .93) {
+    ctx.fillStyle = 'rgba(220,220,210,.12)';
+    ctx.beginPath(); ctx.arc(x + 6, top + 3, 2.5, 0, 6.29); ctx.fill();
+  }
+}
+function drawQueue(ctx, w, h) {
+  const groundY = h - 14;
+  ctx.clearRect(0, 0, w, h);
+  // céu / muro
+  ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = '#14161178'; ctx.fillRect(0, h * .35, w, h);
+  // arame no alto do muro
+  ctx.strokeStyle = '#1e201a'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, h * .35); ctx.lineTo(w, h * .35); ctx.stroke();
+  for (let x = 6; x < w; x += 12) { ctx.beginPath(); ctx.moveTo(x, h * .35 - 3); ctx.lineTo(x + 4, h * .35 + 3); ctx.stroke(); }
+  // poste com cone de luz sobre a frente da fila
+  const lampX = w * .68;
+  ctx.strokeStyle = '#23251d'; ctx.lineWidth = 3;
+  ctx.beginPath(); ctx.moveTo(lampX, groundY); ctx.lineTo(lampX, 8); ctx.lineTo(lampX - 14, 8); ctx.stroke();
+  const flick = .05 + Math.max(0, Math.sin(Q.t * 13) * .012) + (chance(.005) ? -.03 : 0);
+  const grad = ctx.createRadialGradient(lampX - 14, 12, 4, lampX - 14, 12, h * .95);
+  grad.addColorStop(0, `rgba(201,180,120,${.16 + flick})`); grad.addColorStop(1, 'rgba(201,180,120,0)');
+  ctx.fillStyle = grad;
+  ctx.beginPath(); ctx.moveTo(lampX - 14, 10); ctx.lineTo(lampX - 58, groundY); ctx.lineTo(lampX + 34, groundY); ctx.closePath(); ctx.fill();
+  // chão
+  ctx.fillStyle = '#181a14'; ctx.fillRect(0, groundY, w, 14);
+  // figuras
+  Q.figs.forEach(f => { f.x += (f.tx - f.x) * .04; drawFig(ctx, f, groundY); });
+  if (Q.walker) {
+    Q.walker.x += Q.walker.spd;
+    drawFig(ctx, Q.walker, groundY);
+    if (Q.walker.x > w + 12) Q.walker = null;
+  }
+  // neve
+  ctx.fillStyle = 'rgba(220,220,215,.5)';
+  Q.snow.forEach(s => {
+    s.y += s.v; s.x += s.w + Math.sin(Q.t + s.y * .02) * .15;
+    if (s.y > h) { s.y = -2; s.x = rnd() * w; }
+    ctx.fillRect(s.x, s.y, 1.4, 1.4);
+  });
+}
+function queueAdvance() {
+  // o primeiro da fila caminha até o guichê; os outros avançam; chega gente atrás
+  const cv = $('queue-canvas');
+  if (!cv.width) return;
+  const spots = queueSpots(cv.width);
+  const front = Q.figs.shift();
+  if (front) { front.spd = 1.1 + rnd() * .4; Q.walker = front; }
+  Q.figs.forEach((f, i) => { f.tx = spots[i] - ri(0, 6); });
+  const last = Q.figs[Q.figs.length - 1];
+  Q.figs.push(makeFig((last ? last.tx : spots[0]) - 26 - ri(0, 10)));
+}
 function renderQueueChatter() {
-  const n = ri(2, 4);
+  const n = ri(1, 2);
   let html = `≈ ${ri(8, 60)} pessoas na fila<br>`;
   for (let i = 0; i < n; i++) html += pick(QUEUE_CHATTER) + '<br>';
   $('queue-view').innerHTML = html;
@@ -738,8 +840,13 @@ function greetingFor(cz) {
 }
 
 function presentCitizen(cz) {
-  $('npc-portrait').innerHTML = portraitSVG(cz.features);
-  $('npc-portrait').classList.add('pickable');
+  const p = $('npc-portrait');
+  p.innerHTML = portraitSVG(cz.features);
+  p.setAttribute('class', 'pickable'); // svg: className é somente-leitura
+  queueAdvance();
+  // chega andando (sincronizado com o boneco da fila entrando no guichê)
+  setTimeout(() => { p.classList.add('arrive'); }, 350);
+  p.addEventListener('animationend', function h() { p.classList.remove('arrive'); p.removeEventListener('animationend', h); });
   $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
   $('speech').textContent = '“' + greetingFor(cz) + '”';
   buildAskButtons(cz);
@@ -827,6 +934,7 @@ function layDocs(cz) {
     el.style.left = (20 + (i % 3) * 200 + ri(-8, 8)) + 'px';
     el.style.top = (20 + Math.floor(i / 3) * 150 + ri(-6, 6)) + 'px';
     el.style.zIndex = ++shift.zTop;
+    el.style.animationDelay = (i * 0.1) + 's'; // cartas dadas uma a uma
     makeDraggable(el);
     desk.appendChild(el);
     i++;
@@ -1010,7 +1118,10 @@ function decide(decision) {
   if (!cz || !shift.running) return;
   sfx('stamp');
   shift.citizen = null;
-  $('npc-portrait').classList.remove('pickable');
+  const p = $('npc-portrait');
+  p.classList.remove('pickable');
+  // sai andando: aprovado entra no país (direita); rejeitado volta (esquerda); detido, escoltado
+  setTimeout(() => { p.classList.add(decision === 'approve' ? 'leave-ok' : decision === 'reject' ? 'leave-no' : 'leave-det'); }, 350);
 
   // discrepâncias latentes (bagagem) só contam se foram descobertas
   const viols = cz.discrepancies.filter(d => !d.latent || shift.confirmed.includes(d)).concat(computeViolations(cz, S.day));
@@ -1134,6 +1245,7 @@ function endShift() {
   clearInterval(shift.tickId);
   clearInterval(radioTimer);
   stopAmbience();
+  cancelAnimationFrame(Q.raf);
   $('bag-overlay').classList.remove('active');
   $('exam-overlay').classList.remove('active');
   const salary = null; // já pago por decisão
@@ -1159,13 +1271,8 @@ const COSTS = { comida: 8, aquecimento: 6, remedio: 12, presente: 5 };
 let morningPurchases = {};
 
 function goHome() {
-  const ev = NIGHT_EVENTS[S.day];
-  if (ev && !S.flags['night_' + S.day]) {
-    S.flags['night_' + S.day] = true;
-    showNight(S.day, ev);
-    return;
-  }
-  afterNight();
+  // 20:30 — a casa (house.js). Dormir chama afterNight().
+  enterHouse();
 }
 function afterNight() {
   applyNight();
@@ -1210,8 +1317,8 @@ function resolveNight(c) {
   $('night-after').textContent = c.after || '';
   const b = document.createElement('button');
   b.className = 'night-continue';
-  b.textContent = 'TENTAR DORMIR →';
-  b.onclick = afterNight;
+  b.textContent = 'VOLTAR PARA DENTRO →';
+  b.onclick = () => { showScreen('screen-house'); houseResume(); };
   $('night-choices').appendChild(b);
 }
 
@@ -1373,7 +1480,7 @@ document.addEventListener('click', (e) => {
 $('btn-new').onclick = () => {
   S = freshState();
   modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM',
-    'Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nSalário: ' + MOEDA + ' 5 por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família (Vessa, Tomi e sua mãe) depende do seu salário.\n\nAssine abaixo. A recusa não consta do formulário como opção.',
+    'Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nHorário: 08h às 18h. Você chega em casa às 20h30.\nSalário: ' + MOEDA + ' 5 por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família depende do seu salário: Vessa (sua esposa), Tomi (8 anos), Dario (15 anos, do seu primeiro casamento) e sua mãe, Odila.\n\nAssine abaixo. A recusa não consta do formulário como opção.',
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
 };
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };

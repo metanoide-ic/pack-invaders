@@ -43,7 +43,7 @@ O posto não é uma mesa: é uma rotina. Elementos implementados e planejados:
 | Elemento | Protótipo | Produção Unity |
 |---|---|---|
 | Comunicado matinal assinado | ✔ | ✔ + arquivo consultável de comunicados antigos |
-| Fila visível com conversas | ✔ (janela com falas) | ✔ simulação completa: brigas, desmaios, vendedores, fura-filas |
+| Fila visível com conversas | ✔ fila animada em canvas: bonecos esperando na neve sob o poste (luz que tremula), respiração visível no frio, avanço a cada chamada; cidadão chega andando ao guichê, sai pela direita (aprovado), volta cabisbaixo (rejeitado) ou é levado (detido); documentos "dados" na mesa como cartas; carimbo esmaga com slam | ✔ simulação completa: brigas, desmaios, vendedores, fura-filas |
 | Quedas de energia (colapso) | ✔ (escurecimento) | ✔ + gerador manual, lampião, scanners mortos |
 | Rádio durante o expediente | ✔ ticker com 3 emissoras ([ESTATAL]/[LIVRE]/[CLANDESTINA]) por regime; desligável; no colapso vira estática com quase-vozes; no Dia 47, silêncio | ✔ emissoras completas com locutores e música |
 | Telefone do posto | — | ✔ ordens, trotes, ameaças, a voz que sabe seu nome |

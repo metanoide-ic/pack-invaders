@@ -39,8 +39,17 @@ Sem instalação, sem build, sem internet.
   desmentem o motivo declarado, e contrabando que não tem explicação boa;
 - **Rádio do posto:** três emissoras disputando a sua cabeça durante o expediente
   (desligável — mas o silêncio também diz coisas);
-- **Noites:** onze visitas à sua porta, do vizinho sem aquecimento à voz que não devia
-  estar do lado de fora;
+- **A casa (20:30):** depois do expediente você anda pelo apartamento (← → e E, ou clique):
+  sua mãe na sala com a TV que não desliga, Vessa na cozinha com as fofocas das amigas,
+  Tomi tendo "visões" no quarto, e Dario — seu filho do primeiro casamento — conversando
+  com o "amigo" que ninguém sabe quem é. **Cada conversa dá informação de verdade**:
+  se o boato de amanhã é lenda, o que o jornal vai dizer, quando não abrir a porta;
+- **Noites:** batem na porta enquanto você está em casa — do vizinho sem aquecimento à
+  voz que não devia estar do lado de fora. Se for fiscalização do governo e você não
+  atender, a advertência vai para o seu prontuário;
+- **Fila viva:** a fila existe de verdade do lado de fora do guichê — bonecos esperando
+  na neve sob o poste, avançando a cada chamada; cidadãos chegam andando, saem pela
+  direita quando aprovados, voltam cabisbaixos quando rejeitados, são levados quando detidos;
 - **Ecos:** consequências tardias e ambíguas de cada aprovação nos jornais dos dias seguintes;
 - **Três regimes + colapso:** interface, jornal, comunicados e cores mudam com cada governo;
 - **Dia 47:** você vai entender quando chegar. Ou não.

@@ -79,11 +79,43 @@ propaganda — ou algo pior. A partir daqui o jogador desconfia dos documentos, 
 governos, dos cidadãos **e da própria memória**. É o momento em que o thriller político
 vira horror.
 
-## 5.4 A família
+## 5.4 A família — e a casa explorável (implementada)
 
-Vessa (esposa, arquivista), Tomi (filho, 8 anos) e sua mãe, Odila. Não são uma tela de
-despesas: têm rotina, emprego, opiniões e cenas próprias (jantar, luto, desenhos de
-escola). Sistemas:
+Vessa (esposa, arquivista), Tomi (8 anos), **Dario (15 anos, filho do primeiro casamento
+do protagonista, mestiço)** e sua mãe, Odila. Não são uma tela de despesas: têm rotina,
+emprego, opiniões e cenas próprias.
+
+### A casa às 20:30 (house.js)
+
+O expediente termina às 18h; às 20h30 o jogador **anda pelo apartamento** (side-scroller:
+setas/E ou clique) por cinco cômodos: sala (mãe no sofá, TV tremeluzindo), cozinha (Vessa
+no fogão, vapor subindo), quarto do Tomi (desenhos na parede — um deles com "papai de
+dois rostos"), quarto do Dario (janela tapada com tábuas, uma sombra no canto que talvez
+se mova) e o quarto do casal (dormir encerra o dia; à 00h00 o corpo decide sozinho).
+
+**Cada conversa é uma fonte de informação com confiabilidade própria:**
+
+| Personagem | Fonte | Valor de jogo | Confiabilidade |
+|---|---|---|---|
+| Vessa | fofocas das amigas | diz se o boato físico de AMANHÃ é real ou lenda | 75% |
+| Mãe | a TV que não desliga | adianta a manchete de amanhã, embaralhada com propaganda | ~50% |
+| Tomi | "visões" (sonhos) | prenuncia a visita noturna do dia seguinte, cifrado | alta, mas cifrada |
+| Dario | o "amigo" | avisos impossíveis: o procurado de amanhã, o Dia 46, quando não abrir a porta | perfeita — e é isso que assusta |
+
+**Dario é o custo humano do Édito em casa:** mestiço, barrado no portão da escola no
+Dia 15, chamado de "mistura" no pátio com aval do professor sob Mehrvolk, e "camarada"
+no dia seguinte ao golpe — *"quem decide o que eu sou?"*. O "amigo" dele nunca é visto,
+nunca é explicado, não sai em foto ("a foto sai sem o canto do quarto") e uma vez errou
+o nome de Dario — chamou-o pelo nome do pai, "como quem tinha visto uma coisa que ainda
+não aconteceu".
+
+**Batidas na porta (na casa):** eventos scriptados das onze noites + fiscalizações
+aleatórias. Se for o governo e o jogador não atender (ou dormir ignorando), a
+advertência entra no prontuário — o Estado também inspeciona quem inspeciona, inclusive
+em casa. Vizinhos pedem fósforos. Estranhos deixam um botão do SEU casaco no capacho —
+sem que falte nenhum na manga.
+
+Sistemas de sobrevivência:
 
 - **Sobrevivência:** comida, aquecimento e remédio comprados de manhã; fome adoece;
   doença sem remédio por 4 dias mata. O remédio de Tomi (Dia 7+) é a alavanca que o

@@ -67,6 +67,7 @@
         <!-- Guichê: cidadão -->
         <div class="booth" id="booth">
           <div class="booth-window">
+            <canvas id="queue-canvas"></canvas>
             <div class="queue-view" id="queue-view"></div>
             <div class="npc-stage" id="npc-stage">
               <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
@@ -120,7 +121,7 @@
       <div class="endday-panel">
         <div class="endday-title" id="endday-title">FIM DO EXPEDIENTE</div>
         <div id="endday-report"></div>
-        <button id="btn-gohome" class="btn-big">VOLTAR PARA CASA →</button>
+        <button id="btn-gohome" class="btn-big">VOLTAR PARA CASA — 20:30 →</button>
       </div>
     </div>
 
@@ -132,6 +133,25 @@
         <div class="ending-stats" id="ending-stats"></div>
         <button id="btn-restart" class="btn-big">COMEÇAR DE NOVO</button>
       </div>
+    </div>
+
+    <!-- ===== A CASA (20:30) ===== -->
+    <div id="screen-house" class="screen">
+      <div class="house-top">
+        <span id="house-clock">20:30</span>
+        <span class="house-help">← → andar · E interagir (ou clique) · durma na cama para encerrar o dia</span>
+      </div>
+      <div id="house-viewport">
+        <div id="house-world"></div>
+      </div>
+      <div id="house-prompt"></div>
+      <div id="house-dialog">
+        <div id="hd-name"></div>
+        <div id="hd-text"></div>
+        <div id="hd-choices"></div>
+        <div id="hd-hint">clique / E para continuar</div>
+      </div>
+      <div id="house-fade"></div>
     </div>
 
     <!-- ===== NOITE (visitas à porta) ===== -->
@@ -198,5 +218,6 @@
 
   <script src="data.js"></script>
   <script src="game.js"></script>
+  <script src="house.js"></script>
 </body>
 </html>
