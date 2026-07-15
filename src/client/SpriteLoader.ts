@@ -91,6 +91,10 @@ export const ICON_CATEGORIES: Record<string, string[]> = {
     'seed', 'teddy', 'badge', 'lighter', 'tag',
     'watch', 'mirror', 'device', 'tape', 'helmet',
   ],
+  badges: [
+    'wave_perfect', 'skill_master', 'fusion_star', 'combo_fire',
+    'year_complete', 'veteran', 'medal_gold', 'medal_silver', 'medal_bronze',
+  ],
 };
 
 /** Core HUD glyphs, loaded from ./sprites/hud/{id}.png */

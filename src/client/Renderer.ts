@@ -6561,12 +6561,26 @@ export class Renderer {
         const entry = board[lb];
         const charName = charNameMap[entry.characterId] ?? entry.characterId;
         const medal = lb === 0 ? '🥇' : lb === 1 ? '🥈' : lb === 2 ? '🥉' : `${lb + 1}.`;
+        const medalSpriteId = lb === 0 ? 'medal_gold' : lb === 1 ? 'medal_silver' : lb === 2 ? 'medal_bronze' : null;
         ctx.fillStyle = lb === 0 ? '#fbbf24' : lb < 3 ? '#94a3b8' : '#475569';
         const entryDiff = getDifficultyById(entry.difficulty)?.name ?? entry.difficulty;
-        ctx.fillText(
-          `${medal} ${charName} — ${entry.months}m | ${entry.kills}k | ${entryDiff}`,
-          L.cx, lbY + (lb + 1) * lineGap
-        );
+        const lbRowY = lbY + (lb + 1) * lineGap;
+        const medalArt = medalSpriteId ? getIcon('badges', medalSpriteId) : null;
+        if (medalArt) {
+          const rowText = `${charName} — ${entry.months}m | ${entry.kills}k | ${entryDiff}`;
+          const maS = Math.floor(L.h * 0.016);
+          const textW = ctx.measureText(rowText).width;
+          const blockX = L.cx - (textW + maS + 4) / 2;
+          ctx.drawImage(medalArt, blockX, lbRowY - maS * 0.78, maS, maS);
+          ctx.textAlign = 'left';
+          ctx.fillText(rowText, blockX + maS + 4, lbRowY);
+          ctx.textAlign = 'center';
+        } else {
+          ctx.fillText(
+            `${medal} ${charName} — ${entry.months}m | ${entry.kills}k | ${entryDiff}`,
+            L.cx, lbRowY
+          );
+        }
       }
     }
 
@@ -6675,13 +6689,13 @@ export class Renderer {
 
     // Keyboard hints
     // Run badges (performance medals)
-    const badges: { icon: string; label: string; color: string }[] = [];
-    if (game.combat.state.damageTakenThisWave === 0 && game.totalMonths > 1) badges.push({ icon: '🛡', label: 'ÚLTIMA WAVE PERFEITA', color: '#fbbf24' });
-    if (game.stats.skillsUsed >= 20) badges.push({ icon: '⚡', label: 'SKILL MASTER', color: '#6366f1' });
-    if ((game.combat.state as any).maxCombo >= 15) badges.push({ icon: '🔥', label: `COMBO ${(game.combat.state as any).maxCombo}`, color: '#f97316' });
-    if (game.stats.fusionsDiscovered.length >= 3) badges.push({ icon: '★', label: `${game.stats.fusionsDiscovered.length} FUSÕES`, color: '#f472b6' });
-    if (game.totalMonths >= 12) badges.push({ icon: '🏆', label: 'ANO COMPLETO', color: '#4ade80' });
-    if (game.totalMonths >= 24) badges.push({ icon: '👑', label: 'VETERANO', color: '#fbbf24' });
+    const badges: { icon: string; spriteId: string; label: string; color: string }[] = [];
+    if (game.combat.state.damageTakenThisWave === 0 && game.totalMonths > 1) badges.push({ icon: '🛡', spriteId: 'wave_perfect', label: 'ÚLTIMA WAVE PERFEITA', color: '#fbbf24' });
+    if (game.stats.skillsUsed >= 20) badges.push({ icon: '⚡', spriteId: 'skill_master', label: 'SKILL MASTER', color: '#6366f1' });
+    if ((game.combat.state as any).maxCombo >= 15) badges.push({ icon: '🔥', spriteId: 'combo_fire', label: `COMBO ${(game.combat.state as any).maxCombo}`, color: '#f97316' });
+    if (game.stats.fusionsDiscovered.length >= 3) badges.push({ icon: '★', spriteId: 'fusion_star', label: `${game.stats.fusionsDiscovered.length} FUSÕES`, color: '#f472b6' });
+    if (game.totalMonths >= 12) badges.push({ icon: '🏆', spriteId: 'year_complete', label: 'ANO COMPLETO', color: '#4ade80' });
+    if (game.totalMonths >= 24) badges.push({ icon: '👑', spriteId: 'veteran', label: 'VETERANO', color: '#fbbf24' });
 
     if (badges.length > 0) {
       const badgeY = btn1Y - Math.floor(L.h * 0.05);
@@ -6698,7 +6712,16 @@ export class Renderer {
         ctx.lineWidth = 1;
         ctx.strokeRect(bx - Math.floor(badgeSpacing * 0.4), badgeY - 8, Math.floor(badgeSpacing * 0.8), 22);
         ctx.fillStyle = b.color;
-        ctx.fillText(`${b.icon} ${b.label}`, bx, badgeY + 6);
+        const badgeArt = getIcon('badges', b.spriteId);
+        if (badgeArt) {
+          const baS = 16;
+          ctx.drawImage(badgeArt, bx - Math.floor(badgeSpacing * 0.4) + 4, badgeY - baS / 2 + 3, baS, baS);
+          ctx.textAlign = 'left';
+          ctx.fillText(b.label, bx - Math.floor(badgeSpacing * 0.4) + 4 + baS + 4, badgeY + 6);
+          ctx.textAlign = 'center';
+        } else {
+          ctx.fillText(`${b.icon} ${b.label}`, bx, badgeY + 6);
+        }
       }
       ctx.textAlign = 'left';
     }
