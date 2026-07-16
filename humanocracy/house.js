@@ -134,6 +134,68 @@ function buildSprites() {
   });
 }
 
+/* ---------- TEXTURAS DE PAREDE (64×64, pintadas à mão) ---------- */
+const TEX = {};
+function buildTextures() {
+  if (TEX.corr) return;
+  const base = (x, c) => { x.fillStyle = c; x.fillRect(0, 0, 64, 64); };
+  const board = (x, c) => { x.fillStyle = c; x.fillRect(0, 54, 64, 10); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, 53, 64, 2); };
+  const stains = (x, n, a) => { x.fillStyle = `rgba(0,0,0,${a})`; for (let i = 0; i < n; i++) { const s = 2 + (i * 7) % 9; x.fillRect((i * 23) % 60, (i * 13) % 48, s, s); } };
+  TEX.sala = mk(64, 64, (x) => { // papel listrado, já cansado
+    base(x, '#5e5340');
+    x.fillStyle = '#554a39'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 54);
+    stains(x, 3, .12); board(x, '#3a3021');
+  });
+  TEX.coz = mk(64, 64, (x) => { // azulejo antigo
+    base(x, '#4e5844');
+    x.strokeStyle = '#414a39'; x.lineWidth = 2;
+    for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(0, i * 13); x.lineTo(64, i * 13); x.stroke(); }
+    for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 16, 0); x.lineTo(i * 16, 52); x.stroke(); }
+    stains(x, 2, .15); board(x, '#33302a');
+  });
+  TEX.tomi = mk(64, 64, (x) => { // estrelinhas de papel de criança
+    base(x, '#46505c');
+    x.fillStyle = '#525e6c';
+    [[8, 10], [30, 22], [50, 8], [18, 36], [44, 40]].forEach(([a, b]) => {
+      x.fillRect(a, b, 3, 3); x.fillRect(a + 1, b - 2, 1, 7); x.fillRect(a - 2, b + 1, 7, 1);
+    });
+    board(x, '#33302a');
+  });
+  TEX.dario = mk(64, 64, (x) => { // o papel mais velho da casa. ninguém troca.
+    base(x, '#3c3c42');
+    x.fillStyle = '#36363c'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 54);
+    stains(x, 6, .22); board(x, '#26262a');
+  });
+  TEX.casal = mk(64, 64, (x) => { // losangos discretos
+    base(x, '#5a4c3c');
+    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 1.6;
+    for (let i = -2; i < 6; i++) {
+      x.beginPath(); x.moveTo(i * 16, 0); x.lineTo(i * 16 + 27, 54); x.stroke();
+      x.beginPath(); x.moveTo(i * 16 + 27, 0); x.lineTo(i * 16, 54); x.stroke();
+    }
+    board(x, '#3a3021');
+  });
+  TEX.corr = mk(64, 64, (x) => { // reboco nu do corredor
+    base(x, '#4a463c'); stains(x, 5, .16);
+    x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(0, 0, 64, 6);
+    board(x, '#302c24');
+  });
+  TEX.door = mk(64, 64, (x) => { // a porta. madeira, almofadas, maçaneta — e o olho mágico
+    base(x, '#3a2c1a');
+    x.fillStyle = 'rgba(0,0,0,.25)'; [16, 32, 48].forEach(px => x.fillRect(px, 0, 2, 64));
+    x.fillStyle = '#241b0e'; x.fillRect(8, 8, 48, 20); x.fillRect(8, 34, 48, 22);
+    x.fillStyle = '#8a734d'; x.fillRect(50, 29, 5, 5);
+    x.fillStyle = '#0a0908'; x.beginPath(); x.arc(32, 22, 2.6, 0, 6.29); x.fill();
+    x.strokeStyle = '#8a734d'; x.lineWidth = 1; x.beginPath(); x.arc(32, 22, 3.6, 0, 6.29); x.stroke();
+  });
+}
+function texAt(mx, my, tile) {
+  if (tile === 2) return TEX.door;
+  const r = roomAt(mx, my) || roomAt(mx, my + 1) || roomAt(mx, my - 1) || roomAt(mx + 1, my) || roomAt(mx - 1, my);
+  if (!r) return TEX.corr;
+  return { 'SALA': TEX.sala, 'COZINHA': TEX.coz, 'QUARTO DE TOMI': TEX.tomi, 'QUARTO DE DARIO': TEX.dario, 'SEU QUARTO': TEX.casal, 'CORREDOR': TEX.corr }[r.nome] || TEX.corr;
+}
+
 /* ---------- ENTIDADES ---------- */
 let ENTS = [];
 function buildEnts() {
@@ -470,7 +532,10 @@ function interactWith(id) {
 function enterHouse() {
   setRegimeClass(S.day);
   buildSprites();
+  buildTextures();
   buildEnts();
+  // horror ambiental da noite: nunca explicado, nunca repetido demais
+  HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: S.day >= 30 && chance(.15), count: 0 };
   HOUSE.active = true;
   HOUSE.x = 2.5; HOUSE.y = 6.0; HOUSE.ang = 0; HOUSE.pitch = 0;
   HOUSE.clockMin = 1230; HOUSE.acc = 0; HOUSE.lastTs = 0; HOUSE.t = 0;
@@ -527,6 +592,19 @@ function houseMinute() {
   if (k && k.active && !k.answered) {
     if (HOUSE.clockMin - k.lastSfx >= 12) { k.lastSfx = HOUSE.clockMin; sfx('knock'); }
     if (k.expire && HOUSE.clockMin > k.at + k.expire) knockExpire();
+  }
+  // pequenos eventos que a casa não explica
+  if (!HD.open && HOUSE.fx && HOUSE.fx.count < 2 && chance(.018)) {
+    HOUSE.fx.count++;
+    const pool = ['dim'];
+    if (S.day >= 5) pool.push('tv');
+    if (S.day >= 18) pool.push('whisper');
+    if (S.day >= 43) pool.push('inknock');
+    const fx = pick(pool);
+    if (fx === 'tv') HOUSE.fx.tvOff = HOUSE.t + 4;         // a TV descansa. ela nunca descansa.
+    else if (fx === 'dim') { HOUSE.fx.dim = HOUSE.t + 3.5; sfx('buzz'); }
+    else if (fx === 'whisper') whisper();
+    else if (fx === 'inknock') sfx('knock1');               // uma batida. de dentro.
   }
   if (HOUSE.clockMin >= 1440) { houseSleep(true); return; }
   if (HOUSE.clockMin >= 1410 && !HOUSE.forcedSleep) {
@@ -627,7 +705,9 @@ function renderHouse() {
   const zbuf = new Float32Array(W);
   const tanF = Math.tan(FP.FOV / 2);
   const pulse = HOUSE.knock && HOUSE.knock.active ? .5 + .5 * Math.sin(HOUSE.t * 6) : 0;
-  const tvFlick = .85 + Math.random() * .3;
+  const tvOn = HOUSE.t > (HOUSE.fx ? HOUSE.fx.tvOff : 0);
+  const dimF = HOUSE.fx && HOUSE.t < HOUSE.fx.dim ? .42 : 1;
+  const tvFlick = tvOn ? .85 + Math.random() * .3 : 0;
 
   for (let col = 0; col < W; col++) {
     const camX = 2 * col / W - 1;
@@ -644,25 +724,31 @@ function renderHouse() {
       tile = (MAP[mapY] && MAP[mapY][mapX] !== undefined) ? MAP[mapY][mapX] : 1;
       if (tile !== 0) break;
     }
-    let dist = side === 0 ? sideX - dDx : sideY - dDy;
-    dist = Math.max(.01, dist * Math.cos(rayA - HOUSE.ang));
+    const raw = side === 0 ? sideX - dDx : sideY - dDy;
+    const dist = Math.max(.01, raw * Math.cos(rayA - HOUSE.ang));
     zbuf[col] = dist;
     const lineH = H / dist;
     const top = horizon - lineH * .5;
-    let [r, g, b] = tintAt(mapX, mapY);
-    if (tile === 2 && pulse) { r += 70 * pulse; g += 40 * pulse; }
+    // coordenada da textura no ponto exato do impacto
+    let u = side === 0 ? HOUSE.y + raw * rdy : HOUSE.x + raw * rdx;
+    u -= Math.floor(u);
+    const tex = texAt(mapX, mapY, tile);
+    ctx.drawImage(tex, Math.min(63, (u * 64) | 0), 0, 1, 64, col, top, 1, lineH);
+    // escuridão por cima da textura
     const lant = .58 + .42 * Math.cos((col / W - .5) * 2.4);
-    let lum = Math.min(1, 1.7 / (1 + dist * dist * .15)) * lant;
+    let lum = Math.min(1, 1.7 / (1 + dist * dist * .15)) * lant * dimF;
     if (side === 1) lum *= .72;
     lum = Math.max(.04, lum);
-    ctx.fillStyle = `rgb(${(r * lum) | 0},${(g * lum) | 0},${(b * lum) | 0})`;
+    ctx.fillStyle = `rgba(0,0,0,${(1 - lum).toFixed(3)})`;
     ctx.fillRect(col, top, 1, lineH);
+    if (tile === 2 && pulse) { ctx.fillStyle = `rgba(224,150,60,${(pulse * .22).toFixed(3)})`; ctx.fillRect(col, top, 1, lineH); }
   }
 
   // sprites (longe → perto)
   const vis = [];
   for (const e of ENTS) {
     if (!e.spr) continue;
+    if (e.spr === 'shadow' && HOUSE.fx && HOUSE.fx.shadowGone) continue; // hoje o canto está vazio. isso é pior.
     const m = e.spot ? S.family[e.spot] : null;
     if (m && !m.alive) continue;
     const dx = e.x - HOUSE.x, dy = e.y - HOUSE.y;
@@ -686,8 +772,8 @@ function renderHouse() {
     const lift = e.lift || 0;
     const bottom = wallB - (H / corr) * lift;
     const top = bottom - sh;
-    let lum = Math.min(1, 1.7 / (1 + corr * corr * .14));
-    if (e.glow) lum = Math.min(1, lum * 1.7 * tvFlick);
+    let lum = Math.min(1, 1.7 / (1 + corr * corr * .14)) * dimF;
+    if (e.glow && tvOn) lum = Math.min(1, lum * 1.7 * tvFlick);
     ctx.filter = `brightness(${Math.max(.06, lum).toFixed(2)})`;
     if (e.alpha) ctx.globalAlpha = e.alpha;
     const x0 = Math.floor(screenX - sw / 2);
@@ -700,7 +786,7 @@ function renderHouse() {
     ctx.globalAlpha = 1;
     ctx.filter = 'none';
     // brilho da TV
-    if (e.glow) {
+    if (e.glow && tvOn) {
       const gx = screenX, gy = (top + bottom) / 2;
       const gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, sh * 1.4);
       gr.addColorStop(0, `rgba(120,160,190,${.10 * tvFlick})`); gr.addColorStop(1, 'rgba(120,160,190,0)');

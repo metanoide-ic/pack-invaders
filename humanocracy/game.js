@@ -25,6 +25,7 @@ function sfx(kind) {
     else if (kind === 'ding') { o.type = 'sine'; o.frequency.setValueAtTime(660, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'step') { o.type = 'sine'; o.frequency.setValueAtTime(44 + Math.random() * 10, t); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); o.start(t); o.stop(t + .1); }
+    else if (kind === 'knock1') { o.type = 'sine'; o.frequency.setValueAtTime(52, t); g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
     else if (kind === 'knock') {
       for (let i = 0; i < 3; i++) {
         const o2 = AC.createOscillator(), g2 = AC.createGain();
