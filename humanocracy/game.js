@@ -39,6 +39,28 @@ function sfx(kind) {
   } catch (e) { /* áudio indisponível */ }
 }
 
+/* ---------- VOZES MURMURADAS (gibberish grave e triste) ---------- */
+function mumble(pitch, syl) {
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') return;
+    const t0 = AC.currentTime;
+    for (let i = 0; i < syl; i++) {
+      const t = t0 + i * 0.095 + Math.random() * 0.02;
+      const o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter();
+      f.type = 'bandpass'; f.frequency.value = pitch * 3.2; f.Q.value = 1.6;
+      o.type = 'sawtooth';
+      o.frequency.setValueAtTime(pitch * (0.92 + Math.random() * 0.22), t);
+      o.frequency.linearRampToValueAtTime(pitch * (0.85 + Math.random() * 0.3), t + 0.07);
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(.05, t + 0.015);
+      g.gain.linearRampToValueAtTime(0, t + 0.085);
+      o.connect(f); f.connect(g); g.connect(AC.destination);
+      o.start(t); o.stop(t + 0.09);
+    }
+  } catch (e) {}
+}
+
 /* ---------- MÚSICA (trilha melancólica procedural) ---------- */
 const MUSIC = { on: true, playing: false, timer: null };
 const M_NOTES = [110, 130.81, 146.83, 164.81, 196, 220]; // lá menor, esparso
@@ -709,6 +731,7 @@ function startDay() {
   $('btn-detain').classList.toggle('hidden', S.day >= 47);
   showScreen('screen-shift');
   showBulletin(() => {
+    if (S.day >= 48) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
     clearInterval(shift.tickId);
     shift.tickId = setInterval(tickClock, 1000);
@@ -996,6 +1019,7 @@ function presentCitizen(cz) {
   p.addEventListener('animationend', function h() { p.classList.remove('arrive'); p.removeEventListener('animationend', h); });
   $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
   $('speech').textContent = '“' + greetingFor(cz) + '”';
+  mumble(cz.sexo === 'f' ? 175 : 112, ri(4, 7));
   buildAskButtons(cz);
   layDocs(cz);
   if (cz.bribe && !cz.encounter) setTimeout(() => layBribe(cz), 2500);

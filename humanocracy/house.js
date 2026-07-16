@@ -40,7 +40,15 @@ const ROOMS = [
   { x0: 29, y0: 1, x1: 31, y1: 3, nome: 'SEU QUARTO', tint: [88, 74, 58] },
   { x0: 1, y0: 5, x1: 31, y1: 7, nome: 'CORREDOR', tint: [72, 68, 58] },
 ];
-function roomAt(x, y) { return ROOMS.find(r => x >= r.x0 && x <= r.x1 + 1 && y >= r.y0 && y <= r.y1 + 1); }
+/* Mapa do Dia 48: a pista da fila, sem fila, até o seu próprio guichê */
+const MAP48 = [];
+(function buildMap48() {
+  for (let y = 0; y < 14; y++) MAP48.push(new Array(5).fill(1));
+  for (let y = 1; y <= 12; y++) for (let x = 1; x <= 3; x++) MAP48[y][x] = 0;
+})();
+/* cena atual: a casa por padrão; o espelho no dia 48 */
+const CUR = { map: MAP, w: MAPW, h: MAPH, rooms: ROOMS };
+function roomAt(x, y) { return CUR.rooms.find(r => x >= r.x0 && x <= r.x1 + 1 && y >= r.y0 && y <= r.y1 + 1); }
 function tintAt(mx, my) {
   if (MAP[my] && MAP[my][mx] === 2) return [150, 104, 52];
   // paredes herdam o tom do cômodo adjacente mais próximo
@@ -127,6 +135,17 @@ function buildSprites() {
     x.fillStyle = 'rgba(215,215,208,.7)';
     [[12, 14], [22, 30], [44, 20], [50, 52], [16, 58], [38, 64]].forEach(([a, b]) => x.fillRect(a, b, 2, 2));
   });
+  SPR.booth = mk(96, 128, (x) => { // o seu guichê, visto do lado errado
+    x.fillStyle = '#23251d'; x.fillRect(4, 20, 88, 108);
+    x.fillStyle = '#0d0f0c'; x.fillRect(14, 32, 68, 52);
+    const g = x.createRadialGradient(48, 58, 4, 48, 58, 40);
+    g.addColorStop(0, 'rgba(201,180,120,.35)'); g.addColorStop(1, 'rgba(201,180,120,0)');
+    x.fillStyle = g; x.fillRect(14, 32, 68, 52);
+    x.fillStyle = '#3a3c33'; x.fillRect(10, 84, 76, 8);   // bandeja
+    x.fillStyle = '#c9c2ab'; x.fillRect(38, 86, 20, 4);   // seus documentos, esperando
+    x.fillStyle = '#2c2115'; x.fillRect(0, 10, 96, 10);
+    x.fillStyle = '#8a734d'; x.font = 'bold 8px monospace'; x.fillText('POSTO 7', 30, 18);
+  });
   SPR.lamp = mk(32, 64, (x) => {
     x.fillStyle = '#1d1a15'; x.fillRect(14, 0, 4, 34);
     x.fillStyle = '#2c261c'; x.fillRect(6, 30, 20, 8);
@@ -187,6 +206,17 @@ function buildTextures() {
     x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(0, 0, 64, 6);
     board(x, '#302c24');
   });
+  TEX.muro = mk(64, 64, (x) => { // o muro do posto, do lado de quem espera
+    base(x, '#3e3d38');
+    stains(x, 7, .22);
+    x.strokeStyle = 'rgba(0,0,0,.3)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(0, 21); x.lineTo(64, 21); x.stroke();
+    x.beginPath(); x.moveTo(0, 42); x.lineTo(64, 42); x.stroke();
+    // riscos de quem contou os dias esperando
+    x.strokeStyle = 'rgba(0,0,0,.4)';
+    for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(10 + i * 4, 28); x.lineTo(10 + i * 4, 36); x.stroke(); }
+    x.beginPath(); x.moveTo(8, 36); x.lineTo(28, 28); x.stroke();
+  });
   TEX.door = mk(64, 64, (x) => { // a porta. madeira, almofadas, maçaneta — e o olho mágico
     base(x, '#3a2c1a');
     x.fillStyle = 'rgba(0,0,0,.25)'; [16, 32, 48].forEach(px => x.fillRect(px, 0, 2, 64));
@@ -197,6 +227,7 @@ function buildTextures() {
   });
 }
 function texAt(mx, my, tile) {
+  if (HOUSE.mode === 'mirror') return TEX.muro;
   if (tile === 2) return TEX.door;
   const r = roomAt(mx, my) || roomAt(mx, my + 1) || roomAt(mx, my - 1) || roomAt(mx + 1, my) || roomAt(mx - 1, my);
   if (!r) return TEX.corr;
@@ -517,6 +548,7 @@ function hSay(nome, lines, choices, face) {
     cx.clearRect(0, 0, 72, 72);
     cx.drawImage(FACES[face], 0, 0);
   } else fc.classList.add('off');
+  HD.pitch = { mae: 145, vessa: 185, tomi: 265, dario: 96 }[face] || 125;
   hType();
 }
 function hType() {
@@ -524,6 +556,7 @@ function hType() {
   HD.chars = 0;
   clearInterval(HD.typing);
   $('hd-text').textContent = '';
+  mumble(HD.pitch || 125, Math.min(8, Math.max(3, (text.length / 22) | 0)));
   HD.typing = setInterval(() => {
     HD.chars += 2;
     $('hd-text').textContent = text.slice(0, HD.chars);
@@ -573,6 +606,12 @@ function talkTo(id) {
   hSay(nome, lines, null, id);
 }
 function interactWith(id) {
+  if (id === 'guiche') {
+    housePause();
+    showScreen('screen-shift');
+    presentMirror();
+    return;
+  }
   if (id === 'door') { answerDoor(); return; }
   if (id === 'retrato') {
     if (HOUSE.spoke.retrato) { hSay('O RETRATO', ['Cinco silhuetas. Como sempre. Pare de contar.']); return; }
@@ -595,12 +634,47 @@ function interactWith(id) {
 }
 
 /* ---------- ENTRADA / SAÍDA ---------- */
+/* ---------- DIA 48: você, do lado de fora do seu próprio posto ---------- */
+function enterMirror48() {
+  shift.running = false;
+  clearInterval(shift.tickId);
+  clearInterval(radioTimer);
+  cancelAnimationFrame(Q.raf);
+  buildSprites(); buildTextures(); buildFaces();
+  CUR.map = MAP48; CUR.w = 5; CUR.h = 14;
+  CUR.rooms = [{ x0: 1, y0: 1, x1: 3, y1: 12, nome: 'A PISTA DA FILA — VAZIA', tint: [62, 61, 56] }];
+  ENTS = [
+    { spr: 'booth', spot: 'guiche', x: 2, y: 1.55, sc: .8 },
+    { spr: 'lamp', x: 2, y: 5, sc: .16, lift: .74, glowWarm: true },
+    { spr: 'lamp', x: 2, y: 9, sc: .16, lift: .74, glowWarm: true },
+  ];
+  HOUSE.mode = 'mirror';
+  HOUSE.active = true;
+  HOUSE.x = 2; HOUSE.y = 11.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
+  HOUSE.lastTs = 0; HOUSE.t = 0; HOUSE.knock = null; HOUSE.spoke = {};
+  HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: false, count: 9 };
+  $('house-clock').textContent = '—:—';
+  $('house-fade').classList.remove('on');
+  hClose();
+  showScreen('screen-house');
+  startAmbience();
+  cancelAnimationFrame(HOUSE.raf);
+  HOUSE.raf = requestAnimationFrame(houseLoop);
+  setTimeout(() => hSay('DIA 48', [
+    'Não há fila. Não há guardas. Há um vento que parou no meio do caminho, como quem esqueceu o que ia dizer.',
+    'Você está do lado de fora do seu próprio posto. Do lado de quem espera. Quarenta e oito dias e você nunca tinha visto o muro deste ângulo — os risquinhos contando dias que alguém raspou na pedra.',
+    'Caminhe até o guichê. Há documentos na bandeja. São os seus.',
+  ]), 800);
+}
+
 function enterHouse() {
   setRegimeClass(S.day);
   buildSprites();
   buildTextures();
   buildFaces();
   buildEnts();
+  HOUSE.mode = 'house';
+  CUR.map = MAP; CUR.w = MAPW; CUR.h = MAPH; CUR.rooms = ROOMS;
   // horror ambiental da noite: nunca explicado, nunca repetido demais
   HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: S.day >= 30 && chance(.15), count: 0 };
   HOUSE.active = true;
@@ -646,12 +720,13 @@ function knockExpireSilent() {
 function houseTeleport(spot) { // depuração e testes
   const e = ENTS.find(t => t.spot === spot);
   if (!e) return;
-  HOUSE.x = e.x; HOUSE.y = Math.min(e.y + 1.1, MAPH - 1.5);
+  HOUSE.x = e.x; HOUSE.y = Math.min(e.y + 1.1, CUR.h - 1.5);
   HOUSE.ang = Math.atan2(e.y - HOUSE.y, e.x - HOUSE.x);
 }
 
 /* ---------- RELÓGIO ---------- */
 function houseMinute() {
+  if (HOUSE.mode === 'mirror') return; // o tempo acabou ontem
   const h = Math.floor(HOUSE.clockMin / 60) % 24, m = HOUSE.clockMin % 60;
   $('house-clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
   const k = HOUSE.knock;
@@ -685,7 +760,7 @@ function houseMinute() {
 /* ---------- MOVIMENTO ---------- */
 function tryMove(nx, ny) {
   const r = .22;
-  const ok = (x, y) => MAP[Math.floor(y)] && MAP[Math.floor(y)][Math.floor(x)] === 0;
+  const ok = (x, y) => CUR.map[Math.floor(y)] && CUR.map[Math.floor(y)][Math.floor(x)] === 0;
   if (ok(nx + r, HOUSE.y) && ok(nx - r, HOUSE.y)) HOUSE.x = nx;
   if (ok(HOUSE.x, ny + r) && ok(HOUSE.x, ny - r)) HOUSE.y = ny;
 }
@@ -747,7 +822,8 @@ function houseLoop(ts) {
   const prompt = $('house-prompt');
   if (tgt) {
     prompt.classList.add('on');
-    prompt.textContent = tgt.spot === 'door'
+    prompt.textContent = tgt.spot === 'guiche' ? 'E — Deslizar seus documentos pela bandeja'
+      : tgt.spot === 'door'
       ? (HOUSE.knock && HOUSE.knock.active ? 'E — ATENDER A PORTA' : 'E — Olhar pelo olho mágico')
       : tgt.spot === 'bed' ? 'E — Dormir'
       : tgt.spot === 'retrato' ? 'E — Olhar o retrato da família'
@@ -788,7 +864,7 @@ function renderHouse() {
     let side = 0, tile = 1, guard = 0;
     while (guard++ < 64) {
       if (sideX < sideY) { sideX += dDx; mapX += stepX; side = 0; } else { sideY += dDy; mapY += stepY; side = 1; }
-      tile = (MAP[mapY] && MAP[mapY][mapX] !== undefined) ? MAP[mapY][mapX] : 1;
+      tile = (CUR.map[mapY] && CUR.map[mapY][mapX] !== undefined) ? CUR.map[mapY][mapX] : 1;
       if (tile !== 0) break;
     }
     const raw = side === 0 ? sideX - dDx : sideY - dDy;
@@ -904,3 +980,30 @@ $('house-canvas').addEventListener('click', () => {
   if (t) interactWith(t.spot);
 });
 $('house-dialog').addEventListener('click', (e) => { if (!e.target.closest('button')) hAdvance(); });
+
+/* ---------- TOQUE (celular) ---------- */
+document.querySelectorAll('.tc-pad button').forEach(b => {
+  const k = b.dataset.tk;
+  const on = (e) => { e.preventDefault(); KEYS[k] = true; };
+  const off = (e) => { e.preventDefault(); KEYS[k] = false; };
+  b.addEventListener('touchstart', on); b.addEventListener('touchend', off); b.addEventListener('touchcancel', off);
+  b.addEventListener('mousedown', on); b.addEventListener('mouseup', off); b.addEventListener('mouseleave', off);
+});
+const tcE = $('tc-e');
+if (tcE) tcE.addEventListener('touchstart', (e) => {
+  e.preventDefault();
+  if (HD.open) { hAdvance(); return; }
+  const t = interactTarget();
+  if (t) interactWith(t.spot);
+});
+/* arrastar o dedo na tela = olhar ao redor */
+let lastTouch = null;
+$('house-canvas').addEventListener('touchstart', (e) => { lastTouch = e.touches[0]; }, { passive: true });
+$('house-canvas').addEventListener('touchmove', (e) => {
+  if (!lastTouch || !HOUSE.active || HD.open) return;
+  const t = e.touches[0];
+  HOUSE.ang += (t.clientX - lastTouch.clientX) * .006;
+  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - (t.clientY - lastTouch.clientY) * .4));
+  lastTouch = t;
+}, { passive: true });
+$('house-canvas').addEventListener('touchend', () => { lastTouch = null; }, { passive: true });

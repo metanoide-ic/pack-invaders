@@ -469,6 +469,23 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 }
 #house-fade.on { opacity:1; pointer-events:all; }
 
+/* controles de toque (só aparecem em telas de dedo) */
+#touch-controls { display:none; }
+@media (pointer: coarse) {
+  #touch-controls {
+    display:flex; position:absolute; left:0; right:0; bottom:14px;
+    justify-content:space-between; align-items:flex-end; padding:0 18px;
+    z-index:25; pointer-events:none;
+  }
+  .tc-pad { display:grid; grid-template-columns:repeat(4, 54px); gap:8px; pointer-events:all; }
+  .tc-pad button, #tc-e {
+    width:54px; height:54px; font-size:20px; background:#000a; color:#c9b46a;
+    border:1px solid #3a3628; border-radius:8px; pointer-events:all;
+    touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  #tc-e { width:66px; height:66px; font-weight:bold; }
+}
+
 /* ============ NOITE ============ */
 #screen-night { background:#050505; }
 #screen-night.active { display:flex; align-items:center; justify-content:center; }
