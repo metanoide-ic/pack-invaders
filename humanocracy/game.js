@@ -930,8 +930,15 @@ function greetingFor(cz) {
     'É a minha terceira vez nesta fila.', 'Por favor, seja rápido. Meu trem sai ao meio-dia.',
     'Eu não tenho nada a esconder.', '…', 'Deus abençoe este posto.',
   ];
+  const porRegime = {
+    republica: ['Dizem que o senhor é dos justos. Dizem.', 'A fila estava menor na semana passada. Tudo estava menor na semana passada.'],
+    mehrvolk: ['Glória à Pureza. — A voz não acredita no que diz.', 'Está tudo em ordem. Eu JURO que está tudo em ordem.', 'O certificado custou dois meses de salário. Está aí dentro. Por favor.'],
+    conselho: ['Saudações, camarada inspetor.', 'Trouxe o selo novo. E o antigo. E o anterior ao antigo. Qual vale hoje?', 'O sindicato disse que agora é diferente. É diferente?'],
+    colapso: ['Ainda tem alguém aí dentro?', 'Não sei por que a gente ainda faz fila. Mas fazemos.', 'Carimba qualquer coisa. Já não importa. Importa?'],
+  }[regimeOfDay(S.day)] || [];
   const nervous = ['Desculpe… eu fico nervoso(a) com uniformes.', 'Minhas mãos estão tremendo de frio. Só de frio.', 'Eu decorei tudo o que ia dizer e esqueci agora.'];
-  return cz.nervous ? pick(g.concat(nervous, nervous)) : pick(g);
+  const pool = g.concat(porRegime, porRegime);
+  return cz.nervous ? pick(pool.concat(nervous, nervous)) : pick(pool);
 }
 
 function presentCitizen(cz) {
@@ -1608,6 +1615,12 @@ $('btn-music').onclick = () => {
   $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
   if (!MUSIC.on) stopMusic();
 };
+function toggleFullscreen() {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(() => {});
+}
+$('btn-fullscreen').onclick = toggleFullscreen;
+document.addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') toggleFullscreen(); });
 
 /* ---------- INICIALIZAÇÃO ---------- */
 (function init() {

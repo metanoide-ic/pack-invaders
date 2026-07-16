@@ -20,6 +20,7 @@
         <div class="title-menu">
           <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
           <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
+          <button id="btn-fullscreen" class="btn-title" style="font-size:12px;width:200px;padding:8px">⛶ TELA CHEIA (F)</button>
         </div>
         <div class="title-warning">
           Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
@@ -150,10 +151,13 @@
       </div>
       <div id="house-prompt"></div>
       <div id="house-dialog">
-        <div id="hd-name"></div>
-        <div id="hd-text"></div>
-        <div id="hd-choices"></div>
-        <div id="hd-hint">clique / E para continuar</div>
+        <canvas id="hd-face" width="72" height="72"></canvas>
+        <div class="hd-right">
+          <div id="hd-name"></div>
+          <div id="hd-text"></div>
+          <div id="hd-choices"></div>
+          <div id="hd-hint">clique / E para continuar</div>
+        </div>
       </div>
       <div id="house-fade"></div>
     </div>

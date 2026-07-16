@@ -448,9 +448,15 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 #house-dialog {
   display:none; position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
   width:min(680px, 92vw); background:#0d0c09ee; border:1px solid #2e2a1e;
-  padding:14px 18px 10px; z-index:20;
+  padding:14px 18px 10px; z-index:20; gap:14px;
 }
-#house-dialog.on { display:block; }
+#house-dialog.on { display:flex; }
+#hd-face {
+  width:72px; height:72px; flex:0 0 72px; align-self:flex-start;
+  border:1px solid #2e2a1e; background:#080806; image-rendering:pixelated;
+}
+#hd-face.off { display:none; }
+.hd-right { flex:1; min-width:0; }
 #hd-name { color:#c9b46a; font-size:11px; letter-spacing:2px; margin-bottom:6px; }
 #hd-text { color:#cfc9b8; font-size:14px; line-height:1.7; min-height:44px; }
 #hd-choices { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }

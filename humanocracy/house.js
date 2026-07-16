@@ -127,6 +127,13 @@ function buildSprites() {
     x.fillStyle = 'rgba(215,215,208,.7)';
     [[12, 14], [22, 30], [44, 20], [50, 52], [16, 58], [38, 64]].forEach(([a, b]) => x.fillRect(a, b, 2, 2));
   });
+  SPR.lamp = mk(32, 64, (x) => {
+    x.fillStyle = '#1d1a15'; x.fillRect(14, 0, 4, 34);
+    x.fillStyle = '#2c261c'; x.fillRect(6, 30, 20, 8);
+    const g = x.createRadialGradient(16, 46, 2, 16, 46, 12);
+    g.addColorStop(0, '#e8d8a0'); g.addColorStop(1, '#6a5a30');
+    x.fillStyle = g; x.beginPath(); x.arc(16, 46, 9, 0, 6.29); x.fill();
+  });
   SPR.shadow = mk(96, 128, (x) => {
     const g = x.createRadialGradient(48, 70, 6, 48, 70, 60);
     g.addColorStop(0, 'rgba(0,0,0,.92)'); g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -196,6 +203,55 @@ function texAt(mx, my, tile) {
   return { 'SALA': TEX.sala, 'COZINHA': TEX.coz, 'QUARTO DE TOMI': TEX.tomi, 'QUARTO DE DARIO': TEX.dario, 'SEU QUARTO': TEX.casal, 'CORREDOR': TEX.corr }[r.nome] || TEX.corr;
 }
 
+/* ---------- ROSTOS EM CLOSE (caixa de diálogo) ---------- */
+const FACES = {};
+function buildFaces() {
+  if (FACES.mae) return;
+  const R = (x, a, b, w, h, c) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
+  const C = (x, a, b, r, c) => { x.fillStyle = c; x.beginPath(); x.arc(a, b, r, 0, 6.29); x.fill(); };
+  FACES.mae = mk(72, 72, (x) => {
+    R(x, 0, 0, 72, 72, '#0a0a08');
+    R(x, 14, 52, 44, 20, '#4a4036');
+    C(x, 36, 34, 20, '#e0c09a');
+    C(x, 36, 13, 10, '#b5b5a5');
+    x.strokeStyle = '#b5b5a5'; x.lineWidth = 5; x.beginPath(); x.arc(36, 24, 17, Math.PI * 1.15, Math.PI * 1.85); x.stroke();
+    C(x, 28, 32, 2.4, '#2b2820'); C(x, 44, 32, 2.4, '#2b2820');
+    x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1.4;
+    x.beginPath(); x.moveTo(24, 26); x.lineTo(32, 26); x.stroke();
+    x.beginPath(); x.moveTo(40, 26); x.lineTo(48, 26); x.stroke();
+    x.beginPath(); x.moveTo(28, 44); x.quadraticCurveTo(36, 47, 44, 44); x.stroke();
+    x.beginPath(); x.moveTo(30, 41); x.lineTo(42, 41); x.stroke();
+  });
+  FACES.vessa = mk(72, 72, (x) => {
+    R(x, 0, 0, 72, 72, '#0a0a08');
+    R(x, 16, 54, 40, 18, '#42392f');
+    C(x, 36, 34, 19, '#e8c39e');
+    x.fillStyle = '#40301e'; x.beginPath(); x.arc(36, 28, 20, Math.PI, 0); x.fill();
+    C(x, 36, 12, 8, '#40301e');
+    C(x, 28, 34, 2.6, '#3a2c1a'); C(x, 44, 34, 2.6, '#3a2c1a');
+    x.strokeStyle = '#8a6a5a'; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 45); x.lineTo(42, 45); x.stroke();
+  });
+  FACES.tomi = mk(72, 72, (x) => {
+    R(x, 0, 0, 72, 72, '#0a0a08');
+    R(x, 18, 56, 36, 16, '#4a5a6a');
+    C(x, 36, 36, 18, '#ecd0ae');
+    x.fillStyle = '#54432a'; x.beginPath(); x.arc(36, 30, 19, Math.PI, 0); x.fill();
+    C(x, 29, 36, 3, '#222'); C(x, 43, 36, 3, '#222');
+    C(x, 29, 35, 1, '#fff'); C(x, 43, 35, 1, '#fff');
+    x.strokeStyle = '#8a6a5a'; x.lineWidth = 1.8; x.beginPath(); x.moveTo(31, 47); x.quadraticCurveTo(36, 49, 41, 47); x.stroke();
+  });
+  FACES.dario = mk(72, 72, (x) => {
+    // sempre de costas. sempre.
+    R(x, 0, 0, 72, 72, '#0a0a08');
+    R(x, 16, 54, 40, 18, '#2e3230');
+    C(x, 36, 34, 19, '#a9744f');
+    x.fillStyle = '#191919';
+    x.beginPath(); x.arc(36, 34, 20, 0, 6.29); x.fill();
+    C(x, 36, 30, 17, '#141414');
+    x.fillStyle = 'rgba(255,255,255,.05)'; x.fillRect(20, 20, 4, 24);
+  });
+}
+
 /* ---------- ENTIDADES ---------- */
 let ENTS = [];
 function buildEnts() {
@@ -216,6 +272,9 @@ function buildEnts() {
     F.dario.alive && { spr: 'dario', spot: 'dario', x: 26.0, y: 1.9, sc: .7 },
     { spr: 'bedQ', spot: 'bed', x: 30.2, y: 2.0, sc: .44 },
     { spot: 'door', x: 1.0, y: 6.0 }, // invisível: a porta é a parede oeste
+    // lâmpadas de teto: pouca luz, muita sombra
+    ...[[4, 2], [12, 2], [18.5, 2], [24.5, 2], [30, 2], [6, 6], [16, 6], [26, 6]]
+      .map(([lx, ly]) => ({ spr: 'lamp', x: lx, y: ly, sc: .16, lift: .74, glowWarm: true })),
   ].filter(Boolean);
 }
 
@@ -444,13 +503,20 @@ function answerDoor() {
 
 /* ---------- DIÁLOGO (typewriter) ---------- */
 const HD = { open: false, lines: [], idx: 0, typing: null, chars: 0, pendingChoices: null };
-function hSay(nome, lines, choices) {
+function hSay(nome, lines, choices, face) {
   try { document.exitPointerLock(); } catch (e) {}
   HD.open = true; HD.lines = lines.slice(); HD.idx = 0;
   $('hd-name').textContent = nome;
   $('hd-choices').innerHTML = '';
   $('house-dialog').classList.add('on');
   HD.pendingChoices = choices || null;
+  const fc = $('hd-face');
+  if (face && FACES[face]) {
+    fc.classList.remove('off');
+    const cx = fc.getContext('2d');
+    cx.clearRect(0, 0, 72, 72);
+    cx.drawImage(FACES[face], 0, 0);
+  } else fc.classList.add('off');
   hType();
 }
 function hType() {
@@ -496,15 +562,15 @@ function talkTo(id) {
   const m = S.family[id];
   const nome = { mae: 'ODILA — sua mãe', vessa: 'VESSA — sua esposa', tomi: 'TOMI — 8 anos', dario: 'DARIO — 15 anos' }[id];
   if (!m.alive) return;
-  if (m.sick) { hSay(nome, [L.doente]); HOUSE.spoke[id] = true; return; }
-  if (HOUSE.spoke[id]) { hSay(nome, [pick(L.curto)]); return; }
+  if (m.sick) { hSay(nome, [L.doente], null, id); HOUSE.spoke[id] = true; return; }
+  if (HOUSE.spoke[id]) { hSay(nome, [pick(L.curto)], null, id); return; }
   HOUSE.spoke[id] = true;
   const lines = [];
   const sp = H_SPECIAL[S.day];
   if (sp && sp[id]) lines.push(sp[id]);
   else lines.push(pick(L[ph]));
   lines.push({ mae: infoMae, vessa: infoVessa, tomi: infoTomi, dario: infoDario }[id]());
-  hSay(nome, lines);
+  hSay(nome, lines, null, id);
 }
 function interactWith(id) {
   if (id === 'door') { answerDoor(); return; }
@@ -533,6 +599,7 @@ function enterHouse() {
   setRegimeClass(S.day);
   buildSprites();
   buildTextures();
+  buildFaces();
   buildEnts();
   // horror ambiental da noite: nunca explicado, nunca repetido demais
   HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: S.day >= 30 && chance(.15), count: 0 };
@@ -792,6 +859,15 @@ function renderHouse() {
       gr.addColorStop(0, `rgba(120,160,190,${.10 * tvFlick})`); gr.addColorStop(1, 'rgba(120,160,190,0)');
       ctx.fillStyle = gr;
       ctx.fillRect(gx - sh * 1.4, gy - sh * 1.4, sh * 2.8, sh * 2.8);
+    }
+    // halo morno das lâmpadas
+    if (e.glowWarm) {
+      const gx = screenX, gy = (top + bottom) / 2;
+      const wob = .05 + Math.sin(HOUSE.t * 9 + e.x) * .012;
+      const gr = ctx.createRadialGradient(gx, gy, 1, gx, gy, sh * 2.2);
+      gr.addColorStop(0, `rgba(220,190,120,${(wob * dimF).toFixed(3)})`); gr.addColorStop(1, 'rgba(220,190,120,0)');
+      ctx.fillStyle = gr;
+      ctx.fillRect(gx - sh * 2.2, gy - sh * 2.2, sh * 4.4, sh * 4.4);
     }
   }
 
