@@ -118,6 +118,18 @@ function startTitleSnow() {
 /* ---------- SALÁRIO POR REGIME (os reajustes que a inflação come) ---------- */
 function salaryForDay(d) { return d >= 31 ? 8 : d >= 13 ? 6 : 5; }
 
+/* ---------- COTA DE ADMISSÃO DIÁRIA ----------
+   Esgotada a cota, rejeitar inocentes vira "o correto".
+   É assim que a burocracia recruta pessoas razoáveis. */
+function quotaForDay(d) {
+  if (d >= 47) return Infinity; // não há mais normas
+  if (d >= 43) return 3;        // colapso: a fronteira quase fechou
+  if (d >= 30) return 7;        // o Conselho "acolhe o trabalhador"
+  if (d >= 14) return 5;        // Mehrvolk: pureza é escassez
+  if (d >= 8) return 8;
+  return 10;
+}
+
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
@@ -138,6 +150,7 @@ function freshState() {
     ai: { det: {} },           // IA adaptativa: quantas vezes cada discrepância foi detectada
     bioCalibrated: false,
     pendingNews: [],           // consequências tardias {day, text}
+    returnQueue: [],           // quem você marcou volta: {dueDay, nome, pais, sexo, etnia, features, mood, dia}
     rent: 15,
     seedBase: Math.floor(Math.random() * 1e9),
   };
@@ -150,6 +163,7 @@ function loadSave() {
     const s = JSON.parse(j);
     // migração: saves antigos não tinham o Dario
     if (s.family && !s.family.dario) s.family.dario = { nome: 'Dario (filho, 15 — do seu primeiro casamento)', alive: true, sick: false, sickDays: 0, hunger: 0 };
+    if (!s.returnQueue) s.returnQueue = [];
     return s;
   } catch (e) { return null; }
 }
@@ -427,7 +441,8 @@ function makeCitizen(day, opts) {
     nome, sexo, pais, etnia, profissao, cidade,
     motivo: motivoObj.id, motivoLabel: motivoObj.label, duracao: pick(motivoObj.dur),
     destino: pick(COUNTRIES.osteria.cities),
-    features, photoFeatures: features, nasc,
+    features: opts.features || features, photoFeatures: opts.features || features, nasc,
+    returning: opts.returning || null,
     isAlternado: false, isForger: false, isWanted: false, refugee: false,
     discrepancies: [], docs: {}, bribe: 0, encounter: opts.encounter || null,
     nervous: chance(.3), scannerAmbiguo: !!opts.scannerAmbiguo,
@@ -661,6 +676,7 @@ const shift = {
   citToday: 0, wantedName: null, queue: 0, tickId: null,
   picks: [], inspecting: false, confirmed: [], zTop: 10,
   encounterDone: false, whispered: false,
+  approvedToday: 0, quotaRejects: 0, returnDone: false,
 };
 
 function startDay() {
@@ -669,6 +685,7 @@ function startDay() {
   shift.citizen = null; shift.picks = []; shift.confirmed = [];
   shift.encounterDone = false; shift.whispered = false;
   shift.wantedName = null;
+  shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
 
   if (WANTED_DAYS[S.day]) {
     const p = pick(COUNTRY_IDS);
@@ -705,6 +722,8 @@ function startDay() {
 function bulletinText() {
   let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
   if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  const qd = quotaForDay(S.day);
+  if (qd !== Infinity) t += `\n\n§ COTA DE ADMISSÃO DE HOJE: ${qd} entradas. Esgotada a cota, o Ministério BLOQUEIA novas aprovações — rejeite mesmo quem estiver em ordem.`;
   if (S.day === 13) t += `\n\n§ REAJUSTE PATRIÓTICO: ${MOEDA} 6 por decisão correta. O Estado Nacional cuida dos seus.`;
   if (S.day === 31) t += `\n\n§ O CONSELHO VALORIZA O TRABALHADOR: ${MOEDA} 8 por decisão correta. (Nota: o aluguel do espaço requisitado passa a ${MOEDA} 25.)`;
   const rum = rumorForDay(S.day);
@@ -727,7 +746,8 @@ function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updat
 function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · ${fmtDate(worldDate(S.day))}`;
-  $('processed-count').textContent = `Atendidos: ${shift.processed}`;
+  const q = quotaForDay(S.day);
+  $('processed-count').textContent = `Atendidos: ${shift.processed} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;
 }
 
@@ -895,6 +915,25 @@ function nextCitizen() {
       briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
     });
     if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+  } else if (!shift.returnDone && chance(.5) && S.returnQueue.some(r => r.dueDay <= S.day)) {
+    // alguém que você marcou voltou
+    shift.returnDone = true;
+    const idx = S.returnQueue.findIndex(r => r.dueDay <= S.day);
+    const rec = S.returnQueue.splice(idx, 1)[0];
+    if (rec.mood === 'parente') {
+      cz = makeCitizen(S.day, { pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia, forceValid: true, returning: rec });
+      cz.nome = cz.nome.split(' ')[0] + ' ' + rec.nome.split(' ')[1]; // mesmo sobrenome do detido
+      cz.docs.pass.nome = cz.nome;
+      for (const k in cz.docs) if (cz.docs[k].nome) cz.docs[k].nome = cz.nome;
+    } else {
+      const valid = chance(.55);
+      cz = makeCitizen(S.day, {
+        nome: rec.nome, pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia,
+        features: rec.features, returning: rec,
+        forceValid: valid, forcedDisc: valid ? null : pick(DISC_TYPES.filter(t => t !== 'luggage')),
+      });
+      cz.nervous = true;
+    }
   } else if (shift.wantedName && shift.processed === shift.wantedSlot) {
     cz = makeCitizen(S.day, { nome: shift.wantedName, pais: shift.wantedPais, forceValid: true });
     cz.isWanted = true;
@@ -925,6 +964,12 @@ function nextCitizen() {
 
 function greetingFor(cz) {
   if (cz.encounter) return cz.encounter.fala;
+  if (cz.returning) {
+    const r = cz.returning;
+    if (r.mood === 'raiva') return `O senhor. DE NOVO eu, sim. Me barrou no dia ${r.dia}. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.`;
+    if (r.mood === 'suplica') return `É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.`;
+    if (r.mood === 'parente') return `${r.nome} entrou neste posto no dia ${r.dia} e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?`;
+  }
   const g = [
     'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
     'É a minha terceira vez nesta fila.', 'Por favor, seja rápido. Meu trem sai ao meio-dia.',
@@ -1082,6 +1127,8 @@ function makeDraggable(el) {
 function renderRulebook() {
   const rules = rulesForDay(S.day);
   let html = '';
+  const qr = quotaForDay(S.day);
+  if (qr !== Infinity) html += `<div class="rb-rule">§ COTA DE ADMISSÃO: máximo de ${qr} entradas hoje. Esgotada, rejeite mesmo documentos em ordem.</div>`;
   rules.forEach(r => { html += `<div class="rb-rule" data-fid="rb:rule:${r}">§ ${RULES[r].text}</div>`; });
   if (shift.wantedName) html += `<div class="rb-rule" data-fid="rb:wanted">★ PROCURADO(A): ${shift.wantedName}</div>`;
   $('rb-rules').innerHTML = html;
@@ -1123,6 +1170,24 @@ function answerFor(cz, k) {
   if (cz.nervous && chance(.4)) return '…' + truthy[k] + '. Desculpe, é isso. ' + pick(['Eu juro.', 'Tenho certeza.', 'Acho.']);
   return truthy[k];
 }
+const FOLLOWUPS = {
+  motivo: { label: 'Quem espera você?', key: 'contato' },
+  cidade: { label: 'Nome da sua rua?', key: 'rua' },
+  profissao: { label: 'Quem assina seu contrato?', key: 'chefe' },
+  duracao: { label: 'E a volta? Como volta?', key: 'volta' },
+};
+function followTruth(cz, k) {
+  cz.ftruth = cz.ftruth || {};
+  if (cz.ftruth[k]) return cz.ftruth[k];
+  const c = COUNTRIES[cz.pais];
+  let v;
+  if (k === 'contato') v = cz.motivo === 'visita' ? `Minha irmã, ${fullName(cz.pais, 'f')}.` : cz.motivo === 'trabalho' ? `O contramestre ${pick(c.last)}, da obra.` : 'Ninguém. Sigo sozinho(a).';
+  if (k === 'rua') v = `Rua ${pick(['do Sal', 'das Oficinas', 'Norte', 'da Estação', 'dos Curtumes', 'Baixa'])}, nº ${ri(2, 120)}.`;
+  if (k === 'chefe') v = `O(a) gerente ${pick(c.last)}, da ${pick(['Oficina', 'Cooperativa', 'Fábrica', 'Casa'])} ${pick(c.last)}.`;
+  if (k === 'volta') v = cz.motivo === 'imigracao' ? 'Não volto. Não tem volta.' : 'De trem. O dinheiro da passagem está costurado no forro do casaco.';
+  cz.ftruth[k] = v;
+  return v;
+}
 function ask(cz, k, btn) {
   if (!shift.citizen) return;
   spendTime(5);
@@ -1131,6 +1196,43 @@ function ask(cz, k, btn) {
   const log = $('talk-log');
   const LBL = { motivo: 'Motivo da viagem?', cidade: 'Onde nasceu?', profissao: 'Profissão?', duracao: 'Duração da estadia?' };
   log.innerHTML += `<span class="q">— ${LBL[k]}</span><span class="a" data-fid="talk.${k}">“${ans}”</span>`;
+  log.scrollTop = log.scrollHeight;
+  // a resposta abre a pergunta seguinte — quem mente, mente duas vezes
+  const f = FOLLOWUPS[k];
+  if (f && !cz['fu_' + k]) {
+    cz['fu_' + k] = true;
+    const fb = document.createElement('button');
+    fb.textContent = '↳ ' + f.label;
+    fb.onclick = () => askFollow(cz, k, f, fb);
+    $('ask-row').appendChild(fb);
+  }
+}
+function askFollow(cz, k, f, btn) {
+  if (!shift.citizen) return;
+  spendTime(5);
+  btn.disabled = true;
+  let ans;
+  if (cz.lie === k) {
+    // mentira improvisada: cada detalhe novo é inventado na hora
+    const c = COUNTRIES[cz.pais];
+    ans = pick([
+      `…${pick(c.f)}. Não — ${pick(c.m)}. É apelido. Todo mundo confunde.`,
+      `A rua… mudou de nome. Duas vezes. Eu sempre esqueço qual vale.`,
+      `O(a) chefe? Ele… ela… a assinatura está no papel, não está? Está TUDO no papel.`,
+      `Volto quando der. Quando der pra voltar, eu volto.`,
+    ]);
+    if (!cz.followDiscAdded) {
+      cz.followDiscAdded = true;
+      const base = cz.discrepancies.find(d => d.type === 'contradiction');
+      if (base) cz.discrepancies.push({ type: 'contradiction', fids: ['talk.f_' + f.key, base.fids[1]], desc: 'Detalhes improvisados contradizem os documentos' });
+    }
+  } else {
+    ans = followTruth(cz, f.key);
+    if (cz.nervous && chance(.35)) ans = '…' + ans + ' Desculpe. É isso mesmo.';
+    if (cz.isAlternado && chance(.3)) ans += ' — A resposta sai completa, imediata, sem respirar. Perfeita. Perfeita demais?';
+  }
+  const log = $('talk-log');
+  log.innerHTML += `<span class="q">↳ ${f.label}</span><span class="a" data-fid="talk.f_${f.key}">“${ans}”</span>`;
   log.scrollTop = log.scrollHeight;
 }
 
@@ -1242,6 +1344,27 @@ function decide(decision) {
     if (decision === 'approve') correct = true;
     else if (decision === 'detain' && (cz.bioResult === true || cz.softEndorsed)) { correct = true; } // o sistema premia a máquina e a pseudociência — mesmo erradas
     else { correct = false; note = decision === 'reject' ? 'Documentos em perfeita ordem. Rejeição indevida.' : 'Detenção sem qualquer evidência.'; }
+  }
+
+  // COTA DE ADMISSÃO: esgotada, a crueldade vira regulamento
+  const quota = quotaForDay(S.day);
+  if (!dayFree && shift.approvedToday >= quota) {
+    if (decision === 'approve') { correct = false; note = 'COTA DE ADMISSÃO ESGOTADA. Aprovação bloqueada pelo Ministério. (A pessoa entrou — o carimbo é seu. A advertência também.)'; }
+    else if (decision === 'reject' && !cz.isWanted && viols.length === 0) {
+      correct = true; note = '';
+      shift.quotaRejects++;
+      S.counters.rejectedByQuota = (S.counters.rejectedByQuota || 0) + 1;
+    }
+  }
+  if (decision === 'approve') shift.approvedToday++;
+
+  // o mundo tem memória: alguns voltam
+  if (!cz.encounter && !cz.isWanted && !cz.returning && S.day < 43 && S.returnQueue.length < 4) {
+    if (decision === 'reject' && chance(.12)) {
+      S.returnQueue.push({ dueDay: S.day + ri(2, 5), nome: cz.nome, pais: cz.pais, sexo: cz.sexo, etnia: cz.etnia, features: cz.features, mood: chance(.5) ? 'raiva' : 'suplica', dia: S.day });
+    } else if (decision === 'detain' && !cz.isAlternado && chance(.2)) {
+      S.returnQueue.push({ dueDay: S.day + ri(2, 5), nome: cz.nome, pais: cz.pais, sexo: cz.sexo === 'm' ? 'f' : 'm', etnia: cz.etnia, features: null, mood: 'parente', dia: S.day });
+    }
   }
 
   // contadores e consequências invisíveis
@@ -1356,6 +1479,9 @@ function endShift() {
   report += row('Cidadãos atendidos', shift.processed);
   report += row('Advertências hoje', shift.citToday);
   report += row('Saldo atual', `${MOEDA} ${S.money}`);
+  if (shift.quotaRejects >= 2) {
+    S.pendingNews.push({ day: S.day + 1, text: `A cota do posto leste fechou cedo. ${shift.quotaRejects + ri(3, 14)} pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".` });
+  }
   $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
   $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
   showScreen('screen-endday');
