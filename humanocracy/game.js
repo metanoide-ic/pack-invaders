@@ -26,6 +26,7 @@ function sfx(kind) {
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'step') { o.type = 'sine'; o.frequency.setValueAtTime(44 + Math.random() * 10, t); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); o.start(t); o.stop(t + .1); }
     else if (kind === 'knock1') { o.type = 'sine'; o.frequency.setValueAtTime(52, t); g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
+    else if (kind === 'silente') { o.type = 'sine'; o.frequency.setValueAtTime(96, t); o.frequency.linearRampToValueAtTime(38, t + 2.4); g.gain.setValueAtTime(.09, t); g.gain.linearRampToValueAtTime(0, t + 2.6); o.start(t); o.stop(t + 2.7); }
     else if (kind === 'knock') {
       for (let i = 0; i < 3; i++) {
         const o2 = AC.createOscillator(), g2 = AC.createGain();
@@ -173,6 +174,7 @@ function freshState() {
     bioCalibrated: false,
     pendingNews: [],           // consequências tardias {day, text}
     returnQueue: [],           // quem você marcou volta: {dueDay, nome, pais, sexo, etnia, features, mood, dia}
+    silenteDays: [14 + Math.floor(Math.random() * 11), 30 + Math.floor(Math.random() * 15)], // ele vem duas vezes. as regras não mudam.
     rent: 15,
     seedBase: Math.floor(Math.random() * 1e9),
   };
@@ -186,6 +188,7 @@ function loadSave() {
     // migração: saves antigos não tinham o Dario
     if (s.family && !s.family.dario) s.family.dario = { nome: 'Dario (filho, 15 — do seu primeiro casamento)', alive: true, sick: false, sickDays: 0, hunger: 0 };
     if (!s.returnQueue) s.returnQueue = [];
+    if (!s.silenteDays) s.silenteDays = [14 + Math.floor(Math.random() * 11), 30 + Math.floor(Math.random() * 15)];
     return s;
   } catch (e) { return null; }
 }
@@ -416,6 +419,7 @@ const EXAM_ZONES = [
 function openExam() {
   const cz = shift.citizen;
   if (!cz || !shift.running) return;
+  if (cz.isSilente) { silenteGameOver(); return; } // você olhou de perto. ele também.
   if (!cz.examDone) { spendTime(10); cz.examDone = true; }
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
   $('exam-log').innerHTML = '<span class="obs">A pessoa se aproxima do vidro. Perto demais. Examine cada região.</span>';
@@ -448,6 +452,58 @@ function examZone(cz, zone) {
     log.innerHTML += line;
   });
   log.scrollTop = log.scrollHeight;
+}
+
+/* ---------- O SILENTE ----------
+   Ele vem duas vezes por campanha. Não adianta scanner, guarda ou arma.
+   As regras (o amigo do Dario avisa na véspera):
+   1. NÃO olhe de perto (exame físico = fim).
+   2. NÃO chame ninguém (deter = fim — e o biológico vai TENTAR te convencer).
+   3. NÃO demore (35 minutos sem carimbar = fim).
+   Carimbe qualquer coisa. E deixe ir. */
+function silenteSVG() {
+  let s = '';
+  s += `<path d="M18 120 Q18 78 50 76 Q82 78 82 120 Z" fill="#0b0b0d"/>`;
+  s += `<rect x="45" y="58" width="10" height="22" fill="#dcd8cc"/>`;
+  s += `<ellipse cx="50" cy="42" rx="21" ry="27" fill="#e6e2d6"/>`;
+  s += `<ellipse cx="42" cy="40" rx="4.6" ry="6" fill="#050505"/>`;
+  s += `<ellipse cx="58" cy="40" rx="4.6" ry="6" fill="#050505"/>`;
+  s += `<line x1="43" y1="60" x2="57" y2="60" stroke="#8a8578" stroke-width="1"/>`;
+  s += `<path d="M29 30 Q50 14 71 30 L71 24 Q50 8 29 24 Z" fill="#0b0b0d"/>`;
+  return s;
+}
+function makeSilente() {
+  const cz = makeCitizen(S.day, { forceValid: true, pais: 'osteria' });
+  cz.isSilente = true;
+  cz.isAlternado = false; cz.isForger = false;
+  cz.discrepancies = []; cz.bag = [{ txt: 'Não há bagagem.', fid: 'bag.0', desc: 'Nunca houve.' }];
+  cz.nome = '———';
+  cz.docs = { pass: { tipo: 'PASSAPORTE', id: 'pass', color: '#101012', nome: '———', nasc: cz.nasc, sexo: '—', paisNome: '—', cidade: '—', numero: '—————', validade: cz.docs.pass.validade, selo: ' ', reval: null } };
+  cz.arrivedAt = shift.clock;
+  return cz;
+}
+function presentSilente(cz) {
+  const p = $('npc-portrait');
+  p.innerHTML = silenteSVG();
+  p.setAttribute('class', 'silente');
+  document.body.classList.add('silente-present');
+  queueAdvance();
+  $('npc-name').textContent = '———';
+  $('speech').textContent = 'Ele não entrega os documentos. Eles já estavam na bandeja quando você olhou.';
+  $('talk-log').innerHTML = '';
+  $('ask-row').innerHTML = '';
+  $('radio-line').textContent = '‹estática›';
+  layDocs(cz);
+  sfx('silente');
+}
+function silenteGameOver() {
+  document.body.classList.remove('silente-present');
+  finishGame('silente');
+}
+function silenteLeaves(cz) {
+  document.body.classList.remove('silente-present');
+  S.flags.silenteSurvived = (S.flags.silenteSurvived || 0) + 1;
+  S.pendingNews.push({ day: S.day + 1, text: 'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.' });
 }
 
 /* ---------- LINHA DA VIDA ----------
@@ -792,6 +848,7 @@ function startDay() {
     shift.wantedPais = p;
     shift.wantedSlot = ri(3, 6);
   }
+  shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(3, 7) : -1;
 
   $('shift-day').textContent = `DIA ${S.day} — ${REGIME_LABEL[regimeOfDay(S.day)]}`;
   renderRulebook();
@@ -839,6 +896,8 @@ function showBulletin(fn) {
 function tickClock() {
   if (!shift.running) return;
   shift.clock += 2;
+  // demorar diante dele é a terceira forma de perder
+  if (shift.citizen && shift.citizen.isSilente && shift.clock - shift.citizen.arrivedAt >= 35) { silenteGameOver(); return; }
   if (shift.clock >= 1080) { shift.clock = 1080; endShift(); return; }
   updateHud();
 }
@@ -1015,6 +1074,12 @@ function nextCitizen() {
       briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
     });
     if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+  } else if (shift.silenteSlot >= 0 && shift.processed === shift.silenteSlot) {
+    shift.silenteSlot = -1;
+    cz = makeSilente();
+    shift.citizen = cz;
+    presentSilente(cz);
+    return;
   } else if (!shift.returnDone && chance(.5) && S.returnQueue.some(r => r.dueDay <= S.day)) {
     // alguém que você marcou voltou
     shift.returnDone = true;
@@ -1353,6 +1418,13 @@ function scan(kind) {
     out = calm ? '📈 PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : '📈 PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
   } else if (kind === 'bio') {
     spendTime(30);
+    if (cz.isSilente) {
+      // a máquina IMPLORA para você chamar os guardas. não chame.
+      cz.bioResult = true; cz.evidence = true;
+      $('btn-detain').disabled = false;
+      $('scan-result').textContent = '🧬 BIOLÓGICO: ⚠⚠⚠ POSITIVO. POSITIVO. POSITIVO. DETENÇÃO RECOMENDADA COM URGÊN— o restante da linha saiu impresso em branco.';
+      return;
+    }
     if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = '🧬 BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
     if (cz.scannerAmbiguo) { $('scan-result').textContent = '🧬 BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
     const decal = S.day >= 31 && !S.bioCalibrated;
@@ -1421,6 +1493,20 @@ function evaluatePair(a, b) {
 function decide(decision) {
   const cz = shift.citizen;
   if (!cz || !shift.running) return;
+  if (cz.isSilente) {
+    if (decision === 'detain') { silenteGameOver(); return; } // você chamou alguém. ninguém veio. algo veio.
+    // carimbe qualquer coisa. e deixe ir.
+    sfx('stamp');
+    shift.citizen = null;
+    const p = $('npc-portrait');
+    setTimeout(() => p.classList.add('leave-ok'), 300);
+    silenteLeaves(cz);
+    stampDocs(decision);
+    shift.processed++;
+    updateHud();
+    setTimeout(nextCitizen, 1600);
+    return;
+  }
   sfx('stamp');
   shift.citizen = null;
   const p = $('npc-portrait');
@@ -1768,6 +1854,7 @@ function renderHome() {
 /* ---------- FINAIS ---------- */
 function pickEnding(kind) {
   const c = S.counters;
+  if (kind === 'silente') return 'silente';
   if (kind === 'prisao') return 'prisao';
   const famDead = Object.values(S.family).every(m => !m.alive);
   if (famDead) return 'familia';

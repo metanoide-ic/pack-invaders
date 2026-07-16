@@ -136,6 +136,25 @@ assinaturas". Esse arrepio é o produto.
 
 ---
 
+## 2.4b O Silente (implementado)
+
+Duas vezes por campanha (uma entre os dias 14–24, outra entre 30–44), chega ao guichê
+algo que **não é um Alternado nem um humano**. Passaporte com campos em branco ("———"),
+rosto pálido de órbitas vazias que flutua meio milímetro, o rádio vira estática, a tela
+dessatura. Não adianta scanner, guarda ou arma. **Três formas de perder — game over
+imediato e definitivo:**
+
+1. **Olhar de perto** (abrir o Exame Físico);
+2. **Chamar alguém** (DETER — e o detector biológico vai *implorar* "POSITIVO. POSITIVO.
+   DETENÇÃO RECOMENDADA" para te induzir exatamente a isso: a máquina é a armadilha);
+3. **Demorar** (35 minutos sem carimbar).
+
+A saída: **carimbar qualquer coisa, rápido, e deixar ir** — sem advertência, qualquer
+carimbo serve. As regras são aprendíveis: o "amigo" do Dario avisa **na véspera**, com
+um tom que ele nunca usou antes. O final de derrota ("O Que Olha de Volta") descreve o
+carimbo descendo na direção do seu próprio pulso. Sobreviver às duas visitas alimenta
+a conquista Steam `ACH_SILENTE`.
+
 ## 2.5 Falhas honestas do mundo (falsos positivos deliberados)
 
 Para impedir que o jogador transforme qualquer anomalia em veredito, o mundo produz

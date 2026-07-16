@@ -17,28 +17,39 @@ const HOUSE = {
 };
 const KEYS = {};
 
-/* ---------- MAPA (grade; 0=chão, 1=parede, 2=porta de entrada) ---------- */
-const MAPW = 33, MAPH = 9;
+/* ---------- MAPA (grade; 0=chão, 1=parede, 2=porta de entrada) ----------
+   A planta: você entra pela porta oeste no corredor central.
+   ESQUERDA (norte): quarto do Tomi (1º), hóspedes 1, hóspedes 2, cozinha.
+   DIREITA (sul): quarto da sua mãe (1º), quarto do Dario (ao lado), seu quarto.
+   FIM DO CORREDOR: a sala — onde sua mãe está, no sofá, diante da TV. */
+const MAPW = 33, MAPH = 13;
 const MAP = [];
 (function buildMap() {
   for (let y = 0; y < MAPH; y++) MAP.push(new Array(MAPW).fill(1));
   const carve = (x0, y0, x1, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) MAP[y][x] = 0; };
-  carve(1, 1, 7, 3);    // sala
-  carve(9, 1, 15, 3);   // cozinha
-  carve(17, 1, 20, 3);  // quarto do tomi
-  carve(22, 1, 27, 3);  // quarto do dario
-  carve(29, 1, 31, 3);  // seu quarto
-  carve(1, 5, 31, 7);   // corredor
-  [[3, 4], [12, 4], [18, 4], [25, 4], [30, 4]].forEach(([x, y]) => MAP[y][x] = 0); // vãos das portas
+  carve(1, 5, 24, 7);    // corredor central
+  carve(25, 2, 31, 10);  // sala, no fim do corredor
+  carve(2, 1, 6, 3);     // ESQ 1: quarto do Tomi
+  carve(8, 1, 12, 3);    // ESQ 2: quarto de hóspedes 1
+  carve(14, 1, 18, 3);   // ESQ 3: quarto de hóspedes 2
+  carve(20, 1, 24, 3);   // ESQ 4: cozinha
+  carve(2, 9, 6, 11);    // DIR 1: quarto da sua mãe
+  carve(8, 9, 12, 11);   // DIR 2: quarto do Dario
+  carve(14, 9, 18, 11);  // DIR 3: seu quarto
+  [[4, 4], [10, 4], [16, 4], [22, 4]].forEach(([x, y]) => MAP[y][x] = 0); // vãos norte
+  [[4, 8], [10, 8], [16, 8]].forEach(([x, y]) => MAP[y][x] = 0);          // vãos sul
   MAP[6][0] = 2; // a porta de entrada, na parede oeste
 })();
 const ROOMS = [
-  { x0: 1, y0: 1, x1: 7, y1: 3, nome: 'SALA', tint: [96, 84, 66] },
-  { x0: 9, y0: 1, x1: 15, y1: 3, nome: 'COZINHA', tint: [78, 88, 70] },
-  { x0: 17, y0: 1, x1: 20, y1: 3, nome: 'QUARTO DE TOMI', tint: [70, 80, 92] },
-  { x0: 22, y0: 1, x1: 27, y1: 3, nome: 'QUARTO DE DARIO', tint: [58, 58, 64] },
-  { x0: 29, y0: 1, x1: 31, y1: 3, nome: 'SEU QUARTO', tint: [88, 74, 58] },
-  { x0: 1, y0: 5, x1: 31, y1: 7, nome: 'CORREDOR', tint: [72, 68, 58] },
+  { x0: 2, y0: 1, x1: 6, y1: 3, nome: 'QUARTO DE TOMI', tint: [70, 80, 92] },
+  { x0: 8, y0: 1, x1: 12, y1: 3, nome: 'QUARTO DE HÓSPEDES 1', tint: [64, 62, 58] },
+  { x0: 14, y0: 1, x1: 18, y1: 3, nome: 'QUARTO DE HÓSPEDES 2', tint: [64, 62, 58] },
+  { x0: 20, y0: 1, x1: 24, y1: 3, nome: 'COZINHA', tint: [78, 88, 70] },
+  { x0: 2, y0: 9, x1: 6, y1: 11, nome: 'QUARTO DA SUA MÃE', tint: [86, 76, 62] },
+  { x0: 8, y0: 9, x1: 12, y1: 11, nome: 'QUARTO DE DARIO', tint: [58, 58, 64] },
+  { x0: 14, y0: 9, x1: 18, y1: 11, nome: 'SEU QUARTO', tint: [88, 74, 58] },
+  { x0: 25, y0: 2, x1: 31, y1: 10, nome: 'SALA', tint: [96, 84, 66] },
+  { x0: 1, y0: 5, x1: 24, y1: 7, nome: 'CORREDOR', tint: [72, 68, 58] },
 ];
 /* Mapa do Dia 48: a pista da fila, sem fila, até o seu próprio guichê */
 const MAP48 = [];
@@ -134,6 +145,15 @@ function buildSprites() {
     R(x, 30, 6, 4, 68, '#241f16'); R(x, 6, 38, 52, 4, '#241f16');
     x.fillStyle = 'rgba(215,215,208,.7)';
     [[12, 14], [22, 30], [44, 20], [50, 52], [16, 58], [38, 64]].forEach(([a, b]) => x.fillRect(a, b, 2, 2));
+  });
+  SPR.realocados = mk(80, 128, (x) => { // os dois. de pé. de costas. sempre.
+    [[22, '#26292b'], [56, '#2b2e30']].forEach(([cx, cor]) => {
+      x.fillStyle = cor; x.fillRect(cx - 9, 44, 18, 52);
+      x.fillRect(cx - 8, 94, 6, 30); x.fillRect(cx + 2, 94, 6, 30);
+      x.fillStyle = '#9c8468'; x.beginPath(); x.arc(cx, 34, 9, 0, 6.29); x.fill();
+      x.fillStyle = '#141414'; x.beginPath(); x.arc(cx, 32, 10, Math.PI * .95, Math.PI * 2.05); x.fill();
+      x.fillRect(cx - 9, 30, 18, 9);
+    });
   });
   SPR.booth = mk(96, 128, (x) => { // o seu guichê, visto do lado errado
     x.fillStyle = '#23251d'; x.fillRect(4, 20, 88, 108);
@@ -231,7 +251,12 @@ function texAt(mx, my, tile) {
   if (tile === 2) return TEX.door;
   const r = roomAt(mx, my) || roomAt(mx, my + 1) || roomAt(mx, my - 1) || roomAt(mx + 1, my) || roomAt(mx - 1, my);
   if (!r) return TEX.corr;
-  return { 'SALA': TEX.sala, 'COZINHA': TEX.coz, 'QUARTO DE TOMI': TEX.tomi, 'QUARTO DE DARIO': TEX.dario, 'SEU QUARTO': TEX.casal, 'CORREDOR': TEX.corr }[r.nome] || TEX.corr;
+  return {
+    'SALA': TEX.sala, 'COZINHA': TEX.coz, 'QUARTO DE TOMI': TEX.tomi,
+    'QUARTO DE DARIO': TEX.dario, 'SEU QUARTO': TEX.casal, 'CORREDOR': TEX.corr,
+    'QUARTO DE HÓSPEDES 1': TEX.dario, 'QUARTO DE HÓSPEDES 2': TEX.corr,
+    'QUARTO DA SUA MÃE': TEX.casal,
+  }[r.nome] || TEX.corr;
 }
 
 /* ---------- ROSTOS EM CLOSE (caixa de diálogo) ---------- */
@@ -288,23 +313,38 @@ let ENTS = [];
 function buildEnts() {
   const F = S.family;
   ENTS = [
-    { spr: 'retrato', spot: 'retrato', x: 2.0, y: 1.28, sc: .34, lift: .42 },
-    { spr: 'tv', x: 1.5, y: 2.4, sc: .38, glow: true },
-    { spr: 'sofa', x: 5.2, y: 2.5, sc: .4 },
-    F.mae.alive && { spr: 'mae', spot: 'mae', x: 5.2, y: 2.05, sc: .68 },
-    { spr: 'janela', x: 6.8, y: 1.22, sc: .44, lift: .34 },
-    { spr: 'clock', x: 9.7, y: 1.24, sc: .5, lift: .28 },
-    { spr: 'stove', x: 14.4, y: 1.7, sc: .46 },
-    F.vessa.alive && { spr: 'vessa', spot: 'vessa', x: 13.2, y: 2.1, sc: .7 },
-    { spr: 'bedT', x: 19.6, y: 1.9, sc: .38 },
-    F.tomi.alive && { spr: 'tomi', spot: 'tomi', x: 18.3, y: 2.1, sc: .52 },
-    { spr: 'bedD', x: 23.0, y: 1.8, sc: .38 },
-    { spr: 'shadow', x: 26.7, y: 1.35, sc: .95, alpha: .85 },
-    F.dario.alive && { spr: 'dario', spot: 'dario', x: 26.0, y: 1.9, sc: .7 },
-    { spr: 'bedQ', spot: 'bed', x: 30.2, y: 2.0, sc: .44 },
+    // ESQ 1 — quarto do Tomi
+    { spr: 'bedT', x: 5.0, y: 1.8, sc: .38 },
+    F.tomi.alive && { spr: 'tomi', spot: 'tomi', x: 3.4, y: 2.1, sc: .52 },
+    // ESQ 2 — hóspedes 1: vazio... até o Conselho realocar alguém
+    { spr: 'bedD', x: 11.2, y: 1.8, sc: .36 },
+    S.day >= 31 && { spr: 'realocados', spot: 'hosp1', x: 9.6, y: 1.9, sc: .7 },
+    S.day < 31 && { spot: 'hosp1', x: 10, y: 2 },
+    // ESQ 3 — hóspedes 2: o quarto que ninguém usa
+    { spr: 'bedD', x: 17.2, y: 1.8, sc: .36 },
+    { spot: 'hosp2', x: 16, y: 2 },
+    // ESQ 4 — cozinha
+    { spr: 'clock', x: 20.6, y: 1.24, sc: .5, lift: .28 },
+    { spr: 'stove', x: 23.2, y: 1.7, sc: .46 },
+    F.vessa.alive && { spr: 'vessa', spot: 'vessa', x: 21.8, y: 2.1, sc: .7 },
+    // DIR 1 — quarto da sua mãe (ela não está aqui. ela está na sala.)
+    { spr: 'bedQ', x: 4.6, y: 10.2, sc: .4 },
+    { spot: 'quartoMae', x: 4, y: 10 },
+    // DIR 2 — quarto do Dario, ao lado do da mãe
+    { spr: 'bedD', x: 11.4, y: 10.2, sc: .36 },
+    { spr: 'shadow', x: 11.6, y: 10.7, sc: .95, alpha: .85 },
+    F.dario.alive && { spr: 'dario', spot: 'dario', x: 10.4, y: 10.4, sc: .7 },
+    // DIR 3 — seu quarto
+    { spr: 'bedQ', spot: 'bed', x: 16.4, y: 10.2, sc: .44 },
+    // SALA — no fim do corredor
+    { spr: 'retrato', spot: 'retrato', x: 26.0, y: 2.28, sc: .34, lift: .42 },
+    { spr: 'tv', x: 26.2, y: 6.4, sc: .38, glow: true },
+    { spr: 'sofa', x: 29.4, y: 6.4, sc: .4 },
+    F.mae.alive && { spr: 'mae', spot: 'mae', x: 29.4, y: 5.9, sc: .68 },
+    { spr: 'janela', x: 30.6, y: 2.24, sc: .44, lift: .34 },
     { spot: 'door', x: 1.0, y: 6.0 }, // invisível: a porta é a parede oeste
     // lâmpadas de teto: pouca luz, muita sombra
-    ...[[4, 2], [12, 2], [18.5, 2], [24.5, 2], [30, 2], [6, 6], [16, 6], [26, 6]]
+    ...[[4, 2], [10, 2], [16, 2], [22, 2], [4, 10], [10, 10], [16, 10], [6, 6], [13, 6], [20, 6], [28, 6]]
       .map(([lx, ly]) => ({ spr: 'lamp', x: lx, y: ly, sc: .16, lift: .74, glowWarm: true })),
   ].filter(Boolean);
 }
@@ -455,6 +495,7 @@ function infoTomi() {
   ]);
 }
 function infoDario() {
+  if ((S.silenteDays || []).includes(S.day + 1)) return 'Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.';
   if (S.day >= 44) return 'O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.';
   if (S.day + 1 === 46) return '"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."';
   if (WANTED_DAYS[S.day + 1]) return 'O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.';
@@ -621,6 +662,91 @@ function interactWith(id) {
       'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.',
       S.day >= 20 ? 'A quinta silhueta — a menorzinha, do canto — está mais clara que as outras. Sempre esteve? Fotografias desbotam do canto para o centro. É física. Deve ser física.' : 'A moldura está torta meio centímetro. Você não arruma. Arrumar seria admitir que mediu.',
     ]);
+    return;
+  }
+  if (id === 'quartoMae') {
+    if (HOUSE.spoke.quartoMae) { hSay('O QUARTO DA SUA MÃE', ['Está como você deixou. Tudo nesta casa fica como você deixou. Quase tudo.']); return; }
+    HOUSE.spoke.quartoMae = true;
+    if (S.day >= 43) {
+      hSay('O QUARTO DA SUA MÃE', [
+        'A cama está feita. Feita demais. O travesseiro não tem amassado nenhum — nem o vinco de uma cabeça, nem o calor de um corpo.',
+        'Ela dorme aqui? Dormiu alguma vez? Você tenta lembrar da última vez que a viu deitada e a memória devolve só a poltrona, a TV, a luz azul.',
+        'Você ajeita um travesseiro que não precisava ser ajeitado e sai sem fazer barulho. Para não acordar ninguém. Não há ninguém.',
+      ], null, 'mae');
+    } else if (S.day >= 17) {
+      hSay('O QUARTO DA SUA MÃE', [
+        'Na gaveta, embaixo das meias de lã: o formulário de ancestralidade — rasgado ao meio e colado de volta com fita, letra por letra alinhada.',
+        'Foi a Vessa que colou, de madrugada. Sua mãe finge que não sabe. A fita finge que segura. Todo mundo nesta casa é muito bom em fingir.',
+        'Você fecha a gaveta exatamente como estava. Isso também é um tipo de fita.',
+      ], null, 'mae');
+    } else {
+      hSay('O QUARTO DA SUA MÃE', [
+        'Cheiro de lavanda velha e naftalina. O terço no criado-mudo. E, embaixo do travesseiro, dobradas em quatro: ₴ 2 — "emergência", ela sempre diz.',
+      ], [
+        { label: 'PEGAR AS ₴ 2', fn: () => { S.money += 2; S.flags.maeRoubada = true; hSay('VOCÊ', ['Você pega. Emergência é um conceito flexível.', 'Ela vai perceber. Ela percebe tudo. Ela não vai dizer nada — e isso vai ser pior que qualquer coisa que ela pudesse dizer.']); } },
+        { label: 'DEIXAR', fn: () => hSay('VOCÊ', ['Você deixa. Alguma coisa nesta casa ainda precisa ficar no lugar.']) },
+      ], 'mae');
+    }
+    return;
+  }
+  if (id === 'hosp1') {
+    if (S.day < 31) {
+      hSay('QUARTO DE HÓSPEDES 1', [HOUSE.spoke.hosp1 ? 'Continua vazio. Por enquanto.' : 'Um colchão nu, uma cadeira, poeira em suspensão na luz da lâmpada. Ninguém visita mais ninguém neste país.']);
+      HOUSE.spoke.hosp1 = true;
+      return;
+    }
+    if (HOUSE.spoke.hosp1) { hSay('OS REALOCADOS', ['Eles não se viraram. Eles nunca se viram. Você já reparou que nunca viu o rosto deles?']); return; }
+    HOUSE.spoke.hosp1 = true;
+    if (chance(.2)) {
+      S.money += 2;
+      hSay('OS REALOCADOS', [
+        'Os dois estão de pé, de costas, imóveis — como sempre. Sem virar, o homem estende o braço para trás: ₴ 2 dobradas entre os dedos.',
+        '"Pelo incômodo", diz a mulher. A voz vem do lugar errado do quarto.',
+        'Você aceita. Recusar exigiria uma conversa, e conversa exigiria que eles se virassem.',
+      ]);
+    } else {
+      hSay('OS REALOCADOS', pick([
+        ['Os dois de pé, de costas, no escuro. Não acenderam a lâmpada. "Economia", diria o Conselho. Eles não precisam, diria o seu estômago.',
+         'Você fecha a porta devagar. No último centímetro de fresta, tem certeza de que um deles começou a virar a cabeça.'],
+        ['O quarto cheira a nada. Comida sem cheiro, roupa sem cheiro, gente sem cheiro.',
+         '"Boa noite, camarada inspetor", dizem os dois. Ao mesmo tempo. Na mesma nota.'],
+        ['O pote de sal da Vessa está no parapeito. Cheio. Exatamente como estava na prateleira da cozinha. Você não pergunta como ele atravessou o corredor sozinho.'],
+      ]));
+    }
+    return;
+  }
+  if (id === 'hosp2') {
+    if (HOUSE.spoke.hosp2) { hSay('QUARTO DE HÓSPEDES 2', ['Você já vasculhou hoje. O quarto ganhou aquele ar ofendido dos lugares revirados.']); return; }
+    HOUSE.spoke.hosp2 = true;
+    const r = rnd();
+    if (S.day >= 40 && r < .15) {
+      hSay('QUARTO DE HÓSPEDES 2', [
+        'O colchão nu, a cadeira, a poeira. Tudo no lugar. Só que o travesseiro—',
+        'O travesseiro está quente.',
+        'Ninguém dorme neste quarto. Ninguém NUNCA dormiu neste quarto. Você encosta a mão de novo para ter certeza e se arrepende de ter certeza.',
+      ]);
+    } else if (r < .35) {
+      const achou = ri(1, 3);
+      S.money += achou;
+      hSay('QUARTO DE HÓSPEDES 2', [
+        `Vasculhando o armário vazio: ${MOEDA} ${achou} em moedas antigas, esquecidas num casaco que ninguém lembra de quem foi.`,
+        'Dinheiro de morto ou de emigrado. Nesta economia, é tudo dinheiro.',
+      ]);
+    } else if (r < .43) {
+      const doente = Object.keys(S.family).find(k => S.family[k].alive && S.family[k].sick);
+      if (doente) {
+        S.family[doente].sick = false; S.family[doente].sickDays = 0;
+        hSay('QUARTO DE HÓSPEDES 2', [
+          'No fundo da gaveta: um frasco de remédio LACRADO, dentro do prazo. De quem? De quando? Não importa.',
+          `Você o leva para ${S.family[doente].nome.split(' ')[0].replace(',', '')}. Esta noite, a casa tosse menos.`,
+        ]);
+      } else {
+        S.money += 4;
+        hSay('QUARTO DE HÓSPEDES 2', ['Um frasco de remédio lacrado, esquecido na gaveta. Ninguém precisa dele agora — o farmacêutico do beco paga ₴ 4 sem perguntar de onde veio.']);
+      }
+    } else {
+      hSay('QUARTO DE HÓSPEDES 2', ['Colchão nu. Cadeira. Poeira. O quarto que a casa mantém vazio como quem guarda um lugar à mesa para alguém que não avisou se volta.']);
+    }
     return;
   }
   if (id === 'bed') {
@@ -827,6 +953,9 @@ function houseLoop(ts) {
       ? (HOUSE.knock && HOUSE.knock.active ? 'E — ATENDER A PORTA' : 'E — Olhar pelo olho mágico')
       : tgt.spot === 'bed' ? 'E — Dormir'
       : tgt.spot === 'retrato' ? 'E — Olhar o retrato da família'
+      : tgt.spot === 'quartoMae' ? 'E — Olhar o quarto da sua mãe'
+      : tgt.spot === 'hosp1' ? (S.day >= 31 ? 'E — Os realocados' : 'E — Quarto de hóspedes vazio')
+      : tgt.spot === 'hosp2' ? 'E — Vasculhar o quarto de hóspedes'
       : `E — Falar com ${{ mae: 'sua mãe', vessa: 'Vessa', tomi: 'Tomi', dario: 'Dario' }[tgt.spot]}`;
   } else prompt.classList.remove('on');
 

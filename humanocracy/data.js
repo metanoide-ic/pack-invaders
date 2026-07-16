@@ -347,6 +347,10 @@ const HOME_EVENTS = {
 
 /* ---------- FINAIS ---------- */
 const ENDINGS = {
+  silente: {
+    t: 'FIM — O QUE OLHA DE VOLTA',
+    b: 'Você chamou os guardas. Ou olhou perto demais. Ou deixou o tempo decidir por você.\n\nNão houve barulho. É isso que ninguém conta sobre o fim: não há barulho nenhum.\n\nOs guardas ficaram parados onde estavam, educados, de costas. O rádio virou estática. A fila lá fora continuou andando — para frente, para o posto, como se o posto ainda fosse seu.\n\nA última coisa que você registra é o próprio carimbo, na própria mão, descendo devagar na direção do seu próprio pulso.\n\nAPROVADO.\n\nAlguém vai sentar na sua cadeira amanhã. Alguém com o seu rosto. A família nem vai perceber. Você também não percebeu, da outra vez.\n\n— Havia regras. O menino tentou avisar. Não olhe de perto. Não chame ninguém. Carimbe qualquer coisa. E deixe ir. —',
+  },
   prisao: {
     t: 'FINAL — O FORMULÁRIO 77-B',
     b: 'Vieram buscá-lo no meio do turno. As acusações mudaram três vezes durante a leitura: negligência, sabotagem, "inconsistência epistemológica". A cela é fria e o processo, eterno.\n\nNo interrogatório, o agente folheia seu histórico completo — cada carimbo, cada hesitação, cada segundo a mais que você gastou olhando um rosto.\n\n"O senhor entende", diz ele sem levantar os olhos, "que nós também estávamos inspecionando você. Desde o primeiro dia."\n\nVocê entende. Agora entende.',

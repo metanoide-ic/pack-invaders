@@ -104,6 +104,18 @@ informação que existia — vem de o mundo parar de produzi-la.
   distribuição de finais, taxa de acerto possível por dia, ausência de soft-locks legais
   (todo cidadão sempre tem pelo menos um veredito "correto" definido).
 
+## 9.4b Caminho Steam (implementado o primeiro passo)
+
+O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/steam/`:
+
+1. **Agora:** build desktop Electron (`npm run humanocracy`) — tela cheia, F11/Alt+Enter,
+   saves persistidos em userData; empacotável com electron-forge para Windows/Linux/Deck;
+2. **Early Access / demo:** Steamworks via `steamworks.js` (AppID, Steam Cloud sobre o
+   localStorage, overlay com `--in-process-gpu`), gamepad para o Deck, e as **12
+   conquistas** especificadas em `steam/README.md` (todas com contadores já existentes
+   no estado do jogo);
+3. **1.0:** port Unity completo conforme este volume.
+
 ## 9.5 Roadmap pós-protótipo
 
 1. Fila simulada pessoa a pessoa + bagagem/objetos (Volume 4.6);

@@ -85,13 +85,24 @@ Vessa (esposa, arquivista), Tomi (8 anos), **Dario (15 anos, filho do primeiro c
 do protagonista, mestiço)** e sua mãe, Odila. Não são uma tela de despesas: têm rotina,
 emprego, opiniões e cenas próprias.
 
-### A casa às 20:30 (house.js)
+### A casa às 20:30 (house.js — primeira pessoa, raycast)
 
-O expediente termina às 18h; às 20h30 o jogador **anda pelo apartamento** (side-scroller:
-setas/E ou clique) por cinco cômodos: sala (mãe no sofá, TV tremeluzindo), cozinha (Vessa
-no fogão, vapor subindo), quarto do Tomi (desenhos na parede — um deles com "papai de
-dois rostos"), quarto do Dario (janela tapada com tábuas, uma sombra no canto que talvez
-se mova) e o quarto do casal (dormir encerra o dia; à 00h00 o corpo decide sozinho).
+O expediente termina às 18h; às 20h30 o jogador anda pelo apartamento **em primeira
+pessoa** (WASD + mouse-look). A planta: você entra pela porta no **corredor central**;
+à **esquerda**, na ordem: quarto do Tomi (1º), quarto de hóspedes 1, quarto de hóspedes 2
+e a cozinha (Vessa); à **direita**: quarto da sua mãe (1º), quarto do Dario (ao lado do
+dela) e o seu quarto (dormir encerra o dia). No **fim do corredor**, a sala — onde a mãe
+está sempre, no sofá, diante da TV. **Todos os cômodos têm gameplay:**
+
+- **Quarto da mãe** (ela nunca está nele): as ₴2 de "emergência" sob o travesseiro
+  (pegar ou não — ela vai perceber e não vai dizer nada), o formulário rasgado e colado
+  com fita na gaveta (D17+), e no colapso a cama feita demais — *"ela dorme aqui? Dormiu
+  alguma vez?"*;
+- **Hóspedes 1**: vazio até o Dia 30; do 31 em diante, **os realocados** — dois de pé,
+  de costas, imóveis, que às vezes estendem ₴2 "pelo incômodo" sem se virar;
+- **Hóspedes 2**: vasculhável uma vez por noite — moedas esquecidas, um frasco de
+  remédio lacrado (cura um doente de graça!), nada… ou, no fim da campanha, o
+  travesseiro quente do quarto onde ninguém nunca dormiu.
 
 **Cada conversa é uma fonte de informação com confiabilidade própria:**
 

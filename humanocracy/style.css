@@ -351,6 +351,12 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 }
 #npc-portrait.twitch { animation: twitch .55s linear 1; }
 
+/* O Silente: ele não pisca. ele não balança. ele flutua meio milímetro. */
+#npc-portrait.silente { animation: silente-float 7s ease-in-out infinite; cursor: default; }
+@keyframes silente-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
+body.silente-present #screen-shift { filter: saturate(.55) brightness(.88); }
+body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(0,0,0,.75) 100%); }
+
 /* ============ A CASA (20:30) ============ */
 #screen-house { background:#070806; }
 #screen-house.active { display:flex; flex-direction:column; }
