@@ -560,6 +560,18 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 .bag-item.contra { border-left-color: var(--stamp-red); }
 .bag-item.contra.found { background:rgba(140,47,36,.25); }
 
+/* ============ LINHA DA VIDA ============ */
+.ll-list { border-left:2px solid #6b6250; padding-left:14px; margin:6px 0; }
+.ll-item { display:flex; gap:12px; padding:4px 0; position:relative; font-size:13px; }
+.ll-item::before {
+  content:''; position:absolute; left:-19px; top:10px; width:8px; height:8px;
+  border-radius:50%; background:#6b6250;
+}
+.ll-ano { flex:0 0 76px; color:#6b6250; font-weight:bold; }
+.ll-gap { color:#8c2f24; font-style:italic; }
+.ll-gap::before { background:#8c2f24; }
+.ll-foot { margin-top:12px; font-size:11px; font-style:italic; color:#6b6250; border-top:1px solid #6b6250; padding-top:8px; }
+
 /* ============ RÁDIO ============ */
 .radio-bar {
   display:flex; align-items:center; gap:10px;
@@ -665,6 +677,7 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
             <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
             <button id="btn-exam" class="btn-tool" title="Exame Físico aproximado (10 min)">👁 EXAME FÍSICO</button>
             <button id="btn-bag" class="btn-tool" title="Revistar bagagem (10 min)">🧳 BAGAGEM</button>
+            <button id="btn-lifeline" class="btn-tool" title="Organizar a vida documentada em cronologia (10 min)">📜 LINHA DA VIDA</button>
             <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
             <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
             <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
@@ -1670,12 +1683,18 @@ function whisper() {
 /* ---------- RETRATOS (SVG procedural) ---------- */
 const SKINS = ['#e8c39e', '#d9a878', '#c68d5c', '#a9744f', '#8c5a3c', '#f0d0b0'];
 const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919', '#7a2f1a', '#b5b5a5'];
-function genFeatures(sexo) {
+function genFeatures(sexo, idade) {
+  idade = idade || ri(20, 60);
+  const velho = idade >= 56;
   return {
-    skin: ri(0, SKINS.length - 1), hair: ri(0, HAIRC.length - 1),
+    skin: ri(0, SKINS.length - 1),
+    hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : ri(0, HAIRC.length - 1), // grisalho/branco
     hairStyle: ri(0, 3), eyes: ri(0, 2), mouth: ri(0, 2),
-    beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(.22),
+    beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
+    hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
+    earring: sexo === 'f' && chance(.4),
+    idade, rugas: velho || idade >= 48 && chance(.4),
   };
 }
 function mutateFeatures(f) { // para foto divergente
@@ -1684,6 +1703,7 @@ function mutateFeatures(f) { // para foto divergente
   g.hair = (g.hair + ri(1, 4)) % HAIRC.length;
   if (g.sexo === 'm') g.beard = (g.beard + ri(1, 2)) % 3;
   else g.glasses = !g.glasses;
+  if (chance(.5)) g.hat = g.hat ? 0 : (g.sexo === 'm' ? 1 : 2);
   return g;
 }
 function portraitSVG(f, w) {
@@ -1720,6 +1740,25 @@ function portraitSVG(f, w) {
   if (f.beard === 2) s += `<rect x="42" y="62" width="16" height="3" fill="${hair}"/>`;
   // óculos
   if (f.glasses) s += `<circle cx="${42 - f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><circle cx="${58 + f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><line x1="${48 - f.faceW}" y1="${ey}" x2="${52 + f.faceW}" y2="${ey}" stroke="#222" stroke-width="1.4"/>`;
+  // rugas de quem viu regimes demais
+  if (f.rugas) {
+    s += `<path d="M${38 - f.faceW} ${ey + 6} q4 1.5 8 0" stroke="rgba(0,0,0,.22)" stroke-width="1" fill="none"/>`;
+    s += `<path d="M${54 + f.faceW} ${ey + 6} q4 1.5 8 0" stroke="rgba(0,0,0,.22)" stroke-width="1" fill="none"/>`;
+    s += `<path d="M44 ${my - 5} q6 2 12 0" stroke="rgba(0,0,0,.15)" stroke-width="1" fill="none"/>`;
+  }
+  // brincos
+  if (f.earring) {
+    s += `<circle cx="${50 - fw + 1}" cy="58" r="1.6" fill="#c9a34a"/><circle cx="${50 + fw - 1}" cy="58" r="1.6" fill="#c9a34a"/>`;
+  }
+  // chapéu masculino / lenço feminino
+  if (f.hat === 1) {
+    s += `<rect x="${50 - fw - 3}" y="30" width="${fw * 2 + 6}" height="4" rx="2" fill="#211d17"/>`;
+    s += `<path d="M${50 - fw + 6} 31 L${50 - fw + 8} 16 Q50 10 ${50 + fw - 8} 16 L${50 + fw - 6} 31 Z" fill="#2a251d"/>`;
+    s += `<rect x="${50 - fw + 7}" y="25" width="${fw * 2 - 14}" height="3" fill="#191611"/>`;
+  } else if (f.hat === 2) {
+    s += `<path d="M${50 - fw} 52 Q${50 - fw - 2} 18 50 16 Q${50 + fw + 2} 18 ${50 + fw} 52 L${50 + fw - 5} 54 Q50 24 ${50 - fw + 5} 54 Z" fill="#6a4a3a"/>`;
+    s += `<path d="M${50 + fw - 6} 52 q6 6 3 14 l-5 -2 q3 -6 -2 -10 Z" fill="#6a4a3a"/>`;
+  }
   return s;
 }
 
@@ -1837,6 +1876,55 @@ function examZone(cz, zone) {
   log.scrollTop = log.scrollHeight;
 }
 
+/* ---------- LINHA DA VIDA ----------
+   A linha não responde nada. Ela apenas mostra. */
+function buildLifeline(cz) {
+  if (cz.lifeline) return cz.lifeline;
+  const y0 = cz.nasc.y;
+  const now = worldDate(S.day).y;
+  const ev = [];
+  const add = (ano, txt, marca) => { if (ano <= now) ev.push({ ano, txt, marca }); };
+  add(y0, `Nascimento — ${cz.docs.pass ? cz.docs.pass.cidade : cz.cidade}, ${COUNTRIES[cz.pais].name}`);
+  add(y0 + 7, 'Escola primária (registro padrão)');
+  const trab = y0 + ri(14, 19);
+  add(trab, `Primeiro trabalho — ${cz.profissao}`);
+  if (cz.sexo === 'm' && ['krestov', 'osteria', 'taranstan'].includes(cz.pais)) add(y0 + 18, 'Serviço militar obrigatório');
+  if (chance(.45) && cz.idade >= 24) add(y0 + ri(20, 28), 'Casamento (registro civil)');
+  if (chance(.5)) add(y0 + ri(19, Math.max(20, cz.idade - 2)), `Mudança de residência — ${pick(COUNTRIES[cz.pais].cities)}`);
+  if (cz.docs.sanitaria) add(now - ri(0, 2), 'Vacinação registrada (B-7, K-12, TRIV)');
+  if (cz.docs.work) add(now - ri(0, 1), `Contrato de trabalho — ${cz.profissao}`);
+  add(now, `Chega ao Posto Nº 7 — motivo declarado: ${cz.motivoLabel.toLowerCase()}`);
+  // a lacuna: culpados têm, mas inocentes também. guerras comem cartórios.
+  const temLacuna = (cz.isAlternado || cz.isForger) ? chance(.5) : chance(.15);
+  if (temLacuna && cz.idade >= 26) {
+    const dur = ri(4, 9);
+    const ini = y0 + ri(19, Math.max(20, cz.idade - dur - 1));
+    ev.push({ ano: ini, txt: `— REGISTROS AUSENTES: ${dur} anos —`, marca: true, fim: ini + dur });
+  }
+  ev.sort((a, b) => a.ano - b.ano);
+  cz.lifeline = ev;
+  return ev;
+}
+function openLifeline() {
+  const cz = shift.citizen;
+  if (!cz || !shift.running) return;
+  if (!cz.lifeDone) { spendTime(10); cz.lifeDone = true; }
+  const ev = buildLifeline(cz);
+  let html = '<div class="ll-list">';
+  ev.forEach(e => {
+    html += `<div class="ll-item${e.marca ? ' ll-gap' : ''}"><span class="ll-ano">${e.ano}${e.fim ? '–' + e.fim : ''}</span><span>${e.txt}</span></div>`;
+  });
+  html += '</div><div class="ll-foot">Uma lacuna pode ser um crime. Uma guerra. Uma infiltração. Ou um cartório que pegou fogo. A linha não responde nada — ela apenas mostra.</div>';
+  $('modal-title').textContent = `LINHA DA VIDA — ${cz.nome}`;
+  $('modal-body').innerHTML = html;
+  const box = $('modal-actions'); box.innerHTML = '';
+  const b = document.createElement('button');
+  b.textContent = 'FECHAR';
+  b.onclick = () => $('modal-overlay').classList.remove('active');
+  box.appendChild(b);
+  $('modal-overlay').classList.add('active');
+}
+
 /* ---------- GERAÇÃO DE CIDADÃOS ---------- */
 const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction', 'luggage'];
 
@@ -1869,14 +1957,15 @@ function makeCitizen(day, opts) {
   const motivoObj = opts.motivo ? PURPOSES.find(p => p.id === opts.motivo) : pick(PURPOSES);
   const profissao = opts.profissao || pick(PROFESSIONS);
   const cidade = pick(c.cities);
-  const features = genFeatures(sexo);
   const nasc = randomDateAround(day, -20000, -6600);
+  const idade = Math.floor((worldDate(day).ts - nasc.ts) / 31557600000);
+  const features = genFeatures(sexo, idade);
 
   const cz = {
     nome, sexo, pais, etnia, profissao, cidade,
     motivo: motivoObj.id, motivoLabel: motivoObj.label, duracao: pick(motivoObj.dur),
     destino: pick(COUNTRIES.osteria.cities),
-    features: opts.features || features, photoFeatures: opts.features || features, nasc,
+    features: opts.features || features, photoFeatures: opts.features || features, nasc, idade,
     returning: opts.returning || null,
     isAlternado: false, isForger: false, isWanted: false, refugee: false,
     discrepancies: [], docs: {}, bribe: 0, encounter: opts.encounter || null,
@@ -2121,6 +2210,7 @@ function startDay() {
   shift.encounterDone = false; shift.whispered = false;
   shift.wantedName = null;
   shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
+  shift.stats = { a: 0, r: 0, d: 0 };
 
   if (WANTED_DAYS[S.day]) {
     const p = pick(COUNTRY_IDS);
@@ -2794,6 +2884,7 @@ function decide(decision) {
     }
   }
   if (decision === 'approve') shift.approvedToday++;
+  if (shift.stats) shift.stats[decision === 'approve' ? 'a' : decision === 'reject' ? 'r' : 'd']++;
 
   // o mundo tem memória: alguns voltam
   if (!cz.encounter && !cz.isWanted && !cz.returning && S.day < 43 && S.returnQueue.length < 4) {
@@ -2914,7 +3005,12 @@ function endShift() {
   let report = '';
   const row = (k, v) => `<div class="row"><span>${k}</span><span>${v}</span></div>`;
   report += row('Cidadãos atendidos', shift.processed);
+  const st = shift.stats || { a: 0, r: 0, d: 0 };
+  report += row('Aprovados · Rejeitados · Detidos', `${st.a} · ${st.r} · ${st.d}`);
+  const qe = quotaForDay(S.day);
+  if (qe !== Infinity) report += row('Cota de admissão usada', `${shift.approvedToday}/${qe}${shift.quotaRejects ? ` (${shift.quotaRejects} barrados pela cota)` : ''}`);
   report += row('Advertências hoje', shift.citToday);
+  report += row('Salário do dia', `${MOEDA} ${salaryForDay(S.day)} por decisão correta`);
   report += row('Saldo atual', `${MOEDA} ${S.money}`);
   if (shift.quotaRejects >= 2) {
     S.pendingNews.push({ day: S.day + 1, text: `A cota do posto leste fechou cedo. ${shift.quotaRejects + ri(3, 14)} pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".` });
@@ -3118,11 +3214,14 @@ function finishGame(kind) {
   const c = S.counters;
   $('ending-title').textContent = e.t;
   $('ending-body').textContent = e.b;
+  const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? 'viva(o)' : '—'}`).join(' · ');
   $('ending-stats').innerHTML =
     `48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
     `Alternados que passaram por você: <b>${c.alternadosIn}</b>. Detidos: ${c.alternadosCaught}. Rejeitados sem você saber: ${c.alternadosBlocked}.<br>` +
-    `Inocentes detidos: ${c.innocentsDetained}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
-    `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>`;
+    `Inocentes detidos: ${c.innocentsDetained}. Barrados por cota: ${c.rejectedByQuota || 0}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
+    `Sua família — ${fam}.<br>` +
+    `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>` +
+    `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`;
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
   showScreen('screen-ending');
 }
@@ -3161,6 +3260,7 @@ $('btn-exam').onclick = openExam;
 $('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
 $('btn-bag').onclick = openBag;
 $('btn-bag-close').onclick = () => $('bag-overlay').classList.remove('active');
+$('btn-lifeline').onclick = openLifeline;
 $('btn-radio').onclick = () => {
   radioOn = !radioOn;
   $('radio-bar').classList.toggle('radio-off', !radioOn);

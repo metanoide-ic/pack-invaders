@@ -554,6 +554,18 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 .bag-item.contra { border-left-color: var(--stamp-red); }
 .bag-item.contra.found { background:rgba(140,47,36,.25); }
 
+/* ============ LINHA DA VIDA ============ */
+.ll-list { border-left:2px solid #6b6250; padding-left:14px; margin:6px 0; }
+.ll-item { display:flex; gap:12px; padding:4px 0; position:relative; font-size:13px; }
+.ll-item::before {
+  content:''; position:absolute; left:-19px; top:10px; width:8px; height:8px;
+  border-radius:50%; background:#6b6250;
+}
+.ll-ano { flex:0 0 76px; color:#6b6250; font-weight:bold; }
+.ll-gap { color:#8c2f24; font-style:italic; }
+.ll-gap::before { background:#8c2f24; }
+.ll-foot { margin-top:12px; font-size:11px; font-style:italic; color:#6b6250; border-top:1px solid #6b6250; padding-top:8px; }
+
 /* ============ RÁDIO ============ */
 .radio-bar {
   display:flex; align-items:center; gap:10px;
