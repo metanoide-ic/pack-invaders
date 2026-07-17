@@ -1538,9 +1538,12 @@ function hashSeed(...parts) {
   return h >>> 0;
 }
 let _rng = makeRng(Date.now() % 2147483647);
+// troca a stream ativa e devolve a anterior, pra restaurar em um finally
+// manual — usado onde o trecho seedado tem `return` no meio (early exits
+// de nextCitizen/decide/scan) e por isso não cabe no fechamento de withRng.
+function beginRng(seed) { const prev = _rng; _rng = makeRng(seed); return prev; }
 function withRng(seed, fn) {
-  const prev = _rng;
-  _rng = makeRng(seed);
+  const prev = beginRng(seed);
   try { return fn(); } finally { _rng = prev; }
 }
 function rnd() { return _rng(); }
@@ -2644,8 +2647,7 @@ function nextCitizen() {
   // => mesma pessoa em qualquer repetição da campanha (Modo Segunda Leitura),
   // não importa quantas ferramentas você use nela depois de gerada.
   const slotSeed = hashSeed(S.seedBase, S.day, shift.processed, 'citizen');
-  const prevRng = _rng;
-  _rng = makeRng(slotSeed);
+  const prevRng = beginRng(slotSeed);
   try {
     renderQueueChatter();
     shift.picks = []; shift.confirmed = [];
@@ -3007,8 +3009,7 @@ function scan(kind) {
   sfx('scan');
   // mesma pessoa + mesmo aparelho = mesmo resultado, sempre — inclusive se
   // escanear de novo, e inclusive numa segunda leitura da mesma campanha.
-  const prevRng = _rng;
-  _rng = makeRng(hashSeed(cz.seed || 0, 'scan', kind));
+  const prevRng = beginRng(hashSeed(cz.seed || 0, 'scan', kind));
   try {
   let out = '';
   if (kind === 'thermo') {
@@ -3104,8 +3105,7 @@ function decide(decision) {
   if (SETTINGS.archivist) spendTime(24);
   // reações do mundo a esta decisão (quem volta, quando, o eco) usam a seed
   // do PRÓPRIO cidadão — a mesma decisão, na segunda leitura, reage igual.
-  const prevRng = _rng;
-  _rng = makeRng(hashSeed(cz.seed || 0, 'decide'));
+  const prevRng = beginRng(hashSeed(cz.seed || 0, 'decide'));
   try {
   if (cz.isSilente) {
     if (decision === 'detain') { silenteGameOver(); return; } // você chamou alguém. ninguém veio. algo veio.
