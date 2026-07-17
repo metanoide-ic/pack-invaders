@@ -660,6 +660,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
         <div class="title-menu">
           <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
           <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
+          <button id="btn-second-reading" class="btn-title" style="display:none;font-size:12px;width:260px;padding:8px" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
           <button id="btn-fullscreen" class="btn-title" style="font-size:12px;width:200px;padding:8px">⛶ TELA CHEIA (F)</button>
           <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
         </div>
@@ -1519,9 +1520,30 @@ const QUEUE_CHATTER = [
    ============================================================ */
 'use strict';
 
-/* ---------- RNG ---------- */
-let _seed = Date.now() % 2147483647;
-function rnd() { _seed = (_seed * 48271) % 2147483647; return (_seed - 1) / 2147483646; }
+/* ---------- RNG ----------
+   Stream chaveável: fora de qualquer withRng(), roda com uma semente de
+   sessão (só cosmético — neve do título, sombras da fila etc.). Dentro de
+   um withRng(seed, fn), TUDO que passar por rnd/ri/pick/chance vira
+   determinístico pra aquele (seedBase, dia, cidadão, fase) — é o que
+   sustenta o Modo Segunda Leitura: mesma seedBase, mesmos cidadãos,
+   mesmos vereditos possíveis, não importa quantas ferramentas você use. */
+function makeRng(seed) {
+  let s = Math.abs(Math.floor(seed)) % 2147483647; if (s <= 0) s = 1;
+  return function () { s = (s * 48271) % 2147483647; return (s - 1) / 2147483646; };
+}
+function hashSeed(...parts) {
+  let h = 2166136261 >>> 0;
+  const str = parts.join('|');
+  for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+  return h >>> 0;
+}
+let _rng = makeRng(Date.now() % 2147483647);
+function withRng(seed, fn) {
+  const prev = _rng;
+  _rng = makeRng(seed);
+  try { return fn(); } finally { _rng = prev; }
+}
+function rnd() { return _rng(); }
 function ri(a, b) { return a + Math.floor(rnd() * (b - a + 1)); }
 function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
 function chance(p) { return rnd() < p; }
@@ -1695,7 +1717,10 @@ function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringif
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
-function freshState() {
+function freshState(forceSeed) {
+  const seedBase = forceSeed != null ? forceSeed : Math.floor(Math.random() * 1e9);
+  // dias do Silente também vêm da seed — segunda leitura reencontra ele nos mesmos dias
+  const silRng = makeRng(hashSeed(seedBase, 'silente'));
   return {
     day: 1, money: 30, citTotal: 0,
     family: {
@@ -1713,9 +1738,10 @@ function freshState() {
     bioCalibrated: false,
     pendingNews: [],           // consequências tardias {day, text}
     returnQueue: [],           // quem você marcou volta: {dueDay, nome, pais, sexo, etnia, features, mood, dia}
-    silenteDays: [14 + Math.floor(Math.random() * 11), 30 + Math.floor(Math.random() * 15)], // ele vem duas vezes. as regras não mudam.
+    silenteDays: [14 + Math.floor(silRng() * 11), 30 + Math.floor(silRng() * 15)], // ele vem duas vezes. as regras não mudam.
     rent: 15,
-    seedBase: Math.floor(Math.random() * 1e9),
+    seedBase,
+    secondReading: forceSeed != null,
   };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -2380,15 +2406,17 @@ function startDay() {
   shift.wantedName = null;
   shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
   shift.stats = { a: 0, r: 0, d: 0 };
-  shift.queueSize = queueSizeForDay(S.day);
+  withRng(hashSeed(S.seedBase, S.day, 'day'), () => {
+    shift.queueSize = queueSizeForDay(S.day);
 
-  if (WANTED_DAYS[S.day]) {
-    const p = pick(COUNTRY_IDS);
-    shift.wantedName = fullName(p, chance(.5) ? 'm' : 'f');
-    shift.wantedPais = p;
-    shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
-  }
-  shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
+    if (WANTED_DAYS[S.day]) {
+      const p = pick(COUNTRY_IDS);
+      shift.wantedName = fullName(p, chance(.5) ? 'm' : 'f');
+      shift.wantedPais = p;
+      shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
+    }
+    shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
+  });
 
   $('shift-day').textContent = `DIA ${S.day} — ${REGIME_LABEL[regimeOfDay(S.day)]}`;
   renderRulebook();
@@ -2610,78 +2638,90 @@ function nextCitizen() {
     setTimeout(endShift, 1800);
     return;
   }
-  renderQueueChatter();
-  shift.picks = []; shift.confirmed = [];
-  $('scan-result').textContent = '';
-  $('talk-log').innerHTML = '';
-  $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: selecione dois elementos para comparar.' : '';
-  $('btn-detain').disabled = true;
-
-  let cz = null;
-  const enc = ENCOUNTERS[S.day];
-
   if (S.day === 48) { presentMirror(); return; }
 
-  if (enc && !shift.encounterDone && shift.processed >= 1) {
-    shift.encounterDone = true;
-    cz = makeCitizen(S.day, {
-      nome: enc.nome, pais: enc.pais, sexo: enc.sexo, etnia: enc.etnia,
-      profissao: enc.profissao, motivo: enc.motivo,
-      forceValid: enc.valid, forcedDisc: enc.forcedDisc, forcedMissing: enc.forcedMissing,
-      briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
-    });
-    if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
-  } else if (shift.silenteSlot >= 0 && shift.processed === shift.silenteSlot) {
-    shift.silenteSlot = -1;
-    cz = makeSilente();
-    shift.citizen = cz;
-    presentSilente(cz);
-    return;
-  } else if (!shift.returnDone && chance(.5) && S.returnQueue.some(r => r.dueDay <= S.day)) {
-    // alguém que você marcou voltou
-    shift.returnDone = true;
-    const idx = S.returnQueue.findIndex(r => r.dueDay <= S.day);
-    const rec = S.returnQueue.splice(idx, 1)[0];
-    if (rec.mood === 'parente') {
-      cz = makeCitizen(S.day, { pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia, forceValid: true, returning: rec });
-      cz.nome = cz.nome.split(' ')[0] + ' ' + rec.nome.split(' ')[1]; // mesmo sobrenome do detido
-      cz.docs.pass.nome = cz.nome;
-      for (const k in cz.docs) if (cz.docs[k].nome) cz.docs[k].nome = cz.nome;
-    } else {
-      const valid = chance(.55);
-      cz = makeCitizen(S.day, {
-        nome: rec.nome, pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia,
-        features: rec.features, returning: rec,
-        forceValid: valid, forcedDisc: valid ? null : pick(DISC_TYPES.filter(t => t !== 'luggage')),
-      });
-      cz.nervous = true;
-    }
-  } else if (shift.wantedName && shift.processed === shift.wantedSlot) {
-    cz = makeCitizen(S.day, { nome: shift.wantedName, pais: shift.wantedPais, forceValid: true });
-    cz.isWanted = true;
-    shift.wantedName = null;
-  } else {
-    cz = makeCitizen(S.day, {});
-  }
+  // seed própria deste cidadão/slot: mesma seedBase + dia + posição na fila
+  // => mesma pessoa em qualquer repetição da campanha (Modo Segunda Leitura),
+  // não importa quantas ferramentas você use nela depois de gerada.
+  const slotSeed = hashSeed(S.seedBase, S.day, shift.processed, 'citizen');
+  const prevRng = _rng;
+  _rng = makeRng(slotSeed);
+  try {
+    renderQueueChatter();
+    shift.picks = []; shift.confirmed = [];
+    $('scan-result').textContent = '';
+    $('talk-log').innerHTML = '';
+    $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: selecione dois elementos para comparar.' : '';
+    $('btn-detain').disabled = true;
 
-  shift.citizen = cz;
-  presentCitizen(cz);
-  // a fila também vive
-  if (!cz.encounter && shift.processed > 0 && chance(.12)) {
-    const qe = pick(QUEUE_EVENTS);
-    const toast = $('queue-toast');
-    toast.textContent = qe.t + (qe.delay ? ` (a fila parou por ${qe.delay} min)` : '');
-    toast.classList.add('on');
-    if (qe.delay) spendTime(qe.delay);
-    setTimeout(() => toast.classList.remove('on'), 5200);
+    let cz = null;
+    const enc = ENCOUNTERS[S.day];
+
+    if (enc && !shift.encounterDone && shift.processed >= 1) {
+      shift.encounterDone = true;
+      cz = makeCitizen(S.day, {
+        nome: enc.nome, pais: enc.pais, sexo: enc.sexo, etnia: enc.etnia,
+        profissao: enc.profissao, motivo: enc.motivo,
+        forceValid: enc.valid, forcedDisc: enc.forcedDisc, forcedMissing: enc.forcedMissing,
+        briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
+      });
+      if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+    } else if (shift.silenteSlot >= 0 && shift.processed === shift.silenteSlot) {
+      shift.silenteSlot = -1;
+      cz = makeSilente();
+      cz.seed = slotSeed;
+      shift.citizen = cz;
+      presentSilente(cz);
+      return;
+    } else if (!shift.returnDone && chance(.5) && S.returnQueue.some(r => r.dueDay <= S.day)) {
+      // alguém que você marcou voltou
+      shift.returnDone = true;
+      const idx = S.returnQueue.findIndex(r => r.dueDay <= S.day);
+      const rec = S.returnQueue.splice(idx, 1)[0];
+      if (rec.mood === 'parente') {
+        cz = makeCitizen(S.day, { pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia, forceValid: true, returning: rec });
+        cz.nome = cz.nome.split(' ')[0] + ' ' + rec.nome.split(' ')[1]; // mesmo sobrenome do detido
+        cz.docs.pass.nome = cz.nome;
+        for (const k in cz.docs) if (cz.docs[k].nome) cz.docs[k].nome = cz.nome;
+      } else {
+        const valid = chance(.55);
+        cz = makeCitizen(S.day, {
+          nome: rec.nome, pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia,
+          features: rec.features, returning: rec,
+          forceValid: valid, forcedDisc: valid ? null : pick(DISC_TYPES.filter(t => t !== 'luggage')),
+        });
+        cz.nervous = true;
+      }
+    } else if (shift.wantedName && shift.processed === shift.wantedSlot) {
+      cz = makeCitizen(S.day, { nome: shift.wantedName, pais: shift.wantedPais, forceValid: true });
+      cz.isWanted = true;
+      shift.wantedName = null;
+    } else {
+      cz = makeCitizen(S.day, {});
+    }
+
+    cz.seed = slotSeed;
+    shift.citizen = cz;
+    presentCitizen(cz);
+    // a fila também vive
+    if (!cz.encounter && shift.processed > 0 && chance(.12)) {
+      const qe = pick(QUEUE_EVENTS);
+      const toast = $('queue-toast');
+      toast.textContent = qe.t + (qe.delay ? ` (a fila parou por ${qe.delay} min)` : '');
+      toast.classList.add('on');
+      if (qe.delay) spendTime(qe.delay);
+      setTimeout(() => toast.classList.remove('on'), 5200);
+    }
+    // apagão no colapso
+    if (S.day >= 43 && S.day <= 46 && chance(.25)) {
+      document.body.classList.add('blackout');
+      setTimeout(() => document.body.classList.remove('blackout'), 9000);
+    }
+    // sussurro
+    if (S.day >= 18 && !shift.whispered && chance(.4)) { shift.whispered = true; setTimeout(whisper, ri(4000, 20000)); }
+  } finally {
+    _rng = prevRng;
   }
-  // apagão no colapso
-  if (S.day >= 43 && S.day <= 46 && chance(.25)) {
-    document.body.classList.add('blackout');
-    setTimeout(() => document.body.classList.remove('blackout'), 9000);
-  }
-  // sussurro
-  if (S.day >= 18 && !shift.whispered && chance(.4)) { shift.whispered = true; setTimeout(whisper, ri(4000, 20000)); }
 }
 
 function greetingFor(cz) {
@@ -2965,6 +3005,11 @@ function scan(kind) {
   const cz = shift.citizen;
   if (!cz) return;
   sfx('scan');
+  // mesma pessoa + mesmo aparelho = mesmo resultado, sempre — inclusive se
+  // escanear de novo, e inclusive numa segunda leitura da mesma campanha.
+  const prevRng = _rng;
+  _rng = makeRng(hashSeed(cz.seed || 0, 'scan', kind));
+  try {
   let out = '';
   if (kind === 'thermo') {
     spendTime(15);
@@ -2996,6 +3041,9 @@ function scan(kind) {
     } else out = '🧬 BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
   }
   $('scan-result').textContent = out;
+  } finally {
+    _rng = prevRng;
+  }
 }
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
@@ -3054,6 +3102,11 @@ function decide(decision) {
   // modo arquivista: sem o tique passivo, cada decisão cobra o tempo-base
   // de ler e carimbar — o dia ainda avança, só que sem pressa por trás
   if (SETTINGS.archivist) spendTime(24);
+  // reações do mundo a esta decisão (quem volta, quando, o eco) usam a seed
+  // do PRÓPRIO cidadão — a mesma decisão, na segunda leitura, reage igual.
+  const prevRng = _rng;
+  _rng = makeRng(hashSeed(cz.seed || 0, 'decide'));
+  try {
   if (cz.isSilente) {
     if (decision === 'detain') { silenteGameOver(); return; } // você chamou alguém. ninguém veio. algo veio.
     // carimbe qualquer coisa. e deixe ir.
@@ -3144,6 +3197,9 @@ function decide(decision) {
       modal('UM BILHETE FICOU NA BANDEJA', enc.nota.texto, [{ label: 'GUARDAR', fn: () => { S.flags[enc.nota.tipo] = true; nextCitizen(); } }, { label: 'QUEIMAR', fn: nextCitizen }]);
     } else nextCitizen();
   }, 1100);
+  } finally {
+    _rng = prevRng;
+  }
 }
 
 function stampDocs(decision) {
@@ -3308,20 +3364,23 @@ function applyNight() {
   // aluguel
   S.rent = S.day >= 31 ? 25 : 15;
   S.money -= S.rent;
-  // fome/saúde
-  const fed = morningPurchases.comida;
-  const heated = morningPurchases.aquecimento;
-  for (const k in S.family) {
-    const m = S.family[k];
-    if (!m.alive) continue;
-    m.hunger = fed ? 0 : m.hunger + 1;
-    if (m.hunger >= 2 && !m.sick) m.sick = chance(.5);
-    if (!heated && chance(.15)) m.sick = true;
-    if (m.sick) {
-      if (morningPurchases['remedio_' + k]) { m.sick = false; m.sickDays = 0; }
-      else { m.sickDays++; if (m.sickDays >= 4) { m.alive = false; S.flags.morte = true; } }
+  // fome/saúde: mesma seed+dia => mesmo risco de doença dado o que você
+  // comprou (as compras do jogador continuam livres a cada leitura)
+  withRng(hashSeed(S.seedBase, S.day, 'night'), () => {
+    const fed = morningPurchases.comida;
+    const heated = morningPurchases.aquecimento;
+    for (const k in S.family) {
+      const m = S.family[k];
+      if (!m.alive) continue;
+      m.hunger = fed ? 0 : m.hunger + 1;
+      if (m.hunger >= 2 && !m.sick) m.sick = chance(.5);
+      if (!heated && chance(.15)) m.sick = true;
+      if (m.sick) {
+        if (morningPurchases['remedio_' + k]) { m.sick = false; m.sickDays = 0; }
+        else { m.sickDays++; if (m.sickDays >= 4) { m.alive = false; S.flags.morte = true; } }
+      }
     }
-  }
+  });
   morningPurchases = {};
   // eventos de roteiro
   const ev = HOME_EVENTS[S.day];
@@ -3445,6 +3504,10 @@ function finishGame(kind) {
     `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>` +
     `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`;
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
+  // guarda a seed pra "Segunda Leitura": os mesmos cidadãos, agora sabendo
+  // o que você sabe. nem revendo tudo você terá certeza.
+  SETTINGS.lastSeed = S.seedBase;
+  saveSettings();
   showScreen('screen-ending');
 }
 
@@ -3470,6 +3533,13 @@ $('btn-new').onclick = () => {
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
 };
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
+$('btn-second-reading').onclick = () => {
+  if (SETTINGS.lastSeed == null) return;
+  S = freshState(SETTINGS.lastSeed);
+  modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM (SEGUNDA LEITURA)',
+    'O mesmo posto. Os mesmos 48 dias. Os mesmos cidadãos vão cruzar o seu guichê, pelas mesmas portas, nas mesmas horas.\n\nVocê não. Assine de novo — e descubra o quanto isso muda.',
+    [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
+};
 function renderArchivistBtn() {
   $('btn-archivist').textContent = (SETTINGS.archivist ? '☑' : '☐') + ' MODO ARQUIVISTA (sem relógio)';
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
@@ -3553,6 +3623,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   if (loadSave()) $('btn-continue').style.display = '';
   loadSettings();
   renderArchivistBtn();
+  if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();
   // o primeiro clique em qualquer lugar destrava o áudio do navegador

@@ -128,6 +128,18 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas
    a fila continua finita e O Silente ainda pune demora *investigando*, não demora
-   *pensando*. Falta: modo "segunda leitura" (nova campanha com a MESMA seed — os mesmos
-   cidadãos, agora sabendo o que você sabe. A rejogabilidade como tema: nem revendo tudo
-   você terá certeza).
+   *pensando*.
+8. Modo "Segunda Leitura" **— implementado no protótipo**: ao terminar uma campanha
+   (qualquer final), a `seedBase` fica guardada; "SEGUNDA LEITURA" no título recomeça os
+   48 dias com a MESMA seed. Isto exigiu trocar o RNG de um stream global único por um
+   **RNG chaveável** (`withRng(seed, fn)`/`makeRng`/`hashSeed`): cada dia tem sua própria
+   seed (`seedBase+dia`), e cada cidadão a sua (`seedBase+dia+posição na fila`), guardada
+   em `cz.seed`. Isso é o que garante a promessa central do modo — os MESMOS cidadãos
+   aparecem não importa quantas ferramentas você use ou em que ordem, porque a geração de
+   cada um não compartilha stream com o resto. Scanners e a decisão em si também usam
+   sub-seeds de `cz.seed` (`scan+tipo`, `decide`), então escanear a mesma pessoa duas vezes
+   dá sempre o mesmo resultado, e o "mundo reage" (quem volta, o eco) é uma função pura da
+   decisão sobre aquele cidadão, não da ordem de chamadas de outros lugares. Fora dessa
+   malha (flavor de fila, retrato de visita noturna, notícia de preenchimento) continua
+   usando o stream ambiente — não é essencial à identidade dos suspeitos, e generalizar
+   ficaria mais frágil que o ganho.
