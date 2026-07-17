@@ -310,6 +310,20 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .modal-actions button { background:var(--paper-ink); color:var(--paper); border:none; padding:10px 16px; }
 .modal-actions button:hover { background:var(--stamp-red); color:#fff; }
 
+/* ============ PAUSA ============ */
+.pause-overlay {
+  display:none; position:absolute; inset:0; background:rgba(0,0,0,.8);
+  align-items:center; justify-content:center; z-index:80;
+}
+.pause-overlay.active { display:flex; }
+.pause-panel {
+  background:var(--panel); border:1px solid var(--ink-dim); padding:26px 34px;
+  display:flex; flex-direction:column; gap:10px; min-width:320px;
+}
+.pause-title { text-align:center; letter-spacing:6px; color:var(--accent2); margin-bottom:8px; }
+.pause-panel button { padding:11px; letter-spacing:1px; }
+.pause-note { margin-top:10px; text-align:center; font-size:10px; color:var(--ink-dim); font-style:italic; }
+
 /* Citação */
 .citation {
   display:none; position:absolute; left:50%; bottom:40px; transform:translateX(-50%);

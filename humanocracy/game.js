@@ -14,7 +14,9 @@ function chance(p) { return rnd() < p; }
 
 /* ---------- ÁUDIO ---------- */
 let AC = null;
+let SFX_ON = true;
 function sfx(kind) {
+  if (!SFX_ON) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     const t = AC.currentTime;
@@ -42,6 +44,7 @@ function sfx(kind) {
 
 /* ---------- VOZES MURMURADAS (gibberish grave e triste) ---------- */
 function mumble(pitch, syl) {
+  if (!SFX_ON) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') return;
@@ -140,6 +143,17 @@ function startTitleSnow() {
 
 /* ---------- SALÁRIO POR REGIME (os reajustes que a inflação come) ---------- */
 function salaryForDay(d) { return d >= 31 ? 8 : d >= 13 ? 6 : 5; }
+
+/* ---------- TAMANHO DA FILA DO DIA ----------
+   A fila é finita: quando o último da fila é atendido, o expediente acaba.
+   (Calibrado pelo autoplay: ~12-18 pessoas/dia = economia honesta.) */
+function queueSizeForDay(d) {
+  if (d >= 47) return 9;
+  if (d >= 43) return 6 + ri(0, 3);   // colapso: quase ninguém viaja
+  if (d >= 30) return 13 + ri(0, 4);
+  if (d >= 12) return 12 + ri(0, 4);
+  return 11 + ri(0, 3);
+}
 
 /* ---------- COTA DE ADMISSÃO DIÁRIA ----------
    Esgotada a cota, rejeitar inocentes vira "o correto".
@@ -841,14 +855,15 @@ function startDay() {
   shift.wantedName = null;
   shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
   shift.stats = { a: 0, r: 0, d: 0 };
+  shift.queueSize = queueSizeForDay(S.day);
 
   if (WANTED_DAYS[S.day]) {
     const p = pick(COUNTRY_IDS);
     shift.wantedName = fullName(p, chance(.5) ? 'm' : 'f');
     shift.wantedPais = p;
-    shift.wantedSlot = ri(3, 6);
+    shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
   }
-  shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(3, 7) : -1;
+  shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
 
   $('shift-day').textContent = `DIA ${S.day} — ${REGIME_LABEL[regimeOfDay(S.day)]}`;
   renderRulebook();
@@ -906,7 +921,7 @@ function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
   $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · ${fmtDate(worldDate(S.day))}`;
   const q = quotaForDay(S.day);
-  $('processed-count').textContent = `Atendidos: ${shift.processed} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
+  $('processed-count').textContent = `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;
 }
 
@@ -934,6 +949,7 @@ function startRadio() {
 /* ---------- AMBIÊNCIA (drone de válvulas, quase inaudível) ---------- */
 let droneNodes = null;
 function startAmbience() {
+  if (!SFX_ON) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') AC.resume();
@@ -1045,7 +1061,8 @@ function queueAdvance() {
 }
 function renderQueueChatter() {
   const n = ri(1, 2);
-  let html = `≈ ${ri(8, 60)} pessoas na fila<br>`;
+  const resta = Math.max(0, shift.queueSize - shift.processed);
+  let html = `≈ ${resta} pessoas na fila<br>`;
   for (let i = 0; i < n; i++) html += pick(QUEUE_CHATTER) + '<br>';
   $('queue-view').innerHTML = html;
 }
@@ -1053,6 +1070,17 @@ function renderQueueChatter() {
 function nextCitizen() {
   if (!shift.running) return;
   if (shift.clock >= 1080) { endShift(); return; }
+  if (shift.processed >= shift.queueSize) {
+    // a fila de hoje acabou
+    clearDesk();
+    $('npc-portrait').innerHTML = '';
+    $('npc-name').textContent = '—';
+    $('speech').textContent = 'A fila acabou. Do outro lado do vidro, só a neve e as pegadas de quem passou.';
+    $('desk-hint').style.display = '';
+    $('desk-hint').textContent = 'A FILA DE HOJE ACABOU.';
+    setTimeout(endShift, 1800);
+    return;
+  }
   renderQueueChatter();
   shift.picks = []; shift.confirmed = [];
   $('scan-result').textContent = '';
@@ -1945,6 +1973,42 @@ function toggleFullscreen() {
 }
 $('btn-fullscreen').onclick = toggleFullscreen;
 document.addEventListener('keydown', (e) => { if (e.key === 'f' || e.key === 'F') toggleFullscreen(); });
+
+/* ---------- PAUSA (ESC) ---------- */
+const PAUSE = { open: false, resumeShift: false, resumeHouse: false };
+function togglePause() {
+  if ($('screen-title').classList.contains('active') || $('screen-ending').classList.contains('active')) return;
+  if (!PAUSE.open) {
+    PAUSE.open = true;
+    PAUSE.resumeShift = shift.running;
+    if (shift.running) { shift.running = false; clearInterval(shift.tickId); }
+    PAUSE.resumeHouse = typeof HOUSE !== 'undefined' && HOUSE.active;
+    if (PAUSE.resumeHouse) housePause();
+    $('pz-music').textContent = 'MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA');
+    $('pz-sfx').textContent = 'SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
+    $('pause-overlay').classList.add('active');
+  } else {
+    PAUSE.open = false;
+    $('pause-overlay').classList.remove('active');
+    if (PAUSE.resumeShift) { shift.running = true; clearInterval(shift.tickId); shift.tickId = setInterval(tickClock, 1000); }
+    if (PAUSE.resumeHouse) houseResume();
+  }
+}
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') togglePause(); });
+$('pz-continue').onclick = togglePause;
+$('pz-music').onclick = () => {
+  MUSIC.on = !MUSIC.on;
+  if (!MUSIC.on) stopMusic();
+  $('pz-music').textContent = 'MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA');
+  $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
+};
+$('pz-sfx').onclick = () => {
+  SFX_ON = !SFX_ON;
+  if (!SFX_ON) stopAmbience();
+  $('pz-sfx').textContent = 'SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
+};
+$('pz-fullscreen').onclick = toggleFullscreen;
+$('pz-title').onclick = () => { save(); location.reload(); };
 
 /* ---------- INICIALIZAÇÃO ---------- */
 (function init() {

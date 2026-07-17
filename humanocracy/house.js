@@ -914,6 +914,28 @@ function houseLoop(ts) {
   HOUSE.lastTs = ts;
   HOUSE.t += dt / 1000;
 
+  // gamepad (Steam Deck / controle): stick esq anda, stick dir olha, A interage, Start pausa
+  let gpFwd = 0, gpStr = 0, gpA = false, gpStart = false;
+  try {
+    const gp = navigator.getGamepads && navigator.getGamepads()[0];
+    if (gp) {
+      const dz = (v) => Math.abs(v || 0) > .25 ? v : 0;
+      gpFwd = -dz(gp.axes[1]); gpStr = dz(gp.axes[0]);
+      if (!HD.open && !PAUSE.open) {
+        HOUSE.ang += dz(gp.axes[2]) * dt * .0032;
+        HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dz(gp.axes[3]) * dt * .28));
+      }
+      gpA = !!(gp.buttons[0] && gp.buttons[0].pressed);
+      gpStart = !!(gp.buttons[9] && gp.buttons[9].pressed);
+    }
+  } catch (e) {}
+  if (gpA && !HOUSE.gpA) {
+    if (HD.open) hAdvance();
+    else { const t = interactTarget(); if (t) interactWith(t.spot); }
+  }
+  if (gpStart && !HOUSE.gpStart) togglePause();
+  HOUSE.gpA = gpA; HOUSE.gpStart = gpStart;
+
   if (!HD.open) {
     HOUSE.acc += dt;
     while (HOUSE.acc >= 1000) { HOUSE.acc -= 1000; HOUSE.clockMin++; houseMinute(); }
@@ -924,9 +946,11 @@ function houseLoop(ts) {
     if (K('s') || K('S') || K('ArrowDown')) fwd = -1;
     if (K('a') || K('A')) str = -1;
     if (K('d') || K('D')) str = 1;
+    fwd += gpFwd; str += gpStr;
+    fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
     if (K('ArrowLeft')) HOUSE.ang -= dt * .0024;
     if (K('ArrowRight')) HOUSE.ang += dt * .0024;
-    HOUSE.moving = !!(fwd || str);
+    HOUSE.moving = Math.abs(fwd) > .05 || Math.abs(str) > .05;
     if (HOUSE.moving) {
       const sp = dt * .0028;
       const dx = (Math.cos(HOUSE.ang) * fwd + Math.cos(HOUSE.ang + Math.PI / 2) * str) * sp;
