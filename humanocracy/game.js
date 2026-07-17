@@ -497,9 +497,9 @@ function makeSilente() {
   return cz;
 }
 function presentSilente(cz) {
-  const p = $('npc-portrait');
-  p.innerHTML = silenteSVG();
-  p.setAttribute('class', 'silente');
+  $('npc-portrait').innerHTML = silenteSVG();
+  $('npc-actor').className = 'silente';
+  if (window.applyActorPhoto) applyActorPhoto(cz);
   document.body.classList.add('silente-present');
   queueAdvance();
   $('npc-name').textContent = '———';
@@ -874,7 +874,7 @@ function startDay() {
   $('talk-log').innerHTML = '';
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
-  $('npc-portrait').innerHTML = '';
+  $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
   $('btn-scan-bio').style.display = S.day >= 10 ? '' : 'none';
   $('btn-reject').classList.toggle('hidden', S.day >= 47);
   $('btn-detain').classList.toggle('hidden', S.day >= 47);
@@ -1073,7 +1073,7 @@ function nextCitizen() {
   if (shift.processed >= shift.queueSize) {
     // a fila de hoje acabou
     clearDesk();
-    $('npc-portrait').innerHTML = '';
+    $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
     $('npc-name').textContent = '—';
     $('speech').textContent = 'A fila acabou. Do outro lado do vidro, só a neve e as pegadas de quem passou.';
     $('desk-hint').style.display = '';
@@ -1180,13 +1180,14 @@ function greetingFor(cz) {
 }
 
 function presentCitizen(cz) {
-  const p = $('npc-portrait');
-  p.innerHTML = portraitSVG(cz.features);
-  p.setAttribute('class', 'pickable'); // svg: className é somente-leitura
+  $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
+  const a = $('npc-actor');
+  a.className = 'pickable';
+  if (window.applyActorPhoto) applyActorPhoto(cz);          // foto photobash+VHS (adiciona .use-photo)
   queueAdvance();
   // chega andando (sincronizado com o boneco da fila entrando no guichê)
-  setTimeout(() => { p.classList.add('arrive'); }, 350);
-  p.addEventListener('animationend', function h() { p.classList.remove('arrive'); p.removeEventListener('animationend', h); });
+  setTimeout(() => { a.classList.add('arrive'); }, 350);
+  a.addEventListener('animationend', function h() { a.classList.remove('arrive'); a.removeEventListener('animationend', h); });
   $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
   $('speech').textContent = '“' + greetingFor(cz) + '”';
   mumble(cz.sexo === 'f' ? 175 : 112, ri(4, 7));
@@ -1198,9 +1199,9 @@ function presentCitizen(cz) {
   if (chance(cz.isAlternado ? .18 : .05)) {
     setTimeout(() => {
       if (shift.citizen !== cz) return;
-      const p = $('npc-portrait');
-      p.classList.add('twitch');
-      setTimeout(() => p.classList.remove('twitch'), 650);
+      const a = $('npc-actor');
+      a.classList.add('twitch');
+      setTimeout(() => a.classList.remove('twitch'), 650);
     }, ri(3000, 16000));
   }
 }
@@ -1526,8 +1527,8 @@ function decide(decision) {
     // carimbe qualquer coisa. e deixe ir.
     sfx('stamp');
     shift.citizen = null;
-    const p = $('npc-portrait');
-    setTimeout(() => p.classList.add('leave-ok'), 300);
+    const a = $('npc-actor');
+    setTimeout(() => a.classList.add('leave-ok'), 300);
     silenteLeaves(cz);
     stampDocs(decision);
     shift.processed++;
@@ -1537,10 +1538,10 @@ function decide(decision) {
   }
   sfx('stamp');
   shift.citizen = null;
-  const p = $('npc-portrait');
-  p.classList.remove('pickable');
+  const a = $('npc-actor');
+  a.classList.remove('pickable');
   // sai andando: aprovado entra no país (direita); rejeitado volta (esquerda); detido, escoltado
-  setTimeout(() => { p.classList.add(decision === 'approve' ? 'leave-ok' : decision === 'reject' ? 'leave-no' : 'leave-det'); }, 350);
+  setTimeout(() => { a.classList.add(decision === 'approve' ? 'leave-ok' : decision === 'reject' ? 'leave-no' : 'leave-det'); }, 350);
 
   // discrepâncias latentes (bagagem) só contam se foram descobertas
   const viols = cz.discrepancies.filter(d => !d.latent || shift.confirmed.includes(d)).concat(computeViolations(cz, S.day));
@@ -1668,7 +1669,7 @@ function presentMirror() {
   shift.running = false;
   clearInterval(shift.tickId);
   const you = makeCitizen(48, { nome: 'VOCÊ', pais: 'osteria', sexo: 'm', forceValid: true });
-  $('npc-portrait').innerHTML = portraitSVG(you.features);
+  $('npc-portrait').innerHTML = portraitSVG(you.features); if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
   $('npc-name').textContent = '— o vidro reflete —';
   $('speech').textContent = 'Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.';
   layDocs(you);

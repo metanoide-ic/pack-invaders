@@ -16,9 +16,18 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   - Conselho Popular: vermelho e ocre, estrela ★ como carimbo de revalidação;
   - Colapso: dessaturação progressiva até o cinza; a única cor viva que resta é o
     carimbo APROVAR.
-- **Retratos:** procedurais, geométricos, levemente rígidos — rostos que o cérebro lê
-  como rostos mas nunca relaxa ao ler (vale para humanos e Alternados igualmente; **nunca**
-  existe "cara de Alternado", por princípio de design e por ética do tema).
+- **Cidadãos no guichê — photobash + VHS (implementado):** o estilo visual dos cidadãos é
+  o de *No, I'm Not a Human* — **cutouts fotográficos** (photobash) com fundo removido,
+  brilho reduzido, contraste alto e um filtro **VHS** assado (aberração cromática RGB,
+  scanlines, grão, sangramento horizontal) + um overlay CRT ao vivo na janela (scanlines +
+  roll de tracking). Pipeline em `tools/` (canvas headless): cada imagem-base vira "quase
+  infinitos" cidadãos via flip horizontal e variação de matiz/brilho/saturação por pessoa.
+  Os Alternados usam cutouts *uncanny* (rostos deformados); **O Silente** usa o cutout mais
+  perturbador, com o VHS rasgando. Fallback: retrato SVG procedural.
+- **Retratos SVG (fallback / família):** procedurais, geométricos, levemente rígidos —
+  rostos que o cérebro lê como rostos mas nunca relaxa ao ler (vale para humanos e
+  Alternados igualmente; **nunca** existe "cara de Alternado" garantida — a distorção é
+  distribuída, e a maioria dos Alternados parece perfeitamente humana).
 - **Documentos:** cada país com cor, selo e tipografia próprios; desgaste procedural
   (dobras, manchas, carimbos sobrepostos) na produção.
 

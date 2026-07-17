@@ -145,12 +145,33 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   position:absolute; left:6px; bottom:4px; font-size:9px; color:#6c7162cc; line-height:1.3; z-index:2;
   text-shadow: 0 1px 2px #000;
 }
-.npc-stage { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; }
-#npc-portrait { width:170px; height:204px; cursor:pointer; }
-#npc-portrait.pickable:hover { filter: drop-shadow(0 0 6px var(--accent2)); }
+.npc-stage { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; z-index:1; }
+#npc-actor { position:relative; width:200px; height:230px; display:flex; align-items:flex-end; justify-content:center; cursor:pointer; }
+#npc-portrait { width:170px; height:204px; }
+#npc-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:230px; width:auto; display:none; image-rendering:auto; }
+#npc-actor.use-photo #npc-portrait { display:none; }
+#npc-actor.use-photo #npc-photo { display:block; }
+#npc-actor.pickable:hover { filter: drop-shadow(0 0 7px var(--accent2)); }
 
-/* chegada e saída do cidadão */
-#npc-portrait.arrive { animation: npc-arrive 1.15s cubic-bezier(.3,.9,.5,1) backwards; }
+/* overlay CRT/VHS ao vivo sobre a janela do guichê */
+#booth-vhs {
+  position:absolute; inset:0; pointer-events:none; z-index:2; mix-blend-mode:screen;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.16) 0 1px, transparent 1px 3px),
+    linear-gradient(90deg, rgba(255,60,60,.03), transparent 20%, transparent 80%, rgba(60,60,255,.03));
+  opacity:.7;
+}
+#booth-vhs::after {
+  content:''; position:absolute; left:0; right:0; height:22px;
+  background:linear-gradient(180deg, transparent, rgba(180,200,255,.06), transparent);
+  animation: vhs-roll 7s linear infinite;
+}
+@keyframes vhs-roll { from { top:-22px; } to { top:100%; } }
+body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) infinite; }
+@keyframes vhs-tear { 0%,100% { transform:translateX(0) } 50% { transform:translateX(-2px) } }
+
+/* chegada e saída do cidadão (agora no ator, que contém svg OU foto) */
+#npc-actor.arrive { animation: npc-arrive 1.15s cubic-bezier(.3,.9,.5,1) backwards; }
 @keyframes npc-arrive {
   0%   { transform: translateX(-150px) translateY(2px); opacity:0; }
   15%  { opacity:1; }
@@ -160,18 +181,18 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   85%  { transform: translateX(-8px) translateY(1px); }
   100% { transform: none; }
 }
-#npc-portrait.leave-ok  { animation: npc-leave-ok  .95s ease-in forwards; }
+#npc-actor.leave-ok  { animation: npc-leave-ok  .95s ease-in forwards; }
 @keyframes npc-leave-ok {
   0% { transform:none; } 30% { transform: translateX(40px) translateY(-2px); }
   60% { transform: translateX(100px) translateY(2px); opacity:1; }
   100% { transform: translateX(190px); opacity:0; }
 }
-#npc-portrait.leave-no  { animation: npc-leave-no  1.05s ease-in forwards; }
+#npc-actor.leave-no  { animation: npc-leave-no  1.05s ease-in forwards; }
 @keyframes npc-leave-no {
   0% { transform:none; } 20% { transform: translateY(3px); } /* o ombro cai */
   100% { transform: translateX(-190px) translateY(4px); opacity:0; }
 }
-#npc-portrait.leave-det { animation: npc-leave-det 1.1s ease-in forwards; }
+#npc-actor.leave-det { animation: npc-leave-det 1.1s ease-in forwards; }
 @keyframes npc-leave-det {
   0% { transform:none; filter:none; }
   25% { transform: translateX(6px) rotate(2deg); filter: brightness(.75); }
@@ -194,7 +215,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .bribe-note { animation: deal-in .55s ease-out backwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  #npc-portrait, .document, .doc-stamped, .bribe-note { animation: none !important; }
+  #npc-actor, .document, .doc-stamped, .bribe-note { animation: none !important; }
 }
 .npc-name { text-align:center; padding:6px; color:var(--accent2); letter-spacing:1px; font-size:13px; min-height:28px; }
 .speech {
@@ -363,10 +384,10 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
   50% { transform: translateX(1.5px) skewX(2.5deg); }
   54% { transform: none; }
 }
-#npc-portrait.twitch { animation: twitch .55s linear 1; }
+#npc-actor.twitch { animation: twitch .55s linear 1; }
 
 /* O Silente: ele não pisca. ele não balança. ele flutua meio milímetro. */
-#npc-portrait.silente { animation: silente-float 7s ease-in-out infinite; cursor: default; }
+#npc-actor.silente { animation: silente-float 7s ease-in-out infinite; cursor: default; }
 @keyframes silente-float { 0%,100% { transform: translateY(0) } 50% { transform: translateY(-2px) } }
 body.silente-present #screen-shift { filter: saturate(.55) brightness(.88); }
 body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%, transparent 38%, rgba(0,0,0,.75) 100%); }

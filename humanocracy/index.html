@@ -74,8 +74,12 @@
             <div class="queue-view" id="queue-view"></div>
             <div id="queue-toast"></div>
             <div class="npc-stage" id="npc-stage">
-              <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
+              <div id="npc-actor">
+                <svg id="npc-portrait" viewBox="0 0 100 120"></svg>
+                <canvas id="npc-photo" width="220" height="380"></canvas>
+              </div>
             </div>
+            <div id="booth-vhs"></div>
           </div>
           <div class="npc-name" id="npc-name">—</div>
           <div class="speech" id="speech"></div>
@@ -247,8 +251,10 @@
     <div id="vignette"></div>
   </div>
 
+  <script src="characters.js"></script>
   <script src="data.js"></script>
   <script src="game.js"></script>
+  <script src="photochar.js"></script>
   <script src="house.js"></script>
 </body>
 </html>
