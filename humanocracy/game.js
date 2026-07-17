@@ -919,7 +919,9 @@ function tickClock() {
 function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updateHud(); }
 function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
-  $('clock').textContent = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')} · ${fmtDate(worldDate(S.day))}`;
+  const hhmm = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  $('clock').textContent = `${hhmm} · ${fmtDate(worldDate(S.day))}`;
+  const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
   $('processed-count').textContent = `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;

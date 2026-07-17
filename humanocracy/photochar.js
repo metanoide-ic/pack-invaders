@@ -29,8 +29,21 @@ const PHOTOS = { ready: false, img: {}, list: [] };
   });
 })();
 
+/* evita repetir o mesmo rosto duas vezes seguidas (com pool pequeno,
+   isso é o que mais entrega "tá repetindo" — mais importante que ter
+   muitas fotos é nunca mostrar a MESMA logo depois da anterior) */
+const RECENT = [];
+function _rememberAndFilter(cands) {
+  if (cands.length <= 1) return cands;
+  const fresh = cands.filter(r => !RECENT.includes(r.id));
+  return fresh.length ? fresh : cands;
+}
+function _remember(id) {
+  RECENT.push(id);
+  if (RECENT.length > 2) RECENT.shift();
+}
 function _photoBy(pred) {
-  const c = PHOTOS.list.filter(pred);
+  const c = _rememberAndFilter(PHOTOS.list.filter(pred));
   return c.length ? c[Math.floor(Math.random() * c.length)] : null;
 }
 function _humanBySex(sex) {
@@ -54,6 +67,7 @@ function pickPhotoFor(cz) {
     rec = rec || _humanBySex(cz.sexo);
   }
   if (!rec) rec = PHOTOS.list[0];
+  _remember(rec.id);
   cz.photoId = rec.id;
   // variação por cidadão para multiplicar a variedade aparente
   cz.photoFlip = Math.random() < 0.5;
@@ -61,6 +75,12 @@ function pickPhotoFor(cz) {
   cz.photoHue = (Math.random() * 2 - 1) * (wild ? 26 : 12) | 0;
   cz.photoBri = (0.9 + Math.random() * 0.18).toFixed(3);
   cz.photoSat = wild ? 1 : (0.92 + Math.random() * 0.16).toFixed(3);
+  // leve zoom/pan por pessoa: mesma foto nunca enquadra igual duas vezes.
+  // pan em px fixos (não fração de W) — fotos já viram bustos bem largos
+  // (paisagem) depois do recorte, então uma fração de W vira deslocamento
+  // grande demais e empurra o rosto pra fora da janela.
+  cz.photoZoom = (1.02 + Math.random() * 0.07).toFixed(3);
+  cz.photoPanX = (Math.random() * 2 - 1) * 9;
   return rec;
 }
 
@@ -81,7 +101,10 @@ function applyActorPhoto(cz) {
   ctx.save();
   ctx.filter = `hue-rotate(${cz.photoHue || 0}deg) brightness(${cz.photoBri || 1}) saturate(${cz.photoSat || 1})`;
   if (cz.photoFlip) { ctx.translate(W, 0); ctx.scale(-1, 1); }
-  ctx.drawImage(img, 0, 0, W, H);
+  // zoom/pan por instância: a mesma foto nunca enquadra igual duas vezes
+  const z = cz.photoZoom || 1, panX = cz.photoPanX || 0;
+  const dw = W * z, dh = H * z;
+  ctx.drawImage(img, -((dw - W) / 2) + panX, -(dh - H), dw, dh);
   ctx.restore();
   actor.classList.add('use-photo');
   return true;

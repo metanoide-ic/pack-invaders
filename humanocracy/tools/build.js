@@ -10,17 +10,20 @@ const ROOT = path.resolve(__dirname, '..');
 const SRC = path.join(ROOT, 'art_src');
 
 // metadados por arquivo (kind: human|alt|silente|dog ; sex: m|f|-)
+// bustFrom/bustTo: fatia vertical do corpo (0=topo da cabeça, 1=base dos pés)
+// mantida no recorte final — janela de guichê, nunca corpo inteiro.
 const META = {
-  'homem_terno.png':     { kind: 'human', sex: 'm', tag: 'formal' },
-  'homem_camiseta.png':  { kind: 'human', sex: 'm', tag: 'casual' },
-  'extra12.png':         { kind: 'human', sex: 'f', tag: 'casual' },
-  'mulher_vestido.png':  { kind: 'human', sex: 'f', tag: 'formal' },
-  'extra11.png':         { kind: 'human', sex: 'f', tag: 'coberta' },
-  'alternado_jovem.png': { kind: 'alt',   sex: 'm', tag: 'uncanny' },
-  'extra9.png':          { kind: 'silente', sex: '-', tag: 'silente' },
-  'cao.png':             { kind: 'dog',   sex: '-', tag: 'dog' },
-  'extra10.png':         { kind: 'dog',   sex: '-', tag: 'dog' },
+  'homem_terno.png':     { kind: 'human', sex: 'm', tag: 'formal',  bustTo: 0.30 },
+  'homem_camiseta.png':  { kind: 'human', sex: 'm', tag: 'casual',  bustTo: 0.30 },
+  'extra12.png':         { kind: 'human', sex: 'f', tag: 'casual',  bustFrom: 0.22, bustTo: 0.55 },
+  'mulher_vestido.png':  { kind: 'human', sex: 'f', tag: 'formal',  bustTo: 0.30 },
+  'extra11.png':         { kind: 'human', sex: 'f', tag: 'coberta', bustTo: 0.38 },
+  'alternado_jovem.png': { kind: 'alt',   sex: 'm', tag: 'uncanny', bustTo: 0.36 },
+  'extra9.png':          { kind: 'silente', sex: '-', tag: 'silente', bustTo: 0.46 },
+  'cao.png':             { kind: 'dog',   sex: '-', tag: 'dog', bustTo: 0.34 },
+  'extra10.png':         { kind: 'dog',   sex: '-', tag: 'dog', bustTo: 0.30 },
 };
+const DEFAULT_BUST = { human: 0.32, alt: 0.36, silente: 0.46, dog: 0.32 };
 
 (async () => {
   const browser = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox'] });
@@ -42,14 +45,16 @@ const META = {
   for (const f of files) {
     const b64 = fs.readFileSync(path.join(SRC, f)).toString('base64');
     const url = 'data:image/png;base64,' + b64;
-    const res = await page.evaluate(async (u) => {
+    const m = META[f];
+    const bustTo = m.bustTo ?? DEFAULT_BUST[m.kind] ?? 0.34;
+    const bustFrom = m.bustFrom ?? 0;
+    const res = await page.evaluate(async ({ u, bustFrom, bustTo }) => {
       const img = new Image();
       img.src = u;
       await img.decode();
-      const r = window.processImage(img, {});
+      const r = window.processImage(img, { bustFrom, bustTo });
       return r;
-    }, url);
-    const m = META[f];
+    }, { u: url, bustFrom, bustTo });
     out.push({ id: f.replace('.png', ''), kind: m.kind, sex: m.sex, tag: m.tag, w: res.w, h: res.h, data: res.dataURL });
     console.log(`[ok] ${f} -> ${res.w}x${res.h}, ${(res.dataURL.length / 1024 | 0)}KB`);
   }

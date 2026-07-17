@@ -89,7 +89,38 @@
     const pad = 6;
     minx = Math.max(0, minx - pad); miny = Math.max(0, miny - pad);
     maxx = Math.min(w - 1, maxx + pad); maxy = Math.min(h - 1, maxy + pad);
-    const cw = maxx - minx + 1, chh = maxy - miny + 1;
+    let cw = maxx - minx + 1, chh = maxy - miny + 1;
+
+    /* ---- 3b. BUSTO: janela de guichê, não corpo inteiro ----
+       Corta para a fatia superior (cabeça+ombros+peito) e reenquadra
+       horizontalmente só na largura que existe naquela fatia (ombros
+       costumam ser mais estreitos que a saia/quadril). */
+    const bustFrom = opts.bustFrom ?? 0;
+    const bustTo = opts.bustTo ?? 1;
+    if (bustTo < 1 || bustFrom > 0) {
+      const y0 = Math.max(0, miny + Math.round(chh * bustFrom));
+      const y1 = Math.min(h, miny + Math.round(chh * bustTo));
+      // densidade por coluna: cabelo ao vento é fino e esparso, não deve
+      // esticar o enquadramento horizontal — só conta coluna com "corpo"
+      // real (rosto/ombro), senão o centro do recorte foge do rosto.
+      const sliceH = Math.max(1, y1 - y0);
+      const minDensity = Math.max(3, Math.round(sliceH * (opts.bustDensity ?? 0.35)));
+      let bx0 = w, bx1 = 0, any = false;
+      for (let x = 0; x < w; x++) {
+        let cnt = 0;
+        for (let y = y0; y < y1; y++) {
+          if (d[(y * w + x) * 4 + 3] > 20) cnt++;
+        }
+        if (cnt >= minDensity) { any = true; if (x < bx0) bx0 = x; if (x > bx1) bx1 = x; }
+      }
+      if (any) {
+        const padX = Math.round((bx1 - bx0) * (opts.bustPad ?? 0.22)) + 4;
+        minx = Math.max(0, bx0 - padX);
+        maxx = Math.min(w - 1, bx1 + padX);
+      }
+      miny = y0; maxy = Math.max(y0, y1 - 1);
+      cw = maxx - minx + 1; chh = maxy - miny + 1;
+    }
 
     /* ---- 4. downscale para o maior lado = MAX ---- */
     const scaleF = MAX / Math.max(cw, chh);
