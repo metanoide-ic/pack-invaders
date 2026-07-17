@@ -54,8 +54,10 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   é tema (você é parte da máquina que assina).
 - **Advertências:** cupom físico que sobe da mesa com som de matriz — punição com
   estética de recibo.
-- **Acessibilidade (produção):** modo daltônico para selos, escala de fonte, opção de
-  relógio pausável em dificuldade "arquivista", legendas para todo áudio.
+- **Acessibilidade:** decisões nunca dependem só de cor (carimbos sempre têm rótulo de
+  texto); **modo "arquivista" implementado no protótipo** — relógio do turno não avança
+  em tempo real, alternável no título; produção ainda deve: modo daltônico dedicado para
+  selos, escala de fonte, legendas para todo áudio.
 - **O que a UI nunca faz:** mostrar barras de reputação, medidores de paranoia,
   porcentagens de scanner, ou qualquer número que o mundo diegético não imprimiria
   num formulário.

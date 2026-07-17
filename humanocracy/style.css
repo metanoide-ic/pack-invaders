@@ -68,6 +68,8 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .title-sub { color:var(--ink-dim); letter-spacing:3px; font-size:12px; }
 .title-quote { margin:28px 0; font-style:italic; color:var(--accent2); }
 .title-menu { display:flex; flex-direction:column; gap:10px; align-items:center; margin:20px 0; }
+.btn-toggle { font-size:11px; width:260px; padding:8px; opacity:.65; }
+.btn-toggle.on { opacity:1; color:var(--stamp-green); border-color:var(--stamp-green); }
 .btn-title { width:280px; padding:12px; font-size:16px; letter-spacing:2px; }
 .title-warning { font-size:11px; color:var(--ink-dim); margin-top:24px; line-height:1.5; }
 .title-version { font-size:10px; color:var(--ink-dim); margin-top:14px; opacity:.6; }

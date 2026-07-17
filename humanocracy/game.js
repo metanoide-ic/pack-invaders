@@ -167,6 +167,17 @@ function quotaForDay(d) {
   return 10;
 }
 
+/* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
+const SETTINGS_KEY = 'humanocracy_settings_v1';
+let SETTINGS = { archivist: false };
+function loadSettings() {
+  try {
+    const j = localStorage.getItem(SETTINGS_KEY);
+    if (j) SETTINGS = Object.assign(SETTINGS, JSON.parse(j));
+  } catch (e) {}
+}
+function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); } catch (e) {} }
+
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
@@ -910,7 +921,9 @@ function showBulletin(fn) {
 
 function tickClock() {
   if (!shift.running) return;
-  shift.clock += 2;
+  // modo arquivista: o relógio não avança sozinho, só com o uso de
+  // ferramentas (spendTime) — sem pressão de tempo real, a fila continua finita
+  if (!SETTINGS.archivist) shift.clock += 2;
   // demorar diante dele é a terceira forma de perder
   if (shift.citizen && shift.citizen.isSilente && shift.clock - shift.citizen.arrivedAt >= 35) { silenteGameOver(); return; }
   if (shift.clock >= 1080) { shift.clock = 1080; endShift(); return; }
@@ -920,7 +933,7 @@ function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updat
 function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
   const hhmm = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  $('clock').textContent = `${hhmm} · ${fmtDate(worldDate(S.day))}`;
+  $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''} · ${fmtDate(worldDate(S.day))}`;
   const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
   $('processed-count').textContent = `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
@@ -1524,6 +1537,9 @@ function evaluatePair(a, b) {
 function decide(decision) {
   const cz = shift.citizen;
   if (!cz || !shift.running) return;
+  // modo arquivista: sem o tique passivo, cada decisão cobra o tempo-base
+  // de ler e carimbar — o dia ainda avança, só que sem pressa por trás
+  if (SETTINGS.archivist) spendTime(24);
   if (cz.isSilente) {
     if (decision === 'detain') { silenteGameOver(); return; } // você chamou alguém. ninguém veio. algo veio.
     // carimbe qualquer coisa. e deixe ir.
@@ -1940,6 +1956,11 @@ $('btn-new').onclick = () => {
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
 };
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
+function renderArchivistBtn() {
+  $('btn-archivist').textContent = (SETTINGS.archivist ? '☑' : '☐') + ' MODO ARQUIVISTA (sem relógio)';
+  $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
+}
+$('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
 $('btn-gowork').onclick = () => {
   if (ENCOUNTERS[S.day] && ENCOUNTERS[S.day].vendeCalibracao) S.flags.calibOferta = true;
   startDay();
@@ -2016,6 +2037,8 @@ $('pz-title').onclick = () => { save(); location.reload(); };
 /* ---------- INICIALIZAÇÃO ---------- */
 (function init() {
   if (loadSave()) $('btn-continue').style.display = '';
+  loadSettings();
+  renderArchivistBtn();
   showScreen('screen-title');
   startTitleSnow();
   // o primeiro clique em qualquer lugar destrava o áudio do navegador

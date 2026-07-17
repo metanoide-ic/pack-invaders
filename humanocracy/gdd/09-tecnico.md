@@ -124,6 +124,10 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 4. Rede Social Invisível (casos que crescem sozinhos);
 5. Manuais falsificáveis e auditorias reativas;
 6. Localização (EN/ES) — a escrita burocrática é o maior custo de tradução;
-7. Modo "arquivista" (sem relógio) e modo "segunda leitura" (nova campanha com a MESMA
-   seed — os mesmos cidadãos, agora sabendo o que você sabe. A rejogabilidade como tema:
-   nem revendo tudo você terá certeza).
+7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
+   persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
+   só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas
+   a fila continua finita e O Silente ainda pune demora *investigando*, não demora
+   *pensando*. Falta: modo "segunda leitura" (nova campanha com a MESMA seed — os mesmos
+   cidadãos, agora sabendo o que você sabe. A rejogabilidade como tema: nem revendo tudo
+   você terá certeza).
