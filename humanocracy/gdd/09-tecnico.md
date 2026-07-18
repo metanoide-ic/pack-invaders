@@ -179,14 +179,28 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    nota em modal, textos do espelho e os dois ecos — todos traduzidos corretamente em EN;
    paridade de chaves EN/ES confirmada (476 = 476, zero divergência).
 
-   **Não coberto ainda** (o que resta, ainda só em português) — descoberto ao catalogar o
-   conteúdo restante nesta rodada, então listado aqui pela primeira vez: os 12
-   **`NIGHT_EVENTS`** (cenas noturnas de horror multi-parágrafo, com escolhas ramificadas),
-   os 12 **`HOME_EVENTS`** (eventos de drama familiar) e as pools de flavor-text da
-   **bagagem** (`BAG_POOLS`, `BAG_ONEWAY`, `BAG_CONTRABAND`, `BAG_HERRINGS`) — além de toda a
-   casa explorável (`house.js`). Juntos, são o maior volume de texto ainda em português no
-   jogo. Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar
-   em `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
+   Sétima rodada: 476 → 591 chaves com os **`NIGHT_EVENTS`** (as 11 cenas noturnas de
+   horror — quem bate, o texto da cena, os 2 rótulos de escolha e os 2 desfechos de cada
+   uma, incluindo os 3 ecos que viram breves no jornal do dia seguinte), os 12
+   **`HOME_EVENTS`** (os eventos de drama familiar mostrados na tela da manhã, mais os dois
+   eventos inline — o remédio entregue pelo barbeiro e o velório — que estavam soltos em
+   `renderHome()`) e as pools de flavor-text da **bagagem** (`BAG_POOLS` nas 7 categorias,
+   `BAG_ONEWAY`, `BAG_CONTRABAND`, `BAG_HERRINGS`). `showNight()`/`resolveNight()` passaram a
+   traduzir `quem`, `texto`, o rótulo de cada escolha, o texto de desfecho (`after`) e o eco
+   (`echo`); o botão "VOLTAR PARA DENTRO →" também. `openBag()` agora traduz `item.txt` e
+   `item.desc` de cada objeto da mala. Verificado por Playwright: cena da noite do dia 3
+   (pergunta de Bruno, as duas escolhas, o desfecho e o eco no `pendingNews`), evento de casa
+   do dia 4, o evento inline do remédio entregue, e um item de bagagem — todos traduzidos
+   corretamente em EN; paridade de chaves EN/ES confirmada (591 = 591, zero divergência).
+
+   **Não coberto ainda** (o que resta, ainda só em português): toda a casa explorável em
+   primeira pessoa (`house.js` — descrições de cômodo, itens vasculháveis, diálogo com a
+   família) e um punhado de textos de feedback da UI de inspeção descobertos ao longo desta
+   rodada mas ainda não traduzidos (as mensagens da barra `#inspect-bar`, ex. "MODO
+   INSPEÇÃO: ..." e "DISCREPÂNCIA CONFIRMADA: ...", e as descrições de discrepância geradas
+   por `applyDisc()`). `house.js` continua sendo o maior volume de texto ainda em português.
+   Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar em
+   `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

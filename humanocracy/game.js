@@ -721,7 +721,7 @@ function openBag() {
     const el = document.createElement('div');
     el.className = 'bag-item' + (item.contra ? ' contra' : '');
     el.dataset.fid = item.fid;
-    el.innerHTML = item.txt + (item.desc ? `<span class="bag-desc">${item.desc}</span>` : '');
+    el.innerHTML = T(item.txt) + (item.desc ? `<span class="bag-desc">${T(item.desc)}</span>` : '');
     el.onclick = () => {
       if (item.contra && !item.found) {
         item.found = true;
@@ -1817,8 +1817,8 @@ function afterNight() {
 const NIGHTS_SEM_ROSTO = [19, 22, 43]; // o olho mágico não mostra ninguém
 function showNight(day, ev) {
   document.body.className = ''; // a noite não tem regime
-  $('night-hour').textContent = ev.quem;
-  $('night-text').textContent = ev.texto;
+  $('night-hour').textContent = T(ev.quem);
+  $('night-text').textContent = T(ev.texto);
   $('night-after').textContent = '';
   const peep = $('peephole');
   if (NIGHTS_SEM_ROSTO.includes(day)) {
@@ -1831,7 +1831,7 @@ function showNight(day, ev) {
   const box = $('night-choices'); box.innerHTML = '';
   ev.escolhas.forEach(c => {
     const b = document.createElement('button');
-    b.textContent = c.label;
+    b.textContent = T(c.label);
     b.onclick = () => resolveNight(c);
     box.appendChild(b);
   });
@@ -1842,12 +1842,12 @@ function resolveNight(c) {
   if (c.money) { S.money += c.money; }
   if (c.audit) { S.flags.auditRisk = (S.flags.auditRisk || 0) + c.audit; }
   if (c.flag) { S.flags[c.flag] = true; }
-  if (c.echo) { S.pendingNews.push({ day: S.day + 1, text: c.echo }); }
+  if (c.echo) { S.pendingNews.push({ day: S.day + 1, text: T(c.echo) }); }
   $('night-choices').innerHTML = '';
-  $('night-after').textContent = c.after || '';
+  $('night-after').textContent = T(c.after) || '';
   const b = document.createElement('button');
   b.className = 'night-continue';
-  b.textContent = 'VOLTAR PARA DENTRO →';
+  b.textContent = T('VOLTAR PARA DENTRO →');
   b.onclick = () => { showScreen('screen-house'); houseResume(); };
   $('night-choices').appendChild(b);
 }
@@ -1933,9 +1933,9 @@ function renderHome() {
   // eventos
   const ev = HOME_EVENTS[S.day];
   let evHtml = '';
-  if (ev) evHtml += `<div class="ev">${ev.texto}</div>`;
-  if (S.flags.remedioEntregue) { evHtml += `<div class="ev">De madrugada, alguém deixou um pacote na porta: o remédio de Tomi, e um bilhete: "Dívida paga. — J.M."</div>`; S.flags.remedioEntregue = false; }
-  if (S.flags.morte) { evHtml += `<div class="ev">Houve um velório nesta casa. As vizinhas trouxeram sopa e silêncio.</div>`; S.flags.morte = false; }
+  if (ev) evHtml += `<div class="ev">${T(ev.texto)}</div>`;
+  if (S.flags.remedioEntregue) { evHtml += `<div class="ev">${T('De madrugada, alguém deixou um pacote na porta: o remédio de Tomi, e um bilhete: "Dívida paga. — J.M."')}</div>`; S.flags.remedioEntregue = false; }
+  if (S.flags.morte) { evHtml += `<div class="ev">${T('Houve um velório nesta casa. As vizinhas trouxeram sopa e silêncio.')}</div>`; S.flags.morte = false; }
   $('home-events').innerHTML = evHtml;
 
   // orçamento
