@@ -140,10 +140,16 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    reajustes — traduzidos isoladamente e concatenados com os valores não-traduzíveis:
    nomes, números), os boatos do exame físico (`RUMOR_TEXT`) e os 6 sinais físicos com seus
    achados/observações normais (`TELLS`). Um bug real de escopo de variável foi encontrado e
-   corrigido nesta rodada: `examZone()`/`genPhysical()` usavam `const T = TELLS[t]`,
-   sombreando a função global `T()` — impossível de traduzir ali sem antes renomear.
-   **Não coberto ainda** (o que resta, ainda só em português): diálogo procedural da fila
-   (saudações, respostas de interrogatório improvisadas — `answerFor`/`followTruth`),
+   corrigido: `examZone()`/`genPhysical()` usavam `const T = TELLS[t]`, sombreando a função
+   global `T()` — impossível de traduzir ali sem antes renomear. Rodada seguinte: as 259
+   chaves subiram para 303 com o **regulamento** (`RULES`, as 15 leis mostradas no
+   `REGULAMENTO DO DIA`, incluindo a linha de cota e a de procurado) e as **saudações da
+   fila** (`greetingFor` — os ~25 cumprimentos genéricos, por regime, nervosos e de
+   retornantes, com os fragmentos dinâmicos de nome/dia isolados do texto traduzível) — a
+   primeira frase que cada cidadão diz, em todo turno, agora traduz. **Não coberto ainda**
+   (o que resta, ainda só em português): as respostas de interrogatório e os follow-ups
+   improvisados (`answerFor`/`followTruth` — usam `PURPOSES`/`PROFESSIONS`, que também não
+   traduzem os *valores* mostrados em documentos, só os *rótulos* dos campos),
    `SCRIPTED_NEWS` (manchetes específicas por dia), os 15 `ENCOUNTERS` (personagens
    recorrentes com falas próprias) e toda a casa (`house.js`) — o núcleo dramático
    remanescente, e de longe o maior volume de texto do jogo. Adicionar um terceiro idioma é

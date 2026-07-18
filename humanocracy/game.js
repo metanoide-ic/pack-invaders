@@ -1220,9 +1220,9 @@ function greetingFor(cz) {
   if (cz.encounter) return cz.encounter.fala;
   if (cz.returning) {
     const r = cz.returning;
-    if (r.mood === 'raiva') return `O senhor. DE NOVO eu, sim. Me barrou no dia ${r.dia}. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.`;
-    if (r.mood === 'suplica') return `É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.`;
-    if (r.mood === 'parente') return `${r.nome} entrou neste posto no dia ${r.dia} e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?`;
+    if (r.mood === 'raiva') return `${T('O senhor. DE NOVO eu, sim. Me barrou no dia')} ${r.dia}${T('. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.')}`;
+    if (r.mood === 'suplica') return T('É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.');
+    if (r.mood === 'parente') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?')}`;
   }
   const g = [
     'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
@@ -1237,7 +1237,7 @@ function greetingFor(cz) {
   }[regimeOfDay(S.day)] || [];
   const nervous = ['Desculpe… eu fico nervoso(a) com uniformes.', 'Minhas mãos estão tremendo de frio. Só de frio.', 'Eu decorei tudo o que ia dizer e esqueci agora.'];
   const pool = g.concat(porRegime, porRegime);
-  return cz.nervous ? pick(pool.concat(nervous, nervous)) : pick(pool);
+  return T(cz.nervous ? pick(pool.concat(nervous, nervous)) : pick(pool));
 }
 
 function presentCitizen(cz) {
@@ -1384,9 +1384,9 @@ function renderRulebook() {
   const rules = rulesForDay(S.day);
   let html = '';
   const qr = quotaForDay(S.day);
-  if (qr !== Infinity) html += `<div class="rb-rule">§ COTA DE ADMISSÃO: máximo de ${qr} entradas hoje. Esgotada, rejeite mesmo documentos em ordem.</div>`;
-  rules.forEach(r => { html += `<div class="rb-rule" data-fid="rb:rule:${r}">§ ${RULES[r].text}</div>`; });
-  if (shift.wantedName) html += `<div class="rb-rule" data-fid="rb:wanted">★ PROCURADO(A): ${shift.wantedName}</div>`;
+  if (qr !== Infinity) html += `<div class="rb-rule">§ ${T('COTA DE ADMISSÃO: máximo de')} ${qr} ${T('entradas hoje. Esgotada, rejeite mesmo documentos em ordem.')}</div>`;
+  rules.forEach(r => { html += `<div class="rb-rule" data-fid="rb:rule:${r}">§ ${T(RULES[r].text)}</div>`; });
+  if (shift.wantedName) html += `<div class="rb-rule" data-fid="rb:wanted">★ ${T('PROCURADO(A): ')}${shift.wantedName}</div>`;
   $('rb-rules').innerHTML = html;
   let ch = '';
   COUNTRY_IDS.forEach(k => {

@@ -341,6 +341,60 @@ const I18N_EN = {
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'The person leans closer to the glass. Too close. Examine each region.',
 
+  /* ---- REGULAMENTO (RULES) ---- */
+  'Todo viajante deve portar PASSAPORTE válido.': 'Every traveler must carry a valid PASSPORT.',
+  'Cidadãos de Osteria devem portar CARTÃO DE IDENTIDADE.': 'Citizens of Osteria must carry an IDENTITY CARD.',
+  'Estrangeiros devem portar PERMISSÃO DE ENTRADA.': 'Foreigners must carry an ENTRY PERMIT.',
+  'Viajantes a trabalho devem portar PERMISSÃO DE TRABALHO.': 'Travelers for work must carry a WORK PERMIT.',
+  'TODOS devem portar CARTEIRA SANITÁRIA (Decreto 44-C).': 'EVERYONE must carry a HEALTH CARD (Decree 44-C).',
+  'ESTRANGEIROS devem portar CARTEIRA SANITÁRIA.': 'FOREIGNERS must carry a HEALTH CARD.',
+  'Pessoas de origem NÚLIA ou BAHARI devem portar CERTIFICADO DE ANCESTRALIDADE (Édito de Pureza nº 2).':
+    'People of NÚLIA or BAHARI origin must carry an ANCESTRY CERTIFICATE (Edict of Purity No. 2).',
+  'ENTRADA PROIBIDA a cidadãos de KRESTOV (incidente diplomático).': 'ENTRY FORBIDDEN to citizens of KRESTOV (diplomatic incident).',
+  'ENTRADA PROIBIDA a cidadãos de LANTRAVIA (inimigos do povo).': "ENTRY FORBIDDEN to citizens of LANTRAVIA (enemies of the people).",
+  'ENTRADA PROIBIDA a cidadãos de TARANSTAN (agitadores comunistas).': 'ENTRY FORBIDDEN to citizens of TARANSTAN (communist agitators).',
+  'Documentos emitidos ANTES do Conselho exigem SELO DE REVALIDAÇÃO (procure o carimbo ★ no passaporte).':
+    'Documents issued BEFORE the Council require a RENEWAL SEAL (look for the ★ stamp in the passport).',
+  'Convenção de Alcorte: REFUGIADOS com Cartão de Refúgio devem ser protegidos e admitidos.':
+    'Alcorte Convention: REFUGEES with a Refugee Card must be protected and admitted.',
+  'PROCURADOS listados no comunicado devem ser DETIDOS.': 'WANTED individuals listed in the bulletin must be DETAINED.',
+  'O DETECTOR BIOLÓGICO substitui a carteira sanitária. Escaneie todos os suspeitos.': 'The BIOLOGICAL DETECTOR replaces the health card. Scan all suspects.',
+  'DIRETRIZ FINAL: não há mais normas. O posto deve permanecer aberto.': 'FINAL DIRECTIVE: there are no more rules. The post must remain open.',
+  'COTA DE ADMISSÃO: máximo de': 'ADMISSION QUOTA: maximum of',
+  'entradas hoje. Esgotada, rejeite mesmo documentos em ordem.': 'entries today. Once exhausted, reject even documents in order.',
+  'PROCURADO(A): ': 'WANTED: ',
+
+  /* ---- SAUDAÇÕES DA FILA (greetingFor) ---- */
+  'O senhor. DE NOVO eu, sim. Me barrou no dia': 'You, sir. AGAIN, yes, me. You turned me away on day',
+  '. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.':
+    '. I got new papers. They cost what they cost. Look all you want — and look me in the eyes when you stamp.',
+  'É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.':
+    "It's the second time, sir. Since that red stamp I sleep in the line. I fixed everything. I think I fixed everything. Please. PLEASE.",
+  'entrou neste posto no dia': 'entered this post on day',
+  ' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?':
+    ' and never left again. DETAINED, they told me. Nobody says where. I came to cross — and I came to ask to your face: where do you take people?',
+  'Bom dia. Está frio hoje, não?': 'Good morning. Cold today, isn\'t it?',
+  'Aqui estão meus papéis.': 'Here are my papers.',
+  'Espero que esteja tudo em ordem.': 'I hope everything is in order.',
+  'É a minha terceira vez nesta fila.': 'This is my third time in this line.',
+  'Por favor, seja rápido. Meu trem sai ao meio-dia.': 'Please, be quick. My train leaves at noon.',
+  'Eu não tenho nada a esconder.': 'I have nothing to hide.',
+  'Deus abençoe este posto.': 'God bless this post.',
+  'Dizem que o senhor é dos justos. Dizem.': "They say you're one of the just ones. They say.",
+  'A fila estava menor na semana passada. Tudo estava menor na semana passada.': 'The line was shorter last week. Everything was smaller last week.',
+  'Glória à Pureza. — A voz não acredita no que diz.': "Glory to Purity. — The voice doesn't believe what it says.",
+  'Está tudo em ordem. Eu JURO que está tudo em ordem.': 'Everything is in order. I SWEAR everything is in order.',
+  'O certificado custou dois meses de salário. Está aí dentro. Por favor.': "The certificate cost two months' salary. It's in there. Please.",
+  'Saudações, camarada inspetor.': 'Greetings, comrade inspector.',
+  'Trouxe o selo novo. E o antigo. E o anterior ao antigo. Qual vale hoje?': 'I brought the new seal. And the old one. And the one before that. Which one counts today?',
+  'O sindicato disse que agora é diferente. É diferente?': "The union said it's different now. Is it different?",
+  'Ainda tem alguém aí dentro?': 'Is there still someone in there?',
+  'Não sei por que a gente ainda faz fila. Mas fazemos.': "I don't know why we still line up. But we do.",
+  'Carimba qualquer coisa. Já não importa. Importa?': "Stamp anything. It doesn't matter anymore. Does it?",
+  'Desculpe… eu fico nervoso(a) com uniformes.': 'Sorry… I get nervous around uniforms.',
+  'Minhas mãos estão tremendo de frio. Só de frio.': 'My hands are shaking from the cold. Just the cold.',
+  'Eu decorei tudo o que ia dizer e esqueci agora.': 'I memorized everything I was going to say and forgot it now.',
+
   /* ---- SINAIS FÍSICOS (TELLS: achado/normal) ---- */
   'Não piscou uma única vez durante todo o exame.': 'Did not blink even once during the whole exam.',
   'Pisca em ritmo comum. Um pouco rápido, talvez. Frio faz isso.': 'Blinks at a normal rate. A bit fast, maybe. The cold does that.',
@@ -679,6 +733,60 @@ const I18N_ES = {
   'OLHOS': 'OJOS', 'BOCA': 'BOCA', 'PELE': 'PIEL', 'MÃOS': 'MANOS', 'PESCOÇO': 'CUELLO',
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'La persona se acerca al vidrio. Demasiado cerca. Examina cada zona.',
+
+  /* ---- REGULAMENTO (RULES) ---- */
+  'Todo viajante deve portar PASSAPORTE válido.': 'Todo viajero debe portar PASAPORTE válido.',
+  'Cidadãos de Osteria devem portar CARTÃO DE IDENTIDADE.': 'Los ciudadanos de Osteria deben portar CÉDULA DE IDENTIDAD.',
+  'Estrangeiros devem portar PERMISSÃO DE ENTRADA.': 'Los extranjeros deben portar PERMISO DE ENTRADA.',
+  'Viajantes a trabalho devem portar PERMISSÃO DE TRABALHO.': 'Los viajeros por trabajo deben portar PERMISO DE TRABAJO.',
+  'TODOS devem portar CARTEIRA SANITÁRIA (Decreto 44-C).': 'TODOS deben portar CARNET SANITARIO (Decreto 44-C).',
+  'ESTRANGEIROS devem portar CARTEIRA SANITÁRIA.': 'Los EXTRANJEROS deben portar CARNET SANITARIO.',
+  'Pessoas de origem NÚLIA ou BAHARI devem portar CERTIFICADO DE ANCESTRALIDADE (Édito de Pureza nº 2).':
+    'Las personas de origen NÚLIA o BAHARI deben portar CERTIFICADO DE ASCENDENCIA (Edicto de Pureza Nº 2).',
+  'ENTRADA PROIBIDA a cidadãos de KRESTOV (incidente diplomático).': 'ENTRADA PROHIBIDA a ciudadanos de KRESTOV (incidente diplomático).',
+  'ENTRADA PROIBIDA a cidadãos de LANTRAVIA (inimigos do povo).': 'ENTRADA PROHIBIDA a ciudadanos de LANTRAVIA (enemigos del pueblo).',
+  'ENTRADA PROIBIDA a cidadãos de TARANSTAN (agitadores comunistas).': 'ENTRADA PROHIBIDA a ciudadanos de TARANSTAN (agitadores comunistas).',
+  'Documentos emitidos ANTES do Conselho exigem SELO DE REVALIDAÇÃO (procure o carimbo ★ no passaporte).':
+    'Los documentos emitidos ANTES del Consejo requieren SELLO DE RENOVACIÓN (busque el sello ★ en el pasaporte).',
+  'Convenção de Alcorte: REFUGIADOS com Cartão de Refúgio devem ser protegidos e admitidos.':
+    'Convención de Alcorte: los REFUGIADOS con Tarjeta de Refugio deben ser protegidos y admitidos.',
+  'PROCURADOS listados no comunicado devem ser DETIDOS.': 'Los PRÓFUGOS listados en el comunicado deben ser DETENIDOS.',
+  'O DETECTOR BIOLÓGICO substitui a carteira sanitária. Escaneie todos os suspeitos.': 'El DETECTOR BIOLÓGICO reemplaza el carnet sanitario. Escanee a todos los sospechosos.',
+  'DIRETRIZ FINAL: não há mais normas. O posto deve permanecer aberto.': 'DIRECTIVA FINAL: ya no hay normas. El puesto debe permanecer abierto.',
+  'COTA DE ADMISSÃO: máximo de': 'CUOTA DE ADMISIÓN: máximo de',
+  'entradas hoje. Esgotada, rejeite mesmo documentos em ordem.': 'entradas hoy. Agotada, rechace incluso documentos en regla.',
+  'PROCURADO(A): ': 'PRÓFUGO(A): ',
+
+  /* ---- SAUDAÇÕES DA FILA (greetingFor) ---- */
+  'O senhor. DE NOVO eu, sim. Me barrou no dia': 'Usted, señor. DE NUEVO yo, sí. Me rechazó el día',
+  '. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.':
+    '. Conseguí papeles nuevos. Costaron lo que costaron. Mire todo lo que quiera — y míreme a los ojos cuando selle.',
+  'É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.':
+    'Es la segunda vez, señor. Desde aquel sello rojo duermo en la fila. Arreglé todo. Creo que arreglé todo. Por favor. POR FAVOR.',
+  'entrou neste posto no dia': 'entró en este puesto el día',
+  ' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?':
+    ' y nunca más salió. DETENIDO(A), me dijeron. Nadie dice dónde. Vine a cruzar — y vine a preguntarle a la cara: ¿a dónde se llevan a la gente?',
+  'Bom dia. Está frio hoje, não?': 'Buenos días. Hace frío hoy, ¿no?',
+  'Aqui estão meus papéis.': 'Aquí están mis papeles.',
+  'Espero que esteja tudo em ordem.': 'Espero que todo esté en orden.',
+  'É a minha terceira vez nesta fila.': 'Es mi tercera vez en esta fila.',
+  'Por favor, seja rápido. Meu trem sai ao meio-dia.': 'Por favor, sea rápido. Mi tren sale al mediodía.',
+  'Eu não tenho nada a esconder.': 'No tengo nada que esconder.',
+  'Deus abençoe este posto.': 'Dios bendiga este puesto.',
+  'Dizem que o senhor é dos justos. Dizem.': 'Dicen que usted es de los justos. Dicen.',
+  'A fila estava menor na semana passada. Tudo estava menor na semana passada.': 'La fila era más corta la semana pasada. Todo era más pequeño la semana pasada.',
+  'Glória à Pureza. — A voz não acredita no que diz.': 'Gloria a la Pureza. — La voz no cree lo que dice.',
+  'Está tudo em ordem. Eu JURO que está tudo em ordem.': 'Todo está en orden. JURO que todo está en orden.',
+  'O certificado custou dois meses de salário. Está aí dentro. Por favor.': 'El certificado costó dos meses de salario. Está ahí dentro. Por favor.',
+  'Saudações, camarada inspetor.': 'Saludos, camarada inspector.',
+  'Trouxe o selo novo. E o antigo. E o anterior ao antigo. Qual vale hoje?': 'Traje el sello nuevo. Y el antiguo. Y el anterior al antiguo. ¿Cuál vale hoy?',
+  'O sindicato disse que agora é diferente. É diferente?': 'El sindicato dijo que ahora es diferente. ¿Es diferente?',
+  'Ainda tem alguém aí dentro?': '¿Todavía hay alguien ahí adentro?',
+  'Não sei por que a gente ainda faz fila. Mas fazemos.': 'No sé por qué todavía hacemos fila. Pero la hacemos.',
+  'Carimba qualquer coisa. Já não importa. Importa?': 'Sella cualquier cosa. Ya no importa. ¿Importa?',
+  'Desculpe… eu fico nervoso(a) com uniformes.': 'Disculpe… me pongo nervioso(a) con los uniformes.',
+  'Minhas mãos estão tremendo de frio. Só de frio.': 'Me tiemblan las manos de frío. Solo de frío.',
+  'Eu decorei tudo o que ia dizer e esqueci agora.': 'Memoricé todo lo que iba a decir y ahora lo olvidé.',
 
   /* ---- SINAIS FÍSICOS (TELLS: achado/normal) ---- */
   'Não piscou uma única vez durante todo o exame.': 'No parpadeó ni una sola vez durante todo el examen.',
