@@ -152,9 +152,22 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    traduzem os *valores* mostrados em documentos, só os *rótulos* dos campos),
    `SCRIPTED_NEWS` (manchetes específicas por dia), os 15 `ENCOUNTERS` (personagens
    recorrentes com falas próprias) e toda a casa (`house.js`) — o núcleo dramático
-   remanescente, e de longe o maior volume de texto do jogo. Adicionar um terceiro idioma é
-   só copiar `I18N_ES`, traduzir os valores e registrar em `I18N_TABLES` — a arquitetura
-   já suporta N idiomas, não só dois.
+   remanescente, e de longe o maior volume de texto do jogo.
+
+   Quarta rodada: as 303 chaves subiram para 380. Agora traduzem os **valores**, não só os
+   rótulos: `PURPOSES` (os 6 motivos de viagem, ex. "Trabalho"/"Work"), as 9 durações
+   distintas (`PURPOSES.dur`, ex. "6 meses"/"6 months") e as 17 `PROFESSIONS` — tudo isso
+   aparece tanto nos documentos (`fld('work','profissao',...)`, `fld('perm','motivo',...)`)
+   quanto nas respostas de `answerFor()` (com `cidade` propositalmente NÃO traduzido, por
+   ser nome próprio) e nos follow-ups de `followTruth()` (`contato`/`chefe`/`volta`; `rua`
+   também traduz, aceitando que a ordem de palavras de rua fica levemente estranha em EN —
+   um compromisso deliberado, não um erro). A ferramenta **Linha da Vida** (`buildLifeline`/
+   `openLifeline`) traduz por completo: nascimento, escola, primeiro emprego, serviço
+   militar, casamento, mudança de residência, vacinação, chegada ao posto, a lacuna, e o
+   rodapé. Os **ecos** (`scheduleEcho`) — as notícias tardias que uma aprovação de Alternado
+   pode gerar dias depois — também traduzem, com cidade/profissão isoladas do texto fixo.
+   Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar em
+   `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

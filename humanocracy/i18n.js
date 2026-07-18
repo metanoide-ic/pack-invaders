@@ -341,6 +341,67 @@ const I18N_EN = {
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'The person leans closer to the glass. Too close. Examine each region.',
 
+  /* ---- MOTIVOS DE VIAGEM (PURPOSES) ---- */
+  'Visita familiar': 'Family visit', 'Trabalho': 'Work', 'Trânsito': 'Transit',
+  'Imigração': 'Immigration', 'Tratamento médico': 'Medical treatment', 'Estudo': 'Study',
+
+  /* ---- DURAÇÕES (PURPOSES.dur) ---- */
+  '3 dias': '3 days', '1 semana': '1 week', '2 semanas': '2 weeks', '1 mês': '1 month',
+  '6 meses': '6 months', '1 ano': '1 year', '1 dia': '1 day', '2 dias': '2 days', 'permanente': 'permanent',
+
+  /* ---- PROFISSÕES (PROFESSIONS) ---- */
+  'professor(a)': 'teacher', 'engenheiro(a)': 'engineer', 'médico(a)': 'doctor',
+  'operário(a)': 'factory worker', 'comerciante': 'merchant', 'enfermeiro(a)': 'nurse',
+  'agricultor(a)': 'farmer', 'músico(a)': 'musician', 'contador(a)': 'accountant',
+  'soldado': 'soldier', 'costureiro(a)': 'tailor', 'ferroviário(a)': 'railway worker',
+  'pesquisador(a)': 'researcher', 'padeiro(a)': 'baker', 'jornalista': 'journalist',
+  'estudante': 'student', 'mecânico(a)': 'mechanic',
+
+  /* ---- LINHA DA VIDA (buildLifeline/openLifeline) ---- */
+  'LINHA DA VIDA': 'LIFE TIMELINE',
+  'Uma lacuna pode ser um crime. Uma guerra. Uma infiltração. Ou um cartório que pegou fogo. A linha não responde nada — ela apenas mostra.':
+    "A gap can be a crime. A war. An infiltration. Or a records office that caught fire. The timeline doesn't answer anything — it just shows.",
+  'Nascimento — ': 'Birth — ',
+  'Escola primária (registro padrão)': 'Primary school (standard record)',
+  'Primeiro trabalho — ': 'First job — ',
+  'Serviço militar obrigatório': 'Mandatory military service',
+  'Casamento (registro civil)': 'Marriage (civil record)',
+  'Mudança de residência — ': 'Change of residence — ',
+  'Vacinação registrada (B-7, K-12, TRIV)': 'Vaccination recorded (B-7, K-12, TRIV)',
+  'Contrato de trabalho — ': 'Work contract — ',
+  'Chega ao Posto Nº 7 — motivo declarado: ': 'Arrives at Post No. 7 — declared reason: ',
+  '— REGISTROS AUSENTES: ': '— MISSING RECORDS: ',
+  ' anos —': ' years —',
+
+  /* ---- RESPOSTAS DE INTERROGATÓRIO (answerFor/followTruth) ---- */
+  '. Desculpe, é isso. ': ". Sorry, that's it. ",
+  'Eu juro.': 'I swear.', 'Tenho certeza.': "I'm sure.", 'Acho.': 'I think so.',
+  'Minha irmã, ': 'My sister, ',
+  'O contramestre ': 'The foreman ',
+  ', da obra.': ', from the site.',
+  'Ninguém. Sigo sozinho(a).': "No one. I'm traveling alone.",
+  'Rua': 'Street',
+  'do Sal': 'of Salt', 'das Oficinas': 'of the Workshops', 'Norte': 'North',
+  'da Estação': 'of the Station', 'dos Curtumes': 'of the Tanneries', 'Baixa': 'Lower',
+  'O(a) gerente ': 'The manager ',
+  ', da ': ', from the ',
+  'Oficina': 'Workshop', 'Cooperativa': 'Cooperative', 'Fábrica': 'Factory', 'Casa': 'House',
+  'Não volto. Não tem volta.': "I'm not coming back. There's no coming back.",
+  'De trem. O dinheiro da passagem está costurado no forro do casaco.': 'By train. The fare money is sewn into the coat lining.',
+
+  /* ---- ECOS (scheduleEcho) ---- */
+  'Três funcionários do arquivo de ': 'Three archive employees in ',
+  ' não voltaram para casa. As famílias dizem que "voltaram diferentes". A polícia diz que voltaram.':
+    ' didn\'t come home. Families say they "came back different." The police say they came back.',
+  'O reservatório de ': 'The reservoir in ',
+  ' registrou "alterações químicas menores". O laudo foi arquivado.': ' recorded "minor chemical alterations." The report was filed away.',
+  'Um(a) ': 'A ',
+  ' recém-chegado(a) a ': ' recently arrived in ',
+  ' foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".':
+    ' was promoted in record time. Colleagues describe them as "too perfect."',
+  'Moradores de ': 'Residents of ',
+  ' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.': ' report that the neighborhood dogs stopped barking. All of them. In the same week.',
+
   /* ---- REGULAMENTO (RULES) ---- */
   'Todo viajante deve portar PASSAPORTE válido.': 'Every traveler must carry a valid PASSPORT.',
   'Cidadãos de Osteria devem portar CARTÃO DE IDENTIDADE.': 'Citizens of Osteria must carry an IDENTITY CARD.',
@@ -733,6 +794,67 @@ const I18N_ES = {
   'OLHOS': 'OJOS', 'BOCA': 'BOCA', 'PELE': 'PIEL', 'MÃOS': 'MANOS', 'PESCOÇO': 'CUELLO',
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'La persona se acerca al vidrio. Demasiado cerca. Examina cada zona.',
+
+  /* ---- MOTIVOS DE VIAGEM (PURPOSES) ---- */
+  'Visita familiar': 'Visita familiar', 'Trabalho': 'Trabajo', 'Trânsito': 'Tránsito',
+  'Imigração': 'Inmigración', 'Tratamento médico': 'Tratamiento médico', 'Estudo': 'Estudio',
+
+  /* ---- DURAÇÕES (PURPOSES.dur) ---- */
+  '3 dias': '3 días', '1 semana': '1 semana', '2 semanas': '2 semanas', '1 mês': '1 mes',
+  '6 meses': '6 meses', '1 ano': '1 año', '1 dia': '1 día', '2 dias': '2 días', 'permanente': 'permanente',
+
+  /* ---- PROFISSÕES (PROFESSIONS) ---- */
+  'professor(a)': 'profesor(a)', 'engenheiro(a)': 'ingeniero(a)', 'médico(a)': 'médico(a)',
+  'operário(a)': 'obrero(a)', 'comerciante': 'comerciante', 'enfermeiro(a)': 'enfermero(a)',
+  'agricultor(a)': 'agricultor(a)', 'músico(a)': 'músico(a)', 'contador(a)': 'contador(a)',
+  'soldado': 'soldado', 'costureiro(a)': 'costurero(a)', 'ferroviário(a)': 'ferroviario(a)',
+  'pesquisador(a)': 'investigador(a)', 'padeiro(a)': 'panadero(a)', 'jornalista': 'periodista',
+  'estudante': 'estudiante', 'mecânico(a)': 'mecánico(a)',
+
+  /* ---- LINHA DA VIDA (buildLifeline/openLifeline) ---- */
+  'LINHA DA VIDA': 'LÍNEA DE VIDA',
+  'Uma lacuna pode ser um crime. Uma guerra. Uma infiltração. Ou um cartório que pegou fogo. A linha não responde nada — ela apenas mostra.':
+    'Un vacío puede ser un crimen. Una guerra. Una infiltración. O un registro civil que se incendió. La línea no responde nada — solo muestra.',
+  'Nascimento — ': 'Nacimiento — ',
+  'Escola primária (registro padrão)': 'Escuela primaria (registro estándar)',
+  'Primeiro trabalho — ': 'Primer trabajo — ',
+  'Serviço militar obrigatório': 'Servicio militar obligatorio',
+  'Casamento (registro civil)': 'Matrimonio (registro civil)',
+  'Mudança de residência — ': 'Cambio de residencia — ',
+  'Vacinação registrada (B-7, K-12, TRIV)': 'Vacunación registrada (B-7, K-12, TRIV)',
+  'Contrato de trabalho — ': 'Contrato de trabajo — ',
+  'Chega ao Posto Nº 7 — motivo declarado: ': 'Llega al Puesto Nº 7 — motivo declarado: ',
+  '— REGISTROS AUSENTES: ': '— REGISTROS AUSENTES: ',
+  ' anos —': ' años —',
+
+  /* ---- RESPOSTAS DE INTERROGATÓRIO (answerFor/followTruth) ---- */
+  '. Desculpe, é isso. ': '. Disculpe, es eso. ',
+  'Eu juro.': 'Lo juro.', 'Tenho certeza.': 'Estoy seguro(a).', 'Acho.': 'Creo.',
+  'Minha irmã, ': 'Mi hermana, ',
+  'O contramestre ': 'El capataz ',
+  ', da obra.': ', de la obra.',
+  'Ninguém. Sigo sozinho(a).': 'Nadie. Viajo solo(a).',
+  'Rua': 'Calle',
+  'do Sal': 'de la Sal', 'das Oficinas': 'de los Talleres', 'Norte': 'Norte',
+  'da Estação': 'de la Estación', 'dos Curtumes': 'de las Curtiembres', 'Baixa': 'Baja',
+  'O(a) gerente ': 'El(la) gerente ',
+  ', da ': ', de la ',
+  'Oficina': 'Taller', 'Cooperativa': 'Cooperativa', 'Fábrica': 'Fábrica', 'Casa': 'Casa',
+  'Não volto. Não tem volta.': 'No vuelvo. No hay vuelta.',
+  'De trem. O dinheiro da passagem está costurado no forro do casaco.': 'En tren. El dinero del pasaje está cosido en el forro del abrigo.',
+
+  /* ---- ECOS (scheduleEcho) ---- */
+  'Três funcionários do arquivo de ': 'Tres empleados del archivo en ',
+  ' não voltaram para casa. As famílias dizem que "voltaram diferentes". A polícia diz que voltaram.':
+    ' no volvieron a casa. Las familias dicen que "volvieron diferentes". La policía dice que volvieron.',
+  'O reservatório de ': 'El embalse de ',
+  ' registrou "alterações químicas menores". O laudo foi arquivado.': ' registró "alteraciones químicas menores". El informe fue archivado.',
+  'Um(a) ': 'Un(a) ',
+  ' recém-chegado(a) a ': ' recién llegado(a) a ',
+  ' foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".':
+    ' fue ascendido(a) en tiempo récord. Los colegas lo(a) describen como "demasiado perfecto(a)".',
+  'Moradores de ': 'Los residentes de ',
+  ' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.': ' reportan que los perros del barrio dejaron de ladrar. Todos. En la misma semana.',
 
   /* ---- REGULAMENTO (RULES) ---- */
   'Todo viajante deve portar PASSAPORTE válido.': 'Todo viajero debe portar PASAPORTE válido.',

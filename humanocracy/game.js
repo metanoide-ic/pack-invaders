@@ -567,22 +567,22 @@ function buildLifeline(cz) {
   const now = worldDate(S.day).y;
   const ev = [];
   const add = (ano, txt, marca) => { if (ano <= now) ev.push({ ano, txt, marca }); };
-  add(y0, `Nascimento — ${cz.docs.pass ? cz.docs.pass.cidade : cz.cidade}, ${COUNTRIES[cz.pais].name}`);
-  add(y0 + 7, 'Escola primária (registro padrão)');
+  add(y0, `${T('Nascimento — ')}${cz.docs.pass ? cz.docs.pass.cidade : cz.cidade}, ${COUNTRIES[cz.pais].name}`);
+  add(y0 + 7, T('Escola primária (registro padrão)'));
   const trab = y0 + ri(14, 19);
-  add(trab, `Primeiro trabalho — ${cz.profissao}`);
-  if (cz.sexo === 'm' && ['krestov', 'osteria', 'taranstan'].includes(cz.pais)) add(y0 + 18, 'Serviço militar obrigatório');
-  if (chance(.45) && cz.idade >= 24) add(y0 + ri(20, 28), 'Casamento (registro civil)');
-  if (chance(.5)) add(y0 + ri(19, Math.max(20, cz.idade - 2)), `Mudança de residência — ${pick(COUNTRIES[cz.pais].cities)}`);
-  if (cz.docs.sanitaria) add(now - ri(0, 2), 'Vacinação registrada (B-7, K-12, TRIV)');
-  if (cz.docs.work) add(now - ri(0, 1), `Contrato de trabalho — ${cz.profissao}`);
-  add(now, `Chega ao Posto Nº 7 — motivo declarado: ${cz.motivoLabel.toLowerCase()}`);
+  add(trab, `${T('Primeiro trabalho — ')}${T(cz.profissao)}`);
+  if (cz.sexo === 'm' && ['krestov', 'osteria', 'taranstan'].includes(cz.pais)) add(y0 + 18, T('Serviço militar obrigatório'));
+  if (chance(.45) && cz.idade >= 24) add(y0 + ri(20, 28), T('Casamento (registro civil)'));
+  if (chance(.5)) add(y0 + ri(19, Math.max(20, cz.idade - 2)), `${T('Mudança de residência — ')}${pick(COUNTRIES[cz.pais].cities)}`);
+  if (cz.docs.sanitaria) add(now - ri(0, 2), T('Vacinação registrada (B-7, K-12, TRIV)'));
+  if (cz.docs.work) add(now - ri(0, 1), `${T('Contrato de trabalho — ')}${T(cz.profissao)}`);
+  add(now, `${T('Chega ao Posto Nº 7 — motivo declarado: ')}${T(cz.motivoLabel).toLowerCase()}`);
   // a lacuna: culpados têm, mas inocentes também. guerras comem cartórios.
   const temLacuna = (cz.isAlternado || cz.isForger) ? chance(.5) : chance(.15);
   if (temLacuna && cz.idade >= 26) {
     const dur = ri(4, 9);
     const ini = y0 + ri(19, Math.max(20, cz.idade - dur - 1));
-    ev.push({ ano: ini, txt: `— REGISTROS AUSENTES: ${dur} anos —`, marca: true, fim: ini + dur });
+    ev.push({ ano: ini, txt: `${T('— REGISTROS AUSENTES: ')}${dur}${T(' anos —')}`, marca: true, fim: ini + dur });
   }
   ev.sort((a, b) => a.ano - b.ano);
   cz.lifeline = ev;
@@ -597,12 +597,12 @@ function openLifeline() {
   ev.forEach(e => {
     html += `<div class="ll-item${e.marca ? ' ll-gap' : ''}"><span class="ll-ano">${e.ano}${e.fim ? '–' + e.fim : ''}</span><span>${e.txt}</span></div>`;
   });
-  html += '</div><div class="ll-foot">Uma lacuna pode ser um crime. Uma guerra. Uma infiltração. Ou um cartório que pegou fogo. A linha não responde nada — ela apenas mostra.</div>';
-  $('modal-title').textContent = `LINHA DA VIDA — ${cz.nome}`;
+  html += `</div><div class="ll-foot">${T('Uma lacuna pode ser um crime. Uma guerra. Uma infiltração. Ou um cartório que pegou fogo. A linha não responde nada — ela apenas mostra.')}</div>`;
+  $('modal-title').textContent = `${T('LINHA DA VIDA')} — ${cz.nome}`;
   $('modal-body').innerHTML = html;
   const box = $('modal-actions'); box.innerHTML = '';
   const b = document.createElement('button');
-  b.textContent = 'FECHAR';
+  b.textContent = T('FECHAR');
   b.onclick = () => $('modal-overlay').classList.remove('active');
   box.appendChild(b);
   $('modal-overlay').classList.add('active');
@@ -1300,12 +1300,12 @@ function docHTML(doc, cz) {
   } else if (doc.id === 'perm') {
     b += fld('perm', 'nome', 'NOME', doc.nome);
     b += fld('perm', 'numero', 'Nº PASSAPORTE', doc.numero);
-    b += fld('perm', 'motivo', 'MOTIVO', doc.motivo);
+    b += fld('perm', 'motivo', 'MOTIVO', T(doc.motivo));
     b += fld('perm', 'validade', 'VALIDADE', dateStr(doc.validade));
     b += `<div class="doc-seal" data-fid="perm.selo">${doc.selo}</div>`;
   } else if (doc.id === 'work') {
     b += fld('work', 'nome', 'NOME', doc.nome);
-    b += fld('work', 'profissao', 'FUNÇÃO', doc.profissao);
+    b += fld('work', 'profissao', 'FUNÇÃO', T(doc.profissao));
     b += fld('work', 'validade', 'VALIDADE', dateStr(doc.validade));
   } else if (doc.id === 'sanitaria') {
     b += fld('sanitaria', 'nome', 'NOME', doc.nome);
@@ -1416,15 +1416,17 @@ function answerFor(cz, k) {
   const truthy = {
     motivo: cz.motivoLabel, cidade: cz.cidade, profissao: cz.profissao, duracao: cz.duracao,
   };
+  // motivo/profissao/duracao são traduzíveis; cidade é nome próprio, nunca traduz
+  const Tval = (key, v) => key === 'cidade' ? v : T(v);
   // mentira gera contradição com documento
   if (cz.lie === k) {
-    if (k === 'motivo') return pick(PURPOSES.filter(p => p.id !== cz.motivo)).label;
+    if (k === 'motivo') return T(pick(PURPOSES.filter(p => p.id !== cz.motivo)).label);
     if (k === 'cidade') return pick(COUNTRIES[cz.pais].cities.filter(c => c !== cz.cidade).concat(pick(COUNTRIES[pick(COUNTRY_IDS)].cities)));
-    if (k === 'profissao') return pick(PROFESSIONS.filter(p => p !== cz.profissao));
+    if (k === 'profissao') return T(pick(PROFESSIONS.filter(p => p !== cz.profissao)));
   }
   // nervoso: hesita mas acerta (pista falsa)
-  if (cz.nervous && chance(.4)) return '…' + truthy[k] + '. Desculpe, é isso. ' + pick(['Eu juro.', 'Tenho certeza.', 'Acho.']);
-  return truthy[k];
+  if (cz.nervous && chance(.4)) return '…' + Tval(k, truthy[k]) + T('. Desculpe, é isso. ') + T(pick(['Eu juro.', 'Tenho certeza.', 'Acho.']));
+  return Tval(k, truthy[k]);
 }
 const FOLLOWUPS = {
   motivo: { label: 'Quem espera você?', key: 'contato' },
@@ -1437,10 +1439,10 @@ function followTruth(cz, k) {
   if (cz.ftruth[k]) return cz.ftruth[k];
   const c = COUNTRIES[cz.pais];
   let v;
-  if (k === 'contato') v = cz.motivo === 'visita' ? `Minha irmã, ${fullName(cz.pais, 'f')}.` : cz.motivo === 'trabalho' ? `O contramestre ${pick(c.last)}, da obra.` : 'Ninguém. Sigo sozinho(a).';
-  if (k === 'rua') v = `Rua ${pick(['do Sal', 'das Oficinas', 'Norte', 'da Estação', 'dos Curtumes', 'Baixa'])}, nº ${ri(2, 120)}.`;
-  if (k === 'chefe') v = `O(a) gerente ${pick(c.last)}, da ${pick(['Oficina', 'Cooperativa', 'Fábrica', 'Casa'])} ${pick(c.last)}.`;
-  if (k === 'volta') v = cz.motivo === 'imigracao' ? 'Não volto. Não tem volta.' : 'De trem. O dinheiro da passagem está costurado no forro do casaco.';
+  if (k === 'contato') v = cz.motivo === 'visita' ? `${T('Minha irmã, ')}${fullName(cz.pais, 'f')}.` : cz.motivo === 'trabalho' ? `${T('O contramestre ')}${pick(c.last)}${T(', da obra.')}` : T('Ninguém. Sigo sozinho(a).');
+  if (k === 'rua') v = `${T('Rua')} ${T(pick(['do Sal', 'das Oficinas', 'Norte', 'da Estação', 'dos Curtumes', 'Baixa']))}, nº ${ri(2, 120)}.`;
+  if (k === 'chefe') v = `${T('O(a) gerente ')}${pick(c.last)}${T(', da ')}${T(pick(['Oficina', 'Cooperativa', 'Fábrica', 'Casa']))} ${pick(c.last)}.`;
+  if (k === 'volta') v = T(cz.motivo === 'imigracao' ? 'Não volto. Não tem volta.' : 'De trem. O dinheiro da passagem está costurado no forro do casaco.');
   cz.ftruth[k] = v;
   return v;
 }
@@ -1706,10 +1708,10 @@ function scheduleEcho(cz) {
   if (!chance(.5)) return; // às vezes, nada acontece. isso também assombra.
   const delay = ri(2, 5);
   const txts = [
-    `Três funcionários do arquivo de ${cz.destino} não voltaram para casa. As famílias dizem que "voltaram diferentes". A polícia diz que voltaram.`,
-    `O reservatório de ${cz.destino} registrou "alterações químicas menores". O laudo foi arquivado.`,
-    `Um(a) ${cz.profissao} recém-chegado(a) a ${cz.destino} foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".`,
-    `Moradores de ${cz.destino} relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.`,
+    `${T('Três funcionários do arquivo de ')}${cz.destino}${T(' não voltaram para casa. As famílias dizem que "voltaram diferentes". A polícia diz que voltaram.')}`,
+    `${T('O reservatório de ')}${cz.destino}${T(' registrou "alterações químicas menores". O laudo foi arquivado.')}`,
+    `${T('Um(a) ')}${T(cz.profissao)}${T(' recém-chegado(a) a ')}${cz.destino}${T(' foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".')}`,
+    `${T('Moradores de ')}${cz.destino}${T(' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.')}`,
   ];
   S.pendingNews.push({ day: S.day + delay, text: pick(txts) });
 }
