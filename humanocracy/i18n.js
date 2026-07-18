@@ -250,6 +250,101 @@ const I18N_EN = {
   '‹desligado›': '‹off›',
   '— silêncio. nem estática. silêncio. —': '— silence. not even static. silence. —',
 
+  /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
+  'BREVES:': 'BRIEFS:',
+  'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
+  'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
+    'The Ministry of Screening announces the reopening of Post No. 7 after the winter recess. Minister Calder Voss asks new inspectors for "serenity and rigor." The energy crisis shows signs of easing. Lines are expected.',
+  'Time de Valgrado vence por 2 a 1.': "Valgrado's team wins 2 to 1.",
+  'Preço do pão sobe 4%.': 'Bread price rises 4%.',
+  'Horóscopo: um estranho lhe dirá a verdade. Ou não.': 'Horoscope: a stranger will tell you the truth. Or not.',
+  'MULHER DETIDA EM MIRALTA "NÃO ERA QUEM DIZIA SER"': 'WOMAN DETAINED IN MIRALTA "WAS NOT WHO SHE CLAIMED TO BE"',
+  'Vizinhos afirmam que a costureira Odila Vintra "voltou diferente" de uma viagem. Exames foram inconclusivos. A polícia nega que o caso envolva Alternados. A família da detida afirma que ela apenas "andava cansada".':
+    'Neighbors claim seamstress Odila Vintra "came back different" from a trip. Tests were inconclusive. Police deny the case involves Alternates. The detainee\'s family says she was simply "tired."',
+  'Cientistas de Nova República pedem calma: "falsos positivos são comuns".': 'Nova República scientists ask for calm: "false positives are common."',
+  'Rádio clandestina multada.': 'Underground radio fined.',
+  'LINESTAN LANÇA O SCANNER "VERITAS-9"': 'LINESTAN LAUNCHES THE "VERITAS-9" SCANNER',
+  'A LumenCorp de Linestan promete "99,2% de precisão" na detecção de Alternados. Especialistas independentes questionam a metodologia. As ações da empresa subiram 34% em um dia. O Ministério estuda a compra de unidades.':
+    'Linestan\'s LumenCorp promises "99.2% precision" in detecting Alternates. Independent experts question the methodology. The company\'s stock rose 34% in a day. The Ministry considers purchasing units.',
+  'Greve dos ferroviários termina.': 'Railway strike ends.',
+  'Publicidade: VERITAS-9 — proteja sua família.': 'Advertisement: VERITAS-9 — protect your family.',
+  'CHANCELER ALDRIC VOSS É ASSASSINADO': 'CHANCELLOR ALDRIC VOSS ASSASSINATED',
+  'O chanceler foi morto a tiros na escadaria do Parlamento. Não há consenso sobre a autoria: a polícia culpa a resistência; a resistência culpa o governo; panfletos culpam os Alternados; Cantalabria sugere "interferência externa". O país entra em luto — e em pânico.':
+    'The chancellor was shot on the steps of Parliament. There is no consensus on the perpetrator: police blame the resistance; the resistance blames the government; flyers blame the Alternates; Cantalabria suggests "foreign interference." The country enters mourning — and panic.',
+  'Bolsa despenca 18%.': 'Stock market plunges 18%.',
+  'Mehrvolk convoca comício: "Ordem, Segurança, Pureza".': 'Mehrvolk calls a rally: "Order, Security, Purity."',
+  'MULTIDÕES NAS RUAS: "QUEM NOS PROTEGE?"': 'CROWDS IN THE STREETS: "WHO PROTECTS US?"',
+  'Após o assassinato, comícios do movimento Mehrvolk reúnem dezenas de milhares. O orador prometeu "eliminar a infiltração em doze meses". Cientistas alertam que as estatísticas citadas no palco não existem em nenhum estudo publicado.':
+    'After the assassination, Mehrvolk movement rallies gather tens of thousands. The speaker promised to "eliminate infiltration within twelve months." Scientists warn that the statistics cited on stage exist in no published study.',
+  'Toque de recolher em Delvina.': 'Curfew in Delvina.',
+  'Farmácias racionam sedativos.': 'Pharmacies ration sedatives.',
+  'MEHRVOLK ASSUME O GOVERNO DE OSTERIA': 'MEHRVOLK TAKES OVER THE GOVERNMENT OF OSTERIA',
+  'Com apoio de parte do exército e do Parlamento em pânico, o movimento Mehrvolk assumiu o poder na madrugada. Primeiro decreto: "A verdade agora tem um só nome." Jornais de oposição amanheceram fechados. Este jornal foi renomeado por ordem administrativa.':
+    'With support from part of the army and a panicked Parliament, the Mehrvolk movement seized power overnight. First decree: "Truth now has only one name." Opposition newspapers woke up shut down. This newspaper was renamed by administrative order.',
+  'Novos uniformes distribuídos aos postos.': 'New uniforms distributed to the posts.',
+  'Hino atualizado. Decorar até sexta.': 'Anthem updated. Memorize by Friday.',
+  'ÉDITO DE PUREZA Nº 2 ENTRA EM VIGOR': 'EDICT OF PURITY NO. 2 TAKES EFFECT',
+  'Cidadãos de origem núlia e bahari deverão portar Certificado de Ancestralidade. O Instituto Lantraviano de Fenotipia afirma que "certas linhagens apresentam 12% mais incidência de substituição". O estudo não foi revisado por pares. Hospitais registram filas de pessoas tentando provar quem são.':
+    'Citizens of núlio and bahari origin must carry an Ancestry Certificate. The Lantravian Institute of Phenotypy claims that "certain lineages show 12% higher incidence of replacement." The study was not peer-reviewed. Hospitals report lines of people trying to prove who they are.',
+  'Denúncias anônimas dobram.': 'Anonymous denunciations double.',
+  'Criança de 9 anos denuncia o próprio professor.': "9-year-old child denounces their own teacher.",
+  'DEZ DETIDOS EM OPERAÇÃO "SANGUE LIMPO"': 'TEN DETAINED IN OPERATION "CLEAN BLOOD"',
+  'O governo comemora a captura de "dez infiltrados". Documentos vazados sugerem que ao menos sete eram humanos com exames alterados. O Ministério nega. As famílias não foram informadas do paradeiro dos detidos.':
+    'The government celebrates the capture of "ten infiltrators." Leaked documents suggest at least seven were humans with altered exams. The Ministry denies it. Families were not informed of the detainees\' whereabouts.',
+  'Escolas adotam cartilha "Conheça seu vizinho".': 'Schools adopt "Know Your Neighbor" primer.',
+  'Racionamento de carvão.': 'Coal rationing.',
+  'JORNALISTA DESAPARECE APÓS REPORTAGEM': 'JOURNALIST DISAPPEARS AFTER REPORT',
+  'Vela Odim, autora da série "Os Falsos Positivos", está desaparecida há três dias. O governo afirma que ela "viajou por vontade própria". Colegas afirmam que sua casa foi revirada. A LumenCorp negou comentar os erros do VERITAS-9 citados na reportagem.':
+    'Vela Odim, author of the series "The False Positives," has been missing for three days. The government states she "traveled of her own free will." Colleagues say her house was ransacked. LumenCorp declined to comment on the VERITAS-9 errors cited in the report.',
+  'Cartazes novos: "Quem cala, protege."': 'New posters: "Silence protects."',
+  'Pão racionado: 1 unidade por família.': 'Bread rationed: 1 unit per family.',
+  'CIENTISTAS CONTESTAM A FENOTIPIA — E SÃO PRESOS': 'SCIENTISTS CONTEST PHENOTYPY — AND ARE ARRESTED',
+  'Quatorze pesquisadores assinaram carta afirmando que "nenhuma característica física define um Alternado". Foram detidos por "sabotagem epistemológica". Universidades entram em greve. O governo responde: "A ciência do inimigo também é inimiga."':
+    'Fourteen researchers signed a letter stating that "no physical characteristic defines an Alternate." They were detained for "epistemological sabotage." Universities go on strike. The government responds: "The enemy\'s science is also the enemy."',
+  'Fila do posto leste bate recorde.': 'East post line hits record.',
+  'Inverno chega mais cedo.': 'Winter arrives early.',
+  'EXPLOSÃO NA ESTAÇÃO CENTRAL: 31 MORTOS': 'EXPLOSION AT CENTRAL STATION: 31 DEAD',
+  'Um atentado destruiu a Estação Central de Valgrado. O governo culpa a resistência. A resistência culpa "agentes do próprio regime". Um sobrevivente jura que viu o autor "sorrir com a boca errada". Ninguém sabe o que isso significa. Ninguém pergunta duas vezes.':
+    'A bombing destroyed Valgrado Central Station. The government blames the resistance. The resistance blames "agents of the regime itself." A survivor swears they saw the perpetrator "smile with the wrong mouth." No one knows what that means. No one asks twice.',
+  'Luto oficial de três dias.': 'Three days of official mourning.',
+  'Trens suspensos.': 'Trains suspended.',
+  'GOLPE: CONSELHO POPULAR TOMA O PODER': "COUP: PEOPLE'S COUNCIL SEIZES POWER",
+  'Unidades do exército derrubaram o governo Mehrvolk durante a madrugada. O Conselho Popular declara que "os Alternados são uma invenção do capital para disciplinar trabalhadores". Os laboratórios estatais, entretanto, seguem funcionando — agora sob nova bandeira. Todos os documentos antigos exigem revalidação.':
+    'Army units overthrew the Mehrvolk government overnight. The People\'s Council declares that "the Alternates are an invention of capital to discipline workers." The state laboratories, however, keep running — now under a new flag. All old documents require renewal.',
+  'Estátuas derrubadas antes do café.': 'Statues toppled before breakfast.',
+  'Novo hino. Decorar até sexta.': 'New anthem. Memorize by Friday.',
+  'EX-AGENTES DO REGIME VIRAM "ELEMENTOS INDESEJÁVEIS"': 'FORMER REGIME AGENTS BECOME "UNDESIRABLE ELEMENTS"',
+  'Funcionários do governo anterior tentam deixar o país em massa. O Conselho promete julgamentos populares. Nas filas, ninguém mais sabe qual carimbo é o certo — e o Conselho também não. Um inspetor foi preso por aplicar a lei da semana passada.':
+    'Officials from the previous government try to leave the country en masse. The Council promises people\'s trials. In the lines, no one knows anymore which stamp is the right one — and neither does the Council. An inspector was arrested for applying last week\'s law.',
+  'Açúcar desaparece dos mercados.': 'Sugar disappears from markets.',
+  'Boato: "Alternados não suportam açúcar." Falso. Talvez.': 'Rumor: "Alternates can\'t stand sugar." False. Maybe.',
+  'O SCANNER OFICIAL ERA DEFEITUOSO, ADMITE MINISTÉRIO': 'THE OFFICIAL SCANNER WAS FAULTY, MINISTRY ADMITS',
+  'Após seis dias de triagem obrigatória por detector biológico, o Conselho admite que 40% das unidades estavam descalibradas. Volta a valer a carteira sanitária — a mesma que o decreto anterior chamou de "papel inútil". As pessoas na fila riem. Depois choram.':
+    'After six days of mandatory screening by biological detector, the Council admits 40% of the units were miscalibrated. The health card is valid again — the same one the previous decree called "useless paper." The people in line laugh. Then they cry.',
+  'LumenCorp transfere sede para Linestan.': 'LumenCorp moves headquarters to Linestan.',
+  'Apagões programados: 4h por dia.': 'Scheduled blackouts: 4 hours a day.',
+  'FRONTEIRAS DO NORTE CAÍRAM. NINGUÉM GOVERNA LÁ.': 'THE NORTHERN BORDERS HAVE FALLEN. NO ONE GOVERNS THERE.',
+  'Refugiados de Kranton e Krestov relatam cidades sem polícia, sem energia e sem notícias. "Não fugimos deles", disse uma mulher, "fugimos de nós mesmos". O Conselho não comenta. O Conselho não é encontrado para comentar.':
+    'Refugees from Kranton and Krestov report cities without police, without power, and without news. "We didn\'t flee them," said one woman, "we fled ourselves." The Council has no comment. The Council cannot be found for comment.',
+  'Hospitais lotados.': 'Hospitals overflowing.',
+  'A rádio estatal transmite estática entre 14h e 16h.': 'State radio broadcasts static between 2pm and 4pm.',
+  'ONDE ESTÁ O GOVERNO?': 'WHERE IS THE GOVERNMENT?',
+  'Ministérios vazios. Telefones mudos. O último comunicado oficial tem cinco dias. Este jornal é impresso por voluntários. Não sabemos se seremos impressos amanhã. O posto de triagem leste segue aberto — ninguém mandou fechar. Talvez ninguém exista para mandar.':
+    "Empty ministries. Silent phones. The last official bulletin is five days old. This newspaper is printed by volunteers. We don't know if we'll be printed tomorrow. The eastern screening post remains open — no one ordered it closed. Maybe no one exists to order it.",
+  'Feira improvisada na Praça do Sal.': 'Improvised market at Salt Square.',
+  'Alguém pintou na muralha: "ELES JÁ ESTÃO AQUI." Outro completou: "SEMPRE ESTIVERAM."':
+    'Someone painted on the wall: "THEY\'RE ALREADY HERE." Someone else added: "THEY ALWAYS WERE."',
+  'COMUNIDADE DO VALE AFIRMA "CONVIVER" COM ALTERNADOS': 'VALLEY COMMUNITY CLAIMS TO "COEXIST" WITH ALTERNATES',
+  'Um povoado nas montanhas garante viver em paz com "os outros" há anos. "Eles consertam nossas cercas. Nós não perguntamos o nome antigo deles." Impossível verificar. Impossível não pensar nisso a noite inteira.':
+    'A mountain village swears it has lived in peace with "the others" for years. "They fix our fences. We don\'t ask their old name." Impossible to verify. Impossible not to think about it all night.',
+  'Sem previsão do tempo. O instrumento quebrou.': 'No weather forecast. The instrument broke.',
+  'Procura-se: qualquer notícia de Vela Odim.': 'Wanted: any news of Vela Odim.',
+  'ELES NÃO ERRAM MAIS': "THEY DON'T MAKE MISTAKES ANYMORE",
+  'Inspetores de três postos relatam o mesmo: os documentos falsos ficaram perfeitos. As entrevistas, perfeitas. Os exames, inconclusivos. "É como se tivessem aprendido conosco tudo o que sabemos", disse um agente. "Ou como se nunca tivesse havido diferença."':
+    'Inspectors at three posts report the same thing: the fake documents became perfect. The interviews, perfect. The exams, inconclusive. "It\'s as if they learned everything we know from us," said one agent. "Or as if there was never a difference."',
+  'Última linha de trem desativada.': 'Last train line deactivated.',
+  'O horóscopo pede desculpas e não faz previsões hoje.': 'The horoscope apologizes and makes no predictions today.',
+
   /* ---- JORNAL: sem edição / preenchimento ---- */
   'O JORNAL NÃO CHEGOU HOJE.': "THE NEWSPAPER DIDN'T COME TODAY.",
   'Não há mais edições. Houve alguma vez?': 'There are no more issues. Were there ever?',
@@ -703,6 +798,101 @@ const I18N_ES = {
   '[?] …não abram para quem já mora com vocês… ‹corte›': '[?] …no le abran a quien ya vive con ustedes… ‹corte›',
   '‹desligado›': '‹apagada›',
   '— silêncio. nem estática. silêncio. —': '— silencio. ni siquiera estática. silencio. —',
+
+  /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
+  'BREVES:': 'BREVES:',
+  'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'LA FRONTERA ESTE REABRE TRAS SEIS MESES',
+  'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
+    'El Ministerio de Control anuncia la reapertura del Puesto Nº 7 tras el receso invernal. El ministro Calder Voss pide "serenidad y rigor" a los nuevos inspectores. La crisis energética da señales de tregua. Se esperan filas.',
+  'Time de Valgrado vence por 2 a 1.': 'El equipo de Valgrado gana 2 a 1.',
+  'Preço do pão sobe 4%.': 'El precio del pan sube 4%.',
+  'Horóscopo: um estranho lhe dirá a verdade. Ou não.': 'Horóscopo: un extraño le dirá la verdad. O no.',
+  'MULHER DETIDA EM MIRALTA "NÃO ERA QUEM DIZIA SER"': 'MUJER DETENIDA EN MIRALTA "NO ERA QUIEN DECÍA SER"',
+  'Vizinhos afirmam que a costureira Odila Vintra "voltou diferente" de uma viagem. Exames foram inconclusivos. A polícia nega que o caso envolva Alternados. A família da detida afirma que ela apenas "andava cansada".':
+    'Vecinos afirman que la costurera Odila Vintra "volvió diferente" de un viaje. Los exámenes fueron inconclusos. La policía niega que el caso involucre Alternados. La familia de la detenida afirma que ella solo "andaba cansada".',
+  'Cientistas de Nova República pedem calma: "falsos positivos são comuns".': 'Científicos de Nova República piden calma: "los falsos positivos son comunes".',
+  'Rádio clandestina multada.': 'Radio clandestina multada.',
+  'LINESTAN LANÇA O SCANNER "VERITAS-9"': 'LINESTAN LANZA EL ESCÁNER "VERITAS-9"',
+  'A LumenCorp de Linestan promete "99,2% de precisão" na detecção de Alternados. Especialistas independentes questionam a metodologia. As ações da empresa subiram 34% em um dia. O Ministério estuda a compra de unidades.':
+    'LumenCorp de Linestan promete "99,2% de precisión" en la detección de Alternados. Expertos independientes cuestionan la metodología. Las acciones de la empresa subieron 34% en un día. El Ministerio estudia la compra de unidades.',
+  'Greve dos ferroviários termina.': 'Termina la huelga ferroviaria.',
+  'Publicidade: VERITAS-9 — proteja sua família.': 'Publicidad: VERITAS-9 — protege a tu familia.',
+  'CHANCELER ALDRIC VOSS É ASSASSINADO': 'EL CANCILLER ALDRIC VOSS ES ASESINADO',
+  'O chanceler foi morto a tiros na escadaria do Parlamento. Não há consenso sobre a autoria: a polícia culpa a resistência; a resistência culpa o governo; panfletos culpam os Alternados; Cantalabria sugere "interferência externa". O país entra em luto — e em pânico.':
+    'El canciller murió baleado en la escalinata del Parlamento. No hay consenso sobre la autoría: la policía culpa a la resistencia; la resistencia culpa al gobierno; los panfletos culpan a los Alternados; Cantalabria sugiere "interferencia externa". El país entra en luto — y en pánico.',
+  'Bolsa despenca 18%.': 'La bolsa se desploma 18%.',
+  'Mehrvolk convoca comício: "Ordem, Segurança, Pureza".': 'Mehrvolk convoca un mitin: "Orden, Seguridad, Pureza".',
+  'MULTIDÕES NAS RUAS: "QUEM NOS PROTEGE?"': 'MULTITUDES EN LAS CALLES: "¿QUIÉN NOS PROTEGE?"',
+  'Após o assassinato, comícios do movimento Mehrvolk reúnem dezenas de milhares. O orador prometeu "eliminar a infiltração em doze meses". Cientistas alertam que as estatísticas citadas no palco não existem em nenhum estudo publicado.':
+    'Tras el asesinato, los mítines del movimiento Mehrvolk reúnen a decenas de miles. El orador prometió "eliminar la infiltración en doce meses". Los científicos advierten que las estadísticas citadas en el escenario no existen en ningún estudio publicado.',
+  'Toque de recolher em Delvina.': 'Toque de queda en Delvina.',
+  'Farmácias racionam sedativos.': 'Las farmacias racionan sedantes.',
+  'MEHRVOLK ASSUME O GOVERNO DE OSTERIA': 'MEHRVOLK ASUME EL GOBIERNO DE OSTERIA',
+  'Com apoio de parte do exército e do Parlamento em pânico, o movimento Mehrvolk assumiu o poder na madrugada. Primeiro decreto: "A verdade agora tem um só nome." Jornais de oposição amanheceram fechados. Este jornal foi renomeado por ordem administrativa.':
+    'Con apoyo de parte del ejército y de un Parlamento en pánico, el movimiento Mehrvolk tomó el poder durante la madrugada. Primer decreto: "La verdad ahora tiene un solo nombre." Los periódicos de oposición amanecieron cerrados. Este periódico fue renombrado por orden administrativa.',
+  'Novos uniformes distribuídos aos postos.': 'Nuevos uniformes distribuidos a los puestos.',
+  'Hino atualizado. Decorar até sexta.': 'Himno actualizado. Memorizar antes del viernes.',
+  'ÉDITO DE PUREZA Nº 2 ENTRA EM VIGOR': 'EL EDICTO DE PUREZA Nº 2 ENTRA EN VIGOR',
+  'Cidadãos de origem núlia e bahari deverão portar Certificado de Ancestralidade. O Instituto Lantraviano de Fenotipia afirma que "certas linhagens apresentam 12% mais incidência de substituição". O estudo não foi revisado por pares. Hospitais registram filas de pessoas tentando provar quem são.':
+    'Los ciudadanos de origen núlio y bahari deberán portar Certificado de Ascendencia. El Instituto Lantraviano de Fenotipia afirma que "ciertos linajes presentan 12% más incidencia de sustitución". El estudio no fue revisado por pares. Los hospitales registran filas de personas intentando probar quiénes son.',
+  'Denúncias anônimas dobram.': 'Las denuncias anónimas se duplican.',
+  'Criança de 9 anos denuncia o próprio professor.': 'Un niño de 9 años denuncia a su propio profesor.',
+  'DEZ DETIDOS EM OPERAÇÃO "SANGUE LIMPO"': 'DIEZ DETENIDOS EN LA OPERACIÓN "SANGRE LIMPIA"',
+  'O governo comemora a captura de "dez infiltrados". Documentos vazados sugerem que ao menos sete eram humanos com exames alterados. O Ministério nega. As famílias não foram informadas do paradeiro dos detidos.':
+    'El gobierno celebra la captura de "diez infiltrados". Documentos filtrados sugieren que al menos siete eran humanos con exámenes alterados. El Ministerio lo niega. Las familias no fueron informadas del paradero de los detenidos.',
+  'Escolas adotam cartilha "Conheça seu vizinho".': 'Las escuelas adoptan la cartilla "Conoce a tu vecino".',
+  'Racionamento de carvão.': 'Racionamiento de carbón.',
+  'JORNALISTA DESAPARECE APÓS REPORTAGEM': 'PERIODISTA DESAPARECE TRAS UN REPORTAJE',
+  'Vela Odim, autora da série "Os Falsos Positivos", está desaparecida há três dias. O governo afirma que ela "viajou por vontade própria". Colegas afirmam que sua casa foi revirada. A LumenCorp negou comentar os erros do VERITAS-9 citados na reportagem.':
+    'Vela Odim, autora de la serie "Los Falsos Positivos", lleva tres días desaparecida. El gobierno afirma que ella "viajó por voluntad propia". Sus colegas afirman que su casa fue registrada. LumenCorp se negó a comentar los errores del VERITAS-9 citados en el reportaje.',
+  'Cartazes novos: "Quem cala, protege."': 'Nuevos carteles: "Quien calla, protege."',
+  'Pão racionado: 1 unidade por família.': 'Pan racionado: 1 unidad por familia.',
+  'CIENTISTAS CONTESTAM A FENOTIPIA — E SÃO PRESOS': 'CIENTÍFICOS CUESTIONAN LA FENOTIPIA — Y SON ARRESTADOS',
+  'Quatorze pesquisadores assinaram carta afirmando que "nenhuma característica física define um Alternado". Foram detidos por "sabotagem epistemológica". Universidades entram em greve. O governo responde: "A ciência do inimigo também é inimiga."':
+    'Catorce investigadores firmaron una carta afirmando que "ninguna característica física define a un Alternado". Fueron detenidos por "sabotaje epistemológico". Las universidades entran en huelga. El gobierno responde: "La ciencia del enemigo también es enemiga."',
+  'Fila do posto leste bate recorde.': 'La fila del puesto este bate récord.',
+  'Inverno chega mais cedo.': 'El invierno llega antes.',
+  'EXPLOSÃO NA ESTAÇÃO CENTRAL: 31 MORTOS': 'EXPLOSIÓN EN LA ESTACIÓN CENTRAL: 31 MUERTOS',
+  'Um atentado destruiu a Estação Central de Valgrado. O governo culpa a resistência. A resistência culpa "agentes do próprio regime". Um sobrevivente jura que viu o autor "sorrir com a boca errada". Ninguém sabe o que isso significa. Ninguém pergunta duas vezes.':
+    'Un atentado destruyó la Estación Central de Valgrado. El gobierno culpa a la resistencia. La resistencia culpa a "agentes del propio régimen". Un sobreviviente jura haber visto al autor "sonreír con la boca equivocada". Nadie sabe qué significa eso. Nadie pregunta dos veces.',
+  'Luto oficial de três dias.': 'Luto oficial de tres días.',
+  'Trens suspensos.': 'Trenes suspendidos.',
+  'GOLPE: CONSELHO POPULAR TOMA O PODER': 'GOLPE: EL CONSEJO POPULAR TOMA EL PODER',
+  'Unidades do exército derrubaram o governo Mehrvolk durante a madrugada. O Conselho Popular declara que "os Alternados são uma invenção do capital para disciplinar trabalhadores". Os laboratórios estatais, entretanto, seguem funcionando — agora sob nova bandeira. Todos os documentos antigos exigem revalidação.':
+    'Unidades del ejército derrocaron al gobierno Mehrvolk durante la madrugada. El Consejo Popular declara que "los Alternados son una invención del capital para disciplinar a los trabajadores". Los laboratorios estatales, sin embargo, siguen funcionando — ahora bajo una nueva bandera. Todos los documentos antiguos requieren renovación.',
+  'Estátuas derrubadas antes do café.': 'Estatuas derribadas antes del desayuno.',
+  'Novo hino. Decorar até sexta.': 'Nuevo himno. Memorizar antes del viernes.',
+  'EX-AGENTES DO REGIME VIRAM "ELEMENTOS INDESEJÁVEIS"': 'EX AGENTES DEL RÉGIMEN SE CONVIERTEN EN "ELEMENTOS INDESEABLES"',
+  'Funcionários do governo anterior tentam deixar o país em massa. O Conselho promete julgamentos populares. Nas filas, ninguém mais sabe qual carimbo é o certo — e o Conselho também não. Um inspetor foi preso por aplicar a lei da semana passada.':
+    'Funcionarios del gobierno anterior intentan salir del país en masa. El Consejo promete juicios populares. En las filas, ya nadie sabe cuál sello es el correcto — y el Consejo tampoco. Un inspector fue arrestado por aplicar la ley de la semana pasada.',
+  'Açúcar desaparece dos mercados.': 'El azúcar desaparece de los mercados.',
+  'Boato: "Alternados não suportam açúcar." Falso. Talvez.': 'Rumor: "Los Alternados no soportan el azúcar." Falso. Tal vez.',
+  'O SCANNER OFICIAL ERA DEFEITUOSO, ADMITE MINISTÉRIO': 'EL ESCÁNER OFICIAL ERA DEFECTUOSO, ADMITE EL MINISTERIO',
+  'Após seis dias de triagem obrigatória por detector biológico, o Conselho admite que 40% das unidades estavam descalibradas. Volta a valer a carteira sanitária — a mesma que o decreto anterior chamou de "papel inútil". As pessoas na fila riem. Depois choram.':
+    'Tras seis días de control obligatorio con detector biológico, el Consejo admite que el 40% de las unidades estaban descalibradas. Vuelve a valer el carnet sanitario — el mismo que el decreto anterior llamó "papel inútil". La gente en la fila ríe. Después llora.',
+  'LumenCorp transfere sede para Linestan.': 'LumenCorp traslada su sede a Linestan.',
+  'Apagões programados: 4h por dia.': 'Apagones programados: 4h por día.',
+  'FRONTEIRAS DO NORTE CAÍRAM. NINGUÉM GOVERNA LÁ.': 'LAS FRONTERAS DEL NORTE CAYERON. NADIE GOBIERNA ALLÍ.',
+  'Refugiados de Kranton e Krestov relatam cidades sem polícia, sem energia e sem notícias. "Não fugimos deles", disse uma mulher, "fugimos de nós mesmos". O Conselho não comenta. O Conselho não é encontrado para comentar.':
+    'Refugiados de Kranton y Krestov reportan ciudades sin policía, sin energía y sin noticias. "No huimos de ellos", dijo una mujer, "huimos de nosotros mismos". El Consejo no hace comentarios. El Consejo no puede ser encontrado para comentar.',
+  'Hospitais lotados.': 'Hospitales desbordados.',
+  'A rádio estatal transmite estática entre 14h e 16h.': 'La radio estatal transmite estática entre las 14h y las 16h.',
+  'ONDE ESTÁ O GOVERNO?': '¿DÓNDE ESTÁ EL GOBIERNO?',
+  'Ministérios vazios. Telefones mudos. O último comunicado oficial tem cinco dias. Este jornal é impresso por voluntários. Não sabemos se seremos impressos amanhã. O posto de triagem leste segue aberto — ninguém mandou fechar. Talvez ninguém exista para mandar.':
+    'Ministerios vacíos. Teléfonos mudos. El último comunicado oficial tiene cinco días. Este periódico es impreso por voluntarios. No sabemos si seremos impresos mañana. El puesto de control este sigue abierto — nadie mandó cerrarlo. Tal vez nadie existe para mandarlo.',
+  'Feira improvisada na Praça do Sal.': 'Feria improvisada en la Plaza de la Sal.',
+  'Alguém pintou na muralha: "ELES JÁ ESTÃO AQUI." Outro completou: "SEMPRE ESTIVERAM."':
+    'Alguien pintó en la muralla: "YA ESTÁN AQUÍ." Otro completó: "SIEMPRE ESTUVIERON."',
+  'COMUNIDADE DO VALE AFIRMA "CONVIVER" COM ALTERNADOS': 'COMUNIDAD DEL VALLE AFIRMA "CONVIVIR" CON ALTERNADOS',
+  'Um povoado nas montanhas garante viver em paz com "os outros" há anos. "Eles consertam nossas cercas. Nós não perguntamos o nome antigo deles." Impossível verificar. Impossível não pensar nisso a noite inteira.':
+    'Un poblado en las montañas asegura vivir en paz con "los otros" desde hace años. "Ellos arreglan nuestras cercas. Nosotros no preguntamos su nombre antiguo." Imposible de verificar. Imposible no pensar en eso toda la noche.',
+  'Sem previsão do tempo. O instrumento quebrou.': 'Sin pronóstico del tiempo. El instrumento se rompió.',
+  'Procura-se: qualquer notícia de Vela Odim.': 'Se busca: cualquier noticia de Vela Odim.',
+  'ELES NÃO ERRAM MAIS': 'YA NO SE EQUIVOCAN',
+  'Inspetores de três postos relatam o mesmo: os documentos falsos ficaram perfeitos. As entrevistas, perfeitas. Os exames, inconclusivos. "É como se tivessem aprendido conosco tudo o que sabemos", disse um agente. "Ou como se nunca tivesse havido diferença."':
+    'Inspectores de tres puestos reportan lo mismo: los documentos falsos se volvieron perfectos. Las entrevistas, perfectas. Los exámenes, inconclusos. "Es como si hubieran aprendido de nosotros todo lo que sabemos", dijo un agente. "O como si nunca hubiera habido diferencia."',
+  'Última linha de trem desativada.': 'Última línea de tren desactivada.',
+  'O horóscopo pede desculpas e não faz previsões hoje.': 'El horóscopo pide disculpas y no hace predicciones hoy.',
 
   /* ---- JORNAL: sem edição / preenchimento ---- */
   'O JORNAL NÃO CHEGOU HOJE.': 'EL PERIÓDICO NO LLEGÓ HOY.',

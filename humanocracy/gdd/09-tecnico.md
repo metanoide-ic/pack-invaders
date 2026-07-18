@@ -146,28 +146,30 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    `REGULAMENTO DO DIA`, incluindo a linha de cota e a de procurado) e as **saudações da
    fila** (`greetingFor` — os ~25 cumprimentos genéricos, por regime, nervosos e de
    retornantes, com os fragmentos dinâmicos de nome/dia isolados do texto traduzível) — a
-   primeira frase que cada cidadão diz, em todo turno, agora traduz. **Não coberto ainda**
-   (o que resta, ainda só em português): as respostas de interrogatório e os follow-ups
-   improvisados (`answerFor`/`followTruth` — usam `PURPOSES`/`PROFESSIONS`, que também não
-   traduzem os *valores* mostrados em documentos, só os *rótulos* dos campos),
-   `SCRIPTED_NEWS` (manchetes específicas por dia), os 15 `ENCOUNTERS` (personagens
-   recorrentes com falas próprias) e toda a casa (`house.js`) — o núcleo dramático
-   remanescente, e de longe o maior volume de texto do jogo.
+   primeira frase que cada cidadão diz, em todo turno, agora traduz.
 
-   Quarta rodada: as 303 chaves subiram para 380. Agora traduzem os **valores**, não só os
-   rótulos: `PURPOSES` (os 6 motivos de viagem, ex. "Trabalho"/"Work"), as 9 durações
+   Quarta rodada: as 303 chaves subiram para 380. Passaram a traduzir os **valores**, não só
+   os rótulos: `PURPOSES` (os 6 motivos de viagem, ex. "Trabalho"/"Work"), as 9 durações
    distintas (`PURPOSES.dur`, ex. "6 meses"/"6 months") e as 17 `PROFESSIONS` — tudo isso
    aparece tanto nos documentos (`fld('work','profissao',...)`, `fld('perm','motivo',...)`)
    quanto nas respostas de `answerFor()` (com `cidade` propositalmente NÃO traduzido, por
    ser nome próprio) e nos follow-ups de `followTruth()` (`contato`/`chefe`/`volta`; `rua`
    também traduz, aceitando que a ordem de palavras de rua fica levemente estranha em EN —
    um compromisso deliberado, não um erro). A ferramenta **Linha da Vida** (`buildLifeline`/
-   `openLifeline`) traduz por completo: nascimento, escola, primeiro emprego, serviço
-   militar, casamento, mudança de residência, vacinação, chegada ao posto, a lacuna, e o
-   rodapé. Os **ecos** (`scheduleEcho`) — as notícias tardias que uma aprovação de Alternado
-   pode gerar dias depois — também traduzem, com cidade/profissão isoladas do texto fixo.
-   Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar em
-   `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
+   `openLifeline`) traduz por completo, e os **ecos** (`scheduleEcho`) também.
+
+   Quinta rodada: 380 → 454 chaves com **`SCRIPTED_NEWS`** — as 18 manchetes de dias
+   específicos (título + corpo + 2–3 breves cada) que marcam a progressão dos regimes
+   (o golpe Mehrvolk no dia 12, o Conselho Popular no dia 30, o colapso a partir do dia 40)
+   — o fio narrativo que o jornal carrega além do "preenchimento" genérico. `news.h`/
+   `news.b` já passavam por `T()` desde a rodada 2 (cobertura automática, só faltava
+   preencher as chaves); `news.m` (as breves) e o rótulo "BREVES:" foram passados por
+   `T()` nesta rodada. **Não coberto ainda** (o que resta, ainda só em português): os 15
+   `ENCOUNTERS` (personagens recorrentes com falas próprias, `nota`s e desfechos
+   ramificados) e toda a casa (`house.js`) — o núcleo dramático remanescente, e de longe o
+   maior volume de texto do jogo. Adicionar um terceiro idioma é só copiar `I18N_ES`,
+   traduzir os valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas,
+   não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

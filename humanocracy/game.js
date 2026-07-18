@@ -1910,12 +1910,12 @@ function renderNewspaper() {
   const news = scripted || pick(FILLER_NEWS);
   $('np-headline').textContent = T(news.h);
   $('np-body').textContent = T(news.b);
-  let minor = (news.m || []).map(x => '• ' + x);
+  let minor = (news.m || []).map(x => '• ' + T(x));
   // ecos das suas decisões
   const echoes = S.pendingNews.filter(n => n.day <= d);
   S.pendingNews = S.pendingNews.filter(n => n.day > d);
   echoes.forEach(e => minor.push('• ' + e.text));
-  $('np-minor').innerHTML = minor.length ? '<b>BREVES:</b>' + minor.join('<br>') : '';
+  $('np-minor').innerHTML = minor.length ? `<b>${T('BREVES:')}</b>` + minor.join('<br>') : '';
   $('np-ad').textContent = T(pick(ADS));
 }
 
