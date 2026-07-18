@@ -250,6 +250,50 @@ const I18N_EN = {
   '‹desligado›': '‹off›',
   '— silêncio. nem estática. silêncio. —': '— silence. not even static. silence. —',
 
+  /* ---- DIA 48: O ESPELHO ---- */
+  '— o vidro reflete —': '— the glass reflects —',
+  'Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.':
+    'There is no line. There is a glass. On the other side of the glass, someone slides documents onto the tray. They are yours.',
+
+  /* ---- ECOS DE ENCONTROS (encounterOutcome) ---- */
+  'Um hospital clandestino em Delvina tratou quarenta crianças esta semana. Ninguém sabe de onde vieram os medicamentos. Ninguém pergunta.':
+    'An underground hospital in Delvina treated forty children this week. No one knows where the medicine came from. No one asks.',
+  'A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.':
+    'Journalist Vela Odim published abroad: "Screening posts detain 9 innocents for every real suspect." The government denies it. The government always denies it.',
+
+  /* ---- ENCONTROS (ENCOUNTERS: fala + nota) ---- */
+  'Vou cuidar da minha mãe em Kranton. Ela piorou no inverno. Volto em duas semanas, prometo. Digo… não que eu precise prometer nada ao senhor.':
+    "I'm going to take care of my mother in Kranton. She got worse over the winter. I'll be back in two weeks, I promise. I mean… not that I need to promise you anything, sir.",
+  'Inspetor. Meu primo passa por aqui amanhã. Volkan Zubrek, de Krestov. Os papéis dele estão… quase em ordem. Feche um olho e a metade do que ele paga é sua. Pense com calma. Eu volto sempre.':
+    'Inspector. My cousin comes through here tomorrow. Volkan Zubrek, from Krestov. His papers are… almost in order. Close one eye and half of what he pays is yours. Think it over. I always come back.',
+  'AMANHÃ: Volkan Zubrek. Aprove. — R.D.': 'TOMORROW: Volkan Zubrek. Approve. — R.D.',
+  'O sargento falou com você, não falou? Está tudo… combinado.': "The sergeant talked to you, didn't he? It's all… arranged.",
+  'Corto o cabelo de metade desta fila, sabia? A gente ouve coisas. Por exemplo: que o senhor tem um filho doente. E que gente como nós vai precisar de gente como o senhor. Guarde meu nome.':
+    'I cut the hair of half this line, you know? We hear things. For example: that you have a sick son. And that people like us are going to need people like you. Remember my name.',
+  'Quando precisar de remédio de verdade, procure o barbeiro. — J.M.': 'When you need real medicine, find the barber. — J.M.',
+  'Fui demitida enquanto cuidava da minha mãe. A escola diz que "meu perfil não serve mais". Minha permissão venceu ANTEONTEM, eu sei, eu sei — mas se eu voltar agora perco o apartamento e perco… tudo. Por favor. São dois dias.':
+    'I was fired while I was taking care of my mother. The school says "my profile no longer fits." My permit expired the DAY BEFORE YESTERDAY, I know, I know — but if I go back now I lose the apartment and I lose… everything. Please. It\'s two days.',
+  'Amanhã passa por aqui uma "prima" minha. Nadia Baruk, de Frimia. Os papéis dela têm um defeito de fábrica, digamos. Ela carrega remédios para um hospital clandestino. Aprove, e o remédio do seu filho aparece na sua porta. Recuse, e… bom, cada um vive com o que escolhe.':
+    'Tomorrow a "cousin" of mine comes through. Nadia Baruk, from Frimia. Her papers have a factory defect, let\'s say. She carries medicine for an underground hospital. Approve her, and your son\'s medicine appears at your door. Refuse, and… well, everyone lives with what they choose.',
+  'AMANHÃ: Nadia Baruk. O remédio existe. A escolha é sua. — J.M.': 'TOMORROW: Nadia Baruk. The medicine exists. The choice is yours. — J.M.',
+  'O barbeiro mandou lembranças.': 'The barber sends his regards.',
+  'Estou grávida. O pai ficou do outro lado. Eu só quero atravessar antes que… antes que inventem mais um papel que eu não tenho. Não tenho a carteira sanitária. O posto médico da minha cidade FECHOU. Como eu apresento um papel de um lugar que não existe mais?':
+    "I'm pregnant. The father stayed on the other side. I just want to cross before… before they invent another paper I don't have. I don't have the health card. My town's medical post CLOSED. How do I present a paper from a place that no longer exists?",
+  'Estou escrevendo sobre os postos de triagem. Sobre quantos "positivos" eram só gente doente, nervosa ou azarada. Uma pergunta, inspetor, sem caneta na mão: o senhor já teve certeza de alguma coisa aqui dentro? Uma única vez?':
+    'I\'m writing about the screening posts. About how many "positives" were just sick, nervous, or unlucky people. One question, inspector, off the record: have you ever been certain of anything in here? Even once?',
+  'O senhor de novo. Que sorte a minha. — Ela não sorri mais. — Está tudo em ordem dessa vez. Tudo. Pode olhar o quanto quiser.':
+    "You again. What luck I have. — She doesn't smile anymore. — Everything is in order this time. Everything. Look all you want.",
+  'Sem farda fica difícil me reconhecer, é? O Conselho está prendendo todo mundo que serviu antes. TODO MUNDO. Você inclusive está na lista, mais cedo ou mais tarde. Me deixa passar e eu esqueço seu nome quando perguntarem.':
+    "Without a uniform it's hard to recognize me, is it? The Council is arresting everyone who served before. EVERYONE. You too, sooner or later. Let me through and I'll forget your name when they ask.",
+  'Seu detector biológico está descalibrado há semanas — eu vendo o serviço de calibração. 40 ostras e ele volta a funcionar de verdade. Barato, considerando o preço de um erro. A LumenCorp me odeia, o que é sempre bom sinal.':
+    "Your biological detector has been miscalibrated for weeks — I sell the calibration service. 40 oysters and it works for real again. Cheap, considering the cost of a mistake. LumenCorp hates me, which is always a good sign.",
+  '…O bebê nasceu. Está com a minha irmã. Eu atravesso hoje ou não atravesso nunca. — Ela olha para você como quem decora um rosto. — Engraçado. Não lembro mais se o senhor sempre foi assim. Mais velho. Diferente. A gente muda, não é? Todo mundo muda.':
+    "…The baby was born. He's with my sister. I cross today or I never cross. — She looks at you like someone memorizing a face. — Funny. I don't remember anymore if you were always like this. Older. Different. People change, don't they? Everyone changes.",
+  'Você me disse ONTEM para atravessar hoje. Na cozinha. Você segurou minhas mãos e disse "vá antes de mim, eu encontro vocês". — Você não disse isso. Você tem certeza de que não disse isso. — Por que está me olhando assim?':
+    'You told me YESTERDAY to cross today. In the kitchen. You held my hands and said "go before me, I\'ll find you." — You didn\'t say that. You\'re sure you didn\'t say that. — Why are you looking at me like that?',
+  'Nós já conversamos, há duas semanas. O senhor usava uma caneca azul lascada na borda. Reclamou do frio e carimbou meu passaporte duas vezes sem querer. — Você nunca viu este homem. A caneca azul está na sua mesa. Lascada na borda.':
+    'We already talked, two weeks ago. You were using a blue mug, chipped at the rim. You complained about the cold and stamped my passport twice by accident. — You have never seen this man. The blue mug is on your desk. Chipped at the rim.',
+
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
@@ -798,6 +842,50 @@ const I18N_ES = {
   '[?] …não abram para quem já mora com vocês… ‹corte›': '[?] …no le abran a quien ya vive con ustedes… ‹corte›',
   '‹desligado›': '‹apagada›',
   '— silêncio. nem estática. silêncio. —': '— silencio. ni siquiera estática. silencio. —',
+
+  /* ---- DIA 48: O ESPELHO ---- */
+  '— o vidro reflete —': '— el vidrio refleja —',
+  'Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.':
+    'No hay fila. Hay un vidrio. Del otro lado del vidrio, alguien desliza documentos por la bandeja. Son los suyos.',
+
+  /* ---- ECOS DE ENCONTROS (encounterOutcome) ---- */
+  'Um hospital clandestino em Delvina tratou quarenta crianças esta semana. Ninguém sabe de onde vieram os medicamentos. Ninguém pergunta.':
+    'Un hospital clandestino en Delvina trató a cuarenta niños esta semana. Nadie sabe de dónde vinieron los medicamentos. Nadie pregunta.',
+  'A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.':
+    'La periodista Vela Odim publicó en el extranjero: "Los puestos de control detienen a 9 inocentes por cada sospechoso real". El gobierno lo niega. El gobierno siempre niega.',
+
+  /* ---- ENCONTROS (ENCOUNTERS: fala + nota) ---- */
+  'Vou cuidar da minha mãe em Kranton. Ela piorou no inverno. Volto em duas semanas, prometo. Digo… não que eu precise prometer nada ao senhor.':
+    'Voy a cuidar de mi madre en Kranton. Empeoró en el invierno. Vuelvo en dos semanas, lo prometo. Digo… no es que necesite prometerle nada al señor.',
+  'Inspetor. Meu primo passa por aqui amanhã. Volkan Zubrek, de Krestov. Os papéis dele estão… quase em ordem. Feche um olho e a metade do que ele paga é sua. Pense com calma. Eu volto sempre.':
+    'Inspector. Mi primo pasa por aquí mañana. Volkan Zubrek, de Krestov. Sus papeles están… casi en orden. Cierre un ojo y la mitad de lo que él paga es suyo. Piénselo con calma. Yo siempre vuelvo.',
+  'AMANHÃ: Volkan Zubrek. Aprove. — R.D.': 'MAÑANA: Volkan Zubrek. Apruebe. — R.D.',
+  'O sargento falou com você, não falou? Está tudo… combinado.': 'El sargento habló con usted, ¿no? Ya está todo… arreglado.',
+  'Corto o cabelo de metade desta fila, sabia? A gente ouve coisas. Por exemplo: que o senhor tem um filho doente. E que gente como nós vai precisar de gente como o senhor. Guarde meu nome.':
+    '¿Sabía que le corto el pelo a la mitad de esta fila? Uno oye cosas. Por ejemplo: que usted tiene un hijo enfermo. Y que gente como nosotros va a necesitar gente como usted. Recuerde mi nombre.',
+  'Quando precisar de remédio de verdade, procure o barbeiro. — J.M.': 'Cuando necesite medicina de verdad, busque al barbero. — J.M.',
+  'Fui demitida enquanto cuidava da minha mãe. A escola diz que "meu perfil não serve mais". Minha permissão venceu ANTEONTEM, eu sei, eu sei — mas se eu voltar agora perco o apartamento e perco… tudo. Por favor. São dois dias.':
+    'Me despidieron mientras cuidaba a mi madre. La escuela dice que "mi perfil ya no sirve". Mi permiso venció ANTEAYER, lo sé, lo sé — pero si vuelvo ahora pierdo el apartamento y pierdo… todo. Por favor. Son dos días.',
+  'Amanhã passa por aqui uma "prima" minha. Nadia Baruk, de Frimia. Os papéis dela têm um defeito de fábrica, digamos. Ela carrega remédios para um hospital clandestino. Aprove, e o remédio do seu filho aparece na sua porta. Recuse, e… bom, cada um vive com o que escolhe.':
+    'Mañana pasa por aquí una "prima" mía. Nadia Baruk, de Frimia. Sus papeles tienen un defecto de fábrica, digamos. Ella lleva medicinas para un hospital clandestino. Apruébela, y la medicina de su hijo aparece en su puerta. Recházela, y… bueno, cada uno vive con lo que elige.',
+  'AMANHÃ: Nadia Baruk. O remédio existe. A escolha é sua. — J.M.': 'MAÑANA: Nadia Baruk. La medicina existe. La elección es suya. — J.M.',
+  'O barbeiro mandou lembranças.': 'El barbero envía saludos.',
+  'Estou grávida. O pai ficou do outro lado. Eu só quero atravessar antes que… antes que inventem mais um papel que eu não tenho. Não tenho a carteira sanitária. O posto médico da minha cidade FECHOU. Como eu apresento um papel de um lugar que não existe mais?':
+    'Estoy embarazada. El padre se quedó del otro lado. Solo quiero cruzar antes de que… antes de que inventen otro papel que no tengo. No tengo el carnet sanitario. El puesto médico de mi pueblo CERRÓ. ¿Cómo presento un papel de un lugar que ya no existe?',
+  'Estou escrevendo sobre os postos de triagem. Sobre quantos "positivos" eram só gente doente, nervosa ou azarada. Uma pergunta, inspetor, sem caneta na mão: o senhor já teve certeza de alguma coisa aqui dentro? Uma única vez?':
+    'Estoy escribiendo sobre los puestos de control. Sobre cuántos "positivos" eran solo gente enferma, nerviosa o con mala suerte. Una pregunta, inspector, sin lápiz en mano: ¿alguna vez tuvo certeza de algo aquí adentro? ¿Una sola vez?',
+  'O senhor de novo. Que sorte a minha. — Ela não sorri mais. — Está tudo em ordem dessa vez. Tudo. Pode olhar o quanto quiser.':
+    'Usted de nuevo. Qué suerte la mía. — Ella ya no sonríe. — Esta vez está todo en orden. Todo. Puede mirar todo lo que quiera.',
+  'Sem farda fica difícil me reconhecer, é? O Conselho está prendendo todo mundo que serviu antes. TODO MUNDO. Você inclusive está na lista, mais cedo ou mais tarde. Me deixa passar e eu esqueço seu nome quando perguntarem.':
+    'Sin uniforme es difícil reconocerme, ¿no? El Consejo está arrestando a todos los que sirvieron antes. A TODOS. Usted también está en la lista, tarde o temprano. Déjeme pasar y olvido su nombre cuando pregunten.',
+  'Seu detector biológico está descalibrado há semanas — eu vendo o serviço de calibração. 40 ostras e ele volta a funcionar de verdade. Barato, considerando o preço de um erro. A LumenCorp me odeia, o que é sempre bom sinal.':
+    'Su detector biológico está descalibrado desde hace semanas — yo vendo el servicio de calibración. 40 ostras y vuelve a funcionar de verdad. Barato, considerando el precio de un error. LumenCorp me odia, lo cual siempre es buena señal.',
+  '…O bebê nasceu. Está com a minha irmã. Eu atravesso hoje ou não atravesso nunca. — Ela olha para você como quem decora um rosto. — Engraçado. Não lembro mais se o senhor sempre foi assim. Mais velho. Diferente. A gente muda, não é? Todo mundo muda.':
+    '…El bebé nació. Está con mi hermana. Cruzo hoy o no cruzo nunca. — Ella lo mira como quien memoriza un rostro. — Curioso. Ya no recuerdo si usted siempre fue así. Más viejo. Diferente. La gente cambia, ¿no? Todos cambian.',
+  'Você me disse ONTEM para atravessar hoje. Na cozinha. Você segurou minhas mãos e disse "vá antes de mim, eu encontro vocês". — Você não disse isso. Você tem certeza de que não disse isso. — Por que está me olhando assim?':
+    'Usted me dijo AYER que cruzara hoy. En la cocina. Me sostuvo las manos y dijo "ve antes que yo, los encuentro". — Usted no dijo eso. Está seguro de que no dijo eso. — ¿Por qué me mira así?',
+  'Nós já conversamos, há duas semanas. O senhor usava uma caneca azul lascada na borda. Reclamou do frio e carimbou meu passaporte duas vezes sem querer. — Você nunca viu este homem. A caneca azul está na sua mesa. Lascada na borda.':
+    'Ya conversamos, hace dos semanas. Usted usaba una taza azul astillada en el borde. Se quejó del frío y selló mi pasaporte dos veces sin querer. — Usted nunca vio a este hombre. La taza azul está en su escritorio. Astillada en el borde.',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',

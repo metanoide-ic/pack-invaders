@@ -1217,7 +1217,7 @@ function nextCitizen() {
 }
 
 function greetingFor(cz) {
-  if (cz.encounter) return cz.encounter.fala;
+  if (cz.encounter) return T(cz.encounter.fala);
   if (cz.returning) {
     const r = cz.returning;
     if (r.mood === 'raiva') return `${T('O senhor. DE NOVO eu, sim. Me barrou no dia')} ${r.dia}${T('. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.')}`;
@@ -1729,12 +1729,12 @@ function encounterOutcome(enc, decision) {
       if (decision === 'approve') {
         S.counters.resHelped++;
         f.remedioProometido = true;
-        S.pendingNews.push({ day: S.day + 2, text: 'Um hospital clandestino em Delvina tratou quarenta crianças esta semana. Ninguém sabe de onde vieram os medicamentos. Ninguém pergunta.' });
+        S.pendingNews.push({ day: S.day + 2, text: T('Um hospital clandestino em Delvina tratou quarenta crianças esta semana. Ninguém sabe de onde vieram os medicamentos. Ninguém pergunta.') });
       } else if (decision === 'detain') { f.resTraida = true; }
       break;
     case 'elara3': if (decision === 'approve') f.elaraGrata = true; else f.elaraRancor = true; break;
     case 'odim':
-      if (decision === 'approve') S.pendingNews.push({ day: S.day + 3, text: 'A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.' });
+      if (decision === 'approve') S.pendingNews.push({ day: S.day + 3, text: T('A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.') });
       else f.odimDetida = true;
       break;
     case 'elara4': f.elara4 = decision; break;
@@ -1750,8 +1750,8 @@ function presentMirror() {
   clearInterval(shift.tickId);
   const you = makeCitizen(48, { nome: 'VOCÊ', pais: 'osteria', sexo: 'm', forceValid: true });
   $('npc-portrait').innerHTML = portraitSVG(you.features); if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
-  $('npc-name').textContent = '— o vidro reflete —';
-  $('speech').textContent = 'Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.';
+  $('npc-name').textContent = T('— o vidro reflete —');
+  $('speech').textContent = T('Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.');
   layDocs(you);
   $('ask-row').innerHTML = '';
   $('btn-reject').classList.remove('hidden');

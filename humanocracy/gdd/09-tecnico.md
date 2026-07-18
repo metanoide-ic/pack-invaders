@@ -164,12 +164,29 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    — o fio narrativo que o jornal carrega além do "preenchimento" genérico. `news.h`/
    `news.b` já passavam por `T()` desde a rodada 2 (cobertura automática, só faltava
    preencher as chaves); `news.m` (as breves) e o rótulo "BREVES:" foram passados por
-   `T()` nesta rodada. **Não coberto ainda** (o que resta, ainda só em português): os 15
-   `ENCOUNTERS` (personagens recorrentes com falas próprias, `nota`s e desfechos
-   ramificados) e toda a casa (`house.js`) — o núcleo dramático remanescente, e de longe o
-   maior volume de texto do jogo. Adicionar um terceiro idioma é só copiar `I18N_ES`,
-   traduzir os valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas,
-   não só dois.
+   `T()` nesta rodada.
+
+   Sexta rodada: 454 → 476 chaves com os **`ENCOUNTERS`** — os 15 personagens recorrentes
+   scriptados (o arco de 5 partes de Elara Venn, o sargento Dmarov e sua oferta de suborno,
+   o barbeiro-contato da resistência, a jornalista Vela Odim etc.). `greetingFor(cz)` passou
+   a retornar `T(cz.encounter.fala)` em vez da fala crua; as 3 `nota.texto` (bilhetes na
+   bandeja, ex. "AMANHÃ: Volkan Zubrek. Aprove. — R.D.") não precisaram de nenhuma mudança de
+   código — já passavam por `modal()`, que traduz `body` automaticamente desde a rodada 1,
+   só faltava a chave no dicionário. Também traduzidos nesta rodada: a cena do dia 48 ("O
+   Espelho", `presentMirror()`) e os dois ecos tardios de `encounterOutcome()` que tinham
+   ficado órfãos da rodada de "ecos" anterior (o hospital clandestino de Delvina e a
+   publicação de Vela Odim no exterior). Verificado por Playwright: fala de encontro forçado,
+   nota em modal, textos do espelho e os dois ecos — todos traduzidos corretamente em EN;
+   paridade de chaves EN/ES confirmada (476 = 476, zero divergência).
+
+   **Não coberto ainda** (o que resta, ainda só em português) — descoberto ao catalogar o
+   conteúdo restante nesta rodada, então listado aqui pela primeira vez: os 12
+   **`NIGHT_EVENTS`** (cenas noturnas de horror multi-parágrafo, com escolhas ramificadas),
+   os 12 **`HOME_EVENTS`** (eventos de drama familiar) e as pools de flavor-text da
+   **bagagem** (`BAG_POOLS`, `BAG_ONEWAY`, `BAG_CONTRABAND`, `BAG_HERRINGS`) — além de toda a
+   casa explorável (`house.js`). Juntos, são o maior volume de texto ainda em português no
+   jogo. Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar
+   em `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas
