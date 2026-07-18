@@ -294,7 +294,7 @@ function citation(text) {
   shift.citToday++;
   let fine = 0;
   if (shift.citToday > 2) { fine = 5; S.money = Math.max(-50, S.money - 5); }
-  $('citation-body').textContent = text + (fine ? `\nMULTA: ${MOEDA} ${fine}` : '\nADVERTÊNCIA REGISTRADA.');
+  $('citation-body').textContent = T(text) + (fine ? `\n${T('MULTA: ')}${MOEDA} ${fine}` : '\n' + T('ADVERTÊNCIA REGISTRADA.'));
   $('citation').classList.add('active');
   clearTimeout(citTimer);
   citTimer = setTimeout(() => $('citation').classList.remove('active'), 4200);
@@ -728,9 +728,9 @@ function openBag() {
         el.classList.add('found');
         cz.evidence = true;
         $('btn-detain').disabled = false;
-        cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: 'Contrabando na bagagem', confirmedNow: true });
+        cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: T('Contrabando na bagagem'), confirmedNow: true });
         shift.confirmed.push(cz.discrepancies[cz.discrepancies.length - 1]);
-        $('inspect-bar').textContent = '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.';
+        $('inspect-bar').textContent = T('⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.');
         sfx('ding');
         return;
       }
@@ -793,7 +793,7 @@ function applyDisc(cz, type, day) {
     case 'expired': {
       const doc = d.perm && chance(.5) ? d.perm : d.pass;
       doc.validade = randomDateAround(day, -40, -1);
-      add('expired', [doc.id + '.validade', 'clock'], `${doc.tipo} expirado`);
+      add('expired', [doc.id + '.validade', 'clock'], `${T(doc.tipo)}${T(' expirado')}`);
       break;
     }
     case 'nameMismatch': {
@@ -803,50 +803,50 @@ function applyDisc(cz, type, day) {
       let novo = cz.nome.split(' ')[0] + ' ' + pick(c.last);
       if (novo === cz.nome) novo = cz.nome.split(' ')[0] + ' ' + c.last[(c.last.indexOf(cz.nome.split(' ')[1]) + 1) % c.last.length];
       alvo.nome = novo;
-      add('nameMismatch', ['pass.nome', alvo.id + '.nome'], 'Nomes divergentes entre documentos');
+      add('nameMismatch', ['pass.nome', alvo.id + '.nome'], T('Nomes divergentes entre documentos'));
       break;
     }
     case 'numberMismatch': {
       const alvo = d.perm || d.ident;
       if (!alvo) { applyDisc(cz, 'expired', day); return; }
       alvo.numero = `${COUNTRIES[cz.pais].prefix}-${ri(10000, 99999)}`;
-      add('numberMismatch', ['pass.numero', alvo.id + '.numero'], 'Números de registro divergentes');
+      add('numberMismatch', ['pass.numero', alvo.id + '.numero'], T('Números de registro divergentes'));
       break;
     }
     case 'wrongSeal': {
       const outro = pick(COUNTRY_IDS.filter(k => k !== cz.pais));
-      if (d.perm && chance(.5)) { d.perm.selo = COUNTRIES[outro].seal; add('wrongSeal', ['perm.selo', 'rb:osteria'], 'Selo incorreto na permissão'); }
-      else { d.pass.selo = COUNTRIES[outro].seal; add('wrongSeal', ['pass.selo', 'rb:' + cz.pais], 'Selo nacional incorreto'); }
+      if (d.perm && chance(.5)) { d.perm.selo = COUNTRIES[outro].seal; add('wrongSeal', ['perm.selo', 'rb:osteria'], T('Selo incorreto na permissão')); }
+      else { d.pass.selo = COUNTRIES[outro].seal; add('wrongSeal', ['pass.selo', 'rb:' + cz.pais], T('Selo nacional incorreto')); }
       break;
     }
     case 'invalidCity': {
       const outro = pick(COUNTRY_IDS.filter(k => k !== cz.pais));
       d.pass.cidade = pick(COUNTRIES[outro].cities);
-      add('invalidCity', ['pass.cidade', 'rb:' + cz.pais], 'Cidade emissora inexistente no país');
+      add('invalidCity', ['pass.cidade', 'rb:' + cz.pais], T('Cidade emissora inexistente no país'));
       break;
     }
     case 'photoMismatch': {
       cz.photoFeatures = mutateFeatures(cz.features);
-      add('photoMismatch', ['pass.foto', 'npc.face'], 'Foto não confere com o portador');
+      add('photoMismatch', ['pass.foto', 'npc.face'], T('Foto não confere com o portador'));
       break;
     }
     case 'sexMismatch': {
       d.pass.sexo = cz.sexo === 'm' ? 'f' : 'm';
-      add('sexMismatch', ['pass.sexo', 'npc.face'], 'Sexo registrado não confere');
+      add('sexMismatch', ['pass.sexo', 'npc.face'], T('Sexo registrado não confere'));
       break;
     }
     case 'luggage': {
       // a mala desmente a boca — mas só se alguém abrir a mala
       if (!d.perm) { applyDisc(cz, 'expired', day); return; }
       cz.bagOneway = true;
-      add('luggage', ['bag.oneway', 'perm.motivo'], 'Bagagem incompatível com o motivo declarado');
+      add('luggage', ['bag.oneway', 'perm.motivo'], T('Bagagem incompatível com o motivo declarado'));
       cz.discrepancies[cz.discrepancies.length - 1].latent = true;
       break;
     }
     case 'contradiction': {
       cz.lie = pick(['motivo', 'cidade', 'profissao']);
       const fid = cz.lie === 'motivo' ? (d.perm ? 'perm.motivo' : 'pass.nome') : cz.lie === 'cidade' ? 'pass.cidade' : (d.work ? 'work.profissao' : 'pass.nome');
-      add('contradiction', ['talk.' + cz.lie, fid], 'Declaração contradiz os documentos');
+      add('contradiction', ['talk.' + cz.lie, fid], T('Declaração contradiz os documentos'));
       break;
     }
   }
@@ -861,17 +861,17 @@ function computeViolations(cz, day) {
   for (const r in bans) {
     if (rules.includes(r) && cz.pais === bans[r]) {
       if (cz.refugee && cz.docs.refugio && rules.includes('refugeeProtect')) continue; // contradição legal resolvida pró-refúgio
-      v.push({ rule: r, desc: `Entrada proibida: cidadão de ${COUNTRIES[cz.pais].name}` });
+      v.push({ rule: r, desc: `${T('Entrada proibida: cidadão de ')}${COUNTRIES[cz.pais].name}` });
     }
   }
-  if (!cz.docs.pass) v.push({ rule: 'pass', desc: 'Sem passaporte' });
-  if (rules.includes('idOsteria') && cz.pais === 'osteria' && !cz.docs.ident) v.push({ rule: 'idOsteria', desc: 'Cidadão sem cartão de identidade' });
-  if (rules.includes('entryPermit') && cz.pais !== 'osteria' && !cz.docs.perm) v.push({ rule: 'entryPermit', desc: 'Estrangeiro sem permissão de entrada' });
-  if (rules.includes('workPermit') && cz.motivo === 'trabalho' && !cz.docs.work) v.push({ rule: 'workPermit', desc: 'Sem permissão de trabalho' });
+  if (!cz.docs.pass) v.push({ rule: 'pass', desc: T('Sem passaporte') });
+  if (rules.includes('idOsteria') && cz.pais === 'osteria' && !cz.docs.ident) v.push({ rule: 'idOsteria', desc: T('Cidadão sem cartão de identidade') });
+  if (rules.includes('entryPermit') && cz.pais !== 'osteria' && !cz.docs.perm) v.push({ rule: 'entryPermit', desc: T('Estrangeiro sem permissão de entrada') });
+  if (rules.includes('workPermit') && cz.motivo === 'trabalho' && !cz.docs.work) v.push({ rule: 'workPermit', desc: T('Sem permissão de trabalho') });
   const needsHealth = rules.includes('healthAll') || (rules.includes('healthForeign') && cz.pais !== 'osteria');
-  if (needsHealth && !cz.docs.sanitaria) v.push({ rule: 'health', desc: 'Sem carteira sanitária' });
-  if (rules.includes('ancestry') && (cz.etnia === 'nulio' || cz.etnia === 'bahari') && !cz.docs.ancest) v.push({ rule: 'ancestry', desc: 'Sem certificado de ancestralidade (Édito nº 2)' });
-  if (rules.includes('seloConselho') && cz.docs.pass && cz.docs.pass.reval === '—') v.push({ rule: 'seloConselho', desc: 'Documento sem selo de revalidação do Conselho' });
+  if (needsHealth && !cz.docs.sanitaria) v.push({ rule: 'health', desc: T('Sem carteira sanitária') });
+  if (rules.includes('ancestry') && (cz.etnia === 'nulio' || cz.etnia === 'bahari') && !cz.docs.ancest) v.push({ rule: 'ancestry', desc: T('Sem certificado de ancestralidade (Édito nº 2)') });
+  if (rules.includes('seloConselho') && cz.docs.pass && cz.docs.pass.reval === '—') v.push({ rule: 'seloConselho', desc: T('Documento sem selo de revalidação do Conselho') });
   return v;
 }
 
@@ -1143,7 +1143,7 @@ function nextCitizen() {
     shift.picks = []; shift.confirmed = [];
     $('scan-result').textContent = '';
     $('talk-log').innerHTML = '';
-    $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: selecione dois elementos para comparar.' : '';
+    $('inspect-bar').textContent = shift.inspecting ? T('MODO INSPEÇÃO: selecione dois elementos para comparar.') : '';
     $('btn-detain').disabled = true;
 
     let cz = null;
@@ -1482,7 +1482,7 @@ function askFollow(cz, k, f, btn) {
     if (!cz.followDiscAdded) {
       cz.followDiscAdded = true;
       const base = cz.discrepancies.find(d => d.type === 'contradiction');
-      if (base) cz.discrepancies.push({ type: 'contradiction', fids: ['talk.f_' + f.key, base.fids[1]], desc: 'Detalhes improvisados contradizem os documentos' });
+      if (base) cz.discrepancies.push({ type: 'contradiction', fids: ['talk.f_' + f.key, base.fids[1]], desc: T('Detalhes improvisados contradizem os documentos') });
     }
   } else {
     ans = followTruth(cz, f.key);
@@ -1543,7 +1543,7 @@ function scan(kind) {
 function toggleInspect() {
   shift.inspecting = !shift.inspecting;
   $('btn-inspect').classList.toggle('active', shift.inspecting);
-  $('inspect-bar').textContent = shift.inspecting ? 'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).' : '';
+  $('inspect-bar').textContent = shift.inspecting ? T('MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).') : '';
   clearPicks();
 }
 function clearPicks() {
@@ -1568,7 +1568,7 @@ function evaluatePair(a, b) {
   if (cz.isWanted && set.includes('pass.nome') && set.includes('rb:wanted')) {
     cz.evidence = true;
     $('btn-detain').disabled = false;
-    $('inspect-bar').textContent = '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.';
+    $('inspect-bar').textContent = T('★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.');
     sfx('ding'); clearPicks(); return;
   }
   for (const d of cz.discrepancies) {
@@ -1579,11 +1579,11 @@ function evaluatePair(a, b) {
     cz.evidence = true;
     S.ai.det[found.type] = (S.ai.det[found.type] || 0) + 1; // a espécie observa você
     $('btn-detain').disabled = false;
-    $('inspect-bar').textContent = `⚠ DISCREPÂNCIA CONFIRMADA: ${found.desc}.`;
+    $('inspect-bar').textContent = `${T('⚠ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
     a.el.classList.add('flagged'); b.el.classList.add('flagged');
     sfx('ding');
   } else {
-    $('inspect-bar').textContent = 'Nenhuma discrepância entre estes dois elementos.';
+    $('inspect-bar').textContent = T('Nenhuma discrepância entre estes dois elementos.');
   }
   clearPicks();
 }
@@ -1632,7 +1632,7 @@ function decide(decision) {
   } else if (viols.length > 0) {
     if (decision === 'reject') correct = true;
     else if (decision === 'detain') { correct = cz.evidence; if (!correct) note = 'Detenção sem evidência confirmada.'; }
-    else { correct = false; note = 'Aprovado(a) com irregularidade: ' + viols[0].desc + '.'; }
+    else { correct = false; note = T('Aprovado(a) com irregularidade: ') + viols[0].desc + '.'; }
   } else {
     if (decision === 'approve') correct = true;
     else if (decision === 'detain' && (cz.bioResult === true || cz.softEndorsed)) { correct = true; } // o sistema premia a máquina e a pseudociência — mesmo erradas

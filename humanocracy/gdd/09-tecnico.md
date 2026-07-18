@@ -218,13 +218,32 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    contra o dicionário real do jogo (carregado do `index.html` de produção, não de um stub)
    confirma zero string faltando; paridade de chaves EN/ES confirmada (805 = 805).
 
-   **Não coberto ainda** (o que resta, ainda só em português): um punhado de textos de
-   feedback da UI de inspeção descobertos na rodada anterior (as mensagens da barra
-   `#inspect-bar`, ex. "MODO INSPEÇÃO: ..." e "DISCREPÂNCIA CONFIRMADA: ...", e as descrições
-   de discrepância geradas por `applyDisc()`). Com `house.js` traduzido, esse é o único gap
-   de texto de jogo conhecido restante. Adicionar um terceiro idioma é só copiar `I18N_ES`,
-   traduzir os valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas, não
-   só dois.
+   Nona rodada — o último gap conhecido, o feedback da UI de inspeção e das advertências:
+   805 → 843 chaves. Cobre as mensagens da barra `#inspect-bar` (os dois textos de
+   `MODO INSPEÇÃO:`, o acerto contra o procurado, a discrepância confirmada, "nenhuma
+   discrepância" e o contrabando encontrado) e, mais relevante para a jogabilidade, o texto
+   da citação/advertência (`citation()`) que aparece sempre que o jogador erra uma decisão —
+   até esta rodada, esse popup nunca tinha sido traduzido, apesar de ser um dos feedbacks
+   mais frequentes do jogo. `citation(text)` passou a traduzir `text` automaticamente (mesmo
+   padrão de alavancagem de `modal()`/`hSay()`), então as ~6 mensagens literais de `decide()`
+   (procurado aprovado por engano, detenção sem evidência, rejeição indevida etc.) e o rótulo
+   "ADVERTÊNCIA REGISTRADA."/"MULTA: " não precisaram de nenhuma edição além da chave no
+   dicionário. As `desc` de discrepância (`applyDisc()`) e de violação de regra
+   (`computeViolations()`) — texto armazenado em objetos de estado, nunca comparado, só
+   exibido — passaram a ser traduzidas na CRIAÇÃO (não na exibição), já que não têm papel
+   lógico; isso evitou duplicar a tradução nos dois pontos onde aparecem (a barra de
+   inspeção e a nota da citação). Verificado por Playwright em EN e ES: os dois textos do
+   modo inspeção, quatro `desc` de violação de regra (passaporte, identidade, permissão de
+   trabalho, ancestralidade), a citação simples e a citação composta ("Aprovado(a) com
+   irregularidade: ..."), e a barra de discrepância confirmada — todos corretos; paridade de
+   chaves EN/ES confirmada (843 = 843, zero divergência).
+
+   Com esta rodada, não há mais nenhum gap de texto de jogo conhecido em português — a
+   localização EN/ES cobre a interface, a camada ambiente, o regulamento, os documentos e
+   interrogatório, a Linha da Vida, o jornal roteirizado, os encontros scriptados, os
+   eventos noturnos e familiares, a bagagem, a casa explorável e agora o feedback de
+   inspeção/advertência. Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os
+   valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas
