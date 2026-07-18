@@ -304,7 +304,7 @@ function citation(text) {
 /* ---------- SUSSURROS ---------- */
 function whisper() {
   const w = $('whisper');
-  w.textContent = pick(WHISPERS);
+  w.textContent = T(pick(WHISPERS));
   w.style.left = ri(15, 60) + '%';
   w.style.top = ri(20, 70) + '%';
   w.classList.remove('active'); void w.offsetWidth; w.classList.add('active');
@@ -475,11 +475,11 @@ function openExam() {
   if (cz.isSilente) { silenteGameOver(); return; } // você olhou de perto. ele também.
   if (!cz.examDone) { spendTime(10); cz.examDone = true; }
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
-  $('exam-log').innerHTML = '<span class="obs">A pessoa se aproxima do vidro. Perto demais. Examine cada região.</span>';
+  $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   const zones = $('exam-zones'); zones.innerHTML = '';
   EXAM_ZONES.forEach(z => {
     const b = document.createElement('button');
-    b.textContent = z.label;
+    b.textContent = T(z.label);
     b.onclick = () => { b.classList.add('done'); b.disabled = true; examZone(cz, z); };
     zones.appendChild(b);
   });
@@ -489,17 +489,17 @@ function examZone(cz, zone) {
   const log = $('exam-log');
   const rum = rumorForDay(S.day);
   zone.tells.forEach(t => {
-    const T = TELLS[t];
+    const tellDef = TELLS[t];
     const anômalo = cz.phys[t];
-    let line = anômalo ? `<div class="anomalia">⚠ ${T.achado}</div>` : `<div class="obs">${T.normal}</div>`;
+    let line = anômalo ? `<div class="anomalia">⚠ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
     if (anômalo && rum && rum.tell === t) {
       if (rum.official) {
         cz.softEndorsed = true; cz.evidence = true;
         $('btn-detain').disabled = false;
-        line += `<div class="anomalia endossada">→ INDICADOR OFICIAL EM VIGOR (comunicado de hoje). Detenção autorizada — a máquina do Estado confia em você.</div>`;
+        line += `<div class="anomalia endossada">→ ${T('INDICADOR OFICIAL EM VIGOR (comunicado de hoje). Detenção autorizada — a máquina do Estado confia em você.')}</div>`;
         sfx('ding');
       } else {
-        line += `<div class="obs">→ coincide com o boato de hoje. Sem valor legal. (Ainda.)</div>`;
+        line += `<div class="obs">→ ${T('coincide com o boato de hoje. Sem valor legal. (Ainda.)')}</div>`;
       }
     }
     log.innerHTML += line;
@@ -744,9 +744,9 @@ function openBag() {
 function genPhysical(cz) {
   cz.phys = {};
   TELL_IDS.forEach(t => {
-    const T = TELLS[t];
-    let p = T.humanBase + ((cz.nervous || chance(.2)) ? T.confound : 0);
-    if (cz.isAlternado) p += T.altBonus;
+    const tellDef = TELLS[t];
+    let p = tellDef.humanBase + ((cz.nervous || chance(.2)) ? tellDef.confound : 0);
+    if (cz.isAlternado) p += tellDef.altBonus;
     cz.phys[t] = chance(Math.min(p, .95));
   });
   cz.examDone = false;
@@ -933,20 +933,21 @@ function startDay() {
 }
 
 function bulletinText() {
-  let t = SCRIPTED_BULLETIN[S.day] || `Posto Nº 7 — Dia ${S.day}.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.`;
-  if (shift.wantedName) t += `\n\n★ PROCURADO(A) HOJE: ${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}). DETER à vista.`;
+  let t = SCRIPTED_BULLETIN[S.day] ? T(SCRIPTED_BULLETIN[S.day])
+    : `${T('Posto Nº 7 — Dia')} ${S.day}${T('.\n\nAplique o regulamento em vigor (painel à direita). Discrepâncias devem ser confirmadas via INSPEÇÃO antes de justificar detenção.')}`;
+  if (shift.wantedName) t += `${T('\n\n★ PROCURADO(A) HOJE: ')}${shift.wantedName} (${COUNTRIES[shift.wantedPais].name}${T('). DETER à vista.')}`;
   const qd = quotaForDay(S.day);
-  if (qd !== Infinity) t += `\n\n§ COTA DE ADMISSÃO DE HOJE: ${qd} entradas. Esgotada a cota, o Ministério BLOQUEIA novas aprovações — rejeite mesmo quem estiver em ordem.`;
-  if (S.day === 13) t += `\n\n§ REAJUSTE PATRIÓTICO: ${MOEDA} 6 por decisão correta. O Estado Nacional cuida dos seus.`;
-  if (S.day === 31) t += `\n\n§ O CONSELHO VALORIZA O TRABALHADOR: ${MOEDA} 8 por decisão correta. (Nota: o aluguel do espaço requisitado passa a ${MOEDA} 25.)`;
+  if (qd !== Infinity) t += `${T('\n\n§ COTA DE ADMISSÃO DE HOJE: ')}${qd}${T(' entradas. Esgotada a cota, o Ministério BLOQUEIA novas aprovações — rejeite mesmo quem estiver em ordem.')}`;
+  if (S.day === 13) t += `${T('\n\n§ REAJUSTE PATRIÓTICO: ')}${MOEDA} 6${T(' por decisão correta. O Estado Nacional cuida dos seus.')}`;
+  if (S.day === 31) t += `${T('\n\n§ O CONSELHO VALORIZA O TRABALHADOR: ')}${MOEDA} 8${T(' por decisão correta. (Nota: o aluguel do espaço requisitado passa a ')}${MOEDA} 25.)`;
   const rum = rumorForDay(S.day);
   if (rum) t += rum.official
-    ? `\n\n§ INDICADOR FÍSICO EM VIGOR: ${rum.text}\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.`
-    : `\n\n✎ (rabiscado a lápis na margem, por alguém do turno anterior)\n"${rum.text}"`;
+    ? `${T('\n\n§ INDICADOR FÍSICO EM VIGOR: ')}${T(rum.text)}${T('\nAnomalia correspondente registrada em EXAME FÍSICO autoriza detenção.')}`
+    : `${T('\n\n✎ (rabiscado a lápis na margem, por alguém do turno anterior)\n"')}${T(rum.text)}"`;
   return t;
 }
 function showBulletin(fn) {
-  modal(`COMUNICADO OFICIAL — DIA ${S.day}`, bulletinText(), [{ label: 'ASSINAR CIÊNCIA', fn }]);
+  modal(`${T('COMUNICADO OFICIAL — DIA')} ${S.day}`, bulletinText(), [{ label: 'ASSINAR CIÊNCIA', fn }]);
 }
 
 function tickClock() {
@@ -982,9 +983,9 @@ function radioTick() {
   line.classList.add('fade');
   setTimeout(() => {
     let txt;
-    if (!radioOn) txt = '‹desligado›';
-    else if (S.day >= 47) txt = '— silêncio. nem estática. silêncio. —';
-    else txt = pick(RADIO[regimeOfDay(S.day)] || RADIO.republica);
+    if (!radioOn) txt = T('‹desligado›');
+    else if (S.day >= 47) txt = T('— silêncio. nem estática. silêncio. —');
+    else txt = T(pick(RADIO[regimeOfDay(S.day)] || RADIO.republica));
     line.textContent = txt;
     line.classList.remove('fade');
   }, 800);
@@ -1111,8 +1112,8 @@ function queueAdvance() {
 function renderQueueChatter() {
   const n = ri(1, 2);
   const resta = Math.max(0, shift.queueSize - shift.processed);
-  let html = `≈ ${resta} pessoas na fila<br>`;
-  for (let i = 0; i < n; i++) html += pick(QUEUE_CHATTER) + '<br>';
+  let html = `≈ ${resta} ${T('pessoas na fila')}<br>`;
+  for (let i = 0; i < n; i++) html += T(pick(QUEUE_CHATTER)) + '<br>';
   $('queue-view').innerHTML = html;
 }
 
@@ -1198,7 +1199,7 @@ function nextCitizen() {
     if (!cz.encounter && shift.processed > 0 && chance(.12)) {
       const qe = pick(QUEUE_EVENTS);
       const toast = $('queue-toast');
-      toast.textContent = qe.t + (qe.delay ? ` (a fila parou por ${qe.delay} min)` : '');
+      toast.textContent = T(qe.t) + (qe.delay ? ` (${T('a fila parou por')} ${qe.delay} min)` : '');
       toast.classList.add('on');
       if (qe.delay) spendTime(qe.delay);
       setTimeout(() => toast.classList.remove('on'), 5200);
@@ -1899,21 +1900,21 @@ function renderNewspaper() {
   const scripted = SCRIPTED_NEWS[d];
   const np = $('newspaper');
   if (scripted === null) {
-    $('np-headline').textContent = 'O JORNAL NÃO CHEGOU HOJE.';
-    $('np-body').textContent = d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.';
+    $('np-headline').textContent = T('O JORNAL NÃO CHEGOU HOJE.');
+    $('np-body').textContent = T(d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.');
     $('np-minor').innerHTML = ''; $('np-ad').textContent = '';
     return;
   }
   const news = scripted || pick(FILLER_NEWS);
-  $('np-headline').textContent = news.h;
-  $('np-body').textContent = news.b;
+  $('np-headline').textContent = T(news.h);
+  $('np-body').textContent = T(news.b);
   let minor = (news.m || []).map(x => '• ' + x);
   // ecos das suas decisões
   const echoes = S.pendingNews.filter(n => n.day <= d);
   S.pendingNews = S.pendingNews.filter(n => n.day > d);
   echoes.forEach(e => minor.push('• ' + e.text));
   $('np-minor').innerHTML = minor.length ? '<b>BREVES:</b>' + minor.join('<br>') : '';
-  $('np-ad').textContent = pick(ADS);
+  $('np-ad').textContent = T(pick(ADS));
 }
 
 function renderHome() {
@@ -2037,7 +2038,8 @@ document.addEventListener('click', (e) => {
 $('btn-new').onclick = () => {
   S = freshState();
   modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM',
-    'Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nHorário: 08h às 18h. Você chega em casa às 20h30.\nSalário: ' + MOEDA + ' 5 por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família depende do seu salário: Vessa (sua esposa), Tomi (8 anos), Dario (15 anos, do seu primeiro casamento) e sua mãe, Odila.\n\nAssine abaixo. A recusa não consta do formulário como opção.',
+    T('Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nHorário: 08h às 18h. Você chega em casa às 20h30.\nSalário: ') + MOEDA + ' 5' +
+    T(' por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família depende do seu salário: Vessa (sua esposa), Tomi (8 anos), Dario (15 anos, do seu primeiro casamento) e sua mãe, Odila.\n\nAssine abaixo. A recusa não consta do formulário como opção.'),
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
 };
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };

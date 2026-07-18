@@ -124,21 +124,29 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 3. Rádio diegética e jornal multi-editoria;
 4. Rede Social Invisível (casos que crescem sozinhos);
 5. Manuais falsificáveis e auditorias reativas;
-6. Localização (EN/ES) **— arquitetura + inglês + espanhol da interface implementados no
-   protótipo**: `i18n.js` define `T(s)` (procura a chave na tabela do idioma ativo, com
-   fallback pro português original — nunca quebra por faltar tradução) e
+6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
+   ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do
+   idioma ativo, com fallback pro português original — nunca quebra por faltar tradução) e
    `applyStaticI18n()` (varre a interface estática, guarda o PT original em `data-pt` e
    troca pela tradução). `I18N_TABLES = { en: I18N_EN, es: I18N_ES }` — as duas tabelas têm
-   exatamente as mesmas 125 chaves (conferido programaticamente). Botão no título cicla
-   PT-BR → EN → ES → PT-BR (recarrega a página — mais simples e seguro que remendar telas
-   dinâmicas já abertas noutro idioma). Cobertura: toda a interface estática (título, HUD,
-   ferramentas, telas de pausa/exame/bagagem/casa), `REGIME_LABEL`, `MASTHEAD`, os 8 finais
-   (`ENDINGS`, texto integral, nos dois idiomas), rótulos de campo de documento
-   (NOME/NASC./SEXO/…), nomes de tipo de documento (PASSAPORTE/CARTÃO DE IDENTIDADE/…) e
-   as perguntas de interrogatório + follow-ups. **Não coberto ainda** (o grosso do texto do
-   jogo, ainda só em português): diálogo procedural da fila (saudações, respostas de
-   interrogatório improvisadas), boatos/exame físico, rádio diegética, jornal de
-   preenchimento, encontros roteirizados, casa (house.js). Adicionar um terceiro idioma é
+   exatamente as mesmas 259 chaves (conferido programaticamente a cada rodada). Botão no
+   título cicla PT-BR → EN → ES → PT-BR (recarrega a página). Cobertura: toda a interface
+   estática (título, HUD, ferramentas, telas de pausa/exame/bagagem/casa), `REGIME_LABEL`,
+   `MASTHEAD`, os 8 finais (texto integral), rótulos e tipos de documento, perguntas de
+   interrogatório, **e a camada ambiente do mundo**: sussurros (`WHISPERS`), conversa e
+   eventos da fila (`QUEUE_CHATTER`/`QUEUE_EVENTS`), rádio das 4 fases do regime (`RADIO`),
+   anúncios (`ADS`), notícias de preenchimento (`FILLER_NEWS`), os 8 comunicados
+   roteirizados (`SCRIPTED_BULLETIN`, com os fragmentos dinâmicos — procurado, cota,
+   reajustes — traduzidos isoladamente e concatenados com os valores não-traduzíveis:
+   nomes, números), os boatos do exame físico (`RUMOR_TEXT`) e os 6 sinais físicos com seus
+   achados/observações normais (`TELLS`). Um bug real de escopo de variável foi encontrado e
+   corrigido nesta rodada: `examZone()`/`genPhysical()` usavam `const T = TELLS[t]`,
+   sombreando a função global `T()` — impossível de traduzir ali sem antes renomear.
+   **Não coberto ainda** (o que resta, ainda só em português): diálogo procedural da fila
+   (saudações, respostas de interrogatório improvisadas — `answerFor`/`followTruth`),
+   `SCRIPTED_NEWS` (manchetes específicas por dia), os 15 `ENCOUNTERS` (personagens
+   recorrentes com falas próprias) e toda a casa (`house.js`) — o núcleo dramático
+   remanescente, e de longe o maior volume de texto do jogo. Adicionar um terceiro idioma é
    só copiar `I18N_ES`, traduzir os valores e registrar em `I18N_TABLES` — a arquitetura
    já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
