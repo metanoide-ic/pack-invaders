@@ -468,6 +468,381 @@ const I18N_EN = {
   'Uniforme militar dobrado no fundo — sem insígnias': 'Military uniform folded at the bottom — no insignia',
   'Isto não deveria estar aqui. Isto não tem explicação boa.': 'This shouldn\'t be here. There is no good explanation for this.',
 
+  /* ---- A CASA (house.js): cômodos, família, batidas noturnas ---- */
+  'QUARTO DE TOMI': "TOMI'S ROOM",
+  'QUARTO DE HÓSPEDES 1': 'GUEST ROOM 1',
+  'QUARTO DE HÓSPEDES 2': 'GUEST ROOM 2',
+  'COZINHA': 'KITCHEN',
+  'QUARTO DA SUA MÃE': "YOUR MOTHER'S ROOM",
+  'QUARTO DE DARIO': "DARIO'S ROOM",
+  'SEU QUARTO': 'YOUR ROOM',
+  'SALA': 'LIVING ROOM',
+  'CORREDOR': 'HALLWAY',
+  'A PISTA DA FILA — VAZIA': 'THE QUEUE LANE — EMPTY',
+
+  'piscar': 'blinking', 'olhos': 'eyes', 'dentes': 'teeth',
+  'pele': 'skin', 'mãos': 'hands', 'pescoço': 'neck',
+
+  'ODILA — sua mãe': 'ODILA — your mother',
+  'VESSA — sua esposa': 'VESSA — your wife',
+  'TOMI — 8 anos': 'TOMI — 8 years old',
+  'DARIO — 15 anos': 'DARIO — 15 years old',
+  'sua mãe': 'your mother', 'Vessa': 'Vessa', 'Tomi': 'Tomi', 'Dario': 'Dario',
+  'E — Falar com ': 'E — Talk to ',
+
+  // H_LINES: mãe
+  'Sente um pouco, filho. A televisão passou o dia inteiro falando dessa fila sua. Dizem que tem gente dormindo na calçada.':
+    "Sit for a bit, son. The television talked all day about that line of yours. They say people are sleeping on the sidewalk.",
+  'Fiz chá. Esfriou. Faço outro amanhã. — Ela não desgruda os olhos da TV. — Esse apresentador novo pisca demais. Ou de menos. Um dos dois.':
+    "I made tea. It went cold. I'll make more tomorrow. — She doesn't take her eyes off the TV. — This new anchor blinks too much. Or too little. One of the two.",
+  'Sua avó dizia: "quem vigia a porta esquece a janela". Eu nunca entendi. Agora entendo um pouco.':
+    'Your grandmother used to say: "whoever watches the door forgets the window." I never understood it. Now I understand a little.',
+  'Trocaram o hino de novo. Eu cantava o antigo pra você dormir... Agora dizem que o antigo é crime. Cantar baixinho também é?':
+    "They changed the anthem again. I used to sing the old one to put you to sleep... Now they say the old one is a crime. Is singing it quietly a crime too?",
+  'A vizinha do 11 denunciou o próprio genro, filho. GENRO. A televisão deu parabéns pra ela. Parabéns.':
+    'The neighbor from 11 reported her own son-in-law, son. SON-IN-LAW. The television congratulated her. Congratulated her.',
+  'Rasguei um papel essa semana. Não me arrependo. — Ela aumenta o volume da TV. — Não me arrependo.':
+    "I tore up a paper this week. I don't regret it. — She turns up the TV. — I don't regret it.",
+  'Agora a televisão diz que os Alternados nunca existiram. Semana passada existiam demais. Eu já vivi muito pra acreditar em televisão, filho.':
+    "Now the television says the Alternates never existed. Last week there were too many of them. I've lived too long to believe television, son.",
+  'Levaram o retrato antigo do corredor do prédio. Puseram outro. O rosto é diferente mas a moldura... a moldura é a mesma.':
+    "They took down the old portrait in the building hallway. Put up another. The face is different but the frame... the frame is the same.",
+  'Aquela família que mora no seu... quer dizer, NOSSO apartamento agora. Eles não fazem barulho nenhum. Nenhum. Nem os passos.':
+    'That family living in your... I mean, OUR apartment now. They make no noise at all. None. Not even footsteps.',
+  'A televisão só dá chuvisco. Eu deixo ligada mesmo assim. A luz dela... faz companhia. Você acha que tem alguém do outro lado do chuvisco?':
+    "The television is just static now. I leave it on anyway. Its light... keeps me company. Do you think there's someone on the other side of the static?",
+  'Hoje eu fui andar. Eu sei que eu odeio andar. Mas alguma coisa em mim quis andar. Voltei, ué. Eu sempre volto. — Ela sorri. Demora um segundo a mais que o normal.':
+    "I went for a walk today. I know I hate walking. But something in me wanted to walk. I came back, of course. I always come back. — She smiles. It takes one second longer than usual.",
+  'Se um dia eu voltar diferente, filho... não abre a porta. Nem pra mim. Promete? — A TV chia. — Promete.':
+    "If one day I come back different, son... don't open the door. Not even for me. Promise? — The TV hisses. — Promise.",
+  'Vai dormir, filho. Amanhã tem fila.': "Go to sleep, son. There's a line tomorrow.",
+  'Shhh. Agora é a novela.': "Shhh. It's the soap opera now.",
+  'O chá esfriou de novo.': 'The tea went cold again.',
+  'Ela está enrolada na manta, ardendo em febre. "Não gasta dinheiro comigo, filho. Gasta com os meninos." A TV continua ligada.':
+    'She\'s wrapped in the blanket, burning with fever. "Don\'t spend money on me, son. Spend it on the boys." The TV stays on.',
+
+  // H_LINES: Vessa
+  'Chegou... — Ela mexe a panela sem olhar. — A Marta veio aqui hoje. Aquela boca não para. Mas escuta, às vezes sai coisa útil do meio da fofoca.':
+    "You're back... — She stirs the pot without looking up. — Marta came by today. That mouth never stops. But listen, sometimes something useful comes out of the gossip.",
+  'Sobrou pão de ontem. Amanhã eu dou um jeito no jantar. A gente sempre dá um jeito, não é?':
+    "There's leftover bread from yesterday. Tomorrow I'll figure out dinner. We always figure something out, don't we?",
+  'O arquivo tá estranho. Pastas que eu organizei... amanhecem em outra ordem. Deve ser o turno da noite. Deve ser.':
+    "The archive is strange. Folders I organized... wake up in a different order. Must be the night shift. Must be.",
+  'Me fizeram assinar um termo hoje. "Confiabilidade". A caneta era deles, o papel era deles, a mão era minha. Por enquanto a mão era minha.':
+    'They made me sign a form today. "Reliability." The pen was theirs, the paper was theirs, the hand was mine. For now the hand was mine.',
+  'A Lena parou de vir. O marido dela achou "arriscado" a amizade. Amizade agora tem risco, entende?':
+    'Lena stopped coming by. Her husband found the friendship "risky." Friendship carries risk now, you understand?',
+  'Cuidado com o que você carimba, meu amor. As paredes do arquivo ouvem. As daqui de casa eu já não sei.':
+    "Careful what you stamp, my love. The archive walls listen. The ones here at home, I no longer know.",
+  'Os realocados pediram sal DE NOVO. Terceira vez. O que é que eles cozinham que não faz cheiro, hein? Me diz.':
+    "The relocated ones asked for salt AGAIN. Third time. What do they cook that has no smell, huh? Tell me.",
+  'Fofoca do dia: dizem que quem trabalhou pro governo antigo tá sumindo. Você trabalhou pros dois, amor. Você trabalha pra qualquer um que mande. Isso salva ou condena?':
+    "Today's gossip: they say anyone who worked for the old government is disappearing. You worked for both, love. You work for whoever's in charge. Does that save you or condemn you?",
+  'Eu guardei umas coisas numa mala. Não me olha assim. É só... por precaução. Todo mundo tem uma mala agora.':
+    "I packed some things in a suitcase. Don't look at me like that. It's just... precaution. Everyone has a suitcase now.",
+  'Não tem mais fofoca. As amigas... cada uma sumiu de um jeito. A Marta foi pro norte. Do norte não chega notícia. Nem ruim.':
+    "There's no more gossip. The friends... each one vanished in her own way. Marta went north. No news comes from the north. Not even bad news.",
+  'Hoje eu vi a fila do seu posto de longe. Tanta gente, meu amor. E você lá dentro, decidindo. Como é que você dorme? — Ela para. — Desculpa. Eu sei como você dorme. Eu ouço.':
+    "Today I saw the line at your post from a distance. So many people, my love. And you in there, deciding. How do you sleep? — She stops. — Sorry. I know how you sleep. I hear it.",
+  'Quando isso acabar a gente atravessa também. Pro lado de lá. Deve ser igual. Mas pelo menos é LONGE.':
+    "When this is over, we cross too. To the other side. It's probably the same. But at least it's FAR.",
+  'O jantar já foi. Te deixei um prato.': "Dinner's done. I left you a plate.",
+  'Amanhã eu te conto o resto.': "I'll tell you the rest tomorrow.",
+  'Vai ver os meninos antes de dormir.': 'Go check on the boys before you sleep.',
+  'Ela está sentada no chão da cozinha, encostada no fogão apagado. "Já passa. Vai ver os meninos." Não passa.':
+    'She\'s sitting on the kitchen floor, leaning against the cold stove. "It\'ll pass. Go check on the boys." It doesn\'t pass.',
+
+  // H_LINES: Tomi
+  'Pai! Eu desenhei a família. A professora gostou. Só perguntou por que eu desenhei você com dois rostos. Eu não lembro de ter desenhado o segundo.':
+    "Dad! I drew the family. The teacher liked it. She just asked why I drew you with two faces. I don't remember drawing the second one.",
+  'Pai, na fila da sua fronteira... as pessoas más têm cara de quê? Todo mundo tem cara de gente, não tem? Aí como é que você sabe?':
+    "Dad, in the line at your border... what do bad people look like? Everyone looks like people, don't they? So how do you know?",
+  'Eu sonhei com números. Um monte. Carimbados na testa das pessoas. O seu era bonito, pai. O seu era quase igual ao de verdade.':
+    "I dreamed of numbers. A lot of them. Stamped on people's foreheads. Yours was pretty, dad. Yours looked almost like the real one.",
+  'A escola ensinou uma música nova. É legal mas... quando a gente canta todo mundo junto, parece que a sala fica escura. Pode ficar escuro de música, pai?':
+    "School taught a new song. It's nice but... when we all sing together, the room seems to get dark. Can a room get dark from music, dad?",
+  'Mandaram a gente desenhar "o inimigo". Eu desenhei um quadrado vazio. A professora ficou me olhando um tempão. Depois deu nota máxima.':
+    'They made us draw "the enemy." I drew an empty square. The teacher stared at me for a long time. Then gave me the top grade.',
+  'O Dario tá esquisito. Ele conversa sozinho no quarto. Só que... pai... às vezes a outra voz responde.':
+    "Dario's acting strange. He talks to himself in his room. Except... dad... sometimes the other voice answers.",
+  'Trocaram os livros de novo. O herói do livro velho agora é o vilão do novo. Eu perguntei qual era o de verdade. Me mandaram sentar.':
+    "They changed the books again. The hero of the old book is now the villain of the new one. I asked which one was real. They told me to sit down.",
+  'Eu sonhei que batiam na porta a noite inteira. E quando eu abria, era eu do lado de fora. Eu pedindo pra entrar. Qual dos dois eu era, pai?':
+    "I dreamed someone knocked on the door all night. And when I opened it, it was me on the outside. Me asking to come in. Which one of the two was I, dad?",
+  'A senhora do 7 sumiu, né? Eu vi os móveis saindo. Móvel não anda sozinho. Quer dizer... antigamente não andava.':
+    "The lady from 7 disappeared, right? I saw the furniture leaving. Furniture doesn't walk by itself. I mean... it didn't used to.",
+  'A escola fechou. Eu fico olhando pela janela. Tem um cachorro que atravessa a rua sempre no mesmo lugar, na mesma hora. TODO dia. Igualzinho. Cachorro de verdade faz isso?':
+    "School closed. I keep looking out the window. There's a dog that crosses the street always in the same spot, at the same time. EVERY day. Exactly the same. Does a real dog do that?",
+  'Pai, se trocarem você, eu vou perceber? — Ele não está brincando. — Eu ia perceber. Eu IA. Pelo cheiro. Você tem cheiro de carimbo.':
+    "Dad, if they swap you out, will I notice? — He's not joking. — I would notice. I WOULD. By the smell. You smell like a stamp.",
+  'Eu não tenho mais medo do escuro. O escuro é sempre igual. Eu tenho medo das coisas que ficam iguais DEMAIS.':
+    "I'm not afraid of the dark anymore. The dark is always the same. I'm afraid of things that stay TOO much the same.",
+  'Boa noite, pai. Deixa a porta encostada?': 'Good night, dad. Leave the door ajar?',
+  'Amanhã você me conta da fila?': 'Will you tell me about the line tomorrow?',
+  'Zzz... não... o carimbo não...': 'Zzz... no... not the stamp...',
+  'Ele está deitado, pequeno demais na cama. "Pai, eu sonhei que o remédio vinha voando pela janela." Tosse. "Remédio voa?"':
+    'He\'s lying down, too small for the bed. "Dad, I dreamed the medicine came flying through the window." Coughs. "Can medicine fly?"',
+
+  // H_LINES: Dario
+  '...oi. — Ele não vira. Está de frente pro canto do quarto. — Eu tava conversando. Não. Ninguém. Esquece.':
+    "...hey. — He doesn't turn. He's facing the corner of the room. — I was talking. No. No one. Forget it.",
+  'A escola tá um saco. Perguntaram da minha mãe de novo. A minha mãe DE VERDADE. Eu disse que não lembro do rosto dela. Mentira. Eu lembro todo dia.':
+    "School sucks. They asked about my mother again. My REAL mother. I said I don't remember her face. Lie. I remember it every day.",
+  'O amigo diz que você é dos bons, pai. Eu falei que você é só... você. Ele riu. Ele acha você engraçado.':
+    "The friend says you're one of the good ones, dad. I told him you're just... you. He laughed. He thinks you're funny.",
+  'A escola pediu meu "certificado de ancestralidade". A diretora olhou pra minha cara e disse "você entende, não é?". EU ENTENDO. É isso que dá ser filho da mulher errada, né, pai?':
+    'School asked for my "ancestry certificate." The principal looked at my face and said "you understand, don\'t you?" I UNDERSTAND. That\'s what you get for being the son of the wrong woman, right, dad?',
+  'Me chamaram de "mistura" no pátio. O professor ouviu. O professor CONCORDOU. — Ele soca a parede de leve, ritmado. — O amigo disse pra eu não revidar. Que logo não vai mais importar.':
+    'They called me "mixed" in the yard. The teacher heard. The teacher AGREED. — He punches the wall lightly, rhythmically. — The friend said not to fight back. That it won\'t matter soon.',
+  'O amigo disse que essas leis não são pra pegar os de fora. São pra treinar os de dentro. Treinar a gente a apontar. Ele fala umas coisas, pai...':
+    "The friend said these laws aren't to catch outsiders. They're to train the ones inside. Train us to point fingers. He says some things, dad...",
+  'Agora dizem que raça não existe e que era tudo mentira do governo velho. Ontem eu era "mistura", hoje eu sou "camarada". Amanhã eu sou o quê? Quem decide o que eu sou?':
+    'Now they say race doesn\'t exist and it was all a lie from the old government. Yesterday I was "mixed," today I\'m "comrade." Tomorrow I\'m what? Who decides what I am?',
+  'O amigo não gosta dos realocados. Ele fica quieto quando eles cozinham. É a única hora que ele fica quieto.':
+    "The friend doesn't like the relocated ones. He goes quiet when they cook. It's the only time he's quiet.",
+  'Você nunca pergunta com quem eu falo. Todo mundo pergunta. Você não. — Pausa. — Valeu. Acho.':
+    "You never ask who I talk to. Everyone asks. Not you. — Pause. — Thanks. I guess.",
+  'O amigo tá diferente. Antes ele contava coisas. Agora ele só... espera. Fica esperando comigo. Esperando o quê, eu não sei.':
+    "The friend is different. Before he used to tell me things. Now he just... waits. Waits with me. Waiting for what, I don't know.",
+  'Se a gente for embora, ele disse que não pode ir junto. Que ele é DAQUI. Daqui tipo... da casa? Da cidade? Ele não explica.':
+    "If we leave, he said he can't come along. That he's FROM HERE. From here as in... the house? The city? He doesn't explain.",
+  'Pai. Uma vez. Só uma. Ele errou meu nome. Me chamou pelo SEU nome. E depois pediu desculpa como quem tinha visto uma coisa que ainda não aconteceu.':
+    "Dad. Once. Just once. He got my name wrong. Called me by YOUR name. And then apologized like someone who'd seen something that hadn't happened yet.",
+  '...boa noite. — Ele volta a olhar pro canto.': '...good night. — He looks back at the corner.',
+  'A gente conversa amanhã, tô no meio de uma coisa.': "We'll talk tomorrow, I'm in the middle of something.",
+  'Ele diz boa noite também. Brincadeira. Vai dormir, pai.': "He says good night too. Kidding. Go to sleep, dad.",
+  'Ele está na cama, virado pra parede. "O amigo disse que eu vou melhorar. Ele nunca erra essas coisas. Nunca."':
+    'He\'s in bed, turned toward the wall. "The friend said I\'ll get better. He\'s never wrong about these things. Never."',
+
+  // H_SPECIAL
+  'Eu não saí de casa hoje. — Ela diz isso antes de você perguntar qualquer coisa. Ela não para de mexer a panela vazia. — Por que você está me olhando assim? EU NÃO SAÍ DE CASA HOJE.':
+    "I didn't leave the house today. — She says this before you ask anything. She doesn't stop stirring the empty pot. — Why are you looking at me like that? I DIDN'T LEAVE THE HOUSE TODAY.",
+  'Você usava uma caneca azul hoje, pai? Lascada? — Ele não olha pra você. — O homem do meu sonho disse "obrigado pelo carimbo duplo". Ele mandou lembrança.':
+    'Did you use a blue mug today, dad? Chipped? — He doesn\'t look at you. — The man in my dream said "thanks for the double stamp." He sends his regards.',
+  'A professora elogiou meu desenho de novo. O da família. Pai... eu desenhei a gente com CINCO pessoas. Nós não somos quatro mais a vovó? Quem é o quinto? Eu não lembro de desenhar o quinto.':
+    "The teacher praised my drawing again. The family one. Dad... I drew us as FIVE people. Aren't we four plus grandma? Who's the fifth? I don't remember drawing the fifth one.",
+  'Eu rasguei o formulário. — Ela olha pra você pela primeira vez na noite. — Eu SEI quem eu sou. Escreve aí no teu posto: a Odila sabe quem é. Poucos nesse país podem dizer o mesmo.':
+    'I tore up the form. — She looks at you for the first time all night. — I KNOW who I am. Write that down at your post: Odila knows who she is. Few in this country can say the same.',
+  'A escola não me deixou entrar hoje sem o certificado. Fiquei no portão que nem cachorro. O amigo ficou comigo o tempo todo. Ele disse: "guarda os rostos de quem fechou o portão". Eu guardei, pai. Eu guardei.':
+    'The school wouldn\'t let me in today without the certificate. I stood at the gate like a dog. The friend stayed with me the whole time. He said: "remember the faces of whoever closed the gate." I remembered, dad. I remembered.',
+
+  // infoVessa / infoMae (fragmentos dinâmicos)
+  'A Marta não veio hoje. Sem fofoca, sem notícia. O silêncio das amigas é a pior notícia que existe.':
+    "Marta didn't come today. No gossip, no news. A friend's silence is the worst news there is.",
+  'Fofoca com fundamento: a Marta jurou que essa história de ':
+    'Solid gossip: Marta swore that story about ',
+  '... é VERDADE. O cunhado dela trabalha num posto do norte e viu. Amanhã deve chegar esse boato aí na sua fronteira. Fica esperto.':
+    '... is TRUE. Her brother-in-law works at a post up north and saw it. That rumor should reach your border tomorrow. Stay sharp.',
+  'A Lena me contou: essa conversa de ': 'Lena told me: that talk about ',
+  ' é INVENÇÃO. Espalharam pra vender scanner, pra vender medo. Se aparecer no teu comunicado amanhã, pensa duas vezes antes de estragar a vida de alguém por isso.':
+    ' is MADE UP. They spread it to sell scanners, to sell fear. If it shows up in your bulletin tomorrow, think twice before ruining someone\'s life over it.',
+  'A moça da televisão despediu-se hoje com "até amanhã, se houver amanhã". Depois riu. Ninguém no estúdio riu junto.':
+    'The TV woman signed off today with "see you tomorrow, if there is one." Then she laughed. No one in the studio laughed with her.',
+  'A televisão adiantou o jornal de amanhã, filho: "': "The television gave a preview of tomorrow's paper, son: \"",
+  '". Ou eu sonhei que adiantou. Na minha idade a televisão e o sonho passam no mesmo canal.':
+    '". Or I dreamed it did. At my age the television and the dream play on the same channel.',
+  'A televisão disse que está tudo sob controle. Foi a quarta vez que disseram essa frase hoje. Quem conta quatro vezes, não controla nada.':
+    "The television said everything is under control. That's the fourth time they said that sentence today. Whoever says it four times controls nothing.",
+
+  // H_VISIONS
+  'Sonhei que um moço dormia na nossa escada abraçado num cobertor. Ele tinha frio DE DENTRO, pai. Dá pra ter frio de dentro?':
+    "I dreamed a young man slept on our stairs hugging a blanket. He was cold FROM INSIDE, dad. Can you be cold from inside?",
+  'Sonhei com dois homens de casaco comprido parados na porta. Eles não tinham prancheta de verdade. Era só pra segurar alguma coisa nas mãos.':
+    "I dreamed of two men in long coats standing at the door. Their clipboards weren't real. They were just something to hold in their hands.",
+  'Tem um bebê no meu sonho que não chora. A mãe pede água. Dá água pra ela, pai. Mesmo assim... não deixa ela entrar.':
+    "There's a baby in my dream that doesn't cry. The mother asks for water. Give her water, dad. Even so... don't let her in.",
+  'Sonhei com botas no corredor. Muitas. Eu contei, pai. Subiam seis. Desciam SETE.':
+    "I dreamed of boots in the hallway. Many of them. I counted, dad. Six went up. SEVEN came down.",
+  'Uma mão girando a maçaneta. Devagarinho. Com educação. No sonho eu sabia: quem gira assim não quer entrar. Quer saber se VOCÊ vai abrir.':
+    "A hand turning the doorknob. Slowly. Politely. In the dream I knew: whoever turns it like that doesn't want to come in. They want to know if YOU will open it.",
+  'Tem um menino que quer brincar comigo. Ele bate na porta bem baixinho, na altura do meu joelho. Ele diz que se chama Nico. Pai... eu NUNCA te contei o nome dele. Como é que eu sei o nome dele?':
+    "There's a boy who wants to play with me. He knocks on the door very softly, at knee height. He says his name is Nico. Dad... I NEVER told you his name. How do I know his name?",
+  'Sonhei com um homem de casaco cinza que anotava numa pasta. Ele já sabia as respostas. Ele só queria ver a sua cara enquanto você mentia.':
+    "I dreamed of a man in a gray coat writing in a folder. He already knew the answers. He just wanted to see your face while you lied.",
+  'Sonhei que a moça de lá do quarto pedia sal. Aí ela devolvia o pote cheio. Do MESMO jeitinho. Sal não volta sozinho, né, pai?':
+    "I dreamed the woman from that room asked for salt. Then she returned the jar full. In the EXACT same way. Salt doesn't come back by itself, does it, dad?",
+  'Sonhei com o seu carimbo indo embora dentro de um jornal. Ele voltava cheirando diferente. Carimbo tem saudade de casa?':
+    "I dreamed your stamp went away wrapped in a newspaper. It came back smelling different. Does a stamp miss home?",
+  'Vai bater na porta a noite toda. Não vai ter ninguém. Aí a última batida... a última vem de dentro. Dorme com a luz acesa hoje, pai. Por mim.':
+    "There'll be knocking on the door all night. There won't be anyone there. Then the last knock... the last one comes from inside. Sleep with the light on tonight, dad. For me.",
+  'Sonhei com a voz da vovó do lado de fora pedindo pra entrar. Mas a vovó tava dormindo aqui dentro. Pai... quem é que guarda a voz das pessoas quando elas dormem?':
+    "I dreamed of grandma's voice outside asking to come in. But grandma was asleep in here. Dad... who keeps people's voices when they're sleeping?",
+
+  // infoTomi / infoDario
+  'Pai, eu tive um daqueles sonhos... ': 'Dad, I had one of those dreams... ',
+  'Lembra do sonho que eu ia te contar? ': 'Remember the dream I was going to tell you about? ',
+  'Sonhei que a fila do seu trabalho dava volta no mundo e terminava aqui na nossa porta.':
+    "I dreamed the line at your work went all the way around the world and ended right here at our door.",
+  'Sonhei com o carimbo verde. Ele fazia as pessoas felizes. Aí eu virava o carimbo e atrás dele tinha outro carimbo.':
+    "I dreamed of the green stamp. It made people happy. Then I turned the stamp over and behind it was another stamp.",
+  'Hoje não sonhei nada, pai. O nada também conta como sonho?':
+    "I didn't dream anything today, dad. Does nothing count as a dream too?",
+  'Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.':
+    'Dad. Listen. The friend NEVER used that tone before. He said: "tomorrow someone comes who isn\'t one of them or one of you. DON\'T LOOK CLOSELY. DON\'T CALL ANYONE — not even when the machine begs. Stamp anything, quickly, and let them go." He repeated it three times, dad. He never repeats himself.',
+  'O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.':
+    'The friend stopped talking. Since yesterday. He just sits there in the corner and waits with me. I asked "wait for what." He looked at the door.',
+  '"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."':
+    '"From now on they don\'t make mistakes anymore." That\'s what he said. Word for word. And then: "tell your dad it wasn\'t his fault. Tell him BEFORE."',
+  'O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.':
+    'The friend sent you a message. Seriously. He said: "tomorrow someone with the wrong name on his list comes through. Tell him to read the list slowly before stamping anything." I\'m just repeating it, dad. Don\'t look at me like that.',
+  'O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.':
+    "The friend warned me: tomorrow night, when they knock — because they WILL knock — look first. And even after looking... think about whether it's worth opening.",
+  'O amigo perguntou de você hoje. Pelo nome. Pai... eu nunca disse seu nome pra ele.':
+    'The friend asked about you today. By name. Dad... I never told him your name.',
+  'Perguntei de onde ele vem. Ele disse "de perto". Perguntei perto de quê. Ele disse "de você".':
+    'I asked where he comes from. He said "close by." I asked close to what. He said "to you."',
+  'O amigo não aparece em foto. A gente tentou. Não é que ele saia borrado. É que a foto sai... sem o canto do quarto.':
+    "The friend doesn't show up in photos. We tried. It's not that he comes out blurry. It's that the photo comes out... missing the corner of the room.",
+
+  // batidas na porta / atender
+  'NOTA OFICIAL: um servidor público deixou de atender fiscalização domiciliar. A advertência consta do seu prontuário. O Estado bate uma vez.':
+    "OFFICIAL NOTICE: a civil servant failed to answer a home inspection. The warning is on file. The State knocks once.",
+  'As batidas param. Passos descem a escada — devagar, sem pressa, como quem anota.':
+    'The knocking stops. Footsteps go down the stairs — slowly, unhurried, like someone taking notes.',
+  'De manhã você encontrará um papel colado na porta: "NOTIFICAÇÃO DE AUSÊNCIA — advertência registrada". O Estado também inspeciona quem inspeciona.':
+    'In the morning you\'ll find a paper taped to the door: "NOTICE OF ABSENCE — warning on record." The State also inspects those who inspect.',
+  'As batidas simplesmente param. Nenhum passo se afasta.':
+    'The knocking simply stops. No footsteps move away.',
+  'Você percebe que passou os últimos minutos sem piscar.':
+    "You realize you've spent the last few minutes without blinking.",
+  'Quem quer que fosse, desistiu. Vizinhos desistem rápido, nos dias de hoje.':
+    'Whoever it was gave up. Neighbors give up fast, these days.',
+  'A PORTA': 'THE DOOR',
+  'O olho mágico mostra o corredor do prédio, vazio. O corredor mostra o olho mágico de volta.':
+    "The peephole shows the building hallway, empty. The hallway shows the peephole back.",
+  'FISCAL DO MINISTÉRIO': 'MINISTRY INSPECTOR',
+  'Um homem de casaco cinza, prancheta na mão. "Fiscalização de rotina, inspetor. Confirmando residência, composição familiar e... disposição."':
+    'A man in a gray coat, clipboard in hand. "Routine inspection, inspector. Confirming residence, household composition and... disposition."',
+  'Ele olha por cima do seu ombro para dentro da casa. Conta as pessoas com os olhos. Anota.':
+    'He looks over your shoulder into the house. Counts the people with his eyes. Writes it down.',
+  '"Tudo conforme. Por enquanto." Ele desce a escada sem se despedir. Você fecha a porta com as duas mãos.':
+    '"Everything in order. For now." He goes down the stairs without saying goodbye. You close the door with both hands.',
+  'UM VIZINHO': 'A NEIGHBOR',
+  'É o velho Ansel, do 3. "Desculpa a hora. É que... vocês têm fósforo? A luz caiu no meu lado e a minha caixa acabou."':
+    'It\'s old Ansel, from 3. "Sorry for the hour. It\'s just... do you have matches? The power went out on my side and I\'m out of them."',
+  'Você entrega a caixa de fósforos. Ele agradece três vezes e desce contando os degraus em voz alta. Todo mundo tem seus rituais agora.':
+    'You hand him the box of matches. He thanks you three times and goes down counting the steps out loud. Everyone has their rituals now.',
+  '…': '…',
+  'Não há ninguém. Há um embrulho pequeno no capacho: dentro, um botão de casaco. Do SEU casaco — você confere a manga: não falta nenhum.':
+    "There's no one there. There's a small parcel on the doormat: inside, a coat button. From YOUR coat — you check the sleeve: none are missing.",
+  'Você olha o botão por um longo tempo. Depois olha a manga de novo. Depois decide que não vai contar isso pra ninguém.':
+    "You stare at the button for a long time. Then check the sleeve again. Then decide you won't tell anyone about this.",
+
+  // interactWith: retrato, quartoMae, hosp1, hosp2, bed
+  'Cinco silhuetas. Como sempre. Pare de contar.': 'Five silhouettes. As always. Stop counting.',
+  'O RETRATO': 'THE PORTRAIT',
+  'O RETRATO DA FAMÍLIA': 'THE FAMILY PORTRAIT',
+  'Cinco silhuetas atrás do vidro empoeirado: Vessa, Dario, você, sua mãe, Tomi. Cinco. A conta fecha.':
+    'Five silhouettes behind the dusty glass: Vessa, Dario, you, your mother, Tomi. Five. The count checks out.',
+  'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.':
+    "You realize you counted on your fingers. You realize this was the second time you counted.",
+  'A quinta silhueta — a menorzinha, do canto — está mais clara que as outras. Sempre esteve? Fotografias desbotam do canto para o centro. É física. Deve ser física.':
+    "The fifth silhouette — the smallest one, in the corner — is lighter than the others. Was it always? Photographs fade from the corner to the center. It's physics. It must be physics.",
+  'A moldura está torta meio centímetro. Você não arruma. Arrumar seria admitir que mediu.':
+    "The frame is crooked by half a centimeter. You don't fix it. Fixing it would mean admitting you measured it.",
+  'Está como você deixou. Tudo nesta casa fica como você deixou. Quase tudo.':
+    "It's just as you left it. Everything in this house stays as you left it. Almost everything.",
+  'O QUARTO DA SUA MÃE': "YOUR MOTHER'S ROOM",
+  'A cama está feita. Feita demais. O travesseiro não tem amassado nenhum — nem o vinco de uma cabeça, nem o calor de um corpo.':
+    "The bed is made. Too well made. The pillow has no dent at all — not the crease of a head, not the warmth of a body.",
+  'Ela dorme aqui? Dormiu alguma vez? Você tenta lembrar da última vez que a viu deitada e a memória devolve só a poltrona, a TV, a luz azul.':
+    "Does she sleep here? Has she ever? You try to remember the last time you saw her lying down and the memory only gives back the armchair, the TV, the blue light.",
+  'Você ajeita um travesseiro que não precisava ser ajeitado e sai sem fazer barulho. Para não acordar ninguém. Não há ninguém.':
+    "You fix a pillow that didn't need fixing and leave without making a sound. So as not to wake anyone. There's no one there.",
+  'Na gaveta, embaixo das meias de lã: o formulário de ancestralidade — rasgado ao meio e colado de volta com fita, letra por letra alinhada.':
+    "In the drawer, under the wool socks: the ancestry form — torn in half and taped back together, letter by letter aligned.",
+  'Foi a Vessa que colou, de madrugada. Sua mãe finge que não sabe. A fita finge que segura. Todo mundo nesta casa é muito bom em fingir.':
+    "It was Vessa who taped it, before dawn. Your mother pretends not to know. The tape pretends to hold. Everyone in this house is very good at pretending.",
+  'Você fecha a gaveta exatamente como estava. Isso também é um tipo de fita.':
+    'You close the drawer exactly as it was. That, too, is a kind of tape.',
+  'Cheiro de lavanda velha e naftalina. O terço no criado-mudo. E, embaixo do travesseiro, dobradas em quatro: ₴ 2 — "emergência", ela sempre diz.':
+    'Smell of old lavender and mothballs. The rosary on the nightstand. And, under the pillow, folded in quarters: ₴ 2 — "emergency," she always says.',
+  'PEGAR AS ₴ 2': 'TAKE THE ₴ 2',
+  'Você pega. Emergência é um conceito flexível.': 'You take it. Emergency is a flexible concept.',
+  'Ela vai perceber. Ela percebe tudo. Ela não vai dizer nada — e isso vai ser pior que qualquer coisa que ela pudesse dizer.':
+    "She'll notice. She notices everything. She won't say anything — and that will be worse than anything she could say.",
+  'DEIXAR': 'LEAVE IT',
+  'Você deixa. Alguma coisa nesta casa ainda precisa ficar no lugar.':
+    "You leave it. Something in this house still needs to stay in its place.",
+  'VOCÊ': 'YOU',
+  'Continua vazio. Por enquanto.': 'Still empty. For now.',
+  'Um colchão nu, uma cadeira, poeira em suspensão na luz da lâmpada. Ninguém visita mais ninguém neste país.':
+    "A bare mattress, a chair, dust hanging in the lamplight. No one visits anyone anymore in this country.",
+  'Eles não se viraram. Eles nunca se viram. Você já reparou que nunca viu o rosto deles?':
+    "They didn't turn around. They never turn around. Have you noticed you've never seen their faces?",
+  'OS REALOCADOS': 'THE RELOCATED',
+  'Os dois estão de pé, de costas, imóveis — como sempre. Sem virar, o homem estende o braço para trás: ₴ 2 dobradas entre os dedos.':
+    "The two of them stand, backs turned, motionless — as always. Without turning, the man reaches his arm back: ₴ 2 folded between his fingers.",
+  '"Pelo incômodo", diz a mulher. A voz vem do lugar errado do quarto.':
+    '"For the trouble," says the woman. The voice comes from the wrong part of the room.',
+  'Você aceita. Recusar exigiria uma conversa, e conversa exigiria que eles se virassem.':
+    "You accept. Refusing would require a conversation, and a conversation would require them to turn around.",
+  'Os dois de pé, de costas, no escuro. Não acenderam a lâmpada. "Economia", diria o Conselho. Eles não precisam, diria o seu estômago.':
+    'The two of them standing, backs turned, in the dark. They didn\'t turn on the lamp. "Savings," the Council would say. They don\'t need it, your stomach would say.',
+  'Você fecha a porta devagar. No último centímetro de fresta, tem certeza de que um deles começou a virar a cabeça.':
+    'You close the door slowly. In the last inch of the gap, you\'re certain one of them started to turn their head.',
+  'O quarto cheira a nada. Comida sem cheiro, roupa sem cheiro, gente sem cheiro.':
+    'The room smells like nothing. Food with no smell, clothes with no smell, people with no smell.',
+  '"Boa noite, camarada inspetor", dizem os dois. Ao mesmo tempo. Na mesma nota.':
+    '"Good night, comrade inspector," they say. Both at once. On the same note.',
+  'O pote de sal da Vessa está no parapeito. Cheio. Exatamente como estava na prateleira da cozinha. Você não pergunta como ele atravessou o corredor sozinho.':
+    "Vessa's salt jar is on the windowsill. Full. Exactly as it was on the kitchen shelf. You don't ask how it crossed the hallway on its own.",
+  'Você já vasculhou hoje. O quarto ganhou aquele ar ofendido dos lugares revirados.':
+    "You've already searched today. The room has that offended air of places that have been ransacked.",
+  'O colchão nu, a cadeira, a poeira. Tudo no lugar. Só que o travesseiro—':
+    'The bare mattress, the chair, the dust. Everything in place. Except the pillow—',
+  'O travesseiro está quente.': 'The pillow is warm.',
+  'Ninguém dorme neste quarto. Ninguém NUNCA dormiu neste quarto. Você encosta a mão de novo para ter certeza e se arrepende de ter certeza.':
+    "No one sleeps in this room. No one has EVER slept in this room. You touch it again to be sure and regret being sure.",
+  'Vasculhando o armário vazio: ': 'Searching the empty wardrobe: ',
+  ' em moedas antigas, esquecidas num casaco que ninguém lembra de quem foi.':
+    ' in old coins, forgotten in a coat no one remembers whose it was.',
+  'Dinheiro de morto ou de emigrado. Nesta economia, é tudo dinheiro.':
+    "Dead man's money or emigrant's money. In this economy, it's all money.",
+  'No fundo da gaveta: um frasco de remédio LACRADO, dentro do prazo. De quem? De quando? Não importa.':
+    "At the bottom of the drawer: a SEALED medicine bottle, still within date. Whose? From when? Doesn't matter.",
+  'Você o leva para ': 'You take it to ',
+  '. Esta noite, a casa tosse menos.': '. Tonight, the house coughs less.',
+  'Um frasco de remédio lacrado, esquecido na gaveta. Ninguém precisa dele agora — o farmacêutico do beco paga ₴ 4 sem perguntar de onde veio.':
+    "A sealed medicine bottle, forgotten in the drawer. No one needs it now — the back-alley pharmacist pays ₴ 4 without asking where it came from.",
+  'Colchão nu. Cadeira. Poeira. O quarto que a casa mantém vazio como quem guarda um lugar à mesa para alguém que não avisou se volta.':
+    "Bare mattress. Chair. Dust. The room the house keeps empty like someone keeping a place at the table for someone who hasn't said if they're coming back.",
+  'Encerrar o dia?': 'End the day?',
+  'DORMIR': 'SLEEP',
+  'AINDA NÃO': 'NOT YET',
+
+  // dia 48 (espelho) / entrada na casa dia 1 / dormir forçado
+  'Não há fila. Não há guardas. Há um vento que parou no meio do caminho, como quem esqueceu o que ia dizer.':
+    "There's no line. There are no guards. There's a wind that stopped halfway, like someone who forgot what they were going to say.",
+  'Você está do lado de fora do seu próprio posto. Do lado de quem espera. Quarenta e oito dias e você nunca tinha visto o muro deste ângulo — os risquinhos contando dias que alguém raspou na pedra.':
+    "You're standing outside your own post. On the side of those who wait. Forty-eight days and you'd never seen the wall from this angle — the little marks counting days someone scratched into the stone.",
+  'Caminhe até o guichê. Há documentos na bandeja. São os seus.':
+    'Walk to the booth. There are documents in the tray. They are yours.',
+  'DIA 48': 'DAY 48',
+  '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.':
+    "8:30 PM. The apartment smells of thin soup and an old heater. Everyone's here: your mother in the living room, Vessa in the kitchen, the boys in their rooms.",
+  'Ande com WASD ou setas. Clique na tela e mexa o mouse para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
+    "Move with WASD or arrow keys. Click the screen and move the mouse to look around. Get close to someone and press E to talk — they know things the post doesn't.",
+  'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.':
+    "When you're done, sleep in your bed, in the last room. There's a line tomorrow.",
+  'SUA CASA': 'YOUR HOUSE',
+  'NOTA OFICIAL: fiscalização domiciliar não atendida. Advertência registrada no prontuário do servidor.':
+    "OFFICIAL NOTICE: home inspection not answered. Warning recorded in the servant's file.",
+  'Os olhos pesam. Quarenta e oito dias não se atravessam sem dormir.':
+    "Your eyes are heavy. Forty-eight days can't be crossed without sleep.",
+  'IR PARA A CAMA': 'GO TO BED',
+
+  // prompts de interação (houseLoop)
+  'E — Deslizar seus documentos pela bandeja': 'E — Slide your documents through the tray',
+  'E — ATENDER A PORTA': 'E — ANSWER THE DOOR',
+  'E — Olhar pelo olho mágico': 'E — Look through the peephole',
+  'E — Dormir': 'E — Sleep',
+  'E — Olhar o retrato da família': 'E — Look at the family portrait',
+  'E — Olhar o quarto da sua mãe': "E — Look at your mother's room",
+  'E — Os realocados': 'E — The relocated',
+  'E — Quarto de hóspedes vazio': 'E — Empty guest room',
+  'E — Vasculhar o quarto de hóspedes': 'E — Search the guest room',
+
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
@@ -1234,6 +1609,381 @@ const I18N_ES = {
   'Diário com as últimas dez páginas arrancadas': 'Diario con las últimas diez páginas arrancadas',
   'Uniforme militar dobrado no fundo — sem insígnias': 'Uniforme militar doblado en el fondo — sin insignias',
   'Isto não deveria estar aqui. Isto não tem explicação boa.': 'Esto no debería estar aquí. Esto no tiene buena explicación.',
+
+  /* ---- A CASA (house.js): cômodos, família, batidas noturnas ---- */
+  'QUARTO DE TOMI': 'CUARTO DE TOMI',
+  'QUARTO DE HÓSPEDES 1': 'CUARTO DE HUÉSPEDES 1',
+  'QUARTO DE HÓSPEDES 2': 'CUARTO DE HUÉSPEDES 2',
+  'COZINHA': 'COCINA',
+  'QUARTO DA SUA MÃE': 'CUARTO DE SU MADRE',
+  'QUARTO DE DARIO': 'CUARTO DE DARIO',
+  'SEU QUARTO': 'SU CUARTO',
+  'SALA': 'SALA',
+  'CORREDOR': 'PASILLO',
+  'A PISTA DA FILA — VAZIA': 'EL CARRIL DE LA FILA — VACÍO',
+
+  'piscar': 'parpadeo', 'olhos': 'ojos', 'dentes': 'dientes',
+  'pele': 'piel', 'mãos': 'manos', 'pescoço': 'cuello',
+
+  'ODILA — sua mãe': 'ODILA — su madre',
+  'VESSA — sua esposa': 'VESSA — su esposa',
+  'TOMI — 8 anos': 'TOMI — 8 años',
+  'DARIO — 15 anos': 'DARIO — 15 años',
+  'sua mãe': 'su madre', 'Vessa': 'Vessa', 'Tomi': 'Tomi', 'Dario': 'Dario',
+  'E — Falar com ': 'E — Hablar con ',
+
+  // H_LINES: mãe
+  'Sente um pouco, filho. A televisão passou o dia inteiro falando dessa fila sua. Dizem que tem gente dormindo na calçada.':
+    'Siéntate un rato, hijo. La televisión pasó todo el día hablando de esa fila tuya. Dicen que hay gente durmiendo en la acera.',
+  'Fiz chá. Esfriou. Faço outro amanhã. — Ela não desgruda os olhos da TV. — Esse apresentador novo pisca demais. Ou de menos. Um dos dois.':
+    'Hice té. Se enfrió. Hago otro mañana. — Ella no despega los ojos del televisor. — Ese presentador nuevo parpadea demasiado. O muy poco. Una de las dos.',
+  'Sua avó dizia: "quem vigia a porta esquece a janela". Eu nunca entendi. Agora entendo um pouco.':
+    'Tu abuela decía: "quien vigila la puerta olvida la ventana". Nunca lo entendí. Ahora entiendo un poco.',
+  'Trocaram o hino de novo. Eu cantava o antigo pra você dormir... Agora dizem que o antigo é crime. Cantar baixinho também é?':
+    '¿Cambiaron el himno de nuevo. Yo te cantaba el viejo para que durmieras... Ahora dicen que el viejo es un delito. ¿Cantarlo bajito también lo es?',
+  'A vizinha do 11 denunciou o próprio genro, filho. GENRO. A televisão deu parabéns pra ela. Parabéns.':
+    'La vecina del 11 denunció a su propio yerno, hijo. YERNO. La televisión la felicitó. Felicidades.',
+  'Rasguei um papel essa semana. Não me arrependo. — Ela aumenta o volume da TV. — Não me arrependo.':
+    'Rompí un papel esta semana. No me arrepiento. — Sube el volumen del televisor. — No me arrepiento.',
+  'Agora a televisão diz que os Alternados nunca existiram. Semana passada existiam demais. Eu já vivi muito pra acreditar em televisão, filho.':
+    'Ahora la televisión dice que los Alternados nunca existieron. La semana pasada existían demasiado. Ya viví lo suficiente para no creer en la televisión, hijo.',
+  'Levaram o retrato antigo do corredor do prédio. Puseram outro. O rosto é diferente mas a moldura... a moldura é a mesma.':
+    'Se llevaron el retrato viejo del pasillo del edificio. Pusieron otro. El rostro es diferente pero el marco... el marco es el mismo.',
+  'Aquela família que mora no seu... quer dizer, NOSSO apartamento agora. Eles não fazem barulho nenhum. Nenhum. Nem os passos.':
+    'Esa familia que vive en su... quiero decir, NUESTRO apartamento ahora. No hacen ningún ruido. Ninguno. Ni siquiera los pasos.',
+  'A televisão só dá chuvisco. Eu deixo ligada mesmo assim. A luz dela... faz companhia. Você acha que tem alguém do outro lado do chuvisco?':
+    'La televisión solo da estática. La dejo encendida de todos modos. Su luz... hace compañía. ¿Cree que hay alguien del otro lado de la estática?',
+  'Hoje eu fui andar. Eu sei que eu odeio andar. Mas alguma coisa em mim quis andar. Voltei, ué. Eu sempre volto. — Ela sorri. Demora um segundo a mais que o normal.':
+    'Hoy salí a caminar. Sé que odio caminar. Pero algo en mí quiso caminar. Volví, claro. Siempre vuelvo. — Ella sonríe. Tarda un segundo más de lo normal.',
+  'Se um dia eu voltar diferente, filho... não abre a porta. Nem pra mim. Promete? — A TV chia. — Promete.':
+    'Si un día vuelvo diferente, hijo... no abras la puerta. Ni siquiera para mí. ¿Prometes? — El televisor chirría. — Prometes.',
+  'Vai dormir, filho. Amanhã tem fila.': 'Ve a dormir, hijo. Mañana hay fila.',
+  'Shhh. Agora é a novela.': 'Shhh. Ahora es la novela.',
+  'O chá esfriou de novo.': 'El té se enfrió de nuevo.',
+  'Ela está enrolada na manta, ardendo em febre. "Não gasta dinheiro comigo, filho. Gasta com os meninos." A TV continua ligada.':
+    'Está envuelta en la manta, ardiendo de fiebre. "No gastes dinero conmigo, hijo. Gástalo en los niños." El televisor sigue encendido.',
+
+  // H_LINES: Vessa
+  'Chegou... — Ela mexe a panela sem olhar. — A Marta veio aqui hoje. Aquela boca não para. Mas escuta, às vezes sai coisa útil do meio da fofoca.':
+    'Llegaste... — Revuelve la olla sin mirar. — Marta vino hoy. Esa boca no para. Pero escucha, a veces sale algo útil del chisme.',
+  'Sobrou pão de ontem. Amanhã eu dou um jeito no jantar. A gente sempre dá um jeito, não é?':
+    'Sobró pan de ayer. Mañana resuelvo la cena. Siempre nos las arreglamos, ¿no?',
+  'O arquivo tá estranho. Pastas que eu organizei... amanhecem em outra ordem. Deve ser o turno da noite. Deve ser.':
+    'El archivo está extraño. Carpetas que organicé... amanecen en otro orden. Debe ser el turno de noche. Debe ser.',
+  'Me fizeram assinar um termo hoje. "Confiabilidade". A caneta era deles, o papel era deles, a mão era minha. Por enquanto a mão era minha.':
+    'Me hicieron firmar un documento hoy. "Confiabilidad". El bolígrafo era de ellos, el papel era de ellos, la mano era mía. Por ahora la mano era mía.',
+  'A Lena parou de vir. O marido dela achou "arriscado" a amizade. Amizade agora tem risco, entende?':
+    'Lena dejó de venir. Su marido consideró "arriesgada" la amistad. La amistad ahora tiene riesgo, ¿entiende?',
+  'Cuidado com o que você carimba, meu amor. As paredes do arquivo ouvem. As daqui de casa eu já não sei.':
+    'Cuidado con lo que sella, mi amor. Las paredes del archivo escuchan. Las de aquí de casa ya no lo sé.',
+  'Os realocados pediram sal DE NOVO. Terceira vez. O que é que eles cozinham que não faz cheiro, hein? Me diz.':
+    'Los realojados pidieron sal DE NUEVO. Tercera vez. ¿Qué cocinan que no huele, eh? Dígame.',
+  'Fofoca do dia: dizem que quem trabalhou pro governo antigo tá sumindo. Você trabalhou pros dois, amor. Você trabalha pra qualquer um que mande. Isso salva ou condena?':
+    'Chisme del día: dicen que quien trabajó para el gobierno anterior está desapareciendo. Usted trabajó para los dos, amor. Usted trabaja para quien mande. ¿Eso salva o condena?',
+  'Eu guardei umas coisas numa mala. Não me olha assim. É só... por precaução. Todo mundo tem uma mala agora.':
+    'Guardé unas cosas en una maleta. No me mires así. Es solo... por precaución. Todo el mundo tiene una maleta ahora.',
+  'Não tem mais fofoca. As amigas... cada uma sumiu de um jeito. A Marta foi pro norte. Do norte não chega notícia. Nem ruim.':
+    'Ya no hay chisme. Las amigas... cada una desapareció a su manera. Marta se fue al norte. Del norte no llega ninguna noticia. Ni mala.',
+  'Hoje eu vi a fila do seu posto de longe. Tanta gente, meu amor. E você lá dentro, decidindo. Como é que você dorme? — Ela para. — Desculpa. Eu sei como você dorme. Eu ouço.':
+    'Hoy vi la fila de su puesto desde lejos. Tanta gente, mi amor. Y usted ahí adentro, decidiendo. ¿Cómo hace para dormir? — Se detiene. — Perdón. Sé cómo duerme. Lo oigo.',
+  'Quando isso acabar a gente atravessa também. Pro lado de lá. Deve ser igual. Mas pelo menos é LONGE.':
+    'Cuando esto termine nosotros también cruzamos. Al otro lado. Debe ser igual. Pero al menos está LEJOS.',
+  'O jantar já foi. Te deixei um prato.': 'La cena ya pasó. Le dejé un plato.',
+  'Amanhã eu te conto o resto.': 'Mañana le cuento el resto.',
+  'Vai ver os meninos antes de dormir.': 'Vaya a ver a los niños antes de dormir.',
+  'Ela está sentada no chão da cozinha, encostada no fogão apagado. "Já passa. Vai ver os meninos." Não passa.':
+    'Está sentada en el suelo de la cocina, apoyada contra la estufa apagada. "Ya pasa. Ve a ver a los niños." No pasa.',
+
+  // H_LINES: Tomi
+  'Pai! Eu desenhei a família. A professora gostou. Só perguntou por que eu desenhei você com dois rostos. Eu não lembro de ter desenhado o segundo.':
+    '¡Papá! Dibujé a la familia. A la maestra le gustó. Solo preguntó por qué te dibujé con dos caras. No recuerdo haber dibujado la segunda.',
+  'Pai, na fila da sua fronteira... as pessoas más têm cara de quê? Todo mundo tem cara de gente, não tem? Aí como é que você sabe?':
+    'Papá, en la fila de tu frontera... ¿qué cara tiene la gente mala? Todos tienen cara de persona, ¿no? Entonces, ¿cómo sabes?',
+  'Eu sonhei com números. Um monte. Carimbados na testa das pessoas. O seu era bonito, pai. O seu era quase igual ao de verdade.':
+    'Soñé con números. Un montón. Sellados en la frente de la gente. El tuyo era bonito, papá. El tuyo era casi igual al de verdad.',
+  'A escola ensinou uma música nova. É legal mas... quando a gente canta todo mundo junto, parece que a sala fica escura. Pode ficar escuro de música, pai?':
+    'La escuela enseñó una canción nueva. Es linda pero... cuando la cantamos todos juntos, el salón parece oscurecerse. ¿Puede la música oscurecer un salón, papá?',
+  'Mandaram a gente desenhar "o inimigo". Eu desenhei um quadrado vazio. A professora ficou me olhando um tempão. Depois deu nota máxima.':
+    'Nos mandaron dibujar "al enemigo". Dibujé un cuadrado vacío. La maestra me miró un buen rato. Después me puso la nota máxima.',
+  'O Dario tá esquisito. Ele conversa sozinho no quarto. Só que... pai... às vezes a outra voz responde.':
+    'Dario está raro. Habla solo en su cuarto. Solo que... papá... a veces la otra voz responde.',
+  'Trocaram os livros de novo. O herói do livro velho agora é o vilão do novo. Eu perguntei qual era o de verdade. Me mandaram sentar.':
+    'Cambiaron los libros de nuevo. El héroe del libro viejo ahora es el villano del nuevo. Pregunté cuál era el de verdad. Me mandaron a sentar.',
+  'Eu sonhei que batiam na porta a noite inteira. E quando eu abria, era eu do lado de fora. Eu pedindo pra entrar. Qual dos dois eu era, pai?':
+    'Soñé que tocaban la puerta toda la noche. Y cuando abría, era yo del otro lado. Yo pidiendo entrar. ¿Cuál de los dos era yo, papá?',
+  'A senhora do 7 sumiu, né? Eu vi os móveis saindo. Móvel não anda sozinho. Quer dizer... antigamente não andava.':
+    'La señora del 7 desapareció, ¿no? Vi salir los muebles. Los muebles no caminan solos. Digo... antes no caminaban.',
+  'A escola fechou. Eu fico olhando pela janela. Tem um cachorro que atravessa a rua sempre no mesmo lugar, na mesma hora. TODO dia. Igualzinho. Cachorro de verdade faz isso?':
+    'La escuela cerró. Me quedo mirando por la ventana. Hay un perro que cruza la calle siempre en el mismo lugar, a la misma hora. TODOS los días. Exactamente igual. ¿Un perro de verdad hace eso?',
+  'Pai, se trocarem você, eu vou perceber? — Ele não está brincando. — Eu ia perceber. Eu IA. Pelo cheiro. Você tem cheiro de carimbo.':
+    '¿Papá, si te cambian, me voy a dar cuenta? — No está bromeando. — Me daría cuenta. LO HARÍA. Por el olor. Tienes olor a sello.',
+  'Eu não tenho mais medo do escuro. O escuro é sempre igual. Eu tenho medo das coisas que ficam iguais DEMAIS.':
+    'Ya no le tengo miedo a la oscuridad. La oscuridad siempre es igual. Le tengo miedo a las cosas que quedan DEMASIADO iguales.',
+  'Boa noite, pai. Deixa a porta encostada?': '¿Buenas noches, papá. Dejas la puerta entreabierta?',
+  'Amanhã você me conta da fila?': '¿Mañana me cuentas de la fila?',
+  'Zzz... não... o carimbo não...': 'Zzz... no... el sello no...',
+  'Ele está deitado, pequeno demais na cama. "Pai, eu sonhei que o remédio vinha voando pela janela." Tosse. "Remédio voa?"':
+    'Está acostado, demasiado pequeño en la cama. "Papá, soñé que el remedio venía volando por la ventana." Tose. "¿El remedio vuela?"',
+
+  // H_LINES: Dario
+  '...oi. — Ele não vira. Está de frente pro canto do quarto. — Eu tava conversando. Não. Ninguém. Esquece.':
+    '...hola. — No se da vuelta. Está de frente a la esquina del cuarto. — Estaba hablando. No. Nadie. Olvídalo.',
+  'A escola tá um saco. Perguntaram da minha mãe de novo. A minha mãe DE VERDADE. Eu disse que não lembro do rosto dela. Mentira. Eu lembro todo dia.':
+    'La escuela es una porquería. Preguntaron por mi madre de nuevo. Mi madre DE VERDAD. Dije que no recuerdo su cara. Mentira. La recuerdo todos los días.',
+  'O amigo diz que você é dos bons, pai. Eu falei que você é só... você. Ele riu. Ele acha você engraçado.':
+    'El amigo dice que eres de los buenos, papá. Le dije que eres solo... tú. Se rió. Le pareces gracioso.',
+  'A escola pediu meu "certificado de ancestralidade". A diretora olhou pra minha cara e disse "você entende, não é?". EU ENTENDO. É isso que dá ser filho da mulher errada, né, pai?':
+    'La escuela pidió mi "certificado de ascendencia". La directora me miró la cara y dijo "usted entiende, ¿no?" ENTIENDO. Eso es lo que pasa por ser hijo de la mujer equivocada, ¿no, papá?',
+  'Me chamaram de "mistura" no pátio. O professor ouviu. O professor CONCORDOU. — Ele soca a parede de leve, ritmado. — O amigo disse pra eu não revidar. Que logo não vai mais importar.':
+    'Me llamaron "mezcla" en el patio. El profesor escuchó. El profesor ESTUVO DE ACUERDO. — Golpea la pared suavemente, con ritmo. — El amigo me dijo que no responda. Que pronto ya no importará.',
+  'O amigo disse que essas leis não são pra pegar os de fora. São pra treinar os de dentro. Treinar a gente a apontar. Ele fala umas coisas, pai...':
+    'El amigo dijo que estas leyes no son para atrapar a los de afuera. Son para entrenar a los de adentro. Entrenarnos a señalar. Dice unas cosas, papá...',
+  'Agora dizem que raça não existe e que era tudo mentira do governo velho. Ontem eu era "mistura", hoje eu sou "camarada". Amanhã eu sou o quê? Quem decide o que eu sou?':
+    'Ahora dicen que la raza no existe y que todo era mentira del gobierno anterior. Ayer era "mezcla", hoy soy "camarada". ¿Mañana qué soy? ¿Quién decide lo que soy?',
+  'O amigo não gosta dos realocados. Ele fica quieto quando eles cozinham. É a única hora que ele fica quieto.':
+    'Al amigo no le gustan los realojados. Se queda callado cuando cocinan. Es el único momento en que se queda callado.',
+  'Você nunca pergunta com quem eu falo. Todo mundo pergunta. Você não. — Pausa. — Valeu. Acho.':
+    'Nunca preguntas con quién hablo. Todos preguntan. Tú no. — Pausa. — Gracias. Supongo.',
+  'O amigo tá diferente. Antes ele contava coisas. Agora ele só... espera. Fica esperando comigo. Esperando o quê, eu não sei.':
+    'El amigo está diferente. Antes contaba cosas. Ahora solo... espera. Se queda esperando conmigo. Esperando qué, no sé.',
+  'Se a gente for embora, ele disse que não pode ir junto. Que ele é DAQUI. Daqui tipo... da casa? Da cidade? Ele não explica.':
+    'Si nos vamos, dijo que no puede venir. Que él es DE AQUÍ. De aquí tipo... ¿de la casa? ¿De la ciudad? No explica.',
+  'Pai. Uma vez. Só uma. Ele errou meu nome. Me chamou pelo SEU nome. E depois pediu desculpa como quem tinha visto uma coisa que ainda não aconteceu.':
+    'Papá. Una vez. Solo una. Se equivocó de nombre. Me llamó por TU nombre. Y después pidió disculpas como quien había visto algo que todavía no había pasado.',
+  '...boa noite. — Ele volta a olhar pro canto.': '...buenas noches. — Vuelve a mirar hacia la esquina.',
+  'A gente conversa amanhã, tô no meio de uma coisa.': 'Hablamos mañana, estoy en medio de algo.',
+  'Ele diz boa noite também. Brincadeira. Vai dormir, pai.': 'Él dice buenas noches también. Broma. Ve a dormir, papá.',
+  'Ele está na cama, virado pra parede. "O amigo disse que eu vou melhorar. Ele nunca erra essas coisas. Nunca."':
+    'Está en la cama, dado vuelta hacia la pared. "El amigo dijo que voy a mejorar. Nunca se equivoca en estas cosas. Nunca."',
+
+  // H_SPECIAL
+  'Eu não saí de casa hoje. — Ela diz isso antes de você perguntar qualquer coisa. Ela não para de mexer a panela vazia. — Por que você está me olhando assim? EU NÃO SAÍ DE CASA HOJE.':
+    'No salí de casa hoy. — Dice esto antes de que usted pregunte nada. No deja de revolver la olla vacía. — ¿Por qué me mira así? NO SALÍ DE CASA HOY.',
+  'Você usava uma caneca azul hoje, pai? Lascada? — Ele não olha pra você. — O homem do meu sonho disse "obrigado pelo carimbo duplo". Ele mandou lembrança.':
+    '¿Usaste una taza azul hoy, papá? ¿Astillada? — No te mira. — El hombre de mi sueño dijo "gracias por el sello doble". Te manda saludos.',
+  'A professora elogiou meu desenho de novo. O da família. Pai... eu desenhei a gente com CINCO pessoas. Nós não somos quatro mais a vovó? Quem é o quinto? Eu não lembro de desenhar o quinto.':
+    'La maestra elogió mi dibujo de nuevo. El de la familia. Papá... nos dibujé como CINCO personas. ¿No somos cuatro más la abuela? ¿Quién es el quinto? No recuerdo haber dibujado al quinto.',
+  'Eu rasguei o formulário. — Ela olha pra você pela primeira vez na noite. — Eu SEI quem eu sou. Escreve aí no teu posto: a Odila sabe quem é. Poucos nesse país podem dizer o mesmo.':
+    'Rompí el formulario. — Lo mira por primera vez en toda la noche. — YO SÉ quién soy. Escriba eso en su puesto: Odila sabe quién es. Pocos en este país pueden decir lo mismo.',
+  'A escola não me deixou entrar hoje sem o certificado. Fiquei no portão que nem cachorro. O amigo ficou comigo o tempo todo. Ele disse: "guarda os rostos de quem fechou o portão". Eu guardei, pai. Eu guardei.':
+    'La escuela no me dejó entrar hoy sin el certificado. Me quedé en el portón como un perro. El amigo se quedó conmigo todo el tiempo. Dijo: "recuerda las caras de quien cerró el portón". Las recordé, papá. Las recordé.',
+
+  // infoVessa / infoMae (fragmentos dinâmicos)
+  'A Marta não veio hoje. Sem fofoca, sem notícia. O silêncio das amigas é a pior notícia que existe.':
+    'Marta no vino hoy. Sin chisme, sin noticia. El silencio de las amigas es la peor noticia que existe.',
+  'Fofoca com fundamento: a Marta jurou que essa história de ':
+    'Chisme con fundamento: Marta juró que esa historia de ',
+  '... é VERDADE. O cunhado dela trabalha num posto do norte e viu. Amanhã deve chegar esse boato aí na sua fronteira. Fica esperto.':
+    '... es VERDAD. Su cuñado trabaja en un puesto del norte y lo vio. Mañana ese rumor debería llegar a su frontera. Esté atento.',
+  'A Lena me contou: essa conversa de ': 'Lena me contó: eso de ',
+  ' é INVENÇÃO. Espalharam pra vender scanner, pra vender medo. Se aparecer no teu comunicado amanhã, pensa duas vezes antes de estragar a vida de alguém por isso.':
+    ' es INVENCIÓN. Lo inventaron para vender escáneres, para vender miedo. Si aparece en su comunicado mañana, piense dos veces antes de arruinarle la vida a alguien por eso.',
+  'A moça da televisão despediu-se hoje com "até amanhã, se houver amanhã". Depois riu. Ninguém no estúdio riu junto.':
+    'La chica de la televisión se despidió hoy con "hasta mañana, si hay mañana". Después se rió. Nadie en el estudio se rió con ella.',
+  'A televisão adiantou o jornal de amanhã, filho: "': 'La televisión adelantó el periódico de mañana, hijo: "',
+  '". Ou eu sonhei que adiantou. Na minha idade a televisão e o sonho passam no mesmo canal.':
+    '". O soñé que lo adelantó. A mi edad la televisión y el sueño pasan por el mismo canal.',
+  'A televisão disse que está tudo sob controle. Foi a quarta vez que disseram essa frase hoje. Quem conta quatro vezes, não controla nada.':
+    'La televisión dijo que todo está bajo control. Fue la cuarta vez que dijeron esa frase hoy. Quien la cuenta cuatro veces, no controla nada.',
+
+  // H_VISIONS
+  'Sonhei que um moço dormia na nossa escada abraçado num cobertor. Ele tinha frio DE DENTRO, pai. Dá pra ter frio de dentro?':
+    'Soñé que un joven dormía en nuestra escalera abrazado a una manta. Tenía frío POR DENTRO, papá. ¿Se puede tener frío por dentro?',
+  'Sonhei com dois homens de casaco comprido parados na porta. Eles não tinham prancheta de verdade. Era só pra segurar alguma coisa nas mãos.':
+    'Soñé con dos hombres de abrigo largo parados en la puerta. Sus tablillas no eran de verdad. Eran solo para tener algo en las manos.',
+  'Tem um bebê no meu sonho que não chora. A mãe pede água. Dá água pra ela, pai. Mesmo assim... não deixa ela entrar.':
+    'Hay un bebé en mi sueño que no llora. La madre pide agua. Dale agua, papá. Aun así... no la dejes entrar.',
+  'Sonhei com botas no corredor. Muitas. Eu contei, pai. Subiam seis. Desciam SETE.':
+    'Soñé con botas en el pasillo. Muchas. Conté, papá. Subían seis. Bajaban SIETE.',
+  'Uma mão girando a maçaneta. Devagarinho. Com educação. No sonho eu sabia: quem gira assim não quer entrar. Quer saber se VOCÊ vai abrir.':
+    'Una mano girando el picaporte. Despacito. Con educación. En el sueño yo sabía: quien gira así no quiere entrar. Quiere saber si TÚ vas a abrir.',
+  'Tem um menino que quer brincar comigo. Ele bate na porta bem baixinho, na altura do meu joelho. Ele diz que se chama Nico. Pai... eu NUNCA te contei o nome dele. Como é que eu sei o nome dele?':
+    'Hay un niño que quiere jugar conmigo. Toca la puerta bien bajito, a la altura de mi rodilla. Dice que se llama Nico. Papá... nunca te dije su nombre. ¿Cómo sé su nombre?',
+  'Sonhei com um homem de casaco cinza que anotava numa pasta. Ele já sabia as respostas. Ele só queria ver a sua cara enquanto você mentia.':
+    'Soñé con un hombre de abrigo gris que anotaba en una carpeta. Ya sabía las respuestas. Solo quería ver tu cara mientras mentías.',
+  'Sonhei que a moça de lá do quarto pedia sal. Aí ela devolvia o pote cheio. Do MESMO jeitinho. Sal não volta sozinho, né, pai?':
+    'Soñé que la chica de aquel cuarto pedía sal. Y devolvía el frasco lleno. De la MISMA manera. La sal no vuelve sola, ¿no, papá?',
+  'Sonhei com o seu carimbo indo embora dentro de um jornal. Ele voltava cheirando diferente. Carimbo tem saudade de casa?':
+    'Soñé con tu sello yéndose envuelto en un periódico. Volvía con otro olor. ¿Un sello extraña su casa?',
+  'Vai bater na porta a noite toda. Não vai ter ninguém. Aí a última batida... a última vem de dentro. Dorme com a luz acesa hoje, pai. Por mim.':
+    'Van a tocar la puerta toda la noche. No va a haber nadie. Y el último golpe... el último viene de adentro. Duerme con la luz encendida hoy, papá. Por mí.',
+  'Sonhei com a voz da vovó do lado de fora pedindo pra entrar. Mas a vovó tava dormindo aqui dentro. Pai... quem é que guarda a voz das pessoas quando elas dormem?':
+    'Soñé con la voz de la abuela afuera pidiendo entrar. Pero la abuela estaba durmiendo aquí adentro. Papá... ¿quién guarda la voz de las personas cuando duermen?',
+
+  // infoTomi / infoDario
+  'Pai, eu tive um daqueles sonhos... ': 'Papá, tuve uno de esos sueños... ',
+  'Lembra do sonho que eu ia te contar? ': '¿Recuerdas el sueño que te iba a contar? ',
+  'Sonhei que a fila do seu trabalho dava volta no mundo e terminava aqui na nossa porta.':
+    'Soñé que la fila de tu trabajo daba la vuelta al mundo y terminaba aquí, en nuestra puerta.',
+  'Sonhei com o carimbo verde. Ele fazia as pessoas felizes. Aí eu virava o carimbo e atrás dele tinha outro carimbo.':
+    'Soñé con el sello verde. Hacía feliz a la gente. Después daba vuelta el sello y detrás había otro sello.',
+  'Hoje não sonhei nada, pai. O nada também conta como sonho?':
+    'Hoy no soñé nada, papá. ¿La nada también cuenta como sueño?',
+  'Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.':
+    'Papá. Escucha. El amigo NUNCA usó ese tono antes. Dijo: "mañana viene uno que no es de ellos ni de ustedes. NO MIRES DE CERCA. NO LLAMES A NADIE — ni cuando la máquina suplique. Sella cualquier cosa, rápido, y déjalo ir." Lo repitió tres veces, papá. Él nunca repite.',
+  'O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.':
+    'El amigo dejó de hablar. Desde ayer. Solo se sienta ahí en el rincón y espera conmigo. Le pregunté "esperar qué". Miró hacia la puerta.',
+  '"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."':
+    '"De ahora en adelante ya no se equivocan." Eso fue lo que dijo. Palabra por palabra. Y después: "dile a tu papá que no fue su culpa. Díselo ANTES."',
+  'O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.':
+    'El amigo te mandó un mensaje. En serio. Dijo: "mañana pasa alguien con el nombre equivocado en su lista. Que lea la lista con calma antes de sellar cualquier cosa." Solo estoy repitiendo, papá. No me mires así.',
+  'O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.':
+    'El amigo avisó: mañana por la noche, cuando toquen — porque VAN a tocar — mira primero. Y aun después de mirar... piensa si vale la pena abrir.',
+  'O amigo perguntou de você hoje. Pelo nome. Pai... eu nunca disse seu nome pra ele.':
+    'El amigo preguntó por ti hoy. Por tu nombre. Papá... nunca le dije tu nombre.',
+  'Perguntei de onde ele vem. Ele disse "de perto". Perguntei perto de quê. Ele disse "de você".':
+    'Le pregunté de dónde viene. Dijo "de cerca". Le pregunté cerca de qué. Dijo "de ti".',
+  'O amigo não aparece em foto. A gente tentou. Não é que ele saia borrado. É que a foto sai... sem o canto do quarto.':
+    'El amigo no sale en fotos. Lo intentamos. No es que salga borroso. Es que la foto sale... sin el rincón del cuarto.',
+
+  // batidas na porta / atender
+  'NOTA OFICIAL: um servidor público deixou de atender fiscalização domiciliar. A advertência consta do seu prontuário. O Estado bate uma vez.':
+    'NOTA OFICIAL: un funcionario público no atendió una fiscalización domiciliaria. La advertencia consta en su expediente. El Estado toca una vez.',
+  'As batidas param. Passos descem a escada — devagar, sem pressa, como quem anota.':
+    'Los golpes se detienen. Pasos bajan la escalera — despacio, sin prisa, como quien anota.',
+  'De manhã você encontrará um papel colado na porta: "NOTIFICAÇÃO DE AUSÊNCIA — advertência registrada". O Estado também inspeciona quem inspeciona.':
+    'Por la mañana encontrará un papel pegado en la puerta: "NOTIFICACIÓN DE AUSENCIA — advertencia registrada". El Estado también inspecciona a quien inspecciona.',
+  'As batidas simplesmente param. Nenhum passo se afasta.':
+    'Los golpes simplemente se detienen. Ningún paso se aleja.',
+  'Você percebe que passou os últimos minutos sem piscar.':
+    'Se da cuenta de que pasó los últimos minutos sin parpadear.',
+  'Quem quer que fosse, desistiu. Vizinhos desistem rápido, nos dias de hoje.':
+    'Quien fuera, desistió. Los vecinos desisten rápido, en estos días.',
+  'A PORTA': 'LA PUERTA',
+  'O olho mágico mostra o corredor do prédio, vazio. O corredor mostra o olho mágico de volta.':
+    'La mirilla muestra el pasillo del edificio, vacío. El pasillo le devuelve la mirada a la mirilla.',
+  'FISCAL DO MINISTÉRIO': 'FISCAL DEL MINISTERIO',
+  'Um homem de casaco cinza, prancheta na mão. "Fiscalização de rotina, inspetor. Confirmando residência, composição familiar e... disposição."':
+    'Un hombre de abrigo gris, tablilla en mano. "Fiscalización de rutina, inspector. Confirmando residencia, composición familiar y... disposición."',
+  'Ele olha por cima do seu ombro para dentro da casa. Conta as pessoas com os olhos. Anota.':
+    'Mira por encima de su hombro hacia adentro de la casa. Cuenta a las personas con los ojos. Anota.',
+  '"Tudo conforme. Por enquanto." Ele desce a escada sem se despedir. Você fecha a porta com as duas mãos.':
+    '"Todo conforme. Por ahora." Baja la escalera sin despedirse. Usted cierra la puerta con las dos manos.',
+  'UM VIZINHO': 'UN VECINO',
+  'É o velho Ansel, do 3. "Desculpa a hora. É que... vocês têm fósforo? A luz caiu no meu lado e a minha caixa acabou."':
+    'Es el viejo Ansel, del 3. "Perdón la hora. Es que... ¿tienen fósforos? Se cortó la luz de mi lado y se me acabó la caja."',
+  'Você entrega a caixa de fósforos. Ele agradece três vezes e desce contando os degraus em voz alta. Todo mundo tem seus rituais agora.':
+    'Usted le entrega la caja de fósforos. Agradece tres veces y baja contando los escalones en voz alta. Todo el mundo tiene sus rituales ahora.',
+  '…': '…',
+  'Não há ninguém. Há um embrulho pequeno no capacho: dentro, um botão de casaco. Do SEU casaco — você confere a manga: não falta nenhum.':
+    'No hay nadie. Hay un paquetito en el felpudo: adentro, un botón de abrigo. De SU abrigo — revisa la manga: no falta ninguno.',
+  'Você olha o botão por um longo tempo. Depois olha a manga de novo. Depois decide que não vai contar isso pra ninguém.':
+    'Mira el botón durante un largo rato. Después mira la manga de nuevo. Después decide que no le va a contar esto a nadie.',
+
+  // interactWith: retrato, quartoMae, hosp1, hosp2, bed
+  'Cinco silhuetas. Como sempre. Pare de contar.': 'Cinco siluetas. Como siempre. Deje de contar.',
+  'O RETRATO': 'EL RETRATO',
+  'O RETRATO DA FAMÍLIA': 'EL RETRATO FAMILIAR',
+  'Cinco silhuetas atrás do vidro empoeirado: Vessa, Dario, você, sua mãe, Tomi. Cinco. A conta fecha.':
+    'Cinco siluetas detrás del vidrio empolvado: Vessa, Dario, usted, su madre, Tomi. Cinco. La cuenta cierra.',
+  'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.':
+    'Se da cuenta de que contó con los dedos. Se da cuenta de que era la segunda vez que contaba.',
+  'A quinta silhueta — a menorzinha, do canto — está mais clara que as outras. Sempre esteve? Fotografias desbotam do canto para o centro. É física. Deve ser física.':
+    'La quinta silueta — la más pequeña, la del rincón — está más clara que las demás. ¿Siempre estuvo así? Las fotografías se desvanecen del rincón hacia el centro. Es física. Debe ser física.',
+  'A moldura está torta meio centímetro. Você não arruma. Arrumar seria admitir que mediu.':
+    'El marco está torcido medio centímetro. Usted no lo arregla. Arreglarlo sería admitir que lo midió.',
+  'Está como você deixou. Tudo nesta casa fica como você deixou. Quase tudo.':
+    'Está como usted lo dejó. Todo en esta casa queda como usted lo dejó. Casi todo.',
+  'O QUARTO DA SUA MÃE': 'EL CUARTO DE SU MADRE',
+  'A cama está feita. Feita demais. O travesseiro não tem amassado nenhum — nem o vinco de uma cabeça, nem o calor de um corpo.':
+    'La cama está hecha. Demasiado bien hecha. La almohada no tiene ninguna marca — ni el hueco de una cabeza, ni el calor de un cuerpo.',
+  'Ela dorme aqui? Dormiu alguma vez? Você tenta lembrar da última vez que a viu deitada e a memória devolve só a poltrona, a TV, a luz azul.':
+    '¿Ella duerme aquí? ¿Alguna vez durmió? Intenta recordar la última vez que la vio acostada y la memoria solo devuelve el sillón, el televisor, la luz azul.',
+  'Você ajeita um travesseiro que não precisava ser ajeitado e sai sem fazer barulho. Para não acordar ninguém. Não há ninguém.':
+    'Usted acomoda una almohada que no necesitaba ser acomodada y sale sin hacer ruido. Para no despertar a nadie. No hay nadie.',
+  'Na gaveta, embaixo das meias de lã: o formulário de ancestralidade — rasgado ao meio e colado de volta com fita, letra por letra alinhada.':
+    'En el cajón, debajo de las medias de lana: el formulario de ascendencia — roto por la mitad y pegado de nuevo con cinta, letra por letra alineada.',
+  'Foi a Vessa que colou, de madrugada. Sua mãe finge que não sabe. A fita finge que segura. Todo mundo nesta casa é muito bom em fingir.':
+    'Fue Vessa quien lo pegó, de madrugada. Su madre finge que no sabe. La cinta finge que sostiene. Todos en esta casa son muy buenos fingiendo.',
+  'Você fecha a gaveta exatamente como estava. Isso também é um tipo de fita.':
+    'Usted cierra el cajón exactamente como estaba. Eso también es un tipo de cinta.',
+  'Cheiro de lavanda velha e naftalina. O terço no criado-mudo. E, embaixo do travesseiro, dobradas em quatro: ₴ 2 — "emergência", ela sempre diz.':
+    'Olor a lavanda vieja y naftalina. El rosario en la mesita de noche. Y, debajo de la almohada, dobladas en cuatro: ₴ 2 — "emergencia", dice siempre.',
+  'PEGAR AS ₴ 2': 'TOMAR LOS ₴ 2',
+  'Você pega. Emergência é um conceito flexível.': 'Usted las toma. La emergencia es un concepto flexible.',
+  'Ela vai perceber. Ela percebe tudo. Ela não vai dizer nada — e isso vai ser pior que qualquer coisa que ela pudesse dizer.':
+    'Ella se va a dar cuenta. Se da cuenta de todo. No va a decir nada — y eso va a ser peor que cualquier cosa que pudiera decir.',
+  'DEIXAR': 'DEJAR',
+  'Você deixa. Alguma coisa nesta casa ainda precisa ficar no lugar.':
+    'Usted las deja. Algo en esta casa todavía necesita quedarse en su lugar.',
+  'VOCÊ': 'USTED',
+  'Continua vazio. Por enquanto.': 'Sigue vacío. Por ahora.',
+  'Um colchão nu, uma cadeira, poeira em suspensão na luz da lâmpada. Ninguém visita mais ninguém neste país.':
+    'Un colchón desnudo, una silla, polvo suspendido en la luz de la lámpara. Ya nadie visita a nadie en este país.',
+  'Eles não se viraram. Eles nunca se viram. Você já reparou que nunca viu o rosto deles?':
+    'No se dieron vuelta. Nunca se dan vuelta. ¿Ya notó que nunca les ha visto la cara?',
+  'OS REALOCADOS': 'LOS REALOJADOS',
+  'Os dois estão de pé, de costas, imóveis — como sempre. Sem virar, o homem estende o braço para trás: ₴ 2 dobradas entre os dedos.':
+    'Los dos están de pie, de espaldas, inmóviles — como siempre. Sin darse vuelta, el hombre estira el brazo hacia atrás: ₴ 2 dobladas entre los dedos.',
+  '"Pelo incômodo", diz a mulher. A voz vem do lugar errado do quarto.':
+    '"Por la molestia", dice la mujer. La voz viene del lugar equivocado del cuarto.',
+  'Você aceita. Recusar exigiria uma conversa, e conversa exigiria que eles se virassem.':
+    'Usted acepta. Rechazar exigiría una conversación, y una conversación exigiría que se dieran vuelta.',
+  'Os dois de pé, de costas, no escuro. Não acenderam a lâmpada. "Economia", diria o Conselho. Eles não precisam, diria o seu estômago.':
+    'Los dos de pie, de espaldas, en la oscuridad. No encendieron la lámpara. "Ahorro", diría el Consejo. No lo necesitan, diría su estómago.',
+  'Você fecha a porta devagar. No último centímetro de fresta, tem certeza de que um deles começou a virar a cabeça.':
+    'Usted cierra la puerta despacio. En el último centímetro de la rendija, está seguro de que uno de ellos empezó a girar la cabeza.',
+  'O quarto cheira a nada. Comida sem cheiro, roupa sem cheiro, gente sem cheiro.':
+    'El cuarto no huele a nada. Comida sin olor, ropa sin olor, gente sin olor.',
+  '"Boa noite, camarada inspetor", dizem os dois. Ao mesmo tempo. Na mesma nota.':
+    '"Buenas noches, camarada inspector", dicen los dos. Al mismo tiempo. En la misma nota.',
+  'O pote de sal da Vessa está no parapeito. Cheio. Exatamente como estava na prateleira da cozinha. Você não pergunta como ele atravessou o corredor sozinho.':
+    'El frasco de sal de Vessa está en el alféizar. Lleno. Exactamente como estaba en la repisa de la cocina. Usted no pregunta cómo cruzó el pasillo solo.',
+  'Você já vasculhou hoje. O quarto ganhou aquele ar ofendido dos lugares revirados.':
+    'Ya registró hoy. El cuarto tiene ese aire ofendido de los lugares revueltos.',
+  'O colchão nu, a cadeira, a poeira. Tudo no lugar. Só que o travesseiro—':
+    'El colchón desnudo, la silla, el polvo. Todo en su lugar. Solo que la almohada—',
+  'O travesseiro está quente.': 'La almohada está caliente.',
+  'Ninguém dorme neste quarto. Ninguém NUNCA dormiu neste quarto. Você encosta a mão de novo para ter certeza e se arrepende de ter certeza.':
+    'Nadie duerme en este cuarto. Nadie ha dormido NUNCA en este cuarto. Usted toca de nuevo para estar seguro y se arrepiente de estar seguro.',
+  'Vasculhando o armário vazio: ': 'Registrando el armario vacío: ',
+  ' em moedas antigas, esquecidas num casaco que ninguém lembra de quem foi.':
+    ' en monedas antiguas, olvidadas en un abrigo del que nadie recuerda de quién era.',
+  'Dinheiro de morto ou de emigrado. Nesta economia, é tudo dinheiro.':
+    'Dinero de muerto o de emigrado. En esta economía, todo es dinero.',
+  'No fundo da gaveta: um frasco de remédio LACRADO, dentro do prazo. De quem? De quando? Não importa.':
+    'En el fondo del cajón: un frasco de remedio SELLADO, dentro de la fecha. ¿De quién? ¿De cuándo? No importa.',
+  'Você o leva para ': 'Se lo lleva a ',
+  '. Esta noite, a casa tosse menos.': '. Esta noche, la casa tose menos.',
+  'Um frasco de remédio lacrado, esquecido na gaveta. Ninguém precisa dele agora — o farmacêutico do beco paga ₴ 4 sem perguntar de onde veio.':
+    'Un frasco de remedio sellado, olvidado en el cajón. Nadie lo necesita ahora — el farmacéutico del callejón paga ₴ 4 sin preguntar de dónde vino.',
+  'Colchão nu. Cadeira. Poeira. O quarto que a casa mantém vazio como quem guarda um lugar à mesa para alguém que não avisou se volta.':
+    'Colchón desnudo. Silla. Polvo. El cuarto que la casa mantiene vacío como quien guarda un lugar en la mesa para alguien que no avisó si vuelve.',
+  'Encerrar o dia?': '¿Terminar el día?',
+  'DORMIR': 'DORMIR',
+  'AINDA NÃO': 'TODAVÍA NO',
+
+  // dia 48 (espelho) / entrada na casa dia 1 / dormir forçado
+  'Não há fila. Não há guardas. Há um vento que parou no meio do caminho, como quem esqueceu o que ia dizer.':
+    'No hay fila. No hay guardias. Hay un viento que se detuvo a mitad de camino, como quien olvidó lo que iba a decir.',
+  'Você está do lado de fora do seu próprio posto. Do lado de quem espera. Quarenta e oito dias e você nunca tinha visto o muro deste ângulo — os risquinhos contando dias que alguém raspou na pedra.':
+    'Usted está afuera de su propio puesto. Del lado de quien espera. Cuarenta y ocho días y nunca había visto el muro desde este ángulo — las rayitas contando días que alguien raspó en la piedra.',
+  'Caminhe até o guichê. Há documentos na bandeja. São os seus.':
+    'Camine hasta la ventanilla. Hay documentos en la bandeja. Son los suyos.',
+  'DIA 48': 'DÍA 48',
+  '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.':
+    '20:30. El apartamento huele a sopa aguada y a calefactor viejo. Están todos aquí: su madre en la sala, Vessa en la cocina, los niños en sus cuartos.',
+  'Ande com WASD ou setas. Clique na tela e mexa o mouse para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
+    'Camine con WASD o flechas. Haga clic en la pantalla y mueva el mouse para mirar alrededor. Acérquese a alguien y presione E para hablar — ellos saben cosas que el puesto no sabe.',
+  'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.':
+    'Cuando termine, duerma en su cama, en el último cuarto. Mañana hay fila.',
+  'SUA CASA': 'SU CASA',
+  'NOTA OFICIAL: fiscalização domiciliar não atendida. Advertência registrada no prontuário do servidor.':
+    'NOTA OFICIAL: fiscalización domiciliaria no atendida. Advertencia registrada en el expediente del funcionario.',
+  'Os olhos pesam. Quarenta e oito dias não se atravessam sem dormir.':
+    'Los ojos pesan. Cuarenta y ocho días no se cruzan sin dormir.',
+  'IR PARA A CAMA': 'IR A LA CAMA',
+
+  // prompts de interação (houseLoop)
+  'E — Deslizar seus documentos pela bandeja': 'E — Deslizar sus documentos por la bandeja',
+  'E — ATENDER A PORTA': 'E — ATENDER LA PUERTA',
+  'E — Olhar pelo olho mágico': 'E — Mirar por la mirilla',
+  'E — Dormir': 'E — Dormir',
+  'E — Olhar o retrato da família': 'E — Mirar el retrato familiar',
+  'E — Olhar o quarto da sua mãe': 'E — Mirar el cuarto de su madre',
+  'E — Os realocados': 'E — Los realojados',
+  'E — Quarto de hóspedes vazio': 'E — Cuarto de huéspedes vacío',
+  'E — Vasculhar o quarto de hóspedes': 'E — Registrar el cuarto de huéspedes',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',

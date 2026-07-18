@@ -193,14 +193,38 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    do dia 4, o evento inline do remédio entregue, e um item de bagagem — todos traduzidos
    corretamente em EN; paridade de chaves EN/ES confirmada (591 = 591, zero divergência).
 
-   **Não coberto ainda** (o que resta, ainda só em português): toda a casa explorável em
-   primeira pessoa (`house.js` — descrições de cômodo, itens vasculháveis, diálogo com a
-   família) e um punhado de textos de feedback da UI de inspeção descobertos ao longo desta
-   rodada mas ainda não traduzidos (as mensagens da barra `#inspect-bar`, ex. "MODO
-   INSPEÇÃO: ..." e "DISCREPÂNCIA CONFIRMADA: ...", e as descrições de discrepância geradas
-   por `applyDisc()`). `house.js` continua sendo o maior volume de texto ainda em português.
-   Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os valores e registrar em
-   `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
+   Oitava rodada — a casa explorável em primeira pessoa (`house.js`), o maior bloco de texto
+   dramático que ainda restava: 591 → 805 chaves. Cobre os 9 nomes de cômodo (`ROOMS`), as
+   ~52 falas de `H_LINES` (4 membros da família × falas por regime + repetição + doente), as
+   5 falas de `H_SPECIAL` (dias com evento único), as 11 visões proféticas de Tomi em
+   `H_VISIONS`, os textos dinâmicos de `infoVessa()`/`infoMae()`/`infoTomi()`/`infoDario()`
+   (fragmentados ao redor dos valores interpolados — boato do dia seguinte, manchete do
+   jornal, nome do familiar curado), as falas de `scheduleKnock()`/`knockExpire()`/
+   `answerDoor()` (fiscal do Ministério, vizinho, batida sem resposta) e as de
+   `interactWith()` (retrato da família, quarto da mãe, hóspedes 1 e 2, incluindo os dois
+   ramos dinâmicos — moedas encontradas e remédio entregue a um familiar nomeado). A
+   tradução foi centralizada em `hSay()`/`hAdvance()` (que agora traduzem automaticamente o
+   nome do interlocutor, cada linha de fala e cada rótulo de escolha — o mesmo padrão de
+   alavancagem usado em `modal()` desde a primeira rodada), então a maior parte de
+   `interactWith()`/`talkTo()`/`knockExpire()`/`answerDoor()`/`enterHouse()`/`enterMirror48()`
+   não precisou de nenhuma edição de código, só de preencher o dicionário. Só os pontos que
+   escrevem texto fora de `hSay()` — nome do cômodo no HUD, o prompt "E — Falar com ...", e
+   os dois `S.pendingNews.push()` de fiscalização não atendida — precisaram de `T()`
+   explícito. Verificado por Playwright: falas dos 4 familiares (incluindo a variante doente
+   e a de dia especial), retrato da família, quarto da mãe com as duas escolhas, os dois
+   ramos de `hosp2` (moedas e remédio, forçados via override de `rnd()`), prompts de
+   interação e o eco de fiscalização no jornal — todos traduzidos corretamente em EN e ES;
+   varredura completa de `H_LINES`/`H_SPECIAL`/`H_VISIONS`/nomes de cômodo/títulos/rótulos
+   contra o dicionário real do jogo (carregado do `index.html` de produção, não de um stub)
+   confirma zero string faltando; paridade de chaves EN/ES confirmada (805 = 805).
+
+   **Não coberto ainda** (o que resta, ainda só em português): um punhado de textos de
+   feedback da UI de inspeção descobertos na rodada anterior (as mensagens da barra
+   `#inspect-bar`, ex. "MODO INSPEÇÃO: ..." e "DISCREPÂNCIA CONFIRMADA: ...", e as descrições
+   de discrepância geradas por `applyDisc()`). Com `house.js` traduzido, esse é o único gap
+   de texto de jogo conhecido restante. Adicionar um terceiro idioma é só copiar `I18N_ES`,
+   traduzir os valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas, não
+   só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

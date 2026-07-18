@@ -459,18 +459,18 @@ const H_SPECIAL = {
 /* ---------- INFORMAÇÕES (o valor de jogo das conversas) ---------- */
 function infoVessa() {
   const r = rumorForDay(S.day + 1);
-  if (!r) return 'A Marta não veio hoje. Sem fofoca, sem notícia. O silêncio das amigas é a pior notícia que existe.';
+  if (!r) return T('A Marta não veio hoje. Sem fofoca, sem notícia. O silêncio das amigas é a pior notícia que existe.');
   const verdade = TELLS[r.tell].altBonus > 0;
   const diz = chance(.75) ? verdade : !verdade;
   return diz
-    ? `Fofoca com fundamento: a Marta jurou que essa história de ${TELL_LABEL[r.tell]}... é VERDADE. O cunhado dela trabalha num posto do norte e viu. Amanhã deve chegar esse boato aí na sua fronteira. Fica esperto.`
-    : `A Lena me contou: essa conversa de ${TELL_LABEL[r.tell]} é INVENÇÃO. Espalharam pra vender scanner, pra vender medo. Se aparecer no teu comunicado amanhã, pensa duas vezes antes de estragar a vida de alguém por isso.`;
+    ? `${T('Fofoca com fundamento: a Marta jurou que essa história de ')}${T(TELL_LABEL[r.tell])}${T('... é VERDADE. O cunhado dela trabalha num posto do norte e viu. Amanhã deve chegar esse boato aí na sua fronteira. Fica esperto.')}`
+    : `${T('A Lena me contou: essa conversa de ')}${T(TELL_LABEL[r.tell])}${T(' é INVENÇÃO. Espalharam pra vender scanner, pra vender medo. Se aparecer no teu comunicado amanhã, pensa duas vezes antes de estragar a vida de alguém por isso.')}`;
 }
 function infoMae() {
   const n = SCRIPTED_NEWS[S.day + 1];
-  if (n === null) return 'A moça da televisão despediu-se hoje com "até amanhã, se houver amanhã". Depois riu. Ninguém no estúdio riu junto.';
-  if (n) return `A televisão adiantou o jornal de amanhã, filho: "${n.h.toLowerCase()}". Ou eu sonhei que adiantou. Na minha idade a televisão e o sonho passam no mesmo canal.`;
-  return 'A televisão disse que está tudo sob controle. Foi a quarta vez que disseram essa frase hoje. Quem conta quatro vezes, não controla nada.';
+  if (n === null) return T('A moça da televisão despediu-se hoje com "até amanhã, se houver amanhã". Depois riu. Ninguém no estúdio riu junto.');
+  if (n) return `${T('A televisão adiantou o jornal de amanhã, filho: "')}${T(n.h).toLowerCase()}${T('". Ou eu sonhei que adiantou. Na minha idade a televisão e o sonho passam no mesmo canal.')}`;
+  return T('A televisão disse que está tudo sob controle. Foi a quarta vez que disseram essa frase hoje. Quem conta quatro vezes, não controla nada.');
 }
 const H_VISIONS = {
   3: 'Sonhei que um moço dormia na nossa escada abraçado num cobertor. Ele tinha frio DE DENTRO, pai. Dá pra ter frio de dentro?',
@@ -486,25 +486,25 @@ const H_VISIONS = {
   46: 'Sonhei com a voz da vovó do lado de fora pedindo pra entrar. Mas a vovó tava dormindo aqui dentro. Pai... quem é que guarda a voz das pessoas quando elas dormem?',
 };
 function infoTomi() {
-  if (H_VISIONS[S.day + 1] && NIGHT_EVENTS[S.day + 1]) return 'Pai, eu tive um daqueles sonhos... ' + H_VISIONS[S.day + 1];
-  if (H_VISIONS[S.day]) return 'Lembra do sonho que eu ia te contar? ' + H_VISIONS[S.day];
-  return pick([
+  if (H_VISIONS[S.day + 1] && NIGHT_EVENTS[S.day + 1]) return T('Pai, eu tive um daqueles sonhos... ') + T(H_VISIONS[S.day + 1]);
+  if (H_VISIONS[S.day]) return T('Lembra do sonho que eu ia te contar? ') + T(H_VISIONS[S.day]);
+  return T(pick([
     'Sonhei que a fila do seu trabalho dava volta no mundo e terminava aqui na nossa porta.',
     'Sonhei com o carimbo verde. Ele fazia as pessoas felizes. Aí eu virava o carimbo e atrás dele tinha outro carimbo.',
     'Hoje não sonhei nada, pai. O nada também conta como sonho?',
-  ]);
+  ]));
 }
 function infoDario() {
-  if ((S.silenteDays || []).includes(S.day + 1)) return 'Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.';
-  if (S.day >= 44) return 'O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.';
-  if (S.day + 1 === 46) return '"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."';
-  if (WANTED_DAYS[S.day + 1]) return 'O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.';
-  if (NIGHT_EVENTS[S.day + 1]) return 'O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.';
-  return pick([
+  if ((S.silenteDays || []).includes(S.day + 1)) return T('Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.');
+  if (S.day >= 44) return T('O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.');
+  if (S.day + 1 === 46) return T('"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."');
+  if (WANTED_DAYS[S.day + 1]) return T('O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.');
+  if (NIGHT_EVENTS[S.day + 1]) return T('O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.');
+  return T(pick([
     'O amigo perguntou de você hoje. Pelo nome. Pai... eu nunca disse seu nome pra ele.',
     'Perguntei de onde ele vem. Ele disse "de perto". Perguntei perto de quê. Ele disse "de você".',
     'O amigo não aparece em foto. A gente tentou. Não é que ele saia borrado. É que a foto sai... sem o canto do quarto.',
-  ]);
+  ]));
 }
 
 /* ---------- BATIDAS NA PORTA ---------- */
@@ -530,7 +530,7 @@ function knockExpire() {
   HOUSE.knock = null;
   if (k.type === 'gov') {
     S.citTotal++;
-    S.pendingNews.push({ day: S.day + 1, text: 'NOTA OFICIAL: um servidor público deixou de atender fiscalização domiciliar. A advertência consta do seu prontuário. O Estado bate uma vez.' });
+    S.pendingNews.push({ day: S.day + 1, text: T('NOTA OFICIAL: um servidor público deixou de atender fiscalização domiciliar. A advertência consta do seu prontuário. O Estado bate uma vez.') });
     hSay('A PORTA', ['As batidas param. Passos descem a escada — devagar, sem pressa, como quem anota.',
       'De manhã você encontrará um papel colado na porta: "NOTIFICAÇÃO DE AUSÊNCIA — advertência registrada". O Estado também inspeciona quem inspeciona.']);
   } else if (k.type === 'estranho') {
@@ -577,8 +577,8 @@ function answerDoor() {
 const HD = { open: false, lines: [], idx: 0, typing: null, chars: 0, pendingChoices: null };
 function hSay(nome, lines, choices, face) {
   try { document.exitPointerLock(); } catch (e) {}
-  HD.open = true; HD.lines = lines.slice(); HD.idx = 0;
-  $('hd-name').textContent = nome;
+  HD.open = true; HD.lines = lines.map(T); HD.idx = 0;
+  $('hd-name').textContent = T(nome);
   $('hd-choices').innerHTML = '';
   $('house-dialog').classList.add('on');
   HD.pendingChoices = choices || null;
@@ -613,7 +613,7 @@ function hAdvance() {
     const box = $('hd-choices');
     HD.pendingChoices.forEach(c => {
       const b = document.createElement('button');
-      b.textContent = c.label;
+      b.textContent = T(c.label);
       b.onclick = (e) => { e.stopPropagation(); hClose(); if (c.fn) c.fn(); };
       box.appendChild(b);
     });
@@ -729,7 +729,7 @@ function interactWith(id) {
       const achou = ri(1, 3);
       S.money += achou;
       hSay('QUARTO DE HÓSPEDES 2', [
-        `Vasculhando o armário vazio: ${MOEDA} ${achou} em moedas antigas, esquecidas num casaco que ninguém lembra de quem foi.`,
+        `${T('Vasculhando o armário vazio: ')}${MOEDA} ${achou}${T(' em moedas antigas, esquecidas num casaco que ninguém lembra de quem foi.')}`,
         'Dinheiro de morto ou de emigrado. Nesta economia, é tudo dinheiro.',
       ]);
     } else if (r < .43) {
@@ -738,7 +738,7 @@ function interactWith(id) {
         S.family[doente].sick = false; S.family[doente].sickDays = 0;
         hSay('QUARTO DE HÓSPEDES 2', [
           'No fundo da gaveta: um frasco de remédio LACRADO, dentro do prazo. De quem? De quando? Não importa.',
-          `Você o leva para ${S.family[doente].nome.split(' ')[0].replace(',', '')}. Esta noite, a casa tosse menos.`,
+          `${T('Você o leva para ')}${S.family[doente].nome.split(' ')[0].replace(',', '')}${T('. Esta noite, a casa tosse menos.')}`,
         ]);
       } else {
         S.money += 4;
@@ -840,7 +840,7 @@ function houseSleep(forced) {
 }
 function knockExpireSilent() {
   S.citTotal++;
-  S.pendingNews.push({ day: S.day + 1, text: 'NOTA OFICIAL: fiscalização domiciliar não atendida. Advertência registrada no prontuário do servidor.' });
+  S.pendingNews.push({ day: S.day + 1, text: T('NOTA OFICIAL: fiscalização domiciliar não atendida. Advertência registrada no prontuário do servidor.') });
   HOUSE.knock = null;
 }
 function houseTeleport(spot) { // depuração e testes
@@ -967,20 +967,20 @@ function houseLoop(ts) {
 
   // prompt + cômodo
   const room = roomAt(HOUSE.x, HOUSE.y);
-  $('house-room').textContent = room ? room.nome : '';
+  $('house-room').textContent = room ? T(room.nome) : '';
   const tgt = HD.open ? null : interactTarget();
   const prompt = $('house-prompt');
   if (tgt) {
     prompt.classList.add('on');
-    prompt.textContent = tgt.spot === 'guiche' ? 'E — Deslizar seus documentos pela bandeja'
+    prompt.textContent = tgt.spot === 'guiche' ? T('E — Deslizar seus documentos pela bandeja')
       : tgt.spot === 'door'
-      ? (HOUSE.knock && HOUSE.knock.active ? 'E — ATENDER A PORTA' : 'E — Olhar pelo olho mágico')
-      : tgt.spot === 'bed' ? 'E — Dormir'
-      : tgt.spot === 'retrato' ? 'E — Olhar o retrato da família'
-      : tgt.spot === 'quartoMae' ? 'E — Olhar o quarto da sua mãe'
-      : tgt.spot === 'hosp1' ? (S.day >= 31 ? 'E — Os realocados' : 'E — Quarto de hóspedes vazio')
-      : tgt.spot === 'hosp2' ? 'E — Vasculhar o quarto de hóspedes'
-      : `E — Falar com ${{ mae: 'sua mãe', vessa: 'Vessa', tomi: 'Tomi', dario: 'Dario' }[tgt.spot]}`;
+      ? T(HOUSE.knock && HOUSE.knock.active ? 'E — ATENDER A PORTA' : 'E — Olhar pelo olho mágico')
+      : tgt.spot === 'bed' ? T('E — Dormir')
+      : tgt.spot === 'retrato' ? T('E — Olhar o retrato da família')
+      : tgt.spot === 'quartoMae' ? T('E — Olhar o quarto da sua mãe')
+      : tgt.spot === 'hosp1' ? T(S.day >= 31 ? 'E — Os realocados' : 'E — Quarto de hóspedes vazio')
+      : tgt.spot === 'hosp2' ? T('E — Vasculhar o quarto de hóspedes')
+      : T('E — Falar com ') + T({ mae: 'sua mãe', vessa: 'Vessa', tomi: 'Tomi', dario: 'Dario' }[tgt.spot]);
   } else prompt.classList.remove('on');
 
   HOUSE.raf = requestAnimationFrame(houseLoop);
