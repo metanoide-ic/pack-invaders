@@ -124,20 +124,23 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 3. Rádio diegética e jornal multi-editoria;
 4. Rede Social Invisível (casos que crescem sozinhos);
 5. Manuais falsificáveis e auditorias reativas;
-6. Localização (EN/ES) **— arquitetura + inglês da interface implementados no protótipo**:
-   `i18n.js` define `T(s)` (tabela PT→EN com fallback pro original — nunca quebra por
-   faltar tradução) e `applyStaticI18n()` (varre a interface estática, guarda o PT
-   original em `data-pt` e troca pela tradução). Cobertura desta rodada: toda a interface
-   estática (título, HUD, ferramentas, telas de pausa/exame/bagagem/casa), `REGIME_LABEL`,
-   `MASTHEAD`, os 8 finais (`ENDINGS`, texto integral), rótulos de campo de documento
+6. Localização (EN/ES) **— arquitetura + inglês + espanhol da interface implementados no
+   protótipo**: `i18n.js` define `T(s)` (procura a chave na tabela do idioma ativo, com
+   fallback pro português original — nunca quebra por faltar tradução) e
+   `applyStaticI18n()` (varre a interface estática, guarda o PT original em `data-pt` e
+   troca pela tradução). `I18N_TABLES = { en: I18N_EN, es: I18N_ES }` — as duas tabelas têm
+   exatamente as mesmas 125 chaves (conferido programaticamente). Botão no título cicla
+   PT-BR → EN → ES → PT-BR (recarrega a página — mais simples e seguro que remendar telas
+   dinâmicas já abertas noutro idioma). Cobertura: toda a interface estática (título, HUD,
+   ferramentas, telas de pausa/exame/bagagem/casa), `REGIME_LABEL`, `MASTHEAD`, os 8 finais
+   (`ENDINGS`, texto integral, nos dois idiomas), rótulos de campo de documento
    (NOME/NASC./SEXO/…), nomes de tipo de documento (PASSAPORTE/CARTÃO DE IDENTIDADE/…) e
-   as perguntas de interrogatório + follow-ups. Seletor de idioma no título (recarrega a
-   página — mais simples e seguro que remendar telas dinâmicas já abertas). **Não coberto
-   ainda** (o grosso do texto do jogo, ainda só em português): diálogo procedural da fila
-   (saudações, respostas de interrogatório improvisadas), boatos/exame físico, rádio
-   diegética, jornal de preenchimento, encontros roteirizados, casa (house.js). O
-   dicionário em `i18n.js` só cresce — adicionar entradas não quebra nada — e falta
-   ainda o espanhol (mesma estrutura, uma tabela nova `I18N_ES`).
+   as perguntas de interrogatório + follow-ups. **Não coberto ainda** (o grosso do texto do
+   jogo, ainda só em português): diálogo procedural da fila (saudações, respostas de
+   interrogatório improvisadas), boatos/exame físico, rádio diegética, jornal de
+   preenchimento, encontros roteirizados, casa (house.js). Adicionar um terceiro idioma é
+   só copiar `I18N_ES`, traduzir os valores e registrar em `I18N_TABLES` — a arquitetura
+   já suporta N idiomas, não só dois.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

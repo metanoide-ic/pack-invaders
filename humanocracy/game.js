@@ -966,9 +966,11 @@ function updateHud() {
   $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''} · ${fmtDate(worldDate(S.day))}`;
   const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
+  const qStr = q === Infinity ? '∞' : q;
   $('processed-count').textContent = SETTINGS.lang === 'en'
-    ? `Queue: ${shift.processed}/${shift.queueSize} · Admitted: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`
-    : `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
+    ? `Queue: ${shift.processed}/${shift.queueSize} · Admitted: ${shift.approvedToday}/${qStr}`
+    // "Fila"/"Admitidos" são as mesmas palavras em espanhol — sem branch extra
+    : `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${qStr}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;
 }
 
@@ -1890,7 +1892,10 @@ function showMorning() {
 function renderNewspaper() {
   const d = S.day;
   $('np-masthead').textContent = T(MASTHEAD[regimeOfDay(d)]);
-  $('np-date').textContent = fmtDate(worldDate(d)) + (SETTINGS.lang === 'en' ? ` — ${MOEDA} 0.50 — issue ${1200 + d}` : ` — ${MOEDA} 0,50 — edição ${1200 + d}`);
+  const dateSuffix = SETTINGS.lang === 'en' ? ` — ${MOEDA} 0.50 — issue ${1200 + d}`
+    : SETTINGS.lang === 'es' ? ` — ${MOEDA} 0,50 — edición ${1200 + d}`
+    : ` — ${MOEDA} 0,50 — edição ${1200 + d}`;
+  $('np-date').textContent = fmtDate(worldDate(d)) + dateSuffix;
   const scripted = SCRIPTED_NEWS[d];
   const np = $('newspaper');
   if (scripted === null) {
@@ -1982,21 +1987,30 @@ function finishGame(kind) {
   const c = S.counters;
   $('ending-title').textContent = T(e.t);
   $('ending-body').textContent = T(e.b);
-  const en = SETTINGS.lang === 'en';
-  const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? (en ? 'alive' : 'viva(o)') : '—'}`).join(' · ');
-  $('ending-stats').innerHTML = en
-    ? (`48 days. ${c.approved} approvals. ${c.rejected} rejections. ${c.detained} detentions.<br>` +
+  const lang = SETTINGS.lang;
+  const aliveWord = lang === 'en' ? 'alive' : lang === 'es' ? 'vivo(a)' : 'viva(o)';
+  const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? aliveWord : '—'}`).join(' · ');
+  const STATS_TPL = {
+    en: `48 days. ${c.approved} approvals. ${c.rejected} rejections. ${c.detained} detentions.<br>` +
       `Alternates who passed through you: <b>${c.alternadosIn}</b>. Caught: ${c.alternadosCaught}. Rejected without you knowing: ${c.alternadosBlocked}.<br>` +
       `Innocents detained: ${c.innocentsDetained}. Blocked by quota: ${c.rejectedByQuota || 0}. Bribes: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
       `Your family — ${fam}.<br>` +
       `<br><i>These numbers come from the world's True State. You never had access to it. Until now. If this report isn't lying too.</i>` +
-      `<br><i>The report doesn't say whether the survivors are still human. No report says that.</i>`)
-    : (`48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
+      `<br><i>The report doesn't say whether the survivors are still human. No report says that.</i>`,
+    es: `48 días. ${c.approved} aprobaciones. ${c.rejected} rechazos. ${c.detained} detenciones.<br>` +
+      `Alternados que pasaron por ti: <b>${c.alternadosIn}</b>. Detenidos: ${c.alternadosCaught}. Rechazados sin que lo supieras: ${c.alternadosBlocked}.<br>` +
+      `Inocentes detenidos: ${c.innocentsDetained}. Bloqueados por cuota: ${c.rejectedByQuota || 0}. Sobornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
+      `Tu familia — ${fam}.<br>` +
+      `<br><i>Estos números vienen del Estado Verdadero del mundo. Nunca tuviste acceso a él. Hasta ahora. Si es que este informe tampoco miente.</i>` +
+      `<br><i>El informe no dice si los sobrevivientes siguen siendo humanos. Ningún informe dice eso.</i>`,
+    pt: `48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
       `Alternados que passaram por você: <b>${c.alternadosIn}</b>. Detidos: ${c.alternadosCaught}. Rejeitados sem você saber: ${c.alternadosBlocked}.<br>` +
       `Inocentes detidos: ${c.innocentsDetained}. Barrados por cota: ${c.rejectedByQuota || 0}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
       `Sua família — ${fam}.<br>` +
       `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>` +
-      `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`);
+      `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`,
+  };
+  $('ending-stats').innerHTML = STATS_TPL[lang] || STATS_TPL.pt;
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
   // guarda a seed pra "Segunda Leitura": os mesmos cidadãos, agora sabendo
   // o que você sabe. nem revendo tudo você terá certeza.
@@ -2039,12 +2053,15 @@ function renderArchivistBtn() {
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
 }
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
+const LANG_CYCLE = ['pt', 'en', 'es'];
+const LANG_LABEL = { pt: 'PT-BR', en: 'EN', es: 'ES' };
 function renderLangBtn() {
-  $('btn-lang').textContent = SETTINGS.lang === 'en' ? 'EN / PT-BR' : 'PT-BR / EN';
-  $('btn-lang').classList.toggle('on', SETTINGS.lang === 'en');
+  $('btn-lang').textContent = LANG_CYCLE.map(l => l === SETTINGS.lang ? `[${LANG_LABEL[l]}]` : LANG_LABEL[l]).join(' / ');
+  $('btn-lang').classList.toggle('on', SETTINGS.lang !== 'pt');
 }
 $('btn-lang').onclick = () => {
-  SETTINGS.lang = SETTINGS.lang === 'en' ? 'pt' : 'en';
+  const i = LANG_CYCLE.indexOf(SETTINGS.lang);
+  SETTINGS.lang = LANG_CYCLE[(i + 1) % LANG_CYCLE.length];
   saveSettings();
   // idioma troca conteúdo demais em telas dinâmicas pra remendar em runtime;
   // como o botão só existe no título, recarregar é seguro e simples.
