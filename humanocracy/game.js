@@ -193,7 +193,7 @@ function quotaForDay(d) {
 
 /* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
 const SETTINGS_KEY = 'humanocracy_settings_v1';
-let SETTINGS = { archivist: false };
+let SETTINGS = { archivist: false, lang: 'pt' };
 function loadSettings() {
   try {
     const j = localStorage.getItem(SETTINGS_KEY);
@@ -274,12 +274,12 @@ function setRegimeClass(day) {
 
 /* ---------- MODAL ---------- */
 function modal(title, body, actions) {
-  $('modal-title').textContent = title;
-  $('modal-body').textContent = body;
+  $('modal-title').textContent = T(title);
+  $('modal-body').textContent = T(body);
   const box = $('modal-actions'); box.innerHTML = '';
   (actions || [{ label: 'OK' }]).forEach(a => {
     const b = document.createElement('button');
-    b.textContent = a.label;
+    b.textContent = T(a.label);
     b.onclick = () => { $('modal-overlay').classList.remove('active'); if (a.fn) a.fn(); };
     box.appendChild(b);
   });
@@ -906,7 +906,7 @@ function startDay() {
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
   });
 
-  $('shift-day').textContent = `DIA ${S.day} — ${REGIME_LABEL[regimeOfDay(S.day)]}`;
+  $('shift-day').textContent = `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
   renderRulebook();
   updateHud();
   clearDesk();
@@ -966,7 +966,9 @@ function updateHud() {
   $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''} · ${fmtDate(worldDate(S.day))}`;
   const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
-  $('processed-count').textContent = `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
+  $('processed-count').textContent = SETTINGS.lang === 'en'
+    ? `Queue: ${shift.processed}/${shift.queueSize} · Admitted: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`
+    : `Fila: ${shift.processed}/${shift.queueSize} · Admitidos: ${shift.approvedToday}/${q === Infinity ? '∞' : q}`;
   $('money-hud').textContent = `${MOEDA} ${S.money}`;
 }
 
@@ -1120,9 +1122,9 @@ function nextCitizen() {
     clearDesk();
     $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
     $('npc-name').textContent = '—';
-    $('speech').textContent = 'A fila acabou. Do outro lado do vidro, só a neve e as pegadas de quem passou.';
+    $('speech').textContent = T('A fila acabou. Do outro lado do vidro, só a neve e as pegadas de quem passou.');
     $('desk-hint').style.display = '';
-    $('desk-hint').textContent = 'A FILA DE HOJE ACABOU.';
+    $('desk-hint').textContent = T('A FILA DE HOJE ACABOU.');
     setTimeout(endShift, 1800);
     return;
   }
@@ -1270,7 +1272,7 @@ function clearDesk() {
 }
 
 function fld(docId, key, label, value, clickable) {
-  return `<div class="fld"><span class="k">${label}</span><span class="v" data-fid="${docId}.${key}">${value}</span></div>`;
+  return `<div class="fld"><span class="k">${T(label)}</span><span class="v" data-fid="${docId}.${key}">${value}</span></div>`;
 }
 
 function docHTML(doc, cz) {
@@ -1328,7 +1330,7 @@ function layDocs(cz) {
     const el = document.createElement('div');
     el.className = 'document';
     el.dataset.doc = doc.id;
-    el.innerHTML = `<div class="doc-head" style="background:${doc.color}"><span>${doc.tipo}</span><span>${COUNTRIES[cz.pais].prefix}</span></div><div class="doc-body">${docHTML(doc, cz)}</div>`;
+    el.innerHTML = `<div class="doc-head" style="background:${doc.color}"><span>${T(doc.tipo)}</span><span>${COUNTRIES[cz.pais].prefix}</span></div><div class="doc-body">${docHTML(doc, cz)}</div>`;
     el.style.left = (20 + (i % 3) * 200 + ri(-8, 8)) + 'px';
     el.style.top = (20 + Math.floor(i / 3) * 150 + ri(-6, 6)) + 'px';
     el.style.zIndex = ++shift.zTop;
@@ -1402,7 +1404,7 @@ function buildAskButtons(cz) {
   ];
   qs.forEach(q => {
     const b = document.createElement('button');
-    b.textContent = q.label;
+    b.textContent = T(q.label);
     b.onclick = () => ask(cz, q.k, b);
     row.appendChild(b);
   });
@@ -1446,14 +1448,14 @@ function ask(cz, k, btn) {
   const ans = answerFor(cz, k);
   const log = $('talk-log');
   const LBL = { motivo: 'Motivo da viagem?', cidade: 'Onde nasceu?', profissao: 'Profissão?', duracao: 'Duração da estadia?' };
-  log.innerHTML += `<span class="q">— ${LBL[k]}</span><span class="a" data-fid="talk.${k}">“${ans}”</span>`;
+  log.innerHTML += `<span class="q">— ${T(LBL[k])}</span><span class="a" data-fid="talk.${k}">“${ans}”</span>`;
   log.scrollTop = log.scrollHeight;
   // a resposta abre a pergunta seguinte — quem mente, mente duas vezes
   const f = FOLLOWUPS[k];
   if (f && !cz['fu_' + k]) {
     cz['fu_' + k] = true;
     const fb = document.createElement('button');
-    fb.textContent = '↳ ' + f.label;
+    fb.textContent = '↳ ' + T(f.label);
     fb.onclick = () => askFollow(cz, k, f, fb);
     $('ask-row').appendChild(fb);
   }
@@ -1887,8 +1889,8 @@ function showMorning() {
 
 function renderNewspaper() {
   const d = S.day;
-  $('np-masthead').textContent = MASTHEAD[regimeOfDay(d)];
-  $('np-date').textContent = fmtDate(worldDate(d)) + ` — ${MOEDA} 0,50 — edição ${1200 + d}`;
+  $('np-masthead').textContent = T(MASTHEAD[regimeOfDay(d)]);
+  $('np-date').textContent = fmtDate(worldDate(d)) + (SETTINGS.lang === 'en' ? ` — ${MOEDA} 0.50 — issue ${1200 + d}` : ` — ${MOEDA} 0,50 — edição ${1200 + d}`);
   const scripted = SCRIPTED_NEWS[d];
   const np = $('newspaper');
   if (scripted === null) {
@@ -1978,16 +1980,23 @@ function finishGame(kind) {
   const key = pickEnding(kind);
   const e = ENDINGS[key];
   const c = S.counters;
-  $('ending-title').textContent = e.t;
-  $('ending-body').textContent = e.b;
-  const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? 'viva(o)' : '—'}`).join(' · ');
-  $('ending-stats').innerHTML =
-    `48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
-    `Alternados que passaram por você: <b>${c.alternadosIn}</b>. Detidos: ${c.alternadosCaught}. Rejeitados sem você saber: ${c.alternadosBlocked}.<br>` +
-    `Inocentes detidos: ${c.innocentsDetained}. Barrados por cota: ${c.rejectedByQuota || 0}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
-    `Sua família — ${fam}.<br>` +
-    `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>` +
-    `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`;
+  $('ending-title').textContent = T(e.t);
+  $('ending-body').textContent = T(e.b);
+  const en = SETTINGS.lang === 'en';
+  const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? (en ? 'alive' : 'viva(o)') : '—'}`).join(' · ');
+  $('ending-stats').innerHTML = en
+    ? (`48 days. ${c.approved} approvals. ${c.rejected} rejections. ${c.detained} detentions.<br>` +
+      `Alternates who passed through you: <b>${c.alternadosIn}</b>. Caught: ${c.alternadosCaught}. Rejected without you knowing: ${c.alternadosBlocked}.<br>` +
+      `Innocents detained: ${c.innocentsDetained}. Blocked by quota: ${c.rejectedByQuota || 0}. Bribes: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
+      `Your family — ${fam}.<br>` +
+      `<br><i>These numbers come from the world's True State. You never had access to it. Until now. If this report isn't lying too.</i>` +
+      `<br><i>The report doesn't say whether the survivors are still human. No report says that.</i>`)
+    : (`48 dias. ${c.approved} aprovações. ${c.rejected} rejeições. ${c.detained} detenções.<br>` +
+      `Alternados que passaram por você: <b>${c.alternadosIn}</b>. Detidos: ${c.alternadosCaught}. Rejeitados sem você saber: ${c.alternadosBlocked}.<br>` +
+      `Inocentes detidos: ${c.innocentsDetained}. Barrados por cota: ${c.rejectedByQuota || 0}. Subornos: ${c.bribes} (${MOEDA} ${c.bribeMoney}).<br>` +
+      `Sua família — ${fam}.<br>` +
+      `<br><i>Estes números vêm do Estado Verdadeiro do mundo. Você nunca teve acesso a ele. Até agora. Se é que este relatório também não mente.</i>` +
+      `<br><i>O relatório não informa se os que sobreviveram continuam humanos. Nenhum relatório informa isso.</i>`);
   try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
   // guarda a seed pra "Segunda Leitura": os mesmos cidadãos, agora sabendo
   // o que você sabe. nem revendo tudo você terá certeza.
@@ -2026,10 +2035,21 @@ $('btn-second-reading').onclick = () => {
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
 };
 function renderArchivistBtn() {
-  $('btn-archivist').textContent = (SETTINGS.archivist ? '☑' : '☐') + ' MODO ARQUIVISTA (sem relógio)';
+  $('btn-archivist').textContent = (SETTINGS.archivist ? '☑' : '☐') + ' ' + T('MODO ARQUIVISTA (sem relógio)');
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
 }
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
+function renderLangBtn() {
+  $('btn-lang').textContent = SETTINGS.lang === 'en' ? 'EN / PT-BR' : 'PT-BR / EN';
+  $('btn-lang').classList.toggle('on', SETTINGS.lang === 'en');
+}
+$('btn-lang').onclick = () => {
+  SETTINGS.lang = SETTINGS.lang === 'en' ? 'pt' : 'en';
+  saveSettings();
+  // idioma troca conteúdo demais em telas dinâmicas pra remendar em runtime;
+  // como o botão só existe no título, recarregar é seguro e simples.
+  location.reload();
+};
 $('btn-gowork').onclick = () => {
   if (ENCOUNTERS[S.day] && ENCOUNTERS[S.day].vendeCalibracao) S.flags.calibOferta = true;
   startDay();
@@ -2077,8 +2097,8 @@ function togglePause() {
     if (shift.running) { shift.running = false; clearInterval(shift.tickId); }
     PAUSE.resumeHouse = typeof HOUSE !== 'undefined' && HOUSE.active;
     if (PAUSE.resumeHouse) housePause();
-    $('pz-music').textContent = 'MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA');
-    $('pz-sfx').textContent = 'SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
+    $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
+    $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
     $('pause-overlay').classList.add('active');
   } else {
     PAUSE.open = false;
@@ -2092,13 +2112,13 @@ $('pz-continue').onclick = togglePause;
 $('pz-music').onclick = () => {
   MUSIC.on = !MUSIC.on;
   if (!MUSIC.on) stopMusic();
-  $('pz-music').textContent = 'MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA');
+  $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
   $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
 };
 $('pz-sfx').onclick = () => {
   SFX_ON = !SFX_ON;
   if (!SFX_ON) stopAmbience();
-  $('pz-sfx').textContent = 'SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
+  $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
 };
 $('pz-fullscreen').onclick = toggleFullscreen;
 $('pz-title').onclick = () => { save(); location.reload(); };
@@ -2107,7 +2127,9 @@ $('pz-title').onclick = () => { save(); location.reload(); };
 (function init() {
   if (loadSave()) $('btn-continue').style.display = '';
   loadSettings();
+  applyStaticI18n();
   renderArchivistBtn();
+  renderLangBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();
