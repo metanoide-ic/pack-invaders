@@ -1602,8 +1602,8 @@ const I18N_EN = {
   /* ---- pausa ---- */
   '— PAUSA —': '— PAUSED —',
   'CONTINUAR': 'RESUME',
-  'MÚSICA: LIGADA': 'MUSIC: ON', 'MÚSICA: DESLIGADA': 'MUSIC: OFF',
-  'SONS: LIGADOS': 'SOUND: ON', 'SONS: DESLIGADOS': 'SOUND: OFF',
+  'MÚSICA: ': 'MUSIC: ', 'SONS: ': 'SOUND: ',
+  'LIGADA': 'ON', 'DESLIGADA': 'OFF', 'LIGADOS': 'ON', 'DESLIGADOS': 'OFF',
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
@@ -2400,6 +2400,11 @@ const I18N_EN = {
   'COTA DE ADMISSÃO ESGOTADA. Aprovação bloqueada pelo Ministério. (A pessoa entrou — o carimbo é seu. A advertência também.)':
     'ADMISSION QUOTA EXHAUSTED. Approval blocked by the Ministry. (The person got in — the stamp is yours. So is the warning.)',
   'Decisão em desacordo com o regulamento.': 'Decision does not comply with the rulebook.',
+  'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.':
+    'No entry log exists for the eastern post between 10 and 11 AM yesterday. The logbook shows a blank line no one remembers skipping.',
+  'A cota do posto leste fechou cedo. ': 'The eastern post quota closed early. ',
+  ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
+    ' people with documents in order slept in the snow in front of the gate. The Ministry called the day a "logistical success."',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
@@ -2786,8 +2791,8 @@ const I18N_ES = {
   /* ---- pausa ---- */
   '— PAUSA —': '— PAUSA —',
   'CONTINUAR': 'CONTINUAR',
-  'MÚSICA: LIGADA': 'MÚSICA: ACTIVADA', 'MÚSICA: DESLIGADA': 'MÚSICA: DESACTIVADA',
-  'SONS: LIGADOS': 'SONIDO: ACTIVADO', 'SONS: DESLIGADOS': 'SONIDO: DESACTIVADO',
+  'MÚSICA: ': 'MÚSICA: ', 'SONS: ': 'SONIDO: ',
+  'LIGADA': 'ACTIVADA', 'DESLIGADA': 'DESACTIVADA', 'LIGADOS': 'ACTIVADO', 'DESLIGADOS': 'DESACTIVADO',
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
@@ -3584,6 +3589,11 @@ const I18N_ES = {
   'COTA DE ADMISSÃO ESGOTADA. Aprovação bloqueada pelo Ministério. (A pessoa entrou — o carimbo é seu. A advertência também.)':
     'CUOTA DE ADMISIÓN AGOTADA. Aprobación bloqueada por el Ministerio. (La persona entró — el sello es suyo. La advertencia también.)',
   'Decisão em desacordo com o regulamento.': 'Decisión en desacuerdo con el reglamento.',
+  'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.':
+    'No consta registro de entrada en el puesto este entre las 10 y las 11 de ayer. El libro de asistencia muestra una línea en blanco que nadie recuerda haber saltado.',
+  'A cota do posto leste fechou cedo. ': 'La cuota del puesto este se cerró temprano. ',
+  ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
+    ' personas con documentos en orden durmieron en la nieve frente al portón. El Ministerio llamó al día un "éxito logístico".',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',
@@ -4509,7 +4519,7 @@ function silenteGameOver() {
 function silenteLeaves(cz) {
   document.body.classList.remove('silente-present');
   S.flags.silenteSurvived = (S.flags.silenteSurvived || 0) + 1;
-  S.pendingNews.push({ day: S.day + 1, text: 'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.' });
+  S.pendingNews.push({ day: S.day + 1, text: T('Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.') });
 }
 
 /* ---------- LINHA DA VIDA ----------
@@ -5735,7 +5745,7 @@ function endShift() {
   report += row('Salário do dia', `${MOEDA} ${salaryForDay(S.day)} por decisão correta`);
   report += row('Saldo atual', `${MOEDA} ${S.money}`);
   if (shift.quotaRejects >= 2) {
-    S.pendingNews.push({ day: S.day + 1, text: `A cota do posto leste fechou cedo. ${shift.quotaRejects + ri(3, 14)} pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".` });
+    S.pendingNews.push({ day: S.day + 1, text: `${T('A cota do posto leste fechou cedo. ')}${shift.quotaRejects + ri(3, 14)}${T(' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".')}` });
   }
   $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
   $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
@@ -6071,8 +6081,8 @@ function togglePause() {
     if (shift.running) { shift.running = false; clearInterval(shift.tickId); }
     PAUSE.resumeHouse = typeof HOUSE !== 'undefined' && HOUSE.active;
     if (PAUSE.resumeHouse) housePause();
-    $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
-    $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
+    $('pz-music').textContent = T('MÚSICA: ') + T(MUSIC.on ? 'LIGADA' : 'DESLIGADA');
+    $('pz-sfx').textContent = T('SONS: ') + T(SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
     $('pause-overlay').classList.add('active');
   } else {
     PAUSE.open = false;
@@ -6086,13 +6096,13 @@ $('pz-continue').onclick = togglePause;
 $('pz-music').onclick = () => {
   MUSIC.on = !MUSIC.on;
   if (!MUSIC.on) stopMusic();
-  $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
+  $('pz-music').textContent = T('MÚSICA: ') + T(MUSIC.on ? 'LIGADA' : 'DESLIGADA');
   $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
 };
 $('pz-sfx').onclick = () => {
   SFX_ON = !SFX_ON;
   if (!SFX_ON) stopAmbience();
-  $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
+  $('pz-sfx').textContent = T('SONS: ') + T(SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
 };
 $('pz-fullscreen').onclick = toggleFullscreen;
 $('pz-title').onclick = () => { save(); location.reload(); };

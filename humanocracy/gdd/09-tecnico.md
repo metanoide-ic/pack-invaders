@@ -244,6 +244,25 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    eventos noturnos e familiares, a bagagem, a casa explorável e agora o feedback de
    inspeção/advertência. Adicionar um terceiro idioma é só copiar `I18N_ES`, traduzir os
    valores e registrar em `I18N_TABLES` — a arquitetura já suporta N idiomas, não só dois.
+
+   Décima rodada — revisão de código das nove rodadas de localização (8 buscadores em
+   paralelo cobrindo corretude, comportamento removido, rastreamento cross-file, reuso,
+   simplificação, eficiência e altitude): encontrou o gap real que a rodada anterior
+   deixou passar — dois `S.pendingNews.push()` (o eco de `silenteLeaves()` e o comunicado
+   de cota fechada de `endShift()`) nunca tinham passado por `T()`, então esses dois
+   breves do jornal ficavam sempre em português mesmo em EN/ES. Corrigido; 843 → 848
+   chaves. Também simplificado o rótulo MÚSICA/SONS do menu de pausa, que usava 4 chaves
+   de frase inteira (`T('MÚSICA: ' + estado)`) em vez de compor um prefixo traduzido com
+   uma palavra ON/OFF traduzida — agora seguindo o mesmo padrão de fragmentação usado em
+   todo o resto do código. Outros "achados" da revisão (pré-tradução antes de
+   `citation()`/`hSay()` em `decide()`/`talkTo()`) foram investigados e confirmados como
+   arquitetura correta, não bugs: essas strings compostas contêm valores interpolados
+   dinâmicos e por isso nunca poderiam ser chaves estáveis no dicionário — a
+   pré-tradução de fragmentos ali é necessária, não redundante. A checagem de "T"
+   sombreando a função global (bug da rodada 2) foi reconfirmada limpa em toda a base.
+   Verificado: paridade de chaves EN/ES (848 = 848); suíte `smoke.js`–`smoke6.js`
+   completa sem regressão; teste Playwright dirigido confirmando os dois breves
+   corrigidos e os rótulos de música/som em EN.
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

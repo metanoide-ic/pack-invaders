@@ -556,7 +556,7 @@ function silenteGameOver() {
 function silenteLeaves(cz) {
   document.body.classList.remove('silente-present');
   S.flags.silenteSurvived = (S.flags.silenteSurvived || 0) + 1;
-  S.pendingNews.push({ day: S.day + 1, text: 'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.' });
+  S.pendingNews.push({ day: S.day + 1, text: T('Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.') });
 }
 
 /* ---------- LINHA DA VIDA ----------
@@ -1782,7 +1782,7 @@ function endShift() {
   report += row('Salário do dia', `${MOEDA} ${salaryForDay(S.day)} por decisão correta`);
   report += row('Saldo atual', `${MOEDA} ${S.money}`);
   if (shift.quotaRejects >= 2) {
-    S.pendingNews.push({ day: S.day + 1, text: `A cota do posto leste fechou cedo. ${shift.quotaRejects + ri(3, 14)} pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".` });
+    S.pendingNews.push({ day: S.day + 1, text: `${T('A cota do posto leste fechou cedo. ')}${shift.quotaRejects + ri(3, 14)}${T(' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".')}` });
   }
   $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
   $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
@@ -2118,8 +2118,8 @@ function togglePause() {
     if (shift.running) { shift.running = false; clearInterval(shift.tickId); }
     PAUSE.resumeHouse = typeof HOUSE !== 'undefined' && HOUSE.active;
     if (PAUSE.resumeHouse) housePause();
-    $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
-    $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
+    $('pz-music').textContent = T('MÚSICA: ') + T(MUSIC.on ? 'LIGADA' : 'DESLIGADA');
+    $('pz-sfx').textContent = T('SONS: ') + T(SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
     $('pause-overlay').classList.add('active');
   } else {
     PAUSE.open = false;
@@ -2133,13 +2133,13 @@ $('pz-continue').onclick = togglePause;
 $('pz-music').onclick = () => {
   MUSIC.on = !MUSIC.on;
   if (!MUSIC.on) stopMusic();
-  $('pz-music').textContent = T('MÚSICA: ' + (MUSIC.on ? 'LIGADA' : 'DESLIGADA'));
+  $('pz-music').textContent = T('MÚSICA: ') + T(MUSIC.on ? 'LIGADA' : 'DESLIGADA');
   $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
 };
 $('pz-sfx').onclick = () => {
   SFX_ON = !SFX_ON;
   if (!SFX_ON) stopAmbience();
-  $('pz-sfx').textContent = T('SONS: ' + (SFX_ON ? 'LIGADOS' : 'DESLIGADOS'));
+  $('pz-sfx').textContent = T('SONS: ') + T(SFX_ON ? 'LIGADOS' : 'DESLIGADOS');
 };
 $('pz-fullscreen').onclick = toggleFullscreen;
 $('pz-title').onclick = () => { save(); location.reload(); };

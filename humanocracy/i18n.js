@@ -86,8 +86,8 @@ const I18N_EN = {
   /* ---- pausa ---- */
   '— PAUSA —': '— PAUSED —',
   'CONTINUAR': 'RESUME',
-  'MÚSICA: LIGADA': 'MUSIC: ON', 'MÚSICA: DESLIGADA': 'MUSIC: OFF',
-  'SONS: LIGADOS': 'SOUND: ON', 'SONS: DESLIGADOS': 'SOUND: OFF',
+  'MÚSICA: ': 'MUSIC: ', 'SONS: ': 'SOUND: ',
+  'LIGADA': 'ON', 'DESLIGADA': 'OFF', 'LIGADOS': 'ON', 'DESLIGADOS': 'OFF',
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
@@ -884,6 +884,11 @@ const I18N_EN = {
   'COTA DE ADMISSÃO ESGOTADA. Aprovação bloqueada pelo Ministério. (A pessoa entrou — o carimbo é seu. A advertência também.)':
     'ADMISSION QUOTA EXHAUSTED. Approval blocked by the Ministry. (The person got in — the stamp is yours. So is the warning.)',
   'Decisão em desacordo com o regulamento.': 'Decision does not comply with the rulebook.',
+  'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.':
+    'No entry log exists for the eastern post between 10 and 11 AM yesterday. The logbook shows a blank line no one remembers skipping.',
+  'A cota do posto leste fechou cedo. ': 'The eastern post quota closed early. ',
+  ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
+    ' people with documents in order slept in the snow in front of the gate. The Ministry called the day a "logistical success."',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
@@ -1270,8 +1275,8 @@ const I18N_ES = {
   /* ---- pausa ---- */
   '— PAUSA —': '— PAUSA —',
   'CONTINUAR': 'CONTINUAR',
-  'MÚSICA: LIGADA': 'MÚSICA: ACTIVADA', 'MÚSICA: DESLIGADA': 'MÚSICA: DESACTIVADA',
-  'SONS: LIGADOS': 'SONIDO: ACTIVADO', 'SONS: DESLIGADOS': 'SONIDO: DESACTIVADO',
+  'MÚSICA: ': 'MÚSICA: ', 'SONS: ': 'SONIDO: ',
+  'LIGADA': 'ACTIVADA', 'DESLIGADA': 'DESACTIVADA', 'LIGADOS': 'ACTIVADO', 'DESLIGADOS': 'DESACTIVADO',
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
@@ -2068,6 +2073,11 @@ const I18N_ES = {
   'COTA DE ADMISSÃO ESGOTADA. Aprovação bloqueada pelo Ministério. (A pessoa entrou — o carimbo é seu. A advertência também.)':
     'CUOTA DE ADMISIÓN AGOTADA. Aprobación bloqueada por el Ministerio. (La persona entró — el sello es suyo. La advertencia también.)',
   'Decisão em desacordo com o regulamento.': 'Decisión en desacuerdo con el reglamento.',
+  'Nenhum registro de entrada consta do posto leste entre 10h e 11h de ontem. O livro de ponto mostra uma linha em branco que ninguém lembra de ter pulado.':
+    'No consta registro de entrada en el puesto este entre las 10 y las 11 de ayer. El libro de asistencia muestra una línea en blanco que nadie recuerda haber saltado.',
+  'A cota do posto leste fechou cedo. ': 'La cuota del puesto este se cerró temprano. ',
+  ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
+    ' personas con documentos en orden durmieron en la nieve frente al portón. El Ministerio llamó al día un "éxito logístico".',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',
