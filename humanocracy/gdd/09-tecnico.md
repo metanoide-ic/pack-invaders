@@ -165,7 +165,13 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    Advogado e jornalista sempre têm papéis em ordem (`forceValid: true`, sem
    `isAlternado`/`isForger`) — são profissionais perseguindo um caso, não fugitivos;
    se o jogador aprovar qualquer estágio, a escalada simplesmente para ali (sem
-   final "feliz" explícito, só o silêncio de não haver próxima visita).
+   final "feliz" explícito, só o silêncio de não haver próxima visita). Se, em vez
+   disso, o(a) jornalista TAMBÉM for detido(a) ou rejeitado(a) — a linha se esgota
+   nos dois lados —, um eco em `S.pendingNews` aparece no jornal dias depois:
+   a reportagem sobre o caso foi arquivada sem explicação. É o fechamento simétrico
+   ao "o mundo espalha boatos" do item 4 (rodada 11): lá o jornal circula boato
+   sobre VOCÊ; aqui, o jornal registra o silêncio sobre um caso que você decidiu
+   enterrar.
 
    Mesmo cuidado de RNG do item anterior, mas em `decide()` em vez de
    `renderQueueChatter()`: a decisão de EMPILHAR ou não uma nova visita já é uma
@@ -176,11 +182,12 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    atual já foi gerada e resolvida, nunca antes.
 
    Verificado com um teste dedicado simulando a cadeia completa (detém o cidadão →
-   detém o parente → rejeita o advogado → o jornalista aparece): o nome do caso
-   permanece idêntico nos 4 estágios, cada fala traduz corretamente em EN, e
-   aprovar qualquer estágio intermediário confirmadamente não empilha o próximo.
-   Localizado em EN/ES (a nova profissão `advogado(a)` + as 6 falas novas de
-   `greetingFor`); suíte `smoke.js`–`smoke6.js` completa sem regressão.
+   detém o parente → rejeita o advogado → detém o jornalista → eco no jornal): o
+   nome e a data do caso permanecem idênticos do primeiro ao último estágio, cada
+   fala e o eco final traduzem corretamente em EN, e aprovar qualquer estágio
+   intermediário confirmadamente não empilha o próximo. Localizado em EN/ES (a nova
+   profissão `advogado(a)` + as 9 falas novas de `greetingFor`/eco de jornal); suíte
+   `smoke.js`–`smoke6.js` completa sem regressão; 864 → 872 chaves.
 5. Manuais falsificáveis e auditorias reativas;
 6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
    ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do

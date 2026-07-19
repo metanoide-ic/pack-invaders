@@ -1194,6 +1194,10 @@ const I18N_EN = {
   ', detido(a) neste posto no dia': ', detained at this post on day',
   '. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?':
     ". The family's lawyer got no response in thirty days. I've come to ask the question no one answers: where do you take people?",
+  'Uma reportagem sobre o caso de ': 'A news report on the case of ',
+  ', detido(a) no Posto Nº 7 no dia': ', detained at Post No. 7 on day',
+  ', foi arquivada sem explicação. Ninguém envolvido deu mais entrevistas.':
+    ', was shelved without explanation. No one involved gave any more interviews.',
   'Bom dia. Está frio hoje, não?': 'Good morning. Cold today, isn\'t it?',
   'Aqui estão meus papéis.': 'Here are my papers.',
   'Espero que esteja tudo em ordem.': 'I hope everything is in order.',
@@ -2408,6 +2412,10 @@ const I18N_ES = {
   ', detido(a) neste posto no dia': ', detenido(a) en este puesto el día',
   '. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?':
     '. El abogado de la familia no recibió respuesta en treinta días. Vine a hacer la pregunta que nadie responde: ¿a dónde se llevan a la gente?',
+  'Uma reportagem sobre o caso de ': 'Un reportaje sobre el caso de ',
+  ', detido(a) no Posto Nº 7 no dia': ', detenido(a) en el Puesto N.º 7 el día',
+  ', foi arquivada sem explicação. Ninguém envolvido deu mais entrevistas.':
+    ', fue archivado sin explicación. Nadie involucrado dio más entrevistas.',
   'Bom dia. Está frio hoje, não?': 'Buenos días. Hace frío hoy, ¿no?',
   'Aqui estão meus papéis.': 'Aquí están mis papeles.',
   'Espero que esteja tudo em ordem.': 'Espero que todo esté en orden.',

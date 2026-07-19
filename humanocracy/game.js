@@ -1700,6 +1700,13 @@ function decide(decision) {
       S.returnQueue.push({ dueDay: S.day + ri(3, 6), nome: r.nome, pais: cz.pais, sexo: chance(.5) ? 'm' : 'f', etnia: cz.etnia, features: null, mood: 'advogado', dia: r.dia });
     } else if (r.mood === 'advogado' && (decision === 'detain' || decision === 'reject')) {
       S.returnQueue.push({ dueDay: S.day + ri(3, 6), nome: r.nome, pais: cz.pais, sexo: chance(.5) ? 'm' : 'f', etnia: cz.etnia, features: null, mood: 'jornalista', dia: r.dia });
+    } else if (r.mood === 'jornalista' && (decision === 'detain' || decision === 'reject')) {
+      // fim da linha: nem advogado nem jornalista furaram o silêncio — o caso é
+      // arquivado. Não há mais próximo estágio; só o eco no jornal, dias depois.
+      S.pendingNews.push({
+        day: S.day + ri(2, 4),
+        text: `${T('Uma reportagem sobre o caso de ')}${r.nome}${T(', detido(a) no Posto Nº 7 no dia')} ${r.dia}${T(', foi arquivada sem explicação. Ninguém envolvido deu mais entrevistas.')}`,
+      });
     }
   }
 
