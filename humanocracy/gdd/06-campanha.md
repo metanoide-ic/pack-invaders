@@ -93,12 +93,13 @@ Regras: nunca explicar; nunca repetir o mesmo tipo de medo; consequências mecâ
 tem custo mecânico, só custo de sono. O olho mágico vazio (noites 19, 22 e 43) é o
 recurso mais barato e mais eficaz do jogo.
 
-## 6.2 Finais (protótipo: 6; produção: matriz expandida)
+## 6.2 Finais (protótipo: 7; produção: matriz expandida)
 
 Selecionados pela **Memória do Mundo** — não por uma escolha final isolada:
 
 | Final | Gatilho | Tese |
 |---|---|---|
+| **O Que Olha de Volta** (O Silente) | olhar de perto, demorar demais ou chamar guardas no encontro com O Silente | não há final "certo" para essa cena — as três reações erram; o próprio prêmio (o cargo, a família) já é a punição |
 | **O Formulário 77-B** (prisão) | 12+ advertências ou auditoria de corrupção | *"Nós também estávamos inspecionando você. Desde o primeiro dia."* |
 | **A Casa Vazia** | família inteira morta | perfeição profissional × ruína humana |
 | **A Rota do Barbeiro** | ajudou a resistência e guardou o contato | escapar sem documentos — e decidir todos os dias não pensar no sorriso longo demais |

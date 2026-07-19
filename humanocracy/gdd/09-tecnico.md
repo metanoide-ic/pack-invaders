@@ -218,7 +218,9 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    exatamente as mesmas 259 chaves (conferido programaticamente a cada rodada). Botão no
    título cicla PT-BR → EN → ES → PT-BR (recarrega a página). Cobertura: toda a interface
    estática (título, HUD, ferramentas, telas de pausa/exame/bagagem/casa), `REGIME_LABEL`,
-   `MASTHEAD`, os 8 finais (texto integral), rótulos e tipos de documento, perguntas de
+   `MASTHEAD`, os 7 finais (texto integral, incluindo "O Que Olha de Volta" — o final de
+   O Silente, ausente da tabela de finais do Volume 6 até esta correção), rótulos e tipos
+   de documento, perguntas de
    interrogatório, **e a camada ambiente do mundo**: sussurros (`WHISPERS`), conversa e
    eventos da fila (`QUEUE_CHATTER`/`QUEUE_EVENTS`), rádio das 4 fases do regime (`RADIO`),
    anúncios (`ADS`), notícias de preenchimento (`FILLER_NEWS`), os 8 comunicados
