@@ -188,7 +188,28 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    intermediário confirmadamente não empilha o próximo. Localizado em EN/ES (a nova
    profissão `advogado(a)` + as 9 falas novas de `greetingFor`/eco de jornal); suíte
    `smoke.js`–`smoke6.js` completa sem regressão; 864 → 872 chaves.
-5. Manuais falsificáveis e auditorias reativas;
+5. Manuais falsificáveis e auditorias reativas **— as auditorias reativas já existiam no
+   protótipo antes desta rodada e foram só documentadas/reforçadas aqui; "manuais
+   falsificáveis" segue deliberadamente fora de escopo.** `auditRisk` (`S.flags`) já
+   acumulava com subornos aceitos (15% de chance por suborno) e com certas escolhas de
+   `NIGHT_EVENTS` (não abrir a porta pro fiscal, aceitar o suborno da madrugada); ao
+   chegar a 3, `checkArrest()` encerra a campanha no final `'prisao'` — um limiar
+   determinístico e transparente na sua lógica (ainda que oculto na interface),
+   fundado inteiramente em escolhas do próprio jogador, nunca em evidência manipulada.
+   Décima terceira rodada: adicionado `bumpAuditRisk(n)` centralizando os dois pontos
+   de incremento (suborno e eventos noturnos) e, ao cruzar 2 pela primeira vez, um
+   único sussurro — nunca mais que um por campanha (`S.flags.auditWarned`) — avisa
+   "alguém andou perguntando de você" sem dizer quem nem o quê. O limiar de 3, o que
+   o aciona e a dificuldade não mudam em nada; é só a versão jogável de "você também
+   é inspecionado" (Volume 7.7) ganhar um sinal perceptível antes do fim, em vez de
+   só o próprio fim. **"Manuais falsificáveis"** (o regulamento ou os selos de
+   referência mentirem para o jogador) segue sem implementação e sem plano de
+   implementação: diferente do aviso de auditoria, isso alteraria o que o jogador
+   PODE saber com certeza sobre um caso — vai direto contra a garantia central do
+   jogo, de que toda discrepância é real e descobrível com diligência (Volume 3).
+   Verificado: teste dedicado confirma silêncio no risco 1, um único sussurro exato
+   no risco 2, e nenhum segundo sussurro ao cruzar 3 (onde o final de prisão já
+   dispara, sem alteração); 872 → 873 chaves, paridade EN/ES.
 6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
    ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do
    idioma ativo, com fallback pro português original — nunca quebra por faltar tradução) e

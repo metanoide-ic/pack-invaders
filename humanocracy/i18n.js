@@ -181,6 +181,8 @@ const I18N_EN = {
   'o café de hoje tinha o mesmo gosto de sempre. exatamente o mesmo.': 'today\'s coffee tasted the same as always. exactly the same.',
   'a foto 3×4 sorriu. não. não sorriu.': 'the 3x4 photo smiled. no. it didn\'t.',
   'você trancou a porta ao sair de casa. você sempre tranca. sempre?': 'you locked the door when you left home. you always lock it. always?',
+  'alguém andou perguntando de você. ninguém disse quem. ninguém disse o quê.':
+    'someone\'s been asking about you. no one said who. no one said what.',
 
   /* ---- CONVERSA DA FILA (QUEUE_CHATTER) ---- */
   '"…três dias nessa fila…"': '"…three days in this line…"',
@@ -1399,6 +1401,8 @@ const I18N_ES = {
   'o café de hoje tinha o mesmo gosto de sempre. exatamente o mesmo.': 'el café de hoy sabía igual que siempre. exactamente igual.',
   'a foto 3×4 sorriu. não. não sorriu.': 'la foto 3x4 sonrió. no. no sonrió.',
   'você trancou a porta ao sair de casa. você sempre tranca. sempre?': 'cerraste la puerta al salir de casa. siempre la cierras. ¿siempre?',
+  'alguém andou perguntando de você. ninguém disse quem. ninguém disse o quê.':
+    'alguien estuvo preguntando por ti. nadie dijo quién. nadie dijo qué.',
 
   /* ---- CONVERSA DA FILA (QUEUE_CHATTER) ---- */
   '"…três dias nessa fila…"': '"…tres días en esta fila…"',

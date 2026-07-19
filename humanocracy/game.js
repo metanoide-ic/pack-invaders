@@ -302,12 +302,26 @@ function citation(text) {
 }
 
 /* ---------- SUSSURROS ---------- */
-function whisper() {
+function whisper(line) {
   const w = $('whisper');
-  w.textContent = T(pick(WHISPERS));
+  w.textContent = T(line || pick(WHISPERS));
   w.style.left = ri(15, 60) + '%';
   w.style.top = ri(20, 70) + '%';
   w.classList.remove('active'); void w.offsetWidth; w.classList.add('active');
+}
+
+/* ---------- AUDITORIA: você também é inspecionado (Volume 7.7) ---------- */
+/* auditRisk >= 3 termina o jogo (checkArrest). Aos 2, um único sussurro — nunca
+   mais que isso — avisa que alguém notou, sem dizer quem nem o quê. O LIMIAR e o
+   que o aciona (suborno aceito, fiscalização ignorada) continuam exatamente os
+   mesmos; isto só dá ao jogador uma chance de perceber antes do fim, não muda a
+   regra nem a torna mais dura ou mais branda. */
+function bumpAuditRisk(n) {
+  S.flags.auditRisk = (S.flags.auditRisk || 0) + n;
+  if (S.flags.auditRisk >= 2 && !S.flags.auditWarned) {
+    S.flags.auditWarned = true;
+    whisper('alguém andou perguntando de você. ninguém disse quem. ninguém disse o quê.');
+  }
 }
 
 /* ---------- RETRATOS (SVG procedural) ---------- */
@@ -1387,7 +1401,7 @@ function layBribe(cz) {
   el.style.zIndex = ++shift.zTop;
   el.onclick = () => {
     modal('UM ENVELOPE DISCRETO', `Há ${MOEDA} ${cz.bribe} dentro. A fila observa. Ou não.`, [
-      { label: 'ACEITAR', fn: () => { S.money += cz.bribe; S.counters.bribes++; S.counters.bribeMoney += cz.bribe; el.remove(); updateHud(); if (chance(.15)) S.flags.auditRisk = (S.flags.auditRisk || 0) + 1; } },
+      { label: 'ACEITAR', fn: () => { S.money += cz.bribe; S.counters.bribes++; S.counters.bribeMoney += cz.bribe; el.remove(); updateHud(); if (chance(.15)) bumpAuditRisk(1); } },
       { label: 'DEVOLVER', fn: () => { el.remove(); } },
     ]);
   };
@@ -1889,7 +1903,7 @@ function showNight(day, ev) {
 }
 function resolveNight(c) {
   if (c.money) { S.money += c.money; }
-  if (c.audit) { S.flags.auditRisk = (S.flags.auditRisk || 0) + c.audit; }
+  if (c.audit) { bumpAuditRisk(c.audit); }
   if (c.flag) { S.flags[c.flag] = true; }
   if (c.echo) { S.pendingNews.push({ day: S.day + 1, text: T(c.echo) }); }
   $('night-choices').innerHTML = '';
