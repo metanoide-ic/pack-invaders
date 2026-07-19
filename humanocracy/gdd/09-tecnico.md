@@ -122,9 +122,11 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 1. Fila simulada pessoa a pessoa + bagagem/objetos (Volume 4.6);
 2. Linha da Vida + Cadeia de Evidências como UI;
 3. Rádio diegética e jornal multi-editoria;
-4. Rede Social Invisível (casos que crescem sozinhos) **— fatia "boato sobre o
-   inspetor" implementada no protótipo, o resto (casos que crescem sozinhos com
-   advogado/jornalista/faca) ainda só existe nos arcos scriptados dos `ENCOUNTERS`**:
+4. Rede Social Invisível (casos que crescem sozinhos) **— duas fatias implementadas no
+   protótipo: o boato sobre o inspetor, e a escalada de um caso de detenção (parente →
+   advogado → jornalista). O resto (a rede de conhecidos plena, com faca/ameaça, e
+   casos nascendo de QUALQUER interação, não só detenção) ainda só existe nos arcos
+   scriptados dos `ENCOUNTERS`**:
    `reputationTier()` (`game.js`) deriva um "boato" puramente atmosférico dos contadores
    que o jogo já mantém (`S.counters.bribes`, `.innocentsDetained`, `.resHelped`,
    `.rejected`/`.approved`) — sem nenhum estado novo, sem nenhuma ficha de NPC adicional.
@@ -148,6 +150,37 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    (nome, discrepâncias, sinais físicos, bagagem) com reputação neutra, `corrupto` e
    `cruel`. Localizado em EN/ES nesta mesma rodada (16 falas × 2 idiomas, paridade
    confirmada).
+
+   Décima segunda rodada — a escalada do caso, a peça que faltava do texto do GDD
+   ("prender um homem faz a esposa aparecer no Dia+5, o filho depois, o advogado
+   depois, um jornalista depois"): estende o mecanismo de `S.returnQueue` que já
+   existia (quem você rejeita/detém pode voltar — Volume 9.5, "o mundo tem memória").
+   Hoje, além do parente (`mood: 'parente'`) que já aparecia perguntando por quem foi
+   detido, `decide()` ganhou um segundo bloco: se o PRÓPRIO parente for detido, um
+   `advogado(a)` (nova profissão, só usada aqui) é agendado para dias depois pedindo
+   os documentos do processo; se o advogado for detido OU rejeitado, um(a)
+   `jornalista` é agendado(a) investigando o caso. Cada estágio carrega `r.dia` e
+   `r.nome` do registro ANTERIOR, então a fala do jornalista cita a data e o nome do
+   detido original, não da visita mais recente — o fio da história não se perde.
+   Advogado e jornalista sempre têm papéis em ordem (`forceValid: true`, sem
+   `isAlternado`/`isForger`) — são profissionais perseguindo um caso, não fugitivos;
+   se o jogador aprovar qualquer estágio, a escalada simplesmente para ali (sem
+   final "feliz" explícito, só o silêncio de não haver próxima visita).
+
+   Mesmo cuidado de RNG do item anterior, mas em `decide()` em vez de
+   `renderQueueChatter()`: a decisão de EMPILHAR ou não uma nova visita já é uma
+   consequência determinística da AÇÃO do jogador NESTE cidadão (`decision`), não de
+   estado acumulado independente — então não há risco de o número de sorteios
+   depender de histórico de reputação como no item anterior; a única sorte envolvida
+   (`ri(3,6)` pro atraso, sexo do próximo visitante) roda depois que a citizen
+   atual já foi gerada e resolvida, nunca antes.
+
+   Verificado com um teste dedicado simulando a cadeia completa (detém o cidadão →
+   detém o parente → rejeita o advogado → o jornalista aparece): o nome do caso
+   permanece idêntico nos 4 estágios, cada fala traduz corretamente em EN, e
+   aprovar qualquer estágio intermediário confirmadamente não empilha o próximo.
+   Localizado em EN/ES (a nova profissão `advogado(a)` + as 6 falas novas de
+   `greetingFor`); suíte `smoke.js`–`smoke6.js` completa sem regressão.
 5. Manuais falsificáveis e auditorias reativas;
 6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
    ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do

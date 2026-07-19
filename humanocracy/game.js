@@ -1195,6 +1195,15 @@ function nextCitizen() {
         cz.nome = cz.nome.split(' ')[0] + ' ' + rec.nome.split(' ')[1]; // mesmo sobrenome do detido
         cz.docs.pass.nome = cz.nome;
         for (const k in cz.docs) if (cz.docs[k].nome) cz.docs[k].nome = cz.nome;
+      } else if (rec.mood === 'advogado' || rec.mood === 'jornalista') {
+        // o caso cresce sozinho: o parente detido chama um advogado; barrado ou
+        // detido também, o advogado chama uma jornalista — sempre papéis em ordem,
+        // são profissionais, não fugitivos
+        cz = makeCitizen(S.day, {
+          pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia, motivo: 'trabalho',
+          profissao: rec.mood === 'advogado' ? 'advogado(a)' : 'jornalista',
+          forceValid: true, returning: rec,
+        });
       } else {
         const valid = chance(.55);
         cz = makeCitizen(S.day, {
@@ -1243,6 +1252,8 @@ function greetingFor(cz) {
     if (r.mood === 'raiva') return `${T('O senhor. DE NOVO eu, sim. Me barrou no dia')} ${r.dia}${T('. Consegui papéis novos. Custaram o que custaram. Olhe o quanto quiser — e olhe nos meus olhos quando carimbar.')}`;
     if (r.mood === 'suplica') return T('É a segunda vez, senhor. Desde aquele carimbo vermelho eu durmo na fila. Eu arrumei tudo. Acho que arrumei tudo. Por favor. POR FAVOR.');
     if (r.mood === 'parente') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?')}`;
+    if (r.mood === 'advogado') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e foi detido(a). Sou advogado(a) da família. Vim pedir os documentos do processo — e um prazo de resposta, já que ninguém me deu nenhum dos dois.')}`;
+    if (r.mood === 'jornalista') return `${T('Estou apurando o caso de ')}${r.nome}${T(', detido(a) neste posto no dia')} ${r.dia}${T('. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?')}`;
   }
   const g = [
     'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
@@ -1678,6 +1689,17 @@ function decide(decision) {
       S.returnQueue.push({ dueDay: S.day + ri(2, 5), nome: cz.nome, pais: cz.pais, sexo: cz.sexo, etnia: cz.etnia, features: cz.features, mood: chance(.5) ? 'raiva' : 'suplica', dia: S.day });
     } else if (decision === 'detain' && !cz.isAlternado && chance(.2)) {
       S.returnQueue.push({ dueDay: S.day + ri(2, 5), nome: cz.nome, pais: cz.pais, sexo: cz.sexo === 'm' ? 'f' : 'm', etnia: cz.etnia, features: null, mood: 'parente', dia: S.day });
+    }
+  }
+  // o caso cresce sozinho: parente detido chama advogado; advogado barrado ou
+  // detido chama jornalista. r.dia sempre carrega a data do detido ORIGINAL,
+  // não a desta visita, então a narrativa não perde o fio.
+  if (cz.returning && S.day < 43 && S.returnQueue.length < 4) {
+    const r = cz.returning;
+    if (r.mood === 'parente' && decision === 'detain') {
+      S.returnQueue.push({ dueDay: S.day + ri(3, 6), nome: r.nome, pais: cz.pais, sexo: chance(.5) ? 'm' : 'f', etnia: cz.etnia, features: null, mood: 'advogado', dia: r.dia });
+    } else if (r.mood === 'advogado' && (decision === 'detain' || decision === 'reject')) {
+      S.returnQueue.push({ dueDay: S.day + ri(3, 6), nome: r.nome, pais: cz.pais, sexo: chance(.5) ? 'm' : 'f', etnia: cz.etnia, features: null, mood: 'jornalista', dia: r.dia });
     }
   }
 

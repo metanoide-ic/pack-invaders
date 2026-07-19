@@ -1109,7 +1109,7 @@ const I18N_EN = {
   'agricultor(a)': 'farmer', 'músico(a)': 'musician', 'contador(a)': 'accountant',
   'soldado': 'soldier', 'costureiro(a)': 'tailor', 'ferroviário(a)': 'railway worker',
   'pesquisador(a)': 'researcher', 'padeiro(a)': 'baker', 'jornalista': 'journalist',
-  'estudante': 'student', 'mecânico(a)': 'mechanic',
+  'estudante': 'student', 'mecânico(a)': 'mechanic', 'advogado(a)': 'lawyer',
 
   /* ---- LINHA DA VIDA (buildLifeline/openLifeline) ---- */
   'LINHA DA VIDA': 'LIFE TIMELINE',
@@ -1188,6 +1188,12 @@ const I18N_EN = {
   'entrou neste posto no dia': 'entered this post on day',
   ' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?':
     ' and never left again. DETAINED, they told me. Nobody says where. I came to cross — and I came to ask to your face: where do you take people?',
+  ' e foi detido(a). Sou advogado(a) da família. Vim pedir os documentos do processo — e um prazo de resposta, já que ninguém me deu nenhum dos dois.':
+    " and was detained. I'm the family's lawyer. I've come to request the case documents — and a response deadline, since no one's given me either.",
+  'Estou apurando o caso de ': "I'm investigating the case of ",
+  ', detido(a) neste posto no dia': ', detained at this post on day',
+  '. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?':
+    ". The family's lawyer got no response in thirty days. I've come to ask the question no one answers: where do you take people?",
   'Bom dia. Está frio hoje, não?': 'Good morning. Cold today, isn\'t it?',
   'Aqui estão meus papéis.': 'Here are my papers.',
   'Espero que esteja tudo em ordem.': 'I hope everything is in order.',
@@ -2317,7 +2323,7 @@ const I18N_ES = {
   'agricultor(a)': 'agricultor(a)', 'músico(a)': 'músico(a)', 'contador(a)': 'contador(a)',
   'soldado': 'soldado', 'costureiro(a)': 'costurero(a)', 'ferroviário(a)': 'ferroviario(a)',
   'pesquisador(a)': 'investigador(a)', 'padeiro(a)': 'panadero(a)', 'jornalista': 'periodista',
-  'estudante': 'estudiante', 'mecânico(a)': 'mecánico(a)',
+  'estudante': 'estudiante', 'mecânico(a)': 'mecánico(a)', 'advogado(a)': 'abogado(a)',
 
   /* ---- LINHA DA VIDA (buildLifeline/openLifeline) ---- */
   'LINHA DA VIDA': 'LÍNEA DE VIDA',
@@ -2396,6 +2402,12 @@ const I18N_ES = {
   'entrou neste posto no dia': 'entró en este puesto el día',
   ' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?':
     ' y nunca más salió. DETENIDO(A), me dijeron. Nadie dice dónde. Vine a cruzar — y vine a preguntarle a la cara: ¿a dónde se llevan a la gente?',
+  ' e foi detido(a). Sou advogado(a) da família. Vim pedir os documentos do processo — e um prazo de resposta, já que ninguém me deu nenhum dos dois.':
+    ' y fue detenido(a). Soy el abogado de la familia. Vine a pedir los documentos del proceso — y un plazo de respuesta, ya que nadie me dio ninguno de los dos.',
+  'Estou apurando o caso de ': 'Estoy investigando el caso de ',
+  ', detido(a) neste posto no dia': ', detenido(a) en este puesto el día',
+  '. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?':
+    '. El abogado de la familia no recibió respuesta en treinta días. Vine a hacer la pregunta que nadie responde: ¿a dónde se llevan a la gente?',
   'Bom dia. Está frio hoje, não?': 'Buenos días. Hace frío hoy, ¿no?',
   'Aqui estão meus papéis.': 'Aquí están mis papeles.',
   'Espero que esteja tudo em ordem.': 'Espero que todo esté en orden.',
