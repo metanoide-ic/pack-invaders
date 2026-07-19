@@ -606,3 +606,33 @@ const QUEUE_CHATTER = [
   '"…ela não era ela, eu juro…"', '"…vendo pão, meia ostra…"', '"…não olha nos olhos dele…"',
   '"…o inspetor de sexta é pior…"', '"…açúcar. eles odeiam açúcar…"', '"…quieto, tem gente ouvindo…"',
 ];
+
+/* ---------- REDE SOCIAL INVISÍVEL: boatos sobre ESTE inspetor ---------- */
+/* O mundo lembra como você decide. Puramente atmosférico — nunca afeta scanner,
+   nervosismo ou qualquer sinal de jogo, só o que a fila cochicha sobre você. */
+const REPUTATION_CHATTER = {
+  corrupto: [
+    '"…esse aqui tem preço, já ouvi dizer…"',
+    '"…leva um envelope certinho e ele nem lê o resto…"',
+    '"…psiu. sabe quanto custa esse guichê? eu sei…"',
+    '"…disseram que ele já deixou passar gente por menos que isso…"',
+  ],
+  cruel: [
+    '"…esse aqui não solta ninguém, nem quando devia…"',
+    '"…prenderam meu vizinho semana passada. foi esse guichê…"',
+    '"…evita olhar pra ele. evita olhar mesmo…"',
+    '"…dizem que já detém sem prova nenhuma…"',
+  ],
+  protetor: [
+    '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"',
+    '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"',
+    '"…esse guichê é seguro, dizem. mas fala baixo…"',
+    '"…não sei se é bondade ou descuido. mas agradeço os dois…"',
+  ],
+  implacavel: [
+    '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"',
+    '"…melhor nem tentar a sorte com esse guichê…"',
+    '"…ele lê cada linha. CADA linha…"',
+    '"…esse não erra. ou não admite que erra…"',
+  ],
+};

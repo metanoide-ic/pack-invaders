@@ -890,6 +890,25 @@ const I18N_EN = {
   ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
     ' people with documents in order slept in the snow in front of the gate. The Ministry called the day a "logistical success."',
 
+  /* ---- REDE SOCIAL INVISÍVEL: boatos sobre o inspetor (REPUTATION_CHATTER) ---- */
+  '"…esse aqui tem preço, já ouvi dizer…"': '"…this one has a price, I heard…"',
+  '"…leva um envelope certinho e ele nem lê o resto…"': '"…bring the right envelope and he doesn\'t even read the rest…"',
+  '"…psiu. sabe quanto custa esse guichê? eu sei…"': '"…psst. know how much this window costs? I know…"',
+  '"…disseram que ele já deixou passar gente por menos que isso…"': '"…they say he\'s let people through for less than this…"',
+  '"…esse aqui não solta ninguém, nem quando devia…"': '"…this one never lets anyone go, not even when he should…"',
+  '"…prenderam meu vizinho semana passada. foi esse guichê…"': '"…they arrested my neighbor last week. it was this window…"',
+  '"…evita olhar pra ele. evita olhar mesmo…"': "\"…avoid looking at him. really avoid it…\"",
+  '"…dizem que já detém sem prova nenhuma…"': '"…they say he detains people with no evidence at all…"',
+  '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"': '"…psst. they say this one helps, if you know how to ask…"',
+  '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"':
+    '"…my cousin came through here. said he \'forgot\' to check her luggage…"',
+  '"…esse guichê é seguro, dizem. mas fala baixo…"': '"…this window is safe, they say. but keep your voice down…"',
+  '"…não sei se é bondade ou descuido. mas agradeço os dois…"': "\"…I don't know if it's kindness or carelessness. but I'll take either…\"",
+  '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"': '"…that one rejects almost everything, even when the papers are right…"',
+  '"…melhor nem tentar a sorte com esse guichê…"': "\"…better not to try your luck at that window…\"",
+  '"…ele lê cada linha. CADA linha…"': '"…he reads every line. EVERY line…"',
+  '"…esse não erra. ou não admite que erra…"': "\"…he doesn't make mistakes. or doesn't admit to them…\"",
+
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
@@ -2078,6 +2097,25 @@ const I18N_ES = {
   'A cota do posto leste fechou cedo. ': 'La cuota del puesto este se cerró temprano. ',
   ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
     ' personas con documentos en orden durmieron en la nieve frente al portón. El Ministerio llamó al día un "éxito logístico".',
+
+  /* ---- REDE SOCIAL INVISÍVEL: boatos sobre o inspetor (REPUTATION_CHATTER) ---- */
+  '"…esse aqui tem preço, já ouvi dizer…"': '"…este tiene precio, ya lo oí decir…"',
+  '"…leva um envelope certinho e ele nem lê o resto…"': '"…lleva un sobre bien puesto y ni siquiera lee el resto…"',
+  '"…psiu. sabe quanto custa esse guichê? eu sei…"': '"…psh. ¿sabe cuánto cuesta esta ventanilla? yo sé…"',
+  '"…disseram que ele já deixou passar gente por menos que isso…"': '"…dicen que ya dejó pasar gente por menos que eso…"',
+  '"…esse aqui não solta ninguém, nem quando devia…"': '"…este no suelta a nadie, ni cuando debería…"',
+  '"…prenderam meu vizinho semana passada. foi esse guichê…"': '"…detuvieron a mi vecino la semana pasada. fue esta ventanilla…"',
+  '"…evita olhar pra ele. evita olhar mesmo…"': '"…evite mirarlo. evítelo de verdad…"',
+  '"…dizem que já detém sem prova nenhuma…"': '"…dicen que ya detiene sin ninguna prueba…"',
+  '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"': '"…psh. dicen que este ayuda, si sabe pedir de la manera correcta…"',
+  '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"':
+    '"…mi prima pasó por aquí. dijo que él "se olvidó" de revisar su equipaje…"',
+  '"…esse guichê é seguro, dizem. mas fala baixo…"': '"…esta ventanilla es segura, dicen. pero hable bajito…"',
+  '"…não sei se é bondade ou descuido. mas agradeço os dois…"': '"…no sé si es bondad o descuido. pero agradezco los dos…"',
+  '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"': '"…ese rechaza casi todo, aunque los papeles estén en regla…"',
+  '"…melhor nem tentar a sorte com esse guichê…"': '"…mejor ni probar suerte con esa ventanilla…"',
+  '"…ele lê cada linha. CADA linha…"': '"…lee cada línea. CADA línea…"',
+  '"…esse não erra. ou não admite que erra…"': '"…ese no se equivoca. o no admite que se equivoca…"',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',

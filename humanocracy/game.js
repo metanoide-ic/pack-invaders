@@ -1109,11 +1109,31 @@ function queueAdvance() {
   const last = Q.figs[Q.figs.length - 1];
   Q.figs.push(makeFig((last ? last.tx : spots[0]) - 26 - ri(0, 10)));
 }
+/* ---------- REDE SOCIAL INVISÍVEL: boato sobre o inspetor ---------- */
+/* Puramente atmosférico — deriva dos contadores já existentes, nunca alimenta
+   scanner, nervosismo ou qualquer outro sinal de jogo. Só o que a fila cochicha. */
+function reputationTier() {
+  const c = S.counters;
+  if (c.bribes >= 2) return 'corrupto';
+  if (c.innocentsDetained >= 3) return 'cruel';
+  if (c.resHelped >= 1 && c.innocentsDetained === 0) return 'protetor';
+  if (c.rejected >= 8 && c.rejected >= c.approved) return 'implacavel';
+  return null;
+}
 function renderQueueChatter() {
   const n = ri(1, 2);
   const resta = Math.max(0, shift.queueSize - shift.processed);
   let html = `≈ ${resta} ${T('pessoas na fila')}<br>`;
-  for (let i = 0; i < n; i++) html += T(pick(QUEUE_CHATTER)) + '<br>';
+  // boato de reputação: sempre 1 pick() por linha, com ou sem tier — o número de
+  // sorteios não pode depender de S.counters (decisões passadas), senão a MESMA
+  // seed geraria um cidadão diferente conforme a reputação do jogador (quebraria
+  // a promessa da Segunda Leitura). Só a POSIÇÃO do boato (linha 0, sem sorteio)
+  // depende do tier; a escolha da linha em si sempre consome exatamente 1 sorteio.
+  const tier = S.day >= 4 ? reputationTier() : null;
+  for (let i = 0; i < n; i++) {
+    const line = (i === 0 && tier) ? pick(REPUTATION_CHATTER[tier]) : pick(QUEUE_CHATTER);
+    html += T(line) + '<br>';
+  }
   $('queue-view').innerHTML = html;
 }
 

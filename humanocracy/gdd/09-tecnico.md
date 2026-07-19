@@ -122,7 +122,32 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 1. Fila simulada pessoa a pessoa + bagagem/objetos (Volume 4.6);
 2. Linha da Vida + Cadeia de Evidências como UI;
 3. Rádio diegética e jornal multi-editoria;
-4. Rede Social Invisível (casos que crescem sozinhos);
+4. Rede Social Invisível (casos que crescem sozinhos) **— fatia "boato sobre o
+   inspetor" implementada no protótipo, o resto (casos que crescem sozinhos com
+   advogado/jornalista/faca) ainda só existe nos arcos scriptados dos `ENCOUNTERS`**:
+   `reputationTier()` (`game.js`) deriva um "boato" puramente atmosférico dos contadores
+   que o jogo já mantém (`S.counters.bribes`, `.innocentsDetained`, `.resHelped`,
+   `.rejected`/`.approved`) — sem nenhum estado novo, sem nenhuma ficha de NPC adicional.
+   Quatro tiers, cada um com 4 falas em `REPUTATION_CHATTER` (`data.js`): `corrupto`
+   (2+ subornos aceitos), `cruel` (3+ inocentes detidos), `protetor` (ajudou a
+   resistência e nunca deteve um inocente) e `implacavel` (rejeita mais do que aprova,
+   com volume mínimo). A partir do dia 4 (tempo pro boato circular), `renderQueueChatter()`
+   passa a puxar a primeira linha da fila do pool do tier ativo em vez do `QUEUE_CHATTER`
+   genérico. **Deliberadamente só cosmético**: não altera `cz.nervous`, não altera nenhum
+   sinal de exame, não altera peso de discrepância — só o texto que a fila cochicha. Essa
+   fronteira foi mantida por design, pelo mesmo motivo que "manuais falsificáveis" (item 5)
+   segue não-implementado: qualquer efeito de reputação sobre o VEREDITO do jogo mudaria a
+   promessa central de "cada caso julgado pelas próprias evidências", não pela história do
+   inspetor. Cuidado de RNG: `renderQueueChatter()` roda dentro do `beginRng(slotSeed)` do
+   próximo cidadão (mesma seed = mesma pessoa, Volume 9.5 item 8) — se o número de sorteios
+   consumidos dependesse do tier (que depende de decisões passadas), a mesma seed geraria
+   cidadãos diferentes conforme a reputação do jogador, quebrando a Segunda Leitura. Por
+   isso o código sempre consome exatamente 1 `pick()` por linha de boato, tier ou não; só a
+   ESCOLHA de qual pool usar na primeira linha depende do tier (sem custo de sorteio).
+   Verificado com um teste dedicado: a mesma seed gera o cidadão byte-a-byte idêntico
+   (nome, discrepâncias, sinais físicos, bagagem) com reputação neutra, `corrupto` e
+   `cruel`. Localizado em EN/ES nesta mesma rodada (16 falas × 2 idiomas, paridade
+   confirmada).
 5. Manuais falsificáveis e auditorias reativas;
 6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
    ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do
@@ -263,6 +288,10 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    Verificado: paridade de chaves EN/ES (848 = 848); suíte `smoke.js`–`smoke6.js`
    completa sem regressão; teste Playwright dirigido confirmando os dois breves
    corrigidos e os rótulos de música/som em EN.
+
+   Décima primeira rodada: 848 → 864 chaves com as 16 falas de `REPUTATION_CHATTER`
+   (item 4 acima — boato sobre o inspetor), 4 idiomas × 4 tiers, paridade EN/ES
+   confirmada por varredura completa (zero string faltando).
 7. Modo "arquivista" (sem relógio) **— implementado no protótipo**: alternável no título,
    persiste entre partidas (fora do save); o relógio do turno não avança em tempo real,
    só com o custo-base de cada decisão e o uso de ferramentas — sem pressão de tempo, mas

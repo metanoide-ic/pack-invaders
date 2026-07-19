@@ -1512,6 +1512,36 @@ const QUEUE_CHATTER = [
   '"…o inspetor de sexta é pior…"', '"…açúcar. eles odeiam açúcar…"', '"…quieto, tem gente ouvindo…"',
 ];
 
+/* ---------- REDE SOCIAL INVISÍVEL: boatos sobre ESTE inspetor ---------- */
+/* O mundo lembra como você decide. Puramente atmosférico — nunca afeta scanner,
+   nervosismo ou qualquer sinal de jogo, só o que a fila cochicha sobre você. */
+const REPUTATION_CHATTER = {
+  corrupto: [
+    '"…esse aqui tem preço, já ouvi dizer…"',
+    '"…leva um envelope certinho e ele nem lê o resto…"',
+    '"…psiu. sabe quanto custa esse guichê? eu sei…"',
+    '"…disseram que ele já deixou passar gente por menos que isso…"',
+  ],
+  cruel: [
+    '"…esse aqui não solta ninguém, nem quando devia…"',
+    '"…prenderam meu vizinho semana passada. foi esse guichê…"',
+    '"…evita olhar pra ele. evita olhar mesmo…"',
+    '"…dizem que já detém sem prova nenhuma…"',
+  ],
+  protetor: [
+    '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"',
+    '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"',
+    '"…esse guichê é seguro, dizem. mas fala baixo…"',
+    '"…não sei se é bondade ou descuido. mas agradeço os dois…"',
+  ],
+  implacavel: [
+    '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"',
+    '"…melhor nem tentar a sorte com esse guichê…"',
+    '"…ele lê cada linha. CADA linha…"',
+    '"…esse não erra. ou não admite que erra…"',
+  ],
+};
+
 </script>
 <script>
 /* ============================================================
@@ -2405,6 +2435,25 @@ const I18N_EN = {
   'A cota do posto leste fechou cedo. ': 'The eastern post quota closed early. ',
   ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
     ' people with documents in order slept in the snow in front of the gate. The Ministry called the day a "logistical success."',
+
+  /* ---- REDE SOCIAL INVISÍVEL: boatos sobre o inspetor (REPUTATION_CHATTER) ---- */
+  '"…esse aqui tem preço, já ouvi dizer…"': '"…this one has a price, I heard…"',
+  '"…leva um envelope certinho e ele nem lê o resto…"': '"…bring the right envelope and he doesn\'t even read the rest…"',
+  '"…psiu. sabe quanto custa esse guichê? eu sei…"': '"…psst. know how much this window costs? I know…"',
+  '"…disseram que ele já deixou passar gente por menos que isso…"': '"…they say he\'s let people through for less than this…"',
+  '"…esse aqui não solta ninguém, nem quando devia…"': '"…this one never lets anyone go, not even when he should…"',
+  '"…prenderam meu vizinho semana passada. foi esse guichê…"': '"…they arrested my neighbor last week. it was this window…"',
+  '"…evita olhar pra ele. evita olhar mesmo…"': "\"…avoid looking at him. really avoid it…\"",
+  '"…dizem que já detém sem prova nenhuma…"': '"…they say he detains people with no evidence at all…"',
+  '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"': '"…psst. they say this one helps, if you know how to ask…"',
+  '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"':
+    '"…my cousin came through here. said he \'forgot\' to check her luggage…"',
+  '"…esse guichê é seguro, dizem. mas fala baixo…"': '"…this window is safe, they say. but keep your voice down…"',
+  '"…não sei se é bondade ou descuido. mas agradeço os dois…"': "\"…I don't know if it's kindness or carelessness. but I'll take either…\"",
+  '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"': '"…that one rejects almost everything, even when the papers are right…"',
+  '"…melhor nem tentar a sorte com esse guichê…"': "\"…better not to try your luck at that window…\"",
+  '"…ele lê cada linha. CADA linha…"': '"…he reads every line. EVERY line…"',
+  '"…esse não erra. ou não admite que erra…"': "\"…he doesn't make mistakes. or doesn't admit to them…\"",
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
@@ -3594,6 +3643,25 @@ const I18N_ES = {
   'A cota do posto leste fechou cedo. ': 'La cuota del puesto este se cerró temprano. ',
   ' pessoas com documentos em ordem dormiram na neve diante do portão. O Ministério chamou o dia de "sucesso logístico".':
     ' personas con documentos en orden durmieron en la nieve frente al portón. El Ministerio llamó al día un "éxito logístico".',
+
+  /* ---- REDE SOCIAL INVISÍVEL: boatos sobre o inspetor (REPUTATION_CHATTER) ---- */
+  '"…esse aqui tem preço, já ouvi dizer…"': '"…este tiene precio, ya lo oí decir…"',
+  '"…leva um envelope certinho e ele nem lê o resto…"': '"…lleva un sobre bien puesto y ni siquiera lee el resto…"',
+  '"…psiu. sabe quanto custa esse guichê? eu sei…"': '"…psh. ¿sabe cuánto cuesta esta ventanilla? yo sé…"',
+  '"…disseram que ele já deixou passar gente por menos que isso…"': '"…dicen que ya dejó pasar gente por menos que eso…"',
+  '"…esse aqui não solta ninguém, nem quando devia…"': '"…este no suelta a nadie, ni cuando debería…"',
+  '"…prenderam meu vizinho semana passada. foi esse guichê…"': '"…detuvieron a mi vecino la semana pasada. fue esta ventanilla…"',
+  '"…evita olhar pra ele. evita olhar mesmo…"': '"…evite mirarlo. evítelo de verdad…"',
+  '"…dizem que já detém sem prova nenhuma…"': '"…dicen que ya detiene sin ninguna prueba…"',
+  '"…psiu. dizem que esse ajuda, se souber pedir do jeito certo…"': '"…psh. dicen que este ayuda, si sabe pedir de la manera correcta…"',
+  '"…minha prima passou por aqui. disse que ele "esqueceu" de olhar a bagagem dela…"':
+    '"…mi prima pasó por aquí. dijo que él "se olvidó" de revisar su equipaje…"',
+  '"…esse guichê é seguro, dizem. mas fala baixo…"': '"…esta ventanilla es segura, dicen. pero hable bajito…"',
+  '"…não sei se é bondade ou descuido. mas agradeço os dois…"': '"…no sé si es bondad o descuido. pero agradezco los dos…"',
+  '"…esse aí rejeita quase tudo, nem que os papéis estejam certos…"': '"…ese rechaza casi todo, aunque los papeles estén en regla…"',
+  '"…melhor nem tentar a sorte com esse guichê…"': '"…mejor ni probar suerte con esa ventanilla…"',
+  '"…ele lê cada linha. CADA linha…"': '"…lee cada línea. CADA línea…"',
+  '"…esse não erra. ou não admite que erra…"': '"…ese no se equivoca. o no admite que se equivoca…"',
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',
@@ -5072,11 +5140,31 @@ function queueAdvance() {
   const last = Q.figs[Q.figs.length - 1];
   Q.figs.push(makeFig((last ? last.tx : spots[0]) - 26 - ri(0, 10)));
 }
+/* ---------- REDE SOCIAL INVISÍVEL: boato sobre o inspetor ---------- */
+/* Puramente atmosférico — deriva dos contadores já existentes, nunca alimenta
+   scanner, nervosismo ou qualquer outro sinal de jogo. Só o que a fila cochicha. */
+function reputationTier() {
+  const c = S.counters;
+  if (c.bribes >= 2) return 'corrupto';
+  if (c.innocentsDetained >= 3) return 'cruel';
+  if (c.resHelped >= 1 && c.innocentsDetained === 0) return 'protetor';
+  if (c.rejected >= 8 && c.rejected >= c.approved) return 'implacavel';
+  return null;
+}
 function renderQueueChatter() {
   const n = ri(1, 2);
   const resta = Math.max(0, shift.queueSize - shift.processed);
   let html = `≈ ${resta} ${T('pessoas na fila')}<br>`;
-  for (let i = 0; i < n; i++) html += T(pick(QUEUE_CHATTER)) + '<br>';
+  // boato de reputação: sempre 1 pick() por linha, com ou sem tier — o número de
+  // sorteios não pode depender de S.counters (decisões passadas), senão a MESMA
+  // seed geraria um cidadão diferente conforme a reputação do jogador (quebraria
+  // a promessa da Segunda Leitura). Só a POSIÇÃO do boato (linha 0, sem sorteio)
+  // depende do tier; a escolha da linha em si sempre consome exatamente 1 sorteio.
+  const tier = S.day >= 4 ? reputationTier() : null;
+  for (let i = 0; i < n; i++) {
+    const line = (i === 0 && tier) ? pick(REPUTATION_CHATTER[tier]) : pick(QUEUE_CHATTER);
+    html += T(line) + '<br>';
+  }
   $('queue-view').innerHTML = html;
 }
 
