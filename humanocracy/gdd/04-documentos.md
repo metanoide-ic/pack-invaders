@@ -81,9 +81,10 @@ Um documento antigo em estado perfeito pode ser falso — ou apenas bem cuidado.
 
 Discrepâncias implementadas no protótipo: `expired`, `nameMismatch`, `numberMismatch`,
 `wrongSeal`, `invalidCity`, `photoMismatch`, `sexMismatch`, `contradiction` (entrevista),
-mais violações de regra (documento ausente, país banido, sem revalidação ★, sem
-certificado de ancestralidade). A IA adaptativa dos Alternados pondera sobre essa lista
-(Volume 2).
+`luggage` (bagagem incompatível com o motivo declarado — **latente**: só conta se o
+jogador abrir a mala; ver Volume 4.6), mais violações de regra (documento ausente, país
+banido, sem revalidação ★, sem certificado de ancestralidade). A IA adaptativa dos
+Alternados pondera sobre essa lista (Volume 2).
 
 ## 4.5 Biometria — nada é perfeito
 
