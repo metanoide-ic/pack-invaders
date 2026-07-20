@@ -202,14 +202,32 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    "alguém andou perguntando de você" sem dizer quem nem o quê. O limiar de 3, o que
    o aciona e a dificuldade não mudam em nada; é só a versão jogável de "você também
    é inspecionado" (Volume 7.7) ganhar um sinal perceptível antes do fim, em vez de
-   só o próprio fim. **"Manuais falsificáveis"** (o regulamento ou os selos de
-   referência mentirem para o jogador) segue sem implementação e sem plano de
-   implementação: diferente do aviso de auditoria, isso alteraria o que o jogador
-   PODE saber com certeza sobre um caso — vai direto contra a garantia central do
-   jogo, de que toda discrepância é real e descobrível com diligência (Volume 3).
-   Verificado: teste dedicado confirma silêncio no risco 1, um único sussurro exato
-   no risco 2, e nenhum segundo sussurro ao cruzar 3 (onde o final de prisão já
-   dispara, sem alteração); 872 → 873 chaves, paridade EN/ES.
+   só o próprio fim. Verificado: teste dedicado confirma silêncio no risco 1, um único
+   sussurro exato no risco 2, e nenhum segundo sussurro ao cruzar 3 (onde o final de
+   prisão já dispara, sem alteração); 872 → 873 chaves, paridade EN/ES.
+
+   Décima quarta rodada — **"manuais falsificáveis", entregue como narrativa pura, nunca
+   como mecânica**: a versão que mudaria o que o jogador PODE saber com certeza sobre um
+   caso continua fora de escopo, por ir direto contra a garantia central do jogo (Volume
+   3, toda discrepância é real e descobrível com diligência). Mas o tema — o próprio
+   manual de referência sendo fabricado — tinha gancho plantado desde o protótipo
+   original e nunca teve pagamento: o comunicado do Dia 14 introduz o Édito de Pureza nº
+   2 citando um "estudo" do Instituto Lantraviano de Fenotipia "não revisado por pares";
+   o do Dia 24 mostra catorze cientistas presos por contestar essa mesma fenotipia. Um
+   novo `SCRIPTED_NEWS[39]` ("O ÉDITO DE PUREZA NUNCA EXISTIU NO PAPEL") fecha o arco:
+   nunca houve votação, sessão ou estudo — o decreto e o "instituto" citado nele foram
+   obra do mesmo funcionário fictício. `RULES.ancestry`, `computeViolations()` e todo o
+   resto da lógica de julgamento permanecem *byte a byte idênticos* — `git diff` confirma
+   zero linha tocada em `game.js` nesta rodada. O jogador continuou obrigado a seguir a
+   lei exatamente como ela apareceu no REGULAMENTO DO DIA durante o jogo (a única coisa
+   que já era, e continua sendo, a fonte de verdade mecânica); a notícia do Dia 39 é
+   pura ironia trágica retroativa — revela que a base da lei nunca existiu, sem jamais
+   fingir que o jogador deveria ter agido diferente. Verificado: `git diff -- game.js`
+   vazio (nenhuma mudança de lógica); checagem de cobertura confirma `h`/`b`/ambas as
+   `m` do Dia 39 presentes em EN e ES; teste dedicado confirma que `RULES.ancestry.text`
+   e o resultado de `computeViolations()` para um cidadão núlio sem certificado são
+   idênticos antes e depois; suíte `smoke.js`–`smoke6.js` sem regressão; 873 → 877
+   chaves, paridade EN/ES.
 6. Localização (EN/ES) **— arquitetura + inglês + espanhol implementados no protótipo,
    ampliados em duas rodadas**: `i18n.js` define `T(s)` (procura a chave na tabela do
    idioma ativo, com fallback pro português original — nunca quebra por faltar tradução) e
