@@ -29,8 +29,17 @@ electron-builder com `extraMetadata.main`.)
 2. **Saves:** o jogo grava em `localStorage` (persistido pelo Electron em
    `userData`) — habilitar **Steam Cloud** apontando para essa pasta;
 3. **Overlay:** `--in-process-gpu` na linha de comando do Electron;
-4. **Deck:** o jogo já tem controles de toque; mapear gamepad é o único gap
-   (stick esquerdo = WASD, stick direito = olhar, A = E, X/B = carimbos).
+4. **Deck:** o jogo já tem controles de toque. Gamepad **parcialmente mapeado**:
+   a cena da casa (`house.js`, `houseLoop()`) já lê `navigator.getGamepads()` —
+   stick esquerdo anda, stick direito olha, A interage, Start pausa — mas isso
+   cobre só os ~2 minutos por noite na casa. O turno principal (o guichê — onde
+   o jogador passa a maior parte da campanha: inspecionar documentos, escanear,
+   aprovar/rejeitar/deter) não lê gamepad em nenhum lugar; `togglePause()`
+   (`game.js`) só está ligado à tecla Escape. O gap real de produção não é
+   "mapear gamepad" de forma genérica — é desenhar a navegação por controle
+   para uma tela com elementos clicáveis dinâmicos (documentos, zonas de
+   exame, botões de pergunta), decisão de UX ainda em aberto, não só
+   engenharia de input.
 
 ## Conquistas propostas
 
