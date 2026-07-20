@@ -5108,6 +5108,30 @@ function makeFig(x) {
   };
 }
 function queueSpots(w) { const s = []; for (let i = 0; i < 9; i++) s.push(w * .58 - i * 26); return s; }
+/* ---------- GAMEPAD NO GUICHÊ (Steam Deck / controle) ---------- */
+/* A = aprovar, B = rejeitar, X = deter (respeita o disabled do botão),
+   Start = pausa — mesmo padrão de borda-de-subida usado em house.js/houseLoop(). */
+function pollShiftGamepad() {
+  let gpA = false, gpB = false, gpX = false, gpStart = false;
+  try {
+    const gp = navigator.getGamepads && navigator.getGamepads()[0];
+    if (gp) {
+      gpA = !!(gp.buttons[0] && gp.buttons[0].pressed);
+      gpB = !!(gp.buttons[1] && gp.buttons[1].pressed);
+      gpX = !!(gp.buttons[2] && gp.buttons[2].pressed);
+      gpStart = !!(gp.buttons[9] && gp.buttons[9].pressed);
+    }
+  } catch (e) {}
+  if (gpStart && !shift.gpStart) togglePause();
+  const overlayOpen = ['modal-overlay', 'exam-overlay', 'bag-overlay', 'citation']
+    .some(id => { const el = $(id); return el && el.classList.contains('active'); });
+  if (!PAUSE.open && !overlayOpen && shift.running && shift.citizen) {
+    if (gpA && !shift.gpA) decide('approve');
+    if (gpB && !shift.gpB) decide('reject');
+    if (gpX && !shift.gpX && !$('btn-detain').disabled) decide('detain');
+  }
+  shift.gpA = gpA; shift.gpB = gpB; shift.gpX = gpX; shift.gpStart = gpStart;
+}
 function initQueueCanvas() {
   const cv = $('queue-canvas');
   const win = cv.parentElement;
@@ -5122,6 +5146,7 @@ function initQueueCanvas() {
   const loop = () => {
     Q.t += .016;
     drawQueue(ctx, cv.width, cv.height);
+    pollShiftGamepad();
     Q.raf = requestAnimationFrame(loop);
   };
   Q.raf = requestAnimationFrame(loop);

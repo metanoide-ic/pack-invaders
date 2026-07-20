@@ -112,10 +112,12 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 1. **Agora:** build desktop Electron (`npm run humanocracy`) — tela cheia, F11/Alt+Enter,
    saves persistidos em userData; empacotável com electron-forge para Windows/Linux/Deck;
 2. **Early Access / demo:** Steamworks via `steamworks.js` (AppID, Steam Cloud sobre o
-   localStorage, overlay com `--in-process-gpu`), gamepad completo para o Deck (hoje só
-   a cena da casa lê `navigator.getGamepads()` — o turno principal no guichê, onde o
-   jogador passa a maior parte da campanha, não tem mapeamento nenhum; ver
-   `steam/README.md` para o detalhe do gap real), e as **12
+   localStorage, overlay com `--in-process-gpu`), gamepad para o Deck — agora mapeado
+   nas duas cenas onde o jogo é jogado: a casa (`house.js`) e, desde esta rodada, o
+   turno principal no guichê também (`game.js`, `pollShiftGamepad()`: A aprova, B
+   rejeita, X detém respeitando o `disabled` do botão, Start pausa, tudo bloqueado
+   enquanto um overlay/modal estiver aberto — ver `steam/README.md` para o mapeamento
+   completo e o gap restante, a navegação por controle da inspeção comparativa), e as **12
    conquistas** especificadas em `steam/README.md`. A afirmação "todas com contadores já
    existentes" foi conferida contra o código e estava **certa para 9 das 12, errada para
    3**: `ACH_QUENTE` (o travesseiro quente), `ACH_CINCO` (contar o retrato em duas noites
