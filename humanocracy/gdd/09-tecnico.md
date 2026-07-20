@@ -113,8 +113,26 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    saves persistidos em userData; empacotável com electron-forge para Windows/Linux/Deck;
 2. **Early Access / demo:** Steamworks via `steamworks.js` (AppID, Steam Cloud sobre o
    localStorage, overlay com `--in-process-gpu`), gamepad para o Deck, e as **12
-   conquistas** especificadas em `steam/README.md` (todas com contadores já existentes
-   no estado do jogo);
+   conquistas** especificadas em `steam/README.md`. A afirmação "todas com contadores já
+   existentes" foi conferida contra o código e estava **certa para 9 das 12, errada para
+   3**: `ACH_QUENTE` (o travesseiro quente), `ACH_CINCO` (contar o retrato em duas noites
+   distintas) e `ACH_AMIGO` (os 4 tipos de aviso do amigo do Dario) não tinham nenhum
+   estado persistente rastreando sua condição — eram só diálogo efêmero, sem registro.
+   Adicionados: `S.flags.travesseiroQuente` (setado no ramo raro de `interactWith('hosp2')`
+   em `house.js`), `S.counters.retratoNights` (incrementado uma vez por noite em
+   `interactWith('retrato')`, não uma vez por clique) e `S.flags.avisoSilente`/
+   `avisoNaoErram`/`avisoWanted`/`avisoNoite` (um por tipo de aviso em `infoDario()`).
+   Ao instrumentar `avisoNaoErram`, um bug real e pré-existente apareceu: a condição
+   `S.day + 1 === 46` (o aviso do dia 45) vinha DEPOIS de `S.day >= 44` na cadeia de
+   `if`, e como dia 45 sempre satisfaz `>= 44`, a linha da profecia "eles não erram
+   mais" era **código morto inalcançável** desde que foi escrita — o jogador nunca via
+   essa fala específica, sempre caindo na genérica "o amigo parou de falar". Corrigido
+   reordenando a checagem mais específica para antes da mais geral; nenhum outro dia é
+   afetado (a condição geral `>=44` ainda cobre 44, 46 e 47 normalmente). Verificado com
+   teste dedicado: os 3 contadores nunca antes rastreados agora disparam corretamente
+   (incluindo a confirmação de que `retratoNights` conta noites, não cliques), e a
+   profecia do dia 45 agora é alcançável; suíte `smoke.js`–`smoke6.js` sem regressão.
+   Nenhuma string nova de interface — sem impacto em i18n.
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo
