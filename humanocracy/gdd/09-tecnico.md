@@ -217,6 +217,14 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    sem a lista aberta continua idêntico; abrir a partir da pausa e apertar ESC fecha só a
    lista (pausa continua aberta, jogo continua parado) e um segundo ESC despausa
    normalmente; abrir a partir do título e apertar ESC fecha a lista.
+
+   Um retoque pequeno: o toast de conquista não tinha som, destoando de todo o resto do
+   jogo — carimbo, buzina de citação, ding de discrepância confirmada, tudo em
+   `sfx()` já tinha sua própria nota. `sfx('achieve')` soma duas notas curtas subindo
+   (C5 → G5, osciladores senoidais, mesmo estilo síntese do resto de `sfx()`, sem
+   nenhum asset novo), chamada em `unlockAchievement()` antes do toast aparecer —
+   respeita o toggle SONS do menu de pausa como qualquer outro efeito, de graça,
+   porque `sfx()` já guarda esse estado internamente.
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo

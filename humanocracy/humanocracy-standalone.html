@@ -4206,6 +4206,16 @@ function sfx(kind) {
         o2.start(tt); o2.stop(tt + .25);
       }
     }
+    else if (kind === 'achieve') { // conquista: duas notas subindo (C5 → G5), mais festivo que o 'ding' comum
+      o.type = 'sine'; o.frequency.setValueAtTime(523.25, t);
+      g.gain.setValueAtTime(.001, t); g.gain.linearRampToValueAtTime(.14, t + .02); g.gain.exponentialRampToValueAtTime(.001, t + .22);
+      o.start(t); o.stop(t + .24);
+      const o2 = AC.createOscillator(), g2 = AC.createGain();
+      o2.connect(g2); g2.connect(AC.destination);
+      o2.type = 'sine'; o2.frequency.setValueAtTime(783.99, t + .12);
+      g2.gain.setValueAtTime(.001, t + .12); g2.gain.linearRampToValueAtTime(.16, t + .14); g2.gain.exponentialRampToValueAtTime(.001, t + .4);
+      o2.start(t + .12); o2.stop(t + .42);
+    }
   } catch (e) { /* áudio indisponível */ }
 }
 
@@ -4359,6 +4369,7 @@ function unlockAchievement(id) {
   if (!ACHIEVEMENTS[id] || SETTINGS.achievements.includes(id)) return;
   SETTINGS.achievements.push(id);
   saveSettings();
+  sfx('achieve');
   const el = document.createElement('div');
   el.className = 'achievement-toast';
   el.innerHTML = `🏆 <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
