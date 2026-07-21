@@ -306,6 +306,12 @@ function buildFaces() {
     C(x, 36, 30, 17, '#141414');
     x.fillStyle = 'rgba(255,255,255,.05)'; x.fillRect(20, 20, 4, 24);
   });
+  // mesma fita, mesma casa: os rostos da família passam pelo mesmo
+  // pós-processamento analógico dos cidadãos (faces.js)
+  if (window.analogPostCanvas) {
+    let fi = 0;
+    for (const k in FACES) analogPostCanvas(FACES[k], 9100 + (fi++), { levels: 8, grain: 16, aberr: 1, scan: 0.16, sat: 0.4 });
+  }
 }
 
 /* ---------- ENTIDADES ---------- */

@@ -16,18 +16,33 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   - Conselho Popular: vermelho e ocre, estrela ★ como carimbo de revalidação;
   - Colapso: dessaturação progressiva até o cinza; a única cor viva que resta é o
     carimbo APROVAR.
-- **Cidadãos no guichê — photobash + VHS (implementado):** o estilo visual dos cidadãos é
-  o de *No, I'm Not a Human* — **cutouts fotográficos** (photobash) com fundo removido,
-  brilho reduzido, contraste alto e um filtro **VHS** assado (aberração cromática RGB,
-  scanlines, grão, sangramento horizontal) + um overlay CRT ao vivo na janela (scanlines +
-  roll de tracking). Pipeline em `tools/` (canvas headless): cada imagem-base vira "quase
-  infinitos" cidadãos via flip horizontal e variação de matiz/brilho/saturação por pessoa.
-  Os Alternados usam cutouts *uncanny* (rostos deformados); **O Silente** usa o cutout mais
-  perturbador, com o VHS rasgando. Fallback: retrato SVG procedural.
-- **Retratos SVG (fallback / família):** procedurais, geométricos, levemente rígidos —
-  rostos que o cérebro lê como rostos mas nunca relaxa ao ler (vale para humanos e
-  Alternados igualmente; **nunca** existe "cara de Alternado" garantida — a distorção é
-  distribuída, e a maioria dos Alternados parece perfeitamente humana).
+- **Cidadãos — motor procedural analog-horror (implementado, substituiu o photobash):**
+  cada rosto é PINTADO em canvas por `faces.js` — crânio com maxilar e assimetria
+  próprios, chiaroscuro de lâmpada única (lado direito do rosto em sombra franca),
+  órbitas, sombra projetada do nariz, lábios com luz, cabelo e sobrancelha fio a fio,
+  cabeça sempre levemente inclinada (mugshot de verdade nunca é reto) — e depois
+  degradado por uma cadeia de pós-processamento VHS: dessaturação com cast verde-âmbar,
+  curva de contraste, aberração cromática RGB, **dithering ordenado** (Bayer 4x4),
+  scanlines, grão e rasgos de tracking. Determinístico por `f.fseed`: a MESMA pessoa
+  rende o MESMO rosto na foto do documento, no busto do guichê e no close do exame —
+  coisa que o photobash (fotos aleatórias sem relação com o retrato) nunca teve; a
+  "foto divergente" agora é a mesma pessoa com atributos trocados, um spot-the-difference
+  de verdade. O exame renderiza DOIS frames (olhos abertos/fechados) e anima a piscada
+  por opacidade — quem não pisca, não pisca, o frame simplesmente não existe. As marcas
+  do corpo (esclera injetada, pele cerosa sem poros) são pintadas no próprio rosto do
+  exame. **O Silente** tem o único retrato deliberadamente errado do motor: rosto longo
+  demais, sem modelagem nenhuma (a ausência de planos é o que perturba), olhos como
+  buracos, VHS rasgando em três bandas — e a foto do passaporte dele não bate com ele.
+  O descarte do photobash também derrubou o build standalone de 1,8MB para ~600KB.
+- **Nunca existe "cara de Alternado" garantida:** o fator *uncanny* do motor (pupilas
+  desiguais, olhos afastados demais, cantos da boca altos demais) é sorteado para TODO
+  MUNDO (~12% dos rostos), humano ou não — o mundo inteiro sai errado na fita. Isso
+  corrige de quebra um viés do photobash antigo, que dava cutouts "uncanny" para 50%
+  dos Alternados — um tell visual não-intencional que contradizia o GDD.
+- **Camada CRT global:** o jogo inteiro é visto através de um monitor — tile de ruído
+  animado gerado em runtime, scanlines finas e uma barra de rolagem lenta
+  (`#crt-overlay`), com opacidades baixas de propósito: atmosfera, nunca ilegibilidade.
+  Os rostos da família na casa passam pelo mesmo pós-processamento analógico.
 - **Documentos:** cada país com cor, selo e tipografia próprios; desgaste procedural
   (dobras, manchas, carimbos sobrepostos) na produção.
 

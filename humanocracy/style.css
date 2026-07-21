@@ -150,7 +150,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .npc-stage { position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:center; z-index:1; }
 #npc-actor { position:relative; width:200px; height:230px; display:flex; align-items:flex-end; justify-content:center; cursor:pointer; }
 #npc-portrait { width:170px; height:204px; }
-#npc-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:230px; width:auto; display:none; image-rendering:auto; }
+#npc-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:230px; width:auto; display:none; image-rendering:pixelated; }
 #npc-actor.use-photo #npc-portrait { display:none; }
 #npc-actor.use-photo #npc-photo { display:block; }
 #npc-actor.pickable:hover { filter: drop-shadow(0 0 7px var(--accent2)); }
@@ -414,6 +414,35 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
   animation: grain-flicker 4s steps(3) infinite;
 }
 @keyframes grain-flicker { 0%,100% { opacity:.9 } 50% { opacity:1 } 75% { opacity:.95 } }
+
+/* ============ CAMADA CRT GLOBAL (faces.js injeta o tile de ruído) ============
+   O jogo inteiro é visto através de um monitor: grão animado, scanlines
+   finas e uma barra de rolagem lenta. Opacidades baixas de propósito —
+   atmosfera, nunca ilegibilidade. */
+#crt-overlay {
+  position:fixed; inset:0; pointer-events:none; z-index:500;
+  background-repeat:repeat; opacity:.5;
+  animation: crt-noise .38s steps(3) infinite;
+}
+#crt-overlay::before {
+  content:''; position:absolute; inset:0;
+  background: repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 3px);
+}
+#crt-overlay::after {
+  content:''; position:absolute; left:0; right:0; height:90px;
+  background: linear-gradient(180deg, transparent, rgba(220,225,200,.028) 45%, rgba(0,0,0,.05) 75%, transparent);
+  animation: crt-roll 11s linear infinite;
+}
+@keyframes crt-noise {
+  0% { background-position: 0 0; }
+  33% { background-position: -52px 37px; }
+  66% { background-position: 41px -29px; }
+  100% { background-position: 0 0; }
+}
+@keyframes crt-roll { from { top:-90px; } to { top:100%; } }
+@media (prefers-reduced-motion: reduce) {
+  #crt-overlay, #crt-overlay::after { animation: none !important; }
+}
 
 /* tique raríssimo no retrato — rápido demais para ter certeza */
 @keyframes twitch {

@@ -404,6 +404,11 @@ function genFeatures(sexo, idade) {
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
     earring: sexo === 'f' && chance(.4),
     idade, rugas: velho || idade >= 48 && chance(.4),
+    // semente do RENDER (faces.js): mesma pessoa = mesmo rosto em qualquer
+    // contexto (foto do documento, guichê, exame). mutateFeatures copia o
+    // fseed junto — a foto divergente é a MESMA pessoa com atributos trocados,
+    // não um estranho aleatório.
+    fseed: ri(1, 2147483646),
   };
 }
 function mutateFeatures(f) { // para foto divergente
@@ -415,130 +420,10 @@ function mutateFeatures(f) { // para foto divergente
   if (chance(.5)) g.hat = g.hat ? 0 : (g.sexo === 'm' ? 1 : 2);
   return g;
 }
-function portraitSVG(f, w) {
-  const skin = SKINS[f.skin], hair = HAIRC[f.hair];
-  const fw = 26 + f.faceW * 3;
-  let s = '';
-  // ombros
-  s += `<path d="M15 120 Q15 92 50 90 Q85 92 85 120 Z" fill="#3a3c33"/>`;
-  // pescoço
-  s += `<rect x="43" y="72" width="14" height="22" fill="${skin}"/>`;
-  // cabeça
-  s += `<ellipse cx="50" cy="52" rx="${fw}" ry="30" fill="${skin}"/>`;
-  // cabelo
-  const hs = f.hairStyle;
-  if (hs === 0) s += `<path d="M${50 - fw} 52 Q${50 - fw} 20 50 20 Q${50 + fw} 20 ${50 + fw} 52 L${50 + fw} 40 Q50 26 ${50 - fw} 40 Z" fill="${hair}"/>`;
-  if (hs === 1) s += `<path d="M${50 - fw} 55 Q${50 - fw - 4} 14 50 16 Q${50 + fw + 4} 14 ${50 + fw} 55 Q${50 + fw - 6} 34 50 32 Q${50 - fw + 6} 34 ${50 - fw} 55 Z" fill="${hair}"/>`;
-  if (hs === 2) s += `<ellipse cx="50" cy="32" rx="${fw - 4}" ry="12" fill="${hair}"/>`;
-  if (hs === 3) s += `<path d="M${50 - fw} 50 Q50 8 ${50 + fw} 50 L${50 + fw} 62 Q${50 + fw - 8} 44 50 44 Q${50 - fw + 8} 44 ${50 - fw} 62 Z" fill="${hair}"/>`;
-  // sobrancelhas
-  const by = f.brow ? 43 : 45;
-  s += `<rect x="${38 - f.faceW}" y="${by}" width="10" height="2.4" fill="${hair}"/><rect x="${52 + f.faceW}" y="${by}" width="10" height="2.4" fill="${hair}"/>`;
-  // olhos
-  const ey = 50, eo = ['#2b2820', '#3a5a4a', '#54432a'][f.eyes];
-  s += `<circle cx="${42 - f.faceW}" cy="${ey}" r="2.6" fill="${eo}"/><circle cx="${58 + f.faceW}" cy="${ey}" r="2.6" fill="${eo}"/>`;
-  // nariz
-  s += `<path d="M50 52 L48 60 L52 60" stroke="${HAIRC[0]}" stroke-width="1" fill="none" opacity=".5"/>`;
-  // boca
-  const my = 68;
-  if (f.mouth === 0) s += `<line x1="44" y1="${my}" x2="56" y2="${my}" stroke="#7a4a3a" stroke-width="2"/>`;
-  if (f.mouth === 1) s += `<path d="M44 ${my} Q50 ${my + 3} 56 ${my}" stroke="#7a4a3a" stroke-width="2" fill="none"/>`;
-  if (f.mouth === 2) s += `<path d="M44 ${my + 2} Q50 ${my - 2} 56 ${my + 2}" stroke="#7a4a3a" stroke-width="2" fill="none"/>`;
-  // barba
-  if (f.beard === 1) s += `<path d="M${50 - fw + 6} 60 Q50 86 ${50 + fw - 6} 60 L${50 + fw - 6} 66 Q50 92 ${50 - fw + 6} 66 Z" fill="${hair}" opacity=".85"/>`;
-  if (f.beard === 2) s += `<rect x="42" y="62" width="16" height="3" fill="${hair}"/>`;
-  // óculos
-  if (f.glasses) s += `<circle cx="${42 - f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><circle cx="${58 + f.faceW}" cy="${ey}" r="6" stroke="#222" fill="none" stroke-width="1.4"/><line x1="${48 - f.faceW}" y1="${ey}" x2="${52 + f.faceW}" y2="${ey}" stroke="#222" stroke-width="1.4"/>`;
-  // rugas de quem viu regimes demais
-  if (f.rugas) {
-    s += `<path d="M${38 - f.faceW} ${ey + 6} q4 1.5 8 0" stroke="rgba(0,0,0,.22)" stroke-width="1" fill="none"/>`;
-    s += `<path d="M${54 + f.faceW} ${ey + 6} q4 1.5 8 0" stroke="rgba(0,0,0,.22)" stroke-width="1" fill="none"/>`;
-    s += `<path d="M44 ${my - 5} q6 2 12 0" stroke="rgba(0,0,0,.15)" stroke-width="1" fill="none"/>`;
-  }
-  // brincos
-  if (f.earring) {
-    s += `<circle cx="${50 - fw + 1}" cy="58" r="1.6" fill="#c9a34a"/><circle cx="${50 + fw - 1}" cy="58" r="1.6" fill="#c9a34a"/>`;
-  }
-  // chapéu masculino / lenço feminino
-  if (f.hat === 1) {
-    s += `<rect x="${50 - fw - 3}" y="30" width="${fw * 2 + 6}" height="4" rx="2" fill="#211d17"/>`;
-    s += `<path d="M${50 - fw + 6} 31 L${50 - fw + 8} 16 Q50 10 ${50 + fw - 8} 16 L${50 + fw - 6} 31 Z" fill="#2a251d"/>`;
-    s += `<rect x="${50 - fw + 7}" y="25" width="${fw * 2 - 14}" height="3" fill="#191611"/>`;
-  } else if (f.hat === 2) {
-    s += `<path d="M${50 - fw} 52 Q${50 - fw - 2} 18 50 16 Q${50 + fw + 2} 18 ${50 + fw} 52 L${50 + fw - 5} 54 Q50 24 ${50 - fw + 5} 54 Z" fill="#6a4a3a"/>`;
-    s += `<path d="M${50 + fw - 6} 52 q6 6 3 14 l-5 -2 q3 -6 -2 -10 Z" fill="#6a4a3a"/>`;
-  }
-  return s;
-}
-
-/* ---------- CLOSE-UP DO EXAME FÍSICO ---------- */
-function examSVG(f, phys) {
-  const skin = SKINS[f.skin], hair = HAIRC[f.hair];
-  const fw = Math.round((26 + f.faceW * 3) * 1.75);
-  const ex1 = 100 - (16 + f.faceW * 2), ex2 = 100 + (16 + f.faceW * 2), ey = 92;
-  let s = '';
-  // ombros e pescoço
-  s += `<path d="M30 240 Q30 190 100 184 Q170 190 170 240 Z" fill="#2c2e26"/>`;
-  s += `<rect x="86" y="146" width="28" height="44" fill="${skin}"/>`;
-  // pulso no pescoço (sempre desenhado; o achado é textual)
-  s += `<line x1="92" y1="158" x2="94" y2="170" stroke="rgba(0,0,0,.12)" stroke-width="2"/>`;
-  // cabeça
-  s += `<ellipse cx="100" cy="100" rx="${fw}" ry="58" fill="${skin}"/>`;
-  // textura de pele: humanos comuns têm marcas; pele "cerosa" é lisa demais
-  if (!phys.pele) {
-    s += `<circle cx="${ex1 - 14}" cy="118" r="1.6" fill="rgba(0,0,0,.14)"/>`;
-    s += `<circle cx="${ex2 + 10}" cy="86" r="1.2" fill="rgba(0,0,0,.12)"/>`;
-    s += `<path d="M${100 + fw - 16} 128 l7 5" stroke="rgba(0,0,0,.2)" stroke-width="1.4"/>`;
-    s += `<path d="M${ex1 - 8} 70 q4 -2 8 0" stroke="rgba(0,0,0,.08)" stroke-width="1"/>`;
-  } else {
-    s += `<ellipse cx="100" cy="96" rx="${fw - 6}" ry="50" fill="rgba(255,255,255,.05)"/>`;
-  }
-  // cabelo
-  const hs = f.hairStyle;
-  if (hs === 0) s += `<path d="M${100 - fw} 100 Q${100 - fw} 38 100 38 Q${100 + fw} 38 ${100 + fw} 100 L${100 + fw} 76 Q100 50 ${100 - fw} 76 Z" fill="${hair}"/>`;
-  if (hs === 1) s += `<path d="M${100 - fw} 106 Q${100 - fw - 8} 28 100 30 Q${100 + fw + 8} 28 ${100 + fw} 106 Q${100 + fw - 12} 66 100 62 Q${100 - fw + 12} 66 ${100 - fw} 106 Z" fill="${hair}"/>`;
-  if (hs === 2) s += `<ellipse cx="100" cy="60" rx="${fw - 8}" ry="22" fill="${hair}"/>`;
-  if (hs === 3) s += `<path d="M${100 - fw} 96 Q100 16 ${100 + fw} 96 L${100 + fw} 118 Q${100 + fw - 16} 84 100 84 Q${100 - fw + 16} 84 ${100 - fw} 118 Z" fill="${hair}"/>`;
-  // sobrancelhas
-  s += `<rect x="${ex1 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/><rect x="${ex2 - 11}" y="${ey - 14}" width="22" height="4" fill="${hair}"/>`;
-  // olhos: esclera + íris + veias
-  const iris = ['#2b2820', '#3a5a4a', '#54432a'][f.eyes];
-  [ex1, ex2].forEach(x => {
-    s += `<ellipse cx="${x}" cy="${ey}" rx="13" ry="8" fill="#e9e5d6"/>`;
-    if (phys.olhos) {
-      s += `<path d="M${x - 11} ${ey - 3} q5 2 8 2" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
-      s += `<path d="M${x + 10} ${ey + 3} q-5 1 -8 0" stroke="#a2412f" stroke-width=".9" fill="none"/>`;
-      s += `<path d="M${x - 9} ${ey + 4} q4 0 6 -1" stroke="#8c2f24" stroke-width=".7" fill="none"/>`;
-    }
-    s += `<circle cx="${x}" cy="${ey}" r="4.6" fill="${iris}"/><circle cx="${x}" cy="${ey}" r="2" fill="#0c0a07"/>`;
-    s += `<circle cx="${x + 1.4}" cy="${ey - 1.6}" r=".8" fill="#fff" opacity=".8"/>`;
-    // pálpebra: humanos piscam. quem não pisca, não pisca.
-    if (!phys.piscar) {
-      s += `<rect x="${x - 13}" y="${ey - 8}" width="26" height="16" fill="${skin}" opacity="0">` +
-           `<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.94;0.965;1" dur="${(3.4 + (x % 3) * .7).toFixed(1)}s" repeatCount="indefinite"/></rect>`;
-    }
-  });
-  // óculos
-  if (f.glasses) s += `<circle cx="${ex1}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><circle cx="${ex2}" cy="${ey}" r="15" stroke="#1d1d1d" fill="none" stroke-width="2"/><line x1="${ex1 + 15}" y1="${ey}" x2="${ex2 - 15}" y2="${ey}" stroke="#1d1d1d" stroke-width="2"/>`;
-  // nariz
-  s += `<path d="M100 100 L96 120 L104 120" stroke="rgba(0,0,0,.4)" stroke-width="1.6" fill="none"/>`;
-  // boca entreaberta com dentes
-  const my = 136;
-  s += `<path d="M84 ${my} Q100 ${my + 8} 116 ${my} Q100 ${my + 16} 84 ${my} Z" fill="#4a2b24"/>`;
-  for (let i = 0; i < 6; i++) {
-    const tx = 87 + i * 4.6;
-    if (phys.dentes) s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="5.5" rx=".6" fill="#f4f1e6"/>`;
-    else {
-      const h = 4 + ((i * 7) % 3);
-      const cor = i === 4 ? '#8a734d' : '#ded8c2';
-      s += `<rect x="${tx}" y="${my + 1}" width="3.8" height="${h}" rx=".6" fill="${cor}"/>`;
-    }
-  }
-  // barba
-  if (f.beard === 1) s += `<path d="M${100 - fw + 12} 118 Q100 172 ${100 + fw - 12} 118 L${100 + fw - 12} 132 Q100 184 ${100 - fw + 12} 132 Z" fill="${hair}" opacity=".85"/>`;
-  if (f.beard === 2) s += `<rect x="86" y="126" width="28" height="5" fill="${hair}"/>`;
-  return s;
-}
+/* portraitSVG(f) e examSVG(f, phys) agora vivem em faces.js — o motor de
+   retratos procedurais analog-horror (canvas pintado + pós-processamento
+   VHS, determinístico por f.fseed). As assinaturas não mudaram: devolvem
+   markup SVG (um <image> com dataURL) pros mesmos containers de sempre. */
 
 /* ---------- EXAME FÍSICO: UI ---------- */
 const EXAM_ZONES = [
@@ -593,17 +478,9 @@ function examZone(cz, zone) {
    2. NÃO chame ninguém (deter = fim — e o biológico vai TENTAR te convencer).
    3. NÃO demore (35 minutos sem carimbar = fim).
    Carimbe qualquer coisa. E deixe ir. */
-function silenteSVG() {
-  let s = '';
-  s += `<path d="M18 120 Q18 78 50 76 Q82 78 82 120 Z" fill="#0b0b0d"/>`;
-  s += `<rect x="45" y="58" width="10" height="22" fill="#dcd8cc"/>`;
-  s += `<ellipse cx="50" cy="42" rx="21" ry="27" fill="#e6e2d6"/>`;
-  s += `<ellipse cx="42" cy="40" rx="4.6" ry="6" fill="#050505"/>`;
-  s += `<ellipse cx="58" cy="40" rx="4.6" ry="6" fill="#050505"/>`;
-  s += `<line x1="43" y1="60" x2="57" y2="60" stroke="#8a8578" stroke-width="1"/>`;
-  s += `<path d="M29 30 Q50 14 71 30 L71 24 Q50 8 29 24 Z" fill="#0b0b0d"/>`;
-  return s;
-}
+/* silenteSVG() também vive em faces.js — o retrato dele é o único que o
+   motor deixa deliberadamente ERRADO (rosto longo demais, olhos sem fundo,
+   o VHS rasgando em cima). */
 function makeSilente() {
   const cz = makeCitizen(S.day, { forceValid: true, pais: 'osteria' });
   cz.isSilente = true;
