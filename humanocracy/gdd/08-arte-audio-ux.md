@@ -56,8 +56,20 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   estética de recibo.
 - **Acessibilidade:** decisões nunca dependem só de cor (carimbos sempre têm rótulo de
   texto); **modo "arquivista" implementado no protótipo** — relógio do turno não avança
-  em tempo real, alternável no título; produção ainda deve: modo daltônico dedicado para
-  selos, escala de fonte, legendas para todo áudio.
+  em tempo real, alternável no título. Conferido contra o código: os selos nacionais
+  (`COUNTRIES[x].seal`, um glifo Unicode distinto por país — ✦ ▲ ❖ ◉ ✚ ◈ ★ ⬢ ☽ ⚜) já
+  não dependem de cor — `wrongSeal` troca o GLIFO por outro país, nunca só a cor de
+  fundo do cabeçalho do documento, e o glifo errado aparece como texto comparável ao
+  do regulamento; resultados de scanner e zonas de exame já são só texto/opacidade,
+  nunca cor isolada. Então "modo daltônico dedicado para selos" era um TODO mais
+  cauteloso do que o código exigia — já coberto. O que falta de verdade: **escala de
+  fonte** (nenhuma opção de tamanho de texto existe ainda) e **legendas para todo
+  áudio** — este último também mais estreito do que soa: os "sons" do jogo são só
+  efeitos não-verbais (carimbo, batida, buzina) ou as vozes murmuradas (`mumble()` em
+  `game.js`) — gibberish sintetizado por sílaba, sem texto por trás pra legendar, cuja
+  tensão vem do tom, não do conteúdo; a informação real de cada evento sonoro já aparece
+  como texto separado (a fala, o comunicado, o resultado do exame). Produção ainda deve
+  avaliar se algum efeito sonoro isolado carrega informação que só existe no áudio.
 - **O que a UI nunca faz:** mostrar barras de reputação, medidores de paranoia,
   porcentagens de scanner, ou qualquer número que o mundo diegético não imprimiria
   num formulário.
