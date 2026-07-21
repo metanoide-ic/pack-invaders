@@ -232,6 +232,11 @@ function unlockAchievement(id) {
     }, 600);
   }, 4200);
 }
+let achievementsModalOpen = false; // ESC precisa fechar isto, não despausar por baixo
+function closeAchievementsModal() {
+  $('modal-overlay').classList.remove('active');
+  achievementsModalOpen = false;
+}
 function showAchievementsModal() {
   $('modal-title').textContent = T('CONQUISTAS');
   const got = SETTINGS.achievements || [];
@@ -244,8 +249,9 @@ function showAchievementsModal() {
   const box = $('modal-actions'); box.innerHTML = '';
   const b = document.createElement('button');
   b.textContent = T('FECHAR');
-  b.onclick = () => $('modal-overlay').classList.remove('active');
+  b.onclick = closeAchievementsModal;
   box.appendChild(b);
+  achievementsModalOpen = true;
   $('modal-overlay').classList.add('active');
 }
 
@@ -2307,7 +2313,11 @@ function togglePause() {
     if (PAUSE.resumeHouse) houseResume();
   }
 }
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') togglePause(); });
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (achievementsModalOpen) { closeAchievementsModal(); return; } // fecha por cima, não despausa por baixo
+  togglePause();
+});
 $('pz-continue').onclick = togglePause;
 $('pz-music').onclick = () => {
   MUSIC.on = !MUSIC.on;

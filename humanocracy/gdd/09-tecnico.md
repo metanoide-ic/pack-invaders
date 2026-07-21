@@ -203,6 +203,20 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    (`z-index` confirmado 90 > 80) e fechar preserva a pausa aberta, EN traduz o título e
    os dois rótulos de botão; suíte `smoke.js`–`smoke6.js` sem regressão; paridade EN/ES
    confirmada (821 = 821).
+
+   O teste acima só checou clique no FECHAR; testar ESC (o outro jeito óbvio de fechar
+   um modal) revelou um bug real: o listener global de ESC só conhecia `togglePause()` —
+   com as conquistas abertas por cima da pausa, ESC despausava o jogo por baixo (relógio
+   voltando a correr) enquanto a lista continuava tampando a tela por cima, sem jeito
+   fácil de ver o que tinha acontecido. Corrigido com uma flag simples
+   (`achievementsModalOpen`) que o listener confere primeiro: se a lista está aberta, ESC
+   fecha só ela (`closeAchievementsModal()`); senão, comportamento antigo. Como
+   consequência (não intencional, mas correta): ESC agora também fecha a lista quando ela
+   é aberta a partir do TÍTULO, onde antes não fazia nada (`togglePause()` já recusava
+   rodar com `screen-title` ativo). Verificado com teste dedicado: pausar/despausar normal
+   sem a lista aberta continua idêntico; abrir a partir da pausa e apertar ESC fecha só a
+   lista (pausa continua aberta, jogo continua parado) e um segundo ESC despausa
+   normalmente; abrir a partir do título e apertar ESC fecha a lista.
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo
