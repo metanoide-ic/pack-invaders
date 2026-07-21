@@ -193,14 +193,30 @@ function quotaForDay(d) {
 
 /* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
 const SETTINGS_KEY = 'humanocracy_settings_v1';
-let SETTINGS = { archivist: false, lang: 'pt' };
+let SETTINGS = { archivist: false, lang: 'pt', achievements: [] };
 function loadSettings() {
   try {
     const j = localStorage.getItem(SETTINGS_KEY);
     if (j) SETTINGS = Object.assign(SETTINGS, JSON.parse(j));
   } catch (e) {}
+  if (!SETTINGS.achievements) SETTINGS.achievements = [];
 }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); } catch (e) {} }
+
+/* ---------- CONQUISTAS (toast local no protótipo web; mesma condição vira
+   uma chamada a steamworks.js quando a integração Steamworks acontecer —
+   ver steam/README.md) ---------- */
+function unlockAchievement(id) {
+  if (!ACHIEVEMENTS[id] || SETTINGS.achievements.includes(id)) return;
+  SETTINGS.achievements.push(id);
+  saveSettings();
+  const el = document.createElement('div');
+  el.className = 'achievement-toast';
+  el.innerHTML = `🏆 <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => el.classList.add('show'));
+  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 600); }, 4200);
+}
 
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
@@ -1928,6 +1944,7 @@ function goHome() {
 function afterNight() {
   applyNight();
   if (checkArrest()) return;
+  if (S.day === 1) unlockAchievement('ACH_DIA1');
   if (S.day >= 48) { finishGame(); return; }
   S.day++;
   save();
@@ -2109,6 +2126,14 @@ function finishGame(kind) {
   const key = pickEnding(kind);
   const e = ENDINGS[key];
   const c = S.counters;
+  if (key === 'funcionario') unlockAchievement('ACH_MEDALHA');
+  if (key === 'resistencia') unlockAchievement('ACH_ROTA');
+  if (key === 'silente') unlockAchievement('ACH_OLHOU');
+  if (c.alternadosIn >= 6) unlockAchievement('ACH_SILENCIO');
+  if (S.day >= 48) unlockAchievement('ACH_ESPELHO');
+  if ((S.flags.silenteSurvived || 0) >= 2) unlockAchievement('ACH_SILENTE');
+  if (S.day >= 48 && Object.values(S.family).every(m => m.alive)) unlockAchievement('ACH_FAMILIA');
+  if (S.day >= 48 && c.bribes === 0) unlockAchievement('ACH_LIMPO');
   $('ending-title').textContent = T(e.t);
   $('ending-body').textContent = T(e.b);
   const lang = SETTINGS.lang;

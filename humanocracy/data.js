@@ -378,6 +378,24 @@ const ENDINGS = {
   },
 };
 
+/* ---------- CONQUISTAS (protótipo web: toast local em unlockAchievement(),
+   game.js; mesmos IDs e condições de steam/README.md, pra quando a integração
+   Steamworks acontecer) ---------- */
+const ACHIEVEMENTS = {
+  ACH_DIA1: 'Primeiro Carimbo',
+  ACH_MEDALHA: 'Servidor Exemplar',
+  ACH_ROTA: 'A Rota do Barbeiro',
+  ACH_SILENCIO: 'A Cidade Silenciosa',
+  ACH_ESPELHO: 'Quem Sou Eu Depois de 48 Dias',
+  ACH_SILENTE: 'Não Olhe de Perto',
+  ACH_OLHOU: 'Você Olhou',
+  ACH_FAMILIA: 'Ninguém Ficou Para Trás',
+  ACH_LIMPO: 'Mãos Limpas',
+  ACH_QUENTE: 'O Travesseiro',
+  ACH_CINCO: 'A Conta Fecha',
+  ACH_AMIGO: 'O Amigo Nunca Erra',
+};
+
 /* ============================================================
    EXAME FÍSICO, BOATOS E NOITES
    (a camada "No, I'm Not a Human": o corpo como documento —

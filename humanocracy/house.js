@@ -494,14 +494,17 @@ function infoTomi() {
     'Hoje não sonhei nada, pai. O nada também conta como sonho?',
   ]));
 }
+function maybeAmigoAchievement() {
+  if (S.flags.avisoSilente && S.flags.avisoNaoErram && S.flags.avisoWanted && S.flags.avisoNoite) unlockAchievement('ACH_AMIGO');
+}
 function infoDario() {
   // ACH_AMIGO: os 4 tipos de aviso concreto do amigo (silente/eleição errada na
   // lista/batida noturna/profecia do dia 46) — "parou de falar" é atmosfera, não conta.
-  if ((S.silenteDays || []).includes(S.day + 1)) { S.flags.avisoSilente = true; return T('Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.'); }
-  if (S.day + 1 === 46) { S.flags.avisoNaoErram = true; return T('"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."'); }
+  if ((S.silenteDays || []).includes(S.day + 1)) { S.flags.avisoSilente = true; maybeAmigoAchievement(); return T('Pai. Escuta. O amigo NUNCA usou esse tom antes. Ele disse: "amanhã vem um que não é um deles nem um de vocês. NÃO OLHE DE PERTO. NÃO CHAME NINGUÉM — nem quando a máquina implorar. Carimbe qualquer coisa, rápido, e deixe ir." Ele repetiu três vezes, pai. Ele nunca repete.'); }
+  if (S.day + 1 === 46) { S.flags.avisoNaoErram = true; maybeAmigoAchievement(); return T('"A partir de agora eles não erram mais." Foi isso que ele disse. Palavra por palavra. E depois: "diz pro teu pai que não foi culpa dele. Diz ANTES."'); }
   if (S.day >= 44) return T('O amigo parou de falar. Desde ontem. Ele só senta ali no canto e espera comigo. Eu perguntei "esperar o quê". Ele olhou pra porta.');
-  if (WANTED_DAYS[S.day + 1]) { S.flags.avisoWanted = true; return T('O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.'); }
-  if (NIGHT_EVENTS[S.day + 1]) { S.flags.avisoNoite = true; return T('O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.'); }
+  if (WANTED_DAYS[S.day + 1]) { S.flags.avisoWanted = true; maybeAmigoAchievement(); return T('O amigo mandou um recado pra você. Sério. Ele disse: "amanhã passa alguém com o nome errado na lista dele. Que ele leia a lista com calma antes de carimbar qualquer coisa." Eu só tô repetindo, pai. Não me olha assim.'); }
+  if (NIGHT_EVENTS[S.day + 1]) { S.flags.avisoNoite = true; maybeAmigoAchievement(); return T('O amigo avisou: amanhã à noite, quando baterem — porque VÃO bater — olha primeiro. E mesmo depois de olhar... pensa se vale abrir.'); }
   return T(pick([
     'O amigo perguntou de você hoje. Pelo nome. Pai... eu nunca disse seu nome pra ele.',
     'Perguntei de onde ele vem. Ele disse "de perto". Perguntei perto de quê. Ele disse "de você".',
@@ -660,6 +663,7 @@ function interactWith(id) {
     if (HOUSE.spoke.retrato) { hSay('O RETRATO', ['Cinco silhuetas. Como sempre. Pare de contar.']); return; }
     HOUSE.spoke.retrato = true;
     S.counters.retratoNights = (S.counters.retratoNights || 0) + 1; // ACH_CINCO: duas noites distintas
+    if (S.counters.retratoNights >= 2) unlockAchievement('ACH_CINCO');
     hSay('O RETRATO DA FAMÍLIA', [
       'Cinco silhuetas atrás do vidro empoeirado: Vessa, Dario, você, sua mãe, Tomi. Cinco. A conta fecha.',
       'Você percebe que contou nos dedos. Você percebe que era a segunda vez que contava.',
@@ -723,7 +727,7 @@ function interactWith(id) {
     HOUSE.spoke.hosp2 = true;
     const r = rnd();
     if (S.day >= 40 && r < .15) {
-      S.flags.travesseiroQuente = true; // ACH_QUENTE
+      S.flags.travesseiroQuente = true; unlockAchievement('ACH_QUENTE');
       hSay('QUARTO DE HÓSPEDES 2', [
         'O colchão nu, a cadeira, a poeira. Tudo no lugar. Só que o travesseiro—',
         'O travesseiro está quente.',

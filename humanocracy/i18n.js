@@ -1241,6 +1241,21 @@ const I18N_EN = {
   'O pulso no pescoço é visível. Lento. Lento demais. Você conta seis batimentos no minuto.':
     'The pulse in the neck is visible. Slow. Too slow. You count six beats a minute.',
   'Pulso acelerado sob a pele. Gente com medo tem coração audível.': 'Rapid pulse under the skin. Frightened people have an audible heartbeat.',
+
+  /* ---- CONQUISTAS ---- */
+  'CONQUISTA DESBLOQUEADA': 'ACHIEVEMENT UNLOCKED',
+  'Primeiro Carimbo': 'First Stamp',
+  'Servidor Exemplar': 'Exemplary Servant',
+  'A Rota do Barbeiro': "The Barber's Route",
+  'A Cidade Silenciosa': 'The Silent City',
+  'Quem Sou Eu Depois de 48 Dias': 'Who Am I After 48 Days',
+  'Não Olhe de Perto': "Don't Look Closely",
+  'Você Olhou': 'You Looked',
+  'Ninguém Ficou Para Trás': 'No One Was Left Behind',
+  'Mãos Limpas': 'Clean Hands',
+  'O Travesseiro': 'The Pillow',
+  'A Conta Fecha': 'The Count Adds Up',
+  'O Amigo Nunca Erra': 'The Friend Is Never Wrong',
 };
 
 const I18N_ES = {
@@ -2466,6 +2481,21 @@ const I18N_ES = {
   'O pulso no pescoço é visível. Lento. Lento demais. Você conta seis batimentos no minuto.':
     'El pulso en el cuello es visible. Lento. Demasiado lento. Cuentas seis latidos por minuto.',
   'Pulso acelerado sob a pele. Gente com medo tem coração audível.': 'Pulso acelerado bajo la piel. La gente con miedo tiene el corazón audible.',
+
+  /* ---- CONQUISTAS ---- */
+  'CONQUISTA DESBLOQUEADA': 'LOGRO DESBLOQUEADO',
+  'Primeiro Carimbo': 'Primer Sello',
+  'Servidor Exemplar': 'Servidor Ejemplar',
+  'A Rota do Barbeiro': 'La Ruta del Barbero',
+  'A Cidade Silenciosa': 'La Ciudad Silenciosa',
+  'Quem Sou Eu Depois de 48 Dias': 'Quién Soy Después de 48 Días',
+  'Não Olhe de Perto': 'No Mires de Cerca',
+  'Você Olhou': 'Miraste',
+  'Ninguém Ficou Para Trás': 'Nadie Se Quedó Atrás',
+  'Mãos Limpas': 'Manos Limpias',
+  'O Travesseiro': 'La Almohada',
+  'A Conta Fecha': 'La Cuenta Cierra',
+  'O Amigo Nunca Erra': 'El Amigo Nunca Se Equivoca',
 };
 
 const I18N_TABLES = { en: I18N_EN, es: I18N_ES };

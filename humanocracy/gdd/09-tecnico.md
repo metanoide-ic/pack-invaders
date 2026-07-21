@@ -145,6 +145,33 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    (incluindo a confirmação de que `retratoNights` conta noites, não cliques), e a
    profecia do dia 45 agora é alcançável; suíte `smoke.js`–`smoke6.js` sem regressão.
    Nenhuma string nova de interface — sem impacto em i18n.
+
+   Rodada seguinte — as 12 conquistas deixam de ser só contadores silenciosos e passam a
+   ser **conquistas de verdade no protótipo web**, com toast local (sem Steam ainda; o
+   hook fica pronto pra quando a integração acontecer). `unlockAchievement(id)` (`game.js`)
+   marca o ID em `SETTINGS.achievements` — persistido fora do save, mesmo padrão já usado
+   por `SETTINGS.lastSeed` (Segunda Leitura) — evita repetir o toast se já desbloqueada, e
+   mostra um aviso "🏆 CONQUISTA DESBLOQUEADA" que desliza da borda direita da tela por
+   ~4s (`.achievement-toast` em `style.css`, `box-shadow`/`transition`, não interfere no
+   layout do turno). Os 12 nomes ficam em `ACHIEVEMENTS` (`data.js`), como chaves PT que
+   passam por `T()` — mesmo padrão de alavancagem de sempre, sem tabela de tradução
+   paralela. Pontos de verificação: as 8 condições ligadas a final de campanha
+   (`ACH_MEDALHA`/`ACH_ROTA`/`ACH_SILENCIO`/`ACH_ESPELHO`/`ACH_SILENTE`/`ACH_OLHOU`/
+   `ACH_FAMILIA`/`ACH_LIMPO`) são checadas uma vez em `finishGame()`, logo após
+   `pickEnding()` decidir o final; `ACH_DIA1` em `afterNight()`, no instante em que o Dia 1
+   termina; as 3 restantes (`ACH_QUENTE`/`ACH_CINCO`/`ACH_AMIGO`) exatamente onde a
+   flag/contador correspondente já era setado em `house.js` (a rodada anterior já tinha
+   criado esse estado; faltava só alguém checar a condição e mostrar algo ao jogador) —
+   `ACH_AMIGO` ganhou um pequeno helper, `maybeAmigoAchievement()`, chamado nos 4 pontos
+   de `infoDario()` que setam cada aviso, porque a condição depende dos 4 juntos, não de
+   um só. Verificado com teste dedicado: toast aparece e localiza corretamente em EN,
+   não duplica ao chamar `unlockAchievement()` duas vezes com o mesmo ID, ignora um ID
+   desconhecido sem quebrar, `ACH_CINCO`/`ACH_AMIGO` só disparam no limiar certo (não
+   antes), persistência sobrevive a um reload de página (fora do save, como esperado), e
+   os 5 achievements de final disparam juntos numa campanha forçada a terminar em "A
+   Medalha" no Dia 48 com a família viva e zero subornos; suíte `smoke.js`–`smoke6.js`
+   sem regressão; paridade de chaves EN/ES confirmada (as 12 conquistas + o cabeçalho do
+   toast, mesmo conjunto de chaves nos dois idiomas).
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo

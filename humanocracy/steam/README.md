@@ -46,7 +46,7 @@ electron-builder com `extraMetadata.main`.)
    navegação por controle na inspeção comparativa, antes documentado como
    pendente, está fechado.
 
-## Conquistas propostas
+## Conquistas — implementadas no protótipo (toast local, sem Steam ainda)
 
 | ID | Nome | Condição |
 |---|---|---|
@@ -63,7 +63,17 @@ electron-builder com `extraMetadata.main`.)
 | `ACH_CINCO` | A Conta Fecha | contar as silhuetas do retrato duas noites |
 | `ACH_AMIGO` | O Amigo Nunca Erra | receber os 4 tipos de aviso do amigo do Dario |
 
-Os contadores para todas já existem no estado do jogo (`S.counters`, `S.flags`).
+Os contadores para todas já existiam no estado do jogo (`S.counters`, `S.flags`) — o que
+faltava era alguém checar essa condição e mostrar algo ao jogador. `unlockAchievement(id)`
+(`game.js`) faz isso agora: marca o ID em `SETTINGS.achievements` (persistido fora do save,
+mesmo padrão de `SETTINGS.lastSeed`), evita repetir o toast se já desbloqueada, e mostra um
+aviso "🏆 CONQUISTA DESBLOQUEADA" (localizado em EN/ES) que desliza da borda direita da
+tela por ~4s. As 8 condições de final (`ACH_MEDALHA`/`ACH_ROTA`/`ACH_SILENCIO`/
+`ACH_ESPELHO`/`ACH_SILENTE`/`ACH_OLHOU`/`ACH_FAMILIA`/`ACH_LIMPO`) são checadas uma vez em
+`finishGame()`; `ACH_DIA1` em `afterNight()`; as 3 restantes (`ACH_QUENTE`/`ACH_CINCO`/
+`ACH_AMIGO`) no exato ponto de `house.js` onde a flag/contador correspondente já era
+setado. Quando o Steamworks entrar, `unlockAchievement()` é o único lugar que precisa
+ganhar a chamada real ao SDK — as condições e os pontos de verificação não mudam.
 
 ## Produção completa
 
