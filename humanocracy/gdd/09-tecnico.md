@@ -172,6 +172,16 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    Medalha" no Dia 48 com a família viva e zero subornos; suíte `smoke.js`–`smoke6.js`
    sem regressão; paridade de chaves EN/ES confirmada (as 12 conquistas + o cabeçalho do
    toast, mesmo conjunto de chaves nos dois idiomas).
+
+   Esse mesmo teste de "5 de uma vez" expôs um bug real na hora: os toasts simultâneos
+   se sobrepunham exatamente no mesmo `top:16px`, ilegíveis uns sobre os outros — o
+   cenário mais comum de fim de campanha (um bom final costuma bater várias condições
+   ao mesmo tempo) era justamente o pior caso pra UI. Corrigido com uma pilha simples
+   (`achievementToasts[]` em `game.js`): cada novo toast entra 70px abaixo do anterior
+   (`restackAchievementToasts()`), e quando um desaparece (após ~4s), os que restam
+   sobem pra fechar o espaço — `top` ganhou uma transição no CSS pra esse reposicionamento
+   ficar suave, não um salto. Verificado com teste dedicado: três toasts em sequência
+   ficam em 16px/86px/156px, e remover o do meio reflui os outros dois para 16px/86px.
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo

@@ -383,7 +383,7 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   position:fixed; top:16px; right:-360px; width:280px; z-index:200;
   background:var(--panel); border:1px solid var(--accent2); border-left:6px solid var(--accent2);
   box-shadow:0 8px 20px rgba(0,0,0,.6); padding:10px 14px; font-size:12px; line-height:1.5;
-  color:var(--ink); transition: right .4s ease;
+  color:var(--ink); transition: right .4s ease, top .3s ease;
 }
 .achievement-toast.show { right:16px; }
 .achievement-toast b { color:var(--accent2); letter-spacing:1px; font-size:10px; }

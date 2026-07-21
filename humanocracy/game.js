@@ -206,6 +206,12 @@ function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringif
 /* ---------- CONQUISTAS (toast local no protótipo web; mesma condição vira
    uma chamada a steamworks.js quando a integração Steamworks acontecer —
    ver steam/README.md) ---------- */
+const ACHIEVEMENT_TOAST_GAP = 70; // px entre toasts empilhados (altura real ~58px)
+let achievementToasts = []; // toasts visíveis agora, de cima pra baixo — vários finais
+                            // desbloqueiam junto (ex.: A Medalha + Espelho + Família)
+function restackAchievementToasts() {
+  achievementToasts.forEach((el, i) => { el.style.top = (16 + i * ACHIEVEMENT_TOAST_GAP) + 'px'; });
+}
 function unlockAchievement(id) {
   if (!ACHIEVEMENTS[id] || SETTINGS.achievements.includes(id)) return;
   SETTINGS.achievements.push(id);
@@ -213,9 +219,18 @@ function unlockAchievement(id) {
   const el = document.createElement('div');
   el.className = 'achievement-toast';
   el.innerHTML = `🏆 <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
+  achievementToasts.push(el);
+  restackAchievementToasts();
   document.body.appendChild(el);
   requestAnimationFrame(() => el.classList.add('show'));
-  setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 600); }, 4200);
+  setTimeout(() => {
+    el.classList.remove('show');
+    setTimeout(() => {
+      el.remove();
+      achievementToasts = achievementToasts.filter(t => t !== el);
+      restackAchievementToasts();
+    }, 600);
+  }, 4200);
 }
 
 /* ---------- ESTADO ---------- */
