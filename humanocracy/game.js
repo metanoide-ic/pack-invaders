@@ -232,6 +232,22 @@ function unlockAchievement(id) {
     }, 600);
   }, 4200);
 }
+function showAchievementsModal() {
+  $('modal-title').textContent = T('CONQUISTAS');
+  const got = SETTINGS.achievements || [];
+  const ids = Object.keys(ACHIEVEMENTS);
+  const rows = ids.map(id => {
+    const unlocked = got.includes(id);
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '🏆' : '🔒'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+  }).join('');
+  $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
+  const box = $('modal-actions'); box.innerHTML = '';
+  const b = document.createElement('button');
+  b.textContent = T('FECHAR');
+  b.onclick = () => $('modal-overlay').classList.remove('active');
+  box.appendChild(b);
+  $('modal-overlay').classList.add('active');
+}
 
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
@@ -2218,6 +2234,8 @@ function renderArchivistBtn() {
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
 }
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
+$('btn-achievements').onclick = showAchievementsModal;
+$('pz-achievements').onclick = showAchievementsModal;
 const LANG_CYCLE = ['pt', 'en', 'es'];
 const LANG_LABEL = { pt: 'PT-BR', en: 'EN', es: 'ES' };
 function renderLangBtn() {

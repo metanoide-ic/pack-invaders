@@ -73,7 +73,13 @@ tela por ~4s. As 8 condições de final (`ACH_MEDALHA`/`ACH_ROTA`/`ACH_SILENCIO`
 `finishGame()`; `ACH_DIA1` em `afterNight()`; as 3 restantes (`ACH_QUENTE`/`ACH_CINCO`/
 `ACH_AMIGO`) no exato ponto de `house.js` onde a flag/contador correspondente já era
 setado. Quando o Steamworks entrar, `unlockAchievement()` é o único lugar que precisa
-ganhar a chamada real ao SDK — as condições e os pontos de verificação não mudam.
+ganhar a chamada real ao SDK — as condições e os pontos de verificação não mudam. Toasts
+simultâneos (comum em bons finais — vários critérios batem juntos) se empilham em vez de
+se sobrepor (`achievementToasts[]`/`restackAchievementToasts()`), e um botão CONQUISTAS
+— no título e no menu de pausa (`showAchievementsModal()`) — mostra a lista completa das
+12, com ícone de cadeado nas ainda não desbloqueadas e a contagem "x / 12" no topo; abrir
+a partir da pausa some por cima do painel de pausa sem escondê-lo (`z-index` do modal
+acima do da pausa) e volta pra ele ao fechar.
 
 ## Produção completa
 

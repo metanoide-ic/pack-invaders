@@ -344,7 +344,8 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 /* ============ MODAL ============ */
 .modal-overlay {
   display:none; position:absolute; inset:0; background:rgba(0,0,0,.7);
-  align-items:center; justify-content:center; z-index:50;
+  align-items:center; justify-content:center; z-index:90; /* acima da pausa (80): a
+  lista de conquistas abre por cima do painel de pausa, sem escondê-lo */
 }
 .modal-overlay.active { display:flex; }
 .modal {
@@ -356,6 +357,12 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .modal-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
 .modal-actions button { background:var(--paper-ink); color:var(--paper); border:none; padding:10px 16px; }
 .modal-actions button:hover { background:var(--stamp-red); color:#fff; }
+
+/* Lista de conquistas (dentro de #modal-body) */
+.ach-count { font-weight:bold; letter-spacing:1px; margin-bottom:10px; color:var(--stamp-red); }
+.ach-row { padding:5px 0; border-bottom:1px solid rgba(0,0,0,.12); display:flex; gap:8px; align-items:center; }
+.ach-row.locked { opacity:.45; }
+.ach-icon { font-size:14px; width:20px; text-align:center; flex-shrink:0; }
 
 /* ============ PAUSA ============ */
 .pause-overlay {
@@ -679,6 +686,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
           <button id="btn-fullscreen" class="btn-title" style="font-size:12px;width:200px;padding:8px">⛶ TELA CHEIA (F)</button>
           <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
           <button id="btn-lang" class="btn-title btn-toggle" style="width:200px" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
+          <button id="btn-achievements" class="btn-title" style="font-size:12px;width:200px;padding:8px">🏆 CONQUISTAS</button>
         </div>
         <div class="title-warning">
           Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
@@ -888,6 +896,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
       <div class="pause-panel">
         <div class="pause-title">— PAUSA —</div>
         <button id="pz-continue">CONTINUAR</button>
+        <button id="pz-achievements">🏆 CONQUISTAS</button>
         <button id="pz-music">MÚSICA: LIGADA</button>
         <button id="pz-sfx">SONS: LIGADOS</button>
         <button id="pz-fullscreen">TELA CHEIA (F)</button>
@@ -1671,6 +1680,8 @@ const I18N_EN = {
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
+  '🏆 CONQUISTAS': '🏆 ACHIEVEMENTS',
+  'CONQUISTAS': 'ACHIEVEMENTS',
 
   /* ---- citação / notificação ---- */
   '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTRY OF SCREENING — NOTICE',
@@ -2911,6 +2922,8 @@ const I18N_ES = {
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
+  '🏆 CONQUISTAS': '🏆 LOGROS',
+  'CONQUISTAS': 'LOGROS',
 
   /* ---- citação / notificação ---- */
   '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTERIO DE CONTROL — NOTIFICACIÓN',
@@ -4106,6 +4119,7 @@ const I18N_STATIC_SELECTORS = [
   '.house-help', '#hd-hint',
   '.exam-head span', '#btn-exam-close', '.bag-hint',
   '.pause-title', '#pz-continue', '#pz-music', '#pz-sfx', '#pz-fullscreen', '#pz-title', '.pause-note',
+  '#btn-achievements', '#pz-achievements',
   '.citation-head',
 ];
 
@@ -4360,6 +4374,22 @@ function unlockAchievement(id) {
       restackAchievementToasts();
     }, 600);
   }, 4200);
+}
+function showAchievementsModal() {
+  $('modal-title').textContent = T('CONQUISTAS');
+  const got = SETTINGS.achievements || [];
+  const ids = Object.keys(ACHIEVEMENTS);
+  const rows = ids.map(id => {
+    const unlocked = got.includes(id);
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '🏆' : '🔒'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+  }).join('');
+  $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
+  const box = $('modal-actions'); box.innerHTML = '';
+  const b = document.createElement('button');
+  b.textContent = T('FECHAR');
+  b.onclick = () => $('modal-overlay').classList.remove('active');
+  box.appendChild(b);
+  $('modal-overlay').classList.add('active');
 }
 
 /* ---------- ESTADO ---------- */
@@ -6347,6 +6377,8 @@ function renderArchivistBtn() {
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
 }
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
+$('btn-achievements').onclick = showAchievementsModal;
+$('pz-achievements').onclick = showAchievementsModal;
 const LANG_CYCLE = ['pt', 'en', 'es'];
 const LANG_LABEL = { pt: 'PT-BR', en: 'EN', es: 'ES' };
 function renderLangBtn() {

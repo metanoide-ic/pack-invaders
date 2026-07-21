@@ -182,6 +182,27 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    sobem pra fechar o espaço — `top` ganhou uma transição no CSS pra esse reposicionamento
    ficar suave, não um salto. Verificado com teste dedicado: três toasts em sequência
    ficam em 16px/86px/156px, e remover o do meio reflui os outros dois para 16px/86px.
+
+   O toast some em ~4s — bom pro momento, ruim se o jogador quiser conferir depois "quais
+   eu já tenho". Rodada seguinte: um botão CONQUISTAS (título e pausa) abre uma lista
+   completa via `showAchievementsModal()`, reaproveitando `#modal-overlay`/`#modal-body`
+   em vez de criar um overlay novo — só que preenchendo `modal-body.innerHTML` diretamente
+   (as 12 linhas com ícone 🏆/🔒 e contagem "x / 12" no topo), já que `modal()` força
+   `textContent` para os usos normais de texto simples e não serviria aqui. Isso expôs uma
+   lacuna de camada: `#modal-overlay` (z-index 50) abre POR BAIXO de `#pause-overlay`
+   (z-index 80) quando chamado a partir do menu de pausa — nunca acontecia antes porque
+   nenhum outro `modal()` era disparado com a pausa aberta. Corrigido subindo o
+   `#modal-overlay` pra z-index 90 (só essa combinação depende da ordem; os demais usos de
+   `modal()` nunca coexistem com a pausa). Fechar a lista de conquistas remove só o modal,
+   deixando o painel de pausa exposto por baixo — o jogador volta pra pausa, não pro jogo.
+   Os dois botões (`#btn-achievements`, `#pz-achievements`) entraram em
+   `I18N_STATIC_SELECTORS` (texto fixo, sem estado dinâmico como MÚSICA/SONS, então
+   `applyStaticI18n()` sozinho já basta, sem alavancagem extra). Verificado com teste
+   dedicado: lista com 0/12 no título antes de qualquer conquista, contagem/linhas
+   atualizam depois de 2 desbloqueios, abrir a partir da pausa fica acima dela
+   (`z-index` confirmado 90 > 80) e fechar preserva a pausa aberta, EN traduz o título e
+   os dois rótulos de botão; suíte `smoke.js`–`smoke6.js` sem regressão; paridade EN/ES
+   confirmada (821 = 821).
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo

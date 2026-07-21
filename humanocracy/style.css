@@ -338,7 +338,8 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 /* ============ MODAL ============ */
 .modal-overlay {
   display:none; position:absolute; inset:0; background:rgba(0,0,0,.7);
-  align-items:center; justify-content:center; z-index:50;
+  align-items:center; justify-content:center; z-index:90; /* acima da pausa (80): a
+  lista de conquistas abre por cima do painel de pausa, sem escondê-lo */
 }
 .modal-overlay.active { display:flex; }
 .modal {
@@ -350,6 +351,12 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .modal-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
 .modal-actions button { background:var(--paper-ink); color:var(--paper); border:none; padding:10px 16px; }
 .modal-actions button:hover { background:var(--stamp-red); color:#fff; }
+
+/* Lista de conquistas (dentro de #modal-body) */
+.ach-count { font-weight:bold; letter-spacing:1px; margin-bottom:10px; color:var(--stamp-red); }
+.ach-row { padding:5px 0; border-bottom:1px solid rgba(0,0,0,.12); display:flex; gap:8px; align-items:center; }
+.ach-row.locked { opacity:.45; }
+.ach-icon { font-size:14px; width:20px; text-align:center; flex-shrink:0; }
 
 /* ============ PAUSA ============ */
 .pause-overlay {

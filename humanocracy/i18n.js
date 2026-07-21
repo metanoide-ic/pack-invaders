@@ -91,6 +91,8 @@ const I18N_EN = {
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
+  '🏆 CONQUISTAS': '🏆 ACHIEVEMENTS',
+  'CONQUISTAS': 'ACHIEVEMENTS',
 
   /* ---- citação / notificação ---- */
   '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTRY OF SCREENING — NOTICE',
@@ -1331,6 +1333,8 @@ const I18N_ES = {
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
+  '🏆 CONQUISTAS': '🏆 LOGROS',
+  'CONQUISTAS': 'LOGROS',
 
   /* ---- citação / notificação ---- */
   '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTERIO DE CONTROL — NOTIFICACIÓN',
@@ -2526,6 +2530,7 @@ const I18N_STATIC_SELECTORS = [
   '.house-help', '#hd-hint',
   '.exam-head span', '#btn-exam-close', '.bag-hint',
   '.pause-title', '#pz-continue', '#pz-music', '#pz-sfx', '#pz-fullscreen', '#pz-title', '.pause-note',
+  '#btn-achievements', '#pz-achievements',
   '.citation-head',
 ];
 
