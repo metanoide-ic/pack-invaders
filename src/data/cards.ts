@@ -873,14 +873,6 @@ export const NEUTRAL_CARDS: CardDefinition[] = [
   { id: 'n_minimalist', name: 'Minimalista', description: 'Se tem 3 ou menos itens: +100% dano em todos.', characterId: null, weight: 2,
     apply(game) { if (game.backpack.getAllItems().length <= 3) { for (const i of game.backpack.getAllItems()) { cp(i, { d: 2.0 }); } } } },
 
-  // ─── Capacidade de Peso ──────────────────────────────────────────────────
-  { id: 'n_weight_cap_small', name: 'Mochila Reforçada', description: '+6 capacidade de peso máxima da mochila.', characterId: null, weight: 6,
-    apply(game) { game.backpack.addWeightCapacity(6); } },
-  { id: 'n_weight_cap_big', name: 'Compressão Espacial', description: '+10 capacidade de peso máxima, mas -10% dano global.', characterId: null, weight: 3,
-    apply(game) { game.backpack.addWeightCapacity(10); for (const i of game.backpack.getAllItems()) { cp(i, { d: 0.9 }); } } },
-  { id: 'n_weight_cap_synergy', name: 'Bolso Dimensional', description: '+4 capacidade de peso máxima. +8 HP máximo.', characterId: null, weight: 5,
-    apply(game) { game.backpack.addWeightCapacity(4); game.combat.state.playerMaxHp += 8; game.combat.state.playerHp += 8; } },
-
   // ─── Mais cartas neutras ─────────────────────────────────────────────────
   { id: 'n_dash_master', name: 'Mestre do Dash', description: 'Recarga de dash -30% permanente.', characterId: null, weight: 4,
     apply(game) { (game as any)._dashCooldownMult = ((game as any)._dashCooldownMult ?? 1) * 0.7; } },

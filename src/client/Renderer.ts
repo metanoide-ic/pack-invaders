@@ -8,7 +8,7 @@
 import { GameManager, YEAR_ANOMALIES } from '../core/GameManager';
 import { generateAllSprites, SpriteSheet } from './SpriteGen';
 import { SpaceBackground } from './SpaceBackground';
-import { ItemDefinition, getOccupiedCells, getItemWeight } from '../core/ItemSystem';
+import { ItemDefinition, getOccupiedCells } from '../core/ItemSystem';
 import { InputHandler } from './InputHandler';
 import { Enemy, CombatState } from '../core/CombatEngine';
 import { SaveManager } from '../core/SaveManager';
@@ -2225,21 +2225,12 @@ export class Renderer {
       ? (nextBossIsMega ? ` | ☠ BOSS GRANDÃO em ${monthsUntilBoss}` : ` | ⚠ Boss em ${monthsUntilBoss}`)
       : '';
     const anomalyHint = game.currentAnomaly ? ` | ${game.currentAnomaly.icon} ${game.currentAnomaly.name}` : '';
-    const totalWeight = game.backpack.getTotalWeight();
-    const maxWeight = game.backpack.getMaxWeight();
     const infoLine = `${game.getTimeString()} | Gold: ${game.gold} | Espaço: ${usedCells}/${totalCells}`;
     ctx.fillText(
       infoLine,
       L.gridX + mochilaW + Math.floor(L.w * 0.015), L.gridY - Math.floor(L.h * 0.04)
     );
     let cursorX = L.gridX + mochilaW + Math.floor(L.w * 0.015) + ctx.measureText(infoLine).width;
-    // Weight, colored amber near the cap and red when full — the whole
-    // point of the system is to be a felt constraint, not a hidden number
-    const weightPct = maxWeight > 0 ? totalWeight / maxWeight : 0;
-    ctx.fillStyle = weightPct >= 1 ? '#ef4444' : weightPct >= 0.85 ? '#f59e0b' : '#94a3b8';
-    const weightLine = ` | Peso: ${totalWeight}/${maxWeight}`;
-    ctx.fillText(weightLine, cursorX, L.gridY - Math.floor(L.h * 0.04));
-    cursorX += ctx.measureText(weightLine).width;
     if (anomalyHint) {
       ctx.fillStyle = '#94a3b8';
       ctx.fillText(anomalyHint, cursorX, L.gridY - Math.floor(L.h * 0.04));
@@ -6189,19 +6180,12 @@ export class Renderer {
             }
           }
         }
-        // Cell count + weight — red when the weight wouldn't fit the
-        // remaining capacity, so the player knows before spending gold on
-        // something they won't be able to place
         const cellCount = shape.flat().filter(c => c === 1).length;
-        const itemWeight = getItemWeight(item);
-        const wouldFit = game.backpack.getTotalWeight() + itemWeight <= game.backpack.getMaxWeight();
         ctx.font = `${Math.floor(L.h * 0.011)}px monospace`;
         ctx.textAlign = 'center';
         const labelY = previewY + previewH + Math.floor(L.h * 0.012);
         ctx.fillStyle = '#7c8aa0';
-        ctx.fillText(`${cellCount} cel`, x + itemCardW / 2 - Math.floor(L.w * 0.02), labelY);
-        ctx.fillStyle = wouldFit ? '#7c8aa0' : '#ef4444';
-        ctx.fillText(`peso ${itemWeight}`, x + itemCardW / 2 + Math.floor(L.w * 0.03), labelY);
+        ctx.fillText(`${cellCount} cel`, x + itemCardW / 2, labelY);
         ctx.textAlign = 'left';
       }
 
@@ -8133,7 +8117,6 @@ export class Renderer {
       ['DICA:', 'Combo de kills = mais gold!'],
       ['DICA:', 'Item duplicado sobre o igual na mochila = UPGRADE (+dano)!'],
       ['DICA:', 'Loja e boss aparecem de 3 em 3 meses — cartas vêm todo mês!'],
-      ['DICA:', 'Cada item tem um peso — passar do limite da mochila trava a compra!'],
     ];
 
     ctx.font = L.fontNormal;

@@ -217,11 +217,6 @@ export class GameManager {
         : charDef.backpackRule === 'columns_only' ? 'columns_only'
         : charDef.backpackRule === 'diagonal' ? 'diagonal'
         : 'freeform',
-      // Base weight cap scales gently with grid size (bigger backpacks get a
-      // little more room) but is far from 1:1 with cell count — the point is
-      // to cap loadout power independent of physical space. ~21-25 for the
-      // 25-56 cell grids in the roster; weight-capacity cards add on top.
-      baseMaxWeight: 18 + Math.floor((charDef.backpackRows * charDef.backpackCols) / 8),
     };
 
     this.backpack = new BackpackGrid(config);
