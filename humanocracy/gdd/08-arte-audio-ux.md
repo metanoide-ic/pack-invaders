@@ -61,6 +61,14 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
 - **O que a UI nunca faz:** mostrar barras de reputação, medidores de paranoia,
   porcentagens de scanner, ou qualquer número que o mundo diegético não imprimiria
   num formulário.
+- **A exceção proposital — menu de pausa e conquistas:** a regra acima vale para a UI
+  DO GUICHÊ (a mesa, os documentos, o regulamento — o mundo do jogo). O menu de pausa já
+  quebra a quarta parede de propósito ("O posto não pausa por você. Este menu, sim.") —
+  é a única UI do jogo que admite ser UI, não parte do mundo. A tela de CONQUISTAS
+  (implementada no protótipo, acessível pelo título e pela pausa) mora nessa mesma
+  camada meta, não na diegética: o contador "x / 12" é exatamente o tipo de número que
+  a regra acima proíbe DENTRO do guichê, mas aqui está certo — como o placar de
+  conquistas da própria Steam, ele não finge ser parte do posto de fronteira.
 
 ## 8.3 Áudio
 
