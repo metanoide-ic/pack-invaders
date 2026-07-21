@@ -225,6 +225,24 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
    nenhum asset novo), chamada em `unlockAchievement()` antes do toast aparecer —
    respeita o toggle SONS do menu de pausa como qualquer outro efeito, de graça,
    porque `sfx()` já guarda esse estado internamente.
+
+   Escala de fonte (Volume 8.2 listava como TODO de acessibilidade): botão "TEXTO
+   GRANDE" no título e na pausa, `SETTINGS.textLarge` persistido como as demais
+   preferências, aplica `document.body.classList.toggle('text-large', ...)`. O CSS
+   (`body.text-large ...`) só mira áreas de leitura em prosa com rolagem própria —
+   `.modal-body`, `.citation-body`, `.speech`, `.talk-log`, `.rulebook`, `.ending-body`,
+   `#endday-report`, `.np-body` — nunca `.document`, cujos cartões são arrastáveis com
+   largura FIXA de 250px; aumentar fonte ali sem verificação visual confiável poderia
+   estourar o cartão. Achado no processo, um bug real: `setRegimeClass(day)` e
+   `showNight(day, ev)` fazem `document.body.className = ''` a cada troca de dia/noite
+   (pra limpar o tema de regime anterior) — isso também apagava `text-large` no
+   primeiro dia seguinte a ligar a opção, silenciosamente, sem nenhum erro. Corrigido
+   reaplicando `text-large` logo depois do reset nos dois pontos, sem alterar o reset
+   em si. Verificado com teste dedicado: `getComputedStyle` confirma o aumento de
+   fonte nas áreas cobertas (ex. `.speech` 12px→15px, `.rulebook` 11px→14px), a
+   preferência sobrevive a um reload E a uma virada de dia/noite (onde antes se
+   perdia), volta ao tamanho normal ao desligar pela pausa, e o rótulo localiza em EN;
+   suíte `smoke.js`–`smoke6.js` sem regressão; paridade EN/ES confirmada (822 = 822).
 3. **1.0:** port Unity completo conforme este volume.
 
 ## 9.5 Roadmap pós-protótipo

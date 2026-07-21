@@ -666,6 +666,19 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }
 }
 
+/* ============ TEXTO GRANDE (acessibilidade) ============
+   Só nas áreas de leitura em prosa, todas com rolagem própria (nunca no
+   .document — largura fixa de 250px, arrastável; aumentar a fonte ali
+   arriscaria estourar o cartão físico sem verificação visual confiável). */
+body.text-large .modal-body { font-size:16px; }
+body.text-large .citation-body { font-size:15px; }
+body.text-large .speech { font-size:15px; }
+body.text-large .talk-log { font-size:14px; }
+body.text-large .rulebook { font-size:14px; }
+body.text-large .ending-body { font-size:17px; }
+body.text-large #endday-report { font-size:16px; }
+body.text-large .np-body { font-size:15px; }
+
 </style>
 </head>
 <body>
@@ -685,6 +698,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
           <button id="btn-second-reading" class="btn-title" style="display:none;font-size:12px;width:260px;padding:8px" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
           <button id="btn-fullscreen" class="btn-title" style="font-size:12px;width:200px;padding:8px">⛶ TELA CHEIA (F)</button>
           <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
+          <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
           <button id="btn-lang" class="btn-title btn-toggle" style="width:200px" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
           <button id="btn-achievements" class="btn-title" style="font-size:12px;width:200px;padding:8px">🏆 CONQUISTAS</button>
         </div>
@@ -897,6 +911,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
         <div class="pause-title">— PAUSA —</div>
         <button id="pz-continue">CONTINUAR</button>
         <button id="pz-achievements">🏆 CONQUISTAS</button>
+        <button id="pz-textsize">☐ TEXTO GRANDE</button>
         <button id="pz-music">MÚSICA: LIGADA</button>
         <button id="pz-sfx">SONS: LIGADOS</button>
         <button id="pz-fullscreen">TELA CHEIA (F)</button>
@@ -1618,6 +1633,7 @@ const I18N_EN = {
     'New campaign, same seed: the same citizens pass through your booth, on the same days. You are the one who is no longer the same.',
   '⛶ TELA CHEIA (F)': '⛶ FULLSCREEN (F)',
   'MODO ARQUIVISTA (sem relógio)': 'ARCHIVIST MODE (no clock)',
+  'TEXTO GRANDE': 'LARGE TEXT',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
     "The shift clock doesn't move on its own — only when you use tools. Take your time; the queue is still finite.",
   'Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.':
@@ -2860,6 +2876,7 @@ const I18N_ES = {
     'Nueva campaña, misma semilla: los mismos ciudadanos pasan por tu ventanilla, en los mismos días. Tú eres quien ya no es el mismo.',
   '⛶ TELA CHEIA (F)': '⛶ PANTALLA COMPLETA (F)',
   'MODO ARQUIVISTA (sem relógio)': 'MODO ARCHIVISTA (sin reloj)',
+  'TEXTO GRANDE': 'TEXTO GRANDE',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
     'El reloj del turno no avanza solo — solo cuando usas herramientas. Tómate tu tiempo; la fila sigue siendo finita.',
   'Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.':
@@ -4346,7 +4363,7 @@ function quotaForDay(d) {
 
 /* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
 const SETTINGS_KEY = 'humanocracy_settings_v1';
-let SETTINGS = { archivist: false, lang: 'pt', achievements: [] };
+let SETTINGS = { archivist: false, lang: 'pt', achievements: [], textLarge: false };
 function loadSettings() {
   try {
     const j = localStorage.getItem(SETTINGS_KEY);
@@ -4475,8 +4492,9 @@ function showScreen(id) {
   else if (MUSIC.on) startMusic();
 }
 function setRegimeClass(day) {
-  document.body.className = '';
+  document.body.className = ''; // reset de tema — não é preferência do jogador
   document.body.classList.add('regime-' + regimeOfDay(day));
+  if (SETTINGS.textLarge) document.body.classList.add('text-large'); // sobrevive ao reset
 }
 
 /* ---------- MODAL ---------- */
@@ -6146,6 +6164,7 @@ function afterNight() {
 const NIGHTS_SEM_ROSTO = [19, 22, 43]; // o olho mágico não mostra ninguém
 function showNight(day, ev) {
   document.body.className = ''; // a noite não tem regime
+  if (SETTINGS.textLarge) document.body.classList.add('text-large'); // sobrevive ao reset
   $('night-hour').textContent = T(ev.quem);
   $('night-text').textContent = T(ev.texto);
   $('night-after').textContent = '';
@@ -6396,6 +6415,16 @@ function renderArchivistBtn() {
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
 $('btn-achievements').onclick = showAchievementsModal;
 $('pz-achievements').onclick = showAchievementsModal;
+function renderTextSizeBtn() {
+  const label = (SETTINGS.textLarge ? '☑' : '☐') + ' ' + T('TEXTO GRANDE');
+  $('btn-textsize').textContent = label;
+  $('btn-textsize').classList.toggle('on', SETTINGS.textLarge);
+  $('pz-textsize').textContent = label;
+  $('pz-textsize').classList.toggle('on', SETTINGS.textLarge);
+  document.body.classList.toggle('text-large', SETTINGS.textLarge);
+}
+$('btn-textsize').onclick = () => { SETTINGS.textLarge = !SETTINGS.textLarge; saveSettings(); renderTextSizeBtn(); };
+$('pz-textsize').onclick = () => { SETTINGS.textLarge = !SETTINGS.textLarge; saveSettings(); renderTextSizeBtn(); };
 const LANG_CYCLE = ['pt', 'en', 'es'];
 const LANG_LABEL = { pt: 'PT-BR', en: 'EN', es: 'ES' };
 function renderLangBtn() {
@@ -6494,6 +6523,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   applyStaticI18n();
   renderArchivistBtn();
   renderLangBtn();
+  renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();

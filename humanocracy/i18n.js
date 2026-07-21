@@ -29,6 +29,7 @@ const I18N_EN = {
     'New campaign, same seed: the same citizens pass through your booth, on the same days. You are the one who is no longer the same.',
   '⛶ TELA CHEIA (F)': '⛶ FULLSCREEN (F)',
   'MODO ARQUIVISTA (sem relógio)': 'ARCHIVIST MODE (no clock)',
+  'TEXTO GRANDE': 'LARGE TEXT',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
     "The shift clock doesn't move on its own — only when you use tools. Take your time; the queue is still finite.",
   'Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.':
@@ -1271,6 +1272,7 @@ const I18N_ES = {
     'Nueva campaña, misma semilla: los mismos ciudadanos pasan por tu ventanilla, en los mismos días. Tú eres quien ya no es el mismo.',
   '⛶ TELA CHEIA (F)': '⛶ PANTALLA COMPLETA (F)',
   'MODO ARQUIVISTA (sem relógio)': 'MODO ARCHIVISTA (sin reloj)',
+  'TEXTO GRANDE': 'TEXTO GRANDE',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
     'El reloj del turno no avanza solo — solo cuando usas herramientas. Tómate tu tiempo; la fila sigue siendo finita.',
   'Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.':

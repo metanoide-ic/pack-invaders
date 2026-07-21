@@ -659,3 +659,16 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   .shift-main { grid-template-columns: 220px 1fr 240px; }
   .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }
 }
+
+/* ============ TEXTO GRANDE (acessibilidade) ============
+   Só nas áreas de leitura em prosa, todas com rolagem própria (nunca no
+   .document — largura fixa de 250px, arrastável; aumentar a fonte ali
+   arriscaria estourar o cartão físico sem verificação visual confiável). */
+body.text-large .modal-body { font-size:16px; }
+body.text-large .citation-body { font-size:15px; }
+body.text-large .speech { font-size:15px; }
+body.text-large .talk-log { font-size:14px; }
+body.text-large .rulebook { font-size:14px; }
+body.text-large .ending-body { font-size:17px; }
+body.text-large #endday-report { font-size:16px; }
+body.text-large .np-body { font-size:15px; }

@@ -62,14 +62,30 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   fundo do cabeçalho do documento, e o glifo errado aparece como texto comparável ao
   do regulamento; resultados de scanner e zonas de exame já são só texto/opacidade,
   nunca cor isolada. Então "modo daltônico dedicado para selos" era um TODO mais
-  cauteloso do que o código exigia — já coberto. O que falta de verdade: **escala de
-  fonte** (nenhuma opção de tamanho de texto existe ainda) e **legendas para todo
-  áudio** — este último também mais estreito do que soa: os "sons" do jogo são só
-  efeitos não-verbais (carimbo, batida, buzina) ou as vozes murmuradas (`mumble()` em
-  `game.js`) — gibberish sintetizado por sílaba, sem texto por trás pra legendar, cuja
-  tensão vem do tom, não do conteúdo; a informação real de cada evento sonoro já aparece
-  como texto separado (a fala, o comunicado, o resultado do exame). Produção ainda deve
-  avaliar se algum efeito sonoro isolado carrega informação que só existe no áudio.
+  cauteloso do que o código exigia — já coberto. **Escala de fonte implementada no
+  protótipo nesta mesma rodada** — botão "TEXTO GRANDE" (título e pausa, `SETTINGS.textLarge`,
+  persiste como as demais preferências) aumenta a fonte só nas áreas de leitura em
+  prosa com rolagem própria (diálogo, citação/advertência, log de interrogatório,
+  regulamento, tela de fim de dia e final, jornal) — deliberadamente NÃO toca
+  `.document`: os cartões de documento são arrastáveis com largura fixa de 250px, e
+  aumentar a fonte ali arriscaria estourar o cartão sem uma forma confiável de
+  verificar visualmente o resultado neste ambiente. Achado no processo: `setRegimeClass()`
+  e `showNight()` faziam `document.body.className = ''` a cada troca de dia/noite —
+  um reset completo que apagava QUALQUER classe do body, inclusive `text-large`, porque
+  a intenção original era só limpar o tema de regime anterior. Corrigido reaplicando
+  `text-large` logo depois do reset nos dois pontos, sem tocar no reset em si (que
+  continua certo pra regime/silente-present/blackout). Verificado com teste dedicado:
+  fonte aumenta nas áreas cobertas, preferência persiste entre recarregamentos e
+  sobrevive a uma virada de dia (onde antes seria silenciosamente perdida), volta ao
+  tamanho normal ao desligar pela pausa, e localiza em EN; suíte `smoke.js`–`smoke6.js`
+  sem regressão; paridade EN/ES confirmada (822 = 822). **Legendas para todo áudio**
+  segue como o único item real da lista original, mas mais estreito do que soa: os
+  "sons" do jogo são só efeitos não-verbais (carimbo, batida, buzina) ou as vozes
+  murmuradas (`mumble()` em `game.js`) — gibberish sintetizado por sílaba, sem texto
+  por trás pra legendar, cuja tensão vem do tom, não do conteúdo; a informação real de
+  cada evento sonoro já aparece como texto separado (a fala, o comunicado, o resultado
+  do exame). Produção ainda deve avaliar se algum efeito sonoro isolado carrega
+  informação que só existe no áudio.
 - **O que a UI nunca faz:** mostrar barras de reputação, medidores de paranoia,
   porcentagens de scanner, ou qualquer número que o mundo diegético não imprimiria
   num formulário.

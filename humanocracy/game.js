@@ -203,7 +203,7 @@ function quotaForDay(d) {
 
 /* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
 const SETTINGS_KEY = 'humanocracy_settings_v1';
-let SETTINGS = { archivist: false, lang: 'pt', achievements: [] };
+let SETTINGS = { archivist: false, lang: 'pt', achievements: [], textLarge: false };
 function loadSettings() {
   try {
     const j = localStorage.getItem(SETTINGS_KEY);
@@ -332,8 +332,9 @@ function showScreen(id) {
   else if (MUSIC.on) startMusic();
 }
 function setRegimeClass(day) {
-  document.body.className = '';
+  document.body.className = ''; // reset de tema — não é preferência do jogador
   document.body.classList.add('regime-' + regimeOfDay(day));
+  if (SETTINGS.textLarge) document.body.classList.add('text-large'); // sobrevive ao reset
 }
 
 /* ---------- MODAL ---------- */
@@ -2003,6 +2004,7 @@ function afterNight() {
 const NIGHTS_SEM_ROSTO = [19, 22, 43]; // o olho mágico não mostra ninguém
 function showNight(day, ev) {
   document.body.className = ''; // a noite não tem regime
+  if (SETTINGS.textLarge) document.body.classList.add('text-large'); // sobrevive ao reset
   $('night-hour').textContent = T(ev.quem);
   $('night-text').textContent = T(ev.texto);
   $('night-after').textContent = '';
@@ -2253,6 +2255,16 @@ function renderArchivistBtn() {
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
 $('btn-achievements').onclick = showAchievementsModal;
 $('pz-achievements').onclick = showAchievementsModal;
+function renderTextSizeBtn() {
+  const label = (SETTINGS.textLarge ? '☑' : '☐') + ' ' + T('TEXTO GRANDE');
+  $('btn-textsize').textContent = label;
+  $('btn-textsize').classList.toggle('on', SETTINGS.textLarge);
+  $('pz-textsize').textContent = label;
+  $('pz-textsize').classList.toggle('on', SETTINGS.textLarge);
+  document.body.classList.toggle('text-large', SETTINGS.textLarge);
+}
+$('btn-textsize').onclick = () => { SETTINGS.textLarge = !SETTINGS.textLarge; saveSettings(); renderTextSizeBtn(); };
+$('pz-textsize').onclick = () => { SETTINGS.textLarge = !SETTINGS.textLarge; saveSettings(); renderTextSizeBtn(); };
 const LANG_CYCLE = ['pt', 'en', 'es'];
 const LANG_LABEL = { pt: 'PT-BR', en: 'EN', es: 'ES' };
 function renderLangBtn() {
@@ -2351,6 +2363,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   applyStaticI18n();
   renderArchivistBtn();
   renderLangBtn();
+  renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();
