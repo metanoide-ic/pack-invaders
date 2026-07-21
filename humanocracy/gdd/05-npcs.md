@@ -72,6 +72,60 @@ contraditórios entre si (Volume 9, tabelas).
   disse. Você tem certeza. Tem?
 - **Dia 47 — Havel Krantic:** "Nós já conversamos há duas semanas. O senhor usava uma
   caneca azul lascada na borda." Você nunca o viu. A caneca azul está na sua mesa.
+
+## 5.4 O elenco expandido (18 novos, proporcional ao Papers, Please)
+
+Papers, Please tem ~21 personagens fixos (família + equipe + entrantes nomeados) em 31
+dias — 0,68/dia. Aplicando a mesma proporção aos 48 dias de Humanocracy dá ~33; o
+protótipo tinha 15 (4 família + 8 encontros + 3 com título só — O Silente, o amigo do
+Dario, o barbeiro). Faltavam 18, adicionados como novos `ENCOUNTERS` nos dias livres,
+sem tocar o motor (é dado puro — mesmo mecanismo que já sustentava os 8 originais):
+
+- **Bruno Almedra** (Dias 3, 10): alívio cômico recorrente — contrabandista desengonçado,
+  nunca ameaçador, no papel que o Jorji Costava cumpre em Papers, Please.
+- **Talvo Okim** (Dias 34, 36): o informante — insinua que sabe os nomes da sua família,
+  "currículo, não ameaça"; detê-lo sobe o risco de auditoria (`bumpAuditRisk`), ecoando
+  "você também é inspecionado" sem precisar de um mecanismo novo.
+- **Mirena Dvorak** (Dia 17) → **Miron Dvorak** (Dia 40): irmã e irmão. Ela procura o
+  marido detido na Operação "Sangue Limpo" (dia 17, mesmo dia da manchete que a nomeia);
+  ele volta 23 dias depois oferecendo uma rota alternativa pelo norte — um segundo
+  caminho pra ending da resistência (`resistencia_norte`, aceito por `pickEnding()` junto
+  do `resistencia_contato` do barbeiro), coincidindo com a manchete "fronteiras do norte
+  caíram, ninguém governa lá" do mesmo dia.
+- **Ivona Duran** (Dia 4), **Pavo Krantic** (Dia 13), **Irena Corvac** (Dia 14): três
+  retratos de custo humano direto — viúva, jovem viajando sozinho pela primeira vez,
+  contadora pega no exato dia em que o novo Édito de Pureza passa a exigir um certificado
+  que ainda não existe pra ela.
+- **Sabina Borzek** (Dia 20), **Yasmin Kavehpur** (Dia 22): desertora da coletiva
+  taranstan e refugiada bahari sob a Convenção de Alcorte — ambas dentro das janelas de
+  regra já existentes (refúgio taranstan dias 20–26; cartão ALCORTE-9).
+- **Nils Aksun** (Dia 23), **Casimiro Ferro** (Dia 25): o ex-técnico da LumenCorp que
+  admite o scanner K-7 só detecta ansiedade (pressagia a manchete do Dia 37 — "o scanner
+  oficial era defeituoso"), e o pesquisador fugindo dois dias depois de catorze colegas
+  serem presos por contestar a fenotipia (viajando com o passaporte de um colega morto —
+  `nameMismatch`, a categoria "documento real, pessoa errada" do Volume 4.4).
+- **Halvar Nordal** (Dia 26), **Clarice Malden** (Dia 28): um banqueiro linestanês
+  oferecendo um suborno enorme porque o banco dele quebrou, e uma musicista procurando o
+  nome do irmão numa lista após a explosão da Estação Central (manchete do Dia 27).
+- **Ossip Hraben** (Dia 31): o pai da "família de trabalhadores realocados" que já mora
+  na metade do seu apartamento desde o evento de casa do mesmo dia — dá rosto a algo que
+  já existia só como texto em `HOME_EVENTS`.
+- **Edvin Solmak** (Dia 32), **Leontin Corvac** (Dia 43): um burocrata convicto do
+  Conselho, satisfeito com a própria mentira honesta, e um ex-inspetor de outro posto
+  fechado, fugindo do mesmo sistema que ele operava.
+- **Talia Malden** (Dia 46): da "comunidade do Vale" que declara conviver com Alternados
+  (manchete do Dia 45) — a única voz do jogo genuinamente em paz com a pergunta central,
+  o que é mais perturbador do que qualquer resposta de pânico.
+
+Nenhum caso novo precisou de mecânica nova além de `bumpAuditRisk()` (já existia) e um OR
+a mais em `pickEnding()`. Verificado: determinismo de RNG em todos os 35 dias de
+`ENCOUNTERS` (seed fixa, gerado duas vezes, bit a bit idêntico); toda combinação
+país/etnia/motivo/`forcedDisc` validada contra as listas reais do jogo; fluxo completo de
+`okim1`→nota guardada→`okim2` detido→risco de auditoria subindo; fluxo completo de
+`mirena1` aprovada→eco no jornal→`miron1`→nota guardada→`resistencia_norte`→
+`pickEnding()` retornando o final da resistência; suíte `smoke.js`–`smoke6.js` sem
+regressão. **Ainda só em português** — tradução EN/ES é a próxima rodada natural, seguindo
+o mesmo padrão incremental usado no resto da localização deste projeto.
   Lascada na borda.
 
 **Nunca confirmar** se é manipulação dos Alternados, falha de memória por estresse,

@@ -1196,6 +1196,16 @@ const ENCOUNTERS = {
     fala: 'Vou cuidar da minha mãe em Kranton. Ela piorou no inverno. Volto em duas semanas, prometo. Digo… não que eu precise prometer nada ao senhor.',
     nota: null,
   },
+  3: {
+    id: 'bruno1', nome: 'Bruno Almedra', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'comerciante', motivo: 'transito', valid: true,
+    fala: 'Essas caixas? Sabonete. Só sabonete importado. Por que pergunta com essa cara, inspetor? Eu tenho uma cara que faz as pessoas perguntarem, é isso, não é? Já ouvi isso antes.',
+  },
+  4: {
+    id: 'ivona1', nome: 'Ivona Duran', pais: 'frimia', sexo: 'f', etnia: 'mestico',
+    profissao: 'costureira', motivo: 'visita', valid: true,
+    fala: 'Meu marido morreu na estrada, tentando atravessar sem os papéis certos. Eu vim buscar o corpo com os papéis certos. A ironia não escapou a ninguém na minha família, inspetor. Só a ele.',
+  },
   5: {
     id: 'dmarov', nome: 'Sgt. Radek Dmarov', pais: 'osteria', sexo: 'm', etnia: 'osano',
     profissao: 'soldado', motivo: 'transito', valid: true,
@@ -1219,6 +1229,26 @@ const ENCOUNTERS = {
     profissao: 'professora', motivo: 'trabalho', valid: false, forcedDisc: 'expired',
     fala: 'Fui demitida enquanto cuidava da minha mãe. A escola diz que "meu perfil não serve mais". Minha permissão venceu ANTEONTEM, eu sei, eu sei — mas se eu voltar agora perco o apartamento e perco… tudo. Por favor. São dois dias.',
   },
+  10: {
+    id: 'bruno2', nome: 'Bruno Almedra', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'comerciante', motivo: 'transito', valid: false, forcedDisc: 'expired',
+    fala: 'Um dia, inspetor! UM dia! O carimbo diz dia 9, hoje é dia 10, isso é o quê, quatro por cento de atraso? Eu aceito multa. Eu aceito qualquer coisa. Só não me manda de volta pra explicar as caixas de novo.',
+  },
+  11: {
+    id: 'iris1', nome: 'Iris Vetor', pais: 'novarepublica', sexo: 'f', etnia: 'cantalo',
+    profissao: 'pesquisadora', motivo: 'trabalho', valid: true,
+    fala: 'Na Nova República os formulários são digitais e ninguém lê o que a gente escreve mesmo assim. Aqui, pelo menos, o senhor lê. Isso deveria ser reconfortante. Por algum motivo, não é.',
+  },
+  13: {
+    id: 'pavo1', nome: 'Pavo Krantic', pais: 'kranton', sexo: 'm', etnia: 'mestico',
+    profissao: 'estudante', motivo: 'estudo', valid: true,
+    fala: 'Meu tio mora do outro lado. Eu nunca conheci ele. Minha mãe disse: mostra os papéis, fica quieto, não conta pra ninguém que é a primeira vez que eu viajo sozinho. Ela não sabia que eu ia contar pro senhor.',
+  },
+  14: {
+    id: 'irenac1', nome: 'Irena Corvac', pais: 'osteria', sexo: 'f', etnia: 'nulio',
+    profissao: 'contadora', motivo: 'transito', valid: false, forcedMissing: 'ancest',
+    fala: 'O comunicado saiu ontem à noite, inspetor. O cartório abre daqui a três horas. Eu trabalho como contadora há dezoito anos nesta cidade. Ontem eu era osteriana. Hoje sou um formulário que ainda não existe.',
+  },
   15: {
     id: 'marek2', nome: 'Joss Marek', pais: 'osteria', sexo: 'm', etnia: 'mestico',
     profissao: 'barbeiro', motivo: 'transito', valid: true,
@@ -1231,25 +1261,81 @@ const ENCOUNTERS = {
     fala: 'O barbeiro mandou lembranças.',
     resistencia: true,
   },
+  17: {
+    id: 'mirena1', nome: 'Mirena Dvorak', pais: 'kranton', sexo: 'f', etnia: 'nulio',
+    profissao: 'enfermeira', motivo: 'transito', valid: true,
+    fala: 'Levaram meu marido terça-feira. "Sangue Limpo", chamam a operação. Ele vendia pão, inspetor. Eu só quero saber se ele está vivo. O senhor tem acesso a essas listas. Eu vi alguém como o senhor consultando uma, uma vez.',
+  },
   18: {
     id: 'elara3', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
     profissao: 'professora', motivo: 'visita', valid: false, forcedMissing: 'sanitaria',
     fala: 'Estou grávida. O pai ficou do outro lado. Eu só quero atravessar antes que… antes que inventem mais um papel que eu não tenho. Não tenho a carteira sanitária. O posto médico da minha cidade FECHOU. Como eu apresento um papel de um lugar que não existe mais?',
+  },
+  20: {
+    id: 'sabina1', nome: 'Sabina Borzek', pais: 'taranstan', sexo: 'f', etnia: 'tarano',
+    profissao: 'operária', motivo: 'imigracao', valid: true,
+    fala: 'Na coletiva, quem pergunta demais vira exemplo pros outros. Eu perguntei uma vez de menos e uma vez demais, nessa ordem errada. Aqui eu só quero ser ninguém por um tempo.',
   },
   21: {
     id: 'odim', nome: 'Vela Odim', pais: 'osteria', sexo: 'f', etnia: 'osano',
     profissao: 'jornalista', motivo: 'transito', valid: true,
     fala: 'Estou escrevendo sobre os postos de triagem. Sobre quantos "positivos" eram só gente doente, nervosa ou azarada. Uma pergunta, inspetor, sem caneta na mão: o senhor já teve certeza de alguma coisa aqui dentro? Uma única vez?',
   },
+  22: {
+    id: 'yasmin1', nome: 'Yasmin Kavehpur', pais: 'baharzad', sexo: 'f', etnia: 'bahari',
+    profissao: 'enfermeira', motivo: 'imigracao', valid: true,
+    fala: 'A Convenção de Alcorte diz que eu tenho direito a atravessar. O senhor também acredita nisso, ou só carimba nisso?',
+  },
+  23: {
+    id: 'nils1', nome: 'Nils Aksun', pais: 'linestan', sexo: 'm', etnia: 'osano',
+    profissao: 'engenheiro', motivo: 'trabalho', valid: true,
+    fala: 'Eu ajudei a calibrar esse scanner que o senhor usa. Marcador K-7. Sabe o que eu descobri, inspetor? Ele detecta ansiedade. Só isso. Eu me demiti. Ninguém me perguntou por quê. Ninguém pergunta essas coisas.',
+  },
   24: {
     id: 'elara4', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
     profissao: 'costureira', motivo: 'imigracao', valid: false, forcedDisc: 'nameMismatch',
     fala: 'O senhor de novo. Que sorte a minha. — Ela não sorri mais. — Está tudo em ordem dessa vez. Tudo. Pode olhar o quanto quiser.',
   },
+  25: {
+    id: 'casimiro1', nome: 'Casimiro Ferro', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'pesquisador', motivo: 'imigracao', valid: false, forcedDisc: 'nameMismatch',
+    fala: 'Catorze dos meus colegas assinaram aquela carta. Eu não assinei. Vim atravessar mesmo assim, com o passaporte do Andrei — ele não vai precisar mais. Chame isso do que quiser. Eu chamo de covardia com pressa.',
+  },
+  26: {
+    id: 'halvar1', nome: 'Halvar Nordal', pais: 'linestan', sexo: 'm', etnia: 'osano',
+    profissao: 'contador', motivo: 'trabalho', valid: true, briberia: 35,
+    fala: 'Cem moedas, inspetor. Não é suborno, é… taxa de conveniência. Meu banco quebrou terça-feira. O dinheiro que sobrou é literalmente a única coisa real que ainda tenho. Aceite antes que eu perceba isso também.',
+  },
+  28: {
+    id: 'clarice1', nome: 'Clarice Malden', pais: 'osteria', sexo: 'f', etnia: 'osano',
+    profissao: 'musicista', motivo: 'visita', valid: true,
+    fala: 'Meu irmão trabalhava na Estação Central. Trinta e um mortos, disseram. Não disseram nomes. Eu vim ver se o nome dele está numa lista em algum lugar. O senhor tem listas. Todo mundo aqui tem listas.',
+  },
+  31: {
+    id: 'ossip1', nome: 'Ossip Hraben', pais: 'kranton', sexo: 'm', etnia: 'mestico',
+    profissao: 'operário', motivo: 'trabalho', valid: true,
+    fala: 'O senhor… mora no Bloco 14, não mora? Nós dividimos o apartamento agora. Minha esposa disse que a sua não fala com a gente. Eu entendo. Eu também não falaria. Só vim pedir a permissão de trabalho. Preciso alimentar minha família — a que veio comigo, e imagino que a sua também.',
+  },
+  32: {
+    id: 'edvin1', nome: 'Edvin Solmak', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'contador', motivo: 'trabalho', valid: true,
+    fala: 'O regime anterior mentia com carimbos bonitos. O Conselho pelo menos mente honestamente: em papel reciclado, com tinta ruim. Isso é progresso, inspetor. Anote isso. Anote que eu disse isso.',
+  },
   33: {
     id: 'dmarov2', nome: 'Radek Dmarov', pais: 'osteria', sexo: 'm', etnia: 'osano',
     profissao: 'desempregado', motivo: 'imigracao', valid: false, forcedDisc: 'numberMismatch',
     fala: 'Sem farda fica difícil me reconhecer, é? O Conselho está prendendo todo mundo que serviu antes. TODO MUNDO. Você inclusive está na lista, mais cedo ou mais tarde. Me deixa passar e eu esqueço seu nome quando perguntarem.',
+  },
+  34: {
+    id: 'okim1', nome: 'Talvo Okim', pais: 'frimia', sexo: 'm', etnia: 'osano',
+    profissao: 'desempregado', motivo: 'transito', valid: true,
+    fala: 'Eu sei o nome da sua esposa. Sei o nome do seu filho, o mais novo. Não é ameaça, inspetor — é currículo. Alguém me paga pra saber esse tipo de coisa sobre gente como o senhor. Achei educado avisar.',
+    nota: { texto: 'Um nome e um endereço — os seus. Sem assinatura.', tipo: 'vigiado' },
+  },
+  36: {
+    id: 'okim2', nome: 'Talvo Okim', pais: 'frimia', sexo: 'm', etnia: 'osano',
+    profissao: 'desempregado', motivo: 'transito', valid: true,
+    fala: 'Voltei. Não por mim — me mandaram. Queriam saber se o senhor guardou aquele papel ou queimou. Eu disse que não sabia. Foi a única mentira que contei essa semana, o que já é uma boa semana pra mim.',
   },
   38: {
     id: 'mercador', nome: 'Sorenn Ledger', pais: 'linestan', sexo: 'm', etnia: 'osano',
@@ -1257,15 +1343,31 @@ const ENCOUNTERS = {
     fala: 'Seu detector biológico está descalibrado há semanas — eu vendo o serviço de calibração. 40 ostras e ele volta a funcionar de verdade. Barato, considerando o preço de um erro. A LumenCorp me odeia, o que é sempre bom sinal.',
     vendeCalibracao: 40,
   },
+  40: {
+    id: 'miron1', nome: 'Miron Dvorak', pais: 'kranton', sexo: 'm', etnia: 'nulio',
+    profissao: 'ferroviário', motivo: 'imigracao', valid: true,
+    fala: 'Minha irmã disse que um inspetor foi decente com ela, uma vez. Não sei se foi o senhor. Ela também não tinha certeza — disse que os rostos daqui começaram a se confundir pra ela. De qualquer forma: se um dia precisar atravessar sem fila, existe uma rota pelo norte agora que não tem mais fronteira nenhuma vigiando. Ninguém governa lá. É a coisa mais parecida com liberdade que sobrou.',
+    nota: { texto: 'Rota do norte: sem posto, sem guarda, sem mapa depois daqui. — M.D.', tipo: 'resistencia_norte' },
+  },
   41: {
     id: 'elara5', nome: 'Elara Venn', pais: 'kranton', sexo: 'f', etnia: 'nulio',
     profissao: 'professora', motivo: 'imigracao', valid: true, scannerAmbiguo: true,
     fala: '…O bebê nasceu. Está com a minha irmã. Eu atravesso hoje ou não atravesso nunca. — Ela olha para você como quem decora um rosto. — Engraçado. Não lembro mais se o senhor sempre foi assim. Mais velho. Diferente. A gente muda, não é? Todo mundo muda.',
   },
+  43: {
+    id: 'leontin1', nome: 'Leontin Corvac', pais: 'osteria', sexo: 'm', etnia: 'osano',
+    profissao: 'ex-inspetor de fronteira', motivo: 'imigracao', valid: true,
+    fala: 'Posto Nº 4, sabe onde fica? Fechou semana passada. Levaram o meu antecessor primeiro, depois o Ministério, depois a fila toda de gente que ele tinha aprovado "rápido demais". Eu era bom no meu trabalho, inspetor. Isso não significou nada no fim.',
+  },
   44: {
     id: 'esposa', nome: 'Vessa (sua esposa)', pais: 'osteria', sexo: 'f', etnia: 'osano',
     profissao: 'arquivista', motivo: 'transito', valid: true, memoria: true,
     fala: 'Você me disse ONTEM para atravessar hoje. Na cozinha. Você segurou minhas mãos e disse "vá antes de mim, eu encontro vocês". — Você não disse isso. Você tem certeza de que não disse isso. — Por que está me olhando assim?',
+  },
+  46: {
+    id: 'talia1', nome: 'Talia Malden', pais: 'osteria', sexo: 'f', etnia: 'osano',
+    profissao: 'agricultora', motivo: 'visita', valid: true,
+    fala: 'No Vale a gente parou de perguntar. Alternado, humano, o que for — planta a mesma terra, cava o mesmo poço. Funciona. Não sei se é coragem ou cansaço. Ninguém no Vale sabe também. E olha, ainda estamos todos vivos, o que é mais do que muita gente sensata pode dizer.',
   },
   47: {
     id: 'lembranca', nome: 'Havel Krantic', pais: 'kranton', sexo: 'm', etnia: 'nulio',
@@ -6087,6 +6189,14 @@ function encounterOutcome(enc, decision) {
     case 'dmarov2': f.dmarov2 = decision; break;
     case 'elara5': f.elaraFinal = decision; break;
     case 'esposa': f.esposaCruzou = decision === 'approve'; break;
+    case 'mirena1':
+      f.mirenaHusband = decision;
+      if (decision === 'approve') S.pendingNews.push({ day: S.day + 4, text: T('Um homem detido na Operação "Sangue Limpo" foi solto sem explicação. A esposa, enfermeira, não quis dar entrevista. Só disse: "ele está vivo".') });
+      else S.pendingNews.push({ day: S.day + 4, text: T('Não há mais registro de visitas de familiares aos detidos da Operação "Sangue Limpo". O Ministério diz que isso "simplifica o processo".') });
+      break;
+    case 'okim2':
+      if (decision === 'detain') bumpAuditRisk(2); // ele "desaparece" oficialmente — quem manda ele fica sabendo do mesmo jeito
+      break;
   }
 }
 
@@ -6322,7 +6432,7 @@ function pickEnding(kind) {
   const famDead = Object.values(S.family).every(m => !m.alive);
   if (famDead) return 'familia';
   if (kind === 'mirror_reject') return 'duvida';
-  if (c.resHelped >= 1 && S.flags.resistencia_contato && S.citTotal < 12) return 'resistencia';
+  if (c.resHelped >= 1 && (S.flags.resistencia_contato || S.flags.resistencia_norte) && S.citTotal < 12) return 'resistencia';
   if (c.alternadosIn >= 6) return 'silencio';
   if (S.citTotal <= 4 && c.bribes === 0) return 'funcionario';
   return 'duvida';

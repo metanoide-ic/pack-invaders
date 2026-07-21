@@ -1927,6 +1927,14 @@ function encounterOutcome(enc, decision) {
     case 'dmarov2': f.dmarov2 = decision; break;
     case 'elara5': f.elaraFinal = decision; break;
     case 'esposa': f.esposaCruzou = decision === 'approve'; break;
+    case 'mirena1':
+      f.mirenaHusband = decision;
+      if (decision === 'approve') S.pendingNews.push({ day: S.day + 4, text: T('Um homem detido na Operação "Sangue Limpo" foi solto sem explicação. A esposa, enfermeira, não quis dar entrevista. Só disse: "ele está vivo".') });
+      else S.pendingNews.push({ day: S.day + 4, text: T('Não há mais registro de visitas de familiares aos detidos da Operação "Sangue Limpo". O Ministério diz que isso "simplifica o processo".') });
+      break;
+    case 'okim2':
+      if (decision === 'detain') bumpAuditRisk(2); // ele "desaparece" oficialmente — quem manda ele fica sabendo do mesmo jeito
+      break;
   }
 }
 
@@ -2162,7 +2170,7 @@ function pickEnding(kind) {
   const famDead = Object.values(S.family).every(m => !m.alive);
   if (famDead) return 'familia';
   if (kind === 'mirror_reject') return 'duvida';
-  if (c.resHelped >= 1 && S.flags.resistencia_contato && S.citTotal < 12) return 'resistencia';
+  if (c.resHelped >= 1 && (S.flags.resistencia_contato || S.flags.resistencia_norte) && S.citTotal < 12) return 'resistencia';
   if (c.alternadosIn >= 6) return 'silencio';
   if (S.citTotal <= 4 && c.bribes === 0) return 'funcionario';
   return 'duvida';
