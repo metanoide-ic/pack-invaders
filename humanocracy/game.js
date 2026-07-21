@@ -1043,28 +1043,59 @@ function makeFig(x) {
 }
 function queueSpots(w) { const s = []; for (let i = 0; i < 9; i++) s.push(w * .58 - i * 26); return s; }
 /* ---------- GAMEPAD NO GUICHÊ (Steam Deck / controle) ---------- */
-/* A = aprovar, B = rejeitar, X = deter (respeita o disabled do botão),
-   Start = pausa — mesmo padrão de borda-de-subida usado em house.js/houseLoop(). */
+/* Fora do modo inspeção: A = aprovar, B = rejeitar, X = deter (respeita o
+   disabled do botão), Start = pausa, Y = entra no modo inspeção.
+   Dentro do modo inspeção (sem mouse não dá pra clicar em campos soltos):
+   Y sai do modo; L1/R1 (ou D-pad esquerda/direita) movem um cursor de foco
+   entre os elementos inspecionáveis da tela atual; A seleciona o elemento
+   em foco (equivalente a clicar nele) — mesmo padrão de borda-de-subida
+   usado em house.js/houseLoop(). */
+function inspectableTargets() {
+  const out = [];
+  document.querySelectorAll('.v[data-fid], .doc-photo[data-fid], .doc-seal[data-fid], .rb-rule[data-fid], .rb-country[data-fid], .a[data-fid]')
+    .forEach(el => { if (el.offsetParent !== null) out.push({ fid: el.dataset.fid, el }); });
+  const clockWrap = document.querySelector('.shift-clock');
+  if (clockWrap && clockWrap.offsetParent !== null) out.push({ fid: 'clock', el: clockWrap });
+  const npcStage = $('npc-stage');
+  if (npcStage && npcStage.offsetParent !== null) out.push({ fid: 'npc.face', el: npcStage });
+  return out;
+}
 function pollShiftGamepad() {
-  let gpA = false, gpB = false, gpX = false, gpStart = false;
+  let gpA = false, gpB = false, gpX = false, gpY = false, gpStart = false, gpL = false, gpR = false;
   try {
     const gp = navigator.getGamepads && navigator.getGamepads()[0];
     if (gp) {
       gpA = !!(gp.buttons[0] && gp.buttons[0].pressed);
       gpB = !!(gp.buttons[1] && gp.buttons[1].pressed);
       gpX = !!(gp.buttons[2] && gp.buttons[2].pressed);
+      gpY = !!(gp.buttons[3] && gp.buttons[3].pressed);
       gpStart = !!(gp.buttons[9] && gp.buttons[9].pressed);
+      gpL = !!((gp.buttons[4] && gp.buttons[4].pressed) || (gp.buttons[14] && gp.buttons[14].pressed));
+      gpR = !!((gp.buttons[5] && gp.buttons[5].pressed) || (gp.buttons[15] && gp.buttons[15].pressed));
     }
   } catch (e) {}
   if (gpStart && !shift.gpStart) togglePause();
   const overlayOpen = ['modal-overlay', 'exam-overlay', 'bag-overlay', 'citation']
     .some(id => { const el = $(id); return el && el.classList.contains('active'); });
   if (!PAUSE.open && !overlayOpen && shift.running && shift.citizen) {
-    if (gpA && !shift.gpA) decide('approve');
-    if (gpB && !shift.gpB) decide('reject');
+    if (gpY && !shift.gpY) toggleInspect();
+    if (shift.inspecting) {
+      const targets = inspectableTargets();
+      document.querySelectorAll('.gp-focus').forEach(e => e.classList.remove('gp-focus'));
+      if (targets.length) {
+        if (shift.gpFocusIdx == null || shift.gpFocusIdx >= targets.length) shift.gpFocusIdx = 0;
+        if (gpR && !shift.gpR) shift.gpFocusIdx = (shift.gpFocusIdx + 1) % targets.length;
+        if (gpL && !shift.gpL) shift.gpFocusIdx = (shift.gpFocusIdx - 1 + targets.length) % targets.length;
+        targets[shift.gpFocusIdx].el.classList.add('gp-focus');
+        if (gpA && !shift.gpA) pickTarget(targets[shift.gpFocusIdx].fid, targets[shift.gpFocusIdx].el);
+      }
+    } else {
+      if (gpA && !shift.gpA) decide('approve');
+      if (gpB && !shift.gpB) decide('reject');
+    }
     if (gpX && !shift.gpX && !$('btn-detain').disabled) decide('detain');
   }
-  shift.gpA = gpA; shift.gpB = gpB; shift.gpX = gpX; shift.gpStart = gpStart;
+  shift.gpA = gpA; shift.gpB = gpB; shift.gpX = gpX; shift.gpY = gpY; shift.gpStart = gpStart; shift.gpL = gpL; shift.gpR = gpR;
 }
 function initQueueCanvas() {
   const cv = $('queue-canvas');
@@ -1199,7 +1230,7 @@ function nextCitizen() {
   const prevRng = beginRng(slotSeed);
   try {
     renderQueueChatter();
-    shift.picks = []; shift.confirmed = [];
+    shift.picks = []; shift.confirmed = []; shift.gpFocusIdx = 0;
     $('scan-result').textContent = '';
     $('talk-log').innerHTML = '';
     $('inspect-bar').textContent = shift.inspecting ? T('MODO INSPEÇÃO: selecione dois elementos para comparar.') : '';
@@ -1614,6 +1645,8 @@ function toggleInspect() {
   shift.inspecting = !shift.inspecting;
   $('btn-inspect').classList.toggle('active', shift.inspecting);
   $('inspect-bar').textContent = shift.inspecting ? T('MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).') : '';
+  shift.gpFocusIdx = 0;
+  document.querySelectorAll('.gp-focus').forEach(e => e.classList.remove('gp-focus'));
   clearPicks();
 }
 function clearPicks() {

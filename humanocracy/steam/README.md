@@ -31,15 +31,20 @@ electron-builder com `extraMetadata.main`.)
 3. **Overlay:** `--in-process-gpu` na linha de comando do Electron;
 4. **Deck:** o jogo já tem controles de toque. Gamepad mapeado em duas cenas:
    a casa (`house.js`, `houseLoop()` — stick esquerdo anda, stick direito olha,
-   A interage, Start pausa) e agora também o turno principal no guichê
-   (`game.js`, `pollShiftGamepad()` — A aprova, B rejeita, X detém (respeitando
-   o `disabled` do botão, ou seja, só com evidência confirmada), Start pausa;
-   bloqueado enquanto qualquer overlay/modal estiver aberto, para não disparar
-   uma decisão por engano por trás de um comunicado ou bilhete). O gap restante
-   é mais estreito agora: inspeção comparativa (selecionar dois elementos
-   clicáveis dinâmicos — campos, foto, zonas de exame) ainda não tem navegação
-   por controle — precisa de um cursor/foco explícito, decisão de UX própria,
-   não coberta por este mapeamento de botões.
+   A interage, Start pausa) e o turno principal no guichê (`game.js`,
+   `pollShiftGamepad()` — A aprova, B rejeita, X detém (respeitando o
+   `disabled` do botão, ou seja, só com evidência confirmada), Start pausa,
+   Y entra/sai do modo inspeção; bloqueado enquanto qualquer overlay/modal
+   estiver aberto, para não disparar uma decisão por engano por trás de um
+   comunicado ou bilhete). Dentro do modo inspeção — onde não há mouse pra
+   clicar em campos soltos — o mapeamento muda: L1/R1 (ou D-pad
+   esquerda/direita) movem um cursor de foco (`.gp-focus`, contorno dourado)
+   entre os elementos inspecionáveis da tela atual (`inspectableTargets()`
+   enumera campos de documento, foto, selo, regras do regulamento, respostas
+   da entrevista, relógio e rosto do cidadão), e A seleciona o elemento em
+   foco — duas seleções disparam `evaluatePair()` normalmente. O gap de
+   navegação por controle na inspeção comparativa, antes documentado como
+   pendente, está fechado.
 
 ## Conquistas propostas
 

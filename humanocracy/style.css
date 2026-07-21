@@ -277,6 +277,10 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .document .fld .v:hover { background: rgba(185,164,92,.35); }
 .document .fld .v.picked { outline:2px solid var(--stamp-red); background:rgba(140,47,36,.15); }
 .document .fld .v.flagged { background:rgba(140,47,36,.3); text-decoration: underline wavy var(--stamp-red); }
+/* cursor de foco do gamepad no modo inspeção (L1/R1 movem, A seleciona) —
+   box-shadow em vez de outline pra não brigar com .picked/.flagged, que já
+   usam outline nos mesmos elementos. */
+.gp-focus { box-shadow: 0 0 0 2px var(--accent2), 0 0 10px 2px rgba(185,164,92,.55); }
 .doc-photo { float:right; margin:0 0 4px 6px; border:1px solid #6b6250; background:#c9c2ab; }
 .doc-photo svg { display:block; width:64px; height:76px; cursor:pointer; }
 .doc-photo.picked { outline:2px solid var(--stamp-red); }

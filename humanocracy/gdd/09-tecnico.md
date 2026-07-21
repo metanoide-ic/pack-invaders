@@ -112,13 +112,20 @@ O jogo NÃO é um produto web: o alvo é a **Steam**. O caminho em `humanocracy/
 1. **Agora:** build desktop Electron (`npm run humanocracy`) — tela cheia, F11/Alt+Enter,
    saves persistidos em userData; empacotável com electron-forge para Windows/Linux/Deck;
 2. **Early Access / demo:** Steamworks via `steamworks.js` (AppID, Steam Cloud sobre o
-   localStorage, overlay com `--in-process-gpu`), gamepad para o Deck — agora mapeado
-   nas duas cenas onde o jogo é jogado: a casa (`house.js`) e, desde esta rodada, o
-   turno principal no guichê também (`game.js`, `pollShiftGamepad()`: A aprova, B
-   rejeita, X detém respeitando o `disabled` do botão, Start pausa, tudo bloqueado
-   enquanto um overlay/modal estiver aberto — ver `steam/README.md` para o mapeamento
-   completo e o gap restante, a navegação por controle da inspeção comparativa), e as **12
-   conquistas** especificadas em `steam/README.md`. A afirmação "todas com contadores já
+   localStorage, overlay com `--in-process-gpu`), gamepad para o Deck — mapeado
+   nas duas cenas onde o jogo é jogado: a casa (`house.js`) e o turno principal no
+   guichê (`game.js`, `pollShiftGamepad()`: A aprova, B rejeita, X detém respeitando
+   o `disabled` do botão, Start pausa, Y entra/sai do modo inspeção; tudo bloqueado
+   enquanto um overlay/modal estiver aberto). O que faltava — navegação por controle
+   dentro da inspeção comparativa, onde não há mouse pra clicar em campo/foto/selo
+   soltos — está fechado: dentro do modo inspeção, L1/R1 (ou D-pad esquerda/direita)
+   movem um cursor de foco (`inspectableTargets()` enumera tudo que tem `data-fid`
+   mais os dois casos fixos, relógio e rosto do cidadão; `.gp-focus` no CSS marca o
+   elemento em foco com um contorno dourado que não briga com o `.picked`/`.flagged`
+   vermelho, já que usa `box-shadow` em vez de `outline`) e A seleciona o elemento
+   em foco, disparando `evaluatePair()` normalmente na segunda seleção — ver
+   `steam/README.md` para o mapeamento completo. Restam as **12 conquistas**
+   especificadas em `steam/README.md`. A afirmação "todas com contadores já
    existentes" foi conferida contra o código e estava **certa para 9 das 12, errada para
    3**: `ACH_QUENTE` (o travesseiro quente), `ACH_CINCO` (contar o retrato em duas noites
    distintas) e `ACH_AMIGO` (os 4 tipos de aviso do amigo do Dario) não tinham nenhum
