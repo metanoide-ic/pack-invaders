@@ -31,6 +31,14 @@ interface Mote {
   size: number;
 }
 
+interface Craft {
+  x: number;
+  y: number;
+  speed: number;
+  scale: number;
+  phase: number;
+}
+
 interface SkyTheme {
   top: string;
   mid: string;
@@ -38,28 +46,40 @@ interface SkyTheme {
   glow: string;      // rgba horizon glow
   nebula1: string;
   nebula2: string;
+  moon: string;      // distant moon/planet body color
+  moonGlow: string;  // rgba halo around the moon
+  beam: string;      // rgba city searchlight beam
+  craft: string;     // distant alien craft blink color
 }
 
 const THEMES: SkyTheme[] = [
   { // Year 1 — quiet indigo night
     top: '#04050e', mid: '#0a1024', horizon: '#1b2447',
-    glow: 'rgba(76, 96, 190, 0.22)',
-    nebula1: '#1c2b5e', nebula2: '#12395e',
+    glow: 'rgba(76, 96, 190, 0.30)',
+    nebula1: '#2a3f88', nebula2: '#1d5486',
+    moon: '#8493c4', moonGlow: 'rgba(120, 145, 220, 0.20)',
+    beam: 'rgba(120, 150, 240, 0.05)', craft: '#7fdcff',
   },
   { // Year 2 — violet alien sky
     top: '#070312', mid: '#170a2e', horizon: '#37175c',
-    glow: 'rgba(140, 82, 220, 0.22)',
-    nebula1: '#331a5e', nebula2: '#4a1a52',
+    glow: 'rgba(140, 82, 220, 0.30)',
+    nebula1: '#4a2790', nebula2: '#6a237a',
+    moon: '#a678c8', moonGlow: 'rgba(170, 110, 230, 0.20)',
+    beam: 'rgba(180, 120, 240, 0.05)', craft: '#e07fff',
   },
   { // Year 3 — crimson dusk, invasion deepens
     top: '#0d0308', mid: '#24081a', horizon: '#54142c',
-    glow: 'rgba(220, 70, 90, 0.20)',
-    nebula1: '#4d1430', nebula2: '#5e2412',
+    glow: 'rgba(220, 70, 90, 0.28)',
+    nebula1: '#751d47', nebula2: '#8a361b',
+    moon: '#c47a7a', moonGlow: 'rgba(220, 90, 110, 0.20)',
+    beam: 'rgba(240, 120, 130, 0.05)', craft: '#ff9d7f',
   },
   { // Year 4+ — burnt ember apocalypse
     top: '#0a0404', mid: '#1f0d08', horizon: '#4a1f0d',
-    glow: 'rgba(240, 120, 40, 0.20)',
-    nebula1: '#4d260e', nebula2: '#33150c',
+    glow: 'rgba(240, 120, 40, 0.28)',
+    nebula1: '#743a15', nebula2: '#4d2012',
+    moon: '#c89060', moonGlow: 'rgba(240, 150, 70, 0.22)',
+    beam: 'rgba(255, 160, 70, 0.06)', craft: '#ffc27f',
   },
 ];
 
@@ -84,9 +104,13 @@ export class SpaceBackground {
   private scroll = { far: 0, mid: 0, near: 0 };
 
   private nebulaCache = new Map<number, HTMLCanvasElement>();
+  private moonCache = new Map<number, HTMLCanvasElement>();
   private skylineFar!: HTMLCanvasElement;
+  private skylineMid!: HTMLCanvasElement;
   private skylineNear!: HTMLCanvasElement;
   private windowPositions: { x: number; y: number }[] = [];
+  private beamPositions: number[] = [];
+  private craft: Craft[] = [];
   private skyGradCache = new Map<string, CanvasGradient>();
 
   private shooting: { x: number; y: number; vx: number; vy: number; life: number } | null = null;
@@ -124,6 +148,19 @@ export class SpaceBackground {
       });
     }
 
+    // Distant alien craft drifting across the upper sky (combat only). Small
+    // silhouettes with a blinking underbelly light — cheap sense of "the
+    // invasion is everywhere, not just in front of you".
+    for (let i = 0; i < 4; i++) {
+      this.craft.push({
+        x: rng() * w,
+        y: 40 + rng() * (h * 0.34),
+        speed: (rng() < 0.5 ? -1 : 1) * (6 + rng() * 10),
+        scale: 0.7 + rng() * 0.9,
+        phase: rng() * Math.PI * 2,
+      });
+    }
+
     this.buildSkylines();
   }
 
@@ -146,7 +183,7 @@ export class SpaceBackground {
       ctx.fillStyle = color;
       // Overlapping translucent chunks accumulate into a dense cloud core
       // that fades naturally toward the edges.
-      const count = Math.floor(r * r * 0.5);
+      const count = Math.floor(r * r * 0.62);
       for (let i = 0; i < count; i++) {
         const ang = rng() * Math.PI * 2;
         const dist = Math.pow(rng(), 0.6) * r; // bias toward center
@@ -154,7 +191,7 @@ export class SpaceBackground {
         const py = Math.floor(cy + Math.sin(ang) * dist * 0.75);
         const roll = rng();
         const size = roll < 0.55 ? 2 : roll < 0.8 ? 3 : 1;
-        ctx.globalAlpha = 0.05 + rng() * 0.08;
+        ctx.globalAlpha = 0.07 + rng() * 0.11;
         ctx.fillRect(px, py, size, size);
       }
       // Sparse dither halo at the rim
@@ -171,14 +208,61 @@ export class SpaceBackground {
       ctx.globalAlpha = 1;
     };
 
-    blob(75, 50, 36, theme.nebula1);
-    blob(95, 60, 20, theme.nebula2);
-    blob(245, 95, 44, theme.nebula2);
-    blob(225, 80, 22, theme.nebula1);
-    blob(160, 145, 26, theme.nebula1);
-    blob(305, 30, 22, theme.nebula2);
+    // A broad band sweeping across the whole sky (not just the middle), so the
+    // upper reaches no longer read as flat black. Bigger, brighter cores.
+    blob(60, 38, 44, theme.nebula1);
+    blob(95, 55, 26, theme.nebula2);
+    blob(245, 90, 50, theme.nebula2);
+    blob(220, 72, 28, theme.nebula1);
+    blob(160, 130, 32, theme.nebula1);
+    blob(300, 26, 30, theme.nebula2);
+    blob(30, 100, 24, theme.nebula2);
+    blob(180, 40, 22, theme.nebula1);
+    blob(130, 90, 20, theme.nebula2);
 
     this.nebulaCache.set(themeIdx, c);
+    return c;
+  }
+
+  /** Distant hazy moon/planet — a focal anchor low in the sky behind the city.
+   * Pre-rendered per theme; a cratered disc with a soft lit terminator. */
+  private getMoon(themeIdx: number): HTMLCanvasElement {
+    const cached = this.moonCache.get(themeIdx);
+    if (cached) return cached;
+    const theme = THEMES[themeIdx];
+    const R = 150;
+    const c = document.createElement('canvas');
+    c.width = R * 2;
+    c.height = R * 2;
+    const ctx = c.getContext('2d')!;
+    const rng = mulberry(808 + themeIdx * 31);
+
+    // Body with a soft light-to-dark shading from upper-left
+    const body = ctx.createRadialGradient(R * 0.7, R * 0.7, R * 0.1, R, R, R);
+    body.addColorStop(0, theme.moon);
+    body.addColorStop(0.6, theme.moon);
+    body.addColorStop(1, '#0c0c18');
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(R, R, R - 2, 0, Math.PI * 2);
+    ctx.clip();
+    ctx.fillStyle = body;
+    ctx.fillRect(0, 0, R * 2, R * 2);
+    // Craters / surface mottling
+    for (let i = 0; i < 40; i++) {
+      const cr = 4 + rng() * 22;
+      const cx = rng() * R * 2;
+      const cy = rng() * R * 2;
+      ctx.globalAlpha = 0.06 + rng() * 0.08;
+      ctx.fillStyle = rng() < 0.5 ? '#000000' : '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy, cr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    ctx.restore();
+
+    this.moonCache.set(themeIdx, c);
     return c;
   }
 
@@ -245,9 +329,17 @@ export class SpaceBackground {
       return c;
     };
 
-    this.skylineFar = buildLayer(120, 9001, '#0c1120', 24, 78, false);
+    this.skylineFar = buildLayer(140, 9001, '#0c1120', 30, 96, false);
+    this.skylineMid = buildLayer(118, 4519, '#080b16', 26, 104, false);
     this.windowPositions = [];
-    this.skylineNear = buildLayer(96, 7331, '#050810', 20, 88, true);
+    this.skylineNear = buildLayer(108, 7331, '#04060d', 24, 104, true);
+
+    // A few searchlight beams rising from the tallest near buildings — the
+    // survivors sweeping the sky for incoming craft.
+    const brng = mulberry(2024);
+    for (let i = 0; i < 4; i++) {
+      this.beamPositions.push(Math.floor((0.12 + 0.72 * (i / 3) + (brng() - 0.5) * 0.08) * this.w));
+    }
   }
 
   private getSkyGradient(ctx: CanvasRenderingContext2D, themeIdx: number): CanvasGradient {
@@ -282,10 +374,27 @@ export class SpaceBackground {
     const nebX = -((this.time * 3) % (w + 400)) + 200;
     const prevSmooth = ctx.imageSmoothingEnabled;
     ctx.imageSmoothingEnabled = false;
-    ctx.globalAlpha = 0.8;
+    ctx.globalAlpha = 0.92;
     ctx.drawImage(neb, nebX - 400, 0, 1280, 720);
     ctx.drawImage(neb, nebX + w + 0, 0, 1280, 720);
     ctx.globalAlpha = 1;
+
+    // 2b. Distant moon low behind the city (combat only — the inventory screen
+    // has its own big planet, we don't want two competing focal bodies)
+    if (combatMode) {
+      const moon = this.getMoon(themeIdx);
+      const mR = 150;
+      const mCx = Math.floor(w * 0.74);
+      const mCy = h - 92;            // most of the disc rides behind the skyline
+      ctx.globalAlpha = 0.30;
+      ctx.fillStyle = theme.moonGlow;
+      ctx.beginPath();
+      ctx.arc(mCx, mCy, mR * 1.35, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 0.72;
+      ctx.drawImage(moon, mCx - mR, mCy - mR, mR * 2, mR * 2);
+      ctx.globalAlpha = 1;
+    }
     ctx.imageSmoothingEnabled = prevSmooth;
 
     // 3. Starfield — three parallax layers, drifting downward
@@ -296,6 +405,32 @@ export class SpaceBackground {
     this.drawStarLayer(ctx, this.starsFar, this.scroll.far, 0.5);
     this.drawStarLayer(ctx, this.starsMid, this.scroll.mid, 0.75);
     this.drawStarLayer(ctx, this.starsNear, this.scroll.near, 1);
+
+    // 3b. Distant alien craft drifting across the upper sky (combat only)
+    if (combatMode) {
+      const prevS = ctx.imageSmoothingEnabled;
+      ctx.imageSmoothingEnabled = false;
+      for (const cr of this.craft) {
+        cr.x += cr.speed * dt;
+        if (cr.x < -40) cr.x = w + 40;
+        if (cr.x > w + 40) cr.x = -40;
+        const s = cr.scale;
+        const bx = Math.floor(cr.x), by = Math.floor(cr.y);
+        // Saucer hull silhouette
+        ctx.fillStyle = 'rgba(10, 12, 24, 0.85)';
+        ctx.fillRect(bx - Math.round(11 * s), by, Math.round(22 * s), Math.round(3 * s));
+        ctx.fillRect(bx - Math.round(6 * s), by - Math.round(3 * s), Math.round(12 * s), Math.round(3 * s));
+        // Blinking underbelly light
+        const blink = 0.4 + Math.sin(this.time * 3 + cr.phase) * 0.6;
+        if (blink > 0.5) {
+          ctx.globalAlpha = (blink - 0.5) * 2;
+          ctx.fillStyle = theme.craft;
+          ctx.fillRect(bx - 1, by + Math.round(3 * s), Math.max(2, Math.round(2 * s)), Math.max(2, Math.round(2 * s)));
+          ctx.globalAlpha = 1;
+        }
+      }
+      ctx.imageSmoothingEnabled = prevS;
+    }
 
     // 4. Shooting star
     this.updateShootingStar(ctx, dt);
@@ -314,8 +449,37 @@ export class SpaceBackground {
     ctx.fillStyle = glowGrad;
     ctx.fillRect(0, h - glowH, w, glowH);
 
-    // 6. City skyline (far layer offset up, near layer at bottom)
-    ctx.drawImage(this.skylineFar, 0, h - 150);
+    // 5b. Searchlight beams sweeping up from the city (combat only) — wide,
+    // faint triangles that slowly fan back and forth.
+    if (combatMode) {
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = 0; i < this.beamPositions.length; i++) {
+        const baseX = this.beamPositions[i];
+        const baseY = h - 96;
+        const sway = Math.sin(this.time * 0.4 + i * 1.7) * 0.35; // radians from vertical
+        const len = h * 0.72;
+        const halfW = 26 + (i % 2) * 10;
+        const tipX = baseX + Math.sin(sway) * len;
+        const tipY = baseY - Math.cos(sway) * len;
+        const bg = ctx.createLinearGradient(baseX, baseY, tipX, tipY);
+        bg.addColorStop(0, theme.beam);
+        bg.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = bg;
+        ctx.beginPath();
+        ctx.moveTo(baseX - 3, baseY);
+        ctx.lineTo(baseX + 3, baseY);
+        ctx.lineTo(tipX + halfW, tipY);
+        ctx.lineTo(tipX - halfW, tipY);
+        ctx.closePath();
+        ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // 6. City skyline — three depth layers (far/mid/near) stacked toward the
+    // bottom so the ruined city occupies more of the frame.
+    ctx.drawImage(this.skylineFar, 0, h - 168);
+    ctx.drawImage(this.skylineMid, 0, h - 128);
     ctx.drawImage(this.skylineNear, 0, h - 100);
 
     // Flickering window lights
