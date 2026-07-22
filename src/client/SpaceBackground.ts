@@ -115,6 +115,9 @@ export class SpaceBackground {
 
   private shooting: { x: number; y: number; vx: number; vy: number; life: number } | null = null;
   private nextShootingIn = 4;
+  // Distant artillery flak bursts flashing over the city horizon (combat only)
+  private flak: { x: number; y: number; life: number; max: number; r: number }[] = [];
+  private nextFlakIn = 1.5;
   private time = 0;
 
   constructor(private w: number = 1280, private h: number = 720) {
@@ -494,6 +497,40 @@ export class SpaceBackground {
         }
       }
       ctx.globalAlpha = 1;
+    }
+
+    // 6b. Distant artillery flak over the horizon (combat only) — brief orange
+    // flashes among the far buildings, the war raging beyond your street.
+    if (combatMode) {
+      this.nextFlakIn -= dt;
+      if (this.nextFlakIn <= 0 && this.flak.length < 4) {
+        this.flak.push({
+          x: Math.random() * w,
+          y: h - 120 - Math.random() * 60,
+          life: 0.5, max: 0.5, r: 6 + Math.random() * 10,
+        });
+        this.nextFlakIn = 0.6 + Math.random() * 2.2;
+      }
+      ctx.globalCompositeOperation = 'lighter';
+      for (let i = this.flak.length - 1; i >= 0; i--) {
+        const f = this.flak[i];
+        f.life -= dt;
+        if (f.life <= 0) { this.flak.splice(i, 1); continue; }
+        const p = f.life / f.max;
+        const rad = f.r * (1 + (1 - p) * 1.4);
+        ctx.globalAlpha = p * 0.55;
+        ctx.fillStyle = theme.glow.replace(/[\d.]+\)$/, '1)');
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, rad, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = p * 0.9;
+        ctx.fillStyle = '#ffe6b0';
+        ctx.beginPath();
+        ctx.arc(f.x, f.y, rad * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     // 7. Ambient motes during combat — dust drifting up through the battlefield
