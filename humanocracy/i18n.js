@@ -1102,6 +1102,7 @@ const I18N_EN = {
 
   /* ---- EXAME FÍSICO: zonas e intro ---- */
   'OLHOS': 'EYES', 'BOCA': 'MOUTH', 'PELE': 'SKIN', 'MÃOS': 'HANDS', 'PESCOÇO': 'NECK',
+  'GERAL': 'OVERVIEW',
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'The person leans closer to the glass. Too close. Examine each region.',
 
@@ -2345,6 +2346,7 @@ const I18N_ES = {
 
   /* ---- EXAME FÍSICO: zonas e intro ---- */
   'OLHOS': 'OJOS', 'BOCA': 'BOCA', 'PELE': 'PIEL', 'MÃOS': 'MANOS', 'PESCOÇO': 'CUELLO',
+  'GERAL': 'GENERAL',
   'A pessoa se aproxima do vidro. Perto demais. Examine cada região.':
     'La persona se acerca al vidrio. Demasiado cerca. Examina cada zona.',
 

@@ -70,36 +70,111 @@ function tintAt(mx, my) {
 /* ---------- SPRITES (pintados em canvas, sem assets externos) ---------- */
 function mk(w, h, fn) { const c = document.createElement('canvas'); c.width = w; c.height = h; fn(c.getContext('2d')); return c; }
 const SPR = {};
+
+/* ---------- A FAMÍLIA — mesmas feições em TODO lugar ----------
+   Fisionomias fixas (fseed constante): o rosto que aparece no diálogo é
+   o MESMO que anda pela casa em 3D, pintado pelo mesmo motor procedural
+   dos cidadãos do guichê (faces.js). A família é osana, de Valgrado —
+   coerente com os documentos da campanha. */
+const FAM_FEATURES = {
+  mae:   { skin: 0, hair: 7, hairStyle: 1, eyes: 0, mouth: 1, beard: 0, glasses: false, brow: 0, faceW: 1, sexo: 'f', hat: 0, earring: false, idade: 64, rugas: true,  etnia: 'osano', fseed: 811001 },
+  vessa: { skin: 1, hair: 1, hairStyle: 1, eyes: 1, mouth: 0, beard: 0, glasses: false, brow: 0, faceW: 1, sexo: 'f', hat: 0, earring: true,  idade: 38, rugas: false, etnia: 'osano', fseed: 811002 },
+  tomi:  { skin: 0, hair: 2, hairStyle: 1, eyes: 1, mouth: 0, beard: 0, glasses: false, brow: 0, faceW: 0, sexo: 'm', hat: 0, earring: false, idade: 8,  rugas: false, etnia: 'osano', fseed: 811003 },
+  dario: { skin: 2, hair: 5, hairStyle: 0, eyes: 0, mouth: 1, beard: 2, glasses: false, brow: 1, faceW: 1, sexo: 'm', hat: 0, earring: false, idade: 24, rugas: false, etnia: 'osano', fseed: 811004 },
+};
+const FAM_COAT = { mae: 'rgb(74,64,54)', vessa: 'rgb(66,57,47)', tomi: 'rgb(74,90,106)', dario: 'rgb(46,50,48)' };
+
+/* sprite de corpo inteiro 64×128: busto procedural + corpo pintado abaixo */
+function famSprite(who) {
+  const f = FAM_FEATURES[who], coat = FAM_COAT[who];
+  const child = f.idade <= 12;
+  return mk(64, 128, (x) => {
+    const headY = child ? 26 : 2;                 // criança: mais baixa no quadro
+    const bustH = child ? 62 : 77;
+    // pernas primeiro (o busto cobre a cintura)
+    const legTone = 'rgba(28,26,22,1)';
+    x.fillStyle = legTone;
+    if (f.sexo === 'f') { // saia longa + sapatos
+      x.beginPath();
+      x.moveTo(16, headY + bustH - 8); x.lineTo(48, headY + bustH - 8);
+      x.lineTo(52, 120); x.lineTo(12, 120); x.closePath();
+      x.fillStyle = coat; x.fill();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(12, 116, 40, 4);
+      x.fillStyle = '#1c1914'; x.fillRect(20, 120, 9, 6); x.fillRect(36, 120, 9, 6);
+    } else {
+      x.fillStyle = child ? '#3a4652' : '#26282a';
+      x.fillRect(22, headY + bustH - 10, 8, child ? 34 : 52);
+      x.fillRect(34, headY + bustH - 10, 8, child ? 34 : 52);
+      x.fillStyle = '#17150f';
+      x.fillRect(20, child ? 118 : 120, 11, 6); x.fillRect(33, child ? 118 : 120, 11, 6);
+    }
+    // sombra no chão
+    const g = x.createRadialGradient(32, 124, 2, 32, 124, 16);
+    g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.ellipse(32, 124, 16, 4, 0, 0, 6.29); x.fill();
+    // busto do motor procedural (transparente fora da figura)
+    if (typeof renderPortraitCanvas === 'function') {
+      const bust = renderPortraitCanvas(f, {
+        w: 64, h: bustH, paintScale: 2.2, coat,
+        post: { levels: 10, grain: 9, aberr: 1, scan: 0.1, sat: 0.42 },
+      });
+      x.drawImage(bust, 0, headY);
+    }
+    // avental da Vessa por cima do casaco
+    if (who === 'vessa') {
+      x.fillStyle = 'rgba(122,106,79,.9)';
+      x.beginPath();
+      x.moveTo(24, headY + bustH - 18); x.lineTo(40, headY + bustH - 18);
+      x.lineTo(44, 104); x.lineTo(20, 104); x.closePath(); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1;
+      x.beginPath(); x.moveTo(24, headY + bustH - 12); x.lineTo(40, headY + bustH - 12); x.stroke();
+    }
+    // passa o corpo pintado pela mesma fita (leve — o busto já veio degradado)
+    if (window.analogPostCanvas) analogPostCanvas(x.canvas, f.fseed, { levels: 12, grain: 6, aberr: 0, scan: 0.06, sat: 0.6 });
+  });
+}
 function buildSprites() {
   if (SPR.mae) return;
   const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
   const C = (ctx, x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.29); ctx.fill(); };
-  SPR.mae = mk(64, 128, (x) => {
-    R(x, 20, 52, 24, 74, '#3a332a'); R(x, 14, 62, 36, 30, '#4a4036');
-    C(x, 32, 40, 11, '#e0c09a'); C(x, 32, 27, 7, '#b5b5a5');
-    C(x, 28, 39, 1.4, '#2b2820'); C(x, 36, 39, 1.4, '#2b2820');
-    R(x, 26, 46, 12, 2, '#8a6a5a');
-  });
-  SPR.vessa = mk(64, 128, (x) => {
-    R(x, 24, 50, 16, 72, '#42392f'); R(x, 22, 66, 20, 40, '#7a6a4f');
-    R(x, 24, 122, 6, 6, '#26221a'); R(x, 34, 122, 6, 6, '#26221a');
-    C(x, 32, 38, 10, '#e8c39e');
-    R(x, 22, 24, 20, 10, '#40301e'); C(x, 32, 26, 9, '#40301e'); C(x, 32, 38, 10, '#e8c39e');
-    x.fillStyle = '#40301e'; x.beginPath(); x.arc(32, 32, 10, Math.PI, 0); x.fill();
-    C(x, 28, 38, 1.4, '#2b2820'); C(x, 36, 38, 1.4, '#2b2820');
-    R(x, 28, 44, 8, 2, '#8a6a5a');
-  });
-  SPR.tomi = mk(64, 128, (x) => {
-    R(x, 26, 78, 12, 34, '#4a5a6a'); R(x, 26, 112, 5, 14, '#3a4652'); R(x, 33, 112, 5, 14, '#3a4652');
-    C(x, 32, 68, 8, '#ecd0ae');
-    x.fillStyle = '#54432a'; x.beginPath(); x.arc(32, 64, 8, Math.PI, 0); x.fill();
-    C(x, 29, 67, 1.2, '#222'); C(x, 35, 67, 1.2, '#222');
-  });
-  SPR.dario = mk(64, 128, (x) => { // de costas — ele olha para o canto
-    R(x, 24, 52, 16, 52, '#2e3230'); R(x, 25, 104, 6, 22, '#26292a'); R(x, 33, 104, 6, 22, '#26292a');
-    C(x, 32, 42, 9, '#a9744f');
-    x.fillStyle = '#191919'; x.beginPath(); x.arc(32, 40, 10, Math.PI * .9, Math.PI * 2.1); x.fill();
-    R(x, 24, 40, 16, 8, '#191919');
+  SPR.mae = famSprite('mae');
+  SPR.vessa = famSprite('vessa');
+  SPR.tomi = famSprite('tomi');
+  SPR.dario = mk(64, 128, (x) => { // de costas — ele olha para o canto. sempre.
+    const f = FAM_FEATURES.dario;
+    // pernas
+    R(x, 25, 100, 7, 26, '#26292a'); R(x, 33, 100, 7, 26, '#26292a');
+    R(x, 23, 124, 10, 4, '#141310'); R(x, 32, 124, 10, 4, '#141310');
+    // casaco (costas: costura central, ombros caídos)
+    x.fillStyle = FAM_COAT.dario;
+    x.beginPath();
+    x.moveTo(18, 108); x.lineTo(17, 60); x.quadraticCurveTo(18, 48, 32, 47);
+    x.quadraticCurveTo(46, 48, 47, 60); x.lineTo(46, 108); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(32, 50); x.lineTo(32, 106); x.stroke(); // costura
+    x.strokeStyle = 'rgba(200,205,190,.08)'; x.lineWidth = 1.4;
+    x.beginPath(); x.moveTo(19, 62); x.quadraticCurveTo(22, 52, 32, 50); x.stroke(); // luz de recorte
+    // pescoço + nuca
+    R(x, 28, 40, 8, 9, '#8c6b4e');
+    // cabeça POR TRÁS: só cabelo — fio a fio, como o motor faz
+    x.fillStyle = '#141414';
+    x.beginPath(); x.ellipse(32, 32, 11, 12.5, 0, 0, 6.29); x.fill();
+    for (let i = 0; i < 70; i++) {
+      const t = i / 70, hx = 22 + t * 20, hy = 22 + Math.abs(Math.sin(i * 3.7)) * 4;
+      x.strokeStyle = (i % 3) ? 'rgba(6,6,6,.7)' : 'rgba(70,70,66,.35)';
+      x.lineWidth = 0.6;
+      x.beginPath(); x.moveTo(hx, hy);
+      x.quadraticCurveTo(hx + (t - 0.5) * 3, hy + 9, hx + (t - 0.5) * 6, hy + 17);
+      x.stroke();
+    }
+    // orelha esquerda aparecendo — a única prova de que há um rosto do outro lado
+    C(x, 20.5, 34, 2.2, '#8c6b4e');
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.ellipse(20.5, 34.4, 1, 1.5, 0, 0, 6.29); x.fill();
+    // sombra no chão
+    const g = x.createRadialGradient(32, 124, 2, 32, 124, 16);
+    g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.ellipse(32, 124, 16, 4, 0, 0, 6.29); x.fill();
+    if (window.analogPostCanvas) analogPostCanvas(x.canvas, 811004, { levels: 10, grain: 9, aberr: 0, scan: 0.1, sat: 0.42 });
   });
   SPR.sofa = mk(96, 64, (x) => {
     R(x, 4, 24, 88, 34, '#3d3327'); R(x, 0, 10, 14, 48, '#463b2c'); R(x, 82, 10, 14, 48, '#463b2c');
@@ -259,59 +334,49 @@ function texAt(mx, my, tile) {
   }[r.nome] || TEX.corr;
 }
 
-/* ---------- ROSTOS EM CLOSE (caixa de diálogo) ---------- */
+/* ---------- ROSTOS EM CLOSE (caixa de diálogo) ----------
+   O MESMO motor procedural dos cidadãos (faces.js), com as MESMAS
+   fisionomias dos sprites 3D — a pessoa do corredor é a pessoa do
+   diálogo. Dario é a exceção diegética: sempre de costas. */
 const FACES = {};
 function buildFaces() {
   if (FACES.mae) return;
-  const R = (x, a, b, w, h, c) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
-  const C = (x, a, b, r, c) => { x.fillStyle = c; x.beginPath(); x.arc(a, b, r, 0, 6.29); x.fill(); };
-  FACES.mae = mk(72, 72, (x) => {
-    R(x, 0, 0, 72, 72, '#0a0a08');
-    R(x, 14, 52, 44, 20, '#4a4036');
-    C(x, 36, 34, 20, '#e0c09a');
-    C(x, 36, 13, 10, '#b5b5a5');
-    x.strokeStyle = '#b5b5a5'; x.lineWidth = 5; x.beginPath(); x.arc(36, 24, 17, Math.PI * 1.15, Math.PI * 1.85); x.stroke();
-    C(x, 28, 32, 2.4, '#2b2820'); C(x, 44, 32, 2.4, '#2b2820');
-    x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1.4;
-    x.beginPath(); x.moveTo(24, 26); x.lineTo(32, 26); x.stroke();
-    x.beginPath(); x.moveTo(40, 26); x.lineTo(48, 26); x.stroke();
-    x.beginPath(); x.moveTo(28, 44); x.quadraticCurveTo(36, 47, 44, 44); x.stroke();
-    x.beginPath(); x.moveTo(30, 41); x.lineTo(42, 41); x.stroke();
-  });
-  FACES.vessa = mk(72, 72, (x) => {
-    R(x, 0, 0, 72, 72, '#0a0a08');
-    R(x, 16, 54, 40, 18, '#42392f');
-    C(x, 36, 34, 19, '#e8c39e');
-    x.fillStyle = '#40301e'; x.beginPath(); x.arc(36, 28, 20, Math.PI, 0); x.fill();
-    C(x, 36, 12, 8, '#40301e');
-    C(x, 28, 34, 2.6, '#3a2c1a'); C(x, 44, 34, 2.6, '#3a2c1a');
-    x.strokeStyle = '#8a6a5a'; x.lineWidth = 2; x.beginPath(); x.moveTo(30, 45); x.lineTo(42, 45); x.stroke();
-  });
-  FACES.tomi = mk(72, 72, (x) => {
-    R(x, 0, 0, 72, 72, '#0a0a08');
-    R(x, 18, 56, 36, 16, '#4a5a6a');
-    C(x, 36, 36, 18, '#ecd0ae');
-    x.fillStyle = '#54432a'; x.beginPath(); x.arc(36, 30, 19, Math.PI, 0); x.fill();
-    C(x, 29, 36, 3, '#222'); C(x, 43, 36, 3, '#222');
-    C(x, 29, 35, 1, '#fff'); C(x, 43, 35, 1, '#fff');
-    x.strokeStyle = '#8a6a5a'; x.lineWidth = 1.8; x.beginPath(); x.moveTo(31, 47); x.quadraticCurveTo(36, 49, 41, 47); x.stroke();
-  });
+  const famClose = (who) => {
+    const cv = mk(72, 72, () => {});
+    if (typeof renderPortraitCanvas !== 'function') return cv;
+    const p = renderPortraitCanvas(FAM_FEATURES[who], {
+      w: 72, h: 86, zoom: 1.4, focusY: 48, paintScale: 2.6,
+      bg: '#0a0a08', coat: FAM_COAT[who],
+      post: { levels: 9, grain: 14, aberr: 1, scan: 0.15, sat: 0.4, vig: 0.5 },
+    });
+    cv.getContext('2d').drawImage(p, 0, -7);
+    return cv;
+  };
+  FACES.mae = famClose('mae');
+  FACES.vessa = famClose('vessa');
+  FACES.tomi = famClose('tomi');
   FACES.dario = mk(72, 72, (x) => {
-    // sempre de costas. sempre.
-    R(x, 0, 0, 72, 72, '#0a0a08');
-    R(x, 16, 54, 40, 18, '#2e3230');
-    C(x, 36, 34, 19, '#a9744f');
-    x.fillStyle = '#191919';
-    x.beginPath(); x.arc(36, 34, 20, 0, 6.29); x.fill();
-    C(x, 36, 30, 17, '#141414');
-    x.fillStyle = 'rgba(255,255,255,.05)'; x.fillRect(20, 20, 4, 24);
+    // sempre de costas. sempre. — mas com a nuca do motor: cabelo fio a fio
+    x.fillStyle = '#0a0a08'; x.fillRect(0, 0, 72, 72);
+    x.fillStyle = FAM_COAT.dario; x.fillRect(12, 52, 48, 20);
+    x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1.4;
+    x.beginPath(); x.moveTo(36, 54); x.lineTo(36, 72); x.stroke();
+    x.fillStyle = '#8c6b4e'; x.fillRect(30, 44, 12, 12); // pescoço
+    x.fillStyle = '#141414';
+    x.beginPath(); x.ellipse(36, 30, 17, 20, 0, 0, 6.29); x.fill();
+    for (let i = 0; i < 110; i++) {
+      const t = i / 110, hx = 21 + t * 30, hy = 13 + Math.abs(Math.sin(i * 2.9)) * 6;
+      x.strokeStyle = (i % 3) ? 'rgba(5,5,5,.75)' : 'rgba(74,74,70,.4)';
+      x.lineWidth = 0.7;
+      x.beginPath(); x.moveTo(hx, hy);
+      x.quadraticCurveTo(hx + (t - 0.5) * 5, hy + 15, hx + (t - 0.5) * 10, hy + 30);
+      x.stroke();
+    }
+    // luz de recorte à esquerda — a lâmpada do corredor atrás dele
+    x.strokeStyle = 'rgba(210,205,185,.14)'; x.lineWidth = 2;
+    x.beginPath(); x.arc(36, 31, 17.5, Math.PI * 0.75, Math.PI * 1.25); x.stroke();
+    if (window.analogPostCanvas) analogPostCanvas(x.canvas, 9104, { levels: 8, grain: 16, aberr: 1, scan: 0.16, sat: 0.4 });
   });
-  // mesma fita, mesma casa: os rostos da família passam pelo mesmo
-  // pós-processamento analógico dos cidadãos (faces.js)
-  if (window.analogPostCanvas) {
-    let fi = 0;
-    for (const k in FACES) analogPostCanvas(FACES[k], 9100 + (fi++), { levels: 8, grain: 16, aberr: 1, scan: 0.16, sat: 0.4 });
-  }
 }
 
 /* ---------- ENTIDADES ---------- */

@@ -48,6 +48,22 @@ const F_HAIR = [
 ];
 const F_IRIS = [[42, 38, 30], [52, 82, 66], [84, 64, 38]];
 
+/* ---------- etnia → estrutura (sutil, com sobreposição deliberada) ----------
+   Os "manuais de fenotipia" dos regimes existem NA FICÇÃO — e são
+   pseudociência. Estes desvios só garantem coerência de mundo (uma
+   família parece família, Baharzad não parece Kranton), com faixas que
+   se SOBREPÕEM de propósito: nenhum rosto prova etnia nenhuma. O manual
+   do guichê funciona exatamente como os manuais reais funcionavam: mal. */
+const ETHNIC_SHAPE = {
+  osano:   { nose: 0.3,  jaw: 0.4,  eyeH: 0,     lip: 0,   cheek: 0 },
+  nulio:   { nose: -0.5, jaw: -0.5, eyeH: 0.25,  lip: 0,   cheek: 0 },
+  mestico: { nose: 0,    jaw: 0,    eyeH: 0,     lip: 0.2, cheek: 0.2 },
+  bahari:  { nose: 0.7,  jaw: 0.1,  eyeH: 0,     lip: 0.6, cheek: 0 },
+  cantalo: { nose: -0.2, jaw: 0.1,  eyeH: 0.1,   lip: 0.1, cheek: 0, sardas: true },
+  tarano:  { nose: 0.2,  jaw: 0.7,  eyeH: -0.35, lip: 0,   cheek: 0.8 },
+};
+const ETHNIC_NEUTRAL = { nose: 0, jaw: 0, eyeH: 0, lip: 0, cheek: 0 };
+
 function rgb(c, a) { return `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a == null ? 1 : a})`; }
 function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 function lighten(c, t) { return mix(c, [255, 250, 238], t); }
@@ -57,17 +73,24 @@ function darken(c, t) { return mix(c, [10, 8, 6], t); }
 function faceLayout(f) {
   const r = faceRng(faceSeedOf(f));
   const fem = f.sexo === 'f';
-  const fw = 19 + f.faceW * 2.4 + r() * 2 - (fem ? 1.6 : 0);      // meia-largura nas bochechas
-  const jw = fw * (fem ? 0.78 : 0.82) + r() * 1.6;                // meia-largura do maxilar
-  const chinY = 73.5 + r() * 3.5 + (f.idade > 52 ? 1.5 : 0);
-  const eyeY = 47 + (r() - 0.5) * 2.4;
+  const E = ETHNIC_SHAPE[f.etnia] || ETHNIC_NEUTRAL;
+  const child = f.idade != null && f.idade <= 12;                  // Tomi e afins
+  let fw = 19 + f.faceW * 2.4 + r() * 2 - (fem ? 1.6 : 0);        // meia-largura nas bochechas
+  let jw = fw * (fem ? 0.78 : 0.82) + r() * 1.6 + E.jaw * 0.6;    // meia-largura do maxilar
+  let chinY = 73.5 + r() * 3.5 + (f.idade > 52 ? 1.5 : 0);
+  let eyeY = 47 + (r() - 0.5) * 2.4;
   const eyeDX = 10.5 + f.faceW * 0.8 + r() * 1.4;
-  const eyeW = 5.8 + r() * 0.9, eyeH = 2.3 + r() * 0.7;
-  const browY = eyeY - (5 + r() * 2.4) - (f.brow ? 1.2 : 0);
+  const eyeW = 5.8 + r() * 0.9;
+  let eyeH = 2.3 + r() * 0.7 + E.eyeH;
+  let browY = eyeY - (5 + r() * 2.4) - (f.brow ? 1.2 : 0);
   const noseTip = 58.5 + r() * 2.4;
-  const noseW = 4.4 + r() * 1.8 - (fem ? 0.6 : 0);
+  let noseW = 4.4 + r() * 1.8 - (fem ? 0.6 : 0) + E.nose;
   const mouthY = 66.5 + r() * 1.8;
-  const mouthW = 8.2 + r() * 2.2;
+  let mouthW = 8.2 + r() * 2.2;
+  if (child) { // proporções infantis: crânio grande, rosto curto, olho grande
+    fw *= 0.88; jw *= 0.78; chinY -= 5.5; eyeY += 1.4; eyeH += 0.55;
+    noseW *= 0.72; mouthW *= 0.82; browY += 1.4;
+  }
   const ax = (r() - 0.5) * 1.6;                                    // assimetria global
   const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
   // fator uncanny: distribuído por TODO MUNDO (humano ou não — nunca
@@ -79,9 +102,10 @@ function faceLayout(f) {
   const eyeApart = uncanny && r() < 0.5 ? 1.6 : 0;
   const cornerUp = uncanny && r() < 0.4 ? 0.9 : 0;
   return {
-    r, fem, fw, jw, chinY, eyeY, eyeDX: eyeDX + eyeApart, eyeW, eyeH,
+    r, fem, child, fw, jw, chinY, eyeY, eyeDX: eyeDX + eyeApart, eyeW, eyeH,
     browY, noseTip, noseW, mouthY, mouthW, ax, tilt,
     uncanny, pupilSkew, cornerUp,
+    lip: E.lip, cheek: E.cheek, sardas: !!E.sardas && f.skin <= 1,
     skin: F_SKIN[f.skin % F_SKIN.length], hair: F_HAIR[f.hair % F_HAIR.length],
     iris: F_IRIS[f.eyes % F_IRIS.length],
   };
@@ -130,17 +154,54 @@ function paintBust(ctx, f, opts) {
   ctx.closePath(); ctx.fill();
   soft(ctx, cx, 88, 9, 4, rgb(darken(SH, 0.2), 0.4), 1.6);
 
-  /* casaco e ombros */
-  ctx.fillStyle = 'rgb(34,35,29)';
-  ctx.beginPath();
-  ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
-  ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath(); ctx.fill();
-  // lapelas / gola pegando a luz
-  ctx.strokeStyle = 'rgba(120,118,100,.28)'; ctx.lineWidth = 0.8;
-  ctx.beginPath(); ctx.moveTo(41, 92); ctx.lineTo(46, 104); ctx.moveTo(59, 92); ctx.lineTo(54, 104); ctx.stroke();
-  soft(ctx, 50, 96, 26, 7, 'rgba(0,0,0,.35)', 2.4);
+  /* casaco e ombros — lã pesada com trama, dobras e gola de verdade */
+  const coatPath = () => {
+    ctx.beginPath();
+    ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
+    ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+  };
+  coatPath();
+  ctx.fillStyle = opts.coat || 'rgb(45,46,38)';
+  ctx.fill();
+  ctx.save();
+  coatPath(); ctx.clip();
+  // luz da lâmpada no ombro esquerdo, sombra no direito
+  const cg2 = ctx.createLinearGradient(14, 0, 88, 0);
+  cg2.addColorStop(0, 'rgba(235,238,210,.10)');
+  cg2.addColorStop(0.45, 'rgba(0,0,0,0)');
+  cg2.addColorStop(1, 'rgba(0,0,0,.42)');
+  ctx.fillStyle = cg2; ctx.fillRect(8, 82, 84, 42);
+  // trama do tecido (fios horizontais irregulares)
+  for (let i = 0; i < 150; i++) {
+    const tx = 11 + r() * 78, ty = 87 + r() * 35;
+    ctx.strokeStyle = r() < 0.5 ? 'rgba(0,0,0,.13)' : 'rgba(210,212,190,.05)';
+    ctx.lineWidth = 0.4;
+    ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx + 1.5 + r() * 2.5, ty + (r() - 0.5)); ctx.stroke();
+  }
+  // dobras dos braços
+  soft(ctx, 22, 108, 3, 13, 'rgba(0,0,0,.30)', 2.2);
+  soft(ctx, 78, 108, 3, 13, 'rgba(0,0,0,.38)', 2.2);
+  soft(ctx, 33, 114, 2.4, 9, 'rgba(0,0,0,.22)', 2);
+  // abertura central: camisa e botão
+  ctx.fillStyle = 'rgba(12,11,8,.85)';
+  ctx.beginPath(); ctx.moveTo(46, 96); ctx.lineTo(54, 96); ctx.lineTo(53, 122); ctx.lineTo(47, 122); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgb(148,140,116)';
+  ctx.beginPath(); ctx.moveTo(47.5, 96); ctx.lineTo(52.5, 96); ctx.lineTo(51.8, 122); ctx.lineTo(48.2, 122); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(70,62,44,.9)';
+  for (const by of [103, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.8, 0, 6.29); ctx.fill(); }
+  // gola dobrada (duas abas pegando luz de jeitos diferentes)
+  ctx.fillStyle = rgb(mix([45, 46, 38], [235, 238, 210], 0.10));
+  ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.lineTo(33, 93.5); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = rgb(mix([45, 46, 38], [10, 10, 8], 0.35));
+  ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.lineTo(67, 93.5); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.stroke();
+  ctx.restore();
+  // sombra da cabeça caindo no peito
+  soft(ctx, 50, 92, 15, 5, 'rgba(0,0,0,.45)', 2.6);
   // luz de recorte nos ombros (separa do fundo escuro)
-  ctx.strokeStyle = 'rgba(210,215,190,.14)'; ctx.lineWidth = 0.9;
+  ctx.strokeStyle = 'rgba(210,215,190,.16)'; ctx.lineWidth = 0.9;
   ctx.beginPath(); ctx.moveTo(20, 103); ctx.bezierCurveTo(26, 92, 38, 88.5, 49, 88); ctx.stroke();
 
   /* a cabeça inteira levemente inclinada — mugshot de verdade nunca é reto */
@@ -219,20 +280,114 @@ function paintBust(ctx, f, opts) {
   }
   soft(ctx, cx - L.fw + 5, 55, 3.4, 2, 'rgba(255,244,222,.14)', 2);
   soft(ctx, cx + L.fw - 5 + L.ax, 55, 3.4, 2, 'rgba(255,244,222,.10)', 2);
+  // maçãs do rosto altas (estrutura por etnia — sutil, some no VHS de longe)
+  if (L.cheek) {
+    soft(ctx, cx - L.fw + 4.5, 52.5, 3.6, 2.2, rgb(lighten(SK, 0.3), 0.22 * L.cheek), 1.8);
+    soft(ctx, cx + L.fw - 4.5 + L.ax, 52.5, 3.6, 2.2, rgb(lighten(SK, 0.22), 0.14 * L.cheek), 1.8);
+    soft(ctx, cx - L.fw + 5.5, 57.5, 3.4, 2.4, rgb(darken(SH, 0.06), 0.2 * L.cheek), 2);
+    soft(ctx, cx + L.fw - 5.5 + L.ax, 57.5, 3.4, 2.4, rgb(darken(SH, 0.12), 0.24 * L.cheek), 2);
+  }
 
   // boca: lábios de verdade — superior em sombra, inferior pega luz
   const my = L.mouthY, mw = L.mouthW;
   const droop = f.mouth === 1 ? 1.2 : f.mouth === 2 ? -0.4 : 0.5;
+  const lipFull = L.lip || 0;
   const lipTone = mix(SH, [130, 66, 56], L.fem ? 0.6 : 0.3);
   // filtro do lábio (sulco acima)
   soft(ctx, cx, my - 3.2, 1.2, 1.8, rgb(SH, 0.35), 1);
+  const op = opts.mouthOpen || 0;
+  if (op > 0) {
+    /* BOCA ABERTA (exame): "abra a boca, por favor." — dentes um a um.
+       Normal: dentes gastos, amarelados, um canino lascado, gengiva viva.
+       opts.teethPerfect: dentição perfeita DEMAIS, gengiva pálida — o
+       achado do TELLS 'dentes' pintado, não descrito. */
+    const openH = 2.6 + op * 6.2;
+    // cavidade
+    ctx.fillStyle = 'rgb(24,11,9)';
+    ctx.beginPath();
+    ctx.moveTo(cx - mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx, my - 2.4, cx + mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx + mw * 0.8, my + openH * 0.85, cx, my + openH);
+    ctx.quadraticCurveTo(cx - mw * 0.8, my + openH * 0.85, cx - mw * 0.92, my - 0.6);
+    ctx.closePath(); ctx.fill();
+    ctx.save();
+    ctx.beginPath(); // clip da cavidade
+    ctx.moveTo(cx - mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx, my - 2.4, cx + mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx + mw * 0.8, my + openH * 0.85, cx, my + openH);
+    ctx.quadraticCurveTo(cx - mw * 0.8, my + openH * 0.85, cx - mw * 0.92, my - 0.6);
+    ctx.closePath(); ctx.clip();
+    // língua ao fundo
+    soft(ctx, cx, my + openH - 1, mw * 0.5, 2.2, 'rgba(120,48,44,.8)', 1.4);
+    // gengiva superior
+    const gum = opts.teethPerfect ? 'rgb(198,176,172)' : 'rgb(148,72,64)';
+    ctx.fillStyle = gum;
+    ctx.beginPath();
+    ctx.moveTo(cx - mw * 0.92, my - 0.8);
+    ctx.quadraticCurveTo(cx, my - 2.6, cx + mw * 0.92, my - 0.8);
+    ctx.lineTo(cx + mw * 0.92, my + 0.9); ctx.lineTo(cx - mw * 0.92, my + 0.9);
+    ctx.closePath(); ctx.fill();
+    // dentes superiores, um a um
+    const nT = 8, x0 = cx - mw * 0.82, tw = (mw * 1.64) / nT;
+    const rT = faceRng(faceSeedOf(f) ^ 0xD3);
+    for (let i = 0; i < nT; i++) {
+      const tx = x0 + i * tw;
+      let th = opts.teethPerfect ? 2.6 : 1.9 + rT() * 1.0;
+      const chip = !opts.teethPerfect && i === 5;         // o canino lascado
+      if (chip) th *= 0.55;
+      const tone = opts.teethPerfect
+        ? [242, 240, 232]
+        : mix([222, 206, 164], [188, 168, 122], rT() * 0.6);
+      ctx.fillStyle = rgb(tone);
+      ctx.beginPath();
+      ctx.moveTo(tx + 0.12, my - 0.4);
+      ctx.lineTo(tx + tw - 0.12, my - 0.4);
+      ctx.lineTo(tx + tw - 0.28, my - 0.4 + th);
+      ctx.quadraticCurveTo(tx + tw * 0.5, my + th, tx + 0.28, my - 0.4 + th);
+      ctx.closePath(); ctx.fill();
+      // sombra entre dentes (fraca demais na dentição "perfeita")
+      ctx.strokeStyle = `rgba(60,36,28,${opts.teethPerfect ? 0.16 : 0.5})`;
+      ctx.lineWidth = 0.28;
+      ctx.beginPath(); ctx.moveTo(tx, my - 0.3); ctx.lineTo(tx, my - 0.4 + th * 0.9); ctx.stroke();
+      // lado direito de cada dente em sombra (mesma lâmpada de sempre)
+      ctx.fillStyle = 'rgba(90,66,44,.18)';
+      ctx.fillRect(tx + tw * 0.62, my - 0.3, tw * 0.3, th * 0.8);
+    }
+    // dentes inferiores espiando (só com a boca bem aberta)
+    if (op > 0.55) {
+      const y1 = my + openH - 1.6;
+      ctx.fillStyle = opts.teethPerfect ? 'rgb(226,222,212)' : 'rgb(196,180,142)';
+      for (let i = 0; i < nT; i++) {
+        const tx = x0 + i * tw;
+        const th = opts.teethPerfect ? 1.4 : 0.9 + rT() * 0.7;
+        ctx.fillRect(tx + 0.2, y1 - th + 1.6, tw - 0.4, th);
+        ctx.strokeStyle = 'rgba(60,36,28,.35)'; ctx.lineWidth = 0.24;
+        ctx.beginPath(); ctx.moveTo(tx, y1 + 0.2); ctx.lineTo(tx, y1 - th + 1.7); ctx.stroke();
+      }
+    }
+    // sombra da cavidade sobre os dentes (profundidade)
+    const cav = ctx.createLinearGradient(0, my - 1, 0, my + openH);
+    cav.addColorStop(0, 'rgba(0,0,0,0)'); cav.addColorStop(1, 'rgba(10,4,3,.55)');
+    ctx.fillStyle = cav; ctx.fillRect(cx - mw, my - 1, mw * 2, openH + 2);
+    ctx.restore();
+    // anel dos lábios em volta da abertura
+    ctx.strokeStyle = rgb(darken(lipTone, 0.18), 0.95); ctx.lineWidth = 1.5 + lipFull * 0.6;
+    ctx.beginPath();
+    ctx.moveTo(cx - mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx, my - 2.6, cx + mw * 0.92, my - 0.6);
+    ctx.quadraticCurveTo(cx + mw * 0.8, my + openH * 0.85, cx, my + openH + 0.3);
+    ctx.quadraticCurveTo(cx - mw * 0.8, my + openH * 0.85, cx - mw * 0.92, my - 0.6);
+    ctx.closePath(); ctx.stroke();
+    soft(ctx, cx, my + openH + 1.6, mw * 0.5, 1.2, 'rgba(255,240,220,.28)', 0.9); // lábio inferior pega luz
+    soft(ctx, cx, my + openH + 4, mw * 0.7, 2, rgb(darken(SH, 0.14), 0.5), 1.5);  // queixo caído
+  } else {
   // lábio superior
   ctx.fillStyle = rgb(darken(lipTone, 0.22), 0.95);
   ctx.beginPath();
   ctx.moveTo(cx - mw, my + droop * 0.5 - L.cornerUp);
-  ctx.quadraticCurveTo(cx - mw * 0.45, my - 2, cx - 1.2, my - 1.7);
-  ctx.quadraticCurveTo(cx, my - 1.2, cx + 1.2, my - 1.7);
-  ctx.quadraticCurveTo(cx + mw * 0.45, my - 2, cx + mw, my + droop * 0.5 - L.cornerUp);
+  ctx.quadraticCurveTo(cx - mw * 0.45, my - 2 - lipFull * 0.5, cx - 1.2, my - 1.7 - lipFull * 0.6);
+  ctx.quadraticCurveTo(cx, my - 1.2 - lipFull * 0.4, cx + 1.2, my - 1.7 - lipFull * 0.6);
+  ctx.quadraticCurveTo(cx + mw * 0.45, my - 2 - lipFull * 0.5, cx + mw, my + droop * 0.5 - L.cornerUp);
   ctx.quadraticCurveTo(cx, my + 0.8, cx - mw, my + droop * 0.5 - L.cornerUp);
   ctx.closePath(); ctx.fill();
   // lábio inferior
@@ -240,10 +395,10 @@ function paintBust(ctx, f, opts) {
   ctx.beginPath();
   ctx.moveTo(cx - mw * 0.82, my + 0.4);
   ctx.quadraticCurveTo(cx, my + 1, cx + mw * 0.82, my + 0.4);
-  ctx.quadraticCurveTo(cx + mw * 0.5, my + 3.4, cx, my + 3.6);
-  ctx.quadraticCurveTo(cx - mw * 0.5, my + 3.4, cx - mw * 0.82, my + 0.4);
+  ctx.quadraticCurveTo(cx + mw * 0.5, my + 3.4 + lipFull, cx, my + 3.6 + lipFull);
+  ctx.quadraticCurveTo(cx - mw * 0.5, my + 3.4 + lipFull, cx - mw * 0.82, my + 0.4);
   ctx.closePath(); ctx.fill();
-  soft(ctx, cx - 1, my + 2.2, mw * 0.42, 1, 'rgba(255,240,220,.4)', 0.9); // brilho no lábio inferior
+  soft(ctx, cx - 1, my + 2.2 + lipFull * 0.5, mw * 0.42, 1 + lipFull * 0.4, 'rgba(255,240,220,.4)', 0.9); // brilho no lábio inferior
   // vinco da boca (a linha mais escura do rosto)
   ctx.strokeStyle = 'rgba(28,16,12,.85)'; ctx.lineWidth = 0.75;
   ctx.beginPath();
@@ -258,6 +413,7 @@ function paintBust(ctx, f, opts) {
       const t = (i / 4 - 0.5) * mw * 1.3;
       ctx.beginPath(); ctx.moveTo(cx + t, my - 2.2); ctx.lineTo(cx + t * 1.05, my - 0.6); ctx.stroke();
     }
+  }
   }
 
   // rugas
@@ -300,8 +456,17 @@ function paintBust(ctx, f, opts) {
       const sx = cx + (r() - 0.5) * L.fw * 1.4, sy = 58 + r() * 14;
       ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 3 + r() * 3, sy + 2); ctx.stroke();
     }
+    // sardas (cantalos de pele clara, quase sempre)
+    if (L.sardas && r() < 0.8) {
+      ctx.fillStyle = rgb(mix(SH, [122, 74, 44], 0.5), 0.3);
+      for (let i = 0; i < 26; i++) {
+        const x = cx + (r() - 0.5) * L.fw * 1.5;
+        const y = 50 + r() * 10 - Math.abs(x - cx) * 0.12;
+        ctx.fillRect(x, y, 0.55 + r() * 0.3, 0.55 + r() * 0.3);
+      }
+    }
     // barba por fazer
-    if (!L.fem && f.beard === 0 && r() < 0.5) {
+    if (!L.fem && f.beard === 0 && !L.child && r() < 0.5) {
       soft(ctx, cx, L.chinY - 7, L.jw * 0.85, 9, rgb(darken(SH, 0.3), 0.13), 2.6);
     }
   } else {
@@ -328,10 +493,13 @@ function paintBust(ctx, f, opts) {
 
   /* ---------- olhos ---------- */
   const eyes = opts.eyesClosed ? 'closed' : 'open';
+  const wide = opts.eyesWide ? 1 : 0;       // "abra bem os olhos."
+  const lookX = opts.lookX || 0;            // "agora olhe para a esquerda."
   for (const sgn of [-1, 1]) {
     const ex = cx + sgn * L.eyeDX + (sgn > 0 ? L.ax * 0.5 : 0);
     const ey = L.eyeY + (sgn > 0 ? L.ax * 0.35 : 0);
-    const ew = L.eyeW, eh = L.eyeH;
+    const ew = L.eyeW, eh = L.eyeH * (1 + wide * 0.65);
+    const pull = opts.pullLid && sgn === 1; // a pálpebra inferior puxada pelo dedo
     if (eyes === 'closed') {
       ctx.strokeStyle = rgb(darken(SH, 0.35), 0.9); ctx.lineWidth = 0.8;
       ctx.beginPath(); ctx.moveTo(ex - ew, ey + 0.4);
@@ -362,24 +530,35 @@ function paintBust(ctx, f, opts) {
         ctx.stroke();
       }
     }
-    // íris GRANDE, cortada em cima pela pálpebra — olhar pesado, não arregalado
-    const ir = 2.9 + r() * 0.4;
+    // íris GRANDE, cortada em cima pela pálpebra — olhar pesado, não arregalado.
+    // No modo "arregalado" do exame a íris fica INTEIRA visível, com esclera
+    // em volta — é exatamente isso que perturba.
+    const ir = (2.9 + r() * 0.4) * (L.child ? 1.12 : 1) * (wide ? 0.92 : 1);
     const pr = 1.45 + (sgn > 0 ? L.pupilSkew : 0);
-    const iy = ey - 0.3;
-    const ig = ctx.createRadialGradient(ex, iy, 0.4, ex, iy, ir);
+    const ixx = ex + lookX * 1.25;
+    const iy = ey - 0.3 + wide * 0.4;
+    const ig = ctx.createRadialGradient(ixx, iy, 0.4, ixx, iy, ir);
     ig.addColorStop(0, rgb(darken(L.iris, 0.3)));
     ig.addColorStop(0.65, rgb(L.iris));
     ig.addColorStop(1, rgb(darken(L.iris, 0.6)));
     ctx.fillStyle = ig;
-    ctx.beginPath(); ctx.arc(ex, iy, ir, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.fill();
     ctx.fillStyle = 'rgb(8,6,5)';
-    ctx.beginPath(); ctx.arc(ex, iy, pr, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(ixx, iy, pr, 0, 6.29); ctx.fill();
     ctx.fillStyle = 'rgba(255,252,244,.8)';
-    ctx.beginPath(); ctx.arc(ex - 0.9, iy - 0.9, 0.4, 0, 6.29); ctx.fill();
-    // a pálpebra superior COBRE o topo da íris (sombra + oclusão)
-    const lg = ctx.createLinearGradient(0, ey - eh - 0.5, 0, ey - eh * 0.1);
-    lg.addColorStop(0, 'rgba(44,32,24,.85)'); lg.addColorStop(1, 'rgba(44,32,24,0)');
-    ctx.fillStyle = lg; ctx.fillRect(ex - ew, ey - eh - 1, ew * 2, eh + 1.4);
+    ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, 0.4, 0, 6.29); ctx.fill();
+    if (!wide) {
+      // a pálpebra superior COBRE o topo da íris (sombra + oclusão)
+      const lg = ctx.createLinearGradient(0, ey - eh - 0.5, 0, ey - eh * 0.1);
+      lg.addColorStop(0, 'rgba(44,32,24,.85)'); lg.addColorStop(1, 'rgba(44,32,24,0)');
+      ctx.fillStyle = lg; ctx.fillRect(ex - ew, ey - eh - 1, ew * 2, eh + 1.4);
+    }
+    if (pull) {
+      // o interior da pálpebra inferior exposto — vermelho úmido
+      ctx.fillStyle = 'rgb(164,80,72)';
+      ctx.beginPath(); ctx.ellipse(ex, ey + eh + 0.7, ew * 0.62, 1.25, 0, 0, 6.29); ctx.fill();
+      soft(ctx, ex, ey + eh + 0.6, ew * 0.4, 0.6, 'rgba(255,220,210,.5)', 0.6);
+    }
     ctx.restore();
     // linha da pálpebra superior + cílios
     ctx.strokeStyle = 'rgba(30,20,14,.9)'; ctx.lineWidth = 0.85;
@@ -392,9 +571,27 @@ function paintBust(ctx, f, opts) {
     ctx.beginPath(); ctx.moveTo(ex - ew * 0.7, ey - eh - 1.3);
     ctx.quadraticCurveTo(ex, ey - eh - 2, ex + ew * 0.7, ey - eh - 1.1); ctx.stroke();
     // pálpebra inferior discreta
-    ctx.strokeStyle = rgb(SH, 0.45); ctx.lineWidth = 0.4;
-    ctx.beginPath(); ctx.moveTo(ex - ew * 0.7, ey + eh - 0.2);
-    ctx.quadraticCurveTo(ex, ey + eh + 0.4, ex + ew * 0.8, ey + eh - 0.4); ctx.stroke();
+    if (!pull) {
+      ctx.strokeStyle = rgb(SH, 0.45); ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.moveTo(ex - ew * 0.7, ey + eh - 0.2);
+      ctx.quadraticCurveTo(ex, ey + eh + 0.4, ex + ew * 0.8, ey + eh - 0.4); ctx.stroke();
+    } else {
+      // o dedo que puxa a pálpebra (do próprio examinado, contra o vidro)
+      const ftone = mix(SK, SH, 0.3);
+      ctx.fillStyle = rgb(ftone);
+      ctx.beginPath();
+      ctx.moveTo(ex - 2.6, ey + eh + 1.6);
+      ctx.quadraticCurveTo(ex - 2.9, ey + eh + 0.9, ex - 1.2, ey + eh + 0.8);
+      ctx.lineTo(ex + 2.2, ey + eh + 1);
+      ctx.quadraticCurveTo(ex + 3, ey + eh + 1.6, ex + 2.8, ey + eh + 3.4);
+      ctx.lineTo(ex + 2.4, ey + eh + 12);
+      ctx.lineTo(ex - 2.2, ey + eh + 12);
+      ctx.closePath(); ctx.fill();
+      soft(ctx, ex, ey + eh + 2.4, 1.8, 1, rgb(lighten(SK, 0.4), 0.5), 0.8); // polpa contra o vidro
+      ctx.strokeStyle = rgb(darken(SH, 0.2), 0.5); ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.moveTo(ex - 2, ey + eh + 5.5); ctx.lineTo(ex + 2.2, ey + eh + 5.2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ex - 1.8, ey + eh + 8.4); ctx.lineTo(ex + 2, ey + eh + 8.1); ctx.stroke();
+    }
     // canto interno
     ctx.fillStyle = rgb(mix(SH, [130, 60, 50], 0.5), 0.6);
     ctx.beginPath(); ctx.arc(ex - sgn * ew, ey + 0.2, 0.5, 0, 6.29); ctx.fill();
@@ -739,9 +936,9 @@ function renderPortraitCanvas(f, o) {
   F_SCALE = S;
   hc.scale(S, S);
   if (o.zoom) { // aproxima no rosto (exame / busto do guichê)
-    hc.translate(50, o.focusY || 50);
+    hc.translate(o.focusX || 50, o.focusY || 50);
     hc.scale(o.zoom, o.zoom);
-    hc.translate(-50, -(o.focusY || 50));
+    hc.translate(-(o.focusX || 50), -(o.focusY || 50));
   }
   paintBust(hc, f, o);
   hc.restore();
@@ -778,6 +975,343 @@ function examSVG(f, phys) {
       `<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.94;0.965;1" dur="${dur}s" repeatCount="indefinite"/></image>`;
   }
   return s;
+}
+
+/* ============================================================
+   EXAME POR ZONA — mini-cenas animadas (No, I'm Not a Human)
+   Cada zona clicada vira uma SEQUÊNCIA de frames pintados
+   (aproximar → obedecer à ordem → segurar), animada por opacidade
+   discreta no SVG. Nada aqui toca o RNG global.
+   ============================================================ */
+function renderScene(paintFn, seed, o) {
+  o = o || {};
+  const W = o.w || 260, H = o.h || 312;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const S = o.paintScale || 2.6;
+  const hi = document.createElement('canvas');
+  hi.width = Math.round(100 * S); hi.height = Math.round(120 * S);
+  const hc = hi.getContext('2d');
+  if (o.bg) {
+    const g = hc.createLinearGradient(0, 0, 0, hi.height);
+    g.addColorStop(0, o.bg); g.addColorStop(1, '#0a0b07');
+    hc.fillStyle = g; hc.fillRect(0, 0, hi.width, hi.height);
+  }
+  hc.save(); F_SCALE = S; hc.scale(S, S); paintFn(hc); hc.restore();
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(hi, 0, 0, W, H);
+  analogPost(ctx, W, H, seed, o.post || {});
+  return cv;
+}
+
+/* pele em macro: um campo de pele preenchendo o quadro.
+   Normal: poros, rachaduras de frio, descamação, pelos, a cicatriz antiga.
+   phys.pele: cerosa — lisa DEMAIS, um brilho de vela, nada de poros. */
+function paintSkinMacro(ctx, f, phys, shift) {
+  const L = faceLayout(f);
+  const r = faceRng(faceSeedOf(f) ^ (0xA5 + (shift || 0)));
+  const SK = L.skin.b, SH = L.skin.s;
+  const g = ctx.createLinearGradient(0, 0, 100, 120);
+  g.addColorStop(0, rgb(lighten(SK, 0.12)));
+  g.addColorStop(0.55, rgb(SK));
+  g.addColorStop(1, rgb(mix(SK, SH, 0.55)));
+  ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 120);
+  // a lâmpada de sempre, vinda da esquerda
+  const key = ctx.createRadialGradient(22, 30, 4, 26, 38, 90);
+  key.addColorStop(0, 'rgba(255,244,214,.30)'); key.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
+  const j = (shift || 0) * 3.5; // deriva de "câmera na mão" entre frames
+  if (phys && phys.pele) {
+    // cera: planícies lisas, um lustre que pele não deveria ter
+    soft(ctx, 38 + j, 44, 30, 22, 'rgba(255,252,240,.16)', 4);
+    soft(ctx, 62 + j, 78, 26, 18, 'rgba(255,250,238,.10)', 4);
+    soft(ctx, 50, 60, 44, 40, rgb(lighten(SK, 0.08), 0.5), 5);
+    // nem um poro. conte. nem um.
+  } else {
+    // poros
+    ctx.fillStyle = rgb(darken(SH, 0.2), 0.16);
+    for (let i = 0; i < 620; i++) {
+      const x = r() * 100, y = r() * 120;
+      ctx.fillRect(x, y, 0.45 + r() * 0.35, 0.45 + r() * 0.35);
+    }
+    // rachaduras de frio (linhas finas em rede)
+    ctx.strokeStyle = rgb(darken(SH, 0.28), 0.30); ctx.lineWidth = 0.35;
+    for (let i = 0; i < 26; i++) {
+      const x = r() * 100, y = r() * 120, a = r() * 6.29, len = 3 + r() * 7;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + Math.cos(a) * len * 0.5 + (r() - 0.5) * 2, y + Math.sin(a) * len * 0.5,
+        x + Math.cos(a) * len, y + Math.sin(a) * len);
+      ctx.stroke();
+    }
+    // manchas de vento norte
+    for (let i = 0; i < 5; i++) {
+      soft(ctx, r() * 100, r() * 120, 5 + r() * 8, 4 + r() * 6, rgb(mix(SH, [150, 66, 52], 0.5), 0.10), 3);
+    }
+    // descamação (escamas claras levantadas)
+    ctx.fillStyle = rgb(lighten(SK, 0.4), 0.30);
+    for (let i = 0; i < 34; i++) {
+      const x = 20 + r() * 60, y = 20 + r() * 80;
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 1.6, y + 0.4); ctx.lineTo(x + 0.7, y + 1.4);
+      ctx.closePath(); ctx.fill();
+    }
+    // pelos finos
+    ctx.strokeStyle = rgb(darken(L.hair, 0.2), 0.35); ctx.lineWidth = 0.3;
+    for (let i = 0; i < 40; i++) {
+      const x = r() * 100, y = r() * 120;
+      ctx.beginPath(); ctx.moveTo(x, y);
+      ctx.quadraticCurveTo(x + 1, y + 1.6, x + 1.2 + r(), y + 3.2); ctx.stroke();
+    }
+    // a cicatriz antiga no queixo (TELLS 'pele', linha normal)
+    ctx.strokeStyle = rgb(lighten(SK, 0.35), 0.7); ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.moveTo(58 + j, 88); ctx.quadraticCurveTo(66 + j, 91, 74 + j, 90); ctx.stroke();
+    ctx.strokeStyle = rgb(darken(SH, 0.15), 0.4); ctx.lineWidth = 0.4;
+    for (let i = 0; i < 4; i++) {
+      const x = 60 + j + i * 4;
+      ctx.beginPath(); ctx.moveTo(x, 86.6); ctx.lineTo(x + 0.6, 92.4); ctx.stroke();
+    }
+  }
+  // vinheta local + grão de proximidade
+  const vg = ctx.createRadialGradient(50, 60, 30, 50, 60, 85);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(4,3,2,.5)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, 100, 120);
+}
+
+/* mãos contra o vidro: "as palmas. agora o dorso."
+   Normal: calos, linhas fundas, unhas com meia-lua, a aliança apertada.
+   phys.maos: dedos compridos demais, palma sem linhas, unhas sem meia-lua. */
+function paintHandScene(ctx, f, phys, mode) {
+  const L = faceLayout(f);
+  const r = faceRng(faceSeedOf(f) ^ 0xB7);
+  const SK = L.skin.b, SH = L.skin.s;
+  const anom = !!(phys && phys.maos);
+  // fundo: o guichê escuro atrás do vidro
+  const bg = ctx.createRadialGradient(50, 52, 8, 50, 60, 95);
+  bg.addColorStop(0, '#20221a'); bg.addColorStop(1, '#070806');
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 100, 120);
+  // um vulto do dono da mão, desfocado, atrás
+  soft(ctx, 50, 34, 20, 26, 'rgba(16,14,10,.9)', 5);
+  soft(ctx, 50, 22, 11, 12, rgb(mix(SK, SH, 0.6), 0.25), 5);
+
+  const far = mode === 'palm-far';
+  const dorsal = mode === 'dorsal';
+  const sc = far ? 0.62 : 1;              // aproximando do vidro
+  const cy = far ? 74 : 66;               // centro da palma
+  const fingerLen = (anom ? 30 : 23) * sc; // "dedos compridos demais para as mãos"
+  const palmW = 17 * sc, palmH = 21 * sc;
+  const tone = mix(SK, [255, 250, 240], far ? 0 : 0.10); // prensada = mais pálida
+  ctx.save();
+  ctx.translate(50 + (far ? 4 : 0), 0);
+  ctx.rotate((r() - 0.5) * 0.06);
+  // dedos (4) — colunas com juntas
+  for (let i = 0; i < 4; i++) {
+    const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / 3);
+    const fw2 = (3.4 - Math.abs(i - 1.6) * 0.34) * sc;
+    const fl = fingerLen * (i === 0 ? 0.82 : i === 1 ? 1 : i === 2 ? 0.96 : 0.78);
+    const top = cy - palmH * 0.85 - fl;
+    ctx.fillStyle = rgb(tone);
+    ctx.beginPath();
+    ctx.moveTo(fx - fw2, cy - palmH * 0.5);
+    ctx.lineTo(fx - fw2 * 0.92, top + fw2);
+    ctx.quadraticCurveTo(fx, top - fw2 * 0.5, fx + fw2 * 0.92, top + fw2);
+    ctx.lineTo(fx + fw2, cy - palmH * 0.5);
+    ctx.closePath(); ctx.fill();
+    // sombra lateral do dedo (lâmpada à esquerda)
+    ctx.fillStyle = rgb(darken(SH, 0.1), 0.35);
+    ctx.fillRect(fx + fw2 * 0.4, top + fw2, fw2 * 0.55, fl);
+    if (dorsal) {
+      // unhas: com meia-lua (normal) ou ovais idênticas sem meia-lua (anômalo)
+      const nw = fw2 * 0.72, nh = anom ? fw2 * 1.5 : fw2 * 1.15;
+      ctx.fillStyle = anom ? 'rgb(214,206,196)' : rgb(mix(tone, [235, 220, 200], 0.6));
+      ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5, nw, nh, 0, 0, 6.29); ctx.fill();
+      ctx.strokeStyle = rgb(darken(SH, 0.25), 0.5); ctx.lineWidth = 0.35;
+      ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5, nw, nh, 0, 0, 6.29); ctx.stroke();
+      if (!anom) {
+        // a meia-lua
+        ctx.fillStyle = 'rgba(245,242,232,.8)';
+        ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5 + nh * 0.55, nw * 0.66, nh * 0.3, 0, 0, 6.29); ctx.fill();
+        if (i === 2) { // uma unha machucada — vida real
+          ctx.fillStyle = 'rgba(64,40,60,.55)';
+          ctx.beginPath(); ctx.ellipse(fx - nw * 0.2, top + fw2 * 1.4, nw * 0.5, nh * 0.4, 0.4, 0, 6.29); ctx.fill();
+        }
+      }
+      // juntas do dorso: vincos + pele esticada
+      ctx.strokeStyle = rgb(darken(SH, 0.2), anom ? 0.18 : 0.5); ctx.lineWidth = 0.4;
+      for (const t of [0.42, 0.72]) {
+        const jy = top + fl * t;
+        ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.8, jy);
+        ctx.quadraticCurveTo(fx, jy + 1, fx + fw2 * 0.8, jy); ctx.stroke();
+      }
+    } else {
+      // palma contra o vidro: polpas prensadas, mais claras
+      ctx.fillStyle = rgb(lighten(tone, 0.35), far ? 0.2 : 0.75);
+      ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.6, fw2 * 0.8, fw2 * 1.1, 0, 0, 6.29); ctx.fill();
+      // vincos das falanges
+      ctx.strokeStyle = rgb(darken(SH, 0.25), anom ? 0.15 : 0.55); ctx.lineWidth = 0.45;
+      for (const t of [0.38, 0.68]) {
+        const jy = top + fl * t;
+        ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.85, jy);
+        ctx.quadraticCurveTo(fx, jy + 1.2, fx + fw2 * 0.85, jy); ctx.stroke();
+      }
+    }
+  }
+  // polegar
+  ctx.fillStyle = rgb(tone);
+  ctx.beginPath();
+  ctx.moveTo(-palmW - 1, cy + 2);
+  ctx.quadraticCurveTo(-palmW - 8 * sc, cy - 4, -palmW - 9 * sc, cy - 12 * sc);
+  ctx.quadraticCurveTo(-palmW - 8.5 * sc, cy - 16 * sc, -palmW - 5.5 * sc, cy - 15 * sc);
+  ctx.quadraticCurveTo(-palmW - 1.5, cy - 8, -palmW + 2, cy - 2);
+  ctx.closePath(); ctx.fill();
+  // palma / dorso
+  ctx.fillStyle = rgb(tone);
+  ctx.beginPath(); ctx.ellipse(0, cy, palmW, palmH, 0, 0, 6.29); ctx.fill();
+  const shade = ctx.createLinearGradient(-palmW, 0, palmW, 0);
+  shade.addColorStop(0, 'rgba(255,246,224,.12)');
+  shade.addColorStop(0.6, 'rgba(0,0,0,0)');
+  shade.addColorStop(1, rgb(darken(SH, 0.15), 0.4));
+  ctx.fillStyle = shade;
+  ctx.beginPath(); ctx.ellipse(0, cy, palmW, palmH, 0, 0, 6.29); ctx.fill();
+  if (!dorsal && !far) {
+    // área de contato: um halo de condensação em volta da carne prensada
+    soft(ctx, 0, cy - 2, palmW * 1.5, palmH * 1.3, 'rgba(224,230,214,.10)', 4);
+    soft(ctx, 0, cy - 1, palmW * 0.8, palmH * 0.7, rgb(lighten(tone, 0.3), 0.5), 3);
+    if (anom) {
+      // palma SEM linhas. ninguém repara até reparar.
+      soft(ctx, 0, cy, palmW * 0.7, palmH * 0.6, rgb(lighten(tone, 0.15), 0.5), 3);
+    } else {
+      // as três linhas que toda palma tem
+      ctx.strokeStyle = rgb(darken(SH, 0.3), 0.6); ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.7, cy - palmH * 0.35);
+      ctx.quadraticCurveTo(0, cy - palmH * 0.05, palmW * 0.75, cy - palmH * 0.3); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.75, cy + palmH * 0.05);
+      ctx.quadraticCurveTo(-palmW * 0.1, cy + palmH * 0.3, palmW * 0.7, cy + palmH * 0.12) ; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.5, cy + palmH * 0.8);
+      ctx.quadraticCurveTo(-palmW * 0.55, cy + palmH * 0.3, -palmW * 0.25, cy - palmH * 0.5); ctx.stroke();
+      // calos na base dos dedos
+      for (let i = 0; i < 4; i++) {
+        const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / 3);
+        soft(ctx, fx, cy - palmH * 0.62, 1.8, 1.2, rgb(mix(tone, [200, 170, 130], 0.5), 0.5), 1);
+      }
+    }
+  }
+  if (dorsal && !anom) {
+    // a aliança apertada demais para sair (dedo anelar)
+    const fx = -palmW + 2.6 + 2 * ((palmW * 2 - 5) / 3);
+    const ry = cy - palmH * 0.85 - fingerLen * 0.96 * 0.30;
+    ctx.fillStyle = 'rgb(158,132,72)';
+    ctx.fillRect(fx - 3.2, ry, 6.4, 1.7);
+    ctx.fillStyle = 'rgba(255,246,214,.75)';
+    ctx.fillRect(fx - 2.2, ry + 0.3, 1.6, 0.55);
+    // a carne levemente inchada dos dois lados do anel
+    soft(ctx, fx, ry - 1.2, 3, 1, rgb(mix(SK, [180, 100, 90], 0.3), 0.4), 0.8);
+    soft(ctx, fx, ry + 2.6, 3, 1, rgb(mix(SK, [180, 100, 90], 0.3), 0.4), 0.8);
+  }
+  if (dorsal) {
+    // veias do dorso (fracas no anômalo — pele lisa demais)
+    ctx.strokeStyle = `rgba(86,96,110,${anom ? 0.12 : 0.4})`; ctx.lineWidth = 0.7;
+    for (let i = 0; i < 3; i++) {
+      const x0 = -palmW * 0.6 + i * palmW * 0.55;
+      ctx.beginPath(); ctx.moveTo(x0, cy + palmH * 0.75);
+      ctx.quadraticCurveTo(x0 + 2, cy - palmH * 0.2, x0 + 1 + i, cy - palmH * 0.8); ctx.stroke();
+    }
+  }
+  ctx.restore();
+  // o vidro: reflexo diagonal + sujeira de mil mãos anteriores
+  ctx.strokeStyle = 'rgba(235,240,225,.07)'; ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(8, 116); ctx.lineTo(88, 10); ctx.stroke();
+  ctx.strokeStyle = 'rgba(235,240,225,.05)'; ctx.lineWidth = 2.4;
+  ctx.beginPath(); ctx.moveTo(30, 118); ctx.lineTo(98, 30); ctx.stroke();
+  const rr = faceRng(1177);
+  ctx.fillStyle = 'rgba(210,214,196,.05)';
+  for (let i = 0; i < 26; i++) {
+    ctx.beginPath(); ctx.ellipse(rr() * 100, rr() * 120, 1 + rr() * 3, 0.8 + rr() * 2, rr(), 0, 6.29); ctx.fill();
+  }
+}
+
+/* sequência de frames → SVG com opacidade discreta (loop) */
+function seqSVG(frames) {
+  const total = frames.reduce((a, fr) => a + fr.len, 0);
+  const dur = total.toFixed(2);
+  let acc = 0, out = '';
+  frames.forEach((fr, i) => {
+    const t0 = acc / total, t1 = (acc + fr.len) / total; acc += fr.len;
+    let anim;
+    if (i === 0) anim = `values="1;0" keyTimes="0;${t1.toFixed(4)}"`;
+    else if (t1 >= 0.9999) anim = `values="0;1" keyTimes="0;${t0.toFixed(4)}"`;
+    else anim = `values="0;1;0" keyTimes="0;${t0.toFixed(4)};${t1.toFixed(4)}"`;
+    out += `<image href="${fr.url}" width="200" height="240" preserveAspectRatio="none" opacity="${i === 0 ? 1 : 0}">` +
+      `<animate attributeName="opacity" calcMode="discrete" ${anim} dur="${dur}s" repeatCount="indefinite"/></image>`;
+  });
+  return out;
+}
+
+/* a cena de cada zona do exame */
+function examZoneSVG(f, phys, zone) {
+  phys = phys || {};
+  const seed = faceSeedOf(f);
+  const base = {
+    w: 260, h: 312, bg: '#101208', paintScale: 2.7,
+    waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
+    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.34 },
+  };
+  const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
+
+  if (zone === 'olhos') {
+    const zo = { zoom: 2.9, focusY: 47 };
+    const frames = [{ url: F(zo), len: 1.5 }];
+    if (!phys.piscar) { // humanos piscam. o frame existe.
+      frames.push({ url: F(Object.assign({ eyesClosed: true }, zo)), len: 0.16 });
+      frames.push({ url: F(zo), len: 0.8 });
+    } else {
+      frames.push({ url: F(Object.assign({}, zo, { postSeed: 3 })), len: 0.96 }); // ...ele não pisca
+    }
+    frames.push({ url: F(Object.assign({ eyesWide: true, pullLid: true }, zo)), len: 2.3 });
+    frames.push({ url: F(Object.assign({ eyesWide: true, pullLid: true, lookX: -1 }, zo)), len: 1.5 });
+    return seqSVG(frames);
+  }
+  if (zone === 'boca') {
+    const zo = { zoom: 2.9, focusY: 63 };
+    const tp = !!phys.dentes;
+    return seqSVG([
+      { url: F(zo), len: 1.2 },
+      { url: F(Object.assign({ mouthOpen: 0.45, teethPerfect: tp }, zo)), len: 0.5 },
+      { url: F(Object.assign({ mouthOpen: 1, teethPerfect: tp }, zo)), len: 2.9 },
+      { url: F(Object.assign({ mouthOpen: 1, teethPerfect: tp, postSeed: 5 }, zo)), len: 1.5 },
+    ]);
+  }
+  if (zone === 'pele') {
+    const mkF = (sh) => renderScene((c) => paintSkinMacro(c, f, phys, sh), seed ^ (0x51 + sh), {
+      w: 260, h: 312, paintScale: 2.7,
+      post: { levels: 11, ditherAmp: 0.7, grain: 11, aberr: 2, scan: 0.13, vig: 0.4, sat: 0.4 },
+    }).toDataURL();
+    return seqSVG([{ url: mkF(0), len: 1.9 }, { url: mkF(1), len: 1.9 }]);
+  }
+  if (zone === 'maos') {
+    const mkF = (mode, ps) => renderScene((c) => paintHandScene(c, f, phys, mode), seed ^ ps, {
+      w: 260, h: 312, paintScale: 2.7,
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 },
+    }).toDataURL();
+    return seqSVG([
+      { url: mkF('palm-far', 0x91), len: 0.9 },
+      { url: mkF('palm', 0x92), len: 2.7 },
+      { url: mkF('dorsal', 0x93), len: 2.7 },
+    ]);
+  }
+  if (zone === 'pescoco') {
+    const z = 2.0, fx = 50, fy = 71;
+    const url = F({ zoom: z, focusX: fx, focusY: fy });
+    const mapX = (x) => (((x - fx) * z + fx) * 2).toFixed(1);
+    const mapY = (y) => (((y - fy) * z + fy) * 2).toFixed(1);
+    // o pulso na carótida: normal ~84bpm; anômalo, 6 POR MINUTO —
+    // você espera dez segundos pela próxima batida. ela vem.
+    const per = phys.pescoco ? 10 : 0.72;
+    const pulse =
+      `<ellipse cx="${mapX(44.5)}" cy="${mapY(76)}" rx="9" ry="13" fill="rgb(188,124,106)" opacity="0">` +
+      `<animate attributeName="opacity" values="0;.26;0" keyTimes="0;.06;.16" dur="${per}s" repeatCount="indefinite"/></ellipse>` +
+      `<ellipse cx="${mapX(44.5)}" cy="${mapY(76)}" rx="4.5" ry="7" fill="rgb(210,150,128)" opacity="0">` +
+      `<animate attributeName="opacity" values="0;.3;0" keyTimes="0;.06;.14" dur="${per}s" repeatCount="indefinite"/></ellipse>`;
+    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none"/>${pulse}`;
+  }
+  return examSVG(f, phys);
 }
 
 /* ---------- O Silente: o único retrato deliberadamente errado ---------- */
@@ -872,8 +1406,91 @@ function renderActorBust(cz, cv) {
   } catch (e) {}
 })();
 
+/* ============================================================
+   TEXTURAS DE UI (papel, painel, madeira) — geradas em runtime e
+   entregues ao CSS como custom properties (--tex-*). Nenhum asset.
+   ============================================================ */
+(function uiTextures() {
+  try {
+    const doc = document.documentElement;
+    const set = (k, cv) => doc.style.setProperty(k, `url(${cv.toDataURL()})`);
+    const mk2 = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+    const r = faceRng(515151);
+
+    // papel de repartição: fibras, pontinhos, manchas de caneca
+    const p = mk2(220, 220); const px = p.getContext('2d');
+    px.fillStyle = '#d8d2bd'; px.fillRect(0, 0, 220, 220);
+    for (let i = 0; i < 900; i++) { // fibras
+      const x = r() * 220, y = r() * 220, a = r() * 6.29, l = 2 + r() * 6;
+      px.strokeStyle = r() < 0.5 ? 'rgba(120,108,80,.05)' : 'rgba(250,248,238,.07)';
+      px.lineWidth = 0.5;
+      px.beginPath(); px.moveTo(x, y); px.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); px.stroke();
+    }
+    for (let i = 0; i < 260; i++) { // pontinhos de polpa
+      px.fillStyle = `rgba(96,84,58,${0.03 + r() * 0.05})`;
+      px.fillRect(r() * 220, r() * 220, 1, 1);
+    }
+    for (let i = 0; i < 4; i++) { // manchas fantasma
+      const x = r() * 220, y = r() * 220, rad = 14 + r() * 26;
+      const g = px.createRadialGradient(x, y, rad * 0.4, x, y, rad);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(110,92,54,.045)');
+      px.fillStyle = g; px.beginPath(); px.arc(x, y, rad, 0, 6.29); px.fill();
+    }
+    set('--tex-paper', p);
+
+    // painel do posto: chapa escura escovada, riscos de uso
+    const m = mk2(200, 200); const mx = m.getContext('2d');
+    mx.fillStyle = '#22241d'; mx.fillRect(0, 0, 200, 200);
+    for (let i = 0; i < 200; i++) { // escovado vertical
+      const x = r() * 200;
+      mx.strokeStyle = r() < 0.5 ? 'rgba(0,0,0,.06)' : 'rgba(190,190,168,.025)';
+      mx.lineWidth = 0.6 + r();
+      mx.beginPath(); mx.moveTo(x, 0); mx.lineTo(x + (r() - 0.5) * 4, 200); mx.stroke();
+    }
+    for (let i = 0; i < 30; i++) { // riscos de caneta/carimbo/tédio
+      const x = r() * 200, y = r() * 200, a = r() * 6.29, l = 3 + r() * 14;
+      mx.strokeStyle = `rgba(0,0,0,${0.05 + r() * 0.08})`; mx.lineWidth = 0.5;
+      mx.beginPath(); mx.moveTo(x, y); mx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); mx.stroke();
+    }
+    for (let i = 0; i < 500; i++) {
+      mx.fillStyle = `rgba(0,0,0,${0.04 + r() * 0.05})`;
+      mx.fillRect(r() * 200, r() * 200, 1, 1);
+    }
+    set('--tex-panel', m);
+
+    // a mesa: tábuas com veio, nós, marcas de caneca
+    const w = mk2(240, 160); const wx = w.getContext('2d');
+    for (let plank = 0; plank < 4; plank++) {
+      const y0 = plank * 40;
+      const tone = 62 + Math.floor(r() * 14);
+      wx.fillStyle = `rgb(${tone + 14},${tone - 4},${tone - 26})`;
+      wx.fillRect(0, y0, 240, 40);
+      for (let i = 0; i < 9; i++) { // veio
+        const yy = y0 + 3 + r() * 34;
+        wx.strokeStyle = `rgba(30,20,10,${0.10 + r() * 0.12})`;
+        wx.lineWidth = 0.6 + r() * 0.8;
+        wx.beginPath(); wx.moveTo(0, yy);
+        for (let x = 0; x <= 240; x += 30) wx.lineTo(x, yy + Math.sin(x * 0.05 + plank + i) * 2.2);
+        wx.stroke();
+      }
+      if (r() < 0.7) { // nó
+        const kx = r() * 240, ky = y0 + 8 + r() * 24;
+        wx.strokeStyle = 'rgba(28,18,8,.5)'; wx.lineWidth = 1;
+        for (let k = 1; k < 4; k++) { wx.beginPath(); wx.ellipse(kx, ky, k * 2.4, k * 1.4, 0.2, 0, 6.29); wx.stroke(); }
+      }
+      wx.fillStyle = 'rgba(0,0,0,.4)'; wx.fillRect(0, y0 + 38.6, 240, 1.4); // vão entre tábuas
+      wx.fillStyle = 'rgba(255,240,210,.05)'; wx.fillRect(0, y0, 240, 1);   // canto pega luz
+    }
+    // marca de caneca — o círculo que nunca sai
+    wx.strokeStyle = 'rgba(20,12,6,.35)'; wx.lineWidth = 2.4;
+    wx.beginPath(); wx.arc(178, 66, 13, 0, 6.29); wx.stroke();
+    set('--tex-wood', w);
+  } catch (e) {}
+})();
+
 window.portraitSVG = portraitSVG;
 window.examSVG = examSVG;
+window.examZoneSVG = examZoneSVG;
 window.silenteSVG = silenteSVG;
 window.renderActorBust = renderActorBust;
 window.renderPortraitCanvas = renderPortraitCanvas;

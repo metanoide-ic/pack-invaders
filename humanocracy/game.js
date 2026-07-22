@@ -392,13 +392,32 @@ function bumpAuditRisk(n) {
 /* ---------- RETRATOS (SVG procedural) ---------- */
 const SKINS = ['#e8c39e', '#d9a878', '#c68d5c', '#a9744f', '#8c5a3c', '#f0d0b0'];
 const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919', '#7a2f1a', '#b5b5a5'];
-function genFeatures(sexo, idade) {
+/* ---------- fenótipo por etnia ----------
+   Faixas de pele/cabelo/olho COERENTES por etnia (uma família parece
+   família; Baharzad não parece Kranton) — mas SOBREPOSTAS de propósito:
+   listas ponderadas por repetição, com entradas compartilhadas entre
+   etnias. Os "manuais de fenotipia" do regime são pseudociência na
+   ficção, e o jogo faz questão de que continuem sendo: nenhum rosto
+   prova etnia nenhuma. faces.js aplica desvios estruturais igualmente
+   sutis a partir de f.etnia. */
+const ETHNIC_PHENO = {
+  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS)
+  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 1, 2] },
+  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [5, 5, 0, 0, 1],    eyes: [1, 1, 2, 0] },
+  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 1, 2] },
+  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 2] },
+  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [1, 2, 2, 0] },
+  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 2] },
+};
+function genFeatures(sexo, idade, etnia) {
   idade = idade || ri(20, 60);
   const velho = idade >= 56;
+  const ph = ETHNIC_PHENO[etnia];
   return {
-    skin: ri(0, SKINS.length - 1),
-    hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : ri(0, HAIRC.length - 1), // grisalho/branco
-    hairStyle: ri(0, 3), eyes: ri(0, 2), mouth: ri(0, 2),
+    etnia: etnia || null,
+    skin: ph ? pick(ph.skin) : ri(0, SKINS.length - 1),
+    hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : (ph ? pick(ph.hair) : ri(0, HAIRC.length - 1)), // grisalho/branco
+    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 2), mouth: ri(0, 2),
     beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
@@ -441,16 +460,28 @@ function openExam() {
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   const zones = $('exam-zones'); zones.innerHTML = '';
+  // visão geral: volta do close de zona para o rosto inteiro
+  const bg = document.createElement('button');
+  bg.textContent = T('GERAL'); bg.className = 'zone-general';
+  bg.onclick = () => { $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys); };
+  zones.appendChild(bg);
   EXAM_ZONES.forEach(z => {
     const b = document.createElement('button');
     b.textContent = T(z.label);
-    b.onclick = () => { b.classList.add('done'); b.disabled = true; examZone(cz, z); };
+    b.onclick = () => { b.classList.add('done'); examZone(cz, z); };
     zones.appendChild(b);
   });
   $('exam-overlay').classList.add('active');
 }
 function examZone(cz, zone) {
   const log = $('exam-log');
+  // a mini-cena da zona: aproximar, obedecer à ordem, segurar o olhar
+  if (window.examZoneSVG) {
+    try { $('exam-face-svg').innerHTML = examZoneSVG(cz.features, cz.phys, zone.id); } catch (e) {}
+  }
+  cz._examLogged = cz._examLogged || {};
+  if (cz._examLogged[zone.id]) return; // rever a cena é grátis; o laudo só entra uma vez
+  cz._examLogged[zone.id] = true;
   const rum = rumorForDay(S.day);
   zone.tells.forEach(t => {
     const tellDef = TELLS[t];
@@ -598,7 +629,7 @@ function makeCitizen(day, opts) {
   const cidade = pick(c.cities);
   const nasc = randomDateAround(day, -20000, -6600);
   const idade = Math.floor((worldDate(day).ts - nasc.ts) / 31557600000);
-  const features = genFeatures(sexo, idade);
+  const features = genFeatures(sexo, idade, etnia);
 
   const cz = {
     nome, sexo, pais, etnia, profissao, cidade,
