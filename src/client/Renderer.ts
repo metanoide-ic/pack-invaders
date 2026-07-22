@@ -4311,7 +4311,7 @@ export class Renderer {
 
     // Tiered visual scale for readability: the smaller the enemy, the bigger
     // the boost. Presentation only — hitboxes (e.width/e.height) are untouched.
-    const vMult = e.isBoss ? 1.6 : e.width <= 18 ? 1.95 : e.width <= 26 ? 1.7 : 1.5;
+    const vMult = e.isBoss ? 1.6 : e.width <= 18 ? 2.15 : e.width <= 26 ? 1.85 : 1.6;
     const drawW = Math.floor(e.width * vMult);
     const drawH = Math.floor(e.height * vMult);
 
@@ -4453,6 +4453,22 @@ export class Renderer {
     // Idle hover bob (subtle, per-enemy phase from moveTimer)
     const bobY = e.isBoss ? Math.sin(e.moveTimer * 2) * 2 : Math.sin(e.moveTimer * 4) * 1.5;
     const flash = this.enemyHitFlash.get(e.id) ?? 0;
+
+    // Contrast backing — a soft dark halo behind the enemy so it reads cleanly
+    // against the now much richer sky (nebula/stars) instead of blending in.
+    // Skipped for phased enemies (they're meant to be hard to see) and while
+    // hit-flashing (the white pop already separates it).
+    if (!e.phased && flash <= 0) {
+      const hr = Math.floor(Math.max(drawW, drawH) * 0.72);
+      // Two stacked passes: a soft wide shadow to kill the busy background
+      // behind the enemy, then a tighter darker core for a crisp cutout edge.
+      ctx.globalAlpha = e.isBoss ? 0.5 : 0.55;
+      ctx.drawImage(this.getGlow('#04050c', hr), e.x - hr, e.y + bobY - hr);
+      const hr2 = Math.floor(Math.max(drawW, drawH) * 0.5);
+      ctx.globalAlpha = 0.55;
+      ctx.drawImage(this.getGlow('#04050c', hr2), e.x - hr2, e.y + bobY - hr2);
+      ctx.globalAlpha = 1;
+    }
 
     if (sprite) {
       ctx.imageSmoothingEnabled = false;
