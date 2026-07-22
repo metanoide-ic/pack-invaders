@@ -12,7 +12,7 @@ import { ItemDefinition, getOccupiedCells } from '../core/ItemSystem';
 import { InputHandler } from './InputHandler';
 import { Enemy, CombatState } from '../core/CombatEngine';
 import { SaveManager } from '../core/SaveManager';
-import { ALL_ACHIEVEMENTS, getUnlockedAchievements, getGlobalStats } from '../data/achievements';
+import { ALL_ACHIEVEMENTS, getUnlockedAchievements, getGlobalStats, achievementProgress, ACH_CATEGORY_COLOR } from '../data/achievements';
 import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, getMetaGoldBonus, getClaimableMissionCount } from '../data/missions';
 import { getDifficultyById } from '../data/difficulties';
 import { getLeaderboard } from '../data/leaderboard';
@@ -1077,6 +1077,7 @@ export class Renderer {
     ctx.textAlign = 'left';
 
     // Grid of achievements
+    const stats0 = getGlobalStats();
     const cols = 3;
     const achW = Math.floor(L.w * 0.28);
     const achH = Math.floor(L.h * 0.095);
@@ -1094,47 +1095,78 @@ export class Renderer {
       if (y + achH > L.h - Math.floor(L.h * 0.1)) break;
 
       const isUnlocked = unlocked.has(ach.id);
+      const prog = achievementProgress(ach.id, stats0);
+      const cColor = ACH_CATEGORY_COLOR[prog.cat];
+      const pct = prog.target > 0 ? Math.min(1, prog.cur / prog.target) : 0;
+      const nearDone = !isUnlocked && pct >= 0.75; // "so close" highlight
 
-      // Card background (rounded)
+      // Card background — a faint wash of the category color, warmer when
+      // unlocked or nearly there
       ctx.beginPath();
       ctx.roundRect(x, y, achW, achH, 8);
-      ctx.fillStyle = isUnlocked ? 'rgba(20, 35, 20, 0.9)' : 'rgba(12, 12, 20, 0.8)';
+      ctx.fillStyle = isUnlocked ? cColor + '22' : nearDone ? cColor + '14' : 'rgba(12, 12, 20, 0.8)';
       ctx.fill();
 
-      // Left accent bar (gold if unlocked), following the rounded corner
+      // Left accent bar in the category color (dim when locked)
       ctx.beginPath();
       ctx.roundRect(x, y, 4, achH, [8, 0, 0, 8]);
-      ctx.fillStyle = isUnlocked ? '#fbbf24' : '#1f2937';
+      ctx.fillStyle = isUnlocked ? cColor : cColor + (nearDone ? 'aa' : '55');
       ctx.fill();
 
       // Border
       ctx.beginPath();
       ctx.roundRect(x, y, achW, achH, 8);
-      ctx.strokeStyle = isUnlocked ? '#4ade80' : '#1e293b';
+      ctx.strokeStyle = isUnlocked ? cColor : nearDone ? cColor + '80' : '#1e293b';
       ctx.lineWidth = isUnlocked ? 1.5 : 1;
       ctx.stroke();
 
-      // Icon
-      ctx.font = `${Math.floor(L.h * 0.028)}px monospace`;
-      ctx.fillStyle = isUnlocked ? '#ffffff' : '#374151';
+      // Icon — the real glyph always, dimmed while locked so each card keeps
+      // its own identity instead of a wall of identical padlocks
+      ctx.globalAlpha = isUnlocked ? 1 : 0.4;
+      ctx.font = `${Math.floor(L.h * 0.026)}px monospace`;
       ctx.textAlign = 'center';
-      ctx.fillText(isUnlocked ? ach.icon : '🔒', x + 22, y + Math.floor(achH * 0.6));
+      ctx.fillStyle = '#ffffff';
+      ctx.fillText(ach.icon, x + 24, y + Math.floor(achH * 0.52));
+      ctx.globalAlpha = 1;
+      // Tiny lock overlay on the icon for locked ones
+      if (!isUnlocked) {
+        ctx.font = `${Math.floor(L.h * 0.012)}px monospace`;
+        ctx.fillText('🔒', x + 33, y + Math.floor(achH * 0.72));
+      }
 
-      // Name and description
+      // Name + description
       ctx.textAlign = 'left';
       ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-      ctx.fillStyle = isUnlocked ? '#e2e8f0' : '#475569';
-      ctx.fillText(isUnlocked ? ach.name : '???', x + 40, y + Math.floor(achH * 0.35));
-      ctx.font = `${Math.floor(L.h * 0.010)}px monospace`;
-      ctx.fillStyle = isUnlocked ? '#94a3b8' : '#374151';
-      ctx.fillText(ach.description.slice(0, 38), x + 40, y + Math.floor(achH * 0.62));
+      ctx.fillStyle = isUnlocked ? '#f1f5f9' : nearDone ? '#cbd5e1' : '#94a3b8';
+      ctx.fillText(ach.name, x + 46, y + Math.floor(achH * 0.32));
+      ctx.font = `${Math.floor(L.h * 0.0095)}px monospace`;
+      ctx.fillStyle = isUnlocked ? '#94a3b8' : '#64748b';
+      ctx.fillText(ach.description.slice(0, 40), x + 46, y + Math.floor(achH * 0.55));
 
-      // Checkmark for unlocked
-      if (isUnlocked) {
-        ctx.font = `bold ${Math.floor(L.h * 0.012)}px monospace`;
-        ctx.fillStyle = '#4ade80';
+      // Progress bar (locked only) — how close you are, with a count
+      if (!isUnlocked) {
+        const pbX = x + 46, pbY = y + Math.floor(achH * 0.72), pbW = achW - 46 - 12, pbH = 5;
+        ctx.beginPath();
+        ctx.roundRect(pbX, pbY, pbW, pbH, 2.5);
+        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+        ctx.fill();
+        if (pct > 0) {
+          ctx.beginPath();
+          ctx.roundRect(pbX, pbY, Math.max(3, pbW * pct), pbH, 2.5);
+          ctx.fillStyle = cColor;
+          ctx.fill();
+        }
+        ctx.font = `${Math.floor(L.h * 0.0085)}px monospace`;
+        ctx.fillStyle = nearDone ? cColor : '#64748b';
         ctx.textAlign = 'right';
-        ctx.fillText('✓', x + achW - 8, y + Math.floor(achH * 0.5));
+        ctx.fillText(`${prog.cur}/${prog.target}`, x + achW - 10, pbY - 2);
+        ctx.textAlign = 'left';
+      } else {
+        // Checkmark for unlocked
+        ctx.font = `bold ${Math.floor(L.h * 0.014)}px monospace`;
+        ctx.fillStyle = cColor;
+        ctx.textAlign = 'right';
+        ctx.fillText('✓', x + achW - 10, y + Math.floor(achH * 0.5));
         ctx.textAlign = 'left';
       }
     }

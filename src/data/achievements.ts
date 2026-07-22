@@ -78,6 +78,50 @@ export const ALL_ACHIEVEMENTS: Achievement[] = [
     condition: (s) => s.totalRuns >= 50 },
 ];
 
+// ─── Progress & category (for the achievements screen) ────────────────────────
+
+export type AchCategory =
+  | 'kills' | 'survival' | 'boss' | 'combo' | 'economy' | 'roster' | 'collection' | 'runs';
+
+/** Accent color per category — drives the card tint/bar on the achievements
+ * screen so the grid reads as grouped goals instead of identical padlocks. */
+export const ACH_CATEGORY_COLOR: Record<AchCategory, string> = {
+  kills: '#ef4444', survival: '#38bdf8', boss: '#a855f7', combo: '#f97316',
+  economy: '#fbbf24', roster: '#4ade80', collection: '#60a5fa', runs: '#f472b6',
+};
+
+/** Current value, target threshold and category for one achievement. Thresholds
+ * live here next to the conditions above so the two never drift apart. */
+export function achievementProgress(
+  id: string, s: AchievementStats
+): { cur: number; target: number; cat: AchCategory } {
+  const M: Record<string, [number, number, AchCategory]> = {
+    first_blood: [s.totalKills, 1, 'kills'],
+    centurion: [s.totalKills, 100, 'kills'],
+    slayer: [s.totalKills, 1000, 'kills'],
+    genocide: [s.totalKills, 5000, 'kills'],
+    survivor_6: [s.totalMonthsSurvived, 6, 'survival'],
+    survivor_12: [s.totalMonthsSurvived, 12, 'survival'],
+    survivor_24: [s.totalMonthsSurvived, 24, 'survival'],
+    survivor_48: [s.totalMonthsSurvived, 48, 'survival'],
+    boss_first: [s.bossesKilled, 1, 'boss'],
+    boss_hunter: [s.bossesKilled, 10, 'boss'],
+    combo_5: [s.maxCombo, 5, 'combo'],
+    combo_15: [s.maxCombo, 15, 'combo'],
+    combo_30: [s.maxCombo, 30, 'combo'],
+    shopper: [s.totalItemsBought, 50, 'economy'],
+    rich: [s.totalGoldEarned, 1000, 'economy'],
+    unlock_2: [s.charactersUnlocked, 2, 'roster'],
+    unlock_all: [s.charactersUnlocked, 7, 'roster'],
+    collector_10: [s.collectiblesFound, 10, 'collection'],
+    collector_all: [s.collectiblesFound, ALL_COLLECTIBLES.length, 'collection'],
+    persistent: [s.totalRuns, 10, 'runs'],
+    addict: [s.totalRuns, 50, 'runs'],
+  };
+  const [cur, target, cat] = M[id] ?? [0, 1, 'kills'];
+  return { cur: Math.min(cur, target), target, cat };
+}
+
 const ACHIEVEMENT_STORAGE_KEY = 'packinvaders_achievements';
 const STATS_STORAGE_KEY = 'packinvaders_global_stats';
 
