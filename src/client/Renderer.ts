@@ -601,14 +601,42 @@ export class Renderer {
 
   // ─── Save Select ──────────────────────────────────────────────────────────
 
+  /** Shared menu backdrop — a deep twilight gradient with a soft central glow,
+   * instead of the old near-black flat fill. Reads as atmospheric dusk, not a
+   * gloomy void, while staying dark enough for white text and colored cards. */
+  private fillMenuBg(): void {
+    const { ctx, canvas } = this;
+    const w = canvas.width, h = canvas.height;
+    if (!this._menuBgGrad) {
+      const g = ctx.createLinearGradient(0, 0, 0, h);
+      g.addColorStop(0, '#141834');
+      g.addColorStop(0.5, '#1a1e3c');
+      g.addColorStop(1, '#12152e');
+      this._menuBgGrad = g;
+    }
+    ctx.fillStyle = this._menuBgGrad;
+    ctx.fillRect(0, 0, w, h);
+    // Soft warm-cool glow rising from the lower center — a bit of life
+    if (!this._menuBgGlow) {
+      const gl = ctx.createRadialGradient(w / 2, h * 0.82, 0, w / 2, h * 0.82, h * 0.9);
+      gl.addColorStop(0, 'rgba(90, 110, 200, 0.14)');
+      gl.addColorStop(0.55, 'rgba(70, 80, 160, 0.05)');
+      gl.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      this._menuBgGlow = gl;
+    }
+    ctx.fillStyle = this._menuBgGlow;
+    ctx.fillRect(0, 0, w, h);
+  }
+  private _menuBgGrad: CanvasGradient | null = null;
+  private _menuBgGlow: CanvasGradient | null = null;
+
   private renderSaveSelect(dt: number): void {
     const { ctx, canvas } = this;
     const L = this.getLayout();
     this.menuFloatTimer += dt;
     const GOLD = '#d4af37';
 
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.fillMenuBg();
 
     ctx.font = L.fontTitle;
     ctx.fillStyle = GOLD;
@@ -928,11 +956,10 @@ export class Renderer {
   // ─── Achievements ──────────────────────────────────────────────────────────
 
   private renderMissions(_dt: number): void {
-    const { ctx, canvas } = this;
+    const { ctx } = this;
     const L = this.getLayout();
 
-    ctx.fillStyle = '#06060f';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.fillMenuBg();
 
     // Title
     ctx.font = `bold ${Math.floor(L.h * 0.04)}px monospace`;
@@ -1048,12 +1075,11 @@ export class Renderer {
   }
 
   private renderAchievements(dt: number): void {
-    const { ctx, canvas } = this;
+    const { ctx } = this;
     const L = this.getLayout();
     this.menuFloatTimer += dt;
 
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.fillMenuBg();
 
     ctx.font = L.fontTitle;
     ctx.fillStyle = '#fbbf24';
@@ -7922,8 +7948,8 @@ export class Renderer {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
 
-    // Background
-    ctx.fillStyle = 'rgba(5, 5, 15, 0.97)';
+    // Background — lifted twilight overlay (was near-black)
+    ctx.fillStyle = 'rgba(20, 24, 52, 0.96)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Title
@@ -8208,11 +8234,10 @@ export class Renderer {
   // ─── Extra Modes ─────────────────────────────────────────────────────────────
 
   private renderExtraModes(): void {
-    const { ctx, canvas, game } = this;
+    const { ctx, game } = this;
     const L = this.getLayout();
 
-    ctx.fillStyle = '#050510';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    this.fillMenuBg();
 
     // Title
     ctx.font = `bold ${Math.floor(L.h * 0.045)}px monospace`;

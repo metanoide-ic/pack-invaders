@@ -52,34 +52,38 @@ interface SkyTheme {
   craft: string;     // distant alien craft blink color
 }
 
+// Palette intent: an atmospheric *dusk*, not a pitch-black void. Each year has
+// its own mood (twilight blue → violet → rose → amber) but sits at a much
+// higher luminance than before so the sky reads as alive and hopeful-ish
+// rather than grim. Enemies keep a dark contrast-halo so they still pop.
 const THEMES: SkyTheme[] = [
-  { // Year 1 — quiet indigo night
-    top: '#04050e', mid: '#0a1024', horizon: '#1b2447',
-    glow: 'rgba(76, 96, 190, 0.30)',
-    nebula1: '#2a3f88', nebula2: '#1d5486',
-    moon: '#8493c4', moonGlow: 'rgba(120, 145, 220, 0.20)',
-    beam: 'rgba(120, 150, 240, 0.05)', craft: '#7fdcff',
+  { // Year 1 — calm twilight blue, first clear night
+    top: '#121a3e', mid: '#213a72', horizon: '#3a63a8',
+    glow: 'rgba(110, 150, 235, 0.34)',
+    nebula1: '#3a5cb0', nebula2: '#2f78b0',
+    moon: '#a7b8e0', moonGlow: 'rgba(150, 180, 240, 0.24)',
+    beam: 'rgba(140, 175, 250, 0.06)', craft: '#9fe8ff',
   },
-  { // Year 2 — violet alien sky
-    top: '#070312', mid: '#170a2e', horizon: '#37175c',
-    glow: 'rgba(140, 82, 220, 0.30)',
-    nebula1: '#4a2790', nebula2: '#6a237a',
-    moon: '#a678c8', moonGlow: 'rgba(170, 110, 230, 0.20)',
-    beam: 'rgba(180, 120, 240, 0.05)', craft: '#e07fff',
+  { // Year 2 — violet alien dusk
+    top: '#1e1648', mid: '#382472', horizon: '#5a3aa0',
+    glow: 'rgba(170, 120, 240, 0.34)',
+    nebula1: '#6440b8', nebula2: '#8a3ea0',
+    moon: '#c3a0e0', moonGlow: 'rgba(195, 145, 245, 0.24)',
+    beam: 'rgba(195, 145, 250, 0.06)', craft: '#ed9bff',
   },
-  { // Year 3 — crimson dusk, invasion deepens
-    top: '#0d0308', mid: '#24081a', horizon: '#54142c',
-    glow: 'rgba(220, 70, 90, 0.28)',
-    nebula1: '#751d47', nebula2: '#8a361b',
-    moon: '#c47a7a', moonGlow: 'rgba(220, 90, 110, 0.20)',
-    beam: 'rgba(240, 120, 130, 0.05)', craft: '#ff9d7f',
+  { // Year 3 — warm rose-crimson evening (dramatic, not blood-void)
+    top: '#361a2c', mid: '#5e2846', horizon: '#94425e',
+    glow: 'rgba(240, 120, 145, 0.32)',
+    nebula1: '#9c3a64', nebula2: '#ad5432',
+    moon: '#dc9aa0', moonGlow: 'rgba(240, 130, 150, 0.24)',
+    beam: 'rgba(245, 150, 160, 0.06)', craft: '#ffb59a',
   },
-  { // Year 4+ — burnt ember apocalypse
-    top: '#0a0404', mid: '#1f0d08', horizon: '#4a1f0d',
-    glow: 'rgba(240, 120, 40, 0.28)',
-    nebula1: '#743a15', nebula2: '#4d2012',
-    moon: '#c89060', moonGlow: 'rgba(240, 150, 70, 0.22)',
-    beam: 'rgba(255, 160, 70, 0.06)', craft: '#ffc27f',
+  { // Year 4+ — warm amber ember dusk
+    top: '#2e1e10', mid: '#523418', horizon: '#8c5228',
+    glow: 'rgba(250, 165, 80, 0.32)',
+    nebula1: '#9c5622', nebula2: '#6e3a1c',
+    moon: '#dca878', moonGlow: 'rgba(250, 170, 90, 0.26)',
+    beam: 'rgba(255, 180, 90, 0.07)', craft: '#ffce93',
   },
 ];
 
