@@ -7564,7 +7564,10 @@ export class Renderer {
   }
 
   private getEnemySpriteId(e: { tags: string[] | readonly string[]; width: number; defId?: string }): string {
-    if (e.defId && this.sprites.enemies.has(e.defId)) return e.defId;
+    const loadedEnemies = (this as any).loadedSprites?.enemies as Map<string, HTMLImageElement> | undefined;
+    // Prefer a real per-enemy sprite when one exists — procedural sheet OR a
+    // loaded PNG (road-chase enemies are PNG-only, not in the procedural sheet).
+    if (e.defId && (this.sprites.enemies.has(e.defId) || loadedEnemies?.has(e.defId))) return e.defId;
     if (e.tags.includes('Fogo')) return 'fire_imp';
     if (e.tags.includes('Gelo') || e.tags.includes('Água')) return 'ice_golem';
     if (e.tags.includes('Orgânico') || e.tags.includes('Planta')) return 'vine_creep';

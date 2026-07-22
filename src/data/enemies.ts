@@ -26,6 +26,9 @@ export interface EnemyDefinition {
   minWave: number;
   /** Spawn weight (higher = more common) */
   weight: number;
+  /** If set, this enemy only appears in the named phase variant (e.g. 'truck')
+   * and is excluded from the normal wave roster — see getEnemiesForWave. */
+  variantOnly?: string;
 }
 
 export type EnemySpecial =
@@ -1358,6 +1361,60 @@ export const ENEMY_LEECH: EnemyDefinition = {
 
 // ─── All Enemies Export ──────────────────────────────────────────────────────
 
+// ─── Estrada de Fuga — dedicated road-chase roster ──────────────────────────
+// These only spawn during the 'truck' normal variant (variantOnly), so they
+// never dilute the normal pool. Stats reuse existing archetypes to stay in
+// balance; the theme is "things that dive onto the moving truck".
+
+export const ENEMY_ROAD_WASP: EnemyDefinition = {
+  id: 'road_wasp', name: 'Vespa da Pista', tags: [], hp: 10, speed: 68, damage: 4,
+  width: 18, height: 18, goldReward: 3, armor: 0, movement: 'erratic',
+  spriteId: 'road_wasp', minWave: 1, weight: 10, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_MANTA: EnemyDefinition = {
+  id: 'road_manta', name: 'Arraia Alada', tags: ['Orgânico'], hp: 15, speed: 60, damage: 5,
+  width: 26, height: 22, goldReward: 4, armor: 0, movement: 'sine',
+  spriteId: 'road_manta', minWave: 1, weight: 9, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_JELLY: EnemyDefinition = {
+  id: 'road_jelly', name: 'Água-Viva Flutuante', tags: ['Elétrico'], hp: 18, speed: 30, damage: 5,
+  width: 24, height: 26, goldReward: 5, armor: 0, movement: 'sine',
+  special: { type: 'shoot', fireRate: 0.5, projectileSpeed: 120 },
+  spriteId: 'road_jelly', minWave: 1, weight: 6, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_GARGOYLE: EnemyDefinition = {
+  id: 'road_gargoyle', name: 'Gárgula de Ferro', tags: [], hp: 28, speed: 48, damage: 9,
+  width: 30, height: 26, goldReward: 6, armor: 0, movement: 'charge',
+  spriteId: 'road_gargoyle', minWave: 1, weight: 5, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_BIKER: EnemyDefinition = {
+  id: 'road_biker', name: 'Motoqueiro Rival', tags: ['Fogo'], hp: 32, speed: 54, damage: 8,
+  width: 28, height: 30, goldReward: 7, armor: 1, movement: 'strafe',
+  special: { type: 'shoot', fireRate: 0.9, projectileSpeed: 150 },
+  spriteId: 'road_biker', minWave: 1, weight: 6, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_HANGER: EnemyDefinition = {
+  id: 'road_hanger', name: 'Aberração Pendente', tags: ['Veneno'], hp: 42, speed: 20, damage: 8,
+  width: 32, height: 30, goldReward: 7, armor: 1, movement: 'straight',
+  spriteId: 'road_hanger', minWave: 1, weight: 5, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_MOSS: EnemyDefinition = {
+  id: 'road_moss', name: 'Rochedo Musgoso', tags: ['Orgânico'], hp: 55, speed: 14, damage: 10,
+  width: 34, height: 32, goldReward: 8, armor: 2, movement: 'straight',
+  spriteId: 'road_moss', minWave: 1, weight: 4, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_BRUTE: EnemyDefinition = {
+  id: 'road_brute', name: 'Bruto de Sucata', tags: [], hp: 72, speed: 16, damage: 12,
+  width: 38, height: 36, goldReward: 10, armor: 3, movement: 'straight',
+  spriteId: 'road_brute', minWave: 1, weight: 3, variantOnly: 'truck',
+};
+
+/** Estrada de Fuga roster — the truck variant spawns exclusively from this. */
+export const ESTRADA_ENEMIES: EnemyDefinition[] = [
+  ENEMY_ROAD_WASP, ENEMY_ROAD_MANTA, ENEMY_ROAD_JELLY, ENEMY_ROAD_GARGOYLE,
+  ENEMY_ROAD_BIKER, ENEMY_ROAD_HANGER, ENEMY_ROAD_MOSS, ENEMY_ROAD_BRUTE,
+];
+
 export const ALL_ENEMIES: EnemyDefinition[] = [
   ENEMY_SCOUT, ENEMY_GRUNT, ENEMY_TANK, ENEMY_SHOOTER, ENEMY_ZIGZAG,
   ENEMY_SWARM, ENEMY_SHIELD_BEARER, ENEMY_BOMBER,
@@ -1379,6 +1436,9 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   // New bosses (9-20)
   BOSS_TOXAR, BOSS_CRIOX, BOSS_VULKRA, BOSS_PHANTAX, BOSS_TERRAVOX, BOSS_SOLYX,
   BOSS_ABYSSARA, BOSS_MECHRON, BOSS_VOIDMAW, BOSS_ASTRAL_SERPENT, BOSS_HARBINGER, BOSS_EPOCH,
+  // Estrada de Fuga roster — listed here so their sprites load; excluded from
+  // the normal wave pool by getEnemiesForWave (variantOnly).
+  ...ESTRADA_ENEMIES,
 ];
 
 /** All bosses, including the giant Zyr-Goth — kept for anything (codex,
@@ -1404,7 +1464,7 @@ export const MEGA_BOSSES: EnemyDefinition[] = [BOSS_EPOCH];
 
 /** Get enemies available for a given wave */
 export function getEnemiesForWave(wave: number): EnemyDefinition[] {
-  return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0);
+  return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0 && !e.variantOnly);
 }
 
 /**

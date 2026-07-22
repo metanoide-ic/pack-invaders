@@ -6,7 +6,7 @@
 
 import { BackpackGrid, CombatPower } from './BackpackGrid';
 import { ProjectileData, PlacedItem, Tag } from './ItemSystem';
-import { getEnemiesForWave, getBossForEncounter, getMegaBossForEncounter, REGULAR_BOSSES, MEGA_BOSSES, EnemyDefinition, ALL_ENEMIES, BOSS_SWARM_QUEEN } from '../data/enemies';
+import { getEnemiesForWave, getBossForEncounter, getMegaBossForEncounter, REGULAR_BOSSES, MEGA_BOSSES, EnemyDefinition, ALL_ENEMIES, ESTRADA_ENEMIES, BOSS_SWARM_QUEEN } from '../data/enemies';
 
 /**
  * Continuous accelerating growth curve, anchored to a known value at
@@ -3873,6 +3873,13 @@ export class CombatEngine {
     // Year 3+: everything
     const virtualWave = Math.min(20, Math.ceil(totalMonths * 0.6));
     let available = getEnemiesForWave(virtualWave);
+
+    // Estrada de Fuga: swap the whole roster for the dedicated road-chase pool
+    // (biker, manta, wasp, jelly, gargoyle, hanger, moss, brute) so the phase
+    // has its own identity instead of the generic placeholder enemies.
+    if (normalVariant === 'truck') {
+      available = ESTRADA_ENEMIES;
+    }
 
     // Frostbite: everything on screen this wave reads as an ice enemy. The
     // canon "Gelo"-tagged roster is only 2 entries (too thin to fill a whole
