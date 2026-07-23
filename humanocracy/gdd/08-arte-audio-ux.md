@@ -16,6 +16,22 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
   - Conselho Popular: vermelho e ocre, estrela ★ como carimbo de revalidação;
   - Colapso: dessaturação progressiva até o cinza; a única cor viva que resta é o
     carimbo APROVAR.
+- **Tipografia (implementada) — três vozes, embutidas em woff2 base64 (offline):**
+  *Oswald* (condensada institucional, SIL OFL) carrega a voz do Estado — logo,
+  títulos de tela, HUD, cabeçalhos de seção, botões e nomes; *Special Elite*
+  (datilografada, Apache 2.0) é o papel — campos de documento, comunicados e
+  citações saem como se um escrivão os tivesse batido à máquina; *JetBrains Mono*
+  (SIL OFL) é o corpo legível — diálogo, regulamento, logs. O jornal permanece em
+  serifa (Georgia), único lugar onde a serifa é historicamente correta (nameplate).
+  A escolha é deliberada contra o "mono genérico em tudo": cada função tem uma voz.
+- **Estrutura do crânio (Loomis) nos retratos:** o traçado da cabeça deixou de
+  ser um ovo — segue os marcos clássicos (têmpora estreita → zigomático como
+  largura máxima no nível dos olhos → plano reto do maxilar → ângulo gonial →
+  queixo), diferenciado por sexo (mandíbula larga e angular vs. afilada) e idade
+  (proporções infantis). A modelagem ganhou sombras de PLANO com aresta mais dura
+  (concavidade sob a maçã do rosto, arcada superciliar, plano lateral do maxilar)
+  no lugar do aerógrafo suave que fazia todo rosto parecer cera. A barba abraça o
+  maxilar com gradiente e fios direcionais, em vez de mascarar o queixo de preto.
 - **Cidadãos — motor procedural analog-horror (implementado, substituiu o photobash):**
   cada rosto é PINTADO em canvas por `faces.js` — crânio com maxilar e assimetria
   próprios, chiaroscuro de lâmpada única (lado direito do rosto em sombra franca),

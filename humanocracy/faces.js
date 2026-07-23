@@ -91,6 +91,17 @@ function faceLayout(f) {
     fw *= 0.88; jw *= 0.78; chinY -= 5.5; eyeY += 1.4; eyeH += 0.55;
     noseW *= 0.72; mouthW *= 0.82; browY += 1.4;
   }
+  /* ---- estrutura do crânio (Loomis): a testa NÃO é um ovo ----
+     O ponto mais largo é o zigomático (maçã do rosto), no nível dos olhos;
+     a têmpora acima é mais estreita; o maxilar desce em plano quase reto
+     até o ângulo gonial e daí ao queixo. Homem: mandíbula larga e angular,
+     queixo chato; mulher/criança: mais estreito e afilado. */
+  const cheekY = eyeY + 4.5;                       // zigomático (largura máxima)
+  const templeW = fw * (fem ? 0.85 : 0.88);        // têmpora, mais estreita que a maçã
+  const gonialY = eyeY + (fem ? 13.5 : 15) + (child ? -3 : 0); // ângulo do maxilar
+  const jawSquare = fem ? 0.28 : (child ? 0.2 : 0.62) + (f.faceW * 0.06); // dureza do canto
+  const chinW = jw * (fem ? 0.5 : child ? 0.55 : 0.62);          // meia-largura do queixo
+  const crownW = fw * (fem ? 0.62 : 0.66);         // largura do topo do crânio
   const ax = (r() - 0.5) * 1.6;                                    // assimetria global
   const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
   // fator uncanny: distribuído por TODO MUNDO (humano ou não — nunca
@@ -104,6 +115,7 @@ function faceLayout(f) {
   return {
     r, fem, child, fw, jw, chinY, eyeY, eyeDX: eyeDX + eyeApart, eyeW, eyeH,
     browY, noseTip, noseW, mouthY, mouthW, ax, tilt,
+    cheekY, templeW, gonialY, jawSquare, chinW, crownW,
     uncanny, pupilSkew, cornerUp,
     lip: E.lip, cheek: E.cheek, sardas: !!E.sardas && f.skin <= 1,
     skin: F_SKIN[f.skin % F_SKIN.length], hair: F_HAIR[f.hair % F_HAIR.length],
@@ -111,17 +123,33 @@ function faceLayout(f) {
   };
 }
 
-/* ---------- traçado da cabeça ---------- */
+/* ---------- traçado da cabeça (crânio estruturado, não um ovo) ----------
+   Segue os marcos de Loomis: crânio → têmpora (estreita) → zigomático
+   (largura máxima, nível dos olhos) → plano reto do maxilar → ângulo
+   gonial → queixo. É a QUEBRA de plano nesses pontos — e não uma curva
+   contínua — que faz a cabeça deixar de parecer uma bola. */
 function headPath(ctx, L) {
-  const cx = 50, topY = 21;
+  const cx = 50, topY = 20;
+  const a = L.ax; // assimetria só do lado direito (como antes)
+  const cheekY = L.cheekY, gonialY = L.gonialY, chinY = L.chinY;
+  // controle do canto gonial: quanto maior jawSquare, mais baixo/anguloso o canto
+  const gPull = 3 + L.jawSquare * 5;
   ctx.beginPath();
-  ctx.moveTo(cx - L.fw + 0.6, 46);
-  ctx.bezierCurveTo(cx - L.fw - 0.4, topY + 8, cx - L.fw * 0.62, topY - 1.5, cx, topY - 1.5);
-  ctx.bezierCurveTo(cx + L.fw * 0.62, topY - 1.5, cx + L.fw + 0.4 + L.ax, topY + 8, cx + L.fw - 0.6 + L.ax, 46);
-  ctx.bezierCurveTo(cx + L.fw - 0.2 + L.ax, 56, cx + L.jw + 0.8 + L.ax, 62, cx + L.jw * 0.82 + L.ax, L.chinY - 6);
-  ctx.quadraticCurveTo(cx + L.jw * 0.5, L.chinY + 1.8, cx, L.chinY + 2.2);
-  ctx.quadraticCurveTo(cx - L.jw * 0.5, L.chinY + 1.8, cx - L.jw * 0.82, L.chinY - 6);
-  ctx.bezierCurveTo(cx - L.jw - 0.8, 62, cx - L.fw + 0.2, 56, cx - L.fw + 0.6, 46);
+  // ---- lado esquerdo (iluminado), de baixo pra cima ----
+  ctx.moveTo(cx, chinY + 2.2);
+  ctx.quadraticCurveTo(cx - L.chinW, chinY + 1.4, cx - L.chinW - 0.6, chinY - 3.5); // base do queixo
+  ctx.quadraticCurveTo(cx - L.jw + 0.4, gonialY + gPull, cx - L.jw, gonialY);       // sobe ao ângulo gonial
+  ctx.lineTo(cx - L.fw + 0.3, cheekY);                                              // plano reto do maxilar → maçã
+  ctx.quadraticCurveTo(cx - L.fw - 0.4, cheekY - 8, cx - L.templeW, topY + 13);     // maçã → têmpora
+  ctx.quadraticCurveTo(cx - L.templeW - 0.2, topY + 3, cx - L.crownW, topY - 0.5);   // têmpora → topo
+  ctx.quadraticCurveTo(cx - L.crownW * 0.55, topY - 1.6, cx, topY - 1.7);            // calota (mais chata)
+  // ---- lado direito (sombra), de cima pra baixo ----
+  ctx.quadraticCurveTo(cx + L.crownW * 0.55, topY - 1.6, cx + L.crownW + a, topY - 0.5);
+  ctx.quadraticCurveTo(cx + L.templeW + 0.2 + a, topY + 4, cx + L.templeW + a, topY + 13);
+  ctx.quadraticCurveTo(cx + L.fw + 0.4 + a, cheekY - 8, cx + L.fw - 0.3 + a, cheekY);
+  ctx.lineTo(cx + L.jw + a, gonialY);
+  ctx.quadraticCurveTo(cx + L.jw - 0.4 + a, gonialY + gPull, cx + L.chinW + 0.6 + a, chinY - 3.5);
+  ctx.quadraticCurveTo(cx + L.chinW + a, chinY + 1.4, cx, chinY + 2.2);
   ctx.closePath();
 }
 
@@ -236,12 +264,13 @@ function paintBust(ctx, f, opts) {
   chiar.addColorStop(1, rgb(darken(SH, 0.22), 0.62));
   ctx.fillStyle = chiar; ctx.fillRect(0, 0, 100, 120);
 
-  // planos laterais
-  soft(ctx, cx - L.fw + 1, 56, 7, 22, rgb(SH, 0.45), 1.8);
-  soft(ctx, cx + L.fw - 1 + L.ax, 56, 8, 23, rgb(darken(SH, 0.12), 0.7), 1.8);
-  // têmporas
-  soft(ctx, cx - L.fw + 4, 40, 4, 6, rgb(SH, 0.4), 1.6);
-  soft(ctx, cx + L.fw - 4 + L.ax, 40, 4.4, 6, rgb(darken(SH, 0.1), 0.5), 1.6);
+  /* SIDE PLANES do maxilar (mais duros que antes: um plano, não um borrão).
+     Do zigomático até o ângulo gonial, no lado da sombra bem mais fundo. */
+  soft(ctx, cx - L.fw + 2, (L.cheekY + L.gonialY) / 2, 4.5, (L.gonialY - L.cheekY) / 2 + 5, rgb(SH, 0.4), 1.4);
+  soft(ctx, cx + L.fw - 2 + L.ax, (L.cheekY + L.gonialY) / 2, 5.5, (L.gonialY - L.cheekY) / 2 + 6, rgb(darken(SH, 0.14), 0.72), 1.4);
+  // têmporas (recuo acima do zigomático)
+  soft(ctx, cx - L.templeW + 2.5, L.browY - 1, 3, 5.5, rgb(SH, 0.4), 1.4);
+  soft(ctx, cx + L.templeW - 2.5 + L.ax, L.browY - 1, 3.4, 5.5, rgb(darken(SH, 0.1), 0.55), 1.4);
 
   // luz principal: lâmpada acima-esquerda, contida (não lava o lado sombrio)
   const key = ctx.createRadialGradient(cx - 9, 33, 3, cx - 9, 38, 32);
@@ -249,6 +278,20 @@ function paintBust(ctx, f, opts) {
   key.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
   soft(ctx, cx - 7, 30, 10, 6, 'rgba(255,246,222,.26)', 1.8); // testa
+
+  /* MAÇÃS DO ROSTO: highlight no zigomático + a concavidade DIAGONAL logo
+     abaixo (a sombra que dá estrutura de bochecha, não bola de gude). */
+  for (const s of [-1, 1]) {
+    const zx = cx + s * (L.fw - 4) + (s > 0 ? L.ax : 0);
+    // highlight na crista da maçã (mais forte do lado da luz)
+    soft(ctx, zx, L.cheekY - 0.5, 3.6, 2.6, rgb(lighten(SK, 0.24), s < 0 ? 0.4 : 0.18), 1.6);
+    // hollow diagonal descendo para o canto da boca
+    const hx = cx + s * (L.fw - 5.5), hy = L.cheekY + 4.5;
+    soft(ctx, hx - s * 1, hy, 3.2, 4.2, rgb(darken(SH, 0.06), s < 0 ? 0.28 : 0.42), 2.2);
+  }
+  // BROW RIDGE: sombra fina sob a arcada, jogada para dentro das órbitas
+  soft(ctx, cx - L.eyeDX, L.browY + 2.4, 5, 1.6, rgb(darken(SH, 0.12), 0.4), 1.4);
+  soft(ctx, cx + L.eyeDX + L.ax * 0.5, L.browY + 2.4, 5, 1.7, rgb(darken(SH, 0.2), 0.5), 1.4);
 
   // órbitas
   soft(ctx, cx - L.eyeDX, L.eyeY - 0.6, 7, 4.4, rgb(darken(SH, 0.16), 0.55), 1.9);
@@ -702,30 +745,44 @@ function paintBust(ctx, f, opts) {
     ctx.restore();
   }
 
-  /* barba / bigode */
+  /* barba / bigode — massa que ABRAÇA o maxilar (não uma máscara chapada):
+     começa no costeleta baixo, desce pelo maxilar até o queixo, com
+     gradiente (topo pega a luz) e a boca reaparecendo por cima. */
   if (f.beard === 1) {
     ctx.save();
-    ctx.fillStyle = rgb(darken(HC, 0.05), 0.9);
-    ctx.beginPath();
-    ctx.moveTo(cx - L.fw + 1, 54);
-    ctx.quadraticCurveTo(cx - L.jw - 1, 70, cx - L.jw * 0.5, L.chinY + 4);
-    ctx.quadraticCurveTo(cx, L.chinY + 9, cx + L.jw * 0.5, L.chinY + 4);
-    ctx.quadraticCurveTo(cx + L.jw + 1 + L.ax, 70, cx + L.fw - 1 + L.ax, 54);
-    ctx.lineTo(cx + L.fw - 4 + L.ax, 60);
-    ctx.quadraticCurveTo(cx + mwSafe(L) * 1.5, L.mouthY - 2.5, cx, L.mouthY - 2.5);
-    ctx.quadraticCurveTo(cx - mwSafe(L) * 1.5, L.mouthY - 2.5, cx - L.fw + 4, 60);
-    ctx.closePath(); ctx.fill();
+    const bTop = L.cheekY + 3;
+    const beardPath = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx - L.fw + 2, bTop);                                          // costeleta esq
+      ctx.quadraticCurveTo(cx - L.jw - 0.5, L.gonialY + 1, cx - L.chinW - 1, L.chinY - 1);
+      ctx.quadraticCurveTo(cx, L.chinY + 6, cx + L.chinW + 1 + L.ax, L.chinY - 1);
+      ctx.quadraticCurveTo(cx + L.jw + 0.5 + L.ax, L.gonialY + 1, cx + L.fw - 2 + L.ax, bTop); // costeleta dir
+      ctx.lineTo(cx + L.fw - 4.5 + L.ax, bTop + 5);
+      ctx.quadraticCurveTo(cx + mwSafe(L) * 1.4, L.mouthY - 2.2, cx, L.mouthY - 2); // sobe até o bigode
+      ctx.quadraticCurveTo(cx - mwSafe(L) * 1.4, L.mouthY - 2.2, cx - L.fw + 4.5, bTop + 5);
+      ctx.closePath();
+    };
+    beardPath();
+    const bg = ctx.createLinearGradient(0, bTop, 0, L.chinY + 5);
+    bg.addColorStop(0, rgb(darken(HC, 0.02), 0.72));
+    bg.addColorStop(1, rgb(darken(HC, 0.22), 0.9));
+    ctx.fillStyle = bg; ctx.fill();
+    // lado da luz: uma lasca de highlight na crista da barba (dá volume)
+    ctx.save(); beardPath(); ctx.clip();
+    soft(ctx, cx - L.jw * 0.55, L.gonialY - 2, 4, 5, rgb(lighten(HC, 0.4), 0.28), 2.4);
+    ctx.restore();
     // boca reaparece
     ctx.strokeStyle = 'rgba(30,20,16,.8)'; ctx.lineWidth = 0.7;
     ctx.beginPath(); ctx.moveTo(cx - L.mouthW * 0.7, L.mouthY);
     ctx.quadraticCurveTo(cx, L.mouthY + 1, cx + L.mouthW * 0.7, L.mouthY); ctx.stroke();
-    // fios da barba
-    for (let i = 0; i < 60; i++) {
-      const bx = cx + (r() - 0.5) * L.jw * 2.1;
-      const by2 = 62 + r() * (L.chinY - 56);
-      ctx.strokeStyle = r() < 0.5 ? rgb(darken(HC, 0.4), 0.4) : rgb(lighten(HC, 0.25), 0.3);
+    // fios da barba (direcionais, seguem pra baixo)
+    for (let i = 0; i < 80; i++) {
+      const bx = cx + (r() - 0.5) * L.jw * 2;
+      const by2 = bTop + 2 + r() * (L.chinY - bTop);
+      const lit = bx < cx;
+      ctx.strokeStyle = lit ? rgb(lighten(HC, 0.28), 0.3) : rgb(darken(HC, 0.42), 0.42);
       ctx.lineWidth = 0.4;
-      ctx.beginPath(); ctx.moveTo(bx, by2); ctx.lineTo(bx + (r() - 0.5) * 1.6, by2 + 2 + r() * 2); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(bx, by2); ctx.lineTo(bx + (r() - 0.5) * 1.2, by2 + 1.6 + r() * 2); ctx.stroke();
     }
     ctx.restore();
   } else if (f.beard === 2) {
