@@ -8172,61 +8172,92 @@ export class Renderer {
     const { ctx, canvas } = this;
     const L = this.getLayout();
 
-    ctx.fillStyle = 'rgba(0,0,0,0.85)';
+    // Lifted twilight overlay (was pure black) — matches the lighter vibe
+    const bg = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    bg.addColorStop(0, 'rgba(14, 17, 40, 0.93)');
+    bg.addColorStop(1, 'rgba(9, 11, 28, 0.95)');
+    ctx.fillStyle = bg;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.font = L.fontTitle;
+    ctx.font = `bold ${Math.floor(L.h * 0.04)}px monospace`;
     ctx.fillStyle = '#fbbf24';
     ctx.textAlign = 'center';
-    ctx.fillText('CONTROLES', L.cx, Math.floor(L.h * 0.15));
+    ctx.shadowColor = '#fbbf24'; ctx.shadowBlur = 10;
+    ctx.fillText('COMO JOGAR', L.cx, Math.floor(L.h * 0.13));
+    ctx.shadowBlur = 0;
 
-    const lines = [
-      ['A/D ou ←/→', 'Mover nave no combate'],
-      ['SHIFT ou ESPAÇO', 'Dash (esquiva rápida)'],
-      ['1 / 2 / 3', 'Usar habilidades ativas'],
+    const controls: [string, string][] = [
+      ['A / D  ·  ← →', 'Mover a nave no combate'],
+      ['SHIFT / ESPAÇO', 'Dash (esquiva rápida)'],
+      ['1 · 2 · 3', 'Usar as habilidades ativas'],
       ['Clique', 'Interagir com menus e itens'],
-      ['Clique Direito', 'Rotacionar item segurado'],
+      ['Clique Direito', 'Rotacionar o item segurado'],
+      ['TAB', 'Guia de Fusões (loja/mochila)'],
+      ['C', 'Abrir/fechar o Codex'],
       ['ESC', 'Pausar / Configurações'],
-      ['C', 'Abrir/fechar Codex'],
-      ['TAB', 'Guia de Fusões (na loja/inventário)'],
-      ['', ''],
-      ['DICA:', 'Cada personagem tem 3 skills únicas!'],
-      ['DICA:', 'Combo de kills = mais gold!'],
-      ['DICA:', 'Item duplicado sobre o igual na mochila = UPGRADE (+dano)!'],
-      ['DICA:', 'Loja e boss aparecem de 3 em 3 meses — cartas vêm todo mês!'],
+    ];
+    const tips: [string, string][] = [
+      ['★', 'Cada personagem tem 3 skills únicas.'],
+      ['★', 'Combo de kills seguidas = mais gold.'],
+      ['★', 'Item igual sobre o igual na mochila = UPGRADE.'],
+      ['★', 'Itens vizinhos na grade criam sinergias e FUSÕES.'],
+      ['★', 'Loja e boss vêm de 3 em 3 meses; cartas todo mês.'],
+      ['★', 'O peso não trava mais — só o espaço da mochila importa.'],
     ];
 
-    ctx.font = L.fontNormal;
-    const startY = Math.floor(L.h * 0.24);
-    // Line height (and everything below) scales down to fit however many
-    // lines the list holds, instead of a fixed spacing that would push the
-    // footer text off-screen or under the last line as tips get added.
-    const maxListH = Math.floor(L.h * 0.58);
-    const lineH = Math.min(Math.floor(L.h * 0.055), Math.floor(maxListH / Math.max(1, lines.length - 1)));
-    for (let i = 0; i < lines.length; i++) {
-      const [key, desc] = lines[i];
-      if (key) {
-        ctx.fillStyle = '#6366f1';
-        ctx.textAlign = 'right';
-        ctx.fillText(key, L.cx - 10, startY + i * lineH);
-        ctx.fillStyle = '#e2e8f0';
-        ctx.textAlign = 'left';
-        ctx.fillText(desc, L.cx + 10, startY + i * lineH);
-      }
+    // Two columns: controls (left), tips (right)
+    const colGap = Math.floor(L.w * 0.06);
+    const colW = Math.floor(L.w * 0.36);
+    const leftX = L.cx - colGap / 2 - colW;
+    const rightX = L.cx + colGap / 2;
+    const headY = Math.floor(L.h * 0.22);
+    const rowH = Math.floor(L.h * 0.052);
+
+    // Column headers
+    ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#818cf8';
+    ctx.fillText('CONTROLES', leftX, headY);
+    ctx.fillStyle = '#4ade80';
+    ctx.fillText('DICAS', rightX, headY);
+    // Underlines
+    ctx.fillStyle = '#818cf844'; ctx.fillRect(leftX, headY + 6, colW, 1);
+    ctx.fillStyle = '#4ade8044'; ctx.fillRect(rightX, headY + 6, colW, 1);
+
+    const bodyY = headY + Math.floor(L.h * 0.045);
+    // Controls: key (indigo, right-aligned to a divider) + action
+    ctx.font = `${Math.floor(L.h * 0.0145)}px monospace`;
+    const keyColX = leftX + Math.floor(colW * 0.42);
+    for (let i = 0; i < controls.length; i++) {
+      const y = bodyY + i * rowH;
+      ctx.textAlign = 'right';
+      ctx.fillStyle = '#a5b4fc';
+      ctx.fillText(controls[i][0], keyColX, y);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText(controls[i][1], keyColX + 10, y);
     }
-    const listEndY = startY + (lines.length - 1) * lineH;
+    // Tips: green star bullet + text
+    for (let i = 0; i < tips.length; i++) {
+      const y = bodyY + i * rowH;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#4ade80';
+      ctx.fillText(tips[i][0], rightX, y);
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillText(tips[i][1], rightX + Math.floor(L.w * 0.016), y);
+    }
 
     ctx.textAlign = 'center';
-    ctx.font = L.fontSmall;
+    ctx.font = `${Math.floor(L.h * 0.018)}px monospace`;
     ctx.fillStyle = '#94a3b8';
-    const taglineY = listEndY + Math.floor(L.h * 0.06);
+    const taglineY = bodyY + Math.max(controls.length, tips.length) * rowH + Math.floor(L.h * 0.03);
     ctx.fillText('Sobreviva. Monte sua mochila. Detone os aliens.', L.cx, taglineY);
 
     const alpha = 0.5 + Math.sin(Date.now() * 0.003) * 0.4;
     ctx.globalAlpha = alpha;
     ctx.font = L.fontNormal;
-    ctx.fillStyle = '#64748b';
-    ctx.fillText('Clique ou pressione qualquer tecla para continuar', L.cx, taglineY + Math.floor(L.h * 0.055));
+    ctx.fillStyle = '#fbbf24';
+    ctx.fillText('› Clique ou pressione qualquer tecla para começar ‹', L.cx, taglineY + Math.floor(L.h * 0.05));
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
   }
