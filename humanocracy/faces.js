@@ -312,23 +312,34 @@ function paintBust(ctx, f, opts) {
   soft(ctx, cx - L.eyeDX, L.eyeY - 0.6, 7, 4.4, rgb(darken(SH, 0.16), 0.55), 1.9);
   soft(ctx, cx + L.eyeDX + L.ax * 0.5, L.eyeY - 0.6, 7, 4.4, rgb(darken(SH, 0.16), 0.6), 1.9);
 
-  // nariz: sombras da ponte + SOMBRA PROJETADA (lâmpada à esquerda joga a
-  // sombra do nariz pra direita e pra baixo — sem ela o nariz não existe)
-  soft(ctx, cx - 2.6, 53, 1.7, 7.5, rgb(darken(SH, 0.1), 0.5), 1.1);
-  soft(ctx, cx + 2.6, 53, 1.9, 7.5, rgb(darken(SH, 0.18), 0.62), 1.1);
-  soft(ctx, cx - 0.4, 52, 1.1, 6, rgb(lighten(SK, 0.32), 0.55), 0.9); // dorso pega luz
-  soft(ctx, cx, L.noseTip - 3, 2, 4, rgb(lighten(SK, 0.36), 0.65), 1);
+  /* NARIZ como FORMA (não uma mancha vertical): dorso estreito com highlight
+     no lado da luz e sombra dura no lado oposto; a BOLA da ponta com brilho
+     redondo e a base voltada pra baixo em sombra; asas (alae) com vinco;
+     narinas como aberturas tucked POR BAIXO; e a sombra projetada. O
+     contraste se concentra na ponta — é isso que encurta o nariz "longo". */
+  const nTip = L.noseTip, nTop = L.browY + 4, nw = L.noseW, nMidY = (nTop + nTip) / 2;
+  // dorso: fio de luz no topo (lado esquerdo) + faixa de sombra no lado direito
+  soft(ctx, cx - 0.9, nMidY - 1, 1.1, (nTip - nTop) / 2, rgb(lighten(SK, 0.26), 0.5), 0.9);
+  soft(ctx, cx + 1.9, nMidY, 1.5, (nTip - nTop) / 2 + 1, rgb(darken(SH, 0.14), 0.55), 1.0);
+  // raiz do nariz (entre as sobrancelhas), sombra suave
+  soft(ctx, cx + 0.6, nTop, 1.6, 1.6, rgb(darken(SH, 0.08), 0.32), 1.2);
+  // a BOLA da ponta: highlight redondo + base em sombra (o nariz "vira")
+  soft(ctx, cx - 0.7, nTip - 1.1, 2.2, 1.9, rgb(lighten(SK, 0.34), 0.6), 1.0);
+  soft(ctx, cx + 0.3, nTip + 1.9, 2.6, 1.3, rgb(darken(SH, 0.26), 0.6), 1.1); // base (underside)
+  // asas + narinas
+  for (const s of [-1, 1]) {
+    const axx = cx + s * (nw * 0.82) + (s > 0 ? L.ax * 0.3 : 0);
+    soft(ctx, axx, nTip - 0.2, 1.5, 1.7, rgb(s < 0 ? lighten(SK, 0.08) : darken(SH, 0.08), s < 0 ? 0.3 : 0.5), 0.9); // corpo da asa
+    soft(ctx, axx + s * 1.2, nTip - 0.5, 0.8, 1.6, rgb(darken(SH, 0.2), s < 0 ? 0.4 : 0.55), 0.7);                  // vinco alar
+    ctx.fillStyle = rgb(darken(SH, 0.5), 0.82);                                                                     // narina
+    ctx.beginPath(); ctx.ellipse(cx + s * (nw * 0.48), nTip + 1.15, 0.85, 0.62, s * 0.4, 0, 6.29); ctx.fill();
+  }
+  // sombra projetada do nariz (lâmpada à esquerda → direita e pra baixo)
   ctx.save();
-  try { ctx.filter = `blur(${(0.9 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
-  ctx.fillStyle = rgb(darken(SH, 0.22), 0.5);
-  ctx.beginPath(); ctx.ellipse(cx + 2.8, L.noseTip + 2.6, 3.6, 1.8, 0.35, 0, 6.29); ctx.fill();
+  try { ctx.filter = `blur(${(0.8 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
+  ctx.fillStyle = rgb(darken(SH, 0.24), 0.5);
+  ctx.beginPath(); ctx.ellipse(cx + nw * 0.7, nTip + 2.5, 3.2, 1.5, 0.32, 0, 6.29); ctx.fill();
   ctx.restore();
-  ctx.fillStyle = rgb(darken(SH, 0.4), 0.75);
-  ctx.beginPath(); ctx.ellipse(cx - L.noseW * 0.55, L.noseTip + 0.8, 1.15, 0.75, 0.3, 0, 6.29); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + L.noseW * 0.55, L.noseTip + 0.8, 1.15, 0.75, -0.3, 0, 6.29); ctx.fill();
-  // asas do nariz
-  soft(ctx, cx - L.noseW * 0.9, L.noseTip - 0.4, 1.2, 1.4, rgb(SH, 0.4), 0.8);
-  soft(ctx, cx + L.noseW * 0.9, L.noseTip - 0.4, 1.3, 1.5, rgb(darken(SH, 0.1), 0.5), 0.8);
 
   // bochechas / encovado de quem come pouco
   const hollow = f.idade > 46 || r() < 0.35;
@@ -687,30 +698,37 @@ function paintBust(ctx, f, opts) {
     ctx.save();
     const hs = f.hairStyle;
     const topY = 17, hlY = [33, 29, 25, 27][hs] + r() * 2; // linha do cabelo
-    // massa base
+    // massa base — traçado reutilizável (preenche E recorta os fios, para
+    // nenhum fio escapar pra testa como "garra")
+    const hairMass = () => {
+      ctx.beginPath();
+      ctx.moveTo(cx - L.fw - 0.6, 48);
+      ctx.bezierCurveTo(cx - L.fw - 2, topY + 2, cx - L.fw * 0.5, topY - 4.5, cx, topY - 4.5);
+      ctx.bezierCurveTo(cx + L.fw * 0.5, topY - 4.5, cx + L.fw + 2 + L.ax, topY + 2, cx + L.fw + 0.6 + L.ax, 48);
+      // recorte da testa (linha do cabelo por estilo)
+      if (hs === 2) { // recuado / calvície
+        ctx.lineTo(cx + L.fw * 0.92, hlY - 3);
+        ctx.quadraticCurveTo(cx + L.fw * 0.5, hlY + 5, cx, hlY - 8 + (f.idade > 55 ? 3 : 0));
+        ctx.quadraticCurveTo(cx - L.fw * 0.5, hlY + 5, cx - L.fw * 0.92, hlY - 3);
+      } else if (hs === 3) { // penteado pra trás
+        ctx.lineTo(cx + L.fw * 0.96 + L.ax, hlY);
+        ctx.quadraticCurveTo(cx, hlY - 4, cx - L.fw * 0.96, hlY);
+      } else if (hs === 1) { // cheio, com franja recortada (dá "bico" de franja)
+        ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 4);
+        for (let k = 5; k >= 0; k--) { // borda de franja denteada (mechas)
+          const fx = cx + (k / 5 - 0.5) * L.fw * 1.7;
+          ctx.quadraticCurveTo(fx + L.fw * 0.08, hlY + 6.5, fx, hlY + (k % 2 ? 2.5 : 5.5));
+        }
+        ctx.lineTo(cx - L.fw * 0.98, hlY + 5);
+      } else { // repartido de lado
+        ctx.lineTo(cx + L.fw * 0.97 + L.ax, hlY + 2);
+        ctx.quadraticCurveTo(cx + L.fw * 0.3, hlY + 4.5, cx - L.fw * 0.35, hlY - 1.5);
+        ctx.quadraticCurveTo(cx - L.fw * 0.75, hlY, cx - L.fw * 0.97, hlY + 3);
+      }
+      ctx.closePath();
+    };
     ctx.fillStyle = rgb(HC);
-    ctx.beginPath();
-    ctx.moveTo(cx - L.fw - 0.6, 48);
-    ctx.bezierCurveTo(cx - L.fw - 2, topY + 2, cx - L.fw * 0.5, topY - 4.5, cx, topY - 4.5);
-    ctx.bezierCurveTo(cx + L.fw * 0.5, topY - 4.5, cx + L.fw + 2 + L.ax, topY + 2, cx + L.fw + 0.6 + L.ax, 48);
-    // recorte da testa (linha do cabelo por estilo)
-    if (hs === 2) { // recuado / calvície
-      ctx.lineTo(cx + L.fw * 0.92, hlY - 3);
-      ctx.quadraticCurveTo(cx + L.fw * 0.5, hlY + 5, cx, hlY - 8 + (f.idade > 55 ? 3 : 0));
-      ctx.quadraticCurveTo(cx - L.fw * 0.5, hlY + 5, cx - L.fw * 0.92, hlY - 3);
-    } else if (hs === 3) { // penteado pra trás
-      ctx.lineTo(cx + L.fw * 0.96 + L.ax, hlY);
-      ctx.quadraticCurveTo(cx, hlY - 4, cx - L.fw * 0.96, hlY);
-    } else if (hs === 1) { // cheio
-      ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 4);
-      ctx.quadraticCurveTo(cx + L.fw * 0.35, hlY - 2, cx - L.fw * 0.2, hlY + 1.5);
-      ctx.quadraticCurveTo(cx - L.fw * 0.8, hlY + 3.5, cx - L.fw * 0.98, hlY + 5);
-    } else { // repartido de lado
-      ctx.lineTo(cx + L.fw * 0.97 + L.ax, hlY + 2);
-      ctx.quadraticCurveTo(cx + L.fw * 0.3, hlY + 4.5, cx - L.fw * 0.35, hlY - 1.5);
-      ctx.quadraticCurveTo(cx - L.fw * 0.75, hlY, cx - L.fw * 0.97, hlY + 3);
-    }
-    ctx.closePath(); ctx.fill();
+    hairMass(); ctx.fill();
     // sombra do cabelo caindo na testa (aterra o cabelo e quebra a testa chapada)
     ctx.save();
     try { ctx.filter = `blur(${(1.1 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
@@ -752,32 +770,42 @@ function paintBust(ctx, f, opts) {
       ctx.quadraticCurveTo(cx + L.fw - 0.5, 58, cx + L.fw - 1.5, 44);
       ctx.closePath(); ctx.fill();
     }
-    // fios: textura direcional (grossos o bastante pra sobreviver ao dither)
-    for (let i = 0; i < 120; i++) {
+    // fios: textura direcional, RECORTADA à massa (nenhum fio escapa pra testa)
+    ctx.save(); hairMass();
+    if (L.fem) { // inclui as mechas laterais no clip do cabelo feminino
+      ctx.moveTo(cx - L.fw + 3.5, 78); ctx.lineTo(cx - L.fw - 3, 76);
+      ctx.lineTo(cx - L.fw - 0.5, 40); ctx.lineTo(cx - L.fw + 1.5, 44);
+      ctx.moveTo(cx + L.fw - 3.5, 78); ctx.lineTo(cx + L.fw + 3, 74);
+      ctx.lineTo(cx + L.fw + 0.5, 40); ctx.lineTo(cx + L.fw - 1.5, 44);
+    }
+    ctx.clip();
+    for (let i = 0; i < 150; i++) {
       const t = r();
-      const hx = cx + (t - 0.5) * L.fw * 1.9;
-      const hy = topY - 2 + r() * (hs === 2 ? 6 : 13);
+      const hx = cx + (t - 0.5) * L.fw * 2.1;
+      const hy = topY - 4 + r() * (hs === 2 ? 8 : 16);
       const tone = r();
-      ctx.lineWidth = 0.55 + r() * 0.35;
-      ctx.strokeStyle = tone < 0.55 ? rgb(darken(HC, 0.45), 0.6) : rgb(lighten(HC, 0.35), 0.45);
+      ctx.lineWidth = 0.55 + r() * 0.4;
+      ctx.strokeStyle = tone < 0.5 ? rgb(darken(HC, 0.5), 0.55) : rgb(lighten(HC, 0.4), 0.42);
       ctx.beginPath(); ctx.moveTo(hx, hy);
-      if (hs === 3) ctx.quadraticCurveTo(hx + 1, hy + 3.5, hx + 0.5, hy + 7);
+      if (hs === 3) ctx.quadraticCurveTo(hx + 1, hy + 4, hx + 0.5, hy + 8);        // pra trás
+      else if (hs === 1) ctx.quadraticCurveTo(hx + (t - 0.5) * 2, hy + 4, hx + (t - 0.5) * 3, hy + 8); // franja pra baixo
       else ctx.quadraticCurveTo(hx + (t - 0.5) * 4, hy + 3, hx + (t - 0.5) * 7, hy + 5.5);
       ctx.stroke();
     }
     if (L.fem) {
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 60; i++) {
         const sgn = r() < 0.5 ? -1 : 1;
-        const hx = cx + sgn * (L.fw + r() * 3.4 - 1);
-        const hy = 42 + r() * 30;
-        ctx.lineWidth = 0.5 + r() * 0.3;
-        ctx.strokeStyle = r() < 0.5 ? rgb(darken(HC, 0.4), 0.55) : rgb(lighten(HC, 0.3), 0.4);
+        const hx = cx + sgn * (L.fw + r() * 3.4 - 1.5);
+        const hy = 42 + r() * 34;
+        ctx.lineWidth = 0.5 + r() * 0.35;
+        ctx.strokeStyle = r() < 0.5 ? rgb(darken(HC, 0.42), 0.5) : rgb(lighten(HC, 0.32), 0.38);
         ctx.beginPath(); ctx.moveTo(hx, hy);
-        ctx.quadraticCurveTo(hx + sgn * 1.2, hy + 5, hx + sgn * 0.5, hy + 10); ctx.stroke();
+        ctx.quadraticCurveTo(hx + sgn * 1.2, hy + 6, hx + sgn * 0.5, hy + 12); ctx.stroke();
       }
     }
-    // brilho de lâmpada no topo
-    soft(ctx, cx - 5, topY + 2, L.fw * 0.55, 3, 'rgba(255,246,224,.26)', 1.6);
+    // brilho de lâmpada no topo (banda especular do cabelo, no lado da luz)
+    soft(ctx, cx - L.fw * 0.35, topY + 1, L.fw * 0.5, 2.6, rgb(lighten(HC, 0.55), 0.4), 1.6);
+    ctx.restore();
     ctx.restore();
   }
 
