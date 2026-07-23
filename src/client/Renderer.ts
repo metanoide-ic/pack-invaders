@@ -2045,11 +2045,11 @@ export class Renderer {
     // every single frame
     if (!this.vignetteGradient) {
       const vig = ctx.createRadialGradient(
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.55,
-        canvas.width / 2, canvas.height / 2, canvas.height * 0.95
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.62,
+        canvas.width / 2, canvas.height / 2, canvas.height * 0.98
       );
       vig.addColorStop(0, 'rgba(0,0,0,0)');
-      vig.addColorStop(1, 'rgba(0,0,10,0.28)');
+      vig.addColorStop(1, 'rgba(4,3,14,0.15)');
       this.vignetteGradient = vig;
     }
     ctx.fillStyle = this.vignetteGradient;
