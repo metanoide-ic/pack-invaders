@@ -4632,7 +4632,22 @@ function paintBust(ctx, f, opts) {
   key.addColorStop(0, 'rgba(255,244,216,.42)'); key.addColorStop(0.5, 'rgba(255,244,216,.13)');
   key.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
-  soft(ctx, cx - 7, 30, 10, 6, 'rgba(255,246,222,.26)', 1.8); // testa
+
+  /* CRÂNIO COMO ESFERA — sem isto, testa/calva viram um domo pálido chapado
+     (o pior tell de "cabeça de ovo"). A calota é uma bola: escurece no topo
+     e desce nas laterais altas; a testa pega um highlight CURVO, deslocado
+     para o lado da luz, não uma faixa reta. */
+  const crownTop = 22;
+  // sombra de contorno do alto do crânio (a bola some pra cima)
+  soft(ctx, cx + 1, crownTop + 1, L.crownW * 1.15, 3.5, rgb(darken(SH, 0.05), 0.32), 2.6);
+  // laterais altas do crânio (acima da têmpora) caindo em sombra
+  soft(ctx, cx - L.templeW + 1, L.browY - 5, 3, 7, rgb(SH, 0.34), 2);
+  soft(ctx, cx + L.templeW - 1 + L.ax, L.browY - 5, 3.4, 7.5, rgb(darken(SH, 0.12), 0.5), 2);
+  // highlight curvo da testa/calota (lado da luz), some para os cantos
+  soft(ctx, cx - 6, 30, 8.5, 7, 'rgba(255,246,222,.26)', 2.4);
+  soft(ctx, cx - 4, 24, 6, 4, 'rgba(255,248,226,.20)', 2.2);
+  // reflexo especular pequeno no alto (pele/couro pega a lâmpada)
+  soft(ctx, cx - 5, 26, 2.6, 1.6, 'rgba(255,250,232,.28)', 1.4);
 
   /* MAÇÃS DO ROSTO: highlight no zigomático + a concavidade DIAGONAL logo
      abaixo (a sombra que dá estrutura de bochecha, não bola de gude). */
@@ -5051,9 +5066,30 @@ function paintBust(ctx, f, opts) {
       ctx.quadraticCurveTo(cx - L.fw * 0.75, hlY, cx - L.fw * 0.97, hlY + 3);
     }
     ctx.closePath(); ctx.fill();
-    if (hs === 2 && f.idade >= 50) { // couro aparecendo
-      ctx.fillStyle = rgb(SK, 0.28);
-      ctx.beginPath(); ctx.ellipse(cx, topY + 4, L.fw * 0.5, 5, 0, 0, 6.29); ctx.fill();
+    // sombra do cabelo caindo na testa (aterra o cabelo e quebra a testa chapada)
+    ctx.save();
+    try { ctx.filter = `blur(${(1.1 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
+    ctx.fillStyle = rgb(darken(SH, 0.16), hs === 2 ? 0.2 : 0.34);
+    ctx.beginPath();
+    ctx.moveTo(cx - L.fw * 0.82, hlY + 1);
+    ctx.quadraticCurveTo(cx, hlY + (hs === 2 ? -2 : 4.5), cx + L.fw * 0.82, hlY + 1);
+    ctx.lineTo(cx + L.fw * 0.82, hlY - 3); ctx.lineTo(cx - L.fw * 0.82, hlY - 3);
+    ctx.closePath(); ctx.fill();
+    ctx.restore();
+    if (hs === 2) { // recuo mantém cabelo temporal nos lados (não é calvície total)
+      ctx.fillStyle = rgb(darken(HC, 0.04));
+      for (const s of [-1, 1]) {
+        const ox = s > 0 ? L.ax : 0;
+        ctx.beginPath();
+        ctx.moveTo(cx + s * (L.fw + 0.4) + ox, 47);
+        ctx.quadraticCurveTo(cx + s * (L.fw + 1.5) + ox, hlY + 3, cx + s * (L.fw * 0.84) + ox, hlY + 4);
+        ctx.quadraticCurveTo(cx + s * (L.fw * 0.66) + ox, hlY - 1, cx + s * (L.fw * 0.72) + ox, 49);
+        ctx.closePath(); ctx.fill();
+      }
+      if (f.idade >= 50) { // couro aparecendo no alto
+        ctx.fillStyle = rgb(SK, 0.28);
+        ctx.beginPath(); ctx.ellipse(cx, topY + 4, L.fw * 0.5, 5, 0, 0, 6.29); ctx.fill();
+      }
     }
     // cabelo comprido feminino: massas laterais
     if (L.fem) {
