@@ -181,8 +181,16 @@ function soft(ctx, x, y, rx, ry, color, blur) {
 function paintBust(ctx, f, opts) {
   const L = faceLayout(f);
   const r = L.r, cx = 50;
-  const SK = L.skin.b, SH = L.skin.s;
+  let SK = L.skin.b, SH = L.skin.s;
   opts = opts || {};
+  /* ANOMALIAS de Alternado (visíveis ao vivo/exame, nunca na foto do
+     documento): pele com desvio doentio (azulada/cerosa), sorriso medonho,
+     dentes brancos demais, olhar morto. opts.skinShift 0..1. */
+  if (opts.skinShift) {
+    const tgt = opts.skinTone || [116, 140, 152];        // azul-acinzentado doentio
+    SK = mix(SK, tgt, opts.skinShift);
+    SH = mix(SH, darken(tgt, 0.35), opts.skinShift);
+  }
 
   /* pescoço primeiro — a gola do casaco cobre a base depois */
   ctx.fillStyle = rgb(mix(SK, SH, 0.4));
@@ -555,6 +563,34 @@ function paintBust(ctx, f, opts) {
     ctx.closePath(); ctx.stroke();
     soft(ctx, cx, my + openH + 1.6, mw * 0.5, 1.2, 'rgba(255,240,220,.28)', 0.9); // lábio inferior pega luz
     soft(ctx, cx, my + openH + 4, mw * 0.7, 2, rgb(darken(SH, 0.14), 0.5), 1.5);  // queixo caído
+  } else if (opts.smile > 0) {
+    /* SORRISO MEDONHO: cantos puxados alto/largo demais, uma fileira reta de
+       dentes brancos demais — um sorriso que nunca alcança os olhos. */
+    const smile = opts.smile, sw = mw * (1 + smile * 0.45), sy = my - smile * 1.0, lift = smile * 3.2;
+    ctx.fillStyle = 'rgb(18,9,8)'; // fenda escura
+    ctx.beginPath();
+    ctx.moveTo(cx - sw, sy); ctx.quadraticCurveTo(cx, sy + 2.6, cx + sw, sy);
+    ctx.quadraticCurveTo(cx, sy - lift, cx - sw, sy); ctx.closePath(); ctx.fill();
+    ctx.save(); // clip pra fileira de dentes
+    ctx.beginPath();
+    ctx.moveTo(cx - sw * 0.94, sy); ctx.quadraticCurveTo(cx, sy + 2.2, cx + sw * 0.94, sy);
+    ctx.quadraticCurveTo(cx, sy - lift * 0.5, cx - sw * 0.94, sy); ctx.closePath(); ctx.clip();
+    const nTs = 11, x0s = cx - sw * 0.9, tws = sw * 1.8 / nTs;
+    for (let i = 0; i < nTs; i++) {
+      ctx.fillStyle = opts.teethBright ? 'rgb(251,251,248)' : 'rgb(230,224,208)';
+      ctx.fillRect(x0s + i * tws + 0.15, sy - 2.6, tws - 0.3, 3.4);
+      ctx.strokeStyle = opts.teethBright ? 'rgba(120,150,170,.25)' : 'rgba(90,70,50,.35)';
+      ctx.lineWidth = 0.2; ctx.beginPath(); ctx.moveTo(x0s + i * tws, sy - 2.6); ctx.lineTo(x0s + i * tws, sy + 0.8); ctx.stroke();
+    }
+    if (opts.teethBright) soft(ctx, cx - 1, sy - 1.4, sw * 0.5, 1, 'rgba(255,255,255,.4)', 0.8); // esmalte brilhante demais
+    ctx.restore();
+    // lábios finos em volta
+    ctx.strokeStyle = rgb(darken(lipTone, 0.15), 0.9); ctx.lineWidth = 1.1;
+    ctx.beginPath(); ctx.moveTo(cx - sw, sy); ctx.quadraticCurveTo(cx, sy - lift, cx + sw, sy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx - sw, sy); ctx.quadraticCurveTo(cx, sy + 3.4, cx + sw, sy); ctx.stroke();
+    // o sorriso que vai longe demais (vinco extra nos cantos)
+    ctx.strokeStyle = rgb(darken(SH, 0.2), 0.45); ctx.lineWidth = 0.4;
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * sw, sy - 0.3); ctx.lineTo(cx + s * (sw + 2.6), sy - lift * 0.7); ctx.stroke(); }
   } else {
   // lábio superior
   ctx.fillStyle = rgb(darken(lipTone, 0.22), 0.95);
@@ -722,7 +758,8 @@ function paintBust(ctx, f, opts) {
     // No modo "arregalado" do exame a íris fica INTEIRA visível, com esclera
     // em volta — é exatamente isso que perturba.
     const ir = (2.9 + r() * 0.4) * (L.child ? 1.12 : 1) * (wide ? 0.92 : 1);
-    const pr = 1.45 + (sgn > 0 ? L.pupilSkew : 0);
+    // olhar morto: pupila dilatada fixa (o Alternado não acomoda à luz)
+    const pr = (1.45 + (sgn > 0 ? L.pupilSkew : 0)) * (opts.deadStare ? 1.5 : 1);
     const ixx = ex + lookX * 1.25;
     const iy = ey - 0.3 + wide * 0.4;
     const irisC = sgn > 0 ? darken(L.iris, 0.15) : L.iris; // sombra escurece de leve (sem matar a cor)
@@ -735,9 +772,16 @@ function paintBust(ctx, f, opts) {
     ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.fill();
     ctx.fillStyle = 'rgb(8,6,5)';
     ctx.beginPath(); ctx.arc(ixx, iy, pr, 0, 6.29); ctx.fill();
-    // catchlight: forte no olho da luz, fraco no da sombra
-    ctx.fillStyle = `rgba(255,252,244,${sgn < 0 ? 0.85 : 0.4})`;
-    ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, sgn < 0 ? 0.45 : 0.32, 0, 6.29); ctx.fill();
+    // catchlight: forte no olho da luz, fraco no da sombra. No olhar morto os
+    // DOIS reflexos são idênticos e vidrados (nada por trás dos olhos).
+    if (opts.deadStare) {
+      ctx.fillStyle = 'rgba(255,255,250,.85)';
+      ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, 0.42, 0, 6.29); ctx.fill();
+      soft(ctx, ixx + 0.4, iy + 0.6, ir * 0.7, ir * 0.5, 'rgba(200,220,235,.16)', 0.7); // película vidrada fria
+    } else {
+      ctx.fillStyle = `rgba(255,252,244,${sgn < 0 ? 0.85 : 0.4})`;
+      ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, sgn < 0 ? 0.45 : 0.32, 0, 6.29); ctx.fill();
+    }
     if (!wide) {
       // a pálpebra superior COBRE o topo da íris (sombra + oclusão)
       const lg = ctx.createLinearGradient(0, ey - eh - 0.5, 0, ey - eh * 0.1);
@@ -1275,14 +1319,18 @@ function portraitSVG(f) {
 }
 
 /* close-up do exame: mesmo rosto, mais perto, marcas do corpo visíveis */
+function physAnomOpts(phys) {
+  const a = (phys && phys.anom) || {};
+  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare };
+}
 function examSVG(f, phys) {
   phys = phys || {};
-  const o = {
+  const o = Object.assign({
     w: 400, h: 480, bg: '#12130f',
     zoom: 1.55, focusY: 50, paintScale: 4,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
     post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 2, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
-  };
+  }, physAnomOpts(phys));
   const open = renderPortraitCanvas(f, o).toDataURL();
   let s = `<image href="${open}" width="200" height="240" preserveAspectRatio="none"/>`;
   if (!phys.piscar) {
@@ -1567,11 +1615,11 @@ function seqSVG(frames) {
 function examZoneSVG(f, phys, zone) {
   phys = phys || {};
   const seed = faceSeedOf(f);
-  const base = {
+  const base = Object.assign({
     w: 260, h: 312, bg: '#101208', paintScale: 2.7,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
     post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.34 },
-  };
+  }, physAnomOpts(phys));
   const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
 
   if (zone === 'olhos') {
@@ -1681,24 +1729,61 @@ function silenteSVG() {
 }
 
 /* ---------- busto grande do guichê (substitui o photobash) ---------- */
-function renderActorBust(cz, cv) {
-  const W = cv.width, H = cv.height; // 220x380
-  const ctx = cv.getContext('2d');
+/* opções de anomalia do cidadão vivo (nunca vão pra foto do documento) */
+function actorAnomOpts(cz) {
+  const a = (cz && cz.anom) || {};
+  return {
+    skinShift: a.skinShift || 0, skinTone: a.skinTone,
+    smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare,
+    waxy: !!(cz && cz.phys && cz.phys.pele), veins: !!(cz && cz.phys && cz.phys.olhos),
+  };
+}
+function renderActorFrame(cz, eyesClosed) {
+  if (cz && cz.isSilente) return silentePortraitCanvas({ w: 260, h: 312 });
+  return renderPortraitCanvas(cz.features, Object.assign({
+    w: 260, h: 312, paintScale: 3.6, eyesClosed: !!eyesClosed,
+    post: { levels: 14, ditherAmp: 0.55, grain: 9, aberr: 1, scan: 0.10, tears: 1, sat: 0.38 },
+  }, actorAnomOpts(cz)));
+}
+function blitActor(cv, src) {
+  const W = cv.width, H = cv.height, ctx = cv.getContext('2d');
   ctx.clearRect(0, 0, W, H);
-  let src;
-  if (cz && cz.isSilente) {
-    src = silentePortraitCanvas({ w: 260, h: 312 });
-  } else {
-    src = renderPortraitCanvas(cz.features, {
-      w: 260, h: 312, paintScale: 3.6,
-      post: { levels: 14, ditherAmp: 0.55, grain: 9, aberr: 1, scan: 0.10, tears: 1, sat: 0.38 },
-    });
-  }
-  // busto ancorado na base do ator (cabeça grande, ombros cortando o limite)
   const scale = W / src.width * 1.32;
   const dw = src.width * scale, dh = src.height * scale;
   ctx.imageSmoothingEnabled = false;
   ctx.drawImage(src, (W - dw) / 2, H - dh + 6, dw, dh);
+}
+function renderActorBust(cz, cv) { blitActor(cv, renderActorFrame(cz, false)); }
+
+/* ---------- PISCAR AO VIVO no guichê ----------
+   O busto pisca sozinho em ritmo humano. Quem NÃO pisca (Alternado com o
+   tell 'piscar', ou o Silente) simplesmente nunca fecha os olhos — dá pra
+   perceber ali, sem exame. Determinístico visualmente, sem tocar o RNG. */
+let _blinkRAF = null, _blinkState = null;
+function startActorBlink(cz, cv) {
+  stopActorBlink();
+  const open = renderActorFrame(cz, false);
+  blitActor(cv, open);
+  const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar);
+  if (noBlink) return;                       // nunca pisca — o tell ao vivo
+  const closed = renderActorFrame(cz, true);
+  const st = { cv, open, closed, next: performance.now() + 2200 + Math.random() * 3600, closedUntil: 0, showing: 'open' };
+  _blinkState = st;
+  const loop = (t) => {
+    if (_blinkState !== st) return;           // trocou de cidadão
+    if (st.showing === 'open' && t >= st.next) {
+      blitActor(cv, closed); st.showing = 'closed'; st.closedUntil = t + 95 + Math.random() * 70;
+    } else if (st.showing === 'closed' && t >= st.closedUntil) {
+      blitActor(cv, open); st.showing = 'open';
+      st.next = t + 2200 + Math.random() * 3800 + (Math.random() < 0.2 ? -1600 : 0); // piscada dupla às vezes
+    }
+    _blinkRAF = requestAnimationFrame(loop);
+  };
+  _blinkRAF = requestAnimationFrame(loop);
+}
+function stopActorBlink() {
+  if (_blinkRAF) cancelAnimationFrame(_blinkRAF);
+  _blinkRAF = null; _blinkState = null;
 }
 
 /* ============================================================
@@ -1812,5 +1897,7 @@ window.examSVG = examSVG;
 window.examZoneSVG = examZoneSVG;
 window.silenteSVG = silenteSVG;
 window.renderActorBust = renderActorBust;
+window.startActorBlink = startActorBlink;
+window.stopActorBlink = stopActorBlink;
 window.renderPortraitCanvas = renderPortraitCanvas;
 window.analogPostCanvas = analogPostCanvas;

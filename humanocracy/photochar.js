@@ -14,10 +14,12 @@ function applyActorPhoto(cz) {
   if (!actor || !cv || !cz || typeof renderActorBust !== 'function') return false;
   if (!cz.isSilente && !cz.features) return false;
   try {
-    renderActorBust(cz, cv);
+    // busto vivo com piscar em ritmo humano (quem não pisca, não pisca —
+    // o tell percebido ali, sem exame). Fallback para frame estático.
+    if (typeof startActorBlink === 'function') startActorBlink(cz, cv);
+    else renderActorBust(cz, cv);
   } catch (e) {
-    actor.classList.remove('use-photo');
-    return false;
+    try { renderActorBust(cz, cv); } catch (e2) { actor.classList.remove('use-photo'); return false; }
   }
   actor.classList.add('use-photo');
   return true;
@@ -25,6 +27,7 @@ function applyActorPhoto(cz) {
 
 function clearActorPhoto() {
   const actor = document.getElementById('npc-actor');
+  if (typeof stopActorBlink === 'function') stopActorBlink();
   if (actor) actor.classList.remove('use-photo');
 }
 

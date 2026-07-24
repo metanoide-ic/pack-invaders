@@ -755,6 +755,30 @@ function genPhysical(cz) {
     if (cz.isAlternado) p += tellDef.altBonus;
     cz.phys[t] = chance(Math.min(p, .95));
   });
+  // ANOMALIAS VISÍVEIS (só Alternados) — espectro: a maioria passa por
+  // humana; alguns têm UM sinal visível ao vivo; poucos são claramente
+  // não-humanos. Nunca aparecem na foto do documento (só ao vivo/exame).
+  cz.anom = {};
+  if (cz.isAlternado) {
+    const roll = rnd();
+    if (roll < 0.42) {
+      // sutil: nada visível — a ambiguidade que o jogo defende
+    } else if (roll < 0.80) {
+      const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile']);
+      if (which === 'skin') { cz.anom.skinShift = 0.32 + rnd() * 0.22; cz.phys.pele = true; }
+      else if (which === 'smile') { cz.anom.smile = 0.55 + rnd() * 0.5; if (chance(.6)) { cz.anom.teethBright = true; cz.phys.dentes = true; } }
+      else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
+      else { cz.anom.deadStare = true; cz.phys.piscar = true; }
+    } else {
+      // CLARAMENTE NÃO-HUMANO — vários sinais somados
+      cz.anom.skinShift = 0.46 + rnd() * 0.3;
+      cz.anom.deadStare = true;
+      cz.anom.smile = 0.9 + rnd() * 0.5; cz.anom.teethBright = true;
+      cz.anom.clearlyNonHuman = true;
+      cz.phys.piscar = true; cz.phys.pescoco = true; cz.phys.pele = true; cz.phys.dentes = true;
+    }
+  }
+  cz.phys.anom = cz.anom;   // o exame lê as anomalias por aqui
   cz.examDone = false;
   cz.softEndorsed = false;
 }
