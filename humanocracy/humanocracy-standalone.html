@@ -4408,8 +4408,8 @@ const F_HAIR = [
   [42, 31, 22], [78, 54, 34], [116, 82, 48], [156, 126, 80],
   [116, 110, 102], [28, 26, 30], [128, 60, 34], [190, 187, 176],
 ];
-/* Íris: castanho, âmbar-mel, verde-acinzentado, azul-cinza, castanho-claro. */
-const F_IRIS = [[58, 40, 26], [120, 82, 40], [70, 92, 74], [78, 96, 112], [96, 70, 44]];
+/* Íris: castanho, âmbar-mel, verde, azul-cinza, castanho-claro (avelã). */
+const F_IRIS = [[58, 40, 26], [124, 84, 38], [64, 104, 72], [80, 100, 120], [104, 76, 46]];
 
 /* ---------- etnia → estrutura (sutil, com sobreposição deliberada) ----------
    Os "manuais de fenotipia" dos regimes existem NA FICÇÃO — e são
@@ -4954,7 +4954,7 @@ function paintBust(ctx, f, opts) {
     // SOMBRA é mais escuro: dois olhos idênticos e igualmente claros é o que
     // dava o ar de "olhos colados na cara".
     const scleraBase = opts.brightSclera ? [234, 232, 220] : [196, 188, 166];
-    ctx.fillStyle = rgb(sgn > 0 ? darken(scleraBase, 0.34) : scleraBase);
+    ctx.fillStyle = rgb(sgn > 0 ? darken(scleraBase, 0.26) : scleraBase);
     ctx.beginPath();
     ctx.moveTo(ex - ew, ey);
     ctx.quadraticCurveTo(ex - ew * 0.3, ey - eh - 0.6, ex + ew * 0.5, ey - eh + 0.2);
@@ -4993,7 +4993,7 @@ function paintBust(ctx, f, opts) {
     const pr = 1.45 + (sgn > 0 ? L.pupilSkew : 0);
     const ixx = ex + lookX * 1.25;
     const iy = ey - 0.3 + wide * 0.4;
-    const irisC = sgn > 0 ? darken(L.iris, 0.28) : L.iris; // íris do lado sombrio mais escura
+    const irisC = sgn > 0 ? darken(L.iris, 0.15) : L.iris; // sombra escurece de leve (sem matar a cor)
     const ig = ctx.createRadialGradient(ixx - 0.6, iy - 0.6, 0.4, ixx, iy, ir);
     ig.addColorStop(0, rgb(lighten(irisC, 0.12)));  // borda superior-esquerda pega luz
     ig.addColorStop(0.55, rgb(irisC));
