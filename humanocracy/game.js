@@ -401,12 +401,12 @@ const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919',
    prova etnia nenhuma. faces.js aplica desvios estruturais igualmente
    sutis a partir de f.etnia. */
 const ETHNIC_PHENO = {
-  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS: 0 castanho,1 mel,2 verde,3 azul,4 castanho-claro)
-  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 0, 4, 2, 3] },
-  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 5, 0, 7, 2],    eyes: [3, 3, 2, 4, 0] },
-  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 0, 4, 1] },
+  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS: 0 castanho,1 mel,2 verde,3 azul-cinza,4 avelã,5 azul claro)
+  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 0, 4, 2, 3, 5] },
+  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 5, 0, 7, 2],    eyes: [3, 5, 5, 2, 4, 0] },
+  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 0, 4, 1, 3] },
   bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 1] },
-  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [2, 3, 0, 4] },
+  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [2, 3, 5, 0, 4] },
   tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 1] },
 };
 function genFeatures(sexo, idade, etnia) {
@@ -420,7 +420,7 @@ function genFeatures(sexo, idade, etnia) {
     // estilo de cabelo por sexo/idade: mulheres nunca recebem "entradas" (hs2);
     // homens só recebem entradas com mais idade (senão vira careca aleatória).
     hairStyle: sexo === 'f' ? pick([0, 1, 1, 3]) : (idade > 42 ? ri(0, 3) : pick([0, 1, 3, 0])),
-    eyes: ph ? pick(ph.eyes) : ri(0, 4), mouth: ri(0, 2),
+    eyes: ph ? pick(ph.eyes) : ri(0, 5), mouth: ri(0, 2),
     beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço

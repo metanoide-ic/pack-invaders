@@ -53,8 +53,9 @@ const F_HAIR = [
   [42, 31, 22], [78, 54, 34], [116, 82, 48], [156, 126, 80],
   [116, 110, 102], [28, 26, 30], [128, 60, 34], [190, 187, 176],
 ];
-/* Íris: castanho, âmbar-mel, verde, azul-cinza, castanho-claro (avelã). */
-const F_IRIS = [[58, 40, 26], [124, 84, 38], [64, 104, 72], [80, 100, 120], [104, 76, 46]];
+/* Íris: 0 castanho · 1 âmbar-mel · 2 verde · 3 azul-cinza (escuro) ·
+   4 castanho-claro (avelã) · 5 azul claro/gelo. */
+const F_IRIS = [[58, 40, 26], [124, 84, 38], [64, 104, 72], [80, 100, 120], [104, 76, 46], [122, 156, 186]];
 
 /* ---------- etnia → estrutura (sutil, com sobreposição deliberada) ----------
    Os "manuais de fenotipia" dos regimes existem NA FICÇÃO — e são
