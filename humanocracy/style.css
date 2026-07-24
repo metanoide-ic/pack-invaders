@@ -725,6 +725,26 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 @keyframes detected-flash { 0% { background:rgba(200,70,50,.7); } 100% { background:rgba(140,47,36,.35); } }
 .exam-log .obs { color:var(--ink-dim); }
 
+/* ============ MAPA / CARTA DE FRONTEIRAS ============ */
+.map-panel { width:min(1000px, 96vw); }
+.map-grid { display:grid; grid-template-columns: 1fr 300px; min-height:0; }
+#map-canvas { width:100%; height:auto; display:block; background:#0c0f0a; cursor:pointer; image-rendering:auto; }
+.map-info {
+  padding:14px 16px; overflow-y:auto; border-left:1px solid var(--ink-dim);
+  background-color:var(--panel);
+  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+}
+.map-info .mi-empty { color:var(--ink-dim); font-style:italic; line-height:1.7; }
+.map-info .mi-seal { font-size:40px; text-align:center; color:var(--accent2); }
+.map-info .mi-name { font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:2px; font-size:20px; text-align:center; color:var(--ink); }
+.map-info .mi-adj { text-align:center; color:var(--ink-dim); font-size:11px; margin-bottom:10px; }
+.map-info .mi-sec { font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:1px; font-size:11px; color:var(--accent2); margin:10px 0 3px; border-bottom:1px solid var(--ink-dim); padding-bottom:2px; }
+.map-info .mi-row { font-size:12px; line-height:1.6; }
+.map-info .mi-status { padding:6px 8px; margin-top:10px; font-family:var(--font-display); font-weight:600; letter-spacing:1px; font-size:12px; text-align:center; }
+.map-info .mi-status.ok { color:#9fce8f; border:1px solid var(--stamp-green); }
+.map-info .mi-status.ban { color:#d98b7c; border:1px solid var(--stamp-red); background:rgba(140,47,36,.15); }
+@media (max-width:760px){ .map-grid { grid-template-columns:1fr; } .map-info { border-left:none; border-top:1px solid var(--ink-dim); } }
+
 /* ============ BAGAGEM ============ */
 .bag-body { padding:14px; overflow-y:auto; }
 .bag-hint { font-size:11px; color:var(--ink-dim); margin-bottom:10px; }

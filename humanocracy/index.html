@@ -67,6 +67,7 @@
           <span id="money-hud">₴ 0</span>
         </div>
         <button id="btn-music" class="btn-small" title="Música ligada/desligada">♪</button>
+        <button id="btn-map" class="btn-small" title="Carta de fronteiras">🗺 MAPA</button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -226,6 +227,20 @@
         <div class="bag-body">
           <div class="bag-hint">No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.</div>
           <div id="bag-items"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== MAPA / CARTA DE FRONTEIRAS ===== -->
+    <div id="map-overlay" class="exam-overlay">
+      <div class="exam-panel map-panel">
+        <div class="exam-head">
+          <span>CARTA DE FRONTEIRAS — clique num país</span>
+          <button id="btn-map-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="map-grid">
+          <canvas id="map-canvas" width="720" height="560"></canvas>
+          <div class="map-info" id="map-info"></div>
         </div>
       </div>
     </div>

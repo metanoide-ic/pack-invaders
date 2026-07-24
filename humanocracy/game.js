@@ -1603,6 +1603,116 @@ function renderRulebook() {
   $('rb-countries').innerHTML = ch;
 }
 
+/* ---------- CARTA DE FRONTEIRAS (mapa clicável) ---------- */
+let MAP_SEL = null;
+function mapBlob(ctx, x, y, r, seed) {
+  // mancha orgânica (círculo com ruído seedado) — costa recortada
+  const rr = makeRng(seed);
+  ctx.beginPath();
+  const N = 26;
+  for (let i = 0; i <= N; i++) {
+    const a = i / N * Math.PI * 2;
+    const wob = r * (0.82 + rr() * 0.34 + Math.sin(a * 3 + seed) * 0.06);
+    const px = x + Math.cos(a) * wob, py = y + Math.sin(a) * wob * 0.92;
+    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+function drawWorldMap() {
+  const cv = $('map-canvas'); if (!cv) return;
+  const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
+  const S = Math.min(W, H) / 100; const ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
+  const P = (x, y) => [ox + x * S, oy + y * S];
+  // mar / papel
+  ctx.fillStyle = '#12161a'; ctx.fillRect(0, 0, W, H);
+  const sea = ctx.createLinearGradient(0, 0, W, H); sea.addColorStop(0, '#18202a'); sea.addColorStop(1, '#10161c');
+  ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
+  // grade de meridianos (carta náutica)
+  ctx.strokeStyle = 'rgba(120,150,160,.06)'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 10; i++) { const [x1] = P(i * 10, 0); ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke(); const [, y1] = P(0, i * 10); ctx.beginPath(); ctx.moveTo(0, y1); ctx.lineTo(W, y1); ctx.stroke(); }
+  // países
+  let si = 1;
+  COUNTRY_IDS.forEach(k => {
+    const m = MAP_LAYOUT[k]; if (!m) return;
+    const c = COUNTRIES[k];
+    const [cxp, cyp] = P(m.x, m.y); const rp = m.r * S;
+    const sel = MAP_SEL === k;
+    // sombra da terra no mar
+    ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.restore();
+    // terra
+    mapBlob(ctx, cxp, cyp, rp, si * 97 + 5);
+    const g = ctx.createRadialGradient(cxp - rp * 0.3, cyp - rp * 0.3, rp * 0.2, cxp, cyp, rp);
+    g.addColorStop(0, sel ? shade(c.color, 34) : shade(c.color, 12)); g.addColorStop(1, shade(c.color, -18));
+    ctx.fillStyle = g; ctx.fill();
+    ctx.strokeStyle = sel ? '#e8d8a0' : 'rgba(0,0,0,.5)'; ctx.lineWidth = sel ? 2.5 : 1.2; ctx.stroke();
+    // banido hoje?
+    const banned = countryBannedToday(k);
+    if (banned) { ctx.save(); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.clip(); ctx.strokeStyle = 'rgba(200,60,50,.5)'; ctx.lineWidth = 2; for (let d = -rp * 2; d < rp * 2; d += 6) { ctx.beginPath(); ctx.moveTo(cxp + d, cyp - rp); ctx.lineTo(cxp + d + rp * 2, cyp + rp); ctx.stroke(); } ctx.restore(); }
+    // selo + nome
+    ctx.fillStyle = '#f0e8d0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = `${Math.round(rp * 0.7)}px serif`; ctx.fillText(c.seal, cxp, cyp - rp * 0.12);
+    ctx.font = `bold ${Math.round(rp * 0.32)}px "Oswald", sans-serif`;
+    ctx.fillStyle = '#e8ddc4'; ctx.fillText(c.name.toUpperCase(), cxp, cyp + rp * 0.5);
+    si++;
+  });
+  // marcador do POSTO 7 na borda leste de Osteria
+  const om = MAP_LAYOUT.osteria; const [px7, py7] = P(om.x + om.r + 1.5, om.y);
+  ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.arc(px7, py7, 3.5, 0, 6.29); ctx.fill();
+  ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px7, py7, 6, 0, 6.29); ctx.stroke();
+  ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "Oswald", sans-serif'; ctx.textAlign = 'left'; ctx.fillText('POSTO 7', px7 + 9, py7);
+  // rosa dos ventos
+  const [rx, ry] = P(93, 92);
+  ctx.strokeStyle = 'rgba(200,190,160,.4)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
+  ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px serif'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
+}
+function shade(hex, amt) {
+  const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
+  r = Math.max(0, Math.min(255, r)); g = Math.max(0, Math.min(255, g)); b = Math.max(0, Math.min(255, b));
+  return `rgb(${r},${g},${b})`;
+}
+function countryBannedToday(k) {
+  const rules = rulesForDay(S.day);
+  return (rules.includes('banKrestov') && k === 'krestov') ||
+    (rules.includes('banLantravia') && k === 'lantravia') ||
+    (rules.includes('banTaranstan') && k === 'taranstan');
+}
+function selectMapCountry(k) {
+  MAP_SEL = k; drawWorldMap();
+  const info = $('map-info'); if (!info) return;
+  if (!k) { info.innerHTML = `<div class="mi-empty">${T('Clique num país para ver seus dados, selo e o estado da fronteira hoje.')}</div>`; return; }
+  const c = COUNTRIES[k];
+  const banned = countryBannedToday(k);
+  const eth = (c.ethnics || []).map(e => ETHNIC_LABEL[e] || e).join(', ');
+  let html = `<div class="mi-seal">${c.seal}</div>`;
+  html += `<div class="mi-name">${c.name}</div>`;
+  html += `<div class="mi-adj">${T('gentílico: ')}${c.adj} · ${c.prefix}</div>`;
+  html += `<div class="mi-sec">${T('CIDADES')}</div><div class="mi-row">${c.cities.join(' · ')}</div>`;
+  html += `<div class="mi-sec">${T('POVOS')}</div><div class="mi-row">${eth}</div>`;
+  html += `<div class="mi-status ${banned ? 'ban' : 'ok'}">${banned ? '⃠ ' + T('ENTRADA PROIBIDA HOJE') : '✓ ' + T('ENTRADA PERMITIDA')}</div>`;
+  info.innerHTML = html;
+}
+function openMap() {
+  const cv = $('map-canvas'); if (!cv) return;
+  MAP_SEL = null;
+  drawWorldMap(); selectMapCountry(null);
+  $('map-overlay').classList.add('active');
+  if (!cv._wired) {
+    cv._wired = true;
+    cv.addEventListener('click', (e) => {
+      const rect = cv.getBoundingClientRect();
+      const mx = (e.clientX - rect.left) / rect.width * cv.width;
+      const my = (e.clientY - rect.top) / rect.height * cv.height;
+      const S = Math.min(cv.width, cv.height) / 100, ox = (cv.width - 100 * S) / 2, oy = (cv.height - 100 * S) / 2;
+      const lx = (mx - ox) / S, ly = (my - oy) / S;
+      let best = null, bd = 1e9;
+      COUNTRY_IDS.forEach(k => { const m = MAP_LAYOUT[k]; if (!m) return; const d = Math.hypot(lx - m.x, ly - m.y); if (d < m.r && d < bd) { bd = d; best = k; } });
+      if (best) { selectMapCountry(best); try { sfx('click'); } catch (e2) {} }
+    });
+  }
+}
+
 /* ---------- INTERROGATÓRIO ---------- */
 function buildAskButtons(cz) {
   const row = $('ask-row'); row.innerHTML = '';
@@ -2335,6 +2445,8 @@ $('btn-gowork').onclick = () => {
 $('btn-gohome').onclick = goHome;
 $('btn-endshift').onclick = () => { if (shift.running) endShift(); };
 $('btn-bulletin').onclick = () => showBulletin(null);
+$('btn-map').onclick = openMap;
+$('btn-map-close').onclick = () => $('map-overlay').classList.remove('active');
 $('btn-inspect').onclick = toggleInspect;
 $('btn-exam').onclick = openExam;
 $('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');

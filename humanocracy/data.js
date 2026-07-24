@@ -91,6 +91,23 @@ const COUNTRIES = {
 };
 const COUNTRY_IDS = Object.keys(COUNTRIES);
 
+/* ---------- LAYOUT DA CARTA DE FRONTEIRAS (espaço lógico 100x100) ----------
+   Osteria no centro-leste (o Posto 7 fica na sua borda leste). Os vizinhos
+   em volta, agrupados pela "vibe" da lore (nórdicos ao norte, persa a
+   sudeste, etc.). r = raio da mancha do país. */
+const MAP_LAYOUT = {
+  linestan:      { x: 19, y: 18, r: 10.5 },
+  krestov:       { x: 43, y: 13, r: 12 },
+  taranstan:     { x: 73, y: 17, r: 13 },
+  lantravia:     { x: 15, y: 45, r: 11.5 },
+  osteria:       { x: 46, y: 47, r: 14 },
+  kranton:       { x: 75, y: 45, r: 11 },
+  cantalabria:   { x: 19, y: 76, r: 11.5 },
+  frimia:        { x: 47, y: 79, r: 12 },
+  novarepublica: { x: 71, y: 75, r: 11 },
+  baharzad:      { x: 89, y: 68, r: 11 },
+};
+
 const ETHNIC_LABEL = {
   osano: 'Osana', nulio: 'Núlia', mestico: 'Mista',
   bahari: 'Bahari', tarano: 'Tarana', cantalo: 'Cantala',
