@@ -401,13 +401,16 @@ const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919',
    prova etnia nenhuma. faces.js aplica desvios estruturais igualmente
    sutis a partir de f.etnia. */
 const ETHNIC_PHENO = {
-  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS: 0 castanho,1 mel,2 verde,3 azul-cinza,4 avelã,5 azul claro)
-  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 0, 4, 2, 3, 5] },
-  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 5, 0, 7, 2],    eyes: [3, 5, 5, 2, 4, 0] },
-  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 0, 4, 1, 3] },
-  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 1] },
-  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [2, 3, 5, 0, 4] },
-  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 1] },
+  //  Mundo centro/leste-europeu + centro-asiático + persa (à la Arstotzka):
+  //  TODOS de pele clara a oliva — nenhum tom sub-saariano (índice 4 do SKINS
+  //  não é usado). SKINS: 0 clara-rosada,1 clara-oliva,2 média-dourada,3 morena,5 muito clara.
+  //          pele                     cabelo                       olhos (0 cast,1 mel,2 verde,3 azul-cinza,4 avelã,5 azul claro)
+  osano:   { skin: [0, 1, 1, 5, 2, 0], hair: [0, 1, 1, 2, 2, 5, 3], eyes: [0, 0, 4, 2, 3, 5] }, // europeu genérico
+  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 3, 7, 2, 5, 1],    eyes: [3, 5, 5, 2, 4, 0] }, // nórdico/eslavo — palidez
+  mestico: { skin: [0, 1, 1, 2, 5],    hair: [0, 1, 2, 5, 3],       eyes: [0, 0, 4, 1, 3, 5] }, // misto europeu
+  bahari:  { skin: [1, 2, 2, 3, 1],    hair: [5, 5, 0, 1],          eyes: [0, 0, 1, 4] },       // persa — oliva/moreno claro
+  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [5, 0, 0, 1, 2, 6],    eyes: [2, 3, 0, 4, 5] },    // ibérico/latino
+  tarano:  { skin: [1, 1, 2, 2, 0],    hair: [5, 5, 0, 1],          eyes: [0, 0, 1, 4] },       // centro-asiático — oliva claro
 };
 function genFeatures(sexo, idade, etnia) {
   idade = idade || ri(20, 60);
@@ -633,6 +636,19 @@ function makeCitizen(day, opts) {
   const nasc = randomDateAround(day, -20000, -6600);
   const idade = Math.floor((worldDate(day).ts - nasc.ts) / 31557600000);
   const features = genFeatures(sexo, idade, etnia);
+  // roupa: soldados sempre de uniforme; alguns homens são oficiais/guardas;
+  // senão, civil com cachecol ocasional (fronteira fria). Coerente com o país.
+  if (!opts.features) {
+    const us = UNIFORM_STYLES[pais] || UNIFORM_STYLES._default;
+    if (profissao === 'soldado' || (sexo === 'm' && idade >= 22 && chance(.07))) {
+      features.uniform = true;
+      features.uniformColor = us.color; features.uniformTrim = us.trim; features.seal = c.seal;
+      features.hat = chance(.55) ? 3 : 0;          // boné militar às vezes
+      features.beard = features.beard === 1 ? 0 : features.beard; // tropa raspada
+    } else if (!features.hat && chance(.4)) {
+      features.scarf = pick(SCARF_COLORS);
+    }
+  }
 
   const cz = {
     nome, sexo, pais, etnia, profissao, cidade,
@@ -1010,7 +1026,19 @@ function stopAmbience() {
 /* ---------- FILA VIVA (canvas) ---------- */
 const Q = { figs: [], snow: [], raf: null, t: 0, walker: null };
 const COAT_COLORS = ['#2e2a24', '#33302a', '#3a3128', '#2a2e33', '#38332e', '#403428', '#2c3230'];
-const SCARF_COLORS = ['#6b4a3a', '#4a5648', '#5a3a38', '#3a4a58', '#6a5a38', '#54484f'];
+const SCARF_COLORS = ['#8c4a3a', '#4a6a52', '#7a3a3a', '#3a5a78', '#9a7a38', '#6a4a6a', '#a86a44', '#5a6a4a'];
+/* faces.js lê scarf como [r,g,b]; converte os hex acima quando preciso. */
+/* Paletas de uniforme por país (cor do pano + vivo/insígnia) — o "soviético" da lore. */
+const UNIFORM_STYLES = {
+  _default:   { color: [60, 68, 50], trim: [150, 44, 36] },  // verde-campo, vivo vermelho
+  osteria:    { color: [58, 66, 48], trim: [120, 96, 40] },  // verde republicano, vivo âmbar
+  taranstan:  { color: [74, 42, 36], trim: [186, 62, 46] },  // vermelho — o mais "soviético"
+  krestov:    { color: [52, 55, 63], trim: [142, 42, 40] },  // azul-acinzentado
+  lantravia:  { color: [46, 49, 44], trim: [30, 30, 34] },   // cinza sóbrio, vivo quase preto
+  baharzad:   { color: [80, 68, 40], trim: [150, 120, 50] }, // caqui/areia
+  kranton:    { color: [58, 60, 44], trim: [110, 90, 44] },
+  linestan:   { color: [54, 58, 66], trim: [120, 120, 130] },
+};
 function makeFig(x) {
   return {
     x, tx: x, phase: rnd() * 6.28, h: 32 + ri(0, 9),

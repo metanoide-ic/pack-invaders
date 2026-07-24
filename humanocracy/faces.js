@@ -73,6 +73,7 @@ const ETHNIC_SHAPE = {
 };
 const ETHNIC_NEUTRAL = { nose: 0, jaw: 0, eyeH: 0, lip: 0, cheek: 0 };
 
+function toRGB(c) { if (Array.isArray(c)) return c; const n = parseInt(String(c).slice(1), 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255]; }
 function rgb(c, a) { return `rgba(${c[0] | 0},${c[1] | 0},${c[2] | 0},${a == null ? 1 : a})`; }
 function mix(a, b, t) { return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
 function lighten(c, t) { return mix(c, [255, 250, 238], t); }
@@ -219,21 +220,99 @@ function paintBust(ctx, f, opts) {
   soft(ctx, 22, 108, 3, 13, 'rgba(0,0,0,.30)', 2.2);
   soft(ctx, 78, 108, 3, 13, 'rgba(0,0,0,.38)', 2.2);
   soft(ctx, 33, 114, 2.4, 9, 'rgba(0,0,0,.22)', 2);
-  // abertura central: camisa e botão
-  ctx.fillStyle = 'rgba(12,11,8,.85)';
-  ctx.beginPath(); ctx.moveTo(46, 96); ctx.lineTo(54, 96); ctx.lineTo(53, 122); ctx.lineTo(47, 122); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgb(148,140,116)';
-  ctx.beginPath(); ctx.moveTo(47.5, 96); ctx.lineTo(52.5, 96); ctx.lineTo(51.8, 122); ctx.lineTo(48.2, 122); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(70,62,44,.9)';
-  for (const by of [103, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.8, 0, 6.29); ctx.fill(); }
-  // gola dobrada (duas abas pegando luz de jeitos diferentes)
-  ctx.fillStyle = rgb(mix([45, 46, 38], [235, 238, 210], 0.10));
-  ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.lineTo(33, 93.5); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = rgb(mix([45, 46, 38], [10, 10, 8], 0.35));
-  ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.lineTo(67, 93.5); ctx.closePath(); ctx.fill();
-  ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5;
-  ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.stroke();
+  if (f.uniform) {
+    /* UNIFORME militar (gymnastyorka): gola alta com vivo, patas de gola com
+       estrela, fileira de botões e ombreiras — o "soviético" da lore. */
+    const uc = f.uniformColor || [58, 66, 48];
+    const utrim = f.uniformTrim || [150, 40, 34];
+    const star = (sx, sy, rad, col) => { // estrela de 5 pontas
+      ctx.fillStyle = col; ctx.beginPath();
+      for (let k = 0; k < 5; k++) {
+        const a1 = -Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566;
+        ctx.lineTo(sx + Math.cos(a1) * rad, sy + Math.sin(a1) * rad);
+        ctx.lineTo(sx + Math.cos(a2) * rad * 0.42, sy + Math.sin(a2) * rad * 0.42);
+      }
+      ctx.closePath(); ctx.fill();
+    };
+    // recobre o peito com a cor do uniforme (o casaco base era escuro)
+    ctx.fillStyle = rgb(uc); ctx.fillRect(20, 92, 60, 32);
+    const ug = ctx.createLinearGradient(20, 0, 80, 0);
+    ug.addColorStop(0, 'rgba(235,238,210,.10)'); ug.addColorStop(0.5, 'rgba(0,0,0,0)'); ug.addColorStop(1, 'rgba(0,0,0,.4)');
+    ctx.fillStyle = ug; ctx.fillRect(20, 92, 60, 32);
+    // placket central (abotoamento lateral) + fileira de botões
+    ctx.strokeStyle = rgb(darken(uc, 0.3), 0.8); ctx.lineWidth = 0.6;
+    ctx.beginPath(); ctx.moveTo(46, 96); ctx.lineTo(45, 124); ctx.stroke();
+    for (const by of [100, 106, 112, 118]) {
+      ctx.fillStyle = rgb(lighten(uc, 0.35)); ctx.beginPath(); ctx.arc(46, by, 0.95, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.beginPath(); ctx.arc(46.2, by + 0.3, 0.45, 0, 6.29); ctx.fill();
+    }
+    // gola alta (stand collar) com vivo colorido
+    ctx.fillStyle = rgb(darken(uc, 0.08));
+    ctx.beginPath(); ctx.moveTo(37, 93); ctx.quadraticCurveTo(50, 88.5, 63, 93);
+    ctx.lineTo(63, 98); ctx.quadraticCurveTo(50, 94, 37, 98); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = rgb(utrim, 0.95); ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(37, 97.4); ctx.quadraticCurveTo(50, 93.4, 63, 97.4); ctx.stroke();
+    // patas de gola com estrela
+    for (const s of [-1, 1]) {
+      const tx = 50 + s * 8.5;
+      ctx.save(); ctx.translate(tx, 94.2); ctx.rotate(s * 0.12);
+      ctx.fillStyle = rgb(utrim); ctx.fillRect(-3.2, -1.7, 6.4, 3.4);
+      ctx.strokeStyle = 'rgba(240,230,200,.5)'; ctx.lineWidth = 0.3; ctx.strokeRect(-3.2, -1.7, 6.4, 3.4);
+      ctx.restore();
+      star(tx, 94.2, 1.5, 'rgba(244,232,180,.95)');
+    }
+    // ombreiras (shoulder boards) com vivo e pip
+    for (const s of [-1, 1]) {
+      const ox = 50 + s * 21;
+      ctx.save(); ctx.translate(ox, 90.5); ctx.rotate(s * 0.22);
+      ctx.fillStyle = rgb(utrim); ctx.fillRect(-4, -2.2, 8, 4.4);
+      ctx.strokeStyle = 'rgba(240,220,150,.7)'; ctx.lineWidth = 0.35; ctx.strokeRect(-4, -2.2, 8, 4.4);
+      ctx.fillStyle = 'rgba(244,228,150,.9)'; ctx.beginPath(); ctx.arc(0, 0, 0.7, 0, 6.29); ctx.fill();
+      ctx.restore();
+    }
+    // emblema do PAÍS no peito (o selo nacional em disco de metal)
+    if (f.seal) {
+      ctx.fillStyle = rgb(darken(utrim, 0.2)); ctx.beginPath(); ctx.arc(60, 106, 3.4, 0, 6.29); ctx.fill();
+      ctx.strokeStyle = 'rgba(244,228,150,.7)'; ctx.lineWidth = 0.4; ctx.stroke();
+      ctx.fillStyle = 'rgba(246,236,196,.95)';
+      ctx.font = '4.4px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(f.seal, 60, 106.3);
+    }
+  } else {
+    // abertura central: camisa e botão
+    ctx.fillStyle = 'rgba(12,11,8,.85)';
+    ctx.beginPath(); ctx.moveTo(46, 96); ctx.lineTo(54, 96); ctx.lineTo(53, 122); ctx.lineTo(47, 122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgb(148,140,116)';
+    ctx.beginPath(); ctx.moveTo(47.5, 96); ctx.lineTo(52.5, 96); ctx.lineTo(51.8, 122); ctx.lineTo(48.2, 122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(70,62,44,.9)';
+    for (const by of [103, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.8, 0, 6.29); ctx.fill(); }
+    // gola dobrada (duas abas pegando luz de jeitos diferentes)
+    ctx.fillStyle = rgb(mix([45, 46, 38], [235, 238, 210], 0.10));
+    ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.lineTo(33, 93.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rgb(mix([45, 46, 38], [10, 10, 8], 0.35));
+    ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.lineTo(67, 93.5); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5;
+    ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.stroke();
+    // cachecol de lã ocasional (civil, no frio) — enrolado no pescoço
+    if (f.scarf) {
+      const sc = toRGB(f.scarf);
+      // volta principal (mais grossa e mais clara pra ler bem)
+      ctx.fillStyle = rgb(sc);
+      ctx.beginPath(); ctx.moveTo(35, 88); ctx.quadraticCurveTo(50, 95, 65, 88);
+      ctx.lineTo(65, 96); ctx.quadraticCurveTo(50, 103, 35, 96); ctx.closePath(); ctx.fill();
+      // luz/sombra na lã
+      ctx.fillStyle = rgb(lighten(sc, 0.22), 0.5); ctx.beginPath(); ctx.moveTo(35, 89); ctx.quadraticCurveTo(46, 94, 50, 94.5); ctx.lineTo(50, 91); ctx.quadraticCurveTo(44, 90.5, 35, 88.5); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = rgb(darken(sc, 0.28), 0.5); ctx.beginPath(); ctx.moveTo(65, 89); ctx.quadraticCurveTo(56, 94, 50, 94.5); ctx.lineTo(50, 91); ctx.quadraticCurveTo(58, 90.5, 65, 88.5); ctx.closePath(); ctx.fill();
+      // ponta pendurada
+      ctx.fillStyle = rgb(darken(sc, 0.1)); ctx.fillRect(44, 95, 6, 16);
+      ctx.fillStyle = rgb(lighten(sc, 0.15), 0.5); ctx.fillRect(44.5, 95, 2, 16);
+      // trama tricô
+      ctx.strokeStyle = rgb(darken(sc, 0.3), 0.5); ctx.lineWidth = 0.35;
+      for (let i = 0; i < 6; i++) { const yy = 89 + i * 1.3; ctx.beginPath(); ctx.moveTo(36, yy); ctx.lineTo(64, yy); ctx.stroke(); }
+      for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(44.5, 96 + i * 3.2); ctx.lineTo(49.5, 96 + i * 3.2); ctx.stroke(); }
+    }
+  }
   ctx.restore();
   // sombra da cabeça caindo no peito
   soft(ctx, 50, 92, 15, 5, 'rgba(0,0,0,.45)', 2.6);
@@ -280,9 +359,16 @@ function paintBust(ctx, f, opts) {
   chiar.addColorStop(0.4, 'rgba(0,0,0,0)');
   chiar.addColorStop(0.58, rgb(mix(SH, [150, 70, 40], 0.35), 0.14)); // terminador quente
   chiar.addColorStop(0.74, rgb(darken(SH, 0.08), 0.3));
-  chiar.addColorStop(0.93, rgb(darken(SH, 0.24), 0.64));            // núcleo da sombra
-  chiar.addColorStop(1, rgb(mix(SH, [90, 96, 120], 0.5), 0.34));    // bounce frio na borda
+  chiar.addColorStop(0.93, rgb(darken(SH, 0.18), 0.56));           // núcleo da sombra (menos fundo)
+  chiar.addColorStop(1, rgb(mix(SH, [90, 96, 120], 0.5), 0.32));   // bounce frio na borda
   ctx.fillStyle = chiar; ctx.fillRect(0, 0, 100, 120);
+  // FILL LIGHT ambiente: o lado da sombra recebe um respiro de luz (a sala
+  // não é um vazio) — nenhum plano cai a preto puro, e peles mais escuras
+  // param de sumir no fundo.
+  const fillg = ctx.createLinearGradient(cx + L.fw + L.ax, 0, cx - L.fw * 0.1, 0);
+  fillg.addColorStop(0, rgb(lighten(SK, 0.12), 0.18));
+  fillg.addColorStop(0.65, 'rgba(0,0,0,0)');
+  ctx.fillStyle = fillg; ctx.fillRect(0, 0, 100, 120);
 
   /* SIDE PLANES do maxilar (mais duros que antes: um plano, não um borrão).
      Do zigomático até o ângulo gonial, no lado da sombra bem mais fundo. */
@@ -1007,6 +1093,44 @@ function paintBust(ctx, f, opts) {
     // nó sob o queixo
     ctx.fillStyle = 'rgb(82,58,48)';
     ctx.beginPath(); ctx.ellipse(cx - 3, 82, 3.2, 2.2, 0.5, 0, 6.29); ctx.fill();
+  } else if (f.hat === 3) {
+    /* BONÉ MILITAR de pala (peaked cap) — para os uniformizados */
+    const uc = f.uniformColor || [58, 66, 48], utrim = f.uniformTrim || [150, 40, 34];
+    const bw = L.fw + 3.5;
+    // pala (aba dura, escura, brilhante)
+    ctx.fillStyle = 'rgb(18,16,13)';
+    ctx.beginPath(); ctx.ellipse(cx, 30.5, bw * 0.82, 3, 0, 0.05, 3.14 - 0.05); ctx.fill();
+    ctx.fillStyle = 'rgba(80,80,74,.5)'; // brilho da pala
+    ctx.beginPath(); ctx.ellipse(cx - 3, 30, bw * 0.5, 1, 0, 3.2, 6.2); ctx.fill();
+    // faixa (cinta) da cor do vivo
+    ctx.fillStyle = rgb(darken(utrim, 0.1));
+    ctx.beginPath(); ctx.moveTo(cx - bw * 0.8, 27); ctx.lineTo(cx + bw * 0.8, 27); ctx.lineTo(cx + bw * 0.78, 24); ctx.lineTo(cx - bw * 0.78, 24); ctx.closePath(); ctx.fill();
+    // copa (crown) alta e um pouco caída à frente
+    ctx.fillStyle = rgb(uc);
+    ctx.beginPath();
+    ctx.moveTo(cx - bw * 0.78, 24.5);
+    ctx.bezierCurveTo(cx - bw * 0.9, 14, cx - bw * 0.5, 10.5, cx, 10.5);
+    ctx.bezierCurveTo(cx + bw * 0.55, 10.5, cx + bw * 0.95, 14, cx + bw * 0.82, 24.5);
+    ctx.closePath(); ctx.fill();
+    // modelagem da copa (luz esquerda, sombra direita)
+    const cpg = ctx.createLinearGradient(cx - bw, 0, cx + bw, 0);
+    cpg.addColorStop(0, 'rgba(235,238,210,.14)'); cpg.addColorStop(0.5, 'rgba(0,0,0,0)'); cpg.addColorStop(1, 'rgba(0,0,0,.4)');
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - bw * 0.78, 24.5); ctx.bezierCurveTo(cx - bw * 0.9, 14, cx - bw * 0.5, 10.5, cx, 10.5);
+    ctx.bezierCurveTo(cx + bw * 0.55, 10.5, cx + bw * 0.95, 14, cx + bw * 0.82, 24.5); ctx.closePath(); ctx.clip();
+    ctx.fillStyle = cpg; ctx.fillRect(cx - bw, 9, bw * 2, 18);
+    ctx.restore();
+    // emblema: estrela na frente da cinta
+    ctx.save(); ctx.fillStyle = 'rgba(244,232,180,.95)';
+    ctx.beginPath();
+    for (let k = 0; k < 5; k++) {
+      const a1 = -Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566, R = 2;
+      ctx.lineTo(cx + Math.cos(a1) * R, 25.2 + Math.sin(a1) * R);
+      ctx.lineTo(cx + Math.cos(a2) * R * 0.42, 25.2 + Math.sin(a2) * R * 0.42);
+    }
+    ctx.closePath(); ctx.fill(); ctx.restore();
+    soft(ctx, cx, 32.5, L.fw * 0.85, 2.4, 'rgba(6,5,4,.5)', 2); // sombra da pala na testa
   }
 
   ctx.restore(); // fim da inclinação da cabeça
