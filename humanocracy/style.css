@@ -329,6 +329,8 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .doc-seal { text-align:center; font-size:22px; opacity:.75; cursor:pointer; }
 .doc-seal.picked { outline:2px solid var(--stamp-red); }
 .doc-stamped { position:absolute; top:30%; left:12%; font-size:26px; font-weight:bold; transform:rotate(-18deg); opacity:.85; pointer-events:none; letter-spacing:2px; }
+.doc-stamped.is-canvas { top:24%; left:6%; opacity:.9; filter: drop-shadow(0 1px 1px rgba(0,0,0,.25)); }
+.doc-stamped.is-canvas canvas { display:block; width:138px; height:auto; }
 .stamp-ok { color:var(--stamp-green); border:3px solid var(--stamp-green); padding:2px 10px; }
 .stamp-no { color:var(--stamp-red); border:3px solid var(--stamp-red); padding:2px 10px; }
 .bribe-note {

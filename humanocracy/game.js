@@ -2031,12 +2031,45 @@ function decide(decision) {
   }
 }
 
+function roundRectPath(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+/* carimbo de borracha: moldura dupla, selo nacional, rótulo grande e tinta
+   IRREGULAR (partes falham, faixas de tinta seca) — parece prensado, não CSS. */
+function drawStamp(kind) {
+  const W = 176, H = 98, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const ctx = cv.getContext('2d');
+  const col = kind === 'approve' ? 'rgb(52,116,58)' : kind === 'detain' ? 'rgb(150,44,36)' : 'rgb(150,44,36)';
+  const label = kind === 'approve' ? T('APROVADO') : kind === 'detain' ? T('DETIDO') : T('NEGADO');
+  ctx.strokeStyle = col; ctx.fillStyle = col;
+  roundRectPath(ctx, 6, 6, W - 12, H - 12, 9); ctx.lineWidth = 4.5; ctx.stroke();
+  roundRectPath(ctx, 12, 12, W - 24, H - 24, 6); ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = 'bold 12px "Oswald", sans-serif';
+  ctx.fillText('★  ' + T('MINISTÉRIO DE TRIAGEM') + '  ★', W / 2, 25);
+  ctx.font = 'bold 33px "Oswald", sans-serif'; ctx.fillText(label, W / 2, 53);
+  ctx.font = '10px "Oswald", sans-serif';
+  ctx.fillText(COUNTRIES.osteria.seal + '  POSTO 7 · Nº 77-B', W / 2, 76);
+  // ---- tinta irregular ----
+  ctx.globalCompositeOperation = 'destination-out';
+  for (let i = 0; i < 850; i++) { const x = Math.random() * W, y = Math.random() * H; if (Math.random() < 0.5) { ctx.globalAlpha = Math.random() * 0.6; ctx.beginPath(); ctx.arc(x, y, Math.random() * 1.7, 0, 6.29); ctx.fill(); } }
+  for (let i = 0; i < 7; i++) { ctx.globalAlpha = 0.15 + Math.random() * 0.3; ctx.fillRect(0, Math.random() * H, W, 0.7 + Math.random()); } // faixas de tinta seca
+  // canto seco (a borracha não prensa igual)
+  ctx.globalAlpha = 0.5; const gx = Math.random() * W, gy = Math.random() * H;
+  const gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, 40); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, gy, 40, 0, 6.29); ctx.fill();
+  ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  return cv;
+}
 function stampDocs(decision) {
   const first = $('desk').querySelector('.document');
   if (!first) return;
   const st = document.createElement('div');
-  st.className = 'doc-stamped ' + (decision === 'approve' ? 'stamp-ok' : 'stamp-no');
-  st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO';
+  st.className = 'doc-stamped is-canvas';
+  try { st.appendChild(drawStamp(decision)); }
+  catch (e) { st.classList.add(decision === 'approve' ? 'stamp-ok' : 'stamp-no'); st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO'; }
   first.appendChild(st);
 }
 
