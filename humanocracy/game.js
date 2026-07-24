@@ -1421,6 +1421,36 @@ function nextCitizen() {
   }
 }
 
+/* PISTAS NA FALA (à la Papers Please): dão MOTIVO pra inspecionar/examinar
+   uma pessoa em vez de analisar todo mundo — mas nunca são 100% confiáveis
+   (gente honesta às vezes soa suspeita; é a paranoia do posto). */
+const CLUE_FORGER = [
+  'Está tudo em ordem. Não precisa conferir cada carimbo, precisa?',
+  'Os documentos são novos. Bem novos. É que os antigos… se perderam.',
+  'O senhor vai reparar que a data está boa. Está boa, sim.',
+  'Não menti em nada. Bom — nada que o senhor precise anotar.',
+  'Se olhar rápido, está perfeito. É só não olhar devagar.',
+];
+const CLUE_ALTERNADO = [
+  'Eu lembro de nascer lá. Lembro de tudo. Lembro até do que não vi.',
+  'Estou bem. Estou muito bem. O senhor também está bem. Todos estamos bem.',
+  'Não precisa me examinar. Eu sei o que procura. Não está em mim.',
+  'Sorrio porque é o correto sorrir. Está correto, o sorriso?',
+  'O frio não me incomoda. Nada me incomoda. É mais prático assim.',
+  'Pisco quando lembro de piscar. Acabei de lembrar.',
+];
+const CLUE_PARANOIA = [ // gente honesta que soa suspeita — falso positivo
+  'Por favor, não me barre. Minha filha está do outro lado há três dias.',
+  'Sei que pareço nervoso. Todo mundo parece, aqui. O senhor não parece?',
+  'As mãos tremem, mas é o frio. Juro que é só o frio.',
+];
+function clueFor(cz) {
+  const subtle = cz.isAlternado && (!cz.anom || (!cz.anom.skinShift && !cz.anom.deadStare && !cz.anom.smile));
+  if (subtle && chance(.42)) return pick(CLUE_ALTERNADO);
+  if (cz.isForger && chance(.42)) return pick(CLUE_FORGER);
+  if (!cz.isForger && !cz.isAlternado && chance(.08)) return pick(CLUE_PARANOIA);
+  return null;
+}
 function greetingFor(cz) {
   if (cz.encounter) return T(cz.encounter.fala);
   if (cz.returning) {
@@ -1431,6 +1461,9 @@ function greetingFor(cz) {
     if (r.mood === 'advogado') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e foi detido(a). Sou advogado(a) da família. Vim pedir os documentos do processo — e um prazo de resposta, já que ninguém me deu nenhum dos dois.')}`;
     if (r.mood === 'jornalista') return `${T('Estou apurando o caso de ')}${r.nome}${T(', detido(a) neste posto no dia')} ${r.dia}${T('. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?')}`;
   }
+  // pista ocasional (dá motivo pra examinar ESTE — mas não é garantia)
+  if (!cz._clued) { cz._clued = true; cz._clue = clueFor(cz); }
+  if (cz._clue) return T(cz._clue);
   const g = [
     'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
     'É a minha terceira vez nesta fila.', 'Por favor, seja rápido. Meu trem sai ao meio-dia.',
