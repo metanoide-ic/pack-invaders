@@ -710,7 +710,19 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .exam-zones button.done { opacity:.5; }
 .exam-log { flex:1; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--ink); }
 .exam-log .anomalia { color:#d98b7c; }
+/* achado clicável: registra a discrepância (estilo Papers Please) */
+.exam-log .anomalia[data-tell] { cursor:pointer; padding:2px 5px; margin:2px 0; border-left:2px solid transparent; transition:background .12s; }
+.exam-log .anomalia[data-tell]:hover { background:rgba(140,47,36,.18); border-left-color:var(--stamp-red); }
+.exam-log .anomalia[data-tell]::after { content:' ⊕'; color:var(--stamp-red); opacity:.7; font-weight:bold; }
+.exam-log .anomalia[data-tell].flagged { background:rgba(140,47,36,.28); text-decoration:underline wavy var(--stamp-red); border-left-color:var(--stamp-red); }
+.exam-log .anomalia[data-tell].flagged::after { content:' ✓'; color:#d98b7c; }
 .exam-log .anomalia.endossada { text-decoration: underline; cursor:pointer; }
+.exam-log .exam-detected {
+  color:#f0dcc0; background:rgba(140,47,36,.35); border-left:3px solid var(--stamp-red);
+  padding:5px 8px; margin:6px 0 2px; font-family:var(--font-display); font-weight:600;
+  letter-spacing:.04em; animation: detected-flash .5s ease;
+}
+@keyframes detected-flash { 0% { background:rgba(200,70,50,.7); } 100% { background:rgba(140,47,36,.35); } }
 .exam-log .obs { color:var(--ink-dim); }
 
 /* ============ BAGAGEM ============ */

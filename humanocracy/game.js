@@ -457,6 +457,7 @@ const EXAM_ZONES = [
   { id: 'pele', label: 'PELE', tells: ['pele'] },
   { id: 'maos', label: 'MÃOS', tells: ['maos'] },
   { id: 'pescoco', label: 'PESCOÇO', tells: ['pescoco'] },
+  { id: 'corpo', label: 'CORPO', body: true },
 ];
 function openExam() {
   const cz = shift.citizen;
@@ -477,6 +478,18 @@ function openExam() {
     b.onclick = () => { b.classList.add('done'); examZone(cz, z); };
     zones.appendChild(b);
   });
+  // clicar num achado (⚠) registra a discrepância — feedback estilo Papers Please
+  $('exam-log').onclick = (e) => {
+    const el = e.target.closest && e.target.closest('.anomalia[data-tell]');
+    if (!el || el.classList.contains('flagged')) return;
+    el.classList.add('flagged');
+    cz.evidence = true; $('btn-detain').disabled = false;
+    const tag = document.createElement('div');
+    tag.className = 'exam-detected';
+    tag.textContent = '⚠ ' + T('DISCREPÂNCIA DETECTADA — anotada no laudo. Detenção autorizada.');
+    $('exam-log').appendChild(tag); $('exam-log').scrollTop = $('exam-log').scrollHeight;
+    try { sfx('ding'); } catch (e2) {}
+  };
   $('exam-overlay').classList.add('active');
 }
 function examZone(cz, zone) {
@@ -488,11 +501,18 @@ function examZone(cz, zone) {
   cz._examLogged = cz._examLogged || {};
   if (cz._examLogged[zone.id]) return; // rever a cena é grátis; o laudo só entra uma vez
   cz._examLogged[zone.id] = true;
+  if (zone.body) { // CORPO: volume oculto + assinatura térmica
+    let line = cz.phys.concealed
+      ? `<div class="anomalia" data-tell="corpo">⚠ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
+      : `<div class="obs">${T('Nada oculto sob as roupas. Só um corpo com frio.')}</div>`;
+    if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">⚠ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
+    log.innerHTML += line; log.scrollTop = log.scrollHeight; return;
+  }
   const rum = rumorForDay(S.day);
   zone.tells.forEach(t => {
     const tellDef = TELLS[t];
     const anômalo = cz.phys[t];
-    let line = anômalo ? `<div class="anomalia">⚠ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
+    let line = anômalo ? `<div class="anomalia" data-tell="${t}">⚠ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
     if (anômalo && rum && rum.tell === t) {
       if (rum.official) {
         cz.softEndorsed = true; cz.evidence = true;
@@ -712,6 +732,7 @@ function buildBaggage(cz) {
   if (cz.bagOneway) push(BAG_ONEWAY.txt, { fid: 'bag.oneway', desc: BAG_ONEWAY.desc });
   if ((cz.isForger || cz.isAlternado) && chance(.12) && !cz.encounter) {
     push(pick(BAG_CONTRABAND), { contra: true, desc: 'Isto não deveria estar aqui. Isto não tem explicação boa.' });
+    if (cz.phys) cz.phys.concealed = true; // o scanner de corpo consegue vê-lo antes de abrir a mala
   }
   // embaralha
   for (let i = cz.bag.length - 1; i > 0; i--) { const j = ri(0, i); [cz.bag[i], cz.bag[j]] = [cz.bag[j], cz.bag[i]]; }

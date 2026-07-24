@@ -1611,6 +1611,139 @@ function seqSVG(frames) {
   return out;
 }
 
+/* ---------- MACRO DO OLHO (No I'm Not a Human): um olho enche a tela,
+   se mexe em sacadas e pisca. Olhar morto / dilatado / sem piscar = tell. */
+function paintEyeMacro(ctx, f, phys, gaze) {
+  gaze = gaze || {};
+  const L = faceLayout(f);
+  const r = faceRng(faceSeedOf(f) ^ 0x1CE);
+  let SK = L.skin.b, SH = L.skin.s;
+  const anom = (phys && phys.anom) || {};
+  if (anom.skinShift) { const tgt = anom.skinTone || [116, 140, 152]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.35), anom.skinShift); }
+  const cx = 50, cy = 54, hw = 27, hh = 12.5;
+  const bg = ctx.createLinearGradient(0, 10, 0, 120);
+  bg.addColorStop(0, rgb(mix(SK, SH, 0.3))); bg.addColorStop(0.45, rgb(SK)); bg.addColorStop(1, rgb(mix(SK, SH, 0.55)));
+  ctx.fillStyle = bg; ctx.fillRect(0, 0, 100, 120);
+  const key = ctx.createRadialGradient(28, 26, 4, 34, 40, 86); key.addColorStop(0, 'rgba(255,244,214,.26)'); key.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
+  // sobrancelha
+  ctx.save(); try { ctx.filter = `blur(${(0.5 * F_SCALE).toFixed(1)}px)`; } catch (e) {}
+  ctx.strokeStyle = rgb(darken(L.hair, 0.2), 0.85); ctx.lineWidth = 3.4;
+  ctx.beginPath(); ctx.moveTo(cx - hw - 2, cy - hh - 9); ctx.quadraticCurveTo(cx, cy - hh - 15, cx + hw + 2, cy - hh - 8); ctx.stroke(); ctx.restore();
+  ctx.strokeStyle = rgb(darken(L.hair, 0.35), 0.7); ctx.lineWidth = 0.6;
+  for (let i = 0; i < 40; i++) { const t = i / 39, bx = cx - hw - 2 + t * (hw * 2 + 4), by = cy - hh - 11 - Math.sin(t * 3.14) * 3; ctx.beginPath(); ctx.moveTo(bx, by + 1.5); ctx.lineTo(bx + 1.5, by - 1.5 - r() * 0.6); ctx.stroke(); }
+  soft(ctx, cx, cy - hh - 1, hw, 4, rgb(darken(SH, 0.1), 0.4), 3.5);
+  soft(ctx, cx, cy, hw + 4, hh + 7, rgb(darken(SH, 0.08), 0.28), 5);
+  soft(ctx, cx, cy + hh + 4, hw * 0.8, 4, rgb(mix(SH, [70, 60, 78], 0.4), 0.34), 4); // olheira
+  const almond = () => {
+    ctx.beginPath();
+    ctx.moveTo(cx - hw, cy + 0.5);
+    ctx.quadraticCurveTo(cx - hw * 0.45, cy - hh - 2.5, cx + hw * 0.2, cy - hh);
+    ctx.quadraticCurveTo(cx + hw * 0.75, cy - hh * 0.5, cx + hw, cy - 0.5);
+    ctx.quadraticCurveTo(cx + hw * 0.4, cy + hh, cx - hw * 0.4, cy + hh * 0.85);
+    ctx.quadraticCurveTo(cx - hw, cy + hh * 0.4, cx - hw, cy + 0.5); ctx.closePath();
+  };
+  if (gaze.closed) {
+    ctx.fillStyle = rgb(mix(SK, SH, 0.25)); almond(); ctx.fill();
+    ctx.strokeStyle = rgb(darken(SH, 0.3), 0.9); ctx.lineWidth = 1.2;
+    ctx.beginPath(); ctx.moveTo(cx - hw, cy + 0.5); ctx.quadraticCurveTo(cx, cy + hh * 0.7, cx + hw, cy - 0.5); ctx.stroke();
+    ctx.strokeStyle = 'rgba(20,14,10,.85)'; ctx.lineWidth = 0.5;
+    for (let i = 0; i < 16; i++) { const t = i / 15, lx = cx - hw + t * hw * 2, ly = cy + hh * 0.5 - Math.sin(t * 3.14) * hh * 0.4 + 2; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx - 0.5, ly + 2.5); ctx.stroke(); }
+    return;
+  }
+  almond(); ctx.fillStyle = anom.deadStare ? 'rgb(230,230,224)' : (phys && phys.olhos ? 'rgb(222,204,188)' : 'rgb(212,204,184)'); ctx.fill();
+  ctx.save(); almond(); ctx.clip();
+  const lidSh = ctx.createLinearGradient(0, cy - hh - 1, 0, cy + hh * 0.2); lidSh.addColorStop(0, 'rgba(38,26,18,.65)'); lidSh.addColorStop(1, 'rgba(38,26,18,0)');
+  ctx.fillStyle = lidSh; ctx.fillRect(cx - hw, cy - hh - 2, hw * 2, hh + 2);
+  const cor = ctx.createLinearGradient(cx - hw, 0, cx + hw, 0); cor.addColorStop(0, 'rgba(60,44,34,.55)'); cor.addColorStop(0.25, 'rgba(0,0,0,0)'); cor.addColorStop(0.75, 'rgba(0,0,0,0)'); cor.addColorStop(1, 'rgba(60,44,34,.5)');
+  ctx.fillStyle = cor; ctx.fillRect(cx - hw, cy - hh, hw * 2, hh * 2);
+  const nv = (phys && phys.olhos) ? 18 : 6; // veias (injetadas = tell)
+  ctx.strokeStyle = `rgba(150,44,32,${(phys && phys.olhos) ? 0.6 : 0.3})`;
+  for (let i = 0; i < nv; i++) { const side = r() < 0.5 ? -1 : 1; let px = cx + side * hw * 0.95, py = cy + (r() - 0.5) * hh * 1.4; ctx.lineWidth = 0.3 + r() * 0.3; ctx.beginPath(); ctx.moveTo(px, py); for (let k = 0; k < 3; k++) { px -= side * (2 + r() * 3); py += (r() - 0.5) * 2; ctx.lineTo(px, py); } ctx.stroke(); }
+  // íris na posição do gaze
+  const gx = cx + (gaze.x || 0), gy = cy - 1 + (gaze.y || 0), ir = 9.5, ic = L.iris;
+  const ig = ctx.createRadialGradient(gx - 2, gy - 2, 1, gx, gy, ir);
+  ig.addColorStop(0, rgb(lighten(ic, 0.15))); ig.addColorStop(0.5, rgb(ic)); ig.addColorStop(0.85, rgb(darken(ic, 0.5))); ig.addColorStop(1, rgb(darken(ic, 0.72)));
+  ctx.fillStyle = ig; ctx.beginPath(); ctx.arc(gx, gy, ir, 0, 6.29); ctx.fill();
+  ctx.strokeStyle = rgb(darken(ic, 0.4), 0.4); ctx.lineWidth = 0.3;
+  for (let i = 0; i < 26; i++) { const a = i / 26 * 6.29; ctx.beginPath(); ctx.moveTo(gx + Math.cos(a) * 3, gy + Math.sin(a) * 3); ctx.lineTo(gx + Math.cos(a) * ir * 0.92, gy + Math.sin(a) * ir * 0.92); ctx.stroke(); }
+  ctx.strokeStyle = rgb(darken(ic, 0.7), 0.7); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(gx, gy, ir, 0, 6.29); ctx.stroke();
+  const pr = anom.deadStare ? 6.4 : 3.6; // pupila dilatada = tell
+  ctx.fillStyle = 'rgb(6,5,5)'; ctx.beginPath(); ctx.arc(gx, gy, pr, 0, 6.29); ctx.fill();
+  if (anom.deadStare) { ctx.fillStyle = 'rgba(255,255,250,.9)'; ctx.beginPath(); ctx.arc(gx - 2.4, gy - 2.4, 1.4, 0, 6.29); ctx.fill(); soft(ctx, gx + 1, gy + 1, ir * 0.7, ir * 0.5, 'rgba(200,220,235,.14)', 1); }
+  else { ctx.fillStyle = 'rgba(255,252,244,.92)'; ctx.beginPath(); ctx.arc(gx - 2.6, gy - 2.6, 1.7, 0, 6.29); ctx.fill(); ctx.fillStyle = 'rgba(255,252,244,.35)'; ctx.beginPath(); ctx.arc(gx + 1.6, gy + 2, 0.7, 0, 6.29); ctx.fill(); }
+  ctx.restore();
+  // pálpebra superior linha + cílios
+  ctx.strokeStyle = 'rgba(24,16,11,.9)'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(cx - hw - 0.5, cy + 0.5); ctx.quadraticCurveTo(cx - hw * 0.4, cy - hh - 2.5, cx + hw * 0.2, cy - hh); ctx.quadraticCurveTo(cx + hw * 0.75, cy - hh * 0.5, cx + hw + 0.5, cy - 0.5); ctx.stroke();
+  ctx.strokeStyle = 'rgba(16,10,8,.9)'; ctx.lineWidth = 0.5;
+  for (let i = 0; i < 22; i++) { const t = i / 21, lx = cx - hw * 0.9 + t * hw * 1.8, ly = cy - hh + (1 - Math.sin(t * 3.14)) * hh * 0.3 - 1.5; ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + (t - 0.5) * 2, ly - 2.5 - r() * 0.8); ctx.stroke(); }
+  ctx.strokeStyle = rgb(darken(SH, 0.12), 0.4); ctx.lineWidth = 0.6;
+  ctx.beginPath(); ctx.moveTo(cx - hw * 0.7, cy - hh - 3); ctx.quadraticCurveTo(cx, cy - hh - 5, cx + hw * 0.7, cy - hh - 2.5); ctx.stroke();
+  ctx.strokeStyle = rgb(SH, 0.5); ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(cx - hw * 0.6, cy + hh * 0.75); ctx.quadraticCurveTo(cx, cy + hh + 1, cx + hw * 0.5, cy + hh * 0.6); ctx.stroke();
+  ctx.fillStyle = rgb(mix(SH, [150, 80, 70], 0.6), 0.7); ctx.beginPath(); ctx.arc(cx - hw + 1, cy + 0.5, 1.6, 0, 6.29); ctx.fill(); // carúncula
+}
+function eyeMacroSVG(f, phys) {
+  const anom = (phys && phys.anom) || {};
+  const dead = !!anom.deadStare, noBlink = !!(phys && phys.piscar);
+  const seed = faceSeedOf(f);
+  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
+  const C = { x: 0, y: 0 }, Lp = { x: -6, y: 1 }, Rp = { x: 6, y: 0.5 }, Up = { x: -1, y: -3 }, Dp = { x: 1, y: 2.6 };
+  let frames;
+  if (dead) {
+    // olhar morto: fixa, dilatado, não pisca — imobilidade que perturba
+    frames = [{ url: mk(C, 1), len: 3.4 }, { url: mk({ x: 0.6, y: 0 }, 2), len: 0.14 }, { url: mk(C, 3), len: 3.2 }];
+  } else {
+    const bl = noBlink ? null : { url: mk({ closed: true }, 9), len: 0.13 };
+    frames = [{ url: mk(C, 1), len: 1.3 }, { url: mk(Lp, 2), len: 0.5 }, { url: mk(C, 3), len: 0.7 }];
+    if (bl) frames.push(bl);
+    frames.push({ url: mk(C, 4), len: 0.5 }, { url: mk(Rp, 5), len: 0.5 }, { url: mk(Up, 6), len: 0.4 }, { url: mk(C, 7), len: 0.9 }, { url: mk(Dp, 8), len: 0.4 }, { url: mk(C, 10), len: 1.0 });
+    if (bl) frames.push(bl);
+  }
+  return seqSVG(frames);
+}
+
+/* ---------- SCANNER DE CORPO (térmico/raio-X): revela volume oculto sob o
+   casaco e a assinatura térmica (fraca demais = corpo frio de Alternado). */
+function paintBodyScan(ctx, f, phys) {
+  const cold = !!(phys && phys.pescoco);
+  const conceal = !!(phys && phys.concealed);
+  ctx.fillStyle = '#06120f'; ctx.fillRect(0, 0, 100, 120);
+  ctx.strokeStyle = 'rgba(60,180,140,.08)'; ctx.lineWidth = 0.3;
+  for (let x = 0; x <= 100; x += 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 120); ctx.stroke(); }
+  for (let y = 0; y <= 120; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(100, y); ctx.stroke(); }
+  const bodyPath = () => {
+    ctx.beginPath();
+    ctx.moveTo(38, 33); ctx.lineTo(44, 30); ctx.quadraticCurveTo(41, 26, 41, 20);
+    ctx.arc(50, 18, 9, Math.PI, 0); ctx.quadraticCurveTo(59, 26, 56, 30); ctx.lineTo(62, 33);
+    ctx.lineTo(73, 60); ctx.lineTo(69, 66); ctx.lineTo(64, 46); ctx.lineTo(66, 112); ctx.lineTo(34, 112);
+    ctx.lineTo(36, 46); ctx.lineTo(31, 66); ctx.lineTo(27, 60); ctx.closePath();
+  };
+  ctx.save();
+  ctx.fillStyle = cold ? 'rgba(40,90,120,.5)' : 'rgba(120,60,40,.5)'; bodyPath(); ctx.fill();
+  bodyPath(); ctx.clip();
+  if (cold) {
+    const g = ctx.createRadialGradient(50, 58, 4, 50, 62, 60); g.addColorStop(0, 'rgba(70,150,180,.55)'); g.addColorStop(1, 'rgba(20,50,80,.55)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 120);
+  } else {
+    const g = ctx.createRadialGradient(50, 56, 4, 50, 62, 46); g.addColorStop(0, 'rgba(255,224,130,.8)'); g.addColorStop(0.5, 'rgba(224,96,44,.62)'); g.addColorStop(1, 'rgba(120,40,30,.3)');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 120);
+    soft(ctx, 50, 33, 4, 3, 'rgba(255,180,90,.6)', 2); // pulso quente no pescoço
+  }
+  ctx.restore();
+  ctx.strokeStyle = cold ? 'rgba(90,190,215,.7)' : 'rgba(255,180,120,.6)'; ctx.lineWidth = 0.6; bodyPath(); ctx.stroke();
+  if (conceal) { // objeto denso escondido no tronco
+    ctx.fillStyle = 'rgba(16,26,34,.92)'; ctx.fillRect(43, 62, 15, 9);
+    ctx.strokeStyle = 'rgba(120,255,200,.9)'; ctx.lineWidth = 0.8; ctx.strokeRect(43, 62, 15, 9);
+    ctx.beginPath(); ctx.moveTo(47, 62); ctx.lineTo(47, 58); ctx.lineTo(54, 58); ctx.lineTo(54, 62); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(60, 60, 1.5, 0, 6.29); ctx.fill();
+  }
+  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
+  ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 6, 117);
+}
+
 /* a cena de cada zona do exame */
 function examZoneSVG(f, phys, zone) {
   phys = phys || {};
@@ -1623,17 +1756,16 @@ function examZoneSVG(f, phys, zone) {
   const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
 
   if (zone === 'olhos') {
-    const zo = { zoom: 2.9, focusY: 47 };
-    const frames = [{ url: F(zo), len: 1.5 }];
-    if (!phys.piscar) { // humanos piscam. o frame existe.
-      frames.push({ url: F(Object.assign({ eyesClosed: true }, zo)), len: 0.16 });
-      frames.push({ url: F(zo), len: 0.8 });
-    } else {
-      frames.push({ url: F(Object.assign({}, zo, { postSeed: 3 })), len: 0.96 }); // ...ele não pisca
-    }
-    frames.push({ url: F(Object.assign({ eyesWide: true, pullLid: true }, zo)), len: 2.3 });
-    frames.push({ url: F(Object.assign({ eyesWide: true, pullLid: true, lookX: -1 }, zo)), len: 1.5 });
-    return seqSVG(frames);
+    // um olho enche a tela e se mexe (sacadas + piscada); olhar morto/dilatado
+    // ou ausência de piscada = Alternado.
+    return eyeMacroSVG(f, phys);
+  }
+  if (zone === 'corpo') {
+    // scanner térmico do corpo: volume oculto + assinatura térmica, com a
+    // linha de varredura descendo (o feixe do scanner).
+    const url = renderScene((c) => paintBodyScan(c, f, phys), seed ^ 0xB0D, { w: 260, h: 312, paintScale: 2.7, post: { levels: 16, ditherAmp: 0.3, grain: 6, aberr: 1, scan: 0.1, sat: 0.62 } }).toDataURL();
+    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none"/>` +
+      `<rect x="0" y="0" width="200" height="2.5" fill="rgba(120,255,200,.55)"><animate attributeName="y" values="0;238;0" dur="2.6s" repeatCount="indefinite"/></rect>`;
   }
   if (zone === 'boca') {
     const zo = { zoom: 2.9, focusY: 63 };
