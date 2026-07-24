@@ -6071,44 +6071,102 @@ function eyeMacroSVG(f, phys) {
   return seqSVG(frames);
 }
 
-/* ---------- SCANNER DE CORPO (térmico/raio-X): revela volume oculto sob o
-   casaco e a assinatura térmica (fraca demais = corpo frio de Alternado). */
+/* ---------- FÍSICO do personagem (determinístico por fseed + sexo/build) ----
+   O corpo é DAQUELA pessoa: ombro/quadril por sexo, largura por biotipo,
+   altura, pescoço. Usado pelo scanner de corpo (e reutilizável). */
+function bodyLayout(f) {
+  const r = faceRng(faceSeedOf(f) ^ 0xB0D9);
+  const fem = f.sexo === 'f';
+  const build = f.build != null ? f.build : 1;         // 0 magro 1 médio 2 forte
+  const bw = [-2.2, 0, 2.6][build] + (r() - 0.5) * 1.2; // desvio de largura
+  const L = faceLayout(f);
+  const headR = (L.fw + L.jw) * 0.28 + 3.4;            // cabeça ~ da largura do rosto
+  const shoulder = (fem ? 15 : 18) + bw + (fem ? 0 : 1); // meia-largura do ombro
+  const hip = (fem ? 14 : 12.5) + bw * 0.8;             // meia-largura do quadril
+  const waist = (fem ? 10.5 : 11) + bw * 0.9;
+  const chest = (fem ? 12.5 : 13.5) + bw;
+  const neckW = (fem ? 2.6 : 3.4) + build * 0.3;
+  const topY = 8 - (f.height || 0) * 2;                 // altura desloca o topo
+  return { r, fem, build, headR, shoulder, hip, waist, chest, neckW, topY,
+    hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
+}
+/* SCANNER DE CORPO (térmico/raio-X): a silhueta É a pessoa; revela volume
+   oculto sob o casaco e a assinatura térmica (fraca = corpo frio de Alternado). */
 function paintBodyScan(ctx, f, phys) {
   const cold = !!(phys && phys.pescoco);
   const conceal = !!(phys && phys.concealed);
+  const B = bodyLayout(f);
+  const cx = 50;
   ctx.fillStyle = '#06120f'; ctx.fillRect(0, 0, 100, 120);
   ctx.strokeStyle = 'rgba(60,180,140,.08)'; ctx.lineWidth = 0.3;
   for (let x = 0; x <= 100; x += 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 120); ctx.stroke(); }
   for (let y = 0; y <= 120; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(100, y); ctx.stroke(); }
+  // marcos verticais do corpo desta pessoa
+  const headCy = B.topY + B.headR + 2, chinY = headCy + B.headR, neckY = chinY + 2;
+  const shoulderY = neckY + 4, chestY = shoulderY + 14, waistY = chestY + 16, hipY = waistY + 10, footY = 116;
   const bodyPath = () => {
     ctx.beginPath();
-    ctx.moveTo(38, 33); ctx.lineTo(44, 30); ctx.quadraticCurveTo(41, 26, 41, 20);
-    ctx.arc(50, 18, 9, Math.PI, 0); ctx.quadraticCurveTo(59, 26, 56, 30); ctx.lineTo(62, 33);
-    ctx.lineTo(73, 60); ctx.lineTo(69, 66); ctx.lineTo(64, 46); ctx.lineTo(66, 112); ctx.lineTo(34, 112);
-    ctx.lineTo(36, 46); ctx.lineTo(31, 66); ctx.lineTo(27, 60); ctx.closePath();
+    // cabeça
+    ctx.moveTo(cx - B.neckW, neckY);
+    ctx.lineTo(cx - B.neckW - 0.5, chinY);
+    ctx.quadraticCurveTo(cx - B.headR, chinY, cx - B.headR, headCy);
+    ctx.quadraticCurveTo(cx - B.headR, B.topY + 1, cx, B.topY);
+    ctx.quadraticCurveTo(cx + B.headR, B.topY + 1, cx + B.headR, headCy);
+    ctx.quadraticCurveTo(cx + B.headR, chinY, cx + B.neckW + 0.5, chinY);
+    ctx.lineTo(cx + B.neckW, neckY);
+    // ombro dir → tronco → quadril → perna
+    ctx.quadraticCurveTo(cx + B.shoulder * 0.6, shoulderY - 1, cx + B.shoulder, shoulderY + 2);
+    ctx.quadraticCurveTo(cx + B.chest + 1, chestY, cx + B.waist, waistY);
+    ctx.quadraticCurveTo(cx + B.hip + 1, hipY, cx + B.hip, hipY + 3);
+    ctx.lineTo(cx + B.waist * 0.5, footY);              // perna dir
+    ctx.lineTo(cx + 1.5, footY); ctx.lineTo(cx + 1.5, hipY + 4);
+    ctx.lineTo(cx - 1.5, hipY + 4); ctx.lineTo(cx - 1.5, footY); // entreperna
+    ctx.lineTo(cx - B.waist * 0.5, footY);              // perna esq
+    ctx.lineTo(cx - B.hip, hipY + 3);
+    ctx.quadraticCurveTo(cx - B.hip - 1, hipY, cx - B.waist, waistY);
+    ctx.quadraticCurveTo(cx - B.chest - 1, chestY, cx - B.shoulder, shoulderY + 2);
+    ctx.quadraticCurveTo(cx - B.shoulder * 0.6, shoulderY - 1, cx - B.neckW, neckY);
+    ctx.closePath();
+  };
+  // braços (linhas grossas ao lado do tronco)
+  const armPath = () => {
+    for (const s of [-1, 1]) {
+      ctx.moveTo(cx + s * (B.shoulder - 1), shoulderY + 3);
+      ctx.quadraticCurveTo(cx + s * (B.chest + 3), chestY + 4, cx + s * (B.waist + 2), waistY + 4);
+      ctx.lineTo(cx + s * (B.waist + 3.5), hipY + 2);
+    }
   };
   ctx.save();
   ctx.fillStyle = cold ? 'rgba(40,90,120,.5)' : 'rgba(120,60,40,.5)'; bodyPath(); ctx.fill();
+  ctx.strokeStyle = cold ? 'rgba(40,90,120,.5)' : 'rgba(120,60,40,.5)'; ctx.lineWidth = 4; ctx.lineCap = 'round'; armPath(); ctx.stroke();
   bodyPath(); ctx.clip();
   if (cold) {
-    const g = ctx.createRadialGradient(50, 58, 4, 50, 62, 60); g.addColorStop(0, 'rgba(70,150,180,.55)'); g.addColorStop(1, 'rgba(20,50,80,.55)');
+    const g = ctx.createRadialGradient(cx, chestY, 4, cx, chestY + 8, 60); g.addColorStop(0, 'rgba(70,150,180,.55)'); g.addColorStop(1, 'rgba(20,50,80,.55)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 120);
   } else {
-    const g = ctx.createRadialGradient(50, 56, 4, 50, 62, 46); g.addColorStop(0, 'rgba(255,224,130,.8)'); g.addColorStop(0.5, 'rgba(224,96,44,.62)'); g.addColorStop(1, 'rgba(120,40,30,.3)');
+    const g = ctx.createRadialGradient(cx, chestY, 4, cx, chestY + 6, 42); g.addColorStop(0, 'rgba(255,224,130,.8)'); g.addColorStop(0.5, 'rgba(224,96,44,.62)'); g.addColorStop(1, 'rgba(120,40,30,.3)');
     ctx.fillStyle = g; ctx.fillRect(0, 0, 100, 120);
-    soft(ctx, 50, 33, 4, 3, 'rgba(255,180,90,.6)', 2); // pulso quente no pescoço
+    soft(ctx, cx, neckY + 1, 4, 3, 'rgba(255,180,90,.6)', 2);       // pulso quente no pescoço
+    soft(ctx, cx, chestY + 2, B.chest * 0.6, 6, 'rgba(255,200,110,.4)', 3); // coração/pulmões
   }
   ctx.restore();
   ctx.strokeStyle = cold ? 'rgba(90,190,215,.7)' : 'rgba(255,180,120,.6)'; ctx.lineWidth = 0.6; bodyPath(); ctx.stroke();
-  if (conceal) { // objeto denso escondido no tronco
-    ctx.fillStyle = 'rgba(16,26,34,.92)'; ctx.fillRect(43, 62, 15, 9);
-    ctx.strokeStyle = 'rgba(120,255,200,.9)'; ctx.lineWidth = 0.8; ctx.strokeRect(43, 62, 15, 9);
-    ctx.beginPath(); ctx.moveTo(47, 62); ctx.lineTo(47, 58); ctx.lineTo(54, 58); ctx.lineTo(54, 62); ctx.stroke();
-    ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(60, 60, 1.5, 0, 6.29); ctx.fill();
+  // esqueleto fraco (coluna + costelas)
+  ctx.strokeStyle = 'rgba(200,230,220,.14)'; ctx.lineWidth = 0.4;
+  ctx.beginPath(); ctx.moveTo(cx, neckY); ctx.lineTo(cx, hipY); ctx.stroke();
+  for (let i = 0; i < 5; i++) { const yy = chestY + i * 2.6; ctx.beginPath(); ctx.moveTo(cx - B.chest * 0.7, yy + 1); ctx.quadraticCurveTo(cx, yy - 1, cx + B.chest * 0.7, yy + 1); ctx.stroke(); }
+  if (conceal) { // objeto denso escondido na cintura/tronco
+    const ox = cx - 7, oy = waistY - 5;
+    ctx.fillStyle = 'rgba(16,26,34,.92)'; ctx.fillRect(ox, oy, 15, 9);
+    ctx.strokeStyle = 'rgba(120,255,200,.9)'; ctx.lineWidth = 0.8; ctx.strokeRect(ox, oy, 15, 9);
+    ctx.beginPath(); ctx.moveTo(ox + 4, oy); ctx.lineTo(ox + 4, oy - 4); ctx.lineTo(ox + 11, oy - 4); ctx.lineTo(ox + 11, oy); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(ox + 17, oy - 2, 1.5, 0, 6.29); ctx.fill();
   }
   ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
-  ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 6, 117);
+  ctx.fillText(['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M'), 6, 116);
+  ctx.textAlign = 'right';
+  ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 94, 116);
 }
 
 /* a cena de cada zona do exame */
@@ -6834,6 +6892,10 @@ function genFeatures(sexo, idade, etnia) {
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
     earring: sexo === 'f' && chance(.4),
     idade, rugas: velho || idade >= 48 && chance(.4),
+    // CORPO: cada pessoa tem um físico próprio (gerado junto, determinístico).
+    // build 0 magro · 1 médio · 2 forte; height desvio de altura; postura.
+    build: chance(.5) ? 1 : (chance(.5) ? 0 : 2),
+    height: -0.5 + rnd(),                 // -0.5..0.5 (baixo..alto)
     // semente do RENDER (faces.js): mesma pessoa = mesmo rosto em qualquer
     // contexto (foto do documento, guichê, exame). mutateFeatures copia o
     // fseed junto — a foto divergente é a MESMA pessoa com atributos trocados,

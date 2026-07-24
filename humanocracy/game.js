@@ -429,6 +429,10 @@ function genFeatures(sexo, idade, etnia) {
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
     earring: sexo === 'f' && chance(.4),
     idade, rugas: velho || idade >= 48 && chance(.4),
+    // CORPO: cada pessoa tem um físico próprio (gerado junto, determinístico).
+    // build 0 magro · 1 médio · 2 forte; height desvio de altura; postura.
+    build: chance(.5) ? 1 : (chance(.5) ? 0 : 2),
+    height: -0.5 + rnd(),                 // -0.5..0.5 (baixo..alto)
     // semente do RENDER (faces.js): mesma pessoa = mesmo rosto em qualquer
     // contexto (foto do documento, guichê, exame). mutateFeatures copia o
     // fseed junto — a foto divergente é a MESMA pessoa com atributos trocados,
