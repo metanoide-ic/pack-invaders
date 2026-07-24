@@ -7051,11 +7051,13 @@ function stopAmbience() {
 /* ---------- FILA VIVA (canvas) ---------- */
 const Q = { figs: [], snow: [], raf: null, t: 0, walker: null };
 const COAT_COLORS = ['#2e2a24', '#33302a', '#3a3128', '#2a2e33', '#38332e', '#403428', '#2c3230'];
+const SCARF_COLORS = ['#6b4a3a', '#4a5648', '#5a3a38', '#3a4a58', '#6a5a38', '#54484f'];
 function makeFig(x) {
   return {
-    x, tx: x, phase: rnd() * 6.28, h: 30 + ri(0, 8),
-    coat: pick(COAT_COLORS), hat: chance(.5), skin: pick(SKINS),
-    fidget: rnd(), speed: .35 + rnd() * .25,
+    x, tx: x, phase: rnd() * 6.28, h: 32 + ri(0, 9),
+    coat: pick(COAT_COLORS), hat: ri(0, 3), skin: pick(SKINS), hair: pick(HAIRC),
+    scarf: chance(.5) ? pick(SCARF_COLORS) : null, wide: .86 + rnd() * .34,
+    bag: chance(.28), fidget: rnd(), speed: .35 + rnd() * .25,
   };
 }
 function queueSpots(w) { const s = []; for (let i = 0; i < 9; i++) s.push(w * .58 - i * 26); return s; }
@@ -7133,20 +7135,71 @@ function initQueueCanvas() {
   };
   Q.raf = requestAnimationFrame(loop);
 }
-function drawFig(ctx, f, groundY) {
+function drawFig(ctx, f, groundY, lampX) {
   const bob = Math.sin(Q.t * 2 + f.phase) * 1.1;
   const sway = Math.sin(Q.t * .7 + f.phase * 2) * (f.fidget > .7 ? 1.6 : .5);
-  const x = f.x + sway, top = groundY - f.h + bob;
+  const x = f.x + sway, top = groundY - f.h + bob, cw = 6.4 * (f.wide || 1);
+  const lum = Math.max(0, 1 - Math.abs(x - (lampX != null ? lampX : 9999)) / 130); // proximidade da luz
+  // sombra no chão
+  ctx.fillStyle = 'rgba(0,0,0,.42)';
+  ctx.beginPath(); ctx.ellipse(x, groundY + 1, cw * 1.05, 2, 0, 0, 6.29); ctx.fill();
+  // pernas
+  ctx.fillStyle = '#12120e';
+  const legSw = Math.sin(Q.t * 2 + f.phase) * (f.spd ? 1.6 : 0.4);
+  ctx.fillRect(x - 2.9, groundY - 9, 2.4, 9); ctx.fillRect(x + 0.5 + legSw * 0.1, groundY - 9, 2.4, 9);
+  // casaco (ombros arredondados, gola)
   ctx.fillStyle = f.coat;
-  ctx.beginPath(); // corpo (casaco)
-  ctx.moveTo(x - 6, groundY); ctx.lineTo(x - 5, top + 10); ctx.quadraticCurveTo(x, top + 6, x + 5, top + 10); ctx.lineTo(x + 6, groundY); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = f.skin; // cabeça
-  ctx.beginPath(); ctx.arc(x, top + 4, 4.2, 0, 6.29); ctx.fill();
-  if (f.hat) { ctx.fillStyle = '#1d1a16'; ctx.fillRect(x - 5, top - 2, 10, 3); ctx.fillRect(x - 3.4, top - 6, 6.8, 5); }
-  // fôlego no frio
-  if (Math.sin(Q.t * .9 + f.phase * 3) > .93) {
-    ctx.fillStyle = 'rgba(220,220,210,.12)';
-    ctx.beginPath(); ctx.arc(x + 6, top + 3, 2.5, 0, 6.29); ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(x - cw, groundY - 5);
+  ctx.quadraticCurveTo(x - cw - 0.6, top + 12, x - cw * 0.55, top + 9);
+  ctx.quadraticCurveTo(x, top + 6.5, x + cw * 0.55, top + 9);
+  ctx.quadraticCurveTo(x + cw + 0.6, top + 12, x + cw, groundY - 5);
+  ctx.closePath(); ctx.fill();
+  // plano de sombra à esquerda (longe do poste) + borda de luz à direita
+  ctx.fillStyle = 'rgba(0,0,0,.3)';
+  ctx.beginPath();
+  ctx.moveTo(x - cw, groundY - 5); ctx.quadraticCurveTo(x - cw - 0.6, top + 12, x - cw * 0.55, top + 9);
+  ctx.lineTo(x - 0.8, top + 9.5); ctx.lineTo(x - 0.8, groundY - 5); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = `rgba(255,236,196,${(0.12 + lum * 0.26).toFixed(2)})`; ctx.lineWidth = 0.9;
+  ctx.beginPath(); ctx.moveTo(x + cw, groundY - 5); ctx.quadraticCurveTo(x + cw + 0.6, top + 12, x + cw * 0.55, top + 9); ctx.stroke();
+  // fecho central
+  ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(x, top + 8.5); ctx.lineTo(x, groundY - 6); ctx.stroke();
+  // cachecol
+  if (f.scarf) {
+    ctx.fillStyle = f.scarf;
+    ctx.fillRect(x - cw * 0.5, top + 8, cw, 2.4);
+    ctx.fillRect(x - 1.5 + sway * 0.1, top + 9.5, 2.3, 5 + (f.fidget > .6 ? 1.5 : 0));
+  }
+  // cabeça
+  ctx.fillStyle = f.skin;
+  ctx.beginPath(); ctx.arc(x, top + 3.4, 3.9, 0, 6.29); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.3)'; // meia-face em sombra (esquerda)
+  ctx.beginPath(); ctx.arc(x - 1.2, top + 3.4, 3.9, Math.PI * 0.42, Math.PI * 1.42); ctx.fill();
+  ctx.fillStyle = `rgba(255,238,200,${(0.08 + lum * 0.26).toFixed(2)})`; // bochecha direita na luz
+  ctx.beginPath(); ctx.arc(x + 1.2, top + 2.7, 2.2, 0, 6.29); ctx.fill();
+  // cabelo / chapéu
+  if (f.hat === 2) { // lenço
+    ctx.fillStyle = '#3a3630';
+    ctx.beginPath(); ctx.arc(x, top + 2.6, 4.3, Math.PI * 1.02, Math.PI * 2.02); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x - 4, top + 3); ctx.quadraticCurveTo(x, top + 8, x - 1, top + 8.5); ctx.lineTo(x - 3.6, top + 4.5); ctx.closePath(); ctx.fill();
+  } else if (f.hat === 1) { // chapéu de aba
+    ctx.fillStyle = '#191712'; ctx.fillRect(x - 4.8, top - 0.3, 9.6, 1.6);
+    ctx.beginPath(); ctx.arc(x, top - 0.3, 3.4, Math.PI, 0); ctx.fill();
+  } else if (f.hat === 3) { // gorro/ushanka
+    ctx.fillStyle = '#2a231a';
+    ctx.beginPath(); ctx.arc(x, top + 1.2, 4.5, Math.PI * 0.98, Math.PI * 2.02); ctx.fill();
+    ctx.fillRect(x - 4.6, top + 1, 2.6, 4); ctx.fillRect(x + 2, top + 1, 2.6, 4);
+  } else { // cabelo
+    ctx.fillStyle = f.hair || '#2a2018';
+    ctx.beginPath(); ctx.arc(x, top + 2.6, 3.9, Math.PI * 1.03, Math.PI * 2.03); ctx.fill();
+  }
+  // bolsa/sacola de quem espera há horas
+  if (f.bag) { ctx.fillStyle = '#241f18'; ctx.fillRect(x + cw - 1.2, groundY - 15, 3.4, 6.5); }
+  // fôlego no frio (mais visível perto da luz)
+  if (Math.sin(Q.t * .9 + f.phase * 3) > .9) {
+    ctx.fillStyle = `rgba(222,222,212,${(0.1 + lum * 0.14).toFixed(2)})`;
+    ctx.beginPath(); ctx.arc(x + 3.4, top + 3, 2 + Math.sin(Q.t * 3) * 0.4, 0, 6.29); ctx.fill();
   }
 }
 function drawQueue(ctx, w, h) {
@@ -7171,10 +7224,10 @@ function drawQueue(ctx, w, h) {
   // chão
   ctx.fillStyle = '#181a14'; ctx.fillRect(0, groundY, w, 14);
   // figuras
-  Q.figs.forEach(f => { f.x += (f.tx - f.x) * .04; drawFig(ctx, f, groundY); });
+  Q.figs.forEach(f => { f.x += (f.tx - f.x) * .04; drawFig(ctx, f, groundY, lampX); });
   if (Q.walker) {
     Q.walker.x += Q.walker.spd;
-    drawFig(ctx, Q.walker, groundY);
+    drawFig(ctx, Q.walker, groundY, lampX);
     if (Q.walker.x > w + 12) Q.walker = null;
   }
   // neve
