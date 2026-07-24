@@ -5912,14 +5912,27 @@ function paintHandScene(ctx, f, phys, mode) {
 
   const far = mode === 'palm-far';
   const dorsal = mode === 'dorsal';
-  const sc = far ? 0.62 : 1;              // aproximando do vidro
-  const cy = far ? 74 : 66;               // centro da palma
+  const sc = far ? 0.72 : 1.24;           // aproximando do vidro (mão enche mais o quadro)
+  const cy = far ? 70 : 60;               // centro da palma
   const fingerLen = (anom ? 30 : 23) * sc; // "dedos compridos demais para as mãos"
   const palmW = 17 * sc, palmH = 21 * sc;
-  const tone = mix(SK, [255, 250, 240], far ? 0 : 0.10); // prensada = mais pálida
+  const tone = mix(SK, [255, 238, 214], far ? 0.02 : 0.06); // pele quente (prensada = um tico mais pálida)
   ctx.save();
   ctx.translate(50 + (far ? 4 : 0), 0);
   ctx.rotate((r() - 0.5) * 0.06);
+  // pulso + PUNHO do casaco: a mão sai de um braço, não flutua no preto
+  if (!far) {
+    ctx.fillStyle = rgb(mix(tone, SH, 0.28));
+    ctx.fillRect(-palmW * 0.7, cy + palmH * 0.3, palmW * 1.4, 44);
+    ctx.fillStyle = 'rgb(40,38,31)';
+    ctx.beginPath();
+    ctx.moveTo(-palmW * 0.92, cy + palmH * 0.95); ctx.lineTo(palmW * 0.92, cy + palmH * 0.95);
+    ctx.lineTo(palmW * 0.8, 128); ctx.lineTo(-palmW * 0.8, 128); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(210,215,190,.12)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(-palmW * 0.92, cy + palmH * 0.95); ctx.lineTo(palmW * 0.92, cy + palmH * 0.95); ctx.stroke();
+    // botão do punho
+    ctx.fillStyle = 'rgba(70,62,44,.9)'; ctx.beginPath(); ctx.arc(palmW * 0.5, cy + palmH * 1.3, 1.1, 0, 6.29); ctx.fill();
+  }
   // dedos (4) — colunas com juntas
   for (let i = 0; i < 4; i++) {
     const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / 3);
