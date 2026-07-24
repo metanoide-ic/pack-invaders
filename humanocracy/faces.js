@@ -737,7 +737,7 @@ function paintBust(ctx, f, opts) {
   if (f.hat !== 2) {
     ctx.save();
     const hs = f.hairStyle;
-    const topY = 17, hlY = [33, 29, 25, 27][hs] + r() * 2; // linha do cabelo
+    const topY = 17, hlY = [32, 30, 29, 30][hs] + r() * 1.6; // linha do cabelo (mais baixa = menos testa)
     // massa base — traçado reutilizável (preenche E recorta os fios, para
     // nenhum fio escapar pra testa como "garra")
     const hairMass = () => {
@@ -746,13 +746,18 @@ function paintBust(ctx, f, opts) {
       ctx.bezierCurveTo(cx - L.fw - 2, topY + 2, cx - L.fw * 0.5, topY - 4.5, cx, topY - 4.5);
       ctx.bezierCurveTo(cx + L.fw * 0.5, topY - 4.5, cx + L.fw + 2 + L.ax, topY + 2, cx + L.fw + 0.6 + L.ax, 48);
       // recorte da testa (linha do cabelo por estilo)
-      if (hs === 2) { // recuado / calvície
-        ctx.lineTo(cx + L.fw * 0.92, hlY - 3);
-        ctx.quadraticCurveTo(cx + L.fw * 0.5, hlY + 5, cx, hlY - 8 + (f.idade > 55 ? 3 : 0));
-        ctx.quadraticCurveTo(cx - L.fw * 0.5, hlY + 5, cx - L.fw * 0.92, hlY - 3);
-      } else if (hs === 3) { // penteado pra trás
-        ctx.lineTo(cx + L.fw * 0.96 + L.ax, hlY);
-        ctx.quadraticCurveTo(cx, hlY - 4, cx - L.fw * 0.96, hlY);
+      if (hs === 2) { // ENTRADAS suaves: têmporas recuam, forelock central desce;
+        // ainda há cabelo no topo (calvície de verdade só em idoso)
+        const rec = f.idade > 55 ? 3.5 : 1.5;
+        const fore = f.idade > 55 ? -0.5 : 1.5;            // quanto o forelock desce
+        ctx.lineTo(cx + L.fw * 0.9 + L.ax, hlY);
+        ctx.quadraticCurveTo(cx + L.fw * 0.62, hlY - 2 - rec, cx + L.fw * 0.3, hlY - 1); // entrada dir
+        ctx.quadraticCurveTo(cx + L.fw * 0.12, hlY + fore, cx, hlY + fore);              // forelock (pico central)
+        ctx.quadraticCurveTo(cx - L.fw * 0.12, hlY + fore, cx - L.fw * 0.3, hlY - 1);
+        ctx.quadraticCurveTo(cx - L.fw * 0.62, hlY - 2 - rec, cx - L.fw * 0.9, hlY);      // entrada esq
+      } else if (hs === 3) { // penteado pra trás, com volume no topo (não é calvo)
+        ctx.lineTo(cx + L.fw * 0.95 + L.ax, hlY + 1);
+        ctx.quadraticCurveTo(cx, hlY - 1.5, cx - L.fw * 0.95, hlY + 1);
       } else if (hs === 1) { // cheio, com franja recortada (dá "bico" de franja)
         ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 4);
         for (let k = 5; k >= 0; k--) { // borda de franja denteada (mechas)

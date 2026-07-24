@@ -417,7 +417,10 @@ function genFeatures(sexo, idade, etnia) {
     etnia: etnia || null,
     skin: ph ? pick(ph.skin) : ri(0, SKINS.length - 1),
     hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : (ph ? pick(ph.hair) : ri(0, HAIRC.length - 1)), // grisalho/branco
-    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 4), mouth: ri(0, 2),
+    // estilo de cabelo por sexo/idade: mulheres nunca recebem "entradas" (hs2);
+    // homens só recebem entradas com mais idade (senão vira careca aleatória).
+    hairStyle: sexo === 'f' ? pick([0, 1, 1, 3]) : (idade > 42 ? ri(0, 3) : pick([0, 1, 3, 0])),
+    eyes: ph ? pick(ph.eyes) : ri(0, 4), mouth: ri(0, 2),
     beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
