@@ -4448,9 +4448,9 @@ function faceLayout(f) {
   const eyeW = 5.05 + r() * 0.8;                      // um pouco menores
   let eyeH = 2.05 + r() * 0.6 + E.eyeH;
   let browY = eyeY - (5 + r() * 2.4) - (f.brow ? 1.2 : 0);
-  const noseTip = 58.5 + r() * 2.4;
-  let noseW = 4.4 + r() * 1.8 - (fem ? 0.6 : 0) + E.nose;
-  const mouthY = 66.5 + r() * 1.8;
+  const noseTip = 56.8 + r() * 2.2;                    // nariz um pouco mais curto (termina mais alto)
+  let noseW = 3.9 + r() * 1.5 - (fem ? 0.6 : 0) + E.nose; // e um pouco mais estreito
+  const mouthY = 64 + r() * 1.6;                       // boca mais alta: sobra espaço até o queixo
   let mouthW = 8.2 + r() * 2.2;
   if (child) { // proporções infantis: crânio grande, rosto curto, olho grande
     fw *= 0.88; jw *= 0.78; chinY -= 5.5; eyeY += 1.4; eyeH += 0.55;
