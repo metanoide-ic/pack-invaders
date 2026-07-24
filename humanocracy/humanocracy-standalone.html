@@ -4625,12 +4625,17 @@ function paintBust(ctx, f, opts) {
   ctx.fillStyle = gv; ctx.fillRect(0, 0, 100, 120);
 
   // CHIAROSCURO lateral: a lâmpada vem da esquerda; o lado direito do
-  // rosto cai em sombra franca — é isso que faz a foto parecer foto
-  const chiar = ctx.createLinearGradient(cx - L.fw, 0, cx + L.fw, 0);
-  chiar.addColorStop(0, 'rgba(255,242,214,.14)');
-  chiar.addColorStop(0.42, 'rgba(0,0,0,0)');
-  chiar.addColorStop(0.72, rgb(darken(SH, 0.08), 0.28));
-  chiar.addColorStop(1, rgb(darken(SH, 0.22), 0.62));
+  // rosto cai em sombra franca — é isso que faz a foto parecer foto.
+  // O TERMINADOR (transição) leva um toque quente, e a borda extrema da
+  // sombra recebe LUZ REFLETIDA fria (bounce) — é o que faz a forma "virar"
+  // em vez de parecer cera chapada.
+  const chiar = ctx.createLinearGradient(cx - L.fw, 0, cx + L.fw + L.ax, 0);
+  chiar.addColorStop(0, 'rgba(255,242,214,.15)');
+  chiar.addColorStop(0.4, 'rgba(0,0,0,0)');
+  chiar.addColorStop(0.58, rgb(mix(SH, [150, 70, 40], 0.35), 0.14)); // terminador quente
+  chiar.addColorStop(0.74, rgb(darken(SH, 0.08), 0.3));
+  chiar.addColorStop(0.93, rgb(darken(SH, 0.24), 0.64));            // núcleo da sombra
+  chiar.addColorStop(1, rgb(mix(SH, [90, 96, 120], 0.5), 0.34));    // bounce frio na borda
   ctx.fillStyle = chiar; ctx.fillRect(0, 0, 100, 120);
 
   /* SIDE PLANES do maxilar (mais duros que antes: um plano, não um borrão).
@@ -5051,29 +5056,34 @@ function paintBust(ctx, f, opts) {
     ctx.beginPath(); ctx.arc(ex - sgn * ew, ey + 0.2, 0.5, 0, 6.29); ctx.fill();
   }
 
-  /* sobrancelhas: massa sombreada + fios por cima */
+  /* sobrancelhas: FORMA preenchida e afilada (grossa no meio, fina na cauda),
+     seguindo a arcada — não um risco. A do lado da sombra é mais escura. */
   for (const sgn of [-1, 1]) {
     const ex = cx + sgn * L.eyeDX, by = L.browY + (sgn > 0 ? L.ax * 0.5 : 0);
-    // massa base (garante presença mesmo depois do downscale + dither)
-    ctx.save();
-    try { ctx.filter = `blur(${(0.5 * F_SCALE).toFixed(1)}px)`; } catch (e) {}
-    ctx.strokeStyle = rgb(darken(L.hair, 0.2), L.fem ? 0.6 : 0.8);
-    ctx.lineWidth = L.fem ? 1.1 : 1.7;
+    const dark = sgn > 0;
+    const inX = ex - sgn * (L.eyeW * 0.92), inY = by + 1.5;          // cabeça (perto do nariz)
+    const arX = ex - sgn * (L.eyeW * 0.05), arY = by - (f.brow ? 1.8 : 0.9); // arco (pico)
+    const tlX = ex + sgn * (L.eyeW * 1.12), tlY = by + (f.brow ? 0.7 : 1.2); // cauda
+    const th = (L.fem ? 1.0 : 1.7) * (f.brow ? 1.15 : 1);
+    // forma preenchida
+    ctx.fillStyle = rgb(darken(L.hair, dark ? 0.3 : 0.16), L.fem ? 0.72 : 0.9);
     ctx.beginPath();
-    ctx.moveTo(ex - sgn * (L.eyeW + 0.8), by + 1.2);
-    ctx.quadraticCurveTo(ex, by - (f.brow ? 1.6 : 0.7), ex + sgn * (L.eyeW + 0.6), by + (f.brow ? 0.2 : 0.8));
-    ctx.stroke();
-    ctx.restore();
-    // fios
-    const n = L.fem ? 10 : 16;
-    ctx.strokeStyle = rgb(darken(L.hair, 0.35), L.fem ? 0.6 : 0.75);
-    ctx.lineWidth = 0.5;
+    ctx.moveTo(inX, inY);
+    ctx.quadraticCurveTo(arX, arY, tlX, tlY);
+    ctx.quadraticCurveTo(arX, arY + th, inX + sgn * 0.3, inY + th * 0.85);
+    ctx.closePath(); ctx.fill();
+    // sombra que a sobrancelha projeta na órbita (logo abaixo)
+    soft(ctx, arX, by + th + 0.6, L.eyeW * 0.9, 0.9, rgb(darken(SH, 0.14), 0.3), 1.1);
+    // fios por cima (seguem o arco, apontam pra cauda)
+    const n = L.fem ? 13 : 19;
+    ctx.lineWidth = 0.42;
     for (let i = 0; i < n; i++) {
       const t = i / (n - 1);
-      const bx = ex - sgn * (L.eyeW + 0.6) + sgn * t * (L.eyeW * 2 + 1);
-      const yy = by + 1 - Math.sin(t * 2.6) * (f.brow ? 1.6 : 0.9) + r() * 0.5;
-      ctx.beginPath(); ctx.moveTo(bx, yy + 0.8);
-      ctx.lineTo(bx + sgn * (0.7 + t * 0.8), yy - 0.8 - r() * 0.4); ctx.stroke();
+      const bx = inX + (tlX - inX) * t;
+      const yy = by + 1 - Math.sin(t * 2.6) * (f.brow ? 1.6 : 0.9) + (r() - 0.5) * 0.5;
+      ctx.strokeStyle = rgb(r() < 0.5 ? darken(L.hair, 0.4) : lighten(L.hair, 0.28), dark ? 0.5 : 0.72);
+      ctx.beginPath(); ctx.moveTo(bx, yy + 0.9);
+      ctx.lineTo(bx + sgn * (0.7 + t * 0.8), yy - 0.7 - r() * 0.4); ctx.stroke();
     }
   }
 
