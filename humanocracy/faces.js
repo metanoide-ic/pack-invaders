@@ -236,12 +236,18 @@ function paintBust(ctx, f, opts) {
   ctx.save();
   ctx.translate(50, 62); ctx.rotate(L.tilt); ctx.translate(-50, -62);
 
-  /* orelhas (por trás da cabeça) */
-  ctx.fillStyle = rgb(mix(SK, SH, 0.3));
-  ctx.beginPath(); ctx.ellipse(cx - L.fw - 0.5, 52, 2.4, 4, -0.12, 0, 6.29); ctx.fill();
-  ctx.beginPath(); ctx.ellipse(cx + L.fw + 0.5 + L.ax, 52, 2.4, 4, 0.12, 0, 6.29); ctx.fill();
-  soft(ctx, cx - L.fw - 0.5, 52.5, 1.1, 2, rgb(darken(SH, 0.25), 0.5), 0.8);
-  soft(ctx, cx + L.fw + 0.5 + L.ax, 52.5, 1.1, 2, rgb(darken(SH, 0.25), 0.5), 0.8);
+  /* orelhas (por trás da cabeça) — menores, coladas, com sombra de contato
+     atrás para não "saltarem" rosadas do crânio */
+  const earY = L.eyeY + 4;
+  for (const s of [-1, 1]) {
+    const ex0 = cx + s * (L.fw - 0.3) + (s > 0 ? L.ax : 0);
+    soft(ctx, ex0 + s * 1.4, earY + 0.5, 1.6, 3.2, 'rgba(0,0,0,.28)', 1.4); // sombra de contato atrás
+    ctx.fillStyle = rgb(mix(SK, SH, 0.35));
+    ctx.beginPath(); ctx.ellipse(ex0, earY, 2, 3.4, s * 0.12, 0, 6.29); ctx.fill();
+    // hélix (borda) pega luz de leve no lado da lâmpada; concha em sombra
+    soft(ctx, ex0 - s * 0.6, earY - 0.3, 0.7, 2.4, rgb(s < 0 ? lighten(SK, 0.15) : darken(SH, 0.05), 0.4), 0.7);
+    soft(ctx, ex0 + s * 0.5, earY + 0.4, 0.9, 1.8, rgb(darken(SH, 0.3), 0.55), 0.7); // interior (concha)
+  }
 
   /* cabeça: base + modelagem clipada */
   headPath(ctx, L);
@@ -576,8 +582,11 @@ function paintBust(ctx, f, opts) {
       soft(ctx, ex, ey - 1, ew * 0.9, 2, rgb(mix(SK, SH, 0.3), 0.8), 1.2);
       continue;
     }
-    // esclera (nunca branca — olho de gente cansada)
-    ctx.fillStyle = opts.brightSclera ? 'rgb(234,232,220)' : 'rgb(196,188,166)';
+    // esclera (nunca branca — olho de gente cansada). O olho do lado da
+    // SOMBRA é mais escuro: dois olhos idênticos e igualmente claros é o que
+    // dava o ar de "olhos colados na cara".
+    const scleraBase = opts.brightSclera ? [234, 232, 220] : [196, 188, 166];
+    ctx.fillStyle = rgb(sgn > 0 ? darken(scleraBase, 0.34) : scleraBase);
     ctx.beginPath();
     ctx.moveTo(ex - ew, ey);
     ctx.quadraticCurveTo(ex - ew * 0.3, ey - eh - 0.6, ex + ew * 0.5, ey - eh + 0.2);
@@ -591,6 +600,16 @@ function paintBust(ctx, f, opts) {
     cg.addColorStop(0, 'rgba(58,44,34,.5)'); cg.addColorStop(0.3, 'rgba(58,44,34,0)');
     cg.addColorStop(0.7, 'rgba(58,44,34,0)'); cg.addColorStop(1, 'rgba(58,44,34,.55)');
     ctx.fillStyle = cg; ctx.fillRect(ex - ew, ey - eh - 1, ew * 2, eh * 2 + 2);
+    // CRESCENTE: sombra que a pálpebra superior projeta na esclera — assenta
+    // o globo dentro da órbita (o cue mais forte de "olho de verdade")
+    if (!wide) {
+      ctx.fillStyle = 'rgba(36,26,18,.45)';
+      ctx.beginPath();
+      ctx.moveTo(ex - ew, ey - eh * 0.1);
+      ctx.quadraticCurveTo(ex, ey - eh - 0.8, ex + ew, ey - eh * 0.1);
+      ctx.quadraticCurveTo(ex, ey - eh * 0.5 + 1.6, ex - ew, ey - eh * 0.1);
+      ctx.closePath(); ctx.fill();
+    }
     if (opts.veins) {
       ctx.strokeStyle = 'rgba(150,44,32,.6)'; ctx.lineWidth = 0.32;
       for (let i = 0; i < 4; i++) {
@@ -606,16 +625,19 @@ function paintBust(ctx, f, opts) {
     const pr = 1.45 + (sgn > 0 ? L.pupilSkew : 0);
     const ixx = ex + lookX * 1.25;
     const iy = ey - 0.3 + wide * 0.4;
-    const ig = ctx.createRadialGradient(ixx, iy, 0.4, ixx, iy, ir);
-    ig.addColorStop(0, rgb(darken(L.iris, 0.3)));
-    ig.addColorStop(0.65, rgb(L.iris));
-    ig.addColorStop(1, rgb(darken(L.iris, 0.6)));
+    const irisC = sgn > 0 ? darken(L.iris, 0.28) : L.iris; // íris do lado sombrio mais escura
+    const ig = ctx.createRadialGradient(ixx - 0.6, iy - 0.6, 0.4, ixx, iy, ir);
+    ig.addColorStop(0, rgb(lighten(irisC, 0.12)));  // borda superior-esquerda pega luz
+    ig.addColorStop(0.55, rgb(irisC));
+    ig.addColorStop(0.9, rgb(darken(irisC, 0.55)));
+    ig.addColorStop(1, rgb(darken(irisC, 0.7)));    // anel escuro (limbo)
     ctx.fillStyle = ig;
     ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.fill();
     ctx.fillStyle = 'rgb(8,6,5)';
     ctx.beginPath(); ctx.arc(ixx, iy, pr, 0, 6.29); ctx.fill();
-    ctx.fillStyle = 'rgba(255,252,244,.8)';
-    ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, 0.4, 0, 6.29); ctx.fill();
+    // catchlight: forte no olho da luz, fraco no da sombra
+    ctx.fillStyle = `rgba(255,252,244,${sgn < 0 ? 0.85 : 0.4})`;
+    ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, sgn < 0 ? 0.45 : 0.32, 0, 6.29); ctx.fill();
     if (!wide) {
       // a pálpebra superior COBRE o topo da íris (sombra + oclusão)
       const lg = ctx.createLinearGradient(0, ey - eh - 0.5, 0, ey - eh * 0.1);
