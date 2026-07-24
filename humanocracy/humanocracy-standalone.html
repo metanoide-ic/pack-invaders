@@ -41,7 +41,7 @@
      multiplicar luminância — funciona igual sob qualquer tema de regime. */
   --panel-wash: rgba(36,38,31,.84);
   --paper-wash: rgba(216,210,189,.86);
-  --tex-panel: none; --tex-paper: none; --tex-wood: none; /* fallback antes do faces.js rodar */
+  --tex-panel: none; --tex-paper: none; --tex-wood: none; --tex-guilloche: none; /* fallback antes do faces.js rodar */
 }
 
 /* Regime Mehrvolk: preto, vermelho-sangue e dourado */
@@ -318,8 +318,31 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   font-family:var(--font-display); font-weight:600; text-transform:uppercase;
   padding:5px 8px; font-size:12px; letter-spacing:1px;
   color:#f0ead6; display:flex; justify-content:space-between;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+  text-shadow: 0 1px 1px rgba(0,0,0,.4);
 }
-.document .doc-body { padding:8px 10px 10px; }
+.document .doc-body {
+  position:relative; padding:8px 10px 10px; overflow:hidden;
+  /* guilhochê de segurança bem fraco atrás dos campos */
+  background-image: var(--tex-guilloche);
+  background-size: 150px 150px; background-position:center; background-blend-mode:multiply;
+}
+.document .doc-body::before { /* clareia o guilhochê pra virar marca d'água */
+  content:''; position:absolute; inset:0; background:var(--paper-wash); opacity:.55; pointer-events:none;
+}
+.document .doc-body > * { position:relative; }
+/* marca d'água do selo nacional, grande e fantasma, atrás dos campos */
+.doc-watermark {
+  position:absolute; right:6px; bottom:20px; font-size:70px; line-height:1;
+  color:rgba(107,98,80,.13); pointer-events:none; z-index:0; font-family:serif;
+}
+/* zona de leitura de máquina (MRZ) */
+.doc-mrz {
+  margin:8px -10px -10px; padding:5px 8px; font-family:"OCR A", var(--font-mono);
+  font-size:10px; letter-spacing:1px; line-height:1.35; color:#2b2820;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 1px, transparent 1px 6px), #cfc7ad;
+  border-top:1px solid rgba(0,0,0,.25); word-break:break-all; white-space:normal;
+}
 .document .fld { display:flex; justify-content:space-between; padding:1.5px 2px; }
 .document .fld .k { font-family:var(--font-mono); color:#6b6250; font-size:10px; letter-spacing:.03em; }
 .document .fld .v { cursor:pointer; padding:0 3px; }
@@ -330,7 +353,15 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
    box-shadow em vez de outline pra não brigar com .picked/.flagged, que já
    usam outline nos mesmos elementos. */
 .gp-focus { box-shadow: 0 0 0 2px var(--accent2), 0 0 10px 2px rgba(185,164,92,.55); }
-.doc-photo { float:right; margin:0 0 4px 6px; border:1px solid #6b6250; background:#c9c2ab; }
+.doc-photo {
+  float:right; margin:0 0 4px 6px; padding:2px; background:#e9e2cc;
+  border:1px solid #4a4636; box-shadow: 0 1px 3px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.15);
+  position:relative; z-index:1;
+}
+.doc-photo::after { /* carimbo seco sobre a foto (a metade que pega o documento) */
+  content:''; position:absolute; right:-6px; bottom:6px; width:22px; height:22px;
+  border:1.5px solid rgba(140,47,36,.35); border-radius:50%; pointer-events:none;
+}
 .doc-photo svg { display:block; width:64px; height:76px; cursor:pointer; }
 .doc-photo.picked { outline:2px solid var(--stamp-red); }
 .doc-seal { text-align:center; font-size:22px; opacity:.75; cursor:pointer; }
@@ -6500,6 +6531,27 @@ function stopActorBlink() {
     wx.strokeStyle = 'rgba(20,12,6,.35)'; wx.lineWidth = 2.4;
     wx.beginPath(); wx.arc(178, 66, 13, 0, 6.29); wx.stroke();
     set('--tex-wood', w);
+
+    // guilhochê de segurança: curvas espirográficas finas (marca d'água de documento)
+    const gl = mk2(200, 200); const glx = gl.getContext('2d');
+    glx.strokeStyle = 'rgba(60,50,30,.5)'; glx.lineWidth = 0.4;
+    for (let ring = 0; ring < 5; ring++) {
+      const R = 30 + ring * 16, k = 5 + ring, cxg = 100, cyg = 100;
+      glx.beginPath();
+      for (let a = 0; a <= 6.2832; a += 0.02) {
+        const rad = R + Math.sin(a * k) * 8;
+        const x = cxg + Math.cos(a) * rad, y = cyg + Math.sin(a) * rad * 0.96;
+        if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y);
+      }
+      glx.stroke();
+    }
+    // rosetas nos cantos
+    for (const [ox2, oy2] of [[40, 40], [160, 40], [40, 160], [160, 160]]) {
+      glx.beginPath();
+      for (let a = 0; a <= 6.2832; a += 0.03) { const rad = 14 + Math.sin(a * 7) * 5; const x = ox2 + Math.cos(a) * rad, y = oy2 + Math.sin(a) * rad; if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y); }
+      glx.stroke();
+    }
+    set('--tex-guilloche', gl);
   } catch (e) {}
 })();
 
@@ -8035,10 +8087,20 @@ function fld(docId, key, label, value, clickable) {
   return `<div class="fld"><span class="k">${T(label)}</span><span class="v" data-fid="${docId}.${key}">${value}</span></div>`;
 }
 
+function mrzClean(s, n) { return (s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9< ]/g, '').replace(/ /g, '<').padEnd(n, '<').slice(0, n); }
+function docMRZ(doc, cz) {
+  const c = COUNTRIES[cz.pais];
+  const l1 = mrzClean('P<' + c.prefix.toUpperCase() + '<' + (doc.nome || '').replace(/ /g, '<'), 36);
+  const num = (doc.numero || '').replace(/[^A-Z0-9]/gi, '');
+  const yob = (doc.nasc && doc.nasc.y ? String(doc.nasc.y).slice(2) : '00');
+  const l2 = mrzClean(num + '<' + c.prefix + '<' + doc.sexo + '<' + yob + '<' + (doc.numero || '').replace(/\D/g, '').slice(0, 5), 36);
+  return `<div class="doc-mrz">${l1}<br>${l2}</div>`;
+}
 function docHTML(doc, cz) {
   let b = '';
   const dateStr = (dt) => fmtDate(dt);
   if (doc.id === 'pass') {
+    b += `<div class="doc-watermark">${doc.selo}</div>`;
     b += `<div class="doc-photo" data-fid="pass.foto"><svg viewBox="0 0 100 120">${portraitSVG(cz.photoFeatures)}</svg></div>`;
     b += fld('pass', 'nome', 'NOME', doc.nome);
     b += fld('pass', 'nasc', 'NASC.', dateStr(doc.nasc));
@@ -8049,6 +8111,7 @@ function docHTML(doc, cz) {
     b += fld('pass', 'validade', 'VALIDADE', dateStr(doc.validade));
     if (doc.reval !== null) b += fld('pass', 'reval', 'REVALIDAÇÃO', doc.reval);
     b += `<div class="doc-seal" data-fid="pass.selo">${doc.selo}</div>`;
+    b += docMRZ(doc, cz);
   } else if (doc.id === 'ident') {
     b += fld('ident', 'nome', 'NOME', doc.nome);
     b += fld('ident', 'nasc', 'NASC.', dateStr(doc.nasc));

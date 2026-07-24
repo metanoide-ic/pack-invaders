@@ -2079,6 +2079,27 @@ function stopActorBlink() {
     wx.strokeStyle = 'rgba(20,12,6,.35)'; wx.lineWidth = 2.4;
     wx.beginPath(); wx.arc(178, 66, 13, 0, 6.29); wx.stroke();
     set('--tex-wood', w);
+
+    // guilhochê de segurança: curvas espirográficas finas (marca d'água de documento)
+    const gl = mk2(200, 200); const glx = gl.getContext('2d');
+    glx.strokeStyle = 'rgba(60,50,30,.5)'; glx.lineWidth = 0.4;
+    for (let ring = 0; ring < 5; ring++) {
+      const R = 30 + ring * 16, k = 5 + ring, cxg = 100, cyg = 100;
+      glx.beginPath();
+      for (let a = 0; a <= 6.2832; a += 0.02) {
+        const rad = R + Math.sin(a * k) * 8;
+        const x = cxg + Math.cos(a) * rad, y = cyg + Math.sin(a) * rad * 0.96;
+        if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y);
+      }
+      glx.stroke();
+    }
+    // rosetas nos cantos
+    for (const [ox2, oy2] of [[40, 40], [160, 40], [40, 160], [160, 160]]) {
+      glx.beginPath();
+      for (let a = 0; a <= 6.2832; a += 0.03) { const rad = 14 + Math.sin(a * 7) * 5; const x = ox2 + Math.cos(a) * rad, y = oy2 + Math.sin(a) * rad; if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y); }
+      glx.stroke();
+    }
+    set('--tex-guilloche', gl);
   } catch (e) {}
 })();
 

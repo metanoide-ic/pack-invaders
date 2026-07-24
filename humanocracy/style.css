@@ -34,7 +34,7 @@
      multiplicar luminância — funciona igual sob qualquer tema de regime. */
   --panel-wash: rgba(36,38,31,.84);
   --paper-wash: rgba(216,210,189,.86);
-  --tex-panel: none; --tex-paper: none; --tex-wood: none; /* fallback antes do faces.js rodar */
+  --tex-panel: none; --tex-paper: none; --tex-wood: none; --tex-guilloche: none; /* fallback antes do faces.js rodar */
 }
 
 /* Regime Mehrvolk: preto, vermelho-sangue e dourado */
@@ -311,8 +311,31 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   font-family:var(--font-display); font-weight:600; text-transform:uppercase;
   padding:5px 8px; font-size:12px; letter-spacing:1px;
   color:#f0ead6; display:flex; justify-content:space-between;
+  box-shadow: inset 0 -1px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.12);
+  text-shadow: 0 1px 1px rgba(0,0,0,.4);
 }
-.document .doc-body { padding:8px 10px 10px; }
+.document .doc-body {
+  position:relative; padding:8px 10px 10px; overflow:hidden;
+  /* guilhochê de segurança bem fraco atrás dos campos */
+  background-image: var(--tex-guilloche);
+  background-size: 150px 150px; background-position:center; background-blend-mode:multiply;
+}
+.document .doc-body::before { /* clareia o guilhochê pra virar marca d'água */
+  content:''; position:absolute; inset:0; background:var(--paper-wash); opacity:.55; pointer-events:none;
+}
+.document .doc-body > * { position:relative; }
+/* marca d'água do selo nacional, grande e fantasma, atrás dos campos */
+.doc-watermark {
+  position:absolute; right:6px; bottom:20px; font-size:70px; line-height:1;
+  color:rgba(107,98,80,.13); pointer-events:none; z-index:0; font-family:serif;
+}
+/* zona de leitura de máquina (MRZ) */
+.doc-mrz {
+  margin:8px -10px -10px; padding:5px 8px; font-family:"OCR A", var(--font-mono);
+  font-size:10px; letter-spacing:1px; line-height:1.35; color:#2b2820;
+  background:repeating-linear-gradient(0deg, rgba(0,0,0,.05) 0 1px, transparent 1px 6px), #cfc7ad;
+  border-top:1px solid rgba(0,0,0,.25); word-break:break-all; white-space:normal;
+}
 .document .fld { display:flex; justify-content:space-between; padding:1.5px 2px; }
 .document .fld .k { font-family:var(--font-mono); color:#6b6250; font-size:10px; letter-spacing:.03em; }
 .document .fld .v { cursor:pointer; padding:0 3px; }
@@ -323,7 +346,15 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
    box-shadow em vez de outline pra não brigar com .picked/.flagged, que já
    usam outline nos mesmos elementos. */
 .gp-focus { box-shadow: 0 0 0 2px var(--accent2), 0 0 10px 2px rgba(185,164,92,.55); }
-.doc-photo { float:right; margin:0 0 4px 6px; border:1px solid #6b6250; background:#c9c2ab; }
+.doc-photo {
+  float:right; margin:0 0 4px 6px; padding:2px; background:#e9e2cc;
+  border:1px solid #4a4636; box-shadow: 0 1px 3px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.15);
+  position:relative; z-index:1;
+}
+.doc-photo::after { /* carimbo seco sobre a foto (a metade que pega o documento) */
+  content:''; position:absolute; right:-6px; bottom:6px; width:22px; height:22px;
+  border:1.5px solid rgba(140,47,36,.35); border-radius:50%; pointer-events:none;
+}
 .doc-photo svg { display:block; width:64px; height:76px; cursor:pointer; }
 .doc-photo.picked { outline:2px solid var(--stamp-red); }
 .doc-seal { text-align:center; font-size:22px; opacity:.75; cursor:pointer; }

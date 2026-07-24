@@ -1518,10 +1518,20 @@ function fld(docId, key, label, value, clickable) {
   return `<div class="fld"><span class="k">${T(label)}</span><span class="v" data-fid="${docId}.${key}">${value}</span></div>`;
 }
 
+function mrzClean(s, n) { return (s || '').toUpperCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Z0-9< ]/g, '').replace(/ /g, '<').padEnd(n, '<').slice(0, n); }
+function docMRZ(doc, cz) {
+  const c = COUNTRIES[cz.pais];
+  const l1 = mrzClean('P<' + c.prefix.toUpperCase() + '<' + (doc.nome || '').replace(/ /g, '<'), 36);
+  const num = (doc.numero || '').replace(/[^A-Z0-9]/gi, '');
+  const yob = (doc.nasc && doc.nasc.y ? String(doc.nasc.y).slice(2) : '00');
+  const l2 = mrzClean(num + '<' + c.prefix + '<' + doc.sexo + '<' + yob + '<' + (doc.numero || '').replace(/\D/g, '').slice(0, 5), 36);
+  return `<div class="doc-mrz">${l1}<br>${l2}</div>`;
+}
 function docHTML(doc, cz) {
   let b = '';
   const dateStr = (dt) => fmtDate(dt);
   if (doc.id === 'pass') {
+    b += `<div class="doc-watermark">${doc.selo}</div>`;
     b += `<div class="doc-photo" data-fid="pass.foto"><svg viewBox="0 0 100 120">${portraitSVG(cz.photoFeatures)}</svg></div>`;
     b += fld('pass', 'nome', 'NOME', doc.nome);
     b += fld('pass', 'nasc', 'NASC.', dateStr(doc.nasc));
@@ -1532,6 +1542,7 @@ function docHTML(doc, cz) {
     b += fld('pass', 'validade', 'VALIDADE', dateStr(doc.validade));
     if (doc.reval !== null) b += fld('pass', 'reval', 'REVALIDAÇÃO', doc.reval);
     b += `<div class="doc-seal" data-fid="pass.selo">${doc.selo}</div>`;
+    b += docMRZ(doc, cz);
   } else if (doc.id === 'ident') {
     b += fld('ident', 'nome', 'NOME', doc.nome);
     b += fld('ident', 'nasc', 'NASC.', dateStr(doc.nasc));
