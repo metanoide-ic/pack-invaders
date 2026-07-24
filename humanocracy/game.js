@@ -401,13 +401,13 @@ const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919',
    prova etnia nenhuma. faces.js aplica desvios estruturais igualmente
    sutis a partir de f.etnia. */
 const ETHNIC_PHENO = {
-  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS)
-  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 1, 2] },
-  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [5, 5, 0, 0, 1],    eyes: [1, 1, 2, 0] },
-  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 1, 2] },
-  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 2] },
-  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [1, 2, 2, 0] },
-  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 2] },
+  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS: 0 castanho,1 mel,2 verde,3 azul,4 castanho-claro)
+  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 0, 4, 2, 3] },
+  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 5, 0, 7, 2],    eyes: [3, 3, 2, 4, 0] },
+  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 0, 4, 1] },
+  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 1] },
+  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [2, 3, 0, 4] },
+  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 1] },
 };
 function genFeatures(sexo, idade, etnia) {
   idade = idade || ri(20, 60);
@@ -417,7 +417,7 @@ function genFeatures(sexo, idade, etnia) {
     etnia: etnia || null,
     skin: ph ? pick(ph.skin) : ri(0, SKINS.length - 1),
     hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : (ph ? pick(ph.hair) : ri(0, HAIRC.length - 1)), // grisalho/branco
-    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 2), mouth: ri(0, 2),
+    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 4), mouth: ri(0, 2),
     beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço

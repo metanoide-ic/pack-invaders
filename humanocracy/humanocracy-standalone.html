@@ -4389,19 +4389,27 @@ function faceSeedOf(f) {
 }
 
 /* ---------- paletas (mesmos comprimentos de SKINS/HAIRC do game.js) ---------- */
+/* Pele: a SOMBRA (s) puxa pro vermelho/laranja (subsurface scattering) em vez
+   de só escurecer — é o que dá pele viva em vez de plástico. Bases um pouco
+   menos alaranjadas, com undertones variados (rosada, oliva, dourada). */
 const F_SKIN = [
-  { b: [214, 183, 150], s: [150, 118, 92] },
-  { b: [199, 158, 116], s: [136, 100, 70] },
-  { b: [180, 133, 92],  s: [118, 82, 52] },
-  { b: [152, 108, 76],  s: [96, 64, 40] },
-  { b: [124, 84, 58],   s: [76, 48, 30] },
-  { b: [224, 196, 168], s: [160, 132, 106] },
+  { b: [226, 193, 167], s: [160, 104, 88] },   // clara rosada
+  { b: [208, 168, 132], s: [146, 96, 74] },    // clara oliva
+  { b: [184, 139, 101], s: [124, 78, 58] },    // média dourada
+  { b: [154, 111, 80],  s: [102, 62, 46] },    // morena
+  { b: [120, 83, 60],   s: [78, 44, 34] },     // escura quente
+  { b: [232, 203, 179], s: [168, 120, 104] },  // muito clara
 ];
+/* Cabelo: tons mais ricos e distintos (o pós-VHS dessatura, então a fonte
+   compensa). 0 castanho quase-preto · 1 castanho escuro · 2 castanho médio ·
+   3 loiro escuro/cinza-de-rato · 4 sal-e-pimenta · 5 preto (levemente frio) ·
+   6 ruivo/acaju · 7 grisalho/prata. */
 const F_HAIR = [
-  [32, 25, 18], [58, 44, 28], [96, 68, 40], [128, 100, 62],
-  [98, 98, 96], [22, 22, 22], [110, 48, 28], [168, 168, 156],
+  [42, 31, 22], [78, 54, 34], [116, 82, 48], [156, 126, 80],
+  [116, 110, 102], [28, 26, 30], [128, 60, 34], [190, 187, 176],
 ];
-const F_IRIS = [[42, 38, 30], [52, 82, 66], [84, 64, 38]];
+/* Íris: castanho, âmbar-mel, verde-acinzentado, azul-cinza, castanho-claro. */
+const F_IRIS = [[58, 40, 26], [120, 82, 40], [70, 92, 74], [78, 96, 112], [96, 70, 44]];
 
 /* ---------- etnia → estrutura (sutil, com sobreposição deliberada) ----------
    Os "manuais de fenotipia" dos regimes existem NA FICÇÃO — e são
@@ -4435,8 +4443,8 @@ function faceLayout(f) {
   let chinY = 73.5 + r() * 3.5 + (f.idade > 52 ? 1.5 : 0);
   let eyeY = 47 + (r() - 0.5) * 2.4;
   const eyeDX = 10.5 + f.faceW * 0.8 + r() * 1.4;
-  const eyeW = 5.8 + r() * 0.9;
-  let eyeH = 2.3 + r() * 0.7 + E.eyeH;
+  const eyeW = 5.05 + r() * 0.8;                      // um pouco menores
+  let eyeH = 2.05 + r() * 0.6 + E.eyeH;
   let browY = eyeY - (5 + r() * 2.4) - (f.brow ? 1.2 : 0);
   const noseTip = 58.5 + r() * 2.4;
   let noseW = 4.4 + r() * 1.8 - (fem ? 0.6 : 0) + E.nose;
@@ -5186,54 +5194,82 @@ function paintBust(ctx, f, opts) {
     ctx.restore();
   }
 
-  /* barba / bigode — massa que ABRAÇA o maxilar (não uma máscara chapada):
-     começa no costeleta baixo, desce pelo maxilar até o queixo, com
-     gradiente (topo pega a luz) e a boca reaparecendo por cima. */
+  /* ---------- barba ----------
+     A "linha da barba" natural: costeleta alta perto da orelha, DESCE pela
+     bochecha (a maçã fica livre), sobe no canto da boca até o bigode sobre o
+     lábio; o contorno externo segue mandíbula → queixo. Preenchida com
+     gradiente (topo pega luz), fios direcionais recortados, e os LÁBIOS
+     reaparecem por cima (a barba se abre na boca). */
   if (f.beard === 1) {
     ctx.save();
-    const bTop = L.cheekY + 3;
+    const mw2 = L.mouthW, ax2 = L.ax;
     const beardPath = () => {
       ctx.beginPath();
-      ctx.moveTo(cx - L.fw + 2, bTop);                                          // costeleta esq
-      ctx.quadraticCurveTo(cx - L.jw - 0.5, L.gonialY + 1, cx - L.chinW - 1, L.chinY - 1);
-      ctx.quadraticCurveTo(cx, L.chinY + 6, cx + L.chinW + 1 + L.ax, L.chinY - 1);
-      ctx.quadraticCurveTo(cx + L.jw + 0.5 + L.ax, L.gonialY + 1, cx + L.fw - 2 + L.ax, bTop); // costeleta dir
-      ctx.lineTo(cx + L.fw - 4.5 + L.ax, bTop + 5);
-      ctx.quadraticCurveTo(cx + mwSafe(L) * 1.4, L.mouthY - 2.2, cx, L.mouthY - 2); // sobe até o bigode
-      ctx.quadraticCurveTo(cx - mwSafe(L) * 1.4, L.mouthY - 2.2, cx - L.fw + 4.5, bTop + 5);
+      ctx.moveTo(cx - L.fw + 0.5, L.cheekY - 1);                                        // costeleta esq
+      ctx.quadraticCurveTo(cx - L.fw + 1, L.mouthY - 2.5, cx - mw2 - 1.5, L.mouthY - 1.5); // linha da barba na bochecha
+      ctx.quadraticCurveTo(cx - mw2 * 0.4, L.mouthY - 3.6, cx, L.mouthY - 3.2);           // bigode (metade esq)
+      ctx.quadraticCurveTo(cx + mw2 * 0.4, L.mouthY - 3.6, cx + mw2 + 1.5, L.mouthY - 1.5); // bigode (metade dir)
+      ctx.quadraticCurveTo(cx + L.fw - 1 + ax2, L.mouthY - 2.5, cx + L.fw - 0.5 + ax2, L.cheekY - 1); // costeleta dir
+      ctx.quadraticCurveTo(cx + L.jw + 0.5 + ax2, L.gonialY + 1, cx + L.chinW + 1 + ax2, L.chinY - 1); // mandíbula dir
+      ctx.quadraticCurveTo(cx, L.chinY + 6, cx - L.chinW - 1, L.chinY - 1);               // queixo
+      ctx.quadraticCurveTo(cx - L.jw - 0.5, L.gonialY + 1, cx - L.fw + 0.5, L.cheekY - 1); // mandíbula esq
       ctx.closePath();
     };
     beardPath();
-    const bg = ctx.createLinearGradient(0, bTop, 0, L.chinY + 5);
-    bg.addColorStop(0, rgb(darken(HC, 0.02), 0.72));
-    bg.addColorStop(1, rgb(darken(HC, 0.22), 0.9));
+    const bg = ctx.createLinearGradient(0, L.cheekY, 0, L.chinY + 6);
+    bg.addColorStop(0, rgb(darken(HC, 0.04), 0.9));
+    bg.addColorStop(1, rgb(darken(HC, 0.26), 0.96));
     ctx.fillStyle = bg; ctx.fill();
-    // lado da luz: uma lasca de highlight na crista da barba (dá volume)
     ctx.save(); beardPath(); ctx.clip();
-    soft(ctx, cx - L.jw * 0.55, L.gonialY - 2, 4, 5, rgb(lighten(HC, 0.4), 0.28), 2.4);
-    ctx.restore();
-    // boca reaparece
-    ctx.strokeStyle = 'rgba(30,20,16,.8)'; ctx.lineWidth = 0.7;
-    ctx.beginPath(); ctx.moveTo(cx - L.mouthW * 0.7, L.mouthY);
-    ctx.quadraticCurveTo(cx, L.mouthY + 1, cx + L.mouthW * 0.7, L.mouthY); ctx.stroke();
-    // fios da barba (direcionais, seguem pra baixo)
-    for (let i = 0; i < 80; i++) {
-      const bx = cx + (r() - 0.5) * L.jw * 2;
-      const by2 = bTop + 2 + r() * (L.chinY - bTop);
-      const lit = bx < cx;
-      ctx.strokeStyle = lit ? rgb(lighten(HC, 0.28), 0.3) : rgb(darken(HC, 0.42), 0.42);
-      ctx.lineWidth = 0.4;
-      ctx.beginPath(); ctx.moveTo(bx, by2); ctx.lineTo(bx + (r() - 0.5) * 1.2, by2 + 1.6 + r() * 2); ctx.stroke();
+    // luz partida na barba (lado da lâmpada mais claro)
+    const bsplit = ctx.createLinearGradient(cx - L.fw, 0, cx + L.fw, 0);
+    bsplit.addColorStop(0, rgb(lighten(HC, 0.3), 0.22));
+    bsplit.addColorStop(0.5, 'rgba(0,0,0,0)');
+    bsplit.addColorStop(1, 'rgba(0,0,0,.32)');
+    ctx.fillStyle = bsplit; ctx.fillRect(cx - L.fw, L.cheekY - 3, L.fw * 2, L.chinY - L.cheekY + 12);
+    // fios: densos, finos, apontando pra baixo com leve leque
+    for (let i = 0; i < 170; i++) {
+      const bx = cx + (r() - 0.5) * L.jw * 2.1;
+      const by2 = L.cheekY - 1 + r() * (L.chinY - L.cheekY + 6);
+      const fan = (bx - cx) * 0.06;
+      ctx.strokeStyle = bx < cx ? rgb(lighten(HC, 0.34), 0.32) : rgb(darken(HC, 0.5), 0.42);
+      ctx.lineWidth = 0.35 + r() * 0.25;
+      ctx.beginPath(); ctx.moveTo(bx, by2);
+      ctx.quadraticCurveTo(bx + fan, by2 + 1.6, bx + fan * 1.6 + (r() - 0.5) * 0.8, by2 + 3 + r() * 1.6);
+      ctx.stroke();
     }
+    ctx.restore();
+    // LÁBIOS reaparecem (a barba se abre na boca)
+    const lipTone2 = mix(SH, [128, 66, 56], L.fem ? 0.5 : 0.35);
+    ctx.fillStyle = rgb(darken(lipTone2, 0.15), 0.7);
+    ctx.beginPath();
+    ctx.moveTo(cx - mw2 * 0.55, L.mouthY + 0.4);
+    ctx.quadraticCurveTo(cx, L.mouthY + 1.1, cx + mw2 * 0.55, L.mouthY + 0.4);
+    ctx.quadraticCurveTo(cx, L.mouthY + 2.8, cx - mw2 * 0.55, L.mouthY + 0.4);
+    ctx.closePath(); ctx.fill();
+    soft(ctx, cx - 0.5, L.mouthY + 1.4, mw2 * 0.4, 0.7, 'rgba(255,238,218,.32)', 0.8);
+    ctx.strokeStyle = 'rgba(22,13,9,.85)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(cx - mw2 * 0.62, L.mouthY);
+    ctx.quadraticCurveTo(cx, L.mouthY + 0.5, cx + mw2 * 0.62, L.mouthY); ctx.stroke();
     ctx.restore();
   } else if (f.beard === 2) {
-    ctx.strokeStyle = rgb(darken(HC, 0.1), 0.85); ctx.lineWidth = 0.5;
-    for (let i = 0; i < 22; i++) {
-      const t = i / 21;
-      const bx = cx - L.mouthW * 0.9 + t * L.mouthW * 1.8;
-      const by2 = L.mouthY - 2.6 - Math.sin(t * 3.14) * 1.2;
-      ctx.beginPath(); ctx.moveTo(bx, by2); ctx.lineTo(bx + (t - 0.5) * 1.4, by2 + 1.8); ctx.stroke();
+    /* bigode preenchido (não só fios soltos) */
+    ctx.save();
+    ctx.fillStyle = rgb(darken(HC, 0.1), 0.92);
+    ctx.beginPath();
+    ctx.moveTo(cx - L.mouthW - 0.5, L.mouthY - 1);
+    ctx.quadraticCurveTo(cx - L.mouthW * 0.4, L.mouthY - 3.4, cx, L.mouthY - 3);
+    ctx.quadraticCurveTo(cx + L.mouthW * 0.4, L.mouthY - 3.4, cx + L.mouthW + 0.5, L.mouthY - 1);
+    ctx.quadraticCurveTo(cx + L.mouthW * 0.5, L.mouthY - 0.6, cx, L.mouthY - 1);
+    ctx.quadraticCurveTo(cx - L.mouthW * 0.5, L.mouthY - 0.6, cx - L.mouthW - 0.5, L.mouthY - 1);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = rgb(darken(HC, 0.3), 0.7); ctx.lineWidth = 0.35;
+    for (let i = 0; i < 26; i++) {
+      const t = i / 25, bx = cx - L.mouthW + t * L.mouthW * 2;
+      const by2 = L.mouthY - 2.8 - Math.sin(t * 3.14) * 1.1;
+      ctx.beginPath(); ctx.moveTo(bx, by2); ctx.lineTo(bx + (t - 0.5) * 1.2, by2 + 2.2); ctx.stroke();
     }
+    ctx.restore();
   }
 
   /* óculos */
@@ -6399,13 +6435,13 @@ const HAIRC = ['#241a12', '#40301e', '#6b4a2a', '#8c6b3e', '#4a4a4a', '#191919',
    prova etnia nenhuma. faces.js aplica desvios estruturais igualmente
    sutis a partir de f.etnia. */
 const ETHNIC_PHENO = {
-  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS)
-  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 1, 2] },
-  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [5, 5, 0, 0, 1],    eyes: [1, 1, 2, 0] },
-  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 1, 2] },
-  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 2] },
-  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [1, 2, 2, 0] },
-  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 2] },
+  //          pele (índices SKINS)      cabelo (índices HAIRC)   olhos (F_IRIS: 0 castanho,1 mel,2 verde,3 azul,4 castanho-claro)
+  osano:   { skin: [0, 0, 1, 1, 5, 2], hair: [0, 1, 1, 2, 2, 3], eyes: [0, 0, 4, 2, 3] },
+  nulio:   { skin: [5, 5, 0, 0, 1],    hair: [3, 5, 0, 7, 2],    eyes: [3, 3, 2, 4, 0] },
+  mestico: { skin: [1, 1, 2, 2, 3, 0], hair: [0, 1, 2, 3, 5],    eyes: [0, 0, 4, 1] },
+  bahari:  { skin: [3, 3, 4, 4, 2],    hair: [5, 5, 0],          eyes: [0, 0, 1] },
+  cantalo: { skin: [0, 1, 1, 2, 5],    hair: [6, 6, 2, 3, 1],    eyes: [2, 3, 0, 4] },
+  tarano:  { skin: [2, 2, 3, 3, 1],    hair: [5, 5, 0, 1],       eyes: [0, 0, 1] },
 };
 function genFeatures(sexo, idade, etnia) {
   idade = idade || ri(20, 60);
@@ -6415,7 +6451,7 @@ function genFeatures(sexo, idade, etnia) {
     etnia: etnia || null,
     skin: ph ? pick(ph.skin) : ri(0, SKINS.length - 1),
     hair: velho && chance(.8) ? (chance(.5) ? 4 : 7) : (ph ? pick(ph.hair) : ri(0, HAIRC.length - 1)), // grisalho/branco
-    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 2), mouth: ri(0, 2),
+    hairStyle: ri(0, 3), eyes: ph ? pick(ph.eyes) : ri(0, 4), mouth: ri(0, 2),
     beard: sexo === 'm' ? ri(0, 2) : 0, glasses: chance(velho ? .45 : .18),
     brow: ri(0, 1), faceW: ri(0, 2), sexo,
     hat: sexo === 'm' ? (chance(.35) ? 1 : 0) : (chance(.3) ? 2 : 0), // 1 chapéu, 2 lenço
