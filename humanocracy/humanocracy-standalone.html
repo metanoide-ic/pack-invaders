@@ -8849,12 +8849,17 @@ function drawWorldMap() {
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
   const S = Math.min(W, H) / 100; const ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
   const P = (x, y) => [ox + x * S, oy + y * S];
-  // mar / papel
-  ctx.fillStyle = '#12161a'; ctx.fillRect(0, 0, W, H);
-  const sea = ctx.createLinearGradient(0, 0, W, H); sea.addColorStop(0, '#18202a'); sea.addColorStop(1, '#10161c');
+  // mar de carta antiga (papel-oceano esverdeado)
+  ctx.fillStyle = '#1b2620'; ctx.fillRect(0, 0, W, H);
+  const sea = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.62);
+  sea.addColorStop(0, '#28362e'); sea.addColorStop(1, '#161f1a');
   ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
-  // grade de meridianos (carta náutica)
-  ctx.strokeStyle = 'rgba(120,150,160,.06)'; ctx.lineWidth = 1;
+  // linhas de rumo (rosa dos ventos portulana) — cruzam o mar inteiro
+  const [rcx, rcy] = P(50, 50);
+  ctx.strokeStyle = 'rgba(200,180,130,.06)'; ctx.lineWidth = 1;
+  for (let a = 0; a < 6.28; a += Math.PI / 8) { ctx.beginPath(); ctx.moveTo(rcx, rcy); ctx.lineTo(rcx + Math.cos(a) * W, rcy + Math.sin(a) * W); ctx.stroke(); }
+  // grade de meridianos
+  ctx.strokeStyle = 'rgba(150,170,140,.05)'; ctx.lineWidth = 1;
   for (let i = 0; i <= 10; i++) { const [x1] = P(i * 10, 0); ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke(); const [, y1] = P(0, i * 10); ctx.beginPath(); ctx.moveTo(0, y1); ctx.lineTo(W, y1); ctx.stroke(); }
   // países
   let si = 1;
@@ -8863,14 +8868,26 @@ function drawWorldMap() {
     const c = COUNTRIES[k];
     const [cxp, cyp] = P(m.x, m.y); const rp = m.r * S;
     const sel = MAP_SEL === k;
+    const seed = si * 97 + 5;
+    // AURÉOLA COSTEIRA: anéis concêntricos gravados em volta da costa (o
+    // traço que faz a carta parecer antiga de verdade)
+    for (let h = 3; h >= 1; h--) { mapBlob(ctx, cxp, cyp, rp * (1 + h * 0.05), seed); ctx.strokeStyle = `rgba(180,168,120,${0.05 + (3 - h) * 0.04})`; ctx.lineWidth = 1; ctx.stroke(); }
     // sombra da terra no mar
-    ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fill(); ctx.restore();
+    ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, seed); ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill(); ctx.restore();
     // terra
-    mapBlob(ctx, cxp, cyp, rp, si * 97 + 5);
+    mapBlob(ctx, cxp, cyp, rp, seed);
     const g = ctx.createRadialGradient(cxp - rp * 0.3, cyp - rp * 0.3, rp * 0.2, cxp, cyp, rp);
-    g.addColorStop(0, sel ? shade(c.color, 34) : shade(c.color, 12)); g.addColorStop(1, shade(c.color, -18));
+    g.addColorStop(0, sel ? shade(c.color, 40) : shade(c.color, 18)); g.addColorStop(1, shade(c.color, -20));
     ctx.fillStyle = g; ctx.fill();
-    ctx.strokeStyle = sel ? '#e8d8a0' : 'rgba(0,0,0,.5)'; ctx.lineWidth = sel ? 2.5 : 1.2; ctx.stroke();
+    // relevo: hachura de montanhas/terreno recortada à terra
+    ctx.save(); mapBlob(ctx, cxp, cyp, rp, seed); ctx.clip();
+    ctx.strokeStyle = 'rgba(30,22,12,.14)'; ctx.lineWidth = 0.7;
+    const hr = makeRng(seed ^ 0x3a);
+    for (let i = 0; i < 14; i++) { const hx = cxp + (hr() - 0.5) * rp * 1.4, hy = cyp + (hr() - 0.5) * rp * 1.2, len = 3 + hr() * 5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * 0.7); ctx.moveTo(hx + 1.4, hy); ctx.lineTo(hx + len + 1.4, hy - len * 0.7); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(255,246,214,.05)'; for (let i = 0; i < 40; i++) ctx.fillRect(cxp + (hr() - 0.5) * rp * 1.6, cyp + (hr() - 0.5) * rp * 1.5, 1, 1); // estipulado
+    ctx.restore();
+    // costa: linha de tinta dupla
+    mapBlob(ctx, cxp, cyp, rp, seed); ctx.strokeStyle = sel ? '#e8d8a0' : 'rgba(24,18,10,.7)'; ctx.lineWidth = sel ? 2.5 : 1.4; ctx.stroke();
     // banido hoje?
     const banned = countryBannedToday(k);
     if (banned) { ctx.save(); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.clip(); ctx.strokeStyle = 'rgba(200,60,50,.5)'; ctx.lineWidth = 2; for (let d = -rp * 2; d < rp * 2; d += 6) { ctx.beginPath(); ctx.moveTo(cxp + d, cyp - rp); ctx.lineTo(cxp + d + rp * 2, cyp + rp); ctx.stroke(); } ctx.restore(); }
@@ -8892,6 +8909,12 @@ function drawWorldMap() {
   ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
   ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
   ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px serif'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
+  // envelhecimento: manchas de papel, grão, vinheta queimada nas bordas
+  const ar = makeRng(4242);
+  for (let i = 0; i < 5; i++) { const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 70; const st = ctx.createRadialGradient(sx, sy, sr * 0.3, sx, sy, sr); st.addColorStop(0, 'rgba(90,70,30,0)'); st.addColorStop(1, `rgba(70,52,24,${0.05 + ar() * 0.05})`); ctx.fillStyle = st; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill(); }
+  for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${0.02 + ar() * 0.04})`; ctx.fillRect(ar() * W, ar() * H, 1, 1); }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(18,10,4,.6)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 }
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
