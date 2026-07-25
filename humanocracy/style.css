@@ -147,6 +147,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .home-budget .row { display:flex; justify-content:space-between; }
 .home-shop { display:flex; flex-wrap:wrap; gap:8px; }
 .home-shop button { font-size:12px; }
+.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:auto; }
 .btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
 
 /* ============ TURNO ============ */

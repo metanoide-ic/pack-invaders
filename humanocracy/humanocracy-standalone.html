@@ -154,6 +154,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .home-budget .row { display:flex; justify-content:space-between; }
 .home-shop { display:flex; flex-wrap:wrap; gap:8px; }
 .home-shop button { font-size:12px; }
+.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:auto; }
 .btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
 
 /* ============ TURNO ============ */
@@ -905,6 +906,7 @@ body.text-large .np-body { font-size:15px; }
           <div id="home-events"></div>
           <div class="home-budget" id="home-budget"></div>
           <div class="home-shop" id="home-shop"></div>
+          <canvas id="home-scene" class="home-scene" width="620" height="240"></canvas>
           <button id="btn-gowork" class="btn-big">IR AO TRABALHO →</button>
         </div>
       </div>
@@ -9568,6 +9570,76 @@ function renderHome() {
   // calibração do mercador (dia 38+)
   if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (mercado negro)', 40);
   if (morningPurchases.calib) S.bioCalibrated = true;
+
+  drawHomeScene();
+}
+/* vinheta do apartamento: janela com o bloco em frente e neve, lâmpada nua,
+   radiador, casacos da família nos ganchos, mesa. Reflete o frio (aquecimento)
+   e quem ainda mora aqui. Preenche o vazio do painel e vende o Bloco 14. */
+function drawHomeScene() {
+  const cv = $('home-scene'); if (!cv) return;
+  const x = cv.getContext('2d'); const W = cv.width, H = cv.height;
+  const warm = !!morningPurchases.aquecimento;
+  const living = Object.values(S.family).filter(m => m.alive).length;
+  const rng = (() => { let s = (S.day * 2654435761) >>> 0; return () => { s = (s * 48271) % 2147483647; return s / 2147483647; }; })();
+  x.clearRect(0, 0, W, H);
+  // parede + rodapé (papel encardido)
+  const wall = x.createLinearGradient(0, 0, 0, H);
+  wall.addColorStop(0, warm ? '#3a3226' : '#2c2f33'); wall.addColorStop(1, warm ? '#241d14' : '#1b1e22');
+  x.fillStyle = wall; x.fillRect(0, 0, W, H);
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, H - 26, W, 26); // rodapé
+  x.fillStyle = 'rgba(255,246,220,.04)'; x.fillRect(0, H - 27, W, 1);
+  for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(0,0,0,${0.03 + rng() * 0.05})`; x.fillRect(rng() * W, rng() * (H - 26), 1, 1); } // grão
+  // JANELA (à direita) — bloco em frente + neve
+  const wx = W - 210, wy = 26, ww = 150, wh = 150;
+  x.fillStyle = '#0a0d12'; x.fillRect(wx, wy, ww, wh);
+  // prédio em frente com janelas acesas/apagadas
+  x.fillStyle = '#141820'; x.fillRect(wx + 6, wy + 30, ww - 12, wh - 30);
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    const lit = rng() < 0.32; x.fillStyle = lit ? 'rgba(220,190,120,.6)' : 'rgba(40,48,58,.7)';
+    x.fillRect(wx + 14 + c * 26, wy + 40 + r * 22, 15, 13);
+  }
+  // neve caindo
+  x.fillStyle = 'rgba(226,228,232,.75)';
+  for (let i = 0; i < 60; i++) x.fillRect(wx + rng() * ww, wy + rng() * wh, 1.6, 1.6);
+  // caixilho
+  x.strokeStyle = '#3a2e1e'; x.lineWidth = 5; x.strokeRect(wx, wy, ww, wh);
+  x.lineWidth = 3; x.beginPath(); x.moveTo(wx + ww / 2, wy); x.lineTo(wx + ww / 2, wy + wh); x.moveTo(wx, wy + wh / 2); x.lineTo(wx + ww, wy + wh / 2); x.stroke();
+  x.fillStyle = warm ? 'rgba(255,220,150,.06)' : 'rgba(150,180,210,.06)'; x.fillRect(wx, wy, ww, wh); // luz fria/quente pela janela
+  // RADIADOR sob a janela
+  const rx = wx + 18, ry = wy + wh + 6;
+  x.fillStyle = warm ? '#6a5238' : '#3a4048';
+  for (let i = 0; i < 8; i++) x.fillRect(rx + i * 14, ry, 9, 34);
+  x.fillStyle = warm ? '#7a6040' : '#42484f'; x.fillRect(rx - 3, ry - 3, 8 * 14 + 6, 5); x.fillRect(rx - 3, ry + 31, 8 * 14 + 6, 5);
+  if (warm) { const g = x.createRadialGradient(rx + 56, ry + 16, 4, rx + 56, ry + 16, 80); g.addColorStop(0, 'rgba(255,160,60,.16)'); g.addColorStop(1, 'rgba(255,160,60,0)'); x.fillStyle = g; x.fillRect(rx - 40, ry - 50, 200, 130); }
+  // LÂMPADA nua pendurada (à esquerda) com cone
+  const lx = 130, ly = 0;
+  x.strokeStyle = '#1a1712'; x.lineWidth = 2; x.beginPath(); x.moveTo(lx, ly); x.lineTo(lx, 42); x.stroke();
+  const bulbG = x.createRadialGradient(lx, 50, 2, lx, 50, warm ? 15 : 11);
+  bulbG.addColorStop(0, warm ? '#fff0c0' : '#cfd6dd'); bulbG.addColorStop(1, warm ? '#7a5a20' : '#3a4048');
+  x.fillStyle = bulbG; x.beginPath(); x.arc(lx, 50, warm ? 9 : 7, 0, 6.29); x.fill();
+  const cone = x.createRadialGradient(lx, 50, 6, lx, 150, 150);
+  cone.addColorStop(0, warm ? 'rgba(255,224,150,.14)' : 'rgba(190,205,220,.08)'); cone.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = cone; x.beginPath(); x.moveTo(lx - 10, 50); x.lineTo(lx - 80, H); x.lineTo(lx + 80, H); x.lineTo(lx + 10, 50); x.closePath(); x.fill();
+  // CASACOS nos ganchos (um por membro vivo) à esquerda
+  const coats = ['#4a4034', '#3a4450', '#54463a', '#40382e'];
+  for (let i = 0; i < living; i++) {
+    const cx0 = 26 + i * 30, cy0 = 40;
+    x.fillStyle = '#1a140c'; x.fillRect(cx0 - 5, cy0 - 4, 10, 3); // gancho
+    x.fillStyle = coats[i % coats.length];
+    x.beginPath(); x.moveTo(cx0, cy0); x.quadraticCurveTo(cx0 - 11, cy0 + 10, cx0 - 9, cy0 + 40); x.lineTo(cx0 + 9, cy0 + 40); x.quadraticCurveTo(cx0 + 11, cy0 + 10, cx0, cy0); x.closePath(); x.fill();
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(cx0 - 1, cy0 + 4, 2, 34);
+  }
+  // MESA pequena com duas cadeiras (centro-baixo)
+  const tx = 250, ty = H - 60;
+  x.fillStyle = '#3a2c1c'; x.fillRect(tx, ty, 96, 8); x.fillRect(tx + 6, ty + 8, 6, 44); x.fillRect(tx + 84, ty + 8, 6, 44);
+  x.fillStyle = '#2c2115'; x.fillRect(tx - 22, ty + 4, 8, 48); x.fillRect(tx - 22, ty - 20, 8, 24); // cadeira esq
+  x.fillStyle = '#2c2115'; x.fillRect(tx + 110, ty + 4, 8, 48); x.fillRect(tx + 110, ty - 20, 8, 24); // cadeira dir
+  // tigela sobre a mesa
+  x.fillStyle = warm ? '#6a5a44' : '#4a4c50'; x.beginPath(); x.ellipse(tx + 48, ty + 2, 10, 3.4, 0, 0, 6.29); x.fill();
+  // vinheta
+  const vg = x.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, W * 0.62);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.5)'); x.fillStyle = vg; x.fillRect(0, 0, W, H);
 }
 
 /* ---------- FINAIS ---------- */
