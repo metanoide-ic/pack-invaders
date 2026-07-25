@@ -825,11 +825,22 @@ function makeCitizen(day, opts) {
     if (cr < 0.05) {
       const csex = chance(.5) ? 'm' : 'f';
       const cf = genFeatures(csex, ri(4, 10), etnia);
-      comp = { kind: 'child', sexo: csex, feat: { skin: cf.skin, hair: cf.hair }, coat: pick(COAT_COLORS), side: chance(.5) ? -1 : 1, idade: cf.idade, nome: fullName(pais, csex) };
+      comp = {
+        kind: 'child', sexo: csex, feat: { skin: cf.skin, hair: cf.hair }, coat: pick(COAT_COLORS),
+        side: chance(.5) ? -1 : 1, idade: cf.idade, nome: fullName(pais, csex),
+        mood: pick(['shy', 'curious', 'scared', 'tired', 'clingy']),
+        headwear: chance(.5) ? pick(csex === 'f' ? ['bonnet', 'bow', 'scarf'] : ['cap', 'scarf', null]) : null,
+        hairStyle: csex === 'f' ? pick([0, 1, 1]) : pick([0, 0, 1]),
+        freckles: chance(.3), seed: ri(1, 9999),
+      };
     } else if (cr < 0.10) {
       const bsex = chance(.5) ? 'm' : 'f';
       const bf = genFeatures(bsex, ri(0, 1), etnia);
-      comp = { kind: 'baby', sexo: bsex, feat: { skin: bf.skin, hair: bf.hair }, nome: fullName(pais, bsex) };
+      comp = {
+        kind: 'baby', sexo: bsex, feat: { skin: bf.skin, hair: bf.hair }, nome: fullName(pais, bsex),
+        asleep: chance(.55), bonnet: chance(.6), blanket: pick(['#8a7a58', '#6a6a72', '#7a5a4a', '#5a6a5a']),
+        seed: ri(1, 9999),
+      };
     }
     if (comp) {
       // ACOMPANHANTE ALTERNADO: raro e perturbador — uma criança de pupilas

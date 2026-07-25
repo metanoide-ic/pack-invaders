@@ -1203,74 +1203,145 @@ function mwSafe(L) { return Math.max(6, L.mouthW * 0.9); }
 /* acompanhante no guichê (bebê no colo / criança ao lado do adulto) */
 function paintCompanion(ctx, comp) {
   const anom = comp.anom || {};
-  let sk = comp.feat ? F_SKIN[comp.feat.skin % F_SKIN.length].b : [214, 176, 150];
+  const alien = !!(anom.slitPupil || anom.blackSclera);
+  let sk = comp.feat ? F_SKIN[comp.feat.skin % F_SKIN.length].b : [222, 186, 160];
   let sh = comp.feat ? F_SKIN[comp.feat.skin % F_SKIN.length].s : [150, 110, 90];
   if (anom.skinShift) { const tgt = [72, 116, 176]; sk = mix(sk, tgt, anom.skinShift); sh = mix(sh, darken(tgt, 0.4), anom.skinShift); }
-  const skC = rgb(sk), shC = rgb(sh);
+  const skC = rgb(sk), shC = rgb(sh), skLit = rgb(lighten(sk, 0.14));
   const hc = comp.feat ? rgb(F_HAIR[comp.feat.hair % F_HAIR.length]) : 'rgb(58,42,30)';
-  const sclera = anom.blackSclera ? 'rgb(16,14,18)' : 'rgb(240,232,214)';
-  // desenha um par de olhos de acompanhante (aberto humano ou alienígena)
-  const eyes = (ex, ey, s) => {
-    for (const dx of [-2.7 * s, 2.7 * s]) {
-      ctx.fillStyle = sclera; ctx.beginPath(); ctx.ellipse(ex + dx, ey, 1.7 * s, 1.4 * s, 0, 0, 6.29); ctx.fill();
-      ctx.fillStyle = anom.blackSclera ? 'rgb(4,3,6)' : 'rgb(26,18,12)';
-      if (anom.slitPupil) { ctx.save(); ctx.translate(ex + dx, ey); ctx.scale(0.4, 1.9); ctx.beginPath(); ctx.arc(0, 0, 1.15 * s, 0, 6.29); ctx.fill(); ctx.restore(); }
-      else { ctx.beginPath(); ctx.arc(ex + dx, ey, 1.05 * s, 0, 6.29); ctx.fill(); }
+  const hcD = comp.feat ? rgb(darken(F_HAIR[comp.feat.hair % F_HAIR.length], 0.3)) : 'rgb(40,28,20)';
+  const sclera = anom.blackSclera ? 'rgb(16,14,18)' : 'rgb(244,236,220)';
+  const pupilC = anom.blackSclera ? 'rgb(4,3,6)' : 'rgb(30,20,14)';
+  let R = comp.seed || 1; const rnd = () => { R = (R * 48271) % 2147483647; return R / 2147483647; };
+  // par de olhos infantis, com direção do olhar (gx,gy), abertura (lid) e sobrancelha (brow)
+  const eyes = (ex, ey, s, gx, gy, lid, brow) => {
+    gx = gx || 0; gy = gy || 0; lid = lid == null ? 1 : lid;
+    for (const side of [-1, 1]) {
+      const cx0 = ex + side * 2.9 * s;
+      // órbita clara
+      ctx.fillStyle = sclera; ctx.beginPath(); ctx.ellipse(cx0, ey, 2.0 * s, 1.7 * s * lid, 0, 0, 6.29); ctx.fill();
+      // íris/pupila grande (olho de criança) na direção do olhar
+      const ix = cx0 + gx * 0.9, iy = ey + gy * 0.8;
+      ctx.fillStyle = pupilC;
+      if (anom.slitPupil) { ctx.save(); ctx.translate(ix, iy); ctx.scale(0.42, 2.0); ctx.beginPath(); ctx.arc(0, 0, 1.3 * s, 0, 6.29); ctx.fill(); ctx.restore(); }
+      else { ctx.beginPath(); ctx.arc(ix, iy, 1.35 * s * (0.6 + lid * 0.4), 0, 6.29); ctx.fill(); }
+      if (!alien) { ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.beginPath(); ctx.arc(ix - 0.5 * s, iy - 0.5 * s, 0.45 * s, 0, 6.29); ctx.fill(); } // brilho
+      // pálpebra superior (fecha por lid)
+      if (lid < 0.98) { ctx.fillStyle = skC; ctx.fillRect(cx0 - 2.2 * s, ey - 2 * s, 4.4 * s, 2 * s * (1 - lid) + 0.3); }
+      // sobrancelha
+      if (brow) { ctx.strokeStyle = hcD; ctx.lineWidth = 0.7 * s; ctx.beginPath(); const by = ey - 2.6 * s + (brow === 'worry' ? side * 0.6 : 0); ctx.moveTo(cx0 - 1.8 * s, by + (brow === 'worry' ? 0.6 : 0)); ctx.lineTo(cx0 + 1.8 * s, by - (brow === 'up' ? 0.5 : 0)); ctx.stroke(); }
     }
   };
+
   if (comp.kind === 'baby') {
     ctx.save();
-    // braço/manga do adulto cruzando o peito, embalando
-    ctx.fillStyle = 'rgba(18,18,14,.92)';
-    ctx.beginPath(); ctx.moveTo(28, 106); ctx.quadraticCurveTo(50, 122, 76, 106); ctx.lineTo(78, 122); ctx.lineTo(28, 122); ctx.closePath(); ctx.fill();
-    ctx.translate(52, 101); ctx.rotate(-0.42);
-    // trouxa / cobertor
-    const bl = ctx.createLinearGradient(-16, -12, 16, 12);
-    bl.addColorStop(0, 'rgb(158,146,118)'); bl.addColorStop(1, 'rgb(92,84,68)');
-    ctx.fillStyle = bl; ctx.beginPath(); ctx.ellipse(0, 2, 16.5, 11, 0, 0, 6.29); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 0.8;
-    ctx.beginPath(); ctx.moveTo(-8, -3); ctx.quadraticCurveTo(2, 11, 13, 5); ctx.stroke();
-    // carinha (só o rosto aparece do cobertor)
-    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(-9, -3, 5.8, 0, 6.29); ctx.fill();
-    ctx.fillStyle = shC; ctx.globalAlpha = 0.4;
-    ctx.beginPath(); ctx.arc(-7.4, -2, 5.8, Math.PI * 1.7, Math.PI * 0.4); ctx.fill(); ctx.globalAlpha = 1;
-    soft(ctx, -10.6, -4.2, 2.2, 1.8, 'rgba(255,238,214,.45)', 1); // bochecha na luz
-    if (anom.slitPupil || anom.blackSclera) {
-      // NÃO dorme: olha de volta. olhos abertos, errados.
-      eyes(-9, -3.4, 0.82);
-      ctx.strokeStyle = 'rgba(28,18,12,.85)'; ctx.lineWidth = 0.6;
-      ctx.beginPath(); ctx.moveTo(-9.8, -0.2); ctx.lineTo(-8.4, -0.2); ctx.stroke();
+    // braços do adulto embalando (dois antebraços em concha)
+    ctx.fillStyle = 'rgba(16,16,12,.96)';
+    ctx.beginPath(); ctx.moveTo(22, 110); ctx.quadraticCurveTo(50, 126, 80, 110); ctx.lineTo(82, 124); ctx.lineTo(20, 124); ctx.closePath(); ctx.fill();
+    ctx.translate(50, 102); ctx.rotate(-0.22);
+    // COBERTOR enrolado (cocoon) — corpo do bebê
+    const blk = comp.blanket || '#7a6a50';
+    const bg = ctx.createLinearGradient(-16, -14, 14, 14);
+    bg.addColorStop(0, blk); bg.addColorStop(1, 'rgba(0,0,0,.5)');
+    ctx.fillStyle = bg;
+    ctx.beginPath(); ctx.moveTo(-14, 12); ctx.quadraticCurveTo(-19, -4, -9, -11); ctx.quadraticCurveTo(0, -15, 9, -11); ctx.quadraticCurveTo(19, -4, 14, 12); ctx.quadraticCurveTo(0, 17, -14, 12); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = 0.7;
+    ctx.beginPath(); ctx.moveTo(-9, 0); ctx.quadraticCurveTo(0, 9, 11, 3); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-8, 6); ctx.quadraticCurveTo(0, 12, 9, 8); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,246,220,.08)'; ctx.beginPath(); ctx.moveTo(-11, -6); ctx.quadraticCurveTo(0, -12, 11, -6); ctx.stroke();
+    // CABEÇA grande e redonda (bebê = cabeção)
+    const hy = -6;
+    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(0, hy, 8.6, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(0, hy + 3, 7.8, 6.6, 0, 0, Math.PI); ctx.fill(); // bochechas gordas
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.32; ctx.beginPath(); ctx.arc(2.2, hy, 8.6, Math.PI * 1.66, Math.PI * 0.42); ctx.fill(); ctx.globalAlpha = 1;
+    soft(ctx, -3.4, hy - 3.5, 3, 2.4, 'rgba(255,246,224,.5)', 1.4); // testa na luz
+    // bochechas coradas
+    soft(ctx, -3.6, hy + 3.6, 2.2, 1.5, 'rgba(228,120,104,.28)', 1);
+    soft(ctx, 3.6, hy + 3.6, 2.2, 1.5, 'rgba(228,120,104,.28)', 1);
+    // TOUCA ou tufo de cabelo
+    if (comp.bonnet) {
+      ctx.fillStyle = rgb(darken(toRGB(blk), 0.15));
+      ctx.beginPath(); ctx.arc(0, hy - 0.5, 9.4, Math.PI * 1.02, Math.PI * 1.98); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-9.2, hy - 1); ctx.quadraticCurveTo(-10, hy + 6, -6.5, hy + 8); ctx.lineTo(-6.5, hy + 4); ctx.quadraticCurveTo(-8.4, hy + 2, -7.8, hy - 1); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.arc(0, hy - 0.5, 9, Math.PI * 1.06, Math.PI * 1.94); ctx.stroke();
     } else {
-      // olhos fechados (dorme) + boquinha
-      ctx.strokeStyle = 'rgba(28,18,12,.85)'; ctx.lineWidth = 0.6;
-      ctx.beginPath(); ctx.moveTo(-12, -3.6); ctx.quadraticCurveTo(-11, -2.7, -9.7, -3.5); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-8.2, -3.7); ctx.quadraticCurveTo(-7.2, -2.8, -6, -3.6); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-9.8, -0.2); ctx.lineTo(-8.4, -0.2); ctx.stroke();
+      ctx.strokeStyle = hc; ctx.lineWidth = 0.5;
+      for (let i = 0; i < 7; i++) { const a = Math.PI * (1.15 + i * 0.1); ctx.beginPath(); ctx.moveTo(Math.cos(a) * 7, hy + Math.sin(a) * 7); ctx.quadraticCurveTo(Math.cos(a) * 8.5, hy + Math.sin(a) * 8.5 - 1, Math.cos(a) * 8 + (rnd() - 0.5), hy + Math.sin(a) * 8.5 - 2.5); ctx.stroke(); }
     }
-    // toucamento
-    ctx.fillStyle = hc; ctx.beginPath(); ctx.arc(-9, -5.4, 6, Math.PI * 1.02, Math.PI * 2.02); ctx.fill();
+    // OLHOS (dorme = fechados com cílios; acordado/alienígena = abertos grandes)
+    if (comp.asleep && !alien) {
+      ctx.strokeStyle = 'rgba(40,26,18,.85)'; ctx.lineWidth = 0.7;
+      for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(s * 4.2, hy + 0.4); ctx.quadraticCurveTo(s * 2.6, hy + 1.8, s * 1.2, hy + 0.6); ctx.stroke(); }
+    } else {
+      eyes(0, hy + 0.6, 0.92, 0, alien ? 0 : 0.3, 1, null);
+    }
+    // narizinho + boca
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.5; ctx.beginPath(); ctx.arc(0, hy + 3, 0.9, 0, 6.29); ctx.fill(); ctx.globalAlpha = 1;
+    ctx.strokeStyle = 'rgba(150,70,60,.7)'; ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    if (alien) { ctx.moveTo(-1.8, hy + 5.4); ctx.lineTo(1.8, hy + 5.4); } // linha reta, errada
+    else { ctx.arc(0, hy + 4.4, 1.6, 0.2, Math.PI - 0.2); } // boquinha
+    ctx.stroke();
+    // punho pra fora do cobertor
+    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(-10, 4, 2.6, 0, 6.29); ctx.fill();
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.3; ctx.beginPath(); ctx.arc(-9.2, 4, 2.6, Math.PI * 1.7, Math.PI * 0.4); ctx.fill(); ctx.globalAlpha = 1;
     ctx.restore();
-  } else { // criança agarrada ao lado, cabeça grande espiando o vidro
+  } else {
+    // CRIANÇA agarrada ao lado — cabeça grande, expressão conforme o humor
     const side = comp.side || -1;
-    const x0 = side < 0 ? 21 : 79, y0 = 109;
+    const x0 = side < 0 ? 21 : 79, y0 = 108;
+    // humor → olhar (gx,gy), abertura, sobrancelha, boca
+    const inward = -side; // olhar pro adulto = pra dentro da tela
+    let gx = 0, gy = -0.8, lid = 1, brow = null, mouth = 'neutral';
+    if (!alien) {
+      switch (comp.mood) {
+        case 'shy': gx = side * 1.2; gy = 0.5; brow = null; mouth = 'small'; break;
+        case 'curious': gy = -1.1; brow = 'up'; mouth = 'o'; break;
+        case 'scared': gy = -0.6; brow = 'worry'; mouth = 'frown'; break;
+        case 'tired': lid = 0.55; gy = 0; mouth = 'neutral'; break;
+        case 'clingy': gx = inward * 1.3; gy = -0.3; mouth = 'neutral'; break;
+        default: gy = -0.8;
+      }
+    } else { gx = 0; gy = 0; mouth = 'flat'; }
     ctx.save();
     // casaquinho subindo do rodapé
     ctx.fillStyle = comp.coat || 'rgb(70,84,98)';
-    ctx.beginPath(); ctx.moveTo(x0 - 9.5, 123); ctx.quadraticCurveTo(x0 - 8, 113, x0, 112); ctx.quadraticCurveTo(x0 + 8, 113, x0 + 9.5, 123); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x0 - 9.5, 121, 19, 2);
-    // cabeça grande de criança + sombra de contato do adulto
-    soft(ctx, x0, y0 + 2, 8, 8, 'rgba(0,0,0,.4)', 3);
-    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(x0, y0, 7.6, 0, 6.29); ctx.fill();
-    ctx.fillStyle = shC; ctx.globalAlpha = 0.4;
-    ctx.beginPath(); ctx.arc(x0 + 1.6, y0, 7.6, Math.PI * 1.7, Math.PI * 0.4); ctx.fill(); ctx.globalAlpha = 1;
-    // cabelo
-    ctx.fillStyle = hc; ctx.beginPath(); ctx.arc(x0, y0 - 1, 7.9, Math.PI * 1.0, Math.PI * 2.04); ctx.fill();
-    // olhos grandes olhando pra cima (humano) ou fenda/vazio (alienígena)
-    eyes(x0, y0 + 0.5, 1);
-    // boquinha + brilho
-    ctx.strokeStyle = anom.slitPupil || anom.blackSclera ? 'rgba(90,120,140,.7)' : 'rgba(120,60,52,.7)'; ctx.lineWidth = 0.7;
-    ctx.beginPath(); ctx.moveTo(x0 - 1.6, y0 + 3.6); ctx.quadraticCurveTo(x0, y0 + 4.2, x0 + 1.6, y0 + 3.6); ctx.stroke();
-    soft(ctx, x0 - 2.4, y0 - 2, 1.6, 1.2, 'rgba(255,240,216,.4)', 0.8);
+    ctx.beginPath(); ctx.moveTo(x0 - 10, 123); ctx.quadraticCurveTo(x0 - 8.5, 112, x0, 111); ctx.quadraticCurveTo(x0 + 8.5, 112, x0 + 10, 123); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,246,220,.06)'; ctx.fillRect(x0 - 10, 111.5, 20, 1);
+    if (comp.headwear === 'scarf') { ctx.fillStyle = 'rgba(120,60,52,.8)'; ctx.fillRect(x0 - 7, y0 + 5, 14, 4); }
+    // sombra de contato do adulto + cabeça
+    soft(ctx, x0 + side * 3, y0 + 1, 7, 8, 'rgba(0,0,0,.45)', 3);
+    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(x0, y0, 8, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x0, y0 + 3, 6.4, 5.6, 0, 0, Math.PI); ctx.fill(); // bochechas
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.34; ctx.beginPath(); ctx.arc(x0 + side * 1.8, y0, 8, side < 0 ? Math.PI * 1.66 : Math.PI * 0.34, side < 0 ? Math.PI * 0.42 : Math.PI * 1.34, side > 0); ctx.fill(); ctx.globalAlpha = 1;
+    soft(ctx, x0 - side * 2.4, y0 - 3, 2.6, 2, 'rgba(255,246,224,.4)', 1.4);
+    // CABELO com franja / penteado (varia) + touca
+    ctx.fillStyle = hc;
+    if (comp.hairStyle === 1) { // franjinha reta
+      ctx.beginPath(); ctx.arc(x0, y0 - 1, 8.4, Math.PI, 0); ctx.lineTo(x0 + 8, y0 + 1); ctx.quadraticCurveTo(x0, y0 - 1.5, x0 - 8, y0 + 1); ctx.closePath(); ctx.fill();
+    } else { // repartido
+      ctx.beginPath(); ctx.arc(x0, y0 - 1, 8.4, Math.PI * 1.02, Math.PI * 2.02); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x0 - 8, y0 - 1); ctx.quadraticCurveTo(x0 - 3, y0 - 5, x0 + 2, y0 - 3); ctx.quadraticCurveTo(x0 - 2, y0 - 1, x0 - 8, y0 + 1); ctx.closePath(); ctx.fill();
+    }
+    if (comp.headwear === 'bonnet') { ctx.fillStyle = 'rgba(180,170,140,.9)'; ctx.beginPath(); ctx.arc(x0, y0 - 2, 8.8, Math.PI * 1.05, Math.PI * 1.95); ctx.fill(); }
+    else if (comp.headwear === 'cap') { ctx.fillStyle = '#3a3830'; ctx.beginPath(); ctx.arc(x0, y0 - 2, 8.6, Math.PI, 0); ctx.fill(); ctx.fillRect(x0 - 9, y0 - 2.4, 12, 1.8); }
+    else if (comp.headwear === 'bow') { ctx.fillStyle = 'rgba(150,60,54,.9)'; ctx.beginPath(); ctx.moveTo(x0 - 6, y0 - 7); ctx.lineTo(x0 - 1, y0 - 8.5); ctx.lineTo(x0 - 1, y0 - 5.5); ctx.closePath(); ctx.moveTo(x0 - 1, y0 - 8.5); ctx.lineTo(x0 + 4, y0 - 7); ctx.lineTo(x0 - 1, y0 - 5.5); ctx.closePath(); ctx.fill(); }
+    // sardas
+    if (comp.freckles && !alien) { ctx.fillStyle = rgb(darken(sk, 0.22), 0.5); for (let i = 0; i < 5; i++) ctx.fillRect(x0 - 3.5 + rnd() * 7, y0 + 1.5 + rnd() * 2.5, 0.7, 0.7); }
+    // OLHOS + expressão
+    eyes(x0, y0 + 0.6, 1, gx, gy, lid, brow);
+    // narizinho
+    ctx.strokeStyle = shC; ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(x0 - 0.5, y0 + 2.4); ctx.lineTo(x0 - 0.9, y0 + 3.6); ctx.lineTo(x0 + 0.2, y0 + 3.8); ctx.stroke();
+    // BOCA por humor
+    ctx.strokeStyle = alien ? 'rgba(90,120,140,.8)' : 'rgba(150,70,60,.8)'; ctx.lineWidth = 0.8; ctx.fillStyle = 'rgba(120,50,44,.5)';
+    const my = y0 + 5.2; ctx.beginPath();
+    if (mouth === 'o') { ctx.arc(x0, my, 1.1, 0, 6.29); ctx.fillStyle = 'rgba(80,30,26,.6)'; ctx.fill(); }
+    else if (mouth === 'frown') { ctx.moveTo(x0 - 1.8, my + 0.6); ctx.quadraticCurveTo(x0, my - 0.6, x0 + 1.8, my + 0.6); ctx.stroke(); }
+    else if (mouth === 'small') { ctx.moveTo(x0 - 1.2, my); ctx.lineTo(x0 + 1.2, my); ctx.stroke(); }
+    else if (mouth === 'flat') { ctx.moveTo(x0 - 2, my); ctx.lineTo(x0 + 2, my); ctx.stroke(); }
+    else { ctx.moveTo(x0 - 1.8, my); ctx.quadraticCurveTo(x0, my + 0.7, x0 + 1.8, my); ctx.stroke(); }
+    // lágrima do assustado
+    if (comp.mood === 'scared' && !alien) { ctx.fillStyle = 'rgba(180,210,230,.7)'; ctx.beginPath(); ctx.ellipse(x0 - 2.9, y0 + 2.4, 0.6, 1.1, 0, 0, 6.29); ctx.fill(); }
     ctx.restore();
   }
 }
