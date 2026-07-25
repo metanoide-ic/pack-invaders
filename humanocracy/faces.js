@@ -187,9 +187,9 @@ function paintBust(ctx, f, opts) {
      documento): pele com desvio doentio (azulada/cerosa), sorriso medonho,
      dentes brancos demais, olhar morto. opts.skinShift 0..1. */
   if (opts.skinShift) {
-    const tgt = opts.skinTone || [116, 140, 152];        // azul-acinzentado doentio
+    const tgt = opts.skinTone || [72, 116, 176];         // azul doentio, nítido
     SK = mix(SK, tgt, opts.skinShift);
-    SH = mix(SH, darken(tgt, 0.35), opts.skinShift);
+    SH = mix(SH, darken(tgt, 0.4), opts.skinShift);
   }
 
   /* pescoço primeiro — a gola do casaco cobre a base depois */
@@ -1632,7 +1632,7 @@ function paintEyeMacro(ctx, f, phys, gaze) {
   const r = faceRng(faceSeedOf(f) ^ 0x1CE);
   let SK = L.skin.b, SH = L.skin.s;
   const anom = (phys && phys.anom) || {};
-  if (anom.skinShift) { const tgt = anom.skinTone || [116, 140, 152]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.35), anom.skinShift); }
+  if (anom.skinShift) { const tgt = anom.skinTone || [72, 116, 176]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.4), anom.skinShift); }
   const cx = 50, cy = 54, hw = 27, hh = 12.5;
   const bg = ctx.createLinearGradient(0, 10, 0, 120);
   bg.addColorStop(0, rgb(mix(SK, SH, 0.3))); bg.addColorStop(0.45, rgb(SK)); bg.addColorStop(1, rgb(mix(SK, SH, 0.55)));
@@ -1722,7 +1722,11 @@ function eyeMacroSVG(f, phys) {
    altura, pescoço. Usado pelo scanner de corpo (e reutilizável). */
 function bodyLayout(f) {
   const r = faceRng(faceSeedOf(f) ^ 0xB0D9);
-  const fem = f.sexo === 'f';
+  // o CORPO segue o sexo biológico (bodySex); o ROSTO segue a apresentação
+  // (f.sexo). Quando diferem, a silhueta trai o disfarce — só o exame vê.
+  const bsex = f.bodySex || f.sexo;
+  const fem = bsex === 'f';
+  const mismatch = !!(f.bodySex && f.bodySex !== f.sexo);
   const build = f.build != null ? f.build : 1;         // 0 magro 1 médio 2 forte
   const bw = [-2.2, 0, 2.6][build] + (r() - 0.5) * 1.2; // desvio de largura
   const L = faceLayout(f);
@@ -1733,7 +1737,7 @@ function bodyLayout(f) {
   const chest = (fem ? 12.5 : 13.5) + bw;
   const neckW = (fem ? 2.6 : 3.4) + build * 0.3;
   const topY = 8 - (f.height || 0) * 2;                 // altura desloca o topo
-  return { r, fem, build, headR, shoulder, hip, waist, chest, neckW, topY,
+  return { r, fem, build, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
 /* SCANNER DE CORPO (térmico/raio-X): a silhueta É a pessoa; revela volume
@@ -1808,10 +1812,31 @@ function paintBodyScan(ctx, f, phys) {
     ctx.beginPath(); ctx.moveTo(ox + 4, oy); ctx.lineTo(ox + 4, oy - 4); ctx.lineTo(ox + 11, oy - 4); ctx.lineTo(ox + 11, oy); ctx.stroke();
     ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(ox + 17, oy - 2, 1.5, 0, 6.29); ctx.fill();
   }
+  // DISCREPÂNCIA DE BIOTIPO: quando o corpo não bate com o sexo declarado,
+  // o scanner marca os pontos que traem o disfarce (ombros/quadril/densidade).
+  if (B.mismatch) {
+    const cross = 'rgba(255,70,70,.9)';
+    ctx.strokeStyle = cross; ctx.lineWidth = 0.7;
+    const mark = (x, y, w) => { ctx.beginPath(); ctx.moveTo(x - w, y - w); ctx.lineTo(x + w, y + w); ctx.moveTo(x + w, y - w); ctx.lineTo(x - w, y + w); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,70,70,.45)'; ctx.beginPath(); ctx.arc(x, y, w + 1.5, 0, 6.29); ctx.stroke(); ctx.strokeStyle = cross; };
+    mark(cx - B.shoulder + 1, shoulderY + 2, 2.4);   // largura de ombro
+    mark(cx + B.shoulder - 1, shoulderY + 2, 2.4);
+    mark(cx + B.hip - 1, hipY, 2.2);                 // estreiteza de quadril
+    ctx.setLineDash([1.5, 1.5]); ctx.strokeStyle = 'rgba(255,90,90,.55)';
+    ctx.beginPath(); ctx.moveTo(cx - B.shoulder, shoulderY + 2); ctx.lineTo(cx + B.shoulder, shoulderY + 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
-  ctx.fillText(['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M'), 6, 116);
+  const bio = ['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M');
+  if (B.mismatch) {
+    ctx.fillStyle = 'rgba(255,80,80,.95)'; ctx.fillText('DECL: ' + (B.apparentFem ? 'F' : 'M'), 6, 111);
+    ctx.fillText('BIO: ' + bio + ' !!', 6, 116);
+  } else {
+    ctx.fillText(bio, 6, 116);
+  }
   ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(120,255,200,.85)';
   ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 94, 116);
 }
 

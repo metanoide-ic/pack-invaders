@@ -505,10 +505,15 @@ function examZone(cz, zone) {
   cz._examLogged = cz._examLogged || {};
   if (cz._examLogged[zone.id]) return; // rever a cena é grátis; o laudo só entra uma vez
   cz._examLogged[zone.id] = true;
-  if (zone.body) { // CORPO: volume oculto + assinatura térmica
+  if (zone.body) { // CORPO: volume oculto + assinatura térmica + biotipo
     let line = cz.phys.concealed
       ? `<div class="anomalia" data-tell="corpo">⚠ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
       : `<div class="obs">${T('Nada oculto sob as roupas. Só um corpo com frio.')}</div>`;
+    if (cz.sexMismatch) {
+      const decl = cz.sexo === 'f' ? T('feminino') : T('masculino');
+      const real = cz.features.bodySex === 'f' ? T('feminino') : T('masculino');
+      line += `<div class="anomalia" data-tell="biotipo">⚠ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
+    }
     if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">⚠ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
     log.innerHTML += line; log.scrollTop = log.scrollHeight; return;
   }
@@ -718,6 +723,18 @@ function makeCitizen(day, opts) {
   genPhysical(cz);
   if (opts.scannerAmbiguo) cz.phys.piscar = true; // ela não piscou. ou você não viu.
 
+  // DISFARCE DE SEXO: rosto e documento passam perfeitamente por um sexo,
+  // mas o corpo é do outro. Só o scanner corporal denuncia (ombros, quadril,
+  // densidade óssea). Fraude de identidade — deter/rejeitar é o correto.
+  if (!opts.encounter && !opts.forceValid && !cz.returning && !cz.isWanted && idade >= 18 && chance(.06)) {
+    cz.features.bodySex = cz.sexo === 'f' ? 'm' : (chance(.7) ? 'f' : 'm');
+    if (cz.features.bodySex !== cz.sexo) {
+      cz.sexMismatch = true;
+      cz.features.build = cz.features.bodySex === 'm' ? pick([1, 2, 2]) : pick([0, 0, 1]); // corpo condiz com o sexo real
+      cz.discrepancies.push({ type: 'impostor', fids: ['doc.pass.sexo'], desc: T('Biotipo corporal não corresponde ao sexo declarado') });
+    } else { delete cz.features.bodySex; }
+  }
+
   // bagagem
   buildBaggage(cz);
 
@@ -790,13 +807,13 @@ function genPhysical(cz) {
       // sutil: nada visível — a ambiguidade que o jogo defende
     } else if (roll < 0.80) {
       const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile']);
-      if (which === 'skin') { cz.anom.skinShift = 0.32 + rnd() * 0.22; cz.phys.pele = true; }
+      if (which === 'skin') { cz.anom.skinShift = 0.55 + rnd() * 0.28; cz.phys.pele = true; }
       else if (which === 'smile') { cz.anom.smile = 0.55 + rnd() * 0.5; if (chance(.6)) { cz.anom.teethBright = true; cz.phys.dentes = true; } }
       else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
       else { cz.anom.deadStare = true; cz.phys.piscar = true; }
     } else {
       // CLARAMENTE NÃO-HUMANO — vários sinais somados
-      cz.anom.skinShift = 0.46 + rnd() * 0.3;
+      cz.anom.skinShift = 0.7 + rnd() * 0.28;
       cz.anom.deadStare = true;
       cz.anom.smile = 0.9 + rnd() * 0.5; cz.anom.teethBright = true;
       cz.anom.clearlyNonHuman = true;
@@ -1444,11 +1461,18 @@ const CLUE_PARANOIA = [ // gente honesta que soa suspeita — falso positivo
   'Sei que pareço nervoso. Todo mundo parece, aqui. O senhor não parece?',
   'As mãos tremem, mas é o frio. Juro que é só o frio.',
 ];
+const CLUE_IMPOSTOR = [ // disfarce de sexo — pistas finíssimas, só o exame confirma
+  'A voz? É rouca do frio da estrada. Sempre foi assim.',
+  'Não repare no casaco largo. Aperta menos, viaja melhor.',
+  'O nome no passaporte é meu. É meu há tempo suficiente.',
+  'Deixe o cachecol onde está. O pescoço é sensível ao vento.',
+];
 function clueFor(cz) {
   const subtle = cz.isAlternado && (!cz.anom || (!cz.anom.skinShift && !cz.anom.deadStare && !cz.anom.smile));
+  if (cz.sexMismatch && chance(.5)) return pick(CLUE_IMPOSTOR);
   if (subtle && chance(.42)) return pick(CLUE_ALTERNADO);
   if (cz.isForger && chance(.42)) return pick(CLUE_FORGER);
-  if (!cz.isForger && !cz.isAlternado && chance(.08)) return pick(CLUE_PARANOIA);
+  if (!cz.isForger && !cz.isAlternado && !cz.sexMismatch && chance(.08)) return pick(CLUE_PARANOIA);
   return null;
 }
 function greetingFor(cz) {

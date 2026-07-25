@@ -4639,9 +4639,9 @@ function paintBust(ctx, f, opts) {
      documento): pele com desvio doentio (azulada/cerosa), sorriso medonho,
      dentes brancos demais, olhar morto. opts.skinShift 0..1. */
   if (opts.skinShift) {
-    const tgt = opts.skinTone || [116, 140, 152];        // azul-acinzentado doentio
+    const tgt = opts.skinTone || [72, 116, 176];         // azul doentio, nítido
     SK = mix(SK, tgt, opts.skinShift);
-    SH = mix(SH, darken(tgt, 0.35), opts.skinShift);
+    SH = mix(SH, darken(tgt, 0.4), opts.skinShift);
   }
 
   /* pescoço primeiro — a gola do casaco cobre a base depois */
@@ -6084,7 +6084,7 @@ function paintEyeMacro(ctx, f, phys, gaze) {
   const r = faceRng(faceSeedOf(f) ^ 0x1CE);
   let SK = L.skin.b, SH = L.skin.s;
   const anom = (phys && phys.anom) || {};
-  if (anom.skinShift) { const tgt = anom.skinTone || [116, 140, 152]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.35), anom.skinShift); }
+  if (anom.skinShift) { const tgt = anom.skinTone || [72, 116, 176]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.4), anom.skinShift); }
   const cx = 50, cy = 54, hw = 27, hh = 12.5;
   const bg = ctx.createLinearGradient(0, 10, 0, 120);
   bg.addColorStop(0, rgb(mix(SK, SH, 0.3))); bg.addColorStop(0.45, rgb(SK)); bg.addColorStop(1, rgb(mix(SK, SH, 0.55)));
@@ -6174,7 +6174,11 @@ function eyeMacroSVG(f, phys) {
    altura, pescoço. Usado pelo scanner de corpo (e reutilizável). */
 function bodyLayout(f) {
   const r = faceRng(faceSeedOf(f) ^ 0xB0D9);
-  const fem = f.sexo === 'f';
+  // o CORPO segue o sexo biológico (bodySex); o ROSTO segue a apresentação
+  // (f.sexo). Quando diferem, a silhueta trai o disfarce — só o exame vê.
+  const bsex = f.bodySex || f.sexo;
+  const fem = bsex === 'f';
+  const mismatch = !!(f.bodySex && f.bodySex !== f.sexo);
   const build = f.build != null ? f.build : 1;         // 0 magro 1 médio 2 forte
   const bw = [-2.2, 0, 2.6][build] + (r() - 0.5) * 1.2; // desvio de largura
   const L = faceLayout(f);
@@ -6185,7 +6189,7 @@ function bodyLayout(f) {
   const chest = (fem ? 12.5 : 13.5) + bw;
   const neckW = (fem ? 2.6 : 3.4) + build * 0.3;
   const topY = 8 - (f.height || 0) * 2;                 // altura desloca o topo
-  return { r, fem, build, headR, shoulder, hip, waist, chest, neckW, topY,
+  return { r, fem, build, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
 /* SCANNER DE CORPO (térmico/raio-X): a silhueta É a pessoa; revela volume
@@ -6260,10 +6264,31 @@ function paintBodyScan(ctx, f, phys) {
     ctx.beginPath(); ctx.moveTo(ox + 4, oy); ctx.lineTo(ox + 4, oy - 4); ctx.lineTo(ox + 11, oy - 4); ctx.lineTo(ox + 11, oy); ctx.stroke();
     ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(ox + 17, oy - 2, 1.5, 0, 6.29); ctx.fill();
   }
+  // DISCREPÂNCIA DE BIOTIPO: quando o corpo não bate com o sexo declarado,
+  // o scanner marca os pontos que traem o disfarce (ombros/quadril/densidade).
+  if (B.mismatch) {
+    const cross = 'rgba(255,70,70,.9)';
+    ctx.strokeStyle = cross; ctx.lineWidth = 0.7;
+    const mark = (x, y, w) => { ctx.beginPath(); ctx.moveTo(x - w, y - w); ctx.lineTo(x + w, y + w); ctx.moveTo(x + w, y - w); ctx.lineTo(x - w, y + w); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,70,70,.45)'; ctx.beginPath(); ctx.arc(x, y, w + 1.5, 0, 6.29); ctx.stroke(); ctx.strokeStyle = cross; };
+    mark(cx - B.shoulder + 1, shoulderY + 2, 2.4);   // largura de ombro
+    mark(cx + B.shoulder - 1, shoulderY + 2, 2.4);
+    mark(cx + B.hip - 1, hipY, 2.2);                 // estreiteza de quadril
+    ctx.setLineDash([1.5, 1.5]); ctx.strokeStyle = 'rgba(255,90,90,.55)';
+    ctx.beginPath(); ctx.moveTo(cx - B.shoulder, shoulderY + 2); ctx.lineTo(cx + B.shoulder, shoulderY + 2); ctx.stroke();
+    ctx.setLineDash([]);
+  }
   ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
-  ctx.fillText(['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M'), 6, 116);
+  const bio = ['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M');
+  if (B.mismatch) {
+    ctx.fillStyle = 'rgba(255,80,80,.95)'; ctx.fillText('DECL: ' + (B.apparentFem ? 'F' : 'M'), 6, 111);
+    ctx.fillText('BIO: ' + bio + ' !!', 6, 116);
+  } else {
+    ctx.fillText(bio, 6, 116);
+  }
   ctx.textAlign = 'right';
+  ctx.fillStyle = 'rgba(120,255,200,.85)';
   ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 94, 116);
 }
 
@@ -7087,10 +7112,15 @@ function examZone(cz, zone) {
   cz._examLogged = cz._examLogged || {};
   if (cz._examLogged[zone.id]) return; // rever a cena é grátis; o laudo só entra uma vez
   cz._examLogged[zone.id] = true;
-  if (zone.body) { // CORPO: volume oculto + assinatura térmica
+  if (zone.body) { // CORPO: volume oculto + assinatura térmica + biotipo
     let line = cz.phys.concealed
       ? `<div class="anomalia" data-tell="corpo">⚠ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
       : `<div class="obs">${T('Nada oculto sob as roupas. Só um corpo com frio.')}</div>`;
+    if (cz.sexMismatch) {
+      const decl = cz.sexo === 'f' ? T('feminino') : T('masculino');
+      const real = cz.features.bodySex === 'f' ? T('feminino') : T('masculino');
+      line += `<div class="anomalia" data-tell="biotipo">⚠ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
+    }
     if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">⚠ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
     log.innerHTML += line; log.scrollTop = log.scrollHeight; return;
   }
@@ -7300,6 +7330,18 @@ function makeCitizen(day, opts) {
   genPhysical(cz);
   if (opts.scannerAmbiguo) cz.phys.piscar = true; // ela não piscou. ou você não viu.
 
+  // DISFARCE DE SEXO: rosto e documento passam perfeitamente por um sexo,
+  // mas o corpo é do outro. Só o scanner corporal denuncia (ombros, quadril,
+  // densidade óssea). Fraude de identidade — deter/rejeitar é o correto.
+  if (!opts.encounter && !opts.forceValid && !cz.returning && !cz.isWanted && idade >= 18 && chance(.06)) {
+    cz.features.bodySex = cz.sexo === 'f' ? 'm' : (chance(.7) ? 'f' : 'm');
+    if (cz.features.bodySex !== cz.sexo) {
+      cz.sexMismatch = true;
+      cz.features.build = cz.features.bodySex === 'm' ? pick([1, 2, 2]) : pick([0, 0, 1]); // corpo condiz com o sexo real
+      cz.discrepancies.push({ type: 'impostor', fids: ['doc.pass.sexo'], desc: T('Biotipo corporal não corresponde ao sexo declarado') });
+    } else { delete cz.features.bodySex; }
+  }
+
   // bagagem
   buildBaggage(cz);
 
@@ -7372,13 +7414,13 @@ function genPhysical(cz) {
       // sutil: nada visível — a ambiguidade que o jogo defende
     } else if (roll < 0.80) {
       const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile']);
-      if (which === 'skin') { cz.anom.skinShift = 0.32 + rnd() * 0.22; cz.phys.pele = true; }
+      if (which === 'skin') { cz.anom.skinShift = 0.55 + rnd() * 0.28; cz.phys.pele = true; }
       else if (which === 'smile') { cz.anom.smile = 0.55 + rnd() * 0.5; if (chance(.6)) { cz.anom.teethBright = true; cz.phys.dentes = true; } }
       else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
       else { cz.anom.deadStare = true; cz.phys.piscar = true; }
     } else {
       // CLARAMENTE NÃO-HUMANO — vários sinais somados
-      cz.anom.skinShift = 0.46 + rnd() * 0.3;
+      cz.anom.skinShift = 0.7 + rnd() * 0.28;
       cz.anom.deadStare = true;
       cz.anom.smile = 0.9 + rnd() * 0.5; cz.anom.teethBright = true;
       cz.anom.clearlyNonHuman = true;
@@ -8026,11 +8068,18 @@ const CLUE_PARANOIA = [ // gente honesta que soa suspeita — falso positivo
   'Sei que pareço nervoso. Todo mundo parece, aqui. O senhor não parece?',
   'As mãos tremem, mas é o frio. Juro que é só o frio.',
 ];
+const CLUE_IMPOSTOR = [ // disfarce de sexo — pistas finíssimas, só o exame confirma
+  'A voz? É rouca do frio da estrada. Sempre foi assim.',
+  'Não repare no casaco largo. Aperta menos, viaja melhor.',
+  'O nome no passaporte é meu. É meu há tempo suficiente.',
+  'Deixe o cachecol onde está. O pescoço é sensível ao vento.',
+];
 function clueFor(cz) {
   const subtle = cz.isAlternado && (!cz.anom || (!cz.anom.skinShift && !cz.anom.deadStare && !cz.anom.smile));
+  if (cz.sexMismatch && chance(.5)) return pick(CLUE_IMPOSTOR);
   if (subtle && chance(.42)) return pick(CLUE_ALTERNADO);
   if (cz.isForger && chance(.42)) return pick(CLUE_FORGER);
-  if (!cz.isForger && !cz.isAlternado && chance(.08)) return pick(CLUE_PARANOIA);
+  if (!cz.isForger && !cz.isAlternado && !cz.sexMismatch && chance(.08)) return pick(CLUE_PARANOIA);
   return null;
 }
 function greetingFor(cz) {
