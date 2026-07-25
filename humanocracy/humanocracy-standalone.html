@@ -5356,13 +5356,12 @@ function paintBust(ctx, f, opts) {
       } else if (hs === 3) { // penteado pra trás, com volume no topo (não é calvo)
         ctx.lineTo(cx + L.fw * 0.95 + L.ax, hlY + 1);
         ctx.quadraticCurveTo(cx, hlY - 1.5, cx - L.fw * 0.95, hlY + 1);
-      } else if (hs === 1) { // cheio, com franja recortada (dá "bico" de franja)
-        ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 4);
-        for (let k = 5; k >= 0; k--) { // borda de franja denteada (mechas)
-          const fx = cx + (k / 5 - 0.5) * L.fw * 1.7;
-          ctx.quadraticCurveTo(fx + L.fw * 0.08, hlY + 6.5, fx, hlY + (k % 2 ? 2.5 : 5.5));
-        }
-        ctx.lineTo(cx - L.fw * 0.98, hlY + 5);
+      } else if (hs === 1) { // franja cheia e macia, levemente varrida para um lado
+        // arco liso descendo sobre a testa (sem denteado / sem barras verticais)
+        const sweep = L.ax >= 0 ? 1 : -1;
+        ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 3.5);
+        ctx.quadraticCurveTo(cx + L.fw * 0.5, hlY + 7 + sweep * 1.4, cx + sweep * L.fw * 0.14, hlY + 6.6);
+        ctx.quadraticCurveTo(cx - L.fw * 0.5, hlY + 7 - sweep * 1.4, cx - L.fw * 0.98, hlY + 3.5);
       } else { // repartido de lado
         ctx.lineTo(cx + L.fw * 0.97 + L.ax, hlY + 2);
         ctx.quadraticCurveTo(cx + L.fw * 0.3, hlY + 4.5, cx - L.fw * 0.35, hlY - 1.5);
@@ -5431,7 +5430,7 @@ function paintBust(ctx, f, opts) {
       ctx.strokeStyle = tone < 0.5 ? rgb(darken(HC, 0.5), 0.55) : rgb(lighten(HC, 0.4), 0.42);
       ctx.beginPath(); ctx.moveTo(hx, hy);
       if (hs === 3) ctx.quadraticCurveTo(hx + 1, hy + 4, hx + 0.5, hy + 8);        // pra trás
-      else if (hs === 1) ctx.quadraticCurveTo(hx + (t - 0.5) * 2, hy + 4, hx + (t - 0.5) * 3, hy + 8); // franja pra baixo
+      else if (hs === 1) { const sw = L.ax >= 0 ? 1 : -1; ctx.quadraticCurveTo(hx + sw * 1.8, hy + 4, hx + sw * 3.4 + (t - 0.5) * 1.6, hy + 7); } // franja varrida de lado (diagonal, não barras)
       else ctx.quadraticCurveTo(hx + (t - 0.5) * 4, hy + 3, hx + (t - 0.5) * 7, hy + 5.5);
       ctx.stroke();
     }
