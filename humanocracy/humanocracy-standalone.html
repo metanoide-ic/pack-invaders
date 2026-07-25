@@ -95,22 +95,60 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 #screen-title { display:none; align-items:center; justify-content:center; position:relative; }
 #screen-title.active { display:flex; }
 #title-snow { position:absolute; inset:0; width:100%; height:100%; }
-.title-inner { text-align:center; max-width:640px; padding:24px; position:relative; z-index:2; animation: title-in 2.4s ease both; }
+.title-inner {
+  text-align:center; max-width:600px; padding:34px 40px 26px; position:relative; z-index:2;
+  animation: title-in 2.4s ease both;
+  background: radial-gradient(ellipse at 50% 42%, rgba(10,11,8,.82) 40%, rgba(10,11,8,.35) 75%, transparent);
+}
 @keyframes title-in { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
-.title-emblem { font-size:64px; color:var(--accent2); }
+/* brasão do Ministério */
+.title-emblem {
+  width:92px; height:92px; margin:0 auto 10px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:42px; color:var(--accent2); line-height:1;
+  background: radial-gradient(circle at 50% 38%, rgba(201,163,74,.22), rgba(8,8,6,.6));
+  box-shadow:
+    0 0 0 2px rgba(201,163,74,.55), 0 0 0 5px rgba(14,13,9,.95),
+    0 0 0 7px rgba(201,163,74,.28), 0 0 34px rgba(201,163,74,.28);
+  text-shadow: 0 0 12px rgba(201,163,74,.6);
+}
 .title-logo {
   font-family:var(--font-display); font-weight:700;
-  font-size:72px; letter-spacing:10px; color:var(--ink);
-  text-shadow: 0 0 24px rgba(185,164,92,.25); margin:8px 0;
+  font-size:74px; letter-spacing:11px; margin:6px 0 2px;
+  background: linear-gradient(180deg, #f3ead0 0%, #d8c288 42%, #a98d4f 43%, #c9a860 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter: drop-shadow(0 2px 2px rgba(0,0,0,.6)) drop-shadow(0 0 22px rgba(185,164,92,.28));
 }
-.title-sub { font-family:var(--font-display); font-weight:500; color:var(--ink-dim); letter-spacing:3px; font-size:13px; text-transform:uppercase; }
-.title-quote { margin:28px 0; font-family:var(--font-doc); color:var(--accent2); font-size:15px; }
-.title-menu { display:flex; flex-direction:column; gap:10px; align-items:center; margin:20px 0; }
-.btn-toggle { font-size:11px; width:260px; padding:8px; opacity:.65; }
+.title-sub {
+  font-family:var(--font-display); font-weight:500; color:var(--accent2); letter-spacing:3px;
+  font-size:12px; text-transform:uppercase; opacity:.85;
+  padding:0 0 10px; margin-bottom:2px;
+  border-bottom:1px solid rgba(201,163,74,.28);
+  display:inline-block;
+}
+.title-quote { margin:24px auto 22px; font-family:var(--font-doc); color:#cdbf98; font-size:15px; font-style:italic; max-width:440px; }
+.title-menu { display:flex; flex-direction:column; gap:9px; align-items:center; margin:18px 0 6px; }
+.btn-title {
+  width:280px; padding:11px; font-size:14px; letter-spacing:2px;
+  border:1px solid var(--ink-dim); color:var(--ink);
+  background: linear-gradient(180deg, rgba(255,246,220,.06), rgba(0,0,0,.25)), linear-gradient(#22241d,#17190f);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.07), 0 2px 6px rgba(0,0,0,.5);
+  transition: color .1s, box-shadow .12s, transform .06s;
+}
+.btn-title:hover:not(:disabled) { color:#f0e6c8; background-image:none; background-color:transparent; box-shadow: inset 0 1px 0 rgba(255,246,220,.1), 0 0 14px rgba(201,163,74,.3); }
+/* botão primário: selo de cera do Ministério */
+#btn-new {
+  width:308px; padding:16px; font-size:17px; letter-spacing:4px; margin-bottom:4px;
+  color:#14130c; border:1px solid #8a6a20;
+  background: linear-gradient(180deg, #ecd48a 0%, #c9a34a 100%);
+  box-shadow: 0 0 22px rgba(201,163,74,.4), inset 0 1px 0 rgba(255,248,224,.6), inset 0 -2px 4px rgba(120,90,20,.4);
+}
+#btn-new:hover:not(:disabled) { color:#000; background:linear-gradient(180deg,#f6e6a4,#d8b45a); box-shadow:0 0 30px rgba(201,163,74,.6), inset 0 1px 0 rgba(255,248,224,.7); transform:translateY(-1px); }
+.btn-toggle { font-size:11px; width:250px; padding:8px; opacity:.7; }
+.btn-toggle:hover { opacity:1; }
 .btn-toggle.on { opacity:1; color:var(--stamp-green); border-color:var(--stamp-green); }
-.btn-title { width:280px; padding:12px; font-size:16px; letter-spacing:2px; }
-.title-warning { font-size:11px; color:var(--ink-dim); margin-top:24px; line-height:1.5; }
-.title-version { font-size:10px; color:var(--ink-dim); margin-top:14px; opacity:.6; }
+.title-warning { font-size:10.5px; color:var(--ink-dim); margin-top:22px; line-height:1.55; max-width:480px; margin-left:auto; margin-right:auto; }
+.title-version { font-size:10px; color:var(--ink-dim); margin-top:12px; opacity:.55; letter-spacing:1px; }
 
 /* ============ MANHÃ ============ */
 #screen-morning.active { display:flex; align-items:center; justify-content:center; }
