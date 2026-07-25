@@ -133,8 +133,63 @@ function stopMusic() {
 }
 
 /* ---------- NEVE DO TÍTULO ---------- */
+/* BRASÃO DO MINISTÉRIO — olho que tudo vê, raios, coroa de louros, anel de
+   estrelas. O emblema de um Estado de vigilância. Desenhado, não emoji. */
+function drawTitleCrest() {
+  const cv = $('title-crest'); if (!cv) return;
+  const x = cv.getContext('2d'); const N = cv.width, C = N / 2, u = N / 300;
+  x.clearRect(0, 0, N, N);
+  const GOLD = '#c9a34a', GOLDL = '#ecd48a', DARK = '#0e0d09';
+  // raios de propaganda (sunburst)
+  x.save(); x.translate(C, C);
+  for (let i = 0; i < 36; i++) {
+    x.rotate(Math.PI * 2 / 36);
+    x.fillStyle = i % 2 ? 'rgba(201,163,74,.10)' : 'rgba(201,163,74,.05)';
+    x.beginPath(); x.moveTo(0, -30 * u); x.lineTo(6 * u, -142 * u); x.lineTo(-6 * u, -142 * u); x.closePath(); x.fill();
+  }
+  x.restore();
+  // disco de fundo
+  const disc = x.createRadialGradient(C, C - 10 * u, 6 * u, C, C, 116 * u);
+  disc.addColorStop(0, 'rgba(30,26,16,.75)'); disc.addColorStop(1, 'rgba(10,9,6,.9)');
+  x.fillStyle = disc; x.beginPath(); x.arc(C, C, 112 * u, 0, 6.29); x.fill();
+  // anéis
+  x.strokeStyle = GOLD; x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 110 * u, 0, 6.29); x.stroke();
+  x.lineWidth = 1.2 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
+  // estrelas entre os anéis
+  const star = (cx, cy, r, rot) => { x.beginPath(); for (let k = 0; k < 5; k++) { const a1 = rot - Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566; x.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r); x.lineTo(cx + Math.cos(a2) * r * 0.45, cy + Math.sin(a2) * r * 0.45); } x.closePath(); x.fill(); };
+  x.fillStyle = GOLDL;
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; if (Math.abs(Math.sin(a)) < 0.98) star(C + Math.cos(a) * 101 * u, C + Math.sin(a) * 101 * u, 4.4 * u, a); }
+  // coroa de louros (dois ramos)
+  const laurel = (side) => {
+    x.save(); x.translate(C, C); x.scale(side, 1);
+    x.strokeStyle = GOLD; x.lineWidth = 2 * u; x.beginPath(); x.arc(0, 4 * u, 74 * u, Math.PI * 0.62, Math.PI * 0.98); x.stroke();
+    for (let i = 0; i < 6; i++) { const a = Math.PI * (0.66 + i * 0.055); const lx = Math.cos(a) * 74 * u, ly = 4 * u + Math.sin(a) * 74 * u; x.save(); x.translate(lx, ly); x.rotate(a + 0.5); x.fillStyle = GOLDL; x.beginPath(); x.ellipse(0, -6 * u, 3 * u, 7 * u, 0, 0, 6.29); x.fill(); x.restore(); }
+    x.restore();
+  };
+  laurel(1); laurel(-1);
+  // OLHO QUE TUDO VÊ, no centro
+  const ey = C - 2 * u;
+  x.fillStyle = '#f2ead2'; x.beginPath();
+  x.moveTo(C - 46 * u, ey); x.quadraticCurveTo(C, ey - 34 * u, C + 46 * u, ey); x.quadraticCurveTo(C, ey + 34 * u, C - 46 * u, ey); x.closePath(); x.fill();
+  x.strokeStyle = GOLD; x.lineWidth = 2.2 * u; x.stroke();
+  // íris
+  const ig = x.createRadialGradient(C - 4 * u, ey - 4 * u, 2 * u, C, ey, 22 * u);
+  ig.addColorStop(0, '#7ea6c0'); ig.addColorStop(0.7, '#2e5068'); ig.addColorStop(1, '#12222e');
+  x.fillStyle = ig; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
+  x.fillStyle = DARK; x.beginPath(); x.arc(C, ey, 9 * u, 0, 6.29); x.fill();
+  x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(C - 5 * u, ey - 5 * u, 3 * u, 0, 6.29); x.fill();
+  // raios curtos saindo do olho
+  x.strokeStyle = 'rgba(236,212,138,.5)'; x.lineWidth = 1.4 * u;
+  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; x.beginPath(); x.moveTo(C + Math.cos(a) * 50 * u, ey + Math.sin(a) * 24 * u); x.lineTo(C + Math.cos(a) * 62 * u, ey + Math.sin(a) * 30 * u); x.stroke(); }
+  // fita/banner embaixo
+  x.fillStyle = 'rgba(140,47,36,.85)'; x.beginPath();
+  x.moveTo(C - 52 * u, C + 72 * u); x.lineTo(C + 52 * u, C + 72 * u); x.lineTo(C + 44 * u, C + 86 * u); x.lineTo(C - 44 * u, C + 86 * u); x.closePath(); x.fill();
+  x.fillStyle = GOLDL; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold ${11 * u}px "Oswald", sans-serif`;
+  x.fillText('★  M · T · F  ★', C, C + 79 * u);
+}
 const TS = { raf: null, flakes: [], t: 0 };
 function startTitleSnow() {
+  drawTitleCrest();
   const cv = $('title-snow');
   if (!cv) return;
   cv.width = innerWidth; cv.height = innerHeight;
@@ -146,23 +201,44 @@ function startTitleSnow() {
     if (!$('screen-title').classList.contains('active')) { TS.raf = null; return; }
     TS.t += .016;
     ctx.clearRect(0, 0, cv.width, cv.height);
-    const gy = cv.height * .86;
-    // muro e torre do posto no horizonte
-    ctx.fillStyle = '#0e100c';
-    ctx.fillRect(0, gy - 26, cv.width, 26 + cv.height * .14);
-    const tx = cv.width * .82;
-    ctx.fillRect(tx, gy - 120, 34, 120);
-    ctx.fillRect(tx - 8, gy - 132, 50, 14);
-    // luz da torre varrendo
-    const ang = Math.sin(TS.t * .35) * .9;
-    const lx = tx + 17, ly = gy - 126;
+    const W2 = cv.width, gy = cv.height * .84;
+    // névoa baixa no horizonte
+    const fog = ctx.createLinearGradient(0, gy - 70, 0, cv.height);
+    fog.addColorStop(0, 'rgba(20,22,26,0)'); fog.addColorStop(1, 'rgba(16,18,22,.6)');
+    ctx.fillStyle = fog; ctx.fillRect(0, gy - 70, W2, cv.height - gy + 70);
+    // prédio do Ministério à esquerda (silhueta com janelas fracas + bandeira)
+    ctx.fillStyle = '#0b0d0a';
+    ctx.fillRect(W2 * .04, gy - 150, W2 * .14, 150 + cv.height * .16);
+    ctx.fillRect(W2 * .04 + W2 * .05, gy - 178, W2 * .04, 30); // torre central
+    ctx.fillStyle = 'rgba(160,140,90,.18)';
+    for (let r = 0; r < 6; r++) for (let c = 0; c < 4; c++) if ((r * 4 + c) % 3) ctx.fillRect(W2 * .05 + c * (W2 * .028), gy - 138 + r * 20, W2 * .014, 9);
+    // mastro + bandeira
+    ctx.strokeStyle = '#1a1c16'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(W2 * .07, gy - 178); ctx.lineTo(W2 * .07, gy - 210); ctx.stroke();
+    ctx.fillStyle = 'rgba(120,40,34,.5)'; const fw = 5 + Math.sin(TS.t * 2) * 2; ctx.fillRect(W2 * .07, gy - 210, 26 + fw, 14);
+    // muro com arame farpado
+    ctx.fillStyle = '#0e100c'; ctx.fillRect(0, gy - 22, W2, 22 + cv.height * .16);
+    ctx.fillStyle = 'rgba(255,246,220,.03)'; ctx.fillRect(0, gy - 22, W2, 1);
+    ctx.strokeStyle = 'rgba(120,116,100,.4)'; ctx.lineWidth = 1;
+    ctx.beginPath(); for (let sx = 0; sx < W2; sx += 6) { ctx.moveTo(sx, gy - 30 + (sx % 12 ? 0 : 3)); ctx.lineTo(sx + 3, gy - 24); ctx.lineTo(sx + 6, gy - 30); } ctx.stroke();
+    for (let sx = 14; sx < W2; sx += 46) { ctx.beginPath(); ctx.arc(sx, gy - 28, 4, 0, 6.29); ctx.stroke(); } // espirais
+    // torre de guarda à direita (cabine sobre pernas)
+    const tx = W2 * .84;
+    ctx.fillStyle = '#0b0d0a';
+    ctx.beginPath(); ctx.moveTo(tx - 4, gy - 22); ctx.lineTo(tx + 6, gy - 118); ctx.lineTo(tx + 40, gy - 118); ctx.lineTo(tx + 50, gy - 22); ctx.closePath(); ctx.fill(); // pernas trapézio
+    ctx.fillRect(tx - 2, gy - 150, 50, 34); // cabine
+    ctx.beginPath(); ctx.moveTo(tx - 8, gy - 150); ctx.lineTo(tx + 23, gy - 166); ctx.lineTo(tx + 54, gy - 150); ctx.closePath(); ctx.fill(); // telhado
+    ctx.fillStyle = 'rgba(220,200,140,.5)'; ctx.fillRect(tx + 6, gy - 144, 36, 18); // janela acesa
+    // holofote varrendo
+    const ang = Math.sin(TS.t * .3) * .8 - .1;
+    const lx = tx + 24, ly = gy - 135;
     const grad = ctx.createLinearGradient(lx, ly, lx + Math.sin(ang) * 500, ly + 400);
-    grad.addColorStop(0, 'rgba(201,180,120,.10)'); grad.addColorStop(1, 'rgba(201,180,120,0)');
+    grad.addColorStop(0, 'rgba(220,200,140,.14)'); grad.addColorStop(1, 'rgba(201,180,120,0)');
     ctx.fillStyle = grad;
     ctx.beginPath(); ctx.moveTo(lx, ly);
-    ctx.lineTo(lx + Math.sin(ang - .18) * 620, ly + 480);
-    ctx.lineTo(lx + Math.sin(ang + .18) * 620, ly + 480);
+    ctx.lineTo(lx + Math.sin(ang - .16) * 700, ly + 520);
+    ctx.lineTo(lx + Math.sin(ang + .16) * 700, ly + 520);
     ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(255,240,200,.7)'; ctx.beginPath(); ctx.arc(lx, ly, 3, 0, 6.29); ctx.fill();
     // neve
     ctx.fillStyle = 'rgba(215,215,208,.55)';
     TS.flakes.forEach(s => {

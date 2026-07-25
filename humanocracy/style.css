@@ -94,16 +94,10 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   background: radial-gradient(ellipse at 50% 42%, rgba(10,11,8,.82) 40%, rgba(10,11,8,.35) 75%, transparent);
 }
 @keyframes title-in { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
-/* brasão do Ministério */
-.title-emblem {
-  width:92px; height:92px; margin:0 auto 10px; border-radius:50%;
-  display:flex; align-items:center; justify-content:center;
-  font-size:42px; color:var(--accent2); line-height:1;
-  background: radial-gradient(circle at 50% 38%, rgba(201,163,74,.22), rgba(8,8,6,.6));
-  box-shadow:
-    0 0 0 2px rgba(201,163,74,.55), 0 0 0 5px rgba(14,13,9,.95),
-    0 0 0 7px rgba(201,163,74,.28), 0 0 34px rgba(201,163,74,.28);
-  text-shadow: 0 0 12px rgba(201,163,74,.6);
+/* brasão do Ministério (desenhado em canvas) */
+.title-crest {
+  width:150px; height:150px; margin:0 auto -2px; display:block;
+  filter: drop-shadow(0 0 24px rgba(201,163,74,.3));
 }
 .title-logo {
   font-family:var(--font-display); font-weight:700; white-space:nowrap;
