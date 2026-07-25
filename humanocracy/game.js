@@ -1127,6 +1127,9 @@ function makeFig(x) {
     coat: pick(COAT_COLORS), hat: ri(0, 3), skin: pick(SKINS), hair: pick(HAIRC),
     scarf: chance(.5) ? pick(SCARF_COLORS) : null, wide: .86 + rnd() * .34,
     bag: chance(.28), fidget: rnd(), speed: .35 + rnd() * .25,
+    // comportamento parado no frio: 0 quieto · 1 troca o peso · 2 esfrega os
+    // braços · 3 bate o pé. cada um no seu ritmo (rate) e defasagem.
+    idle: ri(0, 3), rate: .8 + rnd() * .7, stampAt: rnd() * 6.28,
   };
 }
 function queueSpots(w) { const s = []; for (let i = 0; i < 9; i++) s.push(w * .58 - i * 26); return s; }
@@ -1205,17 +1208,24 @@ function initQueueCanvas() {
   Q.raf = requestAnimationFrame(loop);
 }
 function drawFig(ctx, f, groundY, lampX) {
+  const walking = !!f.spd;
+  const rate = f.rate || 1;
   const bob = Math.sin(Q.t * 2 + f.phase) * 1.1;
-  const sway = Math.sin(Q.t * .7 + f.phase * 2) * (f.fidget > .7 ? 1.6 : .5);
+  let sway = Math.sin(Q.t * .7 + f.phase * 2) * (f.fidget > .7 ? 1.6 : .5);
+  // troca de peso: um gingado lento de quem está de pé há horas
+  if (!walking && f.idle === 1) sway += Math.sin(Q.t * rate * 0.5 + f.phase) * 1.7;
   const x = f.x + sway, top = groundY - f.h + bob, cw = 6.4 * (f.wide || 1);
   const lum = Math.max(0, 1 - Math.abs(x - (lampX != null ? lampX : 9999)) / 130); // proximidade da luz
   // sombra no chão
   ctx.fillStyle = 'rgba(0,0,0,.42)';
   ctx.beginPath(); ctx.ellipse(x, groundY + 1, cw * 1.05, 2, 0, 0, 6.29); ctx.fill();
-  // pernas
+  // pernas (com batida de pé no frio: levanta um pé de vez em quando)
   ctx.fillStyle = '#12120e';
-  const legSw = Math.sin(Q.t * 2 + f.phase) * (f.spd ? 1.6 : 0.4);
-  ctx.fillRect(x - 2.9, groundY - 9, 2.4, 9); ctx.fillRect(x + 0.5 + legSw * 0.1, groundY - 9, 2.4, 9);
+  const legSw = Math.sin(Q.t * 2 + f.phase) * (walking ? 1.6 : 0.4);
+  let liftL = 0, liftR = 0;
+  if (!walking && f.idle === 3) { const s = Math.sin(Q.t * rate * 1.6 + f.stampAt); if (s > 0.86) liftR = (s - 0.86) * 26; const s2 = Math.sin(Q.t * rate * 1.6 + f.stampAt + 3.1); if (s2 > 0.9) liftL = (s2 - 0.9) * 24; }
+  ctx.fillRect(x - 2.9, groundY - 9 + liftL, 2.4, 9 - liftL);
+  ctx.fillRect(x + 0.5 + legSw * 0.1, groundY - 9 + liftR, 2.4, 9 - liftR);
   // casaco (ombros arredondados, gola)
   ctx.fillStyle = f.coat;
   ctx.beginPath();
@@ -1234,6 +1244,16 @@ function drawFig(ctx, f, groundY, lampX) {
   // fecho central
   ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(x, top + 8.5); ctx.lineTo(x, groundY - 6); ctx.stroke();
+  // esfregar os braços para aquecer: as mãos se cruzam no peito, indo e vindo
+  if (!walking && f.idle === 2) {
+    const rub = Math.sin(Q.t * rate * 2.4 + f.phase) * 1.6;
+    const hy = top + 12;
+    ctx.fillStyle = f.coat;
+    ctx.fillRect(x - cw * 0.7, hy - 1, cw * 0.5, 3.2); ctx.fillRect(x + cw * 0.2, hy - 1, cw * 0.5, 3.2); // antebraços cruzados
+    ctx.fillStyle = f.skin;
+    ctx.beginPath(); ctx.arc(x - 0.5 - rub, hy + 0.6, 1.5, 0, 6.29); ctx.fill();  // mão esq
+    ctx.beginPath(); ctx.arc(x + 0.5 + rub, hy + 0.6, 1.5, 0, 6.29); ctx.fill();  // mão dir
+  }
   // cachecol
   if (f.scarf) {
     ctx.fillStyle = f.scarf;
