@@ -1376,7 +1376,11 @@ function renderScene(paintFn, seed, o) {
 function paintSkinMacro(ctx, f, phys, shift) {
   const L = faceLayout(f);
   const r = faceRng(faceSeedOf(f) ^ (0xA5 + (shift || 0)));
-  const SK = L.skin.b, SH = L.skin.s;
+  let SK = L.skin.b, SH = L.skin.s;
+  // ANOMALIA: o desvio de pele (azul/ceroso) também tinge o close — antes não
+  // tingia, então o zoom "PELE" mostrava tom normal mesmo num Alternado azul.
+  const anom = (phys && phys.anom) || {};
+  if (anom.skinShift) { const tgt = anom.skinTone || [72, 116, 176]; SK = mix(SK, tgt, anom.skinShift); SH = mix(SH, darken(tgt, 0.4), anom.skinShift); }
   const g = ctx.createLinearGradient(0, 0, 100, 120);
   g.addColorStop(0, rgb(lighten(SK, 0.12)));
   g.addColorStop(0.55, rgb(SK));
@@ -1388,11 +1392,29 @@ function paintSkinMacro(ctx, f, phys, shift) {
   ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
   const j = (shift || 0) * 3.5; // deriva de "câmera na mão" entre frames
   if (phys && phys.pele) {
-    // cera: planícies lisas, um lustre que pele não deveria ter
-    soft(ctx, 38 + j, 44, 30, 22, 'rgba(255,252,240,.16)', 4);
-    soft(ctx, 62 + j, 78, 26, 18, 'rgba(255,250,238,.10)', 4);
-    soft(ctx, 50, 60, 44, 40, rgb(lighten(SK, 0.08), 0.5), 5);
-    // nem um poro. conte. nem um.
+    // CERA: liso demais, com um lustre que pele viva não tem — e, se olhar de
+    // muito perto, uma malha celular regular DEMAIS. errado de um jeito difícil
+    // de nomear. (o poro humano é caótico; este é fabricado.)
+    soft(ctx, 50, 60, 46, 42, rgb(lighten(SK, 0.06), 0.5), 6);
+    // sub-superfície fria/azulada em placas (livor) — mais forte se há desvio
+    const livor = anom.skinShift ? [58, 108, 176] : [150, 150, 165];
+    const livA = anom.skinShift ? 0.2 : 0.1;
+    for (let i = 0; i < 6; i++) soft(ctx, 18 + r() * 64, 16 + r() * 88, 10 + r() * 14, 8 + r() * 11, rgb(mix(SK, livor, 0.6), livA), 5);
+    // malha celular regular (padrão hexagonal frouxo — bom demais para ser real)
+    ctx.strokeStyle = rgb(darken(SH, 0.12), 0.14); ctx.lineWidth = 0.3;
+    for (let y = 8; y < 120; y += 7) {
+      for (let x = 6; x < 100; x += 8) {
+        const ox = (Math.floor(y / 7) % 2) * 4;
+        ctx.beginPath(); ctx.arc(x + ox, y, 2.6, 0, 6.29); ctx.stroke();
+      }
+    }
+    // lustre plástico: dois destaques duros de borda nítida (não é suor)
+    soft(ctx, 38 + j, 42, 20, 14, 'rgba(255,253,244,.22)', 3);
+    ctx.fillStyle = 'rgba(255,255,250,.5)'; ctx.beginPath(); ctx.ellipse(34 + j, 40, 5, 3, -0.5, 0, 6.29); ctx.fill();
+    soft(ctx, 66 + j, 80, 16, 12, 'rgba(255,250,240,.14)', 3);
+    // uma emenda: onde a pele foi "fechada". quase invisível.
+    ctx.strokeStyle = rgb(darken(SH, 0.2), 0.22); ctx.lineWidth = 0.4;
+    ctx.beginPath(); ctx.moveTo(28 + j, 12); ctx.quadraticCurveTo(40 + j, 60, 34 + j, 116); ctx.stroke();
   } else {
     // poros
     ctx.fillStyle = rgb(darken(SH, 0.2), 0.16);
@@ -1874,9 +1896,11 @@ function examZoneSVG(f, phys, zone) {
     ]);
   }
   if (zone === 'pele') {
+    // sat mais alta aqui: a cor da pele (azul/livor) É a informação; a
+    // dessaturação padrão do VHS estava apagando o desvio.
     const mkF = (sh) => renderScene((c) => paintSkinMacro(c, f, phys, sh), seed ^ (0x51 + sh), {
       w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 11, ditherAmp: 0.7, grain: 11, aberr: 2, scan: 0.13, vig: 0.4, sat: 0.4 },
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.12, vig: 0.4, sat: 0.62 },
     }).toDataURL();
     return seqSVG([{ url: mkF(0), len: 1.9 }, { url: mkF(1), len: 1.9 }]);
   }
