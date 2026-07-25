@@ -1751,15 +1751,20 @@ function bodyLayout(f) {
   const mismatch = !!(f.bodySex && f.bodySex !== f.sexo);
   const build = f.build != null ? f.build : 1;         // 0 magro 1 médio 2 forte
   const bw = [-2.2, 0, 2.6][build] + (r() - 0.5) * 1.2; // desvio de largura
+  const girth = Math.max(0, f.girth || 0);             // 0 magro .. ~0.8 pesado (barriga)
+  const gw = girth * 9;                                // quanto a massa alarga o meio
   const L = faceLayout(f);
-  const headR = (L.fw + L.jw) * 0.28 + 3.4;            // cabeça ~ da largura do rosto
-  const shoulder = (fem ? 15 : 18) + bw + (fem ? 0 : 1); // meia-largura do ombro
-  const hip = (fem ? 14 : 12.5) + bw * 0.8;             // meia-largura do quadril
-  const waist = (fem ? 10.5 : 11) + bw * 0.9;
-  const chest = (fem ? 12.5 : 13.5) + bw;
-  const neckW = (fem ? 2.6 : 3.4) + build * 0.3;
-  const topY = 8 - (f.height || 0) * 2;                 // altura desloca o topo
-  return { r, fem, build, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
+  const headR = (L.fw + L.jw) * 0.28 + 3.4 + girth * 1.4; // cara mais cheia se pesado
+  const shoulder = (fem ? 15 : 18) + bw + (fem ? 0 : 1) + girth * 2;
+  const hip = (fem ? 14 : 12.5) + bw * 0.8 + gw * 0.7;
+  const waist = (fem ? 10.5 : 11) + bw * 0.9 + gw;     // a cintura é onde a massa mais aparece
+  const chest = (fem ? 12.5 : 13.5) + bw + gw * 0.6;
+  const neckW = (fem ? 2.6 : 3.4) + build * 0.3 + girth * 1.2;
+  const height = f.height || 0;                        // -0.9..0.9
+  // footY é fixo (116) e todos os marcos descem de topY: subir topY (mais alto)
+  // já estica as pernas junto — não precisa escalar segmentos à parte.
+  const topY = 8 - height * 5;
+  return { r, fem, build, girth, height, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
 /* SCANNER DE CORPO (térmico/raio-X): a silhueta É a pessoa; revela volume
@@ -1850,7 +1855,9 @@ function paintBodyScan(ctx, f, phys) {
   }
   ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
-  const bio = ['MAGRO', 'MEDIO', 'FORTE'][B.build] + (B.fem ? ' F' : ' M');
+  const biotermo = B.girth > 0.5 ? 'PESADO' : (B.girth > 0.28 ? 'CHEIO' : ['MAGRO', 'MEDIO', 'FORTE'][B.build]);
+  const altura = B.height > 0.4 ? ' ALTO' : (B.height < -0.4 ? ' BAIXO' : '');
+  const bio = biotermo + (B.fem ? ' F' : ' M') + altura;
   if (B.mismatch) {
     ctx.fillStyle = 'rgba(255,80,80,.95)'; ctx.fillText('DECL: ' + (B.apparentFem ? 'F' : 'M'), 6, 111);
     ctx.fillText('BIO: ' + bio + ' !!', 6, 116);
