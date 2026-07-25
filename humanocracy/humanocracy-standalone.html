@@ -4544,8 +4544,9 @@ function faceLayout(f) {
   const fem = f.sexo === 'f';
   const E = ETHNIC_SHAPE[f.etnia] || ETHNIC_NEUTRAL;
   const child = f.idade != null && f.idade <= 12;                  // Tomi e afins
-  let fw = 19 + f.faceW * 2.4 + r() * 2 - (fem ? 1.6 : 0);        // meia-largura nas bochechas
-  let jw = fw * (fem ? 0.78 : 0.82) + r() * 1.6 + E.jaw * 0.6;    // meia-largura do maxilar
+  const girth = Math.max(0, f.girth || 0);                        // massa corporal → cara mais cheia
+  let fw = 19 + f.faceW * 2.4 + r() * 2 - (fem ? 1.6 : 0) + girth * 2.6; // meia-largura nas bochechas
+  let jw = fw * (fem ? 0.78 : 0.82) + r() * 1.6 + E.jaw * 0.6 + girth * 1.4; // meia-largura do maxilar
   let chinY = 73.5 + r() * 3.5 + (f.idade > 52 ? 1.5 : 0);
   let eyeY = 47 + (r() - 0.5) * 2.4;
   const eyeDX = 10.5 + f.faceW * 0.8 + r() * 1.4;
@@ -4569,7 +4570,7 @@ function faceLayout(f) {
   const templeW = fw * (fem ? 0.85 : 0.88);        // têmpora, mais estreita que a maçã
   const gonialY = eyeY + (fem ? 13.5 : 15) + (child ? -3 : 0); // ângulo do maxilar
   const jawSquare = fem ? 0.28 : (child ? 0.2 : 0.62) + (f.faceW * 0.06); // dureza do canto
-  const chinW = jw * (fem ? 0.5 : child ? 0.55 : 0.62);          // meia-largura do queixo
+  const chinW = jw * (fem ? 0.5 : child ? 0.55 : 0.62) + girth * 1.1; // meia-largura do queixo (papada alarga)
   const crownW = fw * (fem ? 0.62 : 0.66);         // largura do topo do crânio
   const ax = (r() - 0.5) * 1.6;                                    // assimetria global
   const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
@@ -4584,7 +4585,7 @@ function faceLayout(f) {
   return {
     r, fem, child, fw, jw, chinY, eyeY, eyeDX: eyeDX + eyeApart, eyeW, eyeH,
     browY, noseTip, noseW, mouthY, mouthW, ax, tilt,
-    cheekY, templeW, gonialY, jawSquare, chinW, crownW,
+    cheekY, templeW, gonialY, jawSquare, chinW, crownW, girth,
     uncanny, pupilSkew, cornerUp,
     lip: E.lip, cheek: E.cheek, sardas: !!E.sardas && f.skin <= 1,
     skin: F_SKIN[f.skin % F_SKIN.length], hair: F_HAIR[f.hair % F_HAIR.length],
@@ -4781,6 +4782,13 @@ function paintBust(ctx, f, opts) {
     }
   }
   ctx.restore();
+  // papada: segunda dobra de sombra + rolo de carne sob o queixo (pesados)
+  if (L.girth > 0.32) {
+    const gg = Math.min(L.girth, 0.8);
+    soft(ctx, 50, L.chinY + 2.5, L.chinW + 2 + gg * 3, 2 + gg * 2, rgb(mix(SK, SH, 0.55), 0.5), 2.2);
+    soft(ctx, 50, L.chinY + 4.5 + gg * 2, L.chinW + gg * 2, 1.4 + gg * 1.5, 'rgba(0,0,0,.28)', 2);
+    soft(ctx, 50, L.chinY + 1, L.chinW * 0.8, 1.2, rgb(lighten(SK, 0.14), 0.4), 1.4); // brilho no topo do rolo
+  }
   // sombra da cabeça caindo no peito
   soft(ctx, 50, 92, 15, 5, 'rgba(0,0,0,.45)', 2.6);
   // luz de recorte nos ombros (separa do fundo escuro)
