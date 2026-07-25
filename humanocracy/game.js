@@ -813,12 +813,16 @@ function genPhysical(cz) {
       else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
       else { cz.anom.deadStare = true; cz.phys.piscar = true; }
     } else {
-      // CLARAMENTE NÃO-HUMANO — vários sinais somados
+      // CLARAMENTE NÃO-HUMANO — vários sinais somados, e agora sinais que
+      // NENHUM humano tem: pupila em fenda e/ou esclera preta. Inequívoco.
       cz.anom.skinShift = 0.7 + rnd() * 0.28;
       cz.anom.deadStare = true;
       cz.anom.smile = 0.9 + rnd() * 0.5; cz.anom.teethBright = true;
       cz.anom.clearlyNonHuman = true;
-      cz.phys.piscar = true; cz.phys.pescoco = true; cz.phys.pele = true; cz.phys.dentes = true;
+      if (chance(.7)) cz.anom.slitPupil = true;
+      if (chance(.6)) cz.anom.blackSclera = true;
+      if (!cz.anom.slitPupil && !cz.anom.blackSclera) cz.anom.slitPupil = true; // garante ao menos um sinal alienígena
+      cz.phys.piscar = true; cz.phys.pescoco = true; cz.phys.pele = true; cz.phys.dentes = true; cz.phys.olhos = true;
     }
   }
   cz.phys.anom = cz.anom;   // o exame lê as anomalias por aqui

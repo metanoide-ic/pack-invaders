@@ -736,7 +736,7 @@ function paintBust(ctx, f, opts) {
     // esclera (nunca branca — olho de gente cansada). O olho do lado da
     // SOMBRA é mais escuro: dois olhos idênticos e igualmente claros é o que
     // dava o ar de "olhos colados na cara".
-    const scleraBase = opts.brightSclera ? [234, 232, 220] : [196, 188, 166];
+    const scleraBase = opts.blackSclera ? [18, 15, 20] : (opts.brightSclera ? [234, 232, 220] : [196, 188, 166]);
     ctx.fillStyle = rgb(sgn > 0 ? darken(scleraBase, 0.26) : scleraBase);
     ctx.beginPath();
     ctx.moveTo(ex - ew, ey);
@@ -786,7 +786,10 @@ function paintBust(ctx, f, opts) {
     ctx.fillStyle = ig;
     ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.fill();
     ctx.fillStyle = 'rgb(8,6,5)';
-    ctx.beginPath(); ctx.arc(ixx, iy, pr, 0, 6.29); ctx.fill();
+    if (opts.slitPupil) { // pupila em fenda vertical (réptil) — inequivocamente não-humano
+      ctx.save(); ctx.translate(ixx, iy); ctx.scale(0.42, 2.15);
+      ctx.beginPath(); ctx.arc(0, 0, pr * 1.05, 0, 6.29); ctx.fill(); ctx.restore();
+    } else { ctx.beginPath(); ctx.arc(ixx, iy, pr, 0, 6.29); ctx.fill(); }
     // catchlight: forte no olho da luz, fraco no da sombra. No olhar morto os
     // DOIS reflexos são idênticos e vidrados (nada por trás dos olhos).
     if (opts.deadStare) {
@@ -1335,7 +1338,7 @@ function portraitSVG(f) {
 /* close-up do exame: mesmo rosto, mais perto, marcas do corpo visíveis */
 function physAnomOpts(phys) {
   const a = (phys && phys.anom) || {};
-  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare };
+  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare, slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera };
 }
 function examSVG(f, phys) {
   phys = phys || {};
@@ -2008,6 +2011,7 @@ function actorAnomOpts(cz) {
   return {
     skinShift: a.skinShift || 0, skinTone: a.skinTone,
     smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare,
+    slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera,
     waxy: !!(cz && cz.phys && cz.phys.pele), veins: !!(cz && cz.phys && cz.phys.olhos),
   };
 }
