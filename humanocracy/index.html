@@ -74,7 +74,15 @@
       </div>
 
       <div class="shift-main">
-        <!-- Guichê: cidadão -->
+        <!-- Coluna esquerda: interrogatório + resultado de scan -->
+        <div class="stage-side stage-left">
+          <div class="side-cap">INTERROGATÓRIO</div>
+          <div class="ask-row" id="ask-row"></div>
+          <div class="talk-log" id="talk-log"></div>
+          <div class="scan-result" id="scan-result"></div>
+        </div>
+
+        <!-- Centro topo: guichê / cidadão -->
         <div class="booth" id="booth">
           <div class="booth-window">
             <canvas id="queue-canvas"></canvas>
@@ -100,33 +108,31 @@
           </div>
           <div class="npc-name" id="npc-name">—</div>
           <div class="speech" id="speech"></div>
-          <div class="talk-log" id="talk-log"></div>
-          <div class="ask-row" id="ask-row"></div>
         </div>
 
-        <!-- Mesa: documentos -->
-        <div class="desk" id="desk">
-          <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
-        </div>
-
-        <!-- Painel direito: regulamento + ferramentas -->
-        <div class="sidebar">
+        <!-- Coluna direita: ferramentas + regulamento -->
+        <div class="stage-side stage-right">
+          <div class="side-cap">FERRAMENTAS</div>
           <div class="tools">
-            <button id="btn-inspect" class="btn-tool">🔍 INSPEÇÃO</button>
-            <button id="btn-exam" class="btn-tool" title="Exame Físico aproximado (10 min)">👁 EXAME FÍSICO</button>
-            <button id="btn-bag" class="btn-tool" title="Revistar bagagem (10 min)">🧳 BAGAGEM</button>
-            <button id="btn-lifeline" class="btn-tool" title="Organizar a vida documentada em cronologia (10 min)">📜 LINHA DA VIDA</button>
-            <button id="btn-scan-thermo" class="btn-tool" title="Scanner Térmico (15 min)">🌡 TÉRMICO</button>
-            <button id="btn-scan-pulse" class="btn-tool" title="Scanner de Pulsação (15 min)">📈 PULSAÇÃO</button>
-            <button id="btn-scan-bio" class="btn-tool" title="Detector Biológico (30 min)">🧬 BIOLÓGICO</button>
+            <button id="btn-inspect" class="btn-tool" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
+            <button id="btn-exam" class="btn-tool" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
+            <button id="btn-bag" class="btn-tool" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
+            <button id="btn-lifeline" class="btn-tool" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
+            <button id="btn-scan-thermo" class="btn-tool" data-ico="thermo" title="Scanner Térmico (15 min)"><span class="tool-name">TÉRMICO</span></button>
+            <button id="btn-scan-pulse" class="btn-tool" data-ico="pulse" title="Scanner de Pulsação (15 min)"><span class="tool-name">PULSAÇÃO</span></button>
+            <button id="btn-scan-bio" class="btn-tool" data-ico="bio" title="Detector Biológico (30 min)"><span class="tool-name">BIOLÓGICO</span></button>
           </div>
-          <div class="scan-result" id="scan-result"></div>
           <div class="rulebook" id="rulebook">
             <div class="rb-title">REGULAMENTO DO DIA</div>
             <div id="rb-rules"></div>
             <div class="rb-title">REFERÊNCIA DE PAÍSES</div>
             <div id="rb-countries"></div>
           </div>
+        </div>
+
+        <!-- Base: mesa com os documentos -->
+        <div class="desk" id="desk">
+          <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
         </div>
       </div>
 

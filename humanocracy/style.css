@@ -161,16 +161,39 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
 .btn-small { font-size:11px; }
 
-.shift-main { flex:1; display:grid; grid-template-columns: 300px 1fr 320px; min-height:0; }
-
-/* Guichê */
-.booth {
-  background-color: var(--panel); border-right:2px solid #000;
+.shift-main {
+  flex:1; min-height:0; display:grid;
+  grid-template-columns: 272px 1fr 296px;
+  grid-template-rows: minmax(300px, 46%) minmax(0, 1fr);
+  grid-template-areas:
+    "left booth right"
+    "desk desk desk";
+}
+.stage-side {
+  grid-area:left; display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0;
+  background-color: var(--panel);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  display:flex; flex-direction:column; padding:10px; min-height:0;
+}
+.stage-left { grid-area:left; border-right:2px solid #000; }
+.stage-right { grid-area:right; border-left:2px solid #000; }
+.side-cap {
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:3px;
+  font-size:11px; color:var(--accent2); padding-bottom:5px; margin-bottom:2px;
+  border-bottom:1px solid rgba(139,138,122,.3);
+}
+
+/* Guichê — cidadão no centro, no topo */
+.booth {
+  grid-area:booth;
+  background-color: var(--panel);
+  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  display:flex; flex-direction:column; align-items:center; padding:12px 10px; min-height:0; gap:0;
 }
 .booth-window {
-  background:#0d0f0c; border:6px solid #3a3c33; height:230px; position:relative; overflow:hidden;
+  width:min(100%, 380px); background:#0d0f0c;
+  border:7px solid #2a2c24; border-radius:2px;
+  box-shadow: 0 0 0 2px #14150f, 0 10px 26px rgba(0,0,0,.6), inset 0 0 40px rgba(0,0,0,.7);
+  height:230px; position:relative; overflow:hidden; flex:none;
 }
 #queue-canvas { position:absolute; inset:0; width:100%; height:100%; }
 #queue-toast {
@@ -272,10 +295,11 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 @media (prefers-reduced-motion: reduce) {
   #npc-actor, .document, .doc-stamped, .bribe-note { animation: none !important; }
 }
+.booth > .booth-counter, .booth > .npc-name, .booth > .speech { width:min(100%, 380px); }
 .npc-name { font-family:var(--font-display); font-weight:600; text-transform:uppercase; text-align:center; padding:6px; color:var(--accent2); letter-spacing:2px; font-size:15px; min-height:28px; }
 .speech {
   background:var(--panel2); padding:8px; font-size:12px; font-style:italic;
-  min-height:52px; line-height:1.45; border-left:3px solid var(--accent);
+  min-height:52px; line-height:1.45; border-left:3px solid var(--accent); box-sizing:border-box;
 }
 .talk-log { flex:1; overflow-y:auto; font-size:11px; line-height:1.5; margin-top:8px; }
 .talk-log .q { color:var(--ink-dim); }
@@ -285,16 +309,18 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .ask-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
 .ask-row button { font-size:10px; padding:4px 8px; }
 
-/* Mesa */
+/* Mesa — os documentos, na base da tela */
 .desk {
-  position:relative; overflow:hidden;
+  grid-area:desk; position:relative; overflow:hidden;
   background-color: #4a3b28;
   background-image:
-    radial-gradient(ellipse at 50% 0%, rgba(255,255,255,.04), transparent 60%),
+    linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30px),
+    radial-gradient(ellipse at 50% 120%, rgba(255,240,200,.06), transparent 60%),
     var(--tex-wood);
-  background-size: auto, 240px 160px;
-  background-repeat: no-repeat, repeat;
-  min-height:0;
+  background-size: auto, auto, 240px 160px;
+  background-repeat: no-repeat, no-repeat, repeat;
+  min-height:0; border-top:3px solid #14100a;
+  box-shadow: inset 0 6px 16px rgba(0,0,0,.55);
 }
 .desk-hint {
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -370,15 +396,28 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   font-size:11px; box-shadow:3px 5px 12px rgba(0,0,0,.55); cursor:pointer; text-align:center;
 }
 
-/* Sidebar */
-.sidebar {
-  background-color:var(--panel); border-left:2px solid #000;
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0;
+/* Ferramentas — painel de instrumentos do posto */
+.tools { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.btn-tool {
+  display:flex; flex-direction:column; align-items:center; gap:5px;
+  padding:9px 4px 7px; cursor:pointer; position:relative;
+  color:#d8cdb2; font-family:var(--font-display); font-weight:600;
+  background:
+    linear-gradient(180deg, rgba(255,246,220,.08), rgba(0,0,0,.28)),
+    linear-gradient(#262922, #191b15);
+  border:1px solid #000; border-top-color:#3f4238; border-radius:3px;
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.08), 0 2px 5px rgba(0,0,0,.5);
+  transition: transform .06s ease, box-shadow .1s ease, color .1s;
 }
-.tools { display:grid; grid-template-columns:1fr 1fr; gap:6px; }
-.btn-tool { font-size:11px; padding:8px 4px; }
-.btn-tool.active { background:var(--accent); background-image:none; color:#fff; }
+.btn-tool .tool-ico { width:30px; height:30px; image-rendering:auto; opacity:.92; filter:drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.btn-tool .tool-name { font-size:10px; letter-spacing:1.2px; text-transform:uppercase; }
+.btn-tool:hover { color:#f0e6c8; box-shadow: inset 0 1px 0 rgba(255,246,220,.12), 0 0 10px rgba(201,163,74,.28), 0 3px 7px rgba(0,0,0,.55); }
+.btn-tool:active { transform:translateY(1px); box-shadow: inset 0 2px 5px rgba(0,0,0,.6); }
+.btn-tool.active {
+  color:#12140d; background:linear-gradient(180deg, #e8cf84, #c9a34a);
+  border-color:#8a6a20; box-shadow: inset 0 0 0 1px rgba(255,246,220,.4), 0 0 14px rgba(201,163,74,.5);
+}
+.btn-tool.active .tool-ico { opacity:1; filter:none; }
 .scan-result {
   font-size:11px; min-height:34px; padding:6px; line-height:1.4;
   background-color:var(--panel2);
@@ -834,7 +873,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .radio-off #radio-line { color:#4a4a44; }
 
 @media (max-width: 900px) {
-  .shift-main { grid-template-columns: 220px 1fr 240px; }
+  .shift-main { grid-template-columns: 210px 1fr 224px; }
   .morning-grid { grid-template-columns: 1fr; overflow-y:auto; }
 }
 
