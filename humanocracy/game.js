@@ -736,6 +736,20 @@ function makeCitizen(day, opts) {
     } else { delete cz.features.bodySex; }
   }
 
+  // ACOMPANHANTES: famílias cruzam a fronteira. ~5% trazem uma criança
+  // agarrada ao lado, ~5% um bebê de colo. (não para soldados/procurados/
+  // encontros roteirizados/quem já volta.)
+  if (!opts.encounter && !opts.forceValid && !cz.returning && !cz.isWanted && !cz.features.uniform && idade >= 18 && idade <= 55) {
+    const cr = rnd();
+    if (cr < 0.05) {
+      const cf = genFeatures(chance(.5) ? 'm' : 'f', ri(4, 10), etnia);
+      cz.companion = { kind: 'child', feat: { skin: cf.skin, hair: cf.hair }, coat: pick(COAT_COLORS), side: chance(.5) ? -1 : 1, idade: cf.idade };
+    } else if (cr < 0.10) {
+      const bf = genFeatures(chance(.5) ? 'm' : 'f', ri(0, 1), etnia);
+      cz.companion = { kind: 'baby', feat: { skin: bf.skin, hair: bf.hair } };
+    }
+  }
+
   // bagagem
   buildBaggage(cz);
 
@@ -1507,6 +1521,18 @@ const CLUE_IMPOSTOR = [ // disfarce de sexo — pistas finíssimas, só o exame 
   'O nome no passaporte é meu. É meu há tempo suficiente.',
   'Deixe o cachecol onde está. O pescoço é sensível ao vento.',
 ];
+const COMPANION_BABY = [ // bebê de colo — peso emocional, não pista de jogo
+  'Ela dormiu agora. Por favor… fale baixo.',
+  'Nasceu na estrada. Não tem documento ainda. Ninguém me disse que precisava.',
+  'Ele não chorou uma vez a viagem inteira. Bom menino.',
+  'Só quero que ela cresça do outro lado. Só isso.',
+];
+const COMPANION_CHILD = [
+  'Diz "bom dia" pro moço. — …ele é tímido.',
+  'Ela não solta a minha mão desde que saímos de casa.',
+  'Meu filho. Os papéis dele estão junto dos meus. Estão, sim.',
+  'Não olhe assim pra ela. Ela não fez nada. Nenhum de nós fez.',
+];
 function clueFor(cz) {
   const subtle = cz.isAlternado && (!cz.anom || (!cz.anom.skinShift && !cz.anom.deadStare && !cz.anom.smile));
   if (cz.sexMismatch && chance(.5)) return pick(CLUE_IMPOSTOR);
@@ -1524,6 +1550,11 @@ function greetingFor(cz) {
     if (r.mood === 'parente') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e nunca mais saiu. DETIDO(A), me disseram. Ninguém diz onde. Eu vim atravessar — e vim perguntar na sua cara: para onde vocês levam as pessoas?')}`;
     if (r.mood === 'advogado') return `${r.nome} ${T('entrou neste posto no dia')} ${r.dia}${T(' e foi detido(a). Sou advogado(a) da família. Vim pedir os documentos do processo — e um prazo de resposta, já que ninguém me deu nenhum dos dois.')}`;
     if (r.mood === 'jornalista') return `${T('Estou apurando o caso de ')}${r.nome}${T(', detido(a) neste posto no dia')} ${r.dia}${T('. O advogado da família não recebeu resposta em trinta dias. Vim fazer a pergunta que ninguém responde: para onde vocês levam as pessoas?')}`;
+  }
+  // acompanhante: às vezes o adulto fala do filho/bebê (peso humano)
+  if (cz.companion) {
+    if (cz._compLine === undefined) cz._compLine = chance(.6) ? pick(cz.companion.kind === 'baby' ? COMPANION_BABY : COMPANION_CHILD) : null;
+    if (cz._compLine) return T(cz._compLine);
   }
   // pista ocasional (dá motivo pra examinar ESTE — mas não é garantia)
   if (!cz._clued) { cz._clued = true; cz._clue = clueFor(cz); }
