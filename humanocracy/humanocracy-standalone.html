@@ -5563,12 +5563,15 @@ function paintBust(ctx, f, opts) {
       } else if (hs === 3) { // penteado pra trás, com volume no topo (não é calvo)
         ctx.lineTo(cx + L.fw * 0.95 + L.ax, hlY + 1);
         ctx.quadraticCurveTo(cx, hlY - 1.5, cx - L.fw * 0.95, hlY + 1);
-      } else if (hs === 1) { // franja cheia e macia, levemente varrida para um lado
-        // arco liso descendo sobre a testa (sem denteado / sem barras verticais)
-        const sweep = L.ax >= 0 ? 1 : -1;
-        ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + 3.5);
-        ctx.quadraticCurveTo(cx + L.fw * 0.5, hlY + 7 + sweep * 1.4, cx + sweep * L.fw * 0.14, hlY + 6.6);
-        ctx.quadraticCurveTo(cx - L.fw * 0.5, hlY + 7 - sweep * 1.4, cx - L.fw * 0.98, hlY + 3.5);
+      } else if (hs === 1) { // franja varrida de lado: alta na repartição, cai cruzando a testa
+        // NÃO é um arco chapado ("cuia") — um lado revela a testa, o outro pesa.
+        const sw = L.ax >= 0 ? 1 : -1;           // lado da repartição (fica mais alto)
+        const dR = sw > 0 ? 0.8 : 5.2;           // profundidade na borda direita
+        const dL = sw > 0 ? 5.2 : 0.8;           // profundidade na borda esquerda
+        ctx.lineTo(cx + L.fw * 0.98 + L.ax, hlY + dR);
+        // ponta da franja mergulha no lado oposto à repartição (diagonal, não simétrico)
+        ctx.quadraticCurveTo(cx - sw * L.fw * 0.28, hlY + 6.5, cx - sw * L.fw * 0.66, hlY + 5.4);
+        ctx.quadraticCurveTo(cx - sw * L.fw * 0.86, hlY + 4.6, cx - L.fw * 0.98, hlY + dL);
       } else { // repartido de lado
         ctx.lineTo(cx + L.fw * 0.97 + L.ax, hlY + 2);
         ctx.quadraticCurveTo(cx + L.fw * 0.3, hlY + 4.5, cx - L.fw * 0.35, hlY - 1.5);
