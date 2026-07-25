@@ -2717,9 +2717,44 @@ function showMorning() {
   renderHome();
 }
 
+/* xilogravura do jornal: o posto de fronteira, hachurado a traço de tinta */
+function drawNewspaperCut(cv, day) {
+  if (!cv) return;
+  const x = cv.getContext('2d'); const W = cv.width, H = cv.height;
+  const INK = '#221e16';
+  const rng = (() => { let s = ((day || 1) * 40503 + 12345) >>> 0; return () => { s = (s * 48271) % 2147483647; return s / 2147483647; }; })();
+  x.clearRect(0, 0, W, H);
+  x.strokeStyle = INK; x.fillStyle = INK; x.lineWidth = 1; x.lineCap = 'butt';
+  x.strokeRect(1, 1, W - 2, H - 2);
+  const gy = H * 0.66;
+  // céu hachurado (mais denso em cima)
+  for (let y = 4; y < gy - 2; y += 3) { const dens = 1 - (y / gy); x.globalAlpha = 0.12 + dens * 0.4; x.beginPath(); for (let sx = 3; sx < W - 3; sx += 5) { x.moveTo(sx, y); x.lineTo(sx + 3, y); } x.stroke(); }
+  x.globalAlpha = 1;
+  // muro + portão
+  x.fillRect(3, gy - 30, W - 6, 30);
+  x.clearRect(W / 2 - 16, gy - 26, 32, 26); x.strokeRect(W / 2 - 16, gy - 26, 32, 26); // portão
+  x.lineWidth = 0.7; for (let i = 1; i < 5; i++) { x.beginPath(); x.moveTo(W / 2 - 16 + i * 6.4, gy - 26); x.lineTo(W / 2 - 16 + i * 6.4, gy); x.stroke(); }
+  // torre de guarda à direita
+  x.fillRect(W - 44, gy - 66, 26, 40); x.beginPath(); x.moveTo(W - 48, gy - 66); x.lineTo(W - 31, gy - 78); x.lineTo(W - 14, gy - 66); x.closePath(); x.fill();
+  x.clearRect(W - 38, gy - 60, 14, 10); // janela
+  // fila de vultos encapotados
+  const n = 5 + Math.floor(rng() * 3);
+  for (let i = 0; i < n; i++) {
+    const fx = 12 + i * ((W / 2 - 30) / n) + rng() * 3, fh = 22 + rng() * 8, fw = 8 + rng() * 3;
+    x.beginPath(); x.moveTo(fx - fw / 2, gy); x.lineTo(fx - fw / 2 + 1, gy - fh + 6); x.quadraticCurveTo(fx, gy - fh - 3, fx + fw / 2 - 1, gy - fh + 6); x.lineTo(fx + fw / 2, gy); x.closePath(); x.fill();
+    x.clearRect(fx - 1.5, gy - fh + 2, 3, 3); // um respiro de rosto
+  }
+  // chão hachurado
+  x.lineWidth = 1; for (let y = gy + 2; y < H - 3; y += 3) { x.globalAlpha = 0.25 + rng() * 0.2; x.beginPath(); for (let sx = 3; sx < W - 3; sx += 4) { x.moveTo(sx, y); x.lineTo(sx + 2, y); } x.stroke(); }
+  x.globalAlpha = 1;
+}
+const NP_MOTTOS = { republica: 'ORDEM · SERENIDADE · RIGOR', mehrvolk: 'ORDEM · SEGURANÇA · PUREZA', conselho: 'TRABALHO · UNIDADE · VIGILÂNCIA', colapso: 'ÓRGÃO SEM DONO' };
+function npEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function renderNewspaper() {
   const d = S.day;
-  $('np-masthead').textContent = T(MASTHEAD[regimeOfDay(d)]);
+  const reg = regimeOfDay(d);
+  $('np-masthead').textContent = T(MASTHEAD[reg]);
+  if ($('np-motto')) $('np-motto').textContent = T(NP_MOTTOS[reg] || '');
   const dateSuffix = SETTINGS.lang === 'en' ? ` — ${MOEDA} 0.50 — issue ${1200 + d}`
     : SETTINGS.lang === 'es' ? ` — ${MOEDA} 0,50 — edición ${1200 + d}`
     : ` — ${MOEDA} 0,50 — edição ${1200 + d}`;
@@ -2727,14 +2762,18 @@ function renderNewspaper() {
   const scripted = SCRIPTED_NEWS[d];
   const np = $('newspaper');
   if (scripted === null) {
+    if ($('np-kicker')) $('np-kicker').textContent = '';
     $('np-headline').textContent = T('O JORNAL NÃO CHEGOU HOJE.');
     $('np-body').textContent = T(d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.');
     $('np-minor').innerHTML = ''; $('np-ad').textContent = '';
     return;
   }
   const news = scripted || pick(FILLER_NEWS);
+  if ($('np-kicker')) $('np-kicker').textContent = scripted ? T('EDIÇÃO OFICIAL — FRONTEIRA LESTE') : T('SEÇÃO GERAL');
   $('np-headline').textContent = T(news.h);
-  $('np-body').textContent = T(news.b);
+  // corpo com gravura (xilogravura) flutuando à direita
+  $('np-body').innerHTML = '<canvas id="np-cut" class="np-cut" width="240" height="164"></canvas>' + npEsc(T(news.b));
+  drawNewspaperCut($('np-cut'), d);
   let minor = (news.m || []).map(x => '• ' + T(x));
   // ecos das suas decisões
   const echoes = S.pendingNews.filter(n => n.day <= d);
