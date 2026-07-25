@@ -259,66 +259,122 @@ function buildSprites() {
 const TEX = {};
 function buildTextures() {
   if (TEX.corr) return;
+  let _s = 20260724;
+  const rnd = () => { _s = (_s * 48271) % 2147483647; return (_s - 1) / 2147483646; };
   const base = (x, c) => { x.fillStyle = c; x.fillRect(0, 0, 64, 64); };
   const board = (x, c) => { x.fillStyle = c; x.fillRect(0, 54, 64, 10); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, 53, 64, 2); };
-  const stains = (x, n, a) => { x.fillStyle = `rgba(0,0,0,${a})`; for (let i = 0; i < n; i++) { const s = 2 + (i * 7) % 9; x.fillRect((i * 23) % 60, (i * 13) % 48, s, s); } };
-  TEX.sala = mk(64, 64, (x) => { // papel listrado, já cansado
+  // grão fino de reboco
+  const grain = (x, a) => { for (let i = 0; i < 360; i++) { const v = rnd() < 0.5 ? 0 : 255; x.fillStyle = `rgba(${v},${v},${v},${rnd() * a})`; x.fillRect(rnd() * 64, rnd() * 52, 1, 1); } };
+  // mancha de umidade orgânica (radial irregular)
+  const blot = (x, cx, cy, r, rr, gg, bb, al) => {
+    const g = x.createRadialGradient(cx, cy, 1, cx, cy, r);
+    g.addColorStop(0, `rgba(${rr},${gg},${bb},${al})`); g.addColorStop(0.65, `rgba(${rr},${gg},${bb},${al * 0.35})`); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath();
+    for (let a = 0; a < 6.29; a += 0.5) { const rad = r * (0.65 + rnd() * 0.6); const px = cx + Math.cos(a) * rad, py = cy + Math.sin(a) * rad; a === 0 ? x.moveTo(px, py) : x.lineTo(px, py); }
+    x.closePath(); x.fill();
+    x.strokeStyle = `rgba(${rr * 0.6 | 0},${gg * 0.6 | 0},${bb * 0.6 | 0},${al * 0.5})`; x.lineWidth = 0.5; x.stroke(); // anel de tide-line
+  };
+  // rachadura ramificada
+  const crack = (x, sx, sy, steps, ang) => {
+    x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 0.6;
+    const walk = (px, py, a, n) => { x.beginPath(); x.moveTo(px, py); for (let i = 0; i < n; i++) { a += (rnd() - 0.5) * 0.7; px += Math.cos(a) * 2.2; py += Math.sin(a) * 2.2; x.lineTo(px, py); if (rnd() < 0.12 && n > 4) walk(px, py, a + (rnd() < 0.5 ? 1 : -1), (n * 0.5) | 0); } x.stroke(); };
+    walk(sx, sy, ang, steps);
+  };
+  // rodapé (wainscot) com friso e grão vertical
+  const wain = (x, col) => {
+    x.fillStyle = col; x.fillRect(0, 50, 64, 14);
+    x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(0, 49, 64, 1.6);
+    x.fillStyle = 'rgba(255,246,220,.05)'; x.fillRect(0, 51, 64, 1);
+    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 0.6;
+    for (let i = 0; i < 8; i++) { x.beginPath(); x.moveTo(i * 8 + 3, 52); x.lineTo(i * 8 + 3, 63); x.stroke(); }
+  };
+  // vinheta (bordas mais escuras — dá profundidade no raycast)
+  const vign = (x) => { const g = x.createRadialGradient(32, 26, 8, 32, 30, 46); g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.32)'); x.fillStyle = g; x.fillRect(0, 0, 64, 64); };
+  // papel de parede descascando (mostra o reboco por baixo)
+  const peel = (x, px, py, w, h, under) => { x.fillStyle = under; x.beginPath(); x.moveTo(px, py); x.lineTo(px + w, py - 1.5); x.lineTo(px + w - 1, py + h); x.lineTo(px + 1, py + h + 2); x.closePath(); x.fill(); x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 0.5; x.stroke(); x.strokeStyle = 'rgba(255,246,220,.08)'; x.beginPath(); x.moveTo(px, py); x.lineTo(px + w, py - 1.5); x.stroke(); };
+
+  TEX.sala = mk(64, 64, (x) => { // papel listrado, já cansado, manchado de umidade
     base(x, '#5e5340');
-    x.fillStyle = '#554a39'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 54);
-    stains(x, 3, .12); board(x, '#3a3021');
+    x.fillStyle = '#564b3a'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 52);
+    x.fillStyle = 'rgba(120,100,60,.10)'; for (let i = 0; i < 8; i++) x.fillRect(i * 8 + 2, 0, 1, 52);
+    blot(x, 14, 16, 18, 60, 48, 24, 0.5); blot(x, 48, 34, 14, 40, 32, 18, 0.4);
+    peel(x, 40, 4, 12, 16, '#4a4133'); crack(x, 20, 8, 10, 1.4);
+    grain(x, 0.1); wain(x, '#3a3021'); vign(x);
   });
-  TEX.coz = mk(64, 64, (x) => { // azulejo antigo
+  TEX.coz = mk(64, 64, (x) => { // azulejo antigo, rejunte encardido
     base(x, '#4e5844');
-    x.strokeStyle = '#414a39'; x.lineWidth = 2;
+    for (let a = 0; a < 4; a++) for (let b = 0; b < 4; b++) { x.fillStyle = `rgba(255,255,255,${0.02 + rnd() * 0.04})`; x.fillRect(a * 16 + 1, b * 13 + 1, 14, 11); }
+    x.strokeStyle = '#3a4234'; x.lineWidth = 2;
     for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(0, i * 13); x.lineTo(64, i * 13); x.stroke(); }
     for (let i = 0; i <= 4; i++) { x.beginPath(); x.moveTo(i * 16, 0); x.lineTo(i * 16, 52); x.stroke(); }
-    stains(x, 2, .15); board(x, '#33302a');
+    // brilho especular em alguns azulejos
+    for (let i = 0; i < 4; i++) { x.fillStyle = 'rgba(255,255,255,.06)'; x.fillRect((rnd() * 4 | 0) * 16 + 2, (rnd() * 4 | 0) * 13 + 2, 5, 3); }
+    blot(x, 30, 40, 12, 50, 44, 26, 0.4); grain(x, 0.07); wain(x, '#33302a'); vign(x);
   });
-  TEX.tomi = mk(64, 64, (x) => { // estrelinhas de papel de criança
+  TEX.tomi = mk(64, 64, (x) => { // estrelinhas de papel de criança, descolando num canto
     base(x, '#46505c');
     x.fillStyle = '#525e6c';
-    [[8, 10], [30, 22], [50, 8], [18, 36], [44, 40]].forEach(([a, b]) => {
-      x.fillRect(a, b, 3, 3); x.fillRect(a + 1, b - 2, 1, 7); x.fillRect(a - 2, b + 1, 7, 1);
-    });
-    board(x, '#33302a');
+    [[8, 10], [30, 22], [50, 8], [18, 36], [44, 40], [58, 30]].forEach(([a, b]) => { x.fillRect(a, b, 3, 3); x.fillRect(a + 1, b - 2, 1, 7); x.fillRect(a - 2, b + 1, 7, 1); });
+    peel(x, 2, 6, 10, 20, '#3c434c'); blot(x, 52, 44, 10, 40, 44, 52, 0.35);
+    grain(x, 0.08); wain(x, '#33302a'); vign(x);
   });
-  TEX.dario = mk(64, 64, (x) => { // o papel mais velho da casa. ninguém troca.
+  TEX.dario = mk(64, 64, (x) => { // o papel mais velho da casa. ninguém troca. mofo.
     base(x, '#3c3c42');
-    x.fillStyle = '#36363c'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 54);
-    stains(x, 6, .22); board(x, '#26262a');
+    x.fillStyle = '#36363c'; for (let i = 0; i < 8; i++) x.fillRect(i * 8, 0, 4, 52);
+    blot(x, 16, 14, 20, 24, 30, 22, 0.6); blot(x, 46, 26, 16, 20, 26, 20, 0.55); blot(x, 30, 44, 12, 18, 22, 18, 0.5);
+    crack(x, 40, 6, 14, 1.7); crack(x, 12, 30, 10, 0.4); peel(x, 24, 4, 14, 22, '#2e2e34');
+    grain(x, 0.14); wain(x, '#26262a'); vign(x);
   });
-  TEX.casal = mk(64, 64, (x) => { // losangos discretos
+  TEX.casal = mk(64, 64, (x) => { // losangos discretos, encardidos
     base(x, '#5a4c3c');
-    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 1.6;
-    for (let i = -2; i < 6; i++) {
-      x.beginPath(); x.moveTo(i * 16, 0); x.lineTo(i * 16 + 27, 54); x.stroke();
-      x.beginPath(); x.moveTo(i * 16 + 27, 0); x.lineTo(i * 16, 54); x.stroke();
-    }
-    board(x, '#3a3021');
+    x.strokeStyle = 'rgba(0,0,0,.16)'; x.lineWidth = 1.4;
+    for (let i = -2; i < 6; i++) { x.beginPath(); x.moveTo(i * 16, 0); x.lineTo(i * 16 + 27, 54); x.stroke(); x.beginPath(); x.moveTo(i * 16 + 27, 0); x.lineTo(i * 16, 54); x.stroke(); }
+    x.fillStyle = 'rgba(180,150,90,.06)'; for (let i = -1; i < 5; i++) x.fillRect(i * 16 + 12, 12, 2, 2);
+    blot(x, 44, 18, 14, 60, 48, 26, 0.4); grain(x, 0.09); wain(x, '#3a3021'); vign(x);
   });
-  TEX.corr = mk(64, 64, (x) => { // reboco nu do corredor
-    base(x, '#4a463c'); stains(x, 5, .16);
-    x.fillStyle = 'rgba(0,0,0,.12)'; x.fillRect(0, 0, 64, 6);
-    board(x, '#302c24');
+  TEX.corr = mk(64, 64, (x) => { // reboco nu do corredor, manchado, rachado
+    base(x, '#4a463c');
+    blot(x, 18, 20, 16, 44, 40, 28, 0.4); blot(x, 46, 40, 14, 40, 36, 24, 0.4);
+    crack(x, 30, 6, 16, 1.5); crack(x, 8, 26, 9, 0.3);
+    x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(0, 0, 64, 5); // sombra do teto
+    peel(x, 50, 10, 10, 18, '#403c33');
+    grain(x, 0.12); wain(x, '#302c24'); vign(x);
   });
   TEX.muro = mk(64, 64, (x) => { // o muro do posto, do lado de quem espera
     base(x, '#3e3d38');
-    stains(x, 7, .22);
-    x.strokeStyle = 'rgba(0,0,0,.3)'; x.lineWidth = 1;
+    // blocos de concreto com juntas
+    x.strokeStyle = 'rgba(0,0,0,.32)'; x.lineWidth = 1;
     x.beginPath(); x.moveTo(0, 21); x.lineTo(64, 21); x.stroke();
     x.beginPath(); x.moveTo(0, 42); x.lineTo(64, 42); x.stroke();
+    x.beginPath(); x.moveTo(32, 0); x.lineTo(32, 21); x.stroke();
+    x.beginPath(); x.moveTo(0, 42); x.lineTo(0, 64); x.moveTo(16, 21); x.lineTo(16, 42); x.moveTo(48, 21); x.lineTo(48, 42); x.stroke();
+    // luz raspada no topo de cada bloco
+    x.fillStyle = 'rgba(255,246,220,.05)'; x.fillRect(0, 22, 64, 1); x.fillRect(0, 43, 64, 1);
+    blot(x, 22, 12, 15, 30, 34, 40, 0.45); blot(x, 50, 50, 14, 26, 30, 36, 0.4);
+    crack(x, 40, 24, 12, 1.6); grain(x, 0.12);
     // riscos de quem contou os dias esperando
-    x.strokeStyle = 'rgba(0,0,0,.4)';
+    x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 0.8;
     for (let i = 0; i < 5; i++) { x.beginPath(); x.moveTo(10 + i * 4, 28); x.lineTo(10 + i * 4, 36); x.stroke(); }
     x.beginPath(); x.moveTo(8, 36); x.lineTo(28, 28); x.stroke();
+    vign(x);
   });
   TEX.door = mk(64, 64, (x) => { // a porta. madeira, almofadas, maçaneta — e o olho mágico
     base(x, '#3a2c1a');
-    x.fillStyle = 'rgba(0,0,0,.25)'; [16, 32, 48].forEach(px => x.fillRect(px, 0, 2, 64));
-    x.fillStyle = '#241b0e'; x.fillRect(8, 8, 48, 20); x.fillRect(8, 34, 48, 22);
+    // veios de madeira
+    x.strokeStyle = 'rgba(0,0,0,.14)'; x.lineWidth = 0.6;
+    for (let i = 0; i < 10; i++) { const yy = i * 6 + rnd() * 3; x.beginPath(); x.moveTo(0, yy); x.bezierCurveTo(20, yy + (rnd() - .5) * 4, 44, yy + (rnd() - .5) * 4, 64, yy); x.stroke(); }
+    x.fillStyle = 'rgba(0,0,0,.28)'; [16, 32, 48].forEach(px => x.fillRect(px, 0, 2, 64));
+    // almofadas rebaixadas com chanfro
+    [[8, 8, 48, 20], [8, 34, 48, 22]].forEach(([ax, ay, aw, ah]) => {
+      x.fillStyle = '#241b0e'; x.fillRect(ax, ay, aw, ah);
+      x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1; x.strokeRect(ax + .5, ay + .5, aw - 1, ah - 1);
+      x.strokeStyle = 'rgba(255,246,220,.06)'; x.beginPath(); x.moveTo(ax + 2, ay + ah - 2); x.lineTo(ax + 2, ay + 2); x.lineTo(ax + aw - 2, ay + 2); x.stroke();
+    });
     x.fillStyle = '#8a734d'; x.fillRect(50, 29, 5, 5);
+    x.fillStyle = 'rgba(255,246,220,.3)'; x.fillRect(50, 29, 2, 1);
     x.fillStyle = '#0a0908'; x.beginPath(); x.arc(32, 22, 2.6, 0, 6.29); x.fill();
     x.strokeStyle = '#8a734d'; x.lineWidth = 1; x.beginPath(); x.arc(32, 22, 3.6, 0, 6.29); x.stroke();
+    vign(x);
   });
 }
 function texAt(mx, my, tile) {
