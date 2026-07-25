@@ -800,17 +800,171 @@ function buildBaggage(cz) {
   for (let i = cz.bag.length - 1; i > 0; i--) { const j = ri(0, i); [cz.bag[i], cz.bag[j]] = [cz.bag[j], cz.bag[i]]; }
 }
 
+/* ---------- BAGAGEM: objetos desenhados na mala ---------- */
+/* infere o tipo de objeto a partir das palavras do item (as chaves são
+   sempre em PT, mesmo em EN/ES — a tradução é só na exibição). */
+function bagKind(txt, contra) {
+  const t = txt.toLowerCase();
+  if (/passaporte/.test(t)) return 'passports';
+  if (/carimbo/.test(t)) return 'stamp';
+  if (/frasco|remédio|líquido|âmbar|receita médica/.test(t)) return 'vial';
+  if (/peças metálicas|montad/.test(t)) return 'gears';
+  if (/ferramenta|solda|luvas/.test(t)) return 'tools';
+  if (/fotografia|álbum|foto/.test(t)) return 'photo';
+  if (/pão|bolo|mel/.test(t)) return 'food';
+  if (/relógio/.test(t)) return 'watch';
+  if (/terço/.test(t)) return 'rosary';
+  if (/radiografia/.test(t)) return 'xray';
+  if (/passagem|trem/.test(t)) return 'ticket';
+  if (/mapa|rota/.test(t)) return 'map';
+  if (/chave/.test(t)) return 'key';
+  if (/aliança/.test(t)) return 'ring';
+  if (/brinquedo/.test(t)) return 'toy';
+  if (/uniforme/.test(t)) return 'uniform';
+  if (/escritura|carta|recomendação|diário|endereços/.test(t)) return 'papers';
+  if (/livro|caderno/.test(t)) return 'book';
+  if (/roupa|meias|muda|presente|manta|lã/.test(t)) return 'clothing';
+  return contra ? 'vial' : 'bundle';
+}
+function drawBagIcon(kind, contra) {
+  const S = 2, cv = document.createElement('canvas'); cv.width = 64 * S; cv.height = 64 * S;
+  const x = cv.getContext('2d'); x.scale(S, S);
+  const R = (a, b, w, h, c) => { x.fillStyle = c; x.fillRect(a, b, w, h); };
+  const line = (x1, y1, x2, y2, c, w) => { x.strokeStyle = c; x.lineWidth = w || 1; x.beginPath(); x.moveTo(x1, y1); x.lineTo(x2, y2); x.stroke(); };
+  const shadow = () => { const g = x.createRadialGradient(32, 54, 2, 32, 54, 22); g.addColorStop(0, 'rgba(0,0,0,.34)'); g.addColorStop(1, 'rgba(0,0,0,0)'); x.fillStyle = g; x.beginPath(); x.ellipse(32, 54, 20, 4, 0, 0, 6.29); x.fill(); };
+  shadow();
+  const INK = '#2a2620', WOOD = '#6b5236', METAL = '#9a9f98';
+  switch (kind) {
+    case 'photo': {
+      x.save(); x.translate(32, 30); x.rotate(-0.08);
+      R(-16, -18, 32, 38, '#e9e2cd'); R(-13, -15, 26, 26, '#6b7a86'); // moldura + imagem
+      x.fillStyle = '#3a4650'; x.beginPath(); x.arc(0, 0, 6, Math.PI, 0); x.fill(); x.fillRect(-6, 0, 12, 8); // silhueta
+      x.fillStyle = 'rgba(20,12,6,.85)'; x.beginPath(); x.moveTo(6, -15); x.lineTo(13, -15); x.lineTo(13, -8); x.closePath(); x.fill(); // canto queimado
+      x.restore(); break;
+    }
+    case 'food': {
+      x.fillStyle = '#b98b4e'; x.beginPath(); x.ellipse(32, 34, 18, 11, 0, 0, 6.29); x.fill();
+      x.fillStyle = '#a2763d'; x.beginPath(); x.ellipse(32, 36, 18, 10, 0, 0, 6.29); x.fill();
+      x.strokeStyle = 'rgba(60,36,16,.5)'; x.lineWidth = 1; for (const dx of [-8, 0, 8]) { x.beginPath(); x.moveTo(32 + dx, 26); x.lineTo(32 + dx + 2, 30); x.stroke(); }
+      x.fillStyle = 'rgba(255,240,200,.25)'; x.beginPath(); x.ellipse(26, 30, 6, 2, -0.3, 0, 6.29); x.fill(); break;
+    }
+    case 'watch': {
+      x.fillStyle = '#8a7326'; x.beginPath(); x.arc(32, 34, 13, 0, 6.29); x.fill();
+      x.fillStyle = '#d8d2bd'; x.beginPath(); x.arc(32, 34, 10, 0, 6.29); x.fill();
+      x.strokeStyle = INK; line(32, 34, 32, 27, INK, 1.4); line(32, 34, 37, 34, INK, 1.4);
+      x.fillStyle = '#8a7326'; x.fillRect(30, 18, 4, 4); // coroa
+      x.strokeStyle = '#8a7326'; x.lineWidth = 1; x.beginPath(); x.arc(44, 20, 5, 0.4, 3.6); x.stroke(); break; // corrente
+    }
+    case 'tools': {
+      x.save(); x.translate(32, 34); x.rotate(0.5);
+      x.strokeStyle = METAL; x.lineWidth = 4; x.lineCap = 'round'; line(-14, 0, 14, 0, METAL, 5);
+      x.fillStyle = METAL; x.beginPath(); x.arc(-14, 0, 5, 0, 6.29); x.fill(); x.beginPath(); x.arc(14, 0, 5, 0, 6.29); x.fill();
+      x.fillStyle = '#3a3f3a'; x.beginPath(); x.arc(-14, 0, 2, 0, 6.29); x.fill(); x.beginPath(); x.arc(14, 0, 2, 0, 6.29); x.fill();
+      x.restore(); R(20, 40, 16, 8, '#5a4632'); break; // pano oleoso
+    }
+    case 'vial': {
+      const cols = contra ? ['#c98b2a', '#b5701e'] : ['#7a8a5a', '#9aa86a'];
+      [[24, cols[0]], [34, cols[1]], [44, cols[0]]].forEach(([vx, c], i) => {
+        R(vx - 3.5, 22, 7, 22, '#2a2a26'); R(vx - 3, 26, 6, 17, c); // vidro + líquido
+        R(vx - 2, 19, 4, 4, '#6a6a60'); // rolha
+        x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(vx - 2.5, 27, 1.4, 12);
+      });
+      if (contra) { x.strokeStyle = 'rgba(200,60,50,.7)'; x.lineWidth = 1; x.strokeRect(18, 18, 28, 28); }
+      break;
+    }
+    case 'gears': {
+      const gear = (gx, gy, r) => { x.fillStyle = METAL; x.beginPath(); for (let a = 0; a < 6.29; a += 0.52) { const rr = (Math.floor(a / 0.26) % 2) ? r : r * 0.76; x.lineTo(gx + Math.cos(a) * rr, gy + Math.sin(a) * rr); } x.closePath(); x.fill(); x.fillStyle = '#2a2e2a'; x.beginPath(); x.arc(gx, gy, r * 0.35, 0, 6.29); x.fill(); };
+      gear(27, 32, 10); gear(41, 40, 7);
+      x.strokeStyle = 'rgba(200,60,50,.7)'; x.lineWidth = 1; x.strokeRect(16, 18, 32, 30); break;
+    }
+    case 'book': {
+      x.save(); x.translate(32, 33); x.rotate(-0.06);
+      R(-15, -19, 30, 38, contra ? '#5a2f2a' : '#5b4a34'); R(13, -18, 3, 36, '#e6ddc4'); // capa + miolo
+      R(-12, -16, 22, 3, 'rgba(255,240,200,.14)'); x.restore(); break;
+    }
+    case 'papers': {
+      for (let i = 0; i < 3; i++) { x.save(); x.translate(32, 32); x.rotate((i - 1) * 0.14); R(-14, -17, 28, 34, i === 1 ? '#e9e2cd' : '#d6ccb2'); x.restore(); }
+      x.strokeStyle = 'rgba(40,32,20,.4)'; x.lineWidth = 0.8; for (let i = 0; i < 5; i++) line(22, 24 + i * 4, 42, 24 + i * 4, 'rgba(40,32,20,.4)', 0.8); break;
+    }
+    case 'ticket': {
+      x.save(); x.translate(32, 34); x.rotate(-0.1);
+      R(-18, -8, 36, 16, '#d8cba0'); x.strokeStyle = INK; x.setLineDash([2, 2]); line(6, -8, 6, 8, INK, 1); x.setLineDash([]);
+      x.fillStyle = INK; x.font = 'bold 6px monospace'; x.fillText('SÓ IDA', -15, 2); x.restore(); break;
+    }
+    case 'map': {
+      x.save(); x.translate(32, 33);
+      R(-17, -14, 34, 28, '#cabfa0'); x.strokeStyle = 'rgba(40,32,20,.35)'; x.lineWidth = 0.8;
+      line(-17, -4, 17, -4, 'rgba(40,32,20,.3)', 0.8); line(-17, 5, 17, 5, 'rgba(40,32,20,.3)', 0.8); line(-6, -14, -6, 14, 'rgba(40,32,20,.3)', 0.8); line(6, -14, 6, 14, 'rgba(40,32,20,.3)', 0.8); // vincos
+      x.strokeStyle = '#8a2f2a'; x.lineWidth = 1.2; x.setLineDash([2, 2]); x.beginPath(); x.moveTo(-12, 8); x.quadraticCurveTo(0, -6, 12, -10); x.stroke(); x.setLineDash([]); x.restore(); break;
+    }
+    case 'key': {
+      x.save(); x.translate(28, 30); x.rotate(0.7);
+      x.strokeStyle = '#b8912e'; x.lineWidth = 3; line(0, 0, 0, 22, '#b8912e', 3);
+      x.fillStyle = '#b8912e'; x.beginPath(); x.arc(0, -3, 6, 0, 6.29); x.fill(); x.fillStyle = '#2a2620'; x.beginPath(); x.arc(0, -3, 2.4, 0, 6.29); x.fill();
+      R(-1, 16, 6, 3, '#b8912e'); R(-1, 21, 4, 3, '#b8912e'); x.restore(); break;
+    }
+    case 'ring': {
+      R(22, 28, 20, 14, '#5b4a34'); R(24, 30, 16, 3, '#2a2620'); // caixinha
+      x.strokeStyle = '#d8c86a'; x.lineWidth = 2; x.beginPath(); x.arc(32, 28, 5, 0, 6.29); x.stroke();
+      x.fillStyle = '#e8f0ff'; x.beginPath(); x.arc(32, 23, 1.8, 0, 6.29); x.fill(); break;
+    }
+    case 'toy': {
+      x.fillStyle = '#7a5a3a'; x.beginPath(); x.moveTo(32, 20); x.lineTo(43, 38); x.lineTo(21, 38); x.closePath(); x.fill(); // pião
+      x.fillStyle = '#5a4028'; x.fillRect(31, 38, 2, 6); x.strokeStyle = 'rgba(255,240,200,.2)'; line(26, 30, 38, 30, 'rgba(230,200,150,.4)', 1.4); break;
+    }
+    case 'stamp': {
+      R(28, 20, 8, 16, '#3a352b'); R(24, 34, 16, 6, WOOD); R(22, 40, 20, 4, '#2a2620'); // cabo + base
+      x.fillStyle = '#8a2f2a'; x.beginPath(); x.arc(32, 15, 4, 0, 6.29); x.fill(); break;
+    }
+    case 'xray': {
+      R(20, 18, 26, 30, '#20303a'); x.fillStyle = 'rgba(180,200,210,.5)'; // filme
+      x.beginPath(); x.ellipse(33, 30, 6, 9, 0, 0, 6.29); x.fill(); // crânio/tórax fantasma
+      x.strokeStyle = 'rgba(180,200,210,.4)'; x.lineWidth = 0.8; for (let i = 0; i < 4; i++) { x.beginPath(); x.arc(33, 40, 4 + i * 2, Math.PI, 0); x.stroke(); } break;
+    }
+    case 'passports': {
+      for (let i = 0; i < 3; i++) { x.save(); x.translate(32, 26 + i * 6); x.rotate((i - 1) * 0.1); R(-13, -9, 26, 18, contra ? '#3a2f2f' : ['#3d5a46', '#4a3f52', '#5a2f2a'][i]); x.fillStyle = '#b8912e'; x.beginPath(); x.arc(0, 0, 3, 0, 6.29); x.fill(); x.restore(); }
+      if (contra) { x.strokeStyle = 'rgba(200,60,50,.7)'; x.lineWidth = 1; x.strokeRect(16, 14, 32, 30); } break;
+    }
+    case 'uniform': {
+      R(20, 24, 24, 22, '#4a4e42'); // dobrado
+      x.fillStyle = '#3a3e34'; x.fillRect(20, 24, 24, 4); x.strokeStyle = 'rgba(0,0,0,.3)'; line(32, 24, 32, 46, 'rgba(0,0,0,.3)', 1);
+      x.fillStyle = '#6a6e5a'; x.fillRect(24, 30, 4, 3); x.fillRect(36, 30, 4, 3); break; // sem insígnia
+    }
+    case 'clothing': {
+      ['#6a6252', '#7a7060', '#585044'].forEach((c, i) => { R(20, 40 - i * 7, 24, 7, c); x.fillStyle = 'rgba(255,255,255,.05)'; x.fillRect(20, 40 - i * 7, 24, 1.5); }); break;
+    }
+    case 'rosary': {
+      x.strokeStyle = '#5a4630'; x.lineWidth = 1; x.beginPath(); x.arc(32, 30, 11, 0.3, 6.0); x.stroke();
+      x.fillStyle = '#7a5a3a'; for (let a = 0.3; a < 6; a += 0.5) { x.beginPath(); x.arc(32 + Math.cos(a) * 11, 30 + Math.sin(a) * 11, 1.6, 0, 6.29); x.fill(); }
+      x.strokeStyle = '#8a6a40'; x.lineWidth = 2; line(32, 41, 32, 50, '#8a6a40', 2); line(29, 45, 35, 45, '#8a6a40', 2); break; // cruz
+    }
+    default: { // trouxa / embrulho genérico
+      x.fillStyle = '#5a4a36'; x.beginPath(); x.moveTo(18, 44); x.lineTo(22, 26); x.lineTo(42, 26); x.lineTo(46, 44); x.closePath(); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.3)'; x.lineWidth = 1; line(24, 26, 26, 44, 'rgba(0,0,0,.25)', 1); line(32, 26, 32, 44, 'rgba(0,0,0,.25)', 1); line(40, 26, 38, 44, 'rgba(0,0,0,.25)', 1);
+      x.fillStyle = '#4a3c2a'; x.beginPath(); x.moveTo(20, 26); x.quadraticCurveTo(32, 20, 44, 26); x.lineTo(42, 28); x.quadraticCurveTo(32, 23, 22, 28); x.closePath(); x.fill(); break;
+    }
+  }
+  return cv;
+}
+
 /* ---------- BAGAGEM: UI ---------- */
 function openBag() {
   const cz = shift.citizen;
   if (!cz || !shift.running) return;
   if (!cz.bagDone) { spendTime(10); cz.bagDone = true; }
   const box = $('bag-items'); box.innerHTML = '';
+  const empty = cz.bag.length === 1 && /Não há bagagem|Nunca houve/.test(cz.bag[0].txt || '');
   cz.bag.forEach(item => {
     const el = document.createElement('div');
     el.className = 'bag-item' + (item.contra ? ' contra' : '');
     el.dataset.fid = item.fid;
-    el.innerHTML = T(item.txt) + (item.desc ? `<span class="bag-desc">${T(item.desc)}</span>` : '');
+    if (!empty) {
+      const ico = drawBagIcon(bagKind(item.txt || '', item.contra), item.contra);
+      ico.className = 'bag-ico'; el.appendChild(ico);
+    }
+    const cap = document.createElement('div'); cap.className = 'bag-cap';
+    cap.innerHTML = T(item.txt) + (item.desc ? `<span class="bag-desc">${T(item.desc)}</span>` : '');
+    el.appendChild(cap);
     el.onclick = () => {
       if (item.contra && !item.found) {
         item.found = true;

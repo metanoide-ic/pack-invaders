@@ -778,19 +778,37 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .map-info .mi-status.ban { color:#d98b7c; border:1px solid var(--stamp-red); background:rgba(140,47,36,.15); }
 @media (max-width:760px){ .map-grid { grid-template-columns:1fr; } .map-info { border-left:none; border-top:1px solid var(--ink-dim); } }
 
-/* ============ BAGAGEM ============ */
-.bag-body { padding:14px; overflow-y:auto; }
-.bag-hint { font-size:11px; color:var(--ink-dim); margin-bottom:10px; }
-.bag-item {
-  padding:9px 10px; margin-bottom:6px; background-color:var(--panel2);
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  border-left:3px solid #6b5a3a; font-size:12px; line-height:1.5; cursor:pointer;
+/* ============ BAGAGEM — mala aberta com objetos ============ */
+.bag-body {
+  padding:16px; overflow-y:auto;
+  /* forro de couro da mala + costura na borda + sombra da tampa em cima */
+  background-color:#2c2115;
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 40px),
+    linear-gradient(rgba(58,44,28,.55), rgba(34,26,16,.7)), var(--tex-wood);
+  background-size:auto, auto, 240px 160px;
+  box-shadow: inset 0 0 0 2px rgba(20,14,8,.8), inset 0 0 0 4px rgba(120,96,58,.35), inset 0 14px 30px rgba(0,0,0,.55);
 }
-.bag-item:hover { background:var(--panel); }
-.bag-item.picked { outline:2px solid var(--stamp-red); }
-.bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:11px; }
-.bag-item.contra { border-left-color: var(--stamp-red); }
-.bag-item.contra.found { background:rgba(140,47,36,.25); }
+.bag-hint { font-size:11px; color:#b8a276; margin-bottom:12px; font-style:italic; }
+#bag-items { display:grid; grid-template-columns:repeat(auto-fill, minmax(148px,1fr)); gap:10px; }
+.bag-item {
+  display:flex; flex-direction:column; align-items:center; text-align:center;
+  padding:10px 8px 9px; cursor:pointer; position:relative;
+  background-color:rgba(30,26,20,.6);
+  background-image: linear-gradient(rgba(206,196,170,.05), rgba(0,0,0,.12));
+  border:1px solid rgba(120,96,58,.35); border-radius:3px;
+  box-shadow: 0 3px 8px rgba(0,0,0,.4);
+  font-size:11px; line-height:1.4; color:var(--ink);
+  transition: transform .08s ease, box-shadow .1s ease;
+}
+.bag-item:hover { background-color:rgba(46,40,30,.8); transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.5); }
+.bag-ico { width:56px; height:56px; image-rendering:auto; margin-bottom:6px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
+.bag-cap { color:#d8cdb2; }
+.bag-item.picked { outline:2px solid var(--stamp-red); outline-offset:1px; }
+.bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:10px; margin-top:3px; font-style:italic; }
+.bag-item.contra { border-color: rgba(180,60,50,.6); }
+.bag-item.contra::after { content:"!"; position:absolute; top:4px; right:6px; color:var(--stamp-red); font-weight:bold; font-family:var(--font-display); }
+.bag-item.contra.found { background-color:rgba(140,47,36,.3); border-color:var(--stamp-red); }
 
 /* ============ LINHA DA VIDA ============ */
 .ll-list { border-left:2px solid #6b6250; padding-left:14px; margin:6px 0; }
