@@ -2636,9 +2636,9 @@ function checkArrest() {
 
 function showMorning() {
   setRegimeClass(S.day);
+  showScreen('screen-morning');   // ativa a tela antes de renderHome (a vinheta anima só se ativa)
   renderNewspaper();
   renderHome();
-  showScreen('screen-morning');
 }
 
 function renderNewspaper() {
@@ -2719,11 +2719,16 @@ function renderHome() {
 /* vinheta do apartamento: janela com o bloco em frente e neve, lâmpada nua,
    radiador, casacos da família nos ganchos, mesa. Reflete o frio (aquecimento)
    e quem ainda mora aqui. Preenche o vazio do painel e vende o Bloco 14. */
+let _homeAnim = null;
 function drawHomeScene() {
   const cv = $('home-scene'); if (!cv) return;
-  const x = cv.getContext('2d'); const W = cv.width, H = cv.height;
+  const W = cv.width, H = cv.height;
   const warm = !!morningPurchases.aquecimento;
   const living = Object.values(S.family).filter(m => m.alive).length;
+  const wx = W - 210, wy = 26, ww = 150, wh = 150; // janela (para a neve)
+  // cena estática montada num offscreen (não redesenha tudo por quadro)
+  const st = document.createElement('canvas'); st.width = W; st.height = H;
+  const x = st.getContext('2d');
   const rng = (() => { let s = (S.day * 2654435761) >>> 0; return () => { s = (s * 48271) % 2147483647; return s / 2147483647; }; })();
   x.clearRect(0, 0, W, H);
   // parede + rodapé (papel encardido)
@@ -2733,8 +2738,7 @@ function drawHomeScene() {
   x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0, H - 26, W, 26); // rodapé
   x.fillStyle = 'rgba(255,246,220,.04)'; x.fillRect(0, H - 27, W, 1);
   for (let i = 0; i < 1400; i++) { x.fillStyle = `rgba(0,0,0,${0.03 + rng() * 0.05})`; x.fillRect(rng() * W, rng() * (H - 26), 1, 1); } // grão
-  // JANELA (à direita) — bloco em frente + neve
-  const wx = W - 210, wy = 26, ww = 150, wh = 150;
+  // JANELA (à direita) — bloco em frente (a neve e o caixilho vão no loop)
   x.fillStyle = '#0a0d12'; x.fillRect(wx, wy, ww, wh);
   // prédio em frente com janelas acesas/apagadas
   x.fillStyle = '#141820'; x.fillRect(wx + 6, wy + 30, ww - 12, wh - 30);
@@ -2742,12 +2746,6 @@ function drawHomeScene() {
     const lit = rng() < 0.32; x.fillStyle = lit ? 'rgba(220,190,120,.6)' : 'rgba(40,48,58,.7)';
     x.fillRect(wx + 14 + c * 26, wy + 40 + r * 22, 15, 13);
   }
-  // neve caindo
-  x.fillStyle = 'rgba(226,228,232,.75)';
-  for (let i = 0; i < 60; i++) x.fillRect(wx + rng() * ww, wy + rng() * wh, 1.6, 1.6);
-  // caixilho
-  x.strokeStyle = '#3a2e1e'; x.lineWidth = 5; x.strokeRect(wx, wy, ww, wh);
-  x.lineWidth = 3; x.beginPath(); x.moveTo(wx + ww / 2, wy); x.lineTo(wx + ww / 2, wy + wh); x.moveTo(wx, wy + wh / 2); x.lineTo(wx + ww, wy + wh / 2); x.stroke();
   x.fillStyle = warm ? 'rgba(255,220,150,.06)' : 'rgba(150,180,210,.06)'; x.fillRect(wx, wy, ww, wh); // luz fria/quente pela janela
   // RADIADOR sob a janela
   const rx = wx + 18, ry = wy + wh + 6;
@@ -2783,6 +2781,34 @@ function drawHomeScene() {
   // vinheta
   const vg = x.createRadialGradient(W / 2, H / 2, 60, W / 2, H / 2, W * 0.62);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.5)'); x.fillStyle = vg; x.fillRect(0, 0, W, H);
+
+  // --- animação: a neve cai atrás do vidro, o caixilho fica por cima ---
+  const ctx = cv.getContext('2d');
+  const flakes = [];
+  for (let i = 0; i < 70; i++) flakes.push({ x: wx + Math.random() * ww, y: wy + Math.random() * wh, v: 0.25 + Math.random() * 0.85, w: (Math.random() - 0.5) * 0.4, r: 0.9 + Math.random() * 1.3 });
+  const bulbX = 130, glow = warm ? 'rgba(255,224,150,' : 'rgba(190,205,220,';
+  cancelAnimationFrame(_homeAnim);
+  const frame = () => {
+    const scr = document.getElementById('screen-morning');
+    if (!scr || !scr.classList.contains('active')) { _homeAnim = null; return; }
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(st, 0, 0);
+    // neve dentro da janela
+    ctx.save(); ctx.beginPath(); ctx.rect(wx, wy, ww, wh); ctx.clip();
+    ctx.fillStyle = 'rgba(228,230,234,.85)';
+    for (const f of flakes) { f.y += f.v; f.x += f.w + Math.sin((f.y + f.x) * 0.03) * 0.12; if (f.y > wy + wh) { f.y = wy - 2; f.x = wx + Math.random() * ww; } ctx.fillRect(f.x, f.y, f.r, f.r); }
+    ctx.restore();
+    // caixilho por cima do vidro
+    ctx.strokeStyle = '#3a2e1e'; ctx.lineWidth = 5; ctx.strokeRect(wx, wy, ww, wh);
+    ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(wx + ww / 2, wy); ctx.lineTo(wx + ww / 2, wy + wh); ctx.moveTo(wx, wy + wh / 2); ctx.lineTo(wx + ww, wy + wh / 2); ctx.stroke();
+    // leve tremular da lâmpada
+    const fl = 0.9 + Math.sin(performance.now() * 0.004) * 0.06 + (Math.random() < 0.03 ? -0.25 : 0);
+    const bg = ctx.createRadialGradient(bulbX, 50, 2, bulbX, 50, warm ? 16 : 12);
+    bg.addColorStop(0, glow + (0.14 * fl) + ')'); bg.addColorStop(1, glow + '0)');
+    ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(bulbX, 50, 16, 0, 6.29); ctx.fill();
+    _homeAnim = requestAnimationFrame(frame);
+  };
+  frame();
 }
 
 /* ---------- FINAIS ---------- */
