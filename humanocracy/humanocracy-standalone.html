@@ -4660,11 +4660,18 @@ function paintBust(ctx, f, opts) {
   ctx.closePath(); ctx.fill();
   soft(ctx, cx, 88, 9, 4, rgb(darken(SH, 0.2), 0.4), 1.6);
 
-  /* casaco e ombros — lã pesada com trama, dobras e gola de verdade */
+  /* casaco e ombros — lã pesada com trama, dobras e gola de verdade.
+     Criança: ombros estreitos e caídos (senão o cabeção fica em corpo de
+     adulto e a criança vira anão). */
   const coatPath = () => {
     ctx.beginPath();
-    ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
-    ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+    if (L.child) {
+      ctx.moveTo(26, 122); ctx.bezierCurveTo(27, 100, 39, 92, 50, 91.5);
+      ctx.bezierCurveTo(61, 92, 73, 100, 74, 122); ctx.closePath();
+    } else {
+      ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
+      ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+    }
   };
   coatPath();
   ctx.fillStyle = opts.coat || 'rgb(45,46,38)';
@@ -9560,8 +9567,9 @@ function famSprite(who) {
   const f = FAM_FEATURES[who], coat = FAM_COAT[who];
   const child = f.idade <= 12;
   return mk(64, 128, (x) => {
-    const headY = child ? 26 : 2;                 // criança: mais baixa no quadro
-    const bustH = child ? 62 : 77;
+    // criança: cabeça grande (proporção infantil) + corpo curto e atarracado.
+    const headY = child ? 12 : 2;                 // sobe o busto: cabeça maior no quadro
+    const bustH = child ? 78 : 77;                // busto tão alto quanto o do adulto = cabeção
     // pernas primeiro (o busto cobre a cintura)
     const legTone = 'rgba(28,26,22,1)';
     x.fillStyle = legTone;
@@ -9638,22 +9646,23 @@ function buildSprites() {
     x.beginPath(); x.moveTo(32, 50); x.lineTo(32, 106); x.stroke(); // costura
     x.strokeStyle = 'rgba(200,205,190,.08)'; x.lineWidth = 1.4;
     x.beginPath(); x.moveTo(19, 62); x.quadraticCurveTo(22, 52, 32, 50); x.stroke(); // luz de recorte
-    // pescoço + nuca
-    R(x, 28, 40, 8, 9, '#8c6b4e');
-    // cabeça POR TRÁS: só cabelo — fio a fio, como o motor faz
+    // pescoço + nuca (mais cheio: adulto, não pescoço de palito)
+    R(x, 27, 41, 10, 8, '#8c6b4e');
+    // cabeça POR TRÁS: só cabelo — fio a fio, como o motor faz. maior, para
+    // não virar uma cabecinha perdida sobre o casacão.
     x.fillStyle = '#141414';
-    x.beginPath(); x.ellipse(32, 32, 11, 12.5, 0, 0, 6.29); x.fill();
-    for (let i = 0; i < 70; i++) {
-      const t = i / 70, hx = 22 + t * 20, hy = 22 + Math.abs(Math.sin(i * 3.7)) * 4;
+    x.beginPath(); x.ellipse(32, 30, 13, 14.5, 0, 0, 6.29); x.fill();
+    for (let i = 0; i < 80; i++) {
+      const t = i / 80, hx = 19 + t * 26, hy = 19 + Math.abs(Math.sin(i * 3.7)) * 4.5;
       x.strokeStyle = (i % 3) ? 'rgba(6,6,6,.7)' : 'rgba(70,70,66,.35)';
       x.lineWidth = 0.6;
       x.beginPath(); x.moveTo(hx, hy);
-      x.quadraticCurveTo(hx + (t - 0.5) * 3, hy + 9, hx + (t - 0.5) * 6, hy + 17);
+      x.quadraticCurveTo(hx + (t - 0.5) * 3.4, hy + 10, hx + (t - 0.5) * 6.6, hy + 19);
       x.stroke();
     }
     // orelha esquerda aparecendo — a única prova de que há um rosto do outro lado
-    C(x, 20.5, 34, 2.2, '#8c6b4e');
-    x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.ellipse(20.5, 34.4, 1, 1.5, 0, 0, 6.29); x.fill();
+    C(x, 19, 33, 2.4, '#8c6b4e');
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.ellipse(19, 33.4, 1.1, 1.6, 0, 0, 6.29); x.fill();
     // sombra no chão
     const g = x.createRadialGradient(32, 124, 2, 32, 124, 16);
     g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');

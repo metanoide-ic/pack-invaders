@@ -201,11 +201,18 @@ function paintBust(ctx, f, opts) {
   ctx.closePath(); ctx.fill();
   soft(ctx, cx, 88, 9, 4, rgb(darken(SH, 0.2), 0.4), 1.6);
 
-  /* casaco e ombros — lã pesada com trama, dobras e gola de verdade */
+  /* casaco e ombros — lã pesada com trama, dobras e gola de verdade.
+     Criança: ombros estreitos e caídos (senão o cabeção fica em corpo de
+     adulto e a criança vira anão). */
   const coatPath = () => {
     ctx.beginPath();
-    ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
-    ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+    if (L.child) {
+      ctx.moveTo(26, 122); ctx.bezierCurveTo(27, 100, 39, 92, 50, 91.5);
+      ctx.bezierCurveTo(61, 92, 73, 100, 74, 122); ctx.closePath();
+    } else {
+      ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
+      ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+    }
   };
   coatPath();
   ctx.fillStyle = opts.coat || 'rgb(45,46,38)';
