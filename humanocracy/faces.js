@@ -2026,24 +2026,57 @@ function renderActorBust(cz, cv) { blitActor(cv, renderActorFrame(cz, false)); }
    O busto pisca sozinho em ritmo humano. Quem NÃO pisca (Alternado com o
    tell 'piscar', ou o Silente) simplesmente nunca fecha os olhos — dá pra
    perceber ali, sem exame. Determinístico visualmente, sem tocar o RNG. */
-let _blinkRAF = null, _blinkState = null;
+let _blinkRAF = null, _blinkState = null, _blinkLastCv = null;
 function startActorBlink(cz, cv) {
   stopActorBlink();
+  _blinkLastCv = cv;
+  cv.style.transformOrigin = '50% 100%';     // pivô nos pés: balança como quem está de pé
   const open = renderActorFrame(cz, false);
   blitActor(cv, open);
+  const a = (cz && cz.anom) || {};
   const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar);
-  if (noBlink) return;                       // nunca pisca — o tell ao vivo
-  const closed = renderActorFrame(cz, true);
-  const st = { cv, open, closed, next: performance.now() + 2200 + Math.random() * 3600, closedUntil: 0, showing: 'open' };
+  // MOVIMENTO VIVO (transform barato, sem re-render): respiração e leve balanço
+  // dão vida; o nervoso treme; o não-humano fica parado DEMAIS e dá um espasmo
+  // errado de vez em quando — dá pra desconfiar ali, sem exame.
+  const still = !!(a.deadStare || a.clearlyNonHuman) || (cz && cz.isSilente);
+  const breatheAmp = still ? 0 : 1;
+  const tremor = (cz && cz.nervous && !still) ? 1 : 0;
+  const t0 = performance.now();
+  const closed = noBlink ? null : renderActorFrame(cz, true);
+  const st = {
+    cv, open, closed, showing: 'open', still, breatheAmp, tremor,
+    next: t0 + 2200 + Math.random() * 3600, closedUntil: 0,
+    twitchAt: still ? t0 + 4000 + Math.random() * 5000 : Infinity, twitchUntil: 0,
+    tx: 0, ty: 0,
+  };
   _blinkState = st;
   const loop = (t) => {
     if (_blinkState !== st) return;           // trocou de cidadão
-    if (st.showing === 'open' && t >= st.next) {
-      blitActor(cv, closed); st.showing = 'closed'; st.closedUntil = t + 95 + Math.random() * 70;
-    } else if (st.showing === 'closed' && t >= st.closedUntil) {
-      blitActor(cv, open); st.showing = 'open';
-      st.next = t + 2200 + Math.random() * 3800 + (Math.random() < 0.2 ? -1600 : 0); // piscada dupla às vezes
+    // --- piscar ---
+    if (closed) {
+      if (st.showing === 'open' && t >= st.next) {
+        blitActor(cv, closed); st.showing = 'closed'; st.closedUntil = t + 95 + Math.random() * 70;
+      } else if (st.showing === 'closed' && t >= st.closedUntil) {
+        blitActor(cv, open); st.showing = 'open';
+        st.next = t + 2200 + Math.random() * 3800 + (Math.random() < 0.2 ? -1600 : 0);
+      }
     }
+    // --- movimento (transform) ---
+    const s = (t - t0) / 1000;
+    let ox = 0, oy = 0, rot = 0, sc = 1;
+    if (st.breatheAmp) {
+      oy = Math.sin(s * 1.15) * 0.9 + Math.sin(s * 0.37) * 0.5;   // respiração + micro-deriva
+      ox = Math.sin(s * 0.53 + 1) * 0.7;
+      sc = 1 + (Math.sin(s * 1.15) + 1) * 0.0018;                  // peito enche de leve
+      rot = Math.sin(s * 0.41) * 0.12;
+    }
+    if (st.tremor) { ox += (Math.random() - 0.5) * 0.9; oy += (Math.random() - 0.5) * 0.7; }
+    if (st.still) {
+      // espasmo abrupto: alguns quadros de deslocamento errado, e volta seco
+      if (t >= st.twitchAt) { st.twitchUntil = t + 70 + Math.random() * 60; st.twitchAt = t + 3500 + Math.random() * 6000; st._tw = (Math.random() - 0.5) * 5; st._ty = (Math.random() - 0.5) * 3; }
+      if (t < st.twitchUntil) { ox += st._tw; oy += st._ty; rot += st._tw * 0.15; }
+    }
+    cv.style.transform = `translate(${ox.toFixed(2)}px,${oy.toFixed(2)}px) rotate(${rot.toFixed(2)}deg) scale(${sc.toFixed(4)})`;
     _blinkRAF = requestAnimationFrame(loop);
   };
   _blinkRAF = requestAnimationFrame(loop);
@@ -2051,6 +2084,7 @@ function startActorBlink(cz, cv) {
 function stopActorBlink() {
   if (_blinkRAF) cancelAnimationFrame(_blinkRAF);
   _blinkRAF = null; _blinkState = null;
+  if (_blinkLastCv) { try { _blinkLastCv.style.transform = ''; } catch (e) {} }
 }
 
 /* ============================================================
