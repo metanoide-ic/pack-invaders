@@ -6547,34 +6547,77 @@ function stopActorBlink() {
       mx.fillStyle = `rgba(0,0,0,${0.04 + r() * 0.05})`;
       mx.fillRect(r() * 200, r() * 200, 1, 1);
     }
+    // estrias horizontais finíssimas (a chapa foi escovada; ladrilha sem emenda)
+    for (let i = 0; i < 26; i++) {
+      const y = r() * 200;
+      mx.strokeStyle = r() < 0.5 ? 'rgba(0,0,0,.05)' : 'rgba(196,196,172,.03)';
+      mx.lineWidth = 0.5 + r() * 0.6;
+      mx.beginPath(); mx.moveTo(0, y); mx.lineTo(200, y + (r() - 0.5) * 1.5); mx.stroke();
+    }
+    // alguns fios de escovado mais claros, dão a leitura de metal, não papel
+    for (let i = 0; i < 8; i++) {
+      const x = r() * 200;
+      mx.strokeStyle = 'rgba(210,210,186,.045)'; mx.lineWidth = 0.7;
+      mx.beginPath(); mx.moveTo(x, 0); mx.lineTo(x + (r() - 0.5) * 3, 200); mx.stroke();
+    }
     set('--tex-panel', m);
 
-    // a mesa: tábuas com veio, nós, marcas de caneca
+    // a mesa: tábuas de carvalho envernizado, veio profundo, nós, chanfros,
+    // parafusos de repartição e as marcas de anos de caneca e caneca de café
     const w = mk2(240, 160); const wx = w.getContext('2d');
+    const plankH = 40;
     for (let plank = 0; plank < 4; plank++) {
-      const y0 = plank * 40;
-      const tone = 62 + Math.floor(r() * 14);
-      wx.fillStyle = `rgb(${tone + 14},${tone - 4},${tone - 26})`;
-      wx.fillRect(0, y0, 240, 40);
-      for (let i = 0; i < 9; i++) { // veio
-        const yy = y0 + 3 + r() * 34;
-        wx.strokeStyle = `rgba(30,20,10,${0.10 + r() * 0.12})`;
-        wx.lineWidth = 0.6 + r() * 0.8;
+      const y0 = plank * plankH;
+      const tone = 58 + Math.floor(r() * 16);
+      // base com leve gradiente ao longo da tábua (não é cor chapada)
+      const bg = wx.createLinearGradient(0, y0, 240, y0);
+      bg.addColorStop(0, `rgb(${tone + 12},${tone - 6},${tone - 28})`);
+      bg.addColorStop(0.5, `rgb(${tone + 16},${tone - 2},${tone - 24})`);
+      bg.addColorStop(1, `rgb(${tone + 10},${tone - 7},${tone - 29})`);
+      wx.fillStyle = bg; wx.fillRect(0, y0, 240, plankH);
+      // cerne: faixas largas de tom quente
+      for (let i = 0; i < 3; i++) {
+        const yy = y0 + 6 + r() * 28, hgt = 3 + r() * 6;
+        wx.fillStyle = `rgba(${tone + 26},${tone + 2},${tone - 20},${0.06 + r() * 0.05})`;
         wx.beginPath(); wx.moveTo(0, yy);
-        for (let x = 0; x <= 240; x += 30) wx.lineTo(x, yy + Math.sin(x * 0.05 + plank + i) * 2.2);
+        for (let x = 0; x <= 240; x += 24) wx.lineTo(x, yy + Math.sin(x * 0.045 + plank * 1.7 + i) * 2.6);
+        for (let x = 240; x >= 0; x -= 24) wx.lineTo(x, yy + hgt + Math.sin(x * 0.045 + plank * 1.7 + i) * 2.6);
+        wx.closePath(); wx.fill();
+      }
+      for (let i = 0; i < 14; i++) { // veio fino
+        const yy = y0 + 2 + r() * 36;
+        wx.strokeStyle = `rgba(26,16,8,${0.08 + r() * 0.14})`;
+        wx.lineWidth = 0.4 + r() * 0.9;
+        wx.beginPath(); wx.moveTo(0, yy);
+        for (let x = 0; x <= 240; x += 24) wx.lineTo(x, yy + Math.sin(x * 0.05 + plank + i) * 2.2);
         wx.stroke();
       }
-      if (r() < 0.7) { // nó
-        const kx = r() * 240, ky = y0 + 8 + r() * 24;
-        wx.strokeStyle = 'rgba(28,18,8,.5)'; wx.lineWidth = 1;
-        for (let k = 1; k < 4; k++) { wx.beginPath(); wx.ellipse(kx, ky, k * 2.4, k * 1.4, 0.2, 0, 6.29); wx.stroke(); }
+      if (r() < 0.75) { // nó, com desvio do veio ao redor
+        const kx = 20 + r() * 200, ky = y0 + 10 + r() * 20;
+        wx.fillStyle = 'rgba(24,15,7,.28)'; wx.beginPath(); wx.ellipse(kx, ky, 3.4, 2.2, 0.2, 0, 6.29); wx.fill();
+        wx.strokeStyle = 'rgba(20,12,6,.5)'; wx.lineWidth = 0.9;
+        for (let k = 1; k < 5; k++) { wx.beginPath(); wx.ellipse(kx, ky, k * 2.6, k * 1.5, 0.2, 0, 6.29); wx.stroke(); }
       }
-      wx.fillStyle = 'rgba(0,0,0,.4)'; wx.fillRect(0, y0 + 38.6, 240, 1.4); // vão entre tábuas
-      wx.fillStyle = 'rgba(255,240,210,.05)'; wx.fillRect(0, y0, 240, 1);   // canto pega luz
+      // chanfro entre tábuas: sombra funda embaixo + fio de luz em cima da próxima
+      wx.fillStyle = 'rgba(0,0,0,.5)'; wx.fillRect(0, y0 + plankH - 1.6, 240, 1.6);
+      wx.fillStyle = 'rgba(255,240,210,.07)'; wx.fillRect(0, y0 + 0.4, 240, 0.8);
+      // parafusos de latão nas pontas da tábua (mesa de repartição)
+      for (const sx of [7, 233]) {
+        const sy = y0 + plankH / 2;
+        wx.fillStyle = '#6b5a34'; wx.beginPath(); wx.arc(sx, sy, 2.2, 0, 6.29); wx.fill();
+        wx.strokeStyle = 'rgba(0,0,0,.5)'; wx.lineWidth = 0.5; wx.beginPath(); wx.moveTo(sx - 1.5, sy); wx.lineTo(sx + 1.5, sy); wx.stroke();
+        wx.fillStyle = 'rgba(255,240,200,.4)'; wx.fillRect(sx - 1.6, sy - 1.8, 1.4, 0.8);
+      }
     }
-    // marca de caneca — o círculo que nunca sai
-    wx.strokeStyle = 'rgba(20,12,6,.35)'; wx.lineWidth = 2.4;
-    wx.beginPath(); wx.arc(178, 66, 13, 0, 6.29); wx.stroke();
+    // (sem marca de caneca no tile — ela ladrilharia numa grade artificial;
+    //  o desgaste do centro fica por conta do brilho não-repetido do CSS)
+    // arranhões e respingos de tinta de carimbo
+    for (let i = 0; i < 40; i++) {
+      const x = r() * 240, y = r() * 160, a = r() * 6.29, l = 2 + r() * 16;
+      wx.strokeStyle = `rgba(10,6,3,${0.05 + r() * 0.1})`; wx.lineWidth = 0.4;
+      wx.beginPath(); wx.moveTo(x, y); wx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); wx.stroke();
+    }
+    for (let i = 0; i < 10; i++) { wx.fillStyle = `rgba(${20 + r() * 40 | 0},${10},${8},${0.1 + r() * 0.2})`; wx.beginPath(); wx.arc(r() * 240, r() * 160, 0.5 + r() * 1.1, 0, 6.29); wx.fill(); }
     set('--tex-wood', w);
 
     // guilhochê de segurança: curvas espirográficas finas (marca d'água de documento)
