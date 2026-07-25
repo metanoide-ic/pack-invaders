@@ -6524,12 +6524,18 @@ function startActorBlink(cz, cv) {
     const s = (t - t0) / 1000;
     let ox = 0, oy = 0, rot = 0, sc = 1;
     if (st.breatheAmp) {
-      oy = Math.sin(s * 1.15) * 0.9 + Math.sin(s * 0.37) * 0.5;   // respiração + micro-deriva
-      ox = Math.sin(s * 0.53 + 1) * 0.7;
-      sc = 1 + (Math.sin(s * 1.15) + 1) * 0.0018;                  // peito enche de leve
-      rot = Math.sin(s * 0.41) * 0.12;
+      oy = Math.sin(s * 1.05) * 1.5 + Math.sin(s * 0.37) * 0.7;   // respiração + micro-deriva
+      ox = Math.sin(s * 0.53 + 1) * 0.9;
+      sc = 1 + (Math.sin(s * 1.05) + 1) * 0.0026;                 // peito enche de leve
+      rot = Math.sin(s * 0.41) * 0.16;
     }
-    if (st.tremor) { ox += (Math.random() - 0.5) * 0.9; oy += (Math.random() - 0.5) * 0.7; }
+    if (st.tremor) {
+      // tremor orgânico: soma de senóides rápidas incomensuráveis + deriva suave
+      // (não é ruído digital por quadro — treme como mão de gente com frio/medo)
+      ox += Math.sin(s * 17.3) * 0.55 + Math.sin(s * 11.1 + 2) * 0.35;
+      oy += Math.sin(s * 19.7 + 1) * 0.45 + Math.sin(s * 13.3) * 0.3;
+      rot += Math.sin(s * 15.0) * 0.14;
+    }
     if (st.still) {
       // espasmo abrupto: alguns quadros de deslocamento errado, e volta seco
       if (t >= st.twitchAt) { st.twitchUntil = t + 70 + Math.random() * 60; st.twitchAt = t + 3500 + Math.random() * 6000; st._tw = (Math.random() - 0.5) * 5; st._ty = (Math.random() - 0.5) * 3; }
