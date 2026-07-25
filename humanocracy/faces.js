@@ -1202,11 +1202,23 @@ function paintBust(ctx, f, opts) {
 function mwSafe(L) { return Math.max(6, L.mouthW * 0.9); }
 /* acompanhante no guichê (bebê no colo / criança ao lado do adulto) */
 function paintCompanion(ctx, comp) {
-  const skOf = (f) => f ? rgb(F_SKIN[f.skin % F_SKIN.length].b) : 'rgb(214,176,150)';
-  const shOf = (f) => f ? rgb(F_SKIN[f.skin % F_SKIN.length].s) : 'rgb(150,110,90)';
-  const hcOf = (f) => f ? rgb(F_HAIR[f.hair % F_HAIR.length]) : 'rgb(58,42,30)';
+  const anom = comp.anom || {};
+  let sk = comp.feat ? F_SKIN[comp.feat.skin % F_SKIN.length].b : [214, 176, 150];
+  let sh = comp.feat ? F_SKIN[comp.feat.skin % F_SKIN.length].s : [150, 110, 90];
+  if (anom.skinShift) { const tgt = [72, 116, 176]; sk = mix(sk, tgt, anom.skinShift); sh = mix(sh, darken(tgt, 0.4), anom.skinShift); }
+  const skC = rgb(sk), shC = rgb(sh);
+  const hc = comp.feat ? rgb(F_HAIR[comp.feat.hair % F_HAIR.length]) : 'rgb(58,42,30)';
+  const sclera = anom.blackSclera ? 'rgb(16,14,18)' : 'rgb(240,232,214)';
+  // desenha um par de olhos de acompanhante (aberto humano ou alienígena)
+  const eyes = (ex, ey, s) => {
+    for (const dx of [-2.7 * s, 2.7 * s]) {
+      ctx.fillStyle = sclera; ctx.beginPath(); ctx.ellipse(ex + dx, ey, 1.7 * s, 1.4 * s, 0, 0, 6.29); ctx.fill();
+      ctx.fillStyle = anom.blackSclera ? 'rgb(4,3,6)' : 'rgb(26,18,12)';
+      if (anom.slitPupil) { ctx.save(); ctx.translate(ex + dx, ey); ctx.scale(0.4, 1.9); ctx.beginPath(); ctx.arc(0, 0, 1.15 * s, 0, 6.29); ctx.fill(); ctx.restore(); }
+      else { ctx.beginPath(); ctx.arc(ex + dx, ey, 1.05 * s, 0, 6.29); ctx.fill(); }
+    }
+  };
   if (comp.kind === 'baby') {
-    const sk = skOf(comp.feat);
     ctx.save();
     // braço/manga do adulto cruzando o peito, embalando
     ctx.fillStyle = 'rgba(18,18,14,.92)';
@@ -1219,20 +1231,27 @@ function paintCompanion(ctx, comp) {
     ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 0.8;
     ctx.beginPath(); ctx.moveTo(-8, -3); ctx.quadraticCurveTo(2, 11, 13, 5); ctx.stroke();
     // carinha (só o rosto aparece do cobertor)
-    ctx.fillStyle = sk; ctx.beginPath(); ctx.arc(-9, -3, 5.8, 0, 6.29); ctx.fill();
-    ctx.fillStyle = shOf(comp.feat); ctx.globalAlpha = 0.4;
+    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(-9, -3, 5.8, 0, 6.29); ctx.fill();
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.4;
     ctx.beginPath(); ctx.arc(-7.4, -2, 5.8, Math.PI * 1.7, Math.PI * 0.4); ctx.fill(); ctx.globalAlpha = 1;
     soft(ctx, -10.6, -4.2, 2.2, 1.8, 'rgba(255,238,214,.45)', 1); // bochecha na luz
-    // olhos fechados (dorme) + boquinha
-    ctx.strokeStyle = 'rgba(28,18,12,.85)'; ctx.lineWidth = 0.6;
-    ctx.beginPath(); ctx.moveTo(-12, -3.6); ctx.quadraticCurveTo(-11, -2.7, -9.7, -3.5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-8.2, -3.7); ctx.quadraticCurveTo(-7.2, -2.8, -6, -3.6); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(-9.8, -0.2); ctx.lineTo(-8.4, -0.2); ctx.stroke();
+    if (anom.slitPupil || anom.blackSclera) {
+      // NÃO dorme: olha de volta. olhos abertos, errados.
+      eyes(-9, -3.4, 0.82);
+      ctx.strokeStyle = 'rgba(28,18,12,.85)'; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.moveTo(-9.8, -0.2); ctx.lineTo(-8.4, -0.2); ctx.stroke();
+    } else {
+      // olhos fechados (dorme) + boquinha
+      ctx.strokeStyle = 'rgba(28,18,12,.85)'; ctx.lineWidth = 0.6;
+      ctx.beginPath(); ctx.moveTo(-12, -3.6); ctx.quadraticCurveTo(-11, -2.7, -9.7, -3.5); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-8.2, -3.7); ctx.quadraticCurveTo(-7.2, -2.8, -6, -3.6); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-9.8, -0.2); ctx.lineTo(-8.4, -0.2); ctx.stroke();
+    }
     // toucamento
-    ctx.fillStyle = hcOf(comp.feat); ctx.beginPath(); ctx.arc(-9, -5.4, 6, Math.PI * 1.02, Math.PI * 2.02); ctx.fill();
+    ctx.fillStyle = hc; ctx.beginPath(); ctx.arc(-9, -5.4, 6, Math.PI * 1.02, Math.PI * 2.02); ctx.fill();
     ctx.restore();
   } else { // criança agarrada ao lado, cabeça grande espiando o vidro
-    const sk = skOf(comp.feat), hc = hcOf(comp.feat), side = comp.side || -1;
+    const side = comp.side || -1;
     const x0 = side < 0 ? 21 : 79, y0 = 109;
     ctx.save();
     // casaquinho subindo do rodapé
@@ -1241,20 +1260,15 @@ function paintCompanion(ctx, comp) {
     ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.fillRect(x0 - 9.5, 121, 19, 2);
     // cabeça grande de criança + sombra de contato do adulto
     soft(ctx, x0, y0 + 2, 8, 8, 'rgba(0,0,0,.4)', 3);
-    ctx.fillStyle = sk; ctx.beginPath(); ctx.arc(x0, y0, 7.6, 0, 6.29); ctx.fill();
-    ctx.fillStyle = shOf(comp.feat); ctx.globalAlpha = 0.4;
+    ctx.fillStyle = skC; ctx.beginPath(); ctx.arc(x0, y0, 7.6, 0, 6.29); ctx.fill();
+    ctx.fillStyle = shC; ctx.globalAlpha = 0.4;
     ctx.beginPath(); ctx.arc(x0 + 1.6, y0, 7.6, Math.PI * 1.7, Math.PI * 0.4); ctx.fill(); ctx.globalAlpha = 1;
     // cabelo
     ctx.fillStyle = hc; ctx.beginPath(); ctx.arc(x0, y0 - 1, 7.9, Math.PI * 1.0, Math.PI * 2.04); ctx.fill();
-    // olhos grandes olhando pra cima (pro adulto / pro vidro)
-    ctx.fillStyle = 'rgb(240,232,214)';
-    ctx.beginPath(); ctx.ellipse(x0 - 2.7, y0 + 0.6, 1.7, 1.4, 0, 0, 6.29); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(x0 + 2.7, y0 + 0.6, 1.7, 1.4, 0, 0, 6.29); ctx.fill();
-    ctx.fillStyle = 'rgb(26,18,12)';
-    ctx.beginPath(); ctx.arc(x0 - 2.6, y0 + 0.2, 1.05, 0, 6.29); ctx.fill();
-    ctx.beginPath(); ctx.arc(x0 + 2.8, y0 + 0.2, 1.05, 0, 6.29); ctx.fill();
+    // olhos grandes olhando pra cima (humano) ou fenda/vazio (alienígena)
+    eyes(x0, y0 + 0.5, 1);
     // boquinha + brilho
-    ctx.strokeStyle = 'rgba(120,60,52,.7)'; ctx.lineWidth = 0.7;
+    ctx.strokeStyle = anom.slitPupil || anom.blackSclera ? 'rgba(90,120,140,.7)' : 'rgba(120,60,52,.7)'; ctx.lineWidth = 0.7;
     ctx.beginPath(); ctx.moveTo(x0 - 1.6, y0 + 3.6); ctx.quadraticCurveTo(x0, y0 + 4.2, x0 + 1.6, y0 + 3.6); ctx.stroke();
     soft(ctx, x0 - 2.4, y0 - 2, 1.6, 1.2, 'rgba(255,240,216,.4)', 0.8);
     ctx.restore();

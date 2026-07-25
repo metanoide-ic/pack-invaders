@@ -471,6 +471,10 @@ function openExam() {
   if (!cz.examDone) { spendTime(10); cz.examDone = true; }
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
+  // acompanhante Alternado: o horror está no colo, não no rosto que você examina
+  if (cz.companion && cz.companion.anom) {
+    $('exam-log').innerHTML += `<div class="anomalia" data-tell="companion">⚠ ${T('O acompanhante não é uma criança. As pupilas são fendas; os olhos não têm fundo; não pisca. O adulto aperta-o mais forte quando você olha.')}</div>`;
+  }
   const zones = $('exam-zones'); zones.innerHTML = '';
   // visão geral: volta do close de zona para o rosto inteiro
   const bg = document.createElement('button');
@@ -741,12 +745,34 @@ function makeCitizen(day, opts) {
   // encontros roteirizados/quem já volta.)
   if (!opts.encounter && !opts.forceValid && !cz.returning && !cz.isWanted && !cz.features.uniform && idade >= 18 && idade <= 55) {
     const cr = rnd();
+    let comp = null;
     if (cr < 0.05) {
-      const cf = genFeatures(chance(.5) ? 'm' : 'f', ri(4, 10), etnia);
-      cz.companion = { kind: 'child', feat: { skin: cf.skin, hair: cf.hair }, coat: pick(COAT_COLORS), side: chance(.5) ? -1 : 1, idade: cf.idade };
+      const csex = chance(.5) ? 'm' : 'f';
+      const cf = genFeatures(csex, ri(4, 10), etnia);
+      comp = { kind: 'child', sexo: csex, feat: { skin: cf.skin, hair: cf.hair }, coat: pick(COAT_COLORS), side: chance(.5) ? -1 : 1, idade: cf.idade, nome: fullName(pais, csex) };
     } else if (cr < 0.10) {
-      const bf = genFeatures(chance(.5) ? 'm' : 'f', ri(0, 1), etnia);
-      cz.companion = { kind: 'baby', feat: { skin: bf.skin, hair: bf.hair } };
+      const bsex = chance(.5) ? 'm' : 'f';
+      const bf = genFeatures(bsex, ri(0, 1), etnia);
+      comp = { kind: 'baby', sexo: bsex, feat: { skin: bf.skin, hair: bf.hair }, nome: fullName(pais, bsex) };
+    }
+    if (comp) {
+      // ACOMPANHANTE ALTERNADO: raro e perturbador — uma criança de pupilas
+      // em fenda no colo. O adulto pode ser humano; a ameaça vem junto.
+      if (chance(.12)) {
+        comp.anom = {};
+        if (chance(.7)) comp.anom.slitPupil = true;
+        if (chance(.6)) comp.anom.blackSclera = true;
+        if (!comp.anom.slitPupil && !comp.anom.blackSclera) comp.anom.slitPupil = true;
+        comp.anom.skinShift = 0.5 + rnd() * 0.38;
+        cz.companionAlt = true;
+        cz.discrepancies.push({ type: 'harbor', fids: ['npc.companion'], desc: T('Acompanhante apresenta sinais não-humanos') });
+      }
+      // REGISTRO DE MENOR: a maioria carrega; a falta é violação quando a
+      // regra do dia exige (separar famílias por papelada).
+      if (chance(.82)) {
+        cz.docs.menor = { tipo: 'REGISTRO DE MENOR', id: 'menor', color: '#2b2f3a', nome: comp.nome, relacao: comp.kind === 'baby' ? T('lactente') : T('menor'), responsavel: cz.nome, carimbo: '§' };
+      }
+      cz.companion = comp;
     }
   }
 
@@ -978,6 +1004,7 @@ function computeViolations(cz, day) {
   if (rules.includes('ticketLinestan') && cz.pais === 'linestan' && !cz.docs.ticket) v.push({ rule: 'ticketLinestan', desc: T('Cidadão de Linestan sem bilhete de entrada') });
   if (rules.includes('transitFrimia') && cz.pais === 'frimia' && !cz.docs.transito) v.push({ rule: 'transitFrimia', desc: T('Cidadão de Frimia sem visto de trânsito') });
   if (rules.includes('inocBaharzad') && cz.pais === 'baharzad' && !cz.docs.inoc) v.push({ rule: 'inocBaharzad', desc: T('Cidadão de Bahar-Zad sem certificado de inoculação') });
+  if (rules.includes('minorPapers') && cz.companion && !cz.docs.menor) v.push({ rule: 'minorPapers', desc: T('Menor acompanhante sem registro') });
   return v;
 }
 
@@ -1683,6 +1710,11 @@ function docHTML(doc, cz) {
     b += fld('inoc', 'agente', 'AGENTE', doc.agente);
     b += fld('inoc', 'validade', 'VALIDADE', dateStr(doc.validade));
     b += `<div class="doc-seal" data-fid="inoc.carimbo">${doc.carimbo}</div>`;
+  } else if (doc.id === 'menor') {
+    b += fld('menor', 'nome', 'MENOR', doc.nome);
+    b += fld('menor', 'relacao', 'CONDIÇÃO', doc.relacao);
+    b += fld('menor', 'responsavel', 'RESPONSÁVEL', doc.responsavel);
+    b += `<div class="doc-seal" data-fid="menor.carimbo">${doc.carimbo}</div>`;
   }
   return b;
 }

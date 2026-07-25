@@ -143,6 +143,7 @@ const RULES = {
   ticketLinestan:  { text: 'Cidadãos de LINESTAN devem apresentar BILHETE DE ENTRADA numerado (acordo comercial 9-B).' },
   transitFrimia:   { text: 'Cidadãos de FRIMIA devem portar VISTO DE TRÂNSITO carimbado (só de passagem — não podem fixar residência).' },
   inocBaharzad:    { text: 'Cidadãos de BAHAR-ZAD devem portar CERTIFICADO DE INOCULAÇÃO (surto na Rota das Caravanas).' },
+  minorPapers:     { text: 'Todo MENOR acompanhante deve constar em REGISTRO DE MENOR carimbado. Sem registro, o menor não passa.' },
   refugeeProtect:  { text: 'Convenção de Alcorte: REFUGIADOS com Cartão de Refúgio devem ser protegidos e admitidos.' },
   detainWanted:    { text: 'PROCURADOS listados no comunicado devem ser DETIDOS.' },
   scanBioAll:      { text: 'O DETECTOR BIOLÓGICO substitui a carteira sanitária. Escaneie todos os suspeitos.' },
@@ -187,6 +188,7 @@ function rulesForDay(d) {
   if (d >= 4 && d <= 17) r.push('ticketLinestan');
   if (d >= 10 && d <= 24) r.push('transitFrimia');
   if (d >= 24 && d <= 38) r.push('inocBaharzad');
+  if (d >= 16 && d <= 40) r.push('minorPapers'); // burocracia que separa famílias
   if (d >= 14 && d <= 29) { r.push('ancestry'); r.push('banTaranstan'); }
   if (d >= 30 && d <= 42) { r.push('banLantravia'); r.push('seloConselho'); }
   if (d >= 20 && d <= 26) r.push('refugeeProtect'); // contradiz banTaranstan de propósito
