@@ -9377,6 +9377,19 @@ function buildSprites() {
   if (SPR.mae) return;
   const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
   const C = (ctx, x, y, r, c) => { ctx.fillStyle = c; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.29); ctx.fill(); };
+  // retângulo modelado: luz no topo, sombra embaixo — dá volume ao móvel chapado
+  const Rs = (ctx, x, y, w, h, c, lit = 0.16, dark = 0.34) => {
+    const g = ctx.createLinearGradient(0, y, 0, y + h);
+    g.addColorStop(0, `rgba(255,246,220,${lit})`); g.addColorStop(0.18, 'rgba(0,0,0,0)');
+    g.addColorStop(0.7, 'rgba(0,0,0,0)'); g.addColorStop(1, `rgba(0,0,0,${dark})`);
+    ctx.fillStyle = c; ctx.fillRect(x, y, w, h);
+    ctx.fillStyle = g; ctx.fillRect(x, y, w, h);
+  };
+  // friso de luz numa aresta (top ou left)
+  const edge = (ctx, x, y, w, h, side = 'top') => {
+    ctx.fillStyle = 'rgba(255,246,220,.10)';
+    if (side === 'top') ctx.fillRect(x, y, w, 1); else ctx.fillRect(x, y, 1, h);
+  };
   SPR.mae = famSprite('mae');
   SPR.vessa = famSprite('vessa');
   SPR.tomi = famSprite('tomi');
@@ -9417,35 +9430,59 @@ function buildSprites() {
     if (window.analogPostCanvas) analogPostCanvas(x.canvas, 811004, { levels: 10, grain: 9, aberr: 0, scan: 0.1, sat: 0.42 });
   });
   SPR.sofa = mk(96, 64, (x) => {
-    R(x, 4, 24, 88, 34, '#3d3327'); R(x, 0, 10, 14, 48, '#463b2c'); R(x, 82, 10, 14, 48, '#463b2c');
-    R(x, 12, 16, 72, 14, '#463b2c'); R(x, 6, 58, 8, 6, '#221d14'); R(x, 82, 58, 8, 6, '#221d14');
+    Rs(x, 0, 10, 14, 48, '#463b2c'); Rs(x, 82, 10, 14, 48, '#463b2c');   // braços
+    Rs(x, 12, 14, 72, 18, '#4c4030', .2, .3);                            // encosto
+    Rs(x, 4, 24, 88, 34, '#3d3327', .22, .38);                           // assento
+    // vinco entre almofadas + costura de luz
+    x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(47, 26, 2, 30);
+    edge(x, 12, 14, 72); edge(x, 4, 24, 88);
+    R(x, 6, 58, 8, 6, '#221d14'); R(x, 82, 58, 8, 6, '#221d14');          // pés
   });
   SPR.tv = mk(64, 80, (x) => {
-    R(x, 6, 4, 52, 40, '#141610'); R(x, 12, 10, 40, 28, '#2c3a34');
+    Rs(x, 4, 2, 56, 44, '#1a1c16', .1, .4);                              // gabinete
+    R(x, 6, 4, 52, 40, '#141610'); R(x, 12, 10, 40, 28, '#2c3a34');      // tela
+    // brilho curvo do tubo + varredura
+    const g = x.createRadialGradient(30, 20, 2, 30, 24, 26);
+    g.addColorStop(0, 'rgba(120,150,140,.35)'); g.addColorStop(1, 'rgba(40,58,52,0)');
+    x.fillStyle = g; x.fillRect(12, 10, 40, 28);
     R(x, 14, 12, 36, 3, '#4a5e56'); R(x, 14, 22, 36, 2, '#405248');
-    R(x, 27, 44, 10, 22, '#211e16'); R(x, 14, 66, 36, 5, '#211e16');
+    C(x, 54, 14, 1.2, '#7a8a80'); C(x, 54, 20, 1.2, '#5a6a60');          // botões/knobs
+    Rs(x, 27, 44, 10, 22, '#2a271d', .1, .3); R(x, 14, 66, 36, 5, '#211e16');
   });
   SPR.stove = mk(64, 80, (x) => {
-    R(x, 6, 24, 52, 52, '#33302a'); R(x, 12, 32, 22, 20, '#221f19');
-    C(x, 18, 27, 2, '#8a734d'); C(x, 28, 27, 2, '#8a734d');
-    R(x, 36, 12, 20, 10, '#26231d'); R(x, 38, 8, 16, 5, '#1d1a15');
+    Rs(x, 6, 24, 52, 52, '#33302a', .14, .4);                            // corpo esmaltado
+    R(x, 12, 32, 22, 20, '#221f19');                                     // porta do forno
+    x.strokeStyle = 'rgba(255,246,220,.08)'; x.lineWidth = 1; x.strokeRect(12.5, 32.5, 21, 19);
+    R(x, 15, 34, 16, 3, '#3a352b');                                      // puxador
+    C(x, 18, 27, 2, '#8a734d'); C(x, 28, 27, 2, '#8a734d');              // botões
+    C(x, 18, 27, 0.7, '#e8d8a0'); C(x, 28, 27, 0.7, '#e8d8a0');
+    Rs(x, 36, 12, 20, 10, '#26231d', .1, .3); R(x, 38, 8, 16, 5, '#1d1a15'); // exaustor/panela
   });
   SPR.bedT = mk(96, 56, (x) => {
-    R(x, 2, 22, 92, 24, '#3a4652'); R(x, 2, 8, 12, 38, '#2e3a44'); R(x, 16, 16, 24, 10, '#c9c2ab');
+    Rs(x, 2, 22, 92, 24, '#3a4652', .16, .34); Rs(x, 2, 8, 12, 38, '#2e3a44', .12, .3);
+    R(x, 16, 16, 24, 10, '#c9c2ab');                                     // travesseiro
+    x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(2, 34, 92, 2); x.fillRect(2, 40, 92, 1); // dobras
   });
   SPR.bedD = mk(96, 56, (x) => {
-    R(x, 2, 24, 92, 22, '#33302a'); R(x, 2, 10, 10, 36, '#2a2722'); R(x, 14, 18, 22, 8, '#b5ae9c');
+    Rs(x, 2, 24, 92, 22, '#33302a', .1, .4); Rs(x, 2, 10, 10, 36, '#2a2722', .08, .34);
+    R(x, 14, 18, 22, 8, '#b5ae9c');
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(2, 36, 92, 2);           // colcha amassada
   });
   SPR.bedQ = mk(112, 60, (x) => {
-    R(x, 2, 24, 108, 28, '#4a4036'); R(x, 2, 8, 14, 44, '#3a332a');
-    R(x, 18, 16, 26, 10, '#c9c2ab'); R(x, 46, 18, 62, 10, '#55432e');
+    Rs(x, 2, 24, 108, 28, '#4a4036', .16, .36); Rs(x, 2, 8, 14, 44, '#3a332a', .12, .3);
+    R(x, 18, 16, 26, 10, '#c9c2ab'); R(x, 46, 18, 62, 10, '#55432e');    // dois travesseiros
+    x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(2, 38, 108, 2); x.fillRect(2, 44, 108, 1);
   });
   SPR.clock = mk(36, 84, (x) => {
-    R(x, 4, 2, 28, 80, '#2c2115'); C(x, 18, 18, 10, '#c9c2ab');
+    Rs(x, 4, 2, 28, 80, '#2c2115', .14, .4);                             // caixa de pêndulo
+    x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1; x.strokeRect(4.5, 2.5, 27, 79);
+    C(x, 18, 18, 10, '#1a150e'); C(x, 18, 18, 9, '#c9c2ab');             // mostrador
+    x.fillStyle = '#241f16'; for (let i = 0; i < 12; i++) { const a = i / 12 * 6.29; x.fillRect(18 + Math.cos(a) * 7.5 - .5, 18 + Math.sin(a) * 7.5 - .5, 1, 1); }
     x.strokeStyle = '#241f16'; x.lineWidth = 1.6;
     x.beginPath(); x.moveTo(18, 18); x.lineTo(18, 11); x.stroke();
     x.beginPath(); x.moveTo(18, 18); x.lineTo(23, 18); x.stroke();
-    R(x, 10, 32, 16, 44, '#0f0b07'); R(x, 16, 34, 3, 30, '#8a734d'); C(x, 17.5, 66, 4, '#8a734d');
+    R(x, 10, 32, 16, 44, '#0f0b07'); R(x, 16, 34, 3, 30, '#8a734d'); C(x, 17.5, 66, 4, '#8a734d'); // pêndulo
+    C(x, 17.5, 66, 1.4, '#e8d8a0');
   });
   SPR.retrato = mk(48, 64, (x) => {
     R(x, 0, 0, 48, 64, '#241f16'); R(x, 5, 5, 38, 54, '#c9c2ab');
