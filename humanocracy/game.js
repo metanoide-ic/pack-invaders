@@ -3188,6 +3188,15 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();
+  // atalho de demonstração: abrir o jogo com #casa (ou #house) na URL cai
+  // direto na casa em primeira pessoa — pra mostrar a exploração sem jogar um
+  // turno inteiro. Esperamos o 'load' porque enterHouse() vive em house.js,
+  // carregado depois deste arquivo.
+  if (/^#(casa|house)$/i.test(location.hash)) {
+    window.addEventListener('load', () => {
+      try { S = freshState(); setRegimeClass(S.day); enterHouse(); } catch (e) { console.warn('demo casa:', e); }
+    });
+  }
   // o primeiro clique em qualquer lugar destrava o áudio do navegador
   document.addEventListener('pointerdown', function unlock() {
     try {

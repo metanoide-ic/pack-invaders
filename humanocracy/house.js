@@ -8,7 +8,7 @@
 'use strict';
 
 /* ---------- ESTADO ---------- */
-const FP = { W: 480, H: 270, FOV: Math.PI / 3 };
+const FP = { W: 640, H: 360, FOV: Math.PI / 3 };
 const HOUSE = {
   active: false, x: 2.5, y: 6.0, ang: 0, pitch: 0,
   bobPhase: 0, bobY: 0, stepAcc: 0, moving: false,
@@ -1167,9 +1167,11 @@ function renderHouse() {
   const W = FP.W, H = FP.H;
   const horizon = H / 2 + HOUSE.pitch + HOUSE.bobY;
   // teto e chão
-  ctx.fillStyle = '#080807'; ctx.fillRect(0, 0, W, Math.max(0, horizon));
+  const cg = ctx.createLinearGradient(0, 0, 0, Math.max(1, horizon));
+  cg.addColorStop(0, '#050403'); cg.addColorStop(1, '#0d0a06');
+  ctx.fillStyle = cg; ctx.fillRect(0, 0, W, Math.max(0, horizon));
   const fg = ctx.createLinearGradient(0, horizon, 0, H);
-  fg.addColorStop(0, '#0a0805'); fg.addColorStop(1, '#181209');
+  fg.addColorStop(0, '#171008'); fg.addColorStop(.5, '#20160b'); fg.addColorStop(1, '#100b06');
   ctx.fillStyle = fg; ctx.fillRect(0, Math.max(0, horizon), W, H);
 
   const zbuf = new Float32Array(W);
@@ -1204,12 +1206,14 @@ function renderHouse() {
     u -= Math.floor(u);
     const tex = texAt(mapX, mapY, tile);
     ctx.drawImage(tex, Math.min(63, (u * 64) | 0), 0, 1, 64, col, top, 1, lineH);
-    // escuridão por cima da textura
-    const lant = .58 + .42 * Math.cos((col / W - .5) * 2.4);
-    let lum = Math.min(1, 1.7 / (1 + dist * dist * .15)) * lant * dimF;
-    if (side === 1) lum *= .72;
-    lum = Math.max(.04, lum);
-    ctx.fillStyle = `rgba(0,0,0,${(1 - lum).toFixed(3)})`;
+    // escuridão por cima da textura — lanterna do jogador (foco no centro) +
+    // um pouco de luz ambiente morna pra que o cômodo imediato seja legível
+    const lant = .62 + .38 * Math.cos((col / W - .5) * 2.4);
+    let lum = Math.min(1, 2.05 / (1 + dist * dist * .11)) * lant * dimF;
+    if (side === 1) lum *= .74;
+    lum = Math.max(.09, lum);
+    // a sombra "morna" (não preto puro) faz o tungstênio da casa aparecer
+    ctx.fillStyle = `rgba(6,4,2,${(1 - lum).toFixed(3)})`;
     ctx.fillRect(col, top, 1, lineH);
     if (tile === 2 && pulse) { ctx.fillStyle = `rgba(224,150,60,${(pulse * .22).toFixed(3)})`; ctx.fillRect(col, top, 1, lineH); }
   }
@@ -1273,6 +1277,12 @@ function renderHouse() {
       ctx.fillRect(gx - sh * 2.2, gy - sh * 2.2, sh * 4.4, sh * 4.4);
     }
   }
+
+  // vinheta cinematográfica (aterra a cena, foca o centro)
+  const vg = ctx.createRadialGradient(W / 2, H * .52, H * .28, W / 2, H * .52, H * .85);
+  vg.addColorStop(0, 'rgba(0,0,0,0)');
+  vg.addColorStop(1, 'rgba(0,0,0,.55)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
 
   // mira
   ctx.fillStyle = 'rgba(201,180,106,.6)';
