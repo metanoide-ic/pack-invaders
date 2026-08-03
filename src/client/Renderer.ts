@@ -80,6 +80,8 @@ export class Renderer {
   /** Track previous enemy count for death effects */
   private prevEnemyCount = 0;
   private prevEnemyPositions: Map<string, { x: number; y: number }> = new Map();
+  /** Last-frame hitFlash per enemy — rising edge = a fresh hit → impact sparks */
+  private _lastHitFlash: Map<string, number> = new Map();
   /** Smooth HP bar */
   private displayHp = 100;
   /** Card entrance animation */
@@ -3184,6 +3186,7 @@ export class Renderer {
     const currentEnemyIds = new Set(state.enemies.map(e => e.id));
     for (const [id, data] of this.prevEnemyPositions) {
       if (!currentEnemyIds.has(id)) {
+        this._lastHitFlash.delete(id);
         const pos = data;
         const color = (pos as any).color || '#ef4444';
         // Kill flash (brief white burst)
@@ -4658,6 +4661,24 @@ export class Renderer {
       ctx.drawImage(sprite, e.x - drawW / 2, e.y - drawH / 2, drawW, drawH);
       ctx.filter = 'none';
       ctx.restore();
+    }
+    // Impact sparks — rising edge of hitFlash means a brand-new hit this frame,
+    // so burst a few bright sparks + an additive flash at the strike point
+    // (once per hit, not every frame the flash lingers).
+    {
+      const prevFlash = this._lastHitFlash.get(e.id) ?? 0;
+      const nowFlash = e.hitFlash ?? 0;
+      if (nowFlash > prevFlash + 0.001) {
+        const sx = e.x, sy = e.y + drawH * 0.22;
+        this.spawnParticles(sx, sy, '#ffffff', 3);
+        this.spawnParticles(sx, sy, '#fde68a', 2);
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = 0.8;
+        ctx.drawImage(this.getGlow('#fff7d6', 9), sx - 9, sy - 9);
+        ctx.globalAlpha = 1;
+        ctx.globalCompositeOperation = 'source-over';
+      }
+      this._lastHitFlash.set(e.id, nowFlash);
     }
 
     // ── HP bar ────────────────────────────────────────────────────────────
