@@ -211,6 +211,23 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   text-align:center; font-size:12px; font-style:italic; color:#2a251b;
   box-shadow: inset 0 0 0 3px rgba(224,216,192,1), inset 0 0 0 4px #221e16;
 }
+.np-notices {
+  margin-top:14px; border-top:3px double #221e16; padding-top:8px;
+  column-count:2; column-gap:16px; font-size:10.5px; line-height:1.55; color:#332b1f;
+  position:relative; min-height:120px;
+}
+.np-notices b { display:block; column-span:all; font-family:Georgia,serif; letter-spacing:3px; font-size:11px; margin-bottom:5px; }
+.np-notices .np-cls { break-inside:avoid; margin-bottom:6px; padding-bottom:5px; border-bottom:1px dotted rgba(34,30,22,.35); }
+.np-notices .np-cls b { display:inline; font-family:var(--font-doc); letter-spacing:1px; font-size:10.5px; }
+.np-censor {
+  position:absolute; right:6px; bottom:2px; transform:rotate(-8deg);
+  border:2px solid rgba(120,30,26,.6); color:rgba(120,30,26,.62);
+  font-family:Georgia,serif; font-weight:700; letter-spacing:2px; font-size:11px;
+  padding:4px 9px; border-radius:3px; text-align:center; line-height:1.2;
+  box-shadow: inset 0 0 0 1px rgba(120,30,26,.25); text-transform:uppercase;
+  pointer-events:none; opacity:.85;
+}
+.np-censor small { display:block; font-size:8px; letter-spacing:1px; font-weight:400; }
 .home-panel {
   background-color: var(--panel); border:1px solid var(--ink-dim);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
@@ -1017,6 +1034,7 @@ body.text-large .np-body { font-size:15px; }
           <div class="np-body" id="np-body"></div>
           <div class="np-minor" id="np-minor"></div>
           <div class="np-ad" id="np-ad"></div>
+          <div class="np-notices" id="np-notices"></div>
         </div>
         <div class="home-panel">
           <div class="home-title">SEU APARTAMENTO — BLOCO 14, VALGRADO</div>
@@ -2984,6 +3002,9 @@ const I18N_EN = {
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
+  'CLASSIFICADOS': 'CLASSIFIEDS',
+  'VISADO PELA CENSURA': 'PASSED BY CENSOR',
+  'CARIMBO ILEGÍVEL': 'STAMP ILLEGIBLE',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
   'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
     'The Ministry of Screening announces the reopening of Post No. 7 after the winter recess. Minister Calder Voss asks new inspectors for "serenity and rigor." The energy crisis shows signs of easing. Lines are expected.',
@@ -4256,6 +4277,9 @@ const I18N_ES = {
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',
+  'CLASSIFICADOS': 'CLASIFICADOS',
+  'VISADO PELA CENSURA': 'VISADO POR LA CENSURA',
+  'CARIMBO ILEGÍVEL': 'SELLO ILEGIBLE',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'LA FRONTERA ESTE REABRE TRAS SEIS MESES',
   'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
     'El Ministerio de Control anuncia la reapertura del Puesto Nº 7 tras el receso invernal. El ministro Calder Voss pide "serenidad y rigor" a los nuevos inspectores. La crisis energética da señales de tregua. Se esperan filas.',
@@ -9969,7 +9993,7 @@ function renderNewspaper() {
     if ($('np-kicker')) $('np-kicker').textContent = '';
     $('np-headline').textContent = T('O JORNAL NÃO CHEGOU HOJE.');
     $('np-body').textContent = T(d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.');
-    $('np-minor').innerHTML = ''; $('np-ad').textContent = '';
+    $('np-minor').innerHTML = ''; $('np-ad').textContent = ''; $('np-notices').innerHTML = '';
     return;
   }
   const news = scripted || pick(FILLER_NEWS);
@@ -9984,7 +10008,14 @@ function renderNewspaper() {
   S.pendingNews = S.pendingNews.filter(n => n.day > d);
   echoes.forEach(e => minor.push('• ' + e.text));
   $('np-minor').innerHTML = minor.length ? `<b>${T('BREVES:')}</b>` + minor.join('<br>') : '';
-  $('np-ad').textContent = T(pick(ADS));
+  // anúncio em destaque + classificados (preenchem o pé da folha)
+  const pool = ADS.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = ri(0, i); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  $('np-ad').textContent = T(pool[0]);
+  const cls = pool.slice(1, 5).map(a => `<div class="np-cls">${npEsc(T(a))}</div>`).join('');
+  const censor = reg === 'colapso' ? T('CARIMBO ILEGÍVEL') : T('VISADO PELA CENSURA');
+  $('np-notices').innerHTML = `<b>${T('CLASSIFICADOS')}</b>` + cls +
+    `<div class="np-censor">${censor}<small>${T('Nº')} ${4000 + d * 7}</small></div>`;
 }
 
 function renderHome() {

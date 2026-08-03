@@ -936,6 +936,9 @@ const I18N_EN = {
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BRIEFS:',
+  'CLASSIFICADOS': 'CLASSIFIEDS',
+  'VISADO PELA CENSURA': 'PASSED BY CENSOR',
+  'CARIMBO ILEGÍVEL': 'STAMP ILLEGIBLE',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'EASTERN BORDER REOPENS AFTER SIX MONTHS',
   'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
     'The Ministry of Screening announces the reopening of Post No. 7 after the winter recess. Minister Calder Voss asks new inspectors for "serenity and rigor." The energy crisis shows signs of easing. Lines are expected.',
@@ -2208,6 +2211,9 @@ const I18N_ES = {
 
   /* ---- JORNAL: manchetes roteirizadas (SCRIPTED_NEWS) ---- */
   'BREVES:': 'BREVES:',
+  'CLASSIFICADOS': 'CLASIFICADOS',
+  'VISADO PELA CENSURA': 'VISADO POR LA CENSURA',
+  'CARIMBO ILEGÍVEL': 'SELLO ILEGIBLE',
   'FRONTEIRA LESTE REABRE APÓS SEIS MESES': 'LA FRONTERA ESTE REABRE TRAS SEIS MESES',
   'O Ministério de Triagem anuncia a reabertura do Posto Nº 7 após o recesso de inverno. O ministro Calder Voss pede "serenidade e rigor" aos novos inspetores. A crise energética dá sinais de trégua. Filas são esperadas.':
     'El Ministerio de Control anuncia la reapertura del Puesto Nº 7 tras el receso invernal. El ministro Calder Voss pide "serenidad y rigor" a los nuevos inspectores. La crisis energética da señales de tregua. Se esperan filas.',

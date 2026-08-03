@@ -2870,7 +2870,7 @@ function renderNewspaper() {
     if ($('np-kicker')) $('np-kicker').textContent = '';
     $('np-headline').textContent = T('O JORNAL NÃO CHEGOU HOJE.');
     $('np-body').textContent = T(d >= 48 ? 'Não há mais edições. Houve alguma vez?' : 'O entregador não veio. A banca está vazia. A vizinha diz que "jornal era coisa do governo antigo". Qual deles, você não pergunta.');
-    $('np-minor').innerHTML = ''; $('np-ad').textContent = '';
+    $('np-minor').innerHTML = ''; $('np-ad').textContent = ''; $('np-notices').innerHTML = '';
     return;
   }
   const news = scripted || pick(FILLER_NEWS);
@@ -2885,7 +2885,14 @@ function renderNewspaper() {
   S.pendingNews = S.pendingNews.filter(n => n.day > d);
   echoes.forEach(e => minor.push('• ' + e.text));
   $('np-minor').innerHTML = minor.length ? `<b>${T('BREVES:')}</b>` + minor.join('<br>') : '';
-  $('np-ad').textContent = T(pick(ADS));
+  // anúncio em destaque + classificados (preenchem o pé da folha)
+  const pool = ADS.slice();
+  for (let i = pool.length - 1; i > 0; i--) { const j = ri(0, i); [pool[i], pool[j]] = [pool[j], pool[i]]; }
+  $('np-ad').textContent = T(pool[0]);
+  const cls = pool.slice(1, 5).map(a => `<div class="np-cls">${npEsc(T(a))}</div>`).join('');
+  const censor = reg === 'colapso' ? T('CARIMBO ILEGÍVEL') : T('VISADO PELA CENSURA');
+  $('np-notices').innerHTML = `<b>${T('CLASSIFICADOS')}</b>` + cls +
+    `<div class="np-censor">${censor}<small>${T('Nº')} ${4000 + d * 7}</small></div>`;
 }
 
 function renderHome() {
