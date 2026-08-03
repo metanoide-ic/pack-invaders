@@ -931,20 +931,24 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   box-shadow: inset 0 0 0 2px rgba(20,14,8,.8), inset 0 0 0 4px rgba(120,96,58,.35), inset 0 14px 30px rgba(0,0,0,.55);
 }
 .bag-hint { font-size:11px; color:#b8a276; margin-bottom:12px; font-style:italic; }
-#bag-items { display:grid; grid-template-columns:repeat(auto-fill, minmax(148px,1fr)); gap:10px; }
+#bag-items { display:grid; grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:12px; }
+/* cada objeto descansa numa divisória de feltro da mala */
 .bag-item {
   display:flex; flex-direction:column; align-items:center; text-align:center;
-  padding:10px 8px 9px; cursor:pointer; position:relative;
-  background-color:rgba(30,26,20,.6);
-  background-image: linear-gradient(rgba(206,196,170,.05), rgba(0,0,0,.12));
-  border:1px solid rgba(120,96,58,.35); border-radius:3px;
-  box-shadow: 0 3px 8px rgba(0,0,0,.4);
+  padding:15px 10px 11px; cursor:pointer; position:relative;
+  background-color:#26251d;
+  background-image: radial-gradient(ellipse at 50% 40%, rgba(78,82,60,.42), rgba(16,16,12,.9) 74%);
+  border:1px solid rgba(120,96,58,.4); border-radius:4px;
+  box-shadow: inset 0 2px 11px rgba(0,0,0,.62), inset 0 0 0 1px rgba(0,0,0,.35), 0 3px 8px rgba(0,0,0,.42);
   font-size:11px; line-height:1.4; color:var(--ink);
   transition: transform .08s ease, box-shadow .1s ease;
 }
-.bag-item:hover { background-color:rgba(46,40,30,.8); transform:translateY(-2px); box-shadow:0 6px 14px rgba(0,0,0,.5); }
-.bag-ico { width:56px; height:56px; image-rendering:auto; margin-bottom:6px; filter:drop-shadow(0 2px 3px rgba(0,0,0,.5)); }
-.bag-cap { color:#d8cdb2; }
+.bag-item::before { /* costura da divisória */
+  content:""; position:absolute; inset:4px; border:1px dashed rgba(150,124,80,.22); border-radius:3px; pointer-events:none;
+}
+.bag-item:hover { transform:translateY(-2px); box-shadow: inset 0 2px 11px rgba(0,0,0,.5), 0 7px 16px rgba(0,0,0,.55); border-color:rgba(150,124,80,.6); }
+.bag-ico { width:68px; height:68px; image-rendering:auto; margin-bottom:8px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+.bag-cap { color:#e2d7bb; }
 .bag-item.picked { outline:2px solid var(--stamp-red); outline-offset:1px; }
 .bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:10px; margin-top:3px; font-style:italic; }
 .bag-item.contra { border-color: rgba(180,60,50,.6); }
