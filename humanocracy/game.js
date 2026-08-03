@@ -1294,6 +1294,7 @@ function startDay() {
   $('btn-reject').classList.toggle('hidden', S.day >= 47);
   $('btn-detain').classList.toggle('hidden', S.day >= 47);
   showScreen('screen-shift');
+  requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
   showBulletin(() => {
     if (S.day >= 48) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
@@ -1958,6 +1959,99 @@ function docHTML(doc, cz) {
     b += `<div class="doc-seal" data-fid="menor.carimbo">${doc.carimbo}</div>`;
   }
   return b;
+}
+
+/* Enfeites da mesa: o que vive no tampo de um inspetor de fronteira —
+   almofada de tinta, carimbos gastos, caneta-tinteiro, marca de xícara e
+   clipes. Pintado num canvas ATRÁS dos documentos (z-index 0), do lado
+   direito, onde o leque de papéis não chega. Puramente decorativo. */
+function drawDeskProps() {
+  const desk = $('desk'), cv = $('desk-props');
+  if (!desk || !cv) return;
+  const W = desk.clientWidth, H = desk.clientHeight;
+  if (!W || !H) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr;
+  const x = cv.getContext('2d');
+  x.setTransform(dpr, 0, 0, dpr, 0, 0);
+  x.clearRect(0, 0, W, H);
+  const rr = (px, py, w, h, r) => { x.beginPath(); x.moveTo(px + r, py); x.arcTo(px + w, py, px + w, py + h, r); x.arcTo(px + w, py + h, px, py + h, r); x.arcTo(px, py + h, px, py, r); x.arcTo(px, py, px + w, py, r); x.closePath(); };
+  const shadow = (px, py, w, h) => { x.save(); x.filter = 'blur(4px)'; x.fillStyle = 'rgba(0,0,0,.45)'; rr(px + 3, py + 5, w, h, 6); x.fill(); x.restore(); };
+
+  // marca de xícara (anel de café seco)
+  const cx = W * 0.60, cy = H * 0.26, cr = Math.max(20, H * 0.075);
+  x.save();
+  x.strokeStyle = 'rgba(58,36,18,.26)'; x.lineWidth = 3.2;
+  x.beginPath(); x.ellipse(cx, cy, cr, cr * 0.9, 0.2, 0, 6.29); x.stroke();
+  x.strokeStyle = 'rgba(40,24,12,.14)'; x.lineWidth = 1.1;
+  x.beginPath(); x.ellipse(cx + 2, cy + 1, cr * 0.78, cr * 0.7, 0.2, 0, 6.29); x.stroke();
+  x.restore();
+
+  // almofada de tinta (estojo de baquelite com feltro)
+  const padW = Math.min(150, W * 0.16), padH = padW * 0.56;
+  const padX = W - padW - 40, padY = H * 0.16;
+  shadow(padX, padY, padW, padH);
+  const lg = x.createLinearGradient(padX, padY, padX, padY + padH);
+  lg.addColorStop(0, '#2a2420'); lg.addColorStop(1, '#141010');
+  x.fillStyle = lg; rr(padX, padY, padW, padH, 6); x.fill();
+  x.strokeStyle = 'rgba(0,0,0,.6)'; x.lineWidth = 1; rr(padX + .5, padY + .5, padW - 1, padH - 1, 6); x.stroke();
+  x.strokeStyle = 'rgba(255,240,210,.06)'; rr(padX + 1.5, padY + 1.5, padW - 3, padH - 3, 5); x.stroke();
+  // feltro tingido (verde do Ministério, encardido de tinta)
+  const fx = padX + padW * 0.12, fy = padY + padH * 0.22, fw = padW * 0.76, fh = padH * 0.56;
+  const fg = x.createLinearGradient(fx, fy, fx, fy + fh);
+  fg.addColorStop(0, '#3c5a3e'); fg.addColorStop(1, '#213a26');
+  x.fillStyle = fg; rr(fx, fy, fw, fh, 3); x.fill();
+  x.fillStyle = 'rgba(0,0,0,.28)'; // manchas de uso no feltro
+  for (let i = 0; i < 5; i++) { x.beginPath(); x.ellipse(fx + fw * (0.2 + i * 0.16), fy + fh * (0.4 + (i % 2) * 0.25), 3.5, 2.2, 0, 0, 6.29); x.fill(); }
+
+  // um carimbo de borracha descansando sobre a almofada (vista lateral)
+  const drawStamp = (sx, sy, band, rot) => {
+    x.save(); x.translate(sx, sy); x.rotate(rot);
+    shadow(-13, 6, 26, 10);
+    // base (bloco de madeira)
+    const bw = 26, bh = 12;
+    const bg = x.createLinearGradient(0, 6, 0, 6 + bh);
+    bg.addColorStop(0, '#6b4d2e'); bg.addColorStop(1, '#3f2c17');
+    x.fillStyle = bg; rr(-bw / 2, 6, bw, bh, 2); x.fill();
+    x.fillStyle = band; x.fillRect(-bw / 2, 15, bw, 3); // tinta acumulada na borda
+    // pescoço + botão (cabo)
+    x.fillStyle = '#2c2622'; rr(-6, -6, 12, 12, 2); x.fill();
+    const kg = x.createRadialGradient(-2, -12, 1, 0, -8, 14);
+    kg.addColorStop(0, '#5a5048'); kg.addColorStop(1, '#241f1b');
+    x.fillStyle = kg; x.beginPath(); x.ellipse(0, -12, 12, 8, 0, 0, 6.29); x.fill();
+    x.fillStyle = 'rgba(255,240,210,.14)'; x.beginPath(); x.ellipse(-3, -14, 4, 2.4, -0.4, 0, 6.29); x.fill();
+    x.restore();
+  };
+  drawStamp(padX + padW * 0.5, padY - padH * 0.18, '#7a2a24', -0.05);          // carimbo vermelho na almofada
+  drawStamp(padX - padW * 0.34, padY + padH * 1.65, '#2f5c39', 0.22);          // carimbo verde deitado ao lado
+
+  // caneta-tinteiro na diagonal
+  x.save();
+  const penX = W - padW * 1.9, penY = H * 0.66;
+  x.translate(penX, penY); x.rotate(-0.5);
+  const plen = Math.min(150, W * 0.15);
+  shadow(-plen / 2, -3, plen, 7);
+  const pg = x.createLinearGradient(0, -3, 0, 4);
+  pg.addColorStop(0, '#20242c'); pg.addColorStop(.5, '#3a4250'); pg.addColorStop(1, '#12151a');
+  x.fillStyle = pg; rr(-plen / 2, -3.5, plen, 7, 3.5); x.fill();
+  x.fillStyle = '#b9962f'; x.fillRect(plen * 0.12, -3.5, 5, 7);               // anel dourado
+  // bico
+  x.fillStyle = '#c9ad55'; x.beginPath(); x.moveTo(plen / 2 - 2, -3); x.lineTo(plen / 2 + 12, 0); x.lineTo(plen / 2 - 2, 3); x.closePath(); x.fill();
+  x.strokeStyle = '#1a1206'; x.lineWidth = 0.7; x.beginPath(); x.moveTo(plen / 2 + 1, -1.2); x.lineTo(plen / 2 + 12, 0); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,.12)'; rr(-plen / 2 + 4, -2.6, plen * 0.5, 1.4, 1); x.fill(); // brilho
+  x.restore();
+
+  // um par de clipes de papel
+  const clip = (px, py, rot) => {
+    x.save(); x.translate(px, py); x.rotate(rot);
+    x.strokeStyle = '#8f9296'; x.lineWidth = 1.5; x.lineCap = 'round';
+    rr(-4, -9, 8, 18, 4); x.stroke();
+    rr(-2.2, -6, 4.4, 12, 2.2); x.stroke();
+    x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 0.6; rr(-4, -9, 8, 18, 4); x.stroke();
+    x.restore();
+  };
+  clip(W - padW * 2.4, H * 0.24, 0.5);
+  clip(W - 44, H * 0.82, -0.3);
 }
 
 function layDocs(cz) {
@@ -3188,6 +3282,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   showScreen('screen-title');
   startTitleSnow();
+  window.addEventListener('resize', () => { if ($('screen-shift').classList.contains('active')) drawDeskProps(); });
   // atalho de demonstração: abrir o jogo com #casa (ou #house) na URL cai
   // direto na casa em primeira pessoa — pra mostrar a exploração sem jogar um
   // turno inteiro. Esperamos o 'load' porque enterHouse() vive em house.js,
