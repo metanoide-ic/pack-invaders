@@ -3691,13 +3691,24 @@ export class Renderer {
     for (const ft of state.floatingTexts) {
       const alpha = ft.life / ft.maxLife;
       const lifeRatio = 1 - alpha; // 0=fresh, 1=dead
-      // Scale: pops big at first, shrinks slightly
-      const ftScale = 1 + Math.max(0, 0.3 - lifeRatio * 0.6);
+      // Crits punch bigger and briefly flare with an additive glow
+      const isCrit = ft.text.startsWith('CRIT');
+      const popBase = isCrit ? 0.7 : 0.3;
+      const ftScale = 1 + Math.max(0, popBase - lifeRatio * 0.6) + (isCrit ? 0.35 : 0);
       const fontSize = Math.floor(L.h * 0.016 * ftScale);
       ctx.save();
       ctx.globalAlpha = alpha;
       ctx.font = `bold ${fontSize}px monospace`;
       ctx.textAlign = 'center';
+      if (isCrit) {
+        // Additive glow flare behind the crit number while it's fresh
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.globalAlpha = alpha * (1 - lifeRatio) * 0.9;
+        const gr = fontSize;
+        ctx.drawImage(this.getGlow('#ff6b6b', gr), ft.x - gr, ft.y - gr * 0.7);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = alpha;
+      }
       // Full pixel outline for readability against any backdrop
       ctx.fillStyle = 'rgba(0,0,0,0.85)';
       ctx.fillText(ft.text, ft.x + 1, ft.y);
@@ -3711,10 +3722,11 @@ export class Renderer {
     ctx.globalAlpha = 1;
     ctx.textAlign = 'left';
 
-    // Vignette effect (darkened edges)
-    const vigGrad = ctx.createRadialGradient(L.cx, L.cy, Math.floor(L.h * 0.3), L.cx, L.cy, Math.floor(L.h * 0.7));
+    // Vignette effect (darkened edges) — light touch so the fight stays
+    // atmospheric without crushing the corners into gloom
+    const vigGrad = ctx.createRadialGradient(L.cx, L.cy, Math.floor(L.h * 0.42), L.cx, L.cy, Math.floor(L.h * 0.78));
     vigGrad.addColorStop(0, 'transparent');
-    vigGrad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+    vigGrad.addColorStop(1, 'rgba(4, 3, 16, 0.16)');
     ctx.fillStyle = vigGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -4349,14 +4361,37 @@ export class Renderer {
       ctx.globalAlpha = 0.2 + Math.sin(performance.now() * 0.02) * 0.15;
     }
 
-    // Spawn entrance: brief white flash when first entering screen
-    if (e.y > -5 && e.y < 30) {
-      ctx.globalAlpha = Math.max(0, (30 - e.y) / 30) * 0.5;
+    // Spawn entrance: the enemy materializes through a dimensional rift — a
+    // violet portal glow with a horizontal slit that snaps shut behind it.
+    // Played in the visible band just below the HUD (enemies enter from behind
+    // it, so a rift at the very top edge would be occluded).
+    if (e.y > 44 && e.y < 116 && !e.isBoss) {
+      const prog = Math.min(1, Math.max(0, (e.y - 44) / 72)); // 0 fresh → 1 done
+      const a = 1 - prog;
+      ctx.globalCompositeOperation = 'lighter';
+      // Violet rift glow
+      const gr = Math.max(10, e.width * (1.2 - prog * 0.5));
+      ctx.globalAlpha = a;
+      ctx.drawImage(this.getGlow('#c084fc', gr), e.x - gr, e.y - gr);
+      // Bright expanding ring at the instant of emergence
+      if (prog < 0.5) {
+        ctx.globalAlpha = (0.5 - prog) * 2 * 0.7;
+        ctx.strokeStyle = '#f5d0fe';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.width * (0.5 + prog * 1.6), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      // Rift slit — a white-hot tear that closes as the enemy clears it
+      const slitW = e.width * 1.8 * (1 - prog);
+      ctx.globalAlpha = a;
+      ctx.fillStyle = '#e9d5ff';
+      ctx.fillRect(e.x - slitW / 2, e.y - 2, slitW, 4);
+      ctx.globalAlpha = Math.min(1, a * 1.3);
       ctx.fillStyle = '#ffffff';
-      ctx.beginPath();
-      ctx.arc(e.x, e.y, e.width * 0.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.globalAlpha = e.phased ? 0.25 : 1;
+      ctx.fillRect(e.x - slitW / 2, e.y - 1, slitW, 2);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
     }
 
     // Boss glow/pulse effect
