@@ -5708,6 +5708,27 @@ export class Renderer {
 
   // ─── Cards Phase ────────────────────────────────────────────────────────
 
+  /** Pick a thematic glyph for a card from its name/description keywords, so
+   * each card reads differently instead of every one showing the same star. */
+  private cardGlyph(card: { name: string; description: string }): string {
+    const t = (card.name + ' ' + card.description).toLowerCase();
+    const has = (...w: string[]) => w.some(x => t.includes(x));
+    if (has('crítico', 'critico')) return '✷';
+    if (has('cadência', 'cadencia', 'dispar', 'tiro múltiplo', 'tiro duplo')) return '☄';
+    if (has('projét', 'projet', 'perfur', 'ricochete', 'teleguiad')) return '➹';
+    if (has('gold', 'ouro', 'moeda', 'juros', 'desconto', 'loja', 'vendedor')) return '⛃';
+    if (has('escudo', 'barreira', 'armadura', 'blindagem')) return '🛡';
+    if (has('cura', 'vida', 'hp', 'regener', 'vampir', 'fôlego', 'folego')) return '♥';
+    if (has('velocidade', 'vel.', 'dash', 'moviment', 'ligeiro')) return '⚡';
+    if (has('área', 'area', 'explos', 'aoe', 'raio')) return '✸';
+    if (has('veneno', 'ácid', 'acid', 'tóxi', 'toxi', 'praga')) return '☣';
+    if (has('fogo', 'chama', 'ígne', 'igne', 'queima', 'brasa')) return '✹';
+    if (has('gelo', 'congel', 'água', 'agua', 'maré', 'mare')) return '❄';
+    if (has('elétr', 'eletr', 'raio', 'choque')) return '⚡';
+    if (has('dano', 'fúria', 'furia', 'poder', 'sobrecarga')) return '⚔';
+    return '✦';
+  }
+
   private renderCards(dt: number): void {
     const { ctx, canvas, game } = this;
     const L = this.getLayout();
@@ -5872,16 +5893,22 @@ export class Renderer {
       ctx.fillStyle = artGrad;
       ctx.fillRect(tx + 3, ty, cardW - 3, artH);
 
-      // Art placeholder icon (card type icon)
-      const cardIcons: Record<string, string> = {
-        damage: '⚔', fire_rate: '💨', projectiles: '✦', piercing: '→',
-        armor: '🛡', heal: '♥', speed: '⚡', aoe: '💥', gold: '💰',
-      };
-      const cardIcon = (card as any).type ? (cardIcons[(card as any).type] || '✦') : '✦';
-      ctx.font = `${Math.floor(artH * 0.52)}px monospace`;
-      ctx.fillStyle = rColor + '55';
+      // Card emblem — a glyph derived from the card's effect, with an additive
+      // rarity glow so the art area feels alive instead of a dim placeholder
+      const cardIcon = this.cardGlyph(card);
+      const emX = tx + cardW / 2, emY = ty + artH * 0.55;
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = (isHovered ? 0.7 : 0.5) * eased;
+      const emGlow = Math.floor(artH * 0.5);
+      ctx.drawImage(this.getGlow(rColor, emGlow), emX - emGlow, emY - emGlow);
+      ctx.globalAlpha = eased;
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.font = `${Math.floor(artH * 0.5)}px monospace`;
+      ctx.fillStyle = '#f8fafc';
       ctx.textAlign = 'center';
-      ctx.fillText(cardIcon, tx + cardW / 2, ty + artH * 0.62);
+      ctx.shadowColor = rColor; ctx.shadowBlur = 12;
+      ctx.fillText(cardIcon, emX, emY + artH * 0.14);
+      ctx.shadowBlur = 0;
 
       // Art bottom fade
       const artFade = ctx.createLinearGradient(0, ty + artH - 24, 0, ty + artH);
@@ -5927,6 +5954,30 @@ export class Renderer {
       ctx.font = `${Math.floor(L.h * 0.013)}px monospace`;
       ctx.fillStyle = '#94a3b8';
       this.wrapText(card.description, tx + cardW / 2, divY + Math.floor(L.h * 0.025), cardW - 20, Math.floor(L.h * 0.0195));
+
+      // ── Lower watermark — fills the empty bottom half with a big faint
+      // rarity emblem + drifting motes so the card reads as finished art ──
+      const wmY = ty + cardH * 0.76;
+      ctx.save();
+      ctx.globalAlpha = eased * 0.10;
+      ctx.font = `${Math.floor(cardH * 0.26)}px monospace`;
+      ctx.fillStyle = rColor;
+      ctx.textAlign = 'center';
+      ctx.fillText(cardIcon, tx + cardW / 2, wmY + cardH * 0.09);
+      ctx.restore();
+      // Faint drifting motes in the rarity color (cheap "magic" shimmer)
+      ctx.globalCompositeOperation = 'lighter';
+      for (let m = 0; m < 5; m++) {
+        const seed = i * 7 + m * 1.7;
+        const mx = tx + 16 + ((Math.sin(seed * 2.3) * 0.5 + 0.5) * (cardW - 32));
+        const my = ty + cardH * 0.55 + ((this.cardAnimTimer * 8 + m * 40 + i * 25) % (cardH * 0.42));
+        const tw = 0.4 + Math.sin(this.cardAnimTimer * 3 + seed) * 0.35;
+        ctx.globalAlpha = eased * 0.5 * Math.max(0, tw);
+        ctx.fillStyle = rColor;
+        ctx.fillRect(Math.floor(mx), Math.floor(my), 2, 2);
+      }
+      ctx.globalAlpha = eased;
+      ctx.globalCompositeOperation = 'source-over';
 
       // ── Bottom click hint ─────────────────────────────────────────────
       if (isHovered) {
