@@ -1217,6 +1217,27 @@ export class InputHandler {
       return;
     }
 
+    // Not holding: clicking a placed backpack item picks it up so it can be
+    // moved, rearranged or sold — this pickup was missing in the shop, so
+    // items were stuck in place until you left. Mirrors handleInventoryClick.
+    {
+      const gridCol = Math.floor((pos.x - L.gridX) / L.cell);
+      const gridRow = Math.floor((pos.y - L.gridY) / L.cell);
+      if (gridCol >= 0 && gridRow >= 0 && gridCol < this.game.backpack.cols && gridRow < this.game.backpack.rows) {
+        const item = this.game.backpack.getItemAt(gridCol, gridRow);
+        if (item) {
+          this.heldItem = {
+            definition: item.definition,
+            rotation: 0,
+            fromInstanceId: item.instanceId,
+          };
+          this.game.backpack.removeItem(item.instanceId);
+          this.audio.buttonClick();
+          return;
+        }
+      }
+    }
+
     // Check if clicking a shop item to buy — geometry shared with the
     // renderer so cards are clickable exactly where they're drawn
     const SL = this.renderer.getShopCardLayout(this.shopItems.length);
