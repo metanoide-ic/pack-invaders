@@ -811,7 +811,7 @@ function paintBust(ctx, f, opts) {
     // em volta — é exatamente isso que perturba.
     const ir = (2.9 + r() * 0.4) * (L.child ? 1.12 : 1) * (wide ? 0.92 : 1);
     // olhar morto: pupila dilatada fixa (o Alternado não acomoda à luz)
-    const pr = (1.45 + (sgn > 0 ? L.pupilSkew : 0)) * (opts.deadStare ? 1.5 : 1);
+    const pr = (1.45 + (sgn > 0 ? L.pupilSkew : 0)) * (opts.deadStare ? 1.5 : 1) * (opts.anisocoria && sgn > 0 ? 2.3 : 1); // anisocoria: uma pupila dilatada
     const ixx = ex + lookX * 1.25;
     const iy = ey - 0.3 + wide * 0.4;
     const irisC = sgn > 0 ? darken(L.iris, 0.15) : L.iris; // sombra escurece de leve (sem matar a cor)
@@ -1597,7 +1597,7 @@ function portraitSVG(f) {
 /* close-up do exame: mesmo rosto, mais perto, marcas do corpo visíveis */
 function physAnomOpts(phys) {
   const a = (phys && phys.anom) || {};
-  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare, slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam };
+  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare, slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam, anisocoria: !!a.anisocoria };
 }
 function examSVG(f, phys) {
   phys = phys || {};
@@ -1982,7 +1982,7 @@ function paintEyeMacro(ctx, f, phys, gaze) {
   ctx.strokeStyle = rgb(darken(ic, 0.4), 0.4); ctx.lineWidth = 0.3;
   for (let i = 0; i < 26; i++) { const a = i / 26 * 6.29; ctx.beginPath(); ctx.moveTo(gx + Math.cos(a) * 3, gy + Math.sin(a) * 3); ctx.lineTo(gx + Math.cos(a) * ir * 0.92, gy + Math.sin(a) * ir * 0.92); ctx.stroke(); }
   ctx.strokeStyle = rgb(darken(ic, 0.7), 0.7); ctx.lineWidth = 0.8; ctx.beginPath(); ctx.arc(gx, gy, ir, 0, 6.29); ctx.stroke();
-  const pr = anom.deadStare ? 6.4 : 3.6; // pupila dilatada = tell
+  const pr = (anom.deadStare || anom.anisocoria) ? 6.4 : 3.6; // pupila dilatada = tell
   ctx.fillStyle = 'rgb(6,5,5)'; ctx.beginPath(); ctx.arc(gx, gy, pr, 0, 6.29); ctx.fill();
   if (anom.deadStare) { ctx.fillStyle = 'rgba(255,255,250,.9)'; ctx.beginPath(); ctx.arc(gx - 2.4, gy - 2.4, 1.4, 0, 6.29); ctx.fill(); soft(ctx, gx + 1, gy + 1, ir * 0.7, ir * 0.5, 'rgba(200,220,235,.14)', 1); }
   else { ctx.fillStyle = 'rgba(255,252,244,.92)'; ctx.beginPath(); ctx.arc(gx - 2.6, gy - 2.6, 1.7, 0, 6.29); ctx.fill(); ctx.fillStyle = 'rgba(255,252,244,.35)'; ctx.beginPath(); ctx.arc(gx + 1.6, gy + 2, 0.7, 0, 6.29); ctx.fill(); }
@@ -2273,7 +2273,7 @@ function actorAnomOpts(cz) {
   return {
     skinShift: a.skinShift || 0, skinTone: a.skinTone,
     smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare,
-    slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam,
+    slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam, anisocoria: !!a.anisocoria,
     waxy: !!(cz && cz.phys && cz.phys.pele), veins: !!(cz && cz.phys && cz.phys.olhos),
   };
 }

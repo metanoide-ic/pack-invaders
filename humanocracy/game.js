@@ -1150,12 +1150,13 @@ function genPhysical(cz) {
     if (roll < 0.42) {
       // sutil: nada visível — a ambiguidade que o jogo defende
     } else if (roll < 0.80) {
-      const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile', 'neck', 'hands']);
+      const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile', 'neck', 'hands', 'aniso']);
       if (which === 'skin') { cz.anom.skinShift = 0.55 + rnd() * 0.28; cz.phys.pele = true; }
       else if (which === 'smile') { cz.anom.smile = 0.55 + rnd() * 0.5; if (chance(.6)) { cz.anom.teethBright = true; cz.phys.dentes = true; } }
       else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
       else if (which === 'neck') { cz.anom.neckSeam = true; cz.phys.pescoco = true; }   // a junta: cabeça trocada
       else if (which === 'hands') { cz.phys.maos = true; cz.phys.sextoDedo = true; }     // um dedo a mais
+      else if (which === 'aniso') { cz.anom.anisocoria = true; cz.phys.olhos = true; }   // uma pupila dilatada
       else { cz.anom.deadStare = true; cz.phys.piscar = true; }
     } else {
       // CLARAMENTE NÃO-HUMANO — vários sinais somados, e agora sinais que
