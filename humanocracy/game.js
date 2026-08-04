@@ -1088,11 +1088,12 @@ function genPhysical(cz) {
     if (roll < 0.42) {
       // sutil: nada visível — a ambiguidade que o jogo defende
     } else if (roll < 0.80) {
-      const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile', 'neck']);
+      const which = pick(['skin', 'smile', 'teeth', 'eyes', 'smile', 'neck', 'hands']);
       if (which === 'skin') { cz.anom.skinShift = 0.55 + rnd() * 0.28; cz.phys.pele = true; }
       else if (which === 'smile') { cz.anom.smile = 0.55 + rnd() * 0.5; if (chance(.6)) { cz.anom.teethBright = true; cz.phys.dentes = true; } }
       else if (which === 'teeth') { cz.anom.teethBright = true; cz.phys.dentes = true; cz.anom.smile = 0.4 + rnd() * 0.3; }
       else if (which === 'neck') { cz.anom.neckSeam = true; cz.phys.pescoco = true; }   // a junta: cabeça trocada
+      else if (which === 'hands') { cz.phys.maos = true; cz.phys.sextoDedo = true; }     // um dedo a mais
       else { cz.anom.deadStare = true; cz.phys.piscar = true; }
     } else {
       // CLARAMENTE NÃO-HUMANO — vários sinais somados, e agora sinais que
@@ -1105,7 +1106,8 @@ function genPhysical(cz) {
       if (chance(.6)) cz.anom.blackSclera = true;
       if (!cz.anom.slitPupil && !cz.anom.blackSclera) cz.anom.slitPupil = true; // garante ao menos um sinal alienígena
       if (chance(.5)) cz.anom.neckSeam = true;   // a junta, no caso claramente não-humano
-      cz.phys.piscar = true; cz.phys.pescoco = true; cz.phys.pele = true; cz.phys.dentes = true; cz.phys.olhos = true;
+      if (chance(.4)) cz.phys.sextoDedo = true;  // e às vezes o dedo a mais
+      cz.phys.piscar = true; cz.phys.pescoco = true; cz.phys.pele = true; cz.phys.dentes = true; cz.phys.olhos = true; cz.phys.maos = true;
     }
   }
   cz.phys.anom = cz.anom;   // o exame lê as anomalias por aqui

@@ -1656,6 +1656,7 @@ function paintHandScene(ctx, f, phys, mode) {
   const r = faceRng(faceSeedOf(f) ^ 0xB7);
   const SK = L.skin.b, SH = L.skin.s;
   const anom = !!(phys && phys.maos);
+  const sixth = !!(phys && phys.sextoDedo);   // um dedo a mais — só no exame das mãos
   // fundo: o guichê escuro atrás do vidro
   const bg = ctx.createRadialGradient(50, 52, 8, 50, 60, 95);
   bg.addColorStop(0, '#20221a'); bg.addColorStop(1, '#070806');
@@ -1687,11 +1688,13 @@ function paintHandScene(ctx, f, phys, mode) {
     // botão do punho
     ctx.fillStyle = 'rgba(70,62,44,.9)'; ctx.beginPath(); ctx.arc(palmW * 0.5, cy + palmH * 1.3, 1.1, 0, 6.29); ctx.fill();
   }
-  // dedos (4) — colunas com juntas
-  for (let i = 0; i < 4; i++) {
-    const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / 3);
-    const fw2 = (3.4 - Math.abs(i - 1.6) * 0.34) * sc;
-    const fl = fingerLen * (i === 0 ? 0.82 : i === 1 ? 1 : i === 2 ? 0.96 : 0.78);
+  // dedos — colunas com juntas. normal: 4. anômalo (sextoDedo): 5 espremidos.
+  const nFing = sixth ? 5 : 4;
+  const flenP = sixth ? [0.8, 0.95, 1, 0.94, 0.76] : [0.82, 1, 0.96, 0.78];
+  for (let i = 0; i < nFing; i++) {
+    const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / (nFing - 1));
+    const fw2 = (3.4 - Math.abs(i - (sixth ? 1.9 : 1.6)) * 0.34) * sc * (sixth ? 0.88 : 1);
+    const fl = fingerLen * flenP[i];
     const top = cy - palmH * 0.85 - fl;
     ctx.fillStyle = rgb(tone);
     ctx.beginPath();
@@ -1773,13 +1776,13 @@ function paintHandScene(ctx, f, phys, mode) {
       ctx.beginPath(); ctx.moveTo(-palmW * 0.5, cy + palmH * 0.8);
       ctx.quadraticCurveTo(-palmW * 0.55, cy + palmH * 0.3, -palmW * 0.25, cy - palmH * 0.5); ctx.stroke();
       // calos na base dos dedos
-      for (let i = 0; i < 4; i++) {
-        const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / 3);
+      for (let i = 0; i < nFing; i++) {
+        const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / (nFing - 1));
         soft(ctx, fx, cy - palmH * 0.62, 1.8, 1.2, rgb(mix(tone, [200, 170, 130], 0.5), 0.5), 1);
       }
     }
   }
-  if (dorsal && !anom) {
+  if (dorsal && !anom && !sixth) {
     // a aliança apertada demais para sair (dedo anelar)
     const fx = -palmW + 2.6 + 2 * ((palmW * 2 - 5) / 3);
     const ry = cy - palmH * 0.85 - fingerLen * 0.96 * 0.30;
