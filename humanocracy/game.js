@@ -1778,6 +1778,21 @@ function drawFig(ctx, f, groundY, lampX) {
   // fecho central
   ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(x, top + 8.5); ctx.lineTo(x, groundY - 6); ctx.stroke();
+  // BRAÇOS: a figura era só casaco-sino + pernas, sem membros. Agora dois
+  // braços descem pelas laterais, com as mãos (quando não estão esfregando pra
+  // aquecer nem embalando bagagem). Balançam de leve ao andar.
+  if (!(f.idle === 2 && !walking)) {
+    const armSw = walking ? Math.sin(Q.t * 2 + f.phase + 1.6) * 1.3 : Math.sin(Q.t * (f.rate || 1) * 0.6 + f.phase) * 0.4;
+    ctx.strokeStyle = f.coat; ctx.lineWidth = 2.1; ctx.lineCap = 'round';
+    for (const s of [-1, 1]) {
+      const ax = x + s * (cw - 1.1);
+      ctx.beginPath(); ctx.moveTo(ax, top + 10); ctx.quadraticCurveTo(ax + s * 0.6, top + 15, ax - s * 0.4 + armSw * s * 0.4, groundY - 7); ctx.stroke();
+      // mão no fim do braço
+      ctx.fillStyle = f.skin;
+      ctx.beginPath(); ctx.arc(ax - s * 0.4 + armSw * s * 0.4, groundY - 6, 1.25, 0, 6.29); ctx.fill();
+    }
+    ctx.lineCap = 'butt';
+  }
   // esfregar os braços para aquecer: as mãos se cruzam no peito, indo e vindo
   if (!walking && f.idle === 2) {
     const rub = Math.sin(Q.t * rate * 2.4 + f.phase) * 1.6;

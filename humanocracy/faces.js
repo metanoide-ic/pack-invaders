@@ -241,7 +241,8 @@ function paintBust(ctx, f, opts) {
   coatPath();
   // opts.coat vence (família/casa); senão o casaco próprio da pessoa (f.coat);
   // senão o verde padrão. Assim cada cidadão tem o SEU casaco em todo contexto.
-  ctx.fillStyle = opts.coat || (f.coat && !f.uniform ? (Array.isArray(f.coat) ? rgb(f.coat) : f.coat) : 'rgb(45,46,38)');
+  const coatCol = opts.coat || (f.coat && !f.uniform ? (Array.isArray(f.coat) ? rgb(f.coat) : f.coat) : 'rgb(45,46,38)');
+  ctx.fillStyle = coatCol;
   ctx.fill();
   ctx.save();
   coatPath(); ctx.clip();
@@ -372,6 +373,52 @@ function paintBust(ctx, f, opts) {
   ctx.beginPath(); ctx.moveTo(17, 106); ctx.bezierCurveTo(24, 92, 38, 88, 49, 87.4); ctx.stroke();
   ctx.strokeStyle = 'rgba(150,178,214,.3)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(83, 106); ctx.bezierCurveTo(76, 92, 62, 88, 51, 87.4); ctx.stroke();
+
+  /* BRAÇOS: o busto tinha cabeça e ombros mas nenhum membro — ficava "sem
+     braços". Agora dois antebraços (mangas do casaco) descem e se juntam na
+     frente, com as mãos entrelaçadas na altura do cinto — pose de quem espera
+     no frio. Some no bebê de colo (lá os braços já embalam o cobertor) e
+     encolhe pra criança. As mãos usam a MESMA pele do rosto, então também
+     traem a cor doentia do Alternado (skinShift) junto com a cara. */
+  if (!opts.companion) {
+    const kid = L.child;
+    const sleeve = f.uniform ? rgb(f.uniformColor || [58, 66, 48]) : coatCol;
+    const hy = kid ? 108 : 112;                          // altura das mãos entrelaçadas
+    const sx = kid ? 11 : 15.5, out = kid ? 3 : 6.5;     // abertura dos antebraços
+    const cxL = 50 - (kid ? 2.7 : 3.8), cxR = 50 + (kid ? 2.7 : 3.8);
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    // antebraços (mangas) — descem dos ombros e cruzam pra frente
+    ctx.strokeStyle = sleeve; ctx.lineWidth = kid ? 6.6 : 8.8;
+    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 13); ctx.quadraticCurveTo(50 - sx, hy - 3, cxL, hy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 13); ctx.quadraticCurveTo(50 + sx, hy - 3, cxR, hy); ctx.stroke();
+    // sombra por baixo (volume + separa a manga do peito)
+    ctx.strokeStyle = 'rgba(0,0,0,.34)'; ctx.lineWidth = kid ? 2.6 : 3.4;
+    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 10.5); ctx.quadraticCurveTo(50 - sx, hy - 0.5, cxL, hy + 2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 10.5); ctx.quadraticCurveTo(50 + sx, hy - 0.5, cxR, hy + 2); ctx.stroke();
+    // luz no topo das mangas (aresta que descola do fundo/peito escuro)
+    ctx.strokeStyle = 'rgba(240,240,218,.12)'; ctx.lineWidth = 1.3;
+    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 14.5); ctx.quadraticCurveTo(50 - sx, hy - 5, cxL - 1, hy - 1.5); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 14.5); ctx.quadraticCurveTo(50 + sx, hy - 5, cxR + 1, hy - 1.5); ctx.stroke();
+    // PUNHOS (cuffs): banda escura onde a manga vira mão — dá a leitura de braço
+    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = kid ? 6.6 : 8.8; ctx.lineCap = 'butt';
+    ctx.beginPath(); ctx.moveTo(cxL - 2.2, hy - 1.4); ctx.lineTo(cxL + 0.4, hy - 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cxR + 2.2, hy - 1.4); ctx.lineTo(cxR - 0.4, hy - 0.2); ctx.stroke();
+    ctx.lineCap = 'round';
+    // MÃOS entrelaçadas: mão de trás (dir), depois a da frente (esq) por cima
+    const hr = kid ? 3.3 : 4.2;
+    ctx.fillStyle = rgb(mix(SK, SH, 0.42));
+    ctx.beginPath(); ctx.ellipse(cxR + 0.6, hy + 0.6, hr, hr * 0.82, 0.25, 0, 6.29); ctx.fill();
+    ctx.fillStyle = rgb(SK);
+    ctx.beginPath(); ctx.ellipse(cxL - 0.2, hy + 1, hr + 0.5, hr * 0.84, -0.2, 0, 6.29); ctx.fill();
+    // dedos entrelaçados (sulcos) + brilho nos nós + polegar por cima
+    ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = 0.5;
+    for (let k = 0; k < 4; k++) { const fxx = cxL - 2.6 + k * 1.6; ctx.beginPath(); ctx.moveTo(fxx, hy - hr * 0.5); ctx.lineTo(fxx + 0.6, hy + hr * 0.75); ctx.stroke(); }
+    ctx.fillStyle = rgb(mix(SK, SH, 0.2)); ctx.beginPath(); ctx.ellipse(cxL + hr * 0.7, hy - 0.4, hr * 0.42, hr * 0.28, 0.7, 0, 6.29); ctx.fill(); // polegar
+    soft(ctx, cxL - 1.4, hy - 0.6, hr * 0.7, hr * 0.4, rgb(lighten(SK, 0.16), 0.5), 1.2);
+    // contato das mãos com o casaco
+    soft(ctx, 50, hy + hr + 0.4, hr + 3, 1.6, 'rgba(0,0,0,.3)', 1.8);
+    ctx.restore();
+  }
 
   /* a cabeça inteira levemente inclinada — mugshot de verdade nunca é reto */
   ctx.save();
