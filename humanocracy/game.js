@@ -123,35 +123,75 @@ function mumble(pitch, syl) {
 
 /* ---------- MÚSICA (trilha melancólica procedural) ---------- */
 const MUSIC = { on: true, playing: false, timer: null };
-const M_NOTES = [110, 130.81, 146.83, 164.81, 196, 220]; // lá menor, esparso
+// progressão sombria (Lá menor / frígio): díades que a trilha percorre em ordem,
+// não notas soltas aleatórias — soa COMPOSTO, não gerado.
+const M_CHORDS = [
+  [110.00, 164.81], // Am (A+E)
+  [130.81, 196.00], // C+G
+  [146.83, 220.00], // Dm (D+A)
+  [123.47, 164.81], // tensão (B+E)
+  [110.00, 130.81], // A+C (terça menor)
+  [98.00, 146.83],  // G+D
+];
 function musicNote() {
   if (!MUSIC.on || !MUSIC.playing) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') return;
     const t = AC.currentTime;
-    const f = pick(M_NOTES) * (chance(.3) ? 2 : 1);
-    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    // caminha pela progressão (quase sempre em ordem, às vezes pula) — direção, não aleatório
+    MUSIC.idx = ((MUSIC.idx || 0) + (chance(.25) ? 2 : 1)) % M_CHORDS.length;
+    const chord = M_CHORDS[MUSIC.idx];
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 680;
     const g = AC.createGain(); g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(.032, t + 1.3);
-    g.gain.linearRampToValueAtTime(0, t + 4.6);
+    g.gain.linearRampToValueAtTime(.028, t + 1.6);
+    g.gain.linearRampToValueAtTime(0, t + 5.2);
     lp.connect(g); g.connect(AC.destination);
-    [f, f * 1.003].forEach(fr => {
+    chord.forEach(base => [base, base * 1.004].forEach(fr => {
       const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
-      o.connect(lp); o.start(t); o.stop(t + 4.8);
-    });
+      o.connect(lp); o.start(t); o.stop(t + 5.4);
+    }));
+    // às vezes uma nota solitária mais aguda (melodia esparsa, voz humana perdida)
+    if (chance(.42)) {
+      const mel = chord[chance(.5) ? 0 : 1] * (chance(.5) ? 4 : 2);
+      const ml = AC.createBiquadFilter(); ml.type = 'lowpass'; ml.frequency.value = 1500;
+      const mg = AC.createGain(); mg.gain.setValueAtTime(0, t + .4); mg.gain.linearRampToValueAtTime(.015, t + 1.1); mg.gain.linearRampToValueAtTime(0, t + 3.6);
+      ml.connect(mg); mg.connect(AC.destination);
+      const mo = AC.createOscillator(); mo.type = 'sine'; mo.frequency.value = mel; mo.connect(ml); mo.start(t + .4); mo.stop(t + 3.8);
+    }
   } catch (e) {}
 }
 function startMusic() {
   if (MUSIC.playing) return;
   MUSIC.playing = true;
+  MUSIC.idx = 0;
+  // DRONE grave constante (pedal) — aterra a ambiência; um zumbido de posto sem fim
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const dlp = AC.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 240;
+    const dg = AC.createGain(); dg.gain.setValueAtTime(0.0001, t); dg.gain.linearRampToValueAtTime(.02, t + 4);
+    dlp.connect(dg); dg.connect(AC.destination);
+    MUSIC.drone = [];
+    [[55, 1], [82.41, .5]].forEach(([fr, a]) => {
+      const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+      const og = AC.createGain(); og.gain.value = a; o.connect(og); og.connect(dlp);
+      o.start(t); MUSIC.drone.push(o);
+    });
+    MUSIC.droneGain = dg;
+  } catch (e) {}
   clearInterval(MUSIC.timer);
-  MUSIC.timer = setInterval(musicNote, 3200);
+  MUSIC.timer = setInterval(musicNote, 3600);
   musicNote();
 }
 function stopMusic() {
   MUSIC.playing = false;
   clearInterval(MUSIC.timer);
+  try {
+    if (MUSIC.droneGain) { const t = AC.currentTime; MUSIC.droneGain.gain.cancelScheduledValues(t); MUSIC.droneGain.gain.setValueAtTime(MUSIC.droneGain.gain.value, t); MUSIC.droneGain.gain.linearRampToValueAtTime(0, t + 1.2); }
+    if (MUSIC.drone) MUSIC.drone.forEach(o => { try { o.stop(AC.currentTime + 1.4); } catch (e) {} });
+  } catch (e) {}
+  MUSIC.drone = null; MUSIC.droneGain = null;
 }
 
 /* ---------- NEVE DO TÍTULO ---------- */
