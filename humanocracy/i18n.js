@@ -83,6 +83,8 @@ const I18N_EN = {
   /* ---- exame / bagagem ---- */
   'EXAME FÍSICO APROXIMADO — clique nas regiões': 'CLOSE PHYSICAL EXAM — click on regions',
   'FECHAR': 'CLOSE',
+  '🗺 MAPA': '🗺 MAP',
+  'Carta de fronteiras': 'Border chart',
   'REVISTA DE BAGAGEM — objetos contam histórias': 'LUGGAGE SEARCH — objects tell stories',
   'No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.':
     'In INSPECTION mode, an object can be compared with a document field.',
@@ -1396,6 +1398,8 @@ const I18N_ES = {
   /* ---- exame / bagagem ---- */
   'EXAME FÍSICO APROXIMADO — clique nas regiões': 'EXAMEN FÍSICO DE CERCA — haz clic en las zonas',
   'FECHAR': 'CERRAR',
+  '🗺 MAPA': '🗺 MAPA',
+  'Carta de fronteiras': 'Carta de fronteras',
   'REVISTA DE BAGAGEM — objetos contam histórias': 'REVISIÓN DE EQUIPAJE — los objetos cuentan historias',
   'No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.':
     'En modo INSPECCIÓN, un objeto puede compararse con un campo de un documento.',
@@ -2662,7 +2666,7 @@ function T(s) {
 const I18N_STATIC_SELECTORS = [
   '.title-sub', '.title-quote', '#btn-new', '#btn-continue', '#btn-second-reading',
   '#btn-fullscreen', '.title-warning', '.title-version',
-  '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift',
+  '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
   '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
   '.bc-doc', '.bc-stamp', '#desk-hint',
   '.btn-tool .tool-name', '.side-cap',
