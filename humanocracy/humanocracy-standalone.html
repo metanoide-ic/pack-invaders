@@ -10651,7 +10651,10 @@ window.clearActorPhoto = clearActorPhoto;
 
 /* ---------- ESTADO ---------- */
 const FP = { W: 640, H: 360, FOV: Math.PI / 3 };
-let FLOORPIX = null; // pixels do assoalho, extraídos uma vez para o floor casting
+let FLOORPIX = null;   // pixels do assoalho, extraídos uma vez para o floor casting
+let FLOORCV = null, FLOORCTX = null, FLOORBUF = null; // buffer offscreen de meia-res
+let LANTHALF = null;   // lanterna por coluna (meia-res), pré-computada
+let FLOOR_OK = true, FLOOR_N = 0, FLOOR_ACC = 0; // auto-benchmark: cai pro degradê em hardware fraco
 const HOUSE = {
   active: false, x: 2.5, y: 6.0, ang: 0, pitch: 0,
   bobPhase: 0, bobY: 0, stepAcc: 0, moving: false,
@@ -11900,7 +11903,12 @@ function houseLoop(ts) {
     HOUSE.bobY = HOUSE.moving ? Math.sin(HOUSE.bobPhase) * 3 : HOUSE.bobY * .9;
   }
 
+  // auto-benchmark do frame inteiro: se a casa estiver custando caro demais
+  // neste hardware (ex.: canvas em software, sem GPU), desliga o floor casting
+  // e volta pro degradê pra manter a fluidez. Mede após o aquecimento.
+  const _rt = (FLOOR_OK && FLOOR_N < 30) ? performance.now() : 0;
   renderHouse();
+  if (FLOOR_OK && FLOOR_N < 30) { FLOOR_N++; if (FLOOR_N > 10) FLOOR_ACC += performance.now() - _rt; if (FLOOR_N === 30 && FLOOR_ACC / 19 > 30) FLOOR_OK = false; }
 
   // prompt + cômodo
   const room = roomAt(HOUSE.x, HOUSE.y);
@@ -11939,29 +11947,41 @@ function renderHouse() {
   // salto visual da casa). Recai pro degradê antigo se a textura não carregou.
   const hInt = Math.max(0, Math.min(H, Math.round(horizon)));
   if (!FLOORPIX && TEX.floor) { try { FLOORPIX = TEX.floor.getContext('2d').getImageData(0, 0, 64, 64).data; } catch (e) {} }
-  if (FLOORPIX && hInt < H) {
+  if (FLOORPIX && hInt < H && FLOOR_OK) {
+    // Assoalho renderizado em meia-resolução num canvas offscreen e ESTICADO
+    // com drawImage (uma chamada rápida) — evita o putImageData gigante por frame.
+    const FW = W >> 1, FH = H >> 1;
+    if (!FLOORCV || FLOORCV.width !== FW) {
+      FLOORCV = document.createElement('canvas'); FLOORCV.width = FW; FLOORCV.height = FH;
+      FLOORCTX = FLOORCV.getContext('2d'); FLOORBUF = FLOORCTX.createImageData(FW, FH);
+      LANTHALF = new Float32Array(FW); for (let xx = 0; xx < FW; xx++) LANTHALF[xx] = .62 + .38 * Math.cos((xx / FW - .5) * 2.4);
+    }
+    const fd = FLOORBUF.data;
     const dirX = Math.cos(HOUSE.ang), dirY = Math.sin(HOUSE.ang);
     const planeX = -Math.sin(HOUSE.ang) * tanF, planeY = Math.cos(HOUSE.ang) * tanF;
-    const rd0x = dirX - planeX, rd0y = dirY - planeY, rd1x = dirX + planeX, rd1y = dirY + planeY;
-    const posZ = 0.5 * H, fld = ctx.createImageData(W, H - hInt), fd = fld.data;
-    for (let y = hInt; y < H; y++) {
-      const p = y - horizon, rowDist = posZ / (p < 0.5 ? 0.5 : p);
-      const stepX = rowDist * (rd1x - rd0x) / W, stepY = rowDist * (rd1y - rd0y) / W;
+    const rd0x = dirX - planeX, rd0y = dirY - planeY;
+    const stepDX = (planeX * 2) / FW, stepDY = (planeY * 2) / FW;  // (rd1-rd0)/FW por coluna de meia-res
+    const posZ = 0.5 * H;
+    const rows = Math.min(FH, (H - hInt + 1) >> 1);
+    for (let br = 0; br < rows; br++) {
+      const y = hInt + br * 2, p = y - horizon, rowDist = posZ / (p < 0.5 ? 0.5 : p);
+      const sx = rowDist * stepDX, sy = rowDist * stepDY;
       let fx = HOUSE.x + rowDist * rd0x, fy = HOUSE.y + rowDist * rd0y;
       let lum = Math.min(1, 2.05 / (1 + rowDist * rowDist * .11)) * dimF0;
-      lum = Math.max(.07, lum) * 0.85;                 // chão um tico mais escuro que a parede
-      const rowOff = (y - hInt) * W * 4;
-      for (let xx = 0; xx < W; xx++) {
+      lum = (lum < .07 ? .07 : lum) * 0.85;
+      let di = br * FW * 4;
+      for (let xx = 0; xx < FW; xx++) {
         const ti = ((((fy - Math.floor(fy)) * 64) | 0) * 64 + (((fx - Math.floor(fx)) * 64) | 0)) * 4;
-        const L = lum * (.62 + .38 * Math.cos((xx / W - .5) * 2.4)), iL = 1 - L, di = rowOff + xx * 4;
+        const L = lum * LANTHALF[xx], iL = 1 - L;
         fd[di] = FLOORPIX[ti] * L + 6 * iL;
         fd[di + 1] = FLOORPIX[ti + 1] * L + 4 * iL;
         fd[di + 2] = FLOORPIX[ti + 2] * L + 2 * iL;
         fd[di + 3] = 255;
-        fx += stepX; fy += stepY;
+        di += 4; fx += sx; fy += sy;
       }
     }
-    ctx.putImageData(fld, 0, hInt);
+    FLOORCTX.putImageData(FLOORBUF, 0, 0, 0, 0, FW, rows);
+    ctx.drawImage(FLOORCV, 0, 0, FW, rows, 0, hInt, W, H - hInt);
   } else {
     const fg = ctx.createLinearGradient(0, horizon, 0, H);
     fg.addColorStop(0, '#171008'); fg.addColorStop(.5, '#20160b'); fg.addColorStop(1, '#100b06');
