@@ -1685,7 +1685,12 @@ function renderPortraitCanvas(f, o) {
 }
 
 /* foto de documento / retrato pequeno — look de impressão barata */
-const PORTRAIT_POST = { levels: 8, ditherAmp: 0.9, grain: 12, aberr: 1, scan: 0.09, vig: 0.4, sat: 0.45 };
+/* FOTO DE DOCUMENTO: é PAPEL IMPRESSO, não vídeo. Sem scanline nem aberração
+   cromática (isso é da fita/lente); em vez disso, quase monocromático (tinta
+   barata), contraste alto de impressão ruim, grão de papel e posterização
+   grosseira. Assim a foto do passaporte deixa de ser gêmea do feed ao vivo do
+   guichê — e a comparação foto×rosto fica mais legível como fic­ção. */
+const PORTRAIT_POST = { levels: 6, ditherAmp: 0.9, grain: 14, aberr: 0, bleed: 0.05, scan: 0, vig: 0.42, sat: 0.13, contrast: 1.35 };
 function portraitSVG(f) {
   const cv = renderPortraitCanvas(f, { w: 160, h: 192, bg: '#8a8778', post: PORTRAIT_POST });
   return `<image href="${cv.toDataURL()}" width="100" height="120" style="image-rendering:pixelated" preserveAspectRatio="none"/>`;
