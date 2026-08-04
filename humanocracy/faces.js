@@ -355,9 +355,13 @@ function paintBust(ctx, f, opts) {
   }
   // sombra da cabeça caindo no peito
   soft(ctx, 50, 92, 15, 5, 'rgba(0,0,0,.45)', 2.6);
-  // luz de recorte nos ombros (separa do fundo escuro)
-  ctx.strokeStyle = 'rgba(210,215,190,.16)'; ctx.lineWidth = 0.9;
-  ctx.beginPath(); ctx.moveTo(20, 103); ctx.bezierCurveTo(26, 92, 38, 88.5, 49, 88); ctx.stroke();
+  // luz de recorte nos ombros (separa o casaco preto do fundo preto):
+  // ombro esquerdo pega a key (morna), ombro direito pega o rim (frio).
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(226,220,190,.34)'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(17, 106); ctx.bezierCurveTo(24, 92, 38, 88, 49, 87.4); ctx.stroke();
+  ctx.strokeStyle = 'rgba(150,178,214,.3)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(83, 106); ctx.bezierCurveTo(76, 92, 62, 88, 51, 87.4); ctx.stroke();
 
   /* a cabeça inteira levemente inclinada — mugshot de verdade nunca é reto */
   ctx.save();
@@ -733,6 +737,21 @@ function paintBust(ctx, f, opts) {
   /* sombra forte sob o queixo */
   soft(ctx, cx, L.chinY + 7, 8.5, 3, 'rgba(8,6,4,.42)', 2);
 
+  /* ESPECULARES: brilhos pequenos e "molhados" nos pontos altos, do lado da
+     luz. Fazem a pele parecer viva e esculpida em vez de fosco de manequim.
+     Contidos — é gente cansada, não editorial de revista. */
+  if (f.hat !== 2) {
+    const nT = L.noseTip, nTp = L.browY + 4, nMid = (nTp + nT) / 2;
+    const hl = (x, y, rx, ry, al, bl) => soft(ctx, x, y, rx, ry, `rgba(255,250,236,${al})`, bl);
+    hl(cx - 5.5, 30, 4.2, 3, 0.15, 2);                        // testa (lado da luz)
+    hl(cx - 0.8, nMid, 0.7, (nT - nTp) / 2.6, 0.2, 0.6);      // cavalete do nariz (fio de luz)
+    hl(cx - 0.7, nT - 1, 1.0, 0.9, 0.34, 0.55);               // ponta do nariz (hot spot)
+    hl(cx - L.fw + 4.8, L.cheekY - 0.6, 2.3, 1.5, 0.19, 1.3); // crista da maçã (luz)
+    hl(cx - L.eyeDX, L.browY - 0.7, 3, 1.1, 0.12, 1.4);       // osso da sobrancelha
+    hl(cx - 0.5, L.mouthY + 1.9, L.mouthW * 0.36, 0.8, 0.2, 0.7); // lábio inferior (úmido)
+    hl(cx - 1.5, L.chinY - 2.6, 2.2, 1.4, 0.13, 1.6);         // queixo
+  }
+
   /* ---------- olhos ---------- */
   const eyes = opts.eyesClosed ? 'closed' : 'open';
   const wide = opts.eyesWide ? 1 : 0;       // "abra bem os olhos."
@@ -801,6 +820,23 @@ function paintBust(ctx, f, opts) {
     ig.addColorStop(1, rgb(darken(irisC, 0.7)));    // anel escuro (limbo)
     ctx.fillStyle = ig;
     ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.fill();
+    // FIBRAS da íris + anel límbico + brilho inferior (luz atravessa) — o que
+    // separa um olho vivo de um disco chapado. Só quando a íris é grande o bastante.
+    if (!opts.blackSclera && ir > 2) {
+      ctx.save(); ctx.beginPath(); ctx.arc(ixx, iy, ir, 0, 6.29); ctx.clip();
+      for (let k = 0; k < 16; k++) {
+        const a = k / 16 * 6.28 + (r() - 0.5) * 0.22;
+        const r0 = pr + 0.3, r1 = ir * (0.7 + r() * 0.3);
+        ctx.strokeStyle = k % 2 ? rgb(lighten(irisC, 0.32), 0.32) : rgb(darken(irisC, 0.5), 0.4);
+        ctx.lineWidth = 0.32;
+        ctx.beginPath(); ctx.moveTo(ixx + Math.cos(a) * r0, iy + Math.sin(a) * r0);
+        ctx.lineTo(ixx + Math.cos(a) * r1, iy + Math.sin(a) * r1); ctx.stroke();
+      }
+      soft(ctx, ixx + 0.3, iy + ir * 0.5, ir * 0.6, ir * 0.34, rgb(lighten(irisC, 0.28), sgn < 0 ? 0.32 : 0.18), 0.7);
+      ctx.strokeStyle = rgb(darken(irisC, 0.62), 0.55); ctx.lineWidth = 0.5;
+      ctx.beginPath(); ctx.arc(ixx, iy, ir - 0.3, 0, 6.29); ctx.stroke();
+      ctx.restore();
+    }
     ctx.fillStyle = 'rgb(8,6,5)';
     if (opts.slitPupil) { // pupila em fenda vertical (réptil) — inequivocamente não-humano
       ctx.save(); ctx.translate(ixx, iy); ctx.scale(0.42, 2.15);
@@ -813,8 +849,11 @@ function paintBust(ctx, f, opts) {
       ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, 0.42, 0, 6.29); ctx.fill();
       soft(ctx, ixx + 0.4, iy + 0.6, ir * 0.7, ir * 0.5, 'rgba(200,220,235,.16)', 0.7); // película vidrada fria
     } else {
-      ctx.fillStyle = `rgba(255,252,244,${sgn < 0 ? 0.85 : 0.4})`;
-      ctx.beginPath(); ctx.arc(ixx - 0.9, iy - 0.9, sgn < 0 ? 0.45 : 0.32, 0, 6.29); ctx.fill();
+      ctx.fillStyle = `rgba(255,253,246,${sgn < 0 ? 0.92 : 0.5})`;
+      ctx.beginPath(); ctx.arc(ixx - 0.95, iy - 0.95, sgn < 0 ? 0.52 : 0.38, 0, 6.29); ctx.fill();
+      // segunda faísca minúscula do lado oposto — umidade do globo
+      ctx.fillStyle = `rgba(255,255,252,${sgn < 0 ? 0.5 : 0.28})`;
+      ctx.beginPath(); ctx.arc(ixx + 0.55, iy + 0.45, 0.2, 0, 6.29); ctx.fill();
     }
     if (!wide) {
       // a pálpebra superior COBRE o topo da íris (sombra + oclusão)
@@ -941,6 +980,21 @@ function paintBust(ctx, f, opts) {
     };
     ctx.fillStyle = rgb(HC);
     hairMass(); ctx.fill();
+    // VOLUME do cabelo: sombreado de forma pra não virar um capacete chapado.
+    // Escurece raízes e bordas; abre uma banda de brilho anisotrópico na copa
+    // do lado da luz. É o que transforma "mancha de cor" em cabelo com volume.
+    ctx.save(); hairMass(); ctx.clip();
+    const hg = ctx.createLinearGradient(cx - L.fw, topY - 6, cx + L.fw + L.ax, 54);
+    hg.addColorStop(0, rgb(lighten(HC, 0.32), 0.4));
+    hg.addColorStop(0.42, 'rgba(0,0,0,0)');
+    hg.addColorStop(1, rgb(darken(HC, 0.5), 0.42));
+    ctx.fillStyle = hg; ctx.fillRect(0, 0, 100, 120);
+    soft(ctx, cx, hlY - 2, L.fw * 0.9, 3, rgb(darken(HC, 0.55), 0.38), 2.4);            // raiz (contato com a testa)
+    soft(ctx, cx - L.fw + 1, 38, 3, 10, rgb(darken(HC, 0.5), 0.36), 2.4);               // borda esq (o cabelo vira)
+    soft(ctx, cx + L.fw - 1 + L.ax, 38, 3.2, 10, rgb(darken(HC, 0.55), 0.42), 2.4);     // borda dir (sombra)
+    soft(ctx, cx - L.fw * 0.3, topY + 2, L.fw * 0.62, 2.2, rgb(lighten(HC, 0.6), 0.48), 1.6);  // banda de brilho (copa)
+    soft(ctx, cx - L.fw * 0.14, topY + 4.6, L.fw * 0.46, 1.1, rgb(lighten(HC, 0.78), 0.4), 1.1); // núcleo do brilho
+    ctx.restore();
     // sombra do cabelo caindo na testa (aterra o cabelo e quebra a testa chapada)
     ctx.save();
     try { ctx.filter = `blur(${(1.1 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
@@ -991,13 +1045,13 @@ function paintBust(ctx, f, opts) {
       ctx.lineTo(cx + L.fw + 0.5, 40); ctx.lineTo(cx + L.fw - 1.5, 44);
     }
     ctx.clip();
-    for (let i = 0; i < 150; i++) {
+    for (let i = 0; i < 210; i++) {
       const t = r();
       const hx = cx + (t - 0.5) * L.fw * 2.1;
       const hy = topY - 4 + r() * (hs === 2 ? 8 : 16);
       const tone = r();
-      ctx.lineWidth = 0.55 + r() * 0.4;
-      ctx.strokeStyle = tone < 0.5 ? rgb(darken(HC, 0.5), 0.55) : rgb(lighten(HC, 0.4), 0.42);
+      ctx.lineWidth = 0.32 + r() * 0.34;
+      ctx.strokeStyle = tone < 0.5 ? rgb(darken(HC, 0.5), 0.4) : rgb(lighten(HC, 0.45), 0.34);
       ctx.beginPath(); ctx.moveTo(hx, hy);
       if (hs === 3) ctx.quadraticCurveTo(hx + 1, hy + 4, hx + 0.5, hy + 8);        // pra trás
       else if (hs === 1) { const sw = L.ax >= 0 ? 1 : -1; ctx.quadraticCurveTo(hx + sw * 1.8, hy + 4, hx + sw * 3.4 + (t - 0.5) * 1.6, hy + 7); } // franja varrida de lado (diagonal, não barras)
@@ -1211,6 +1265,34 @@ function paintBust(ctx, f, opts) {
     }
     ctx.closePath(); ctx.fill(); ctx.restore();
     soft(ctx, cx, 32.5, L.fw * 0.85, 2.4, 'rgba(6,5,4,.5)', 2); // sombra da pala na testa
+  }
+
+  /* RIM / LUZ DE SEPARAÇÃO: um fio de luz na borda de SOMBRA (direita) do
+     crânio→maçã→maxilar. Descola a cabeça do fundo preto e faz a forma "virar".
+     Fria (kicker por trás), contrastando com a key morna da esquerda. Mora
+     DENTRO da silhueta (clip) pra virar aresta de luz, não halo. */
+  if (f.hat !== 2) {
+    const a = L.ax, gPull = 3 + L.jawSquare * 5;
+    ctx.save();
+    headPath(ctx, L); ctx.clip();
+    try { ctx.filter = `blur(${(0.75 * F_SCALE * 0.55).toFixed(1)}px)`; } catch (e) {}
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(150,178,214,0.5)'; ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(cx + L.crownW * 0.5, 18.4);
+    ctx.quadraticCurveTo(cx + L.crownW * 0.55, 18.4, cx + L.crownW + a, 19.5);
+    ctx.quadraticCurveTo(cx + L.templeW + 0.2 + a, 24, cx + L.templeW + a, 33);
+    ctx.quadraticCurveTo(cx + L.fw + 0.4 + a, L.cheekY - 8, cx + L.fw - 0.3 + a, L.cheekY);
+    ctx.lineTo(cx + L.jw + a, L.gonialY);
+    ctx.quadraticCurveTo(cx + L.jw - 0.4 + a, L.gonialY + gPull, cx + L.chinW + 0.6 + a, L.chinY - 3.5);
+    ctx.stroke();
+    // um segundo fio, mais fino e brilhante, no núcleo da aresta (maçã→maxilar)
+    ctx.strokeStyle = 'rgba(196,214,236,0.4)'; ctx.lineWidth = 0.7;
+    ctx.beginPath();
+    ctx.moveTo(cx + L.fw + 0.2 + a, L.cheekY - 6);
+    ctx.quadraticCurveTo(cx + L.fw - 0.2 + a, L.cheekY, cx + L.jw + a, L.gonialY);
+    ctx.stroke();
+    ctx.restore();
   }
 
   ctx.restore(); // fim da inclinação da cabeça
