@@ -595,6 +595,21 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 #endday-report .row { display:flex; justify-content:space-between; border-bottom:1px dotted rgba(143,138,122,.3); }
 .ending-body { font-size:14px; line-height:1.8; }
 .ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
+/* tela de FINAL: fundo solene com vinheta + painel que sobe devagar */
+#screen-ending { background: radial-gradient(ellipse at 50% 38%, #16150f 0%, #070605 68%, #000 100%); }
+#screen-ending .ending-panel {
+  background-color:#100f0b; border-color:#2a281e;
+  box-shadow: 0 0 0 1px rgba(201,163,74,.14), 0 20px 60px rgba(0,0,0,.7);
+  border-top:2px solid rgba(201,163,74,.4);
+}
+#screen-ending.active .ending-panel { animation: ending-rise 1.5s ease-out backwards; }
+@keyframes ending-rise { from { opacity:0; transform:translateY(16px); } }
+#screen-ending .ending-title {
+  text-shadow: 0 0 14px rgba(201,163,74,.35), 0 2px 3px rgba(0,0,0,.6);
+  animation: end-flicker 7s steps(1) infinite;
+}
+@keyframes end-flicker { 0%,95%,100% { opacity:1; } 96% { opacity:.55; } 97% { opacity:.9; } 98% { opacity:.45; } 99% { opacity:.85; } }
+@media (prefers-reduced-motion: reduce) { #screen-ending.active .ending-panel, #screen-ending .ending-title { animation:none; } }
 
 /* ============ MODAL ============ */
 .modal-overlay {
