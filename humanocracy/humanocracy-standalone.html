@@ -8917,9 +8917,63 @@ function startAmbience() {
     const ng = AC.createGain(); ng.gain.value = .006;
     ns.connect(nf); nf.connect(ng); ng.connect(AC.destination); ns.start();
     droneNodes = { o1, o2, oh, ns, g };
+    // eventos diegéticos esparsos: alguém tosse na fila, uma cadeira arrasta,
+    // um aviso abafado no alto-falante. Vêm "de outra sala" (grave e filtrado)
+    // — o posto passa a soar habitado, não um loop vazio.
+    scheduleAmbienceEvent();
   } catch (e) { /* sem áudio */ }
 }
+let ambTimer = null;
+function scheduleAmbienceEvent() {
+  clearTimeout(ambTimer);
+  ambTimer = setTimeout(() => { ambienceEvent(); scheduleAmbienceEvent(); }, 11000 + Math.random() * 20000);
+}
+function ambienceEvent() {
+  if (!SFX_ON || !droneNodes) return;
+  try {
+    if (!AC || AC.state === 'suspended') return;
+    const t = AC.currentTime;
+    // tudo passa por um lowpass duro: soa "atrás da parede"
+    const wall = AC.createBiquadFilter(); wall.type = 'lowpass'; wall.frequency.value = 900; wall.Q.value = 0.6;
+    const out = AC.createGain(); out.gain.value = 0.5; wall.connect(out); out.connect(AC.destination);
+    const noise = (dur) => { const b = AC.createBuffer(1, AC.sampleRate * dur, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = AC.createBufferSource(); s.buffer = b; return s; };
+    const kind = Math.floor(Math.random() * 5);
+    if (kind === 0) { // tosse: dois pulsos de ruído com formante
+      for (let k = 0; k < (Math.random() < .5 ? 1 : 2); k++) {
+        const tt = t + k * 0.22, s = noise(0.16);
+        const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 1.2;
+        const g = AC.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.09, tt + .015); g.gain.exponentialRampToValueAtTime(.0005, tt + .15);
+        s.connect(bp); bp.connect(g); g.connect(wall); s.start(tt); s.stop(tt + .16);
+      }
+    } else if (kind === 1) { // cadeira arrastando: sawtooth grave deslizando + atrito
+      const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(52, t + .5);
+      const g = AC.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .08); g.gain.linearRampToValueAtTime(0, t + .55);
+      const s = noise(0.55), sf = AC.createBiquadFilter(); sf.type = 'bandpass'; sf.frequency.value = 240; const sg = AC.createGain(); sg.gain.value = .03;
+      o.connect(g); g.connect(wall); s.connect(sf); sf.connect(sg); sg.connect(wall); o.start(t); o.stop(t + .56); s.start(t); s.stop(t + .55);
+    } else if (kind === 2) { // aviso abafado: sino de dois tons (o "din-don" do PA)
+      [[660, t], [523, t + .34]].forEach(([fr, tt]) => {
+        const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+        const g = AC.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.045, tt + .03); g.gain.exponentialRampToValueAtTime(.0006, tt + .5);
+        o.connect(g); g.connect(wall); o.start(tt); o.stop(tt + .52);
+      });
+    } else if (kind === 3) { // passos: dois baques macios
+      for (let k = 0; k < 2; k++) {
+        const tt = t + k * 0.34, o = AC.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(90, tt); o.frequency.exponentialRampToValueAtTime(48, tt + .1);
+        const g = AC.createGain(); g.gain.setValueAtTime(.06, tt); g.gain.exponentialRampToValueAtTime(.0005, tt + .13);
+        o.connect(g); g.connect(wall); o.start(tt); o.stop(tt + .14);
+      }
+    } else { // papel farfalhando: rajadas curtas de ruído agudo
+      for (let k = 0; k < 3; k++) {
+        const tt = t + k * 0.09 + Math.random() * .04, s = noise(0.06);
+        const hp = AC.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 1600;
+        const g = AC.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.02, tt + .01); g.gain.linearRampToValueAtTime(0, tt + .05);
+        s.connect(hp); hp.connect(g); g.connect(out); s.start(tt); s.stop(tt + .06);
+      }
+    }
+  } catch (e) {}
+}
 function stopAmbience() {
+  clearTimeout(ambTimer); ambTimer = null;
   if (!droneNodes) return;
   try { droneNodes.o1.stop(); droneNodes.o2.stop(); if (droneNodes.oh) droneNodes.oh.stop(); if (droneNodes.ns) droneNodes.ns.stop(); } catch (e) {}
   droneNodes = null;
