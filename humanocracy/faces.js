@@ -729,6 +729,19 @@ function paintBust(ctx, f, opts) {
       const sx = cx + (r() - 0.5) * L.fw * 1.4, sy = 58 + r() * 14;
       ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(sx + 3 + r() * 3, sy + 2); ctx.stroke();
     }
+    // PINTA / sinal: ~28% das pessoas têm uma. Individualiza — dois rostos
+    // gerados nunca mais parecem "o mesmo modelo". Local plausível (bochecha,
+    // maçã, acima do lábio, têmpora), com relevo mínimo (sombra + realce).
+    if (r() < 0.28 && !L.child) {
+      const spots = [[cx - L.fw * 0.5, L.cheekY + 3], [cx + L.fw * 0.42, L.cheekY + 6], [cx + 3.5, L.mouthY - 3.5], [cx - L.eyeDX - 1, L.eyeY - 6], [cx - 4, L.chinY - 6]];
+      const sp = spots[(r() * spots.length) | 0];
+      const mr = 0.5 + r() * 0.5;
+      soft(ctx, sp[0] + 0.25, sp[1] + 0.25, mr * 1.4, mr * 1.2, 'rgba(20,10,6,.3)', 0.6); // sombra de relevo
+      ctx.fillStyle = rgb(mix([70, 44, 30], SH, r() * 0.3), 0.9);
+      ctx.beginPath(); ctx.ellipse(sp[0], sp[1], mr, mr * 0.9, 0, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(255,240,220,.2)';
+      ctx.beginPath(); ctx.arc(sp[0] - mr * 0.35, sp[1] - mr * 0.35, mr * 0.3, 0, 6.29); ctx.fill(); // micro-realce
+    }
     // sardas (cantalos de pele clara, quase sempre)
     if (L.sardas && r() < 0.8) {
       ctx.fillStyle = rgb(mix(SH, [122, 74, 44], 0.5), 0.3);
