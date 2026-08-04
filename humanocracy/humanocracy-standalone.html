@@ -7559,7 +7559,8 @@ function stopMusic() {
 /* ---------- NEVE DO TÍTULO ---------- */
 /* BRASÃO DO MINISTÉRIO — olho que tudo vê, raios, coroa de louros, anel de
    estrelas. O emblema de um Estado de vigilância. Desenhado, não emoji. */
-function drawTitleCrest() {
+function drawTitleCrest(lidAmt) {
+  lidAmt = lidAmt || 0;
   const cv = $('title-crest'); if (!cv) return;
   const x = cv.getContext('2d'); const N = cv.width, C = N / 2, u = N / 300;
   x.clearRect(0, 0, N, N);
@@ -7602,6 +7603,16 @@ function drawTitleCrest() {
   x.fillStyle = ig; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
   x.fillStyle = DARK; x.beginPath(); x.arc(C, ey, 9 * u, 0, 6.29); x.fill();
   x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(C - 5 * u, ey - 5 * u, 3 * u, 0, 6.29); x.fill();
+  // PÁLPEBRA (piscar ocasional): desce sobre o olho — recorta no formato dele
+  if (lidAmt > 0) {
+    x.save();
+    x.beginPath(); x.moveTo(C - 46 * u, ey); x.quadraticCurveTo(C, ey - 34 * u, C + 46 * u, ey); x.quadraticCurveTo(C, ey + 34 * u, C - 46 * u, ey); x.closePath(); x.clip();
+    const lidY = ey - 34 * u + lidAmt * 68 * u;
+    x.fillStyle = '#e6dcc0'; x.fillRect(C - 48 * u, ey - 34 * u, 96 * u, lidAmt * 68 * u);   // a pálpebra
+    x.fillStyle = 'rgba(120,96,58,.22)'; x.fillRect(C - 48 * u, lidY - 3 * u, 96 * u, 3 * u); // dobra
+    x.strokeStyle = GOLD; x.lineWidth = 1.6 * u; x.beginPath(); x.moveTo(C - 46 * u, lidY); x.lineTo(C + 46 * u, lidY); x.stroke(); // linha de cílios
+    x.restore();
+  }
   // raios curtos saindo do olho
   x.strokeStyle = 'rgba(236,212,138,.5)'; x.lineWidth = 1.4 * u;
   for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; x.beginPath(); x.moveTo(C + Math.cos(a) * 50 * u, ey + Math.sin(a) * 24 * u); x.lineTo(C + Math.cos(a) * 62 * u, ey + Math.sin(a) * 30 * u); x.stroke(); }
@@ -7614,6 +7625,7 @@ function drawTitleCrest() {
 const TS = { raf: null, flakes: [], t: 0 };
 function startTitleSnow() {
   drawTitleCrest();
+  TS.blinkT = null; TS.nextBlink = null;
   const cv = $('title-snow');
   if (!cv) return;
   cv.width = innerWidth; cv.height = innerHeight;
@@ -7624,6 +7636,13 @@ function startTitleSnow() {
   const loop = () => {
     if (!$('screen-title').classList.contains('active')) { TS.raf = null; return; }
     TS.t += .016;
+    // PISCAR do olho do brasão (ocasional, rápido) — redesenha o brasão só na piscada
+    if (TS.nextBlink == null) TS.nextBlink = TS.t + 3 + Math.random() * 4;
+    if (TS.blinkT != null) {
+      TS.blinkT += .016; const ph = TS.blinkT / .32;
+      if (ph >= 1) { drawTitleCrest(0); TS.blinkT = null; TS.nextBlink = TS.t + 3.5 + Math.random() * 5; }
+      else drawTitleCrest(ph < .5 ? ph * 2 : (1 - ph) * 2);
+    } else if (TS.t >= TS.nextBlink) { TS.blinkT = 0; }
     ctx.clearRect(0, 0, cv.width, cv.height);
     const W2 = cv.width, gy = cv.height * .84;
     // névoa baixa no horizonte
