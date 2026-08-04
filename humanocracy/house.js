@@ -117,7 +117,8 @@ function famSprite(who) {
     if (typeof renderPortraitCanvas === 'function') {
       const bust = renderPortraitCanvas(f, {
         w: 64, h: bustH, paintScale: 2.2, coat,
-        post: { levels: 10, grain: 9, aberr: 1, scan: 0.1, sat: 0.42 },
+        // sem franja cromática no rosto da família (o grão/scanline mantém o clima)
+        post: { levels: 11, grain: 8, aberr: 0, scan: 0.09, sat: 0.46 },
       });
       x.drawImage(bust, 0, headY);
     }
@@ -362,6 +363,24 @@ function buildSprites() {
     R(x, 22, 6, 15, 6, '#c9c2ab'); Ln(x, 24, 9, 35, 9, 'rgba(40,32,20,.4)', 0.6); // jornal dobrado
     C(x, 46, 9, 3, '#6a6258'); C(x, 46, 8, 1, '#e8d8a0');               // xícara
   });
+  SPR.poster = mk(48, 66, (x) => { // cartaz de propaganda do regime
+    R(x, 2, 2, 44, 62, '#241a10'); R(x, 5, 5, 38, 56, '#6a2a24');       // moldura + campo vermelho
+    x.fillStyle = 'rgba(200,170,90,.16)'; x.save(); x.translate(24, 26); // raios
+    for (let a = 0; a < 6.28; a += 0.5) { x.beginPath(); x.moveTo(0, 0); x.lineTo(Math.cos(a) * 30, Math.sin(a) * 30); x.lineTo(Math.cos(a + 0.22) * 30, Math.sin(a + 0.22) * 30); x.closePath(); x.fill(); } x.restore();
+    x.fillStyle = '#d8c98a'; x.beginPath(); x.ellipse(24, 26, 10, 6, 0, 0, 6.29); x.fill();  // olho
+    x.fillStyle = '#1a1510'; x.beginPath(); x.arc(24, 26, 3.4, 0, 6.29); x.fill();
+    x.fillStyle = '#c9b878'; x.beginPath(); x.arc(23.4, 25.2, 1.1, 0, 6.29); x.fill();
+    R(x, 8, 46, 32, 9, '#241a10'); x.fillStyle = '#c9b878'; for (let i = 0; i < 5; i++) x.fillRect(11 + i * 6, 49, 4, 2); // slogan
+  });
+  SPR.tapestry = mk(64, 100, (x) => { // estandarte do Ministério na sala
+    R(x, 4, 2, 56, 4, '#3a2f22'); R(x, 8, 4, 48, 84, '#2e3d33');        // varão + pano
+    x.strokeStyle = '#8a6a30'; x.lineWidth = 2; x.strokeRect(11, 8, 42, 76);
+    x.strokeStyle = '#b8912e'; x.lineWidth = 2; x.beginPath(); x.arc(32, 42, 15, 0, 6.29); x.stroke();
+    x.strokeStyle = 'rgba(184,145,46,.5)'; x.lineWidth = 1; for (let a = 0; a < 6.28; a += 0.52) { x.beginPath(); x.moveTo(32 + Math.cos(a) * 17, 42 + Math.sin(a) * 17); x.lineTo(32 + Math.cos(a) * 22, 42 + Math.sin(a) * 22); x.stroke(); }
+    x.fillStyle = '#d8c98a'; x.beginPath(); x.ellipse(32, 42, 10, 6, 0, 0, 6.29); x.fill();  // olho
+    x.fillStyle = '#1a1510'; x.beginPath(); x.arc(32, 42, 3.4, 0, 6.29); x.fill();
+    x.fillStyle = '#8a6a30'; for (let i = 0; i < 12; i++) x.fillRect(9 + i * 4, 84, 2, 5);    // franja
+  });
 }
 
 /* ---------- TEXTURAS DE PAREDE (64×64, pintadas à mão) ---------- */
@@ -590,6 +609,10 @@ function buildEnts() {
     { spr: 'plant', x: 25.7, y: 9.5, sc: .58 }, { spr: 'shelf', x: 30.6, y: 9.4, sc: .78 },            // sala
     { spr: 'lowtable', x: 28.2, y: 6.4, sc: .34 },                                                      // mesa de centro (sala)
     { spr: 'coatrack', x: 1.7, y: 5.4, sc: .72 }, { spr: 'plant', x: 23.4, y: 6.6, sc: .55 },          // corredor
+    // quadros e cartazes nas paredes do corredor (montados alto, entre os vãos)
+    { spr: 'poster', x: 7, y: 5.16, sc: .3, lift: .5 }, { spr: 'retrato', x: 13, y: 5.16, sc: .26, lift: .52 }, { spr: 'poster', x: 19, y: 5.16, sc: .3, lift: .5 },
+    { spr: 'retrato', x: 13, y: 6.84, sc: .26, lift: .52 },
+    { spr: 'tapestry', x: 28, y: 2.34, sc: .72, lift: .38 }, // estandarte do Ministério na sala
     // lâmpadas de teto: pouca luz, muita sombra
     ...[[4, 2], [10, 2], [16, 2], [22, 2], [4, 10], [10, 10], [16, 10], [6, 6], [13, 6], [20, 6], [28, 6]]
       .map(([lx, ly]) => ({ spr: 'lamp', x: lx, y: ly, sc: .16, lift: .74, glowWarm: true })),
