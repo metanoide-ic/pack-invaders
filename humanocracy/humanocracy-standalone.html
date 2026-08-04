@@ -6517,11 +6517,25 @@ function paintSkinMacro(ctx, f, phys, shift) {
     ctx.strokeStyle = rgb(darken(SH, 0.2), 0.22); ctx.lineWidth = 0.4;
     ctx.beginPath(); ctx.moveTo(28 + j, 12); ctx.quadraticCurveTo(40 + j, 60, 34 + j, 116); ctx.stroke();
   } else {
-    // poros
+    // mosqueado de tom: manchas frouxas quentes/frias sob os poros, pra pele
+    // não ficar de um só tom (o que denuncia "pintado"). humano é irregular.
+    for (let i = 0; i < 22; i++) {
+      const warm = r() < 0.6;
+      const tint = warm ? [176, 96, 78] : [96, 110, 132];
+      soft(ctx, r() * 100, r() * 120, 6 + r() * 12, 5 + r() * 10, rgb(mix(SK, tint, 0.5), 0.05 + r() * 0.05), 4);
+    }
+    // poros — em duas escalas: muitos finos + alguns maiores e mais fundos,
+    // e uns poucos com micro-brilho de sebo na borda. distribuição caótica.
     ctx.fillStyle = rgb(darken(SH, 0.2), 0.16);
-    for (let i = 0; i < 620; i++) {
+    for (let i = 0; i < 680; i++) {
       const x = r() * 100, y = r() * 120;
-      ctx.fillRect(x, y, 0.45 + r() * 0.35, 0.45 + r() * 0.35);
+      ctx.fillRect(x, y, 0.4 + r() * 0.3, 0.4 + r() * 0.3);
+    }
+    ctx.fillStyle = rgb(darken(SH, 0.34), 0.22);
+    for (let i = 0; i < 90; i++) {
+      const x = r() * 100, y = r() * 120, s = 0.7 + r() * 0.6;
+      ctx.fillRect(x, y, s, s);
+      if (r() < 0.4) { ctx.fillStyle = rgb(lighten(SK, 0.25), 0.18); ctx.fillRect(x - 0.4, y - 0.4, 0.4, 0.4); ctx.fillStyle = rgb(darken(SH, 0.34), 0.22); }
     }
     // rachaduras de frio (linhas finas em rede)
     ctx.strokeStyle = rgb(darken(SH, 0.28), 0.30); ctx.lineWidth = 0.35;
