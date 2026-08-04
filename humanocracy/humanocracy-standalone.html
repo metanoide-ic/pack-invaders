@@ -7457,6 +7457,10 @@ function sfx(kind) {
       const od = AC.createOscillator(), gd = AC.createGain(); od.connect(gd); gd.connect(AC.destination);
       od.type = 'sine'; od.frequency.setValueAtTime(1362, t); gd.gain.setValueAtTime(.045, t); gd.gain.exponentialRampToValueAtTime(.001, t + .28); od.start(t); od.stop(t + .3);
     }
+    else if (kind === 'click') { // tique curto de botão/instrumento
+      o.type = 'square'; o.frequency.setValueAtTime(2100, t); o.frequency.exponentialRampToValueAtTime(820, t + .02);
+      g.gain.setValueAtTime(.045, t); g.gain.exponentialRampToValueAtTime(.001, t + .04); o.start(t); o.stop(t + .05);
+    }
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'step') { o.type = 'sine'; o.frequency.setValueAtTime(44 + Math.random() * 10, t); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); o.start(t); o.stop(t + .1); }
     else if (kind === 'knock1') { o.type = 'sine'; o.frequency.setValueAtTime(52, t); g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
@@ -10717,6 +10721,8 @@ function drawToolIcon(kind) {
   return cv;
 }
 document.querySelectorAll('.btn-tool').forEach(b => { const k = b.dataset.ico; if (k) b.insertBefore(drawToolIcon(k), b.firstChild); });
+// tique tátil ao acionar ferramentas e perguntas do interrogatório
+document.addEventListener('click', (ev) => { if (ev.target.closest && ev.target.closest('.btn-tool, #ask-row button')) sfx('click'); }, true);
 $('btn-music').onclick = () => {
   MUSIC.on = !MUSIC.on;
   $('btn-music').style.opacity = MUSIC.on ? '1' : '.4';
