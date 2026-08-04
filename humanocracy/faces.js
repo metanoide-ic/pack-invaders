@@ -1478,6 +1478,14 @@ function analogPost(ctx, w, h, seed, o) {
     let bb = lum + (D[i + 2] - lum) * sat;
     rr *= 1.045; gg *= 1.03; bb *= 0.90;
     rr = (rr - 118) * con + 118 - 6; gg = (gg - 118) * con + 118 - 6; bb = (bb - 118) * con + 118 - 6;
+    // SPLIT-TONE: sombras mornas (tungstênio), luzes levemente frias. Dá
+    // profundidade cinematográfica sem mexer no grão/scanline da fita.
+    const nl = lum / 255;
+    const shT = nl < 0.5 ? (0.5 - nl) * 2 : 0;      // 1 no preto → 0 no meio-tom
+    const hiT = nl > 0.55 ? (nl - 0.55) / 0.45 : 0; // 0 no meio → 1 no branco
+    rr += shT * 8.5 - hiT * 3.5;
+    gg += shT * 3.0 - hiT * 1.0;
+    bb += shT * -5.5 + hiT * 8.0;
     D[i] = rr < 0 ? 0 : rr > 255 ? 255 : rr;
     D[i + 1] = gg < 0 ? 0 : gg > 255 ? 255 : gg;
     D[i + 2] = bb < 0 ? 0 : bb > 255 ? 255 : bb;
