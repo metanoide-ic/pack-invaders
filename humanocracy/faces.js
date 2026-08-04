@@ -920,21 +920,36 @@ function paintBust(ctx, f, opts) {
       ctx.beginPath(); ctx.moveTo(ex - ew * 0.7, ey + eh - 0.2);
       ctx.quadraticCurveTo(ex, ey + eh + 0.4, ex + ew * 0.8, ey + eh - 0.4); ctx.stroke();
     } else {
-      // o dedo que puxa a pálpebra (do próprio examinado, contra o vidro)
-      const ftone = mix(SK, SH, 0.3);
-      ctx.fillStyle = rgb(ftone);
+      // o dedo que puxa a pálpebra (do próprio examinado). Uma ponta de dedo
+      // DE VERDADE: pad arredondado sob a pálpebra, corpo que afina e some pra
+      // baixo, unha com meia-lua. (antes era uma barra chapada de canto reto.)
+      const yb = ey + eh;
+      // sombra de contato: onde a polpa empurra a pele, logo acima
+      soft(ctx, ex + 0.3, yb + 0.4, 3.2, 1.4, rgb(darken(SH, 0.28), 0.5), 1.2);
+      const ftone = mix(SK, SH, 0.28);
+      // corpo do dedo (afinando pra baixo, cantos redondos, sem base reta)
+      const fg = ctx.createLinearGradient(ex - 3, 0, ex + 3.2, 0);
+      fg.addColorStop(0, rgb(darken(ftone, 0.22))); fg.addColorStop(0.4, rgb(lighten(ftone, 0.06)));
+      fg.addColorStop(0.7, rgb(ftone)); fg.addColorStop(1, rgb(darken(ftone, 0.3)));
+      ctx.fillStyle = fg;
       ctx.beginPath();
-      ctx.moveTo(ex - 2.6, ey + eh + 1.6);
-      ctx.quadraticCurveTo(ex - 2.9, ey + eh + 0.9, ex - 1.2, ey + eh + 0.8);
-      ctx.lineTo(ex + 2.2, ey + eh + 1);
-      ctx.quadraticCurveTo(ex + 3, ey + eh + 1.6, ex + 2.8, ey + eh + 3.4);
-      ctx.lineTo(ex + 2.4, ey + eh + 12);
-      ctx.lineTo(ex - 2.2, ey + eh + 12);
+      ctx.moveTo(ex - 3, yb + 2.2);
+      ctx.quadraticCurveTo(ex - 3.2, yb + 0.6, ex, yb + 0.4);          // pad topo-esq (arredondado)
+      ctx.quadraticCurveTo(ex + 3.2, yb + 0.6, ex + 3.1, yb + 2.4);    // pad topo-dir
+      ctx.quadraticCurveTo(ex + 2.9, yb + 8, ex + 2.2, yb + 13);       // lado direito afinando
+      ctx.quadraticCurveTo(ex + 0.2, yb + 15.5, ex - 1.8, yb + 13);    // ponta baixa arredondada
+      ctx.quadraticCurveTo(ex - 2.8, yb + 8, ex - 3, yb + 2.2);        // lado esquerdo
       ctx.closePath(); ctx.fill();
-      soft(ctx, ex, ey + eh + 2.4, 1.8, 1, rgb(lighten(SK, 0.4), 0.5), 0.8); // polpa contra o vidro
-      ctx.strokeStyle = rgb(darken(SH, 0.2), 0.5); ctx.lineWidth = 0.4;
-      ctx.beginPath(); ctx.moveTo(ex - 2, ey + eh + 5.5); ctx.lineTo(ex + 2.2, ey + eh + 5.2); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(ex - 1.8, ey + eh + 8.4); ctx.lineTo(ex + 2, ey + eh + 8.1); ctx.stroke();
+      // realce da polpa (luz da lâmpada na carne apertada)
+      soft(ctx, ex - 0.6, yb + 3.4, 1.9, 2.6, rgb(lighten(SK, 0.34), 0.5), 1.2);
+      // unha: meia-lua clara mais abaixo, no dorso do dedo
+      ctx.fillStyle = rgb(lighten(mix(SK, [230, 214, 206], 0.5), 0.1), 0.7);
+      ctx.beginPath(); ctx.ellipse(ex + 0.2, yb + 9.5, 1.7, 2.4, 0.05, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(255,250,244,.35)';
+      ctx.beginPath(); ctx.ellipse(ex - 0.1, yb + 8.2, 1.2, 0.8, 0, 0, 6.29); ctx.fill(); // lúnula
+      // prega da junta
+      ctx.strokeStyle = rgb(darken(SH, 0.22), 0.45); ctx.lineWidth = 0.4;
+      ctx.beginPath(); ctx.moveTo(ex - 2.4, yb + 6); ctx.quadraticCurveTo(ex, yb + 6.6, ex + 2.6, yb + 6); ctx.stroke();
     }
     // canto interno
     ctx.fillStyle = rgb(mix(SH, [130, 60, 50], 0.5), 0.6);
