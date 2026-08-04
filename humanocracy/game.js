@@ -137,6 +137,18 @@ const M_CHORDS = [
   [110.00, 130.81], // A+C (terça menor)
   [98.00, 146.83],  // G+D
 ];
+/* MOTIVO: um tema curto e triste (não notas aleatórias — isso soa "gerado").
+   Semitons a partir de Lá; frase que balança e desce, feito um sino de fim de
+   turno. Retorna sempre — o ouvido aprende a cantarolar. */
+const M_MOTIF = [0, 3, 5, 3, 0, -2, 0, -5]; // Lá Dó Ré Dó Lá Sol Lá Mí(baixo)
+// deriva de humor por regime: quanto pior o Estado, mais grave e desafinado
+const M_MOOD = {
+  republica: { detune: 1.004, mel: 1.0, lp: 680 },
+  mehrvolk: { detune: 1.006, mel: 0.94, lp: 620 },
+  conselho: { detune: 1.009, mel: 0.5, lp: 560 },  // melodia rareia, quase muda
+  colapso: { detune: 1.013, mel: 0.4, lp: 500 },   // tudo desce e desafina
+};
+function mMood() { try { return M_MOOD[regimeOfDay(S.day)] || M_MOOD.republica; } catch (e) { return M_MOOD.republica; } }
 function musicNote() {
   if (!MUSIC.on || !MUSIC.playing) return;
   try {
@@ -144,31 +156,38 @@ function musicNote() {
     if (AC.state === 'suspended') return;
     const t = AC.currentTime;
     // caminha pela progressão (quase sempre em ordem, às vezes pula) — direção, não aleatório
+    const mood = mMood();
     MUSIC.idx = ((MUSIC.idx || 0) + (chance(.25) ? 2 : 1)) % M_CHORDS.length;
     const chord = M_CHORDS[MUSIC.idx];
-    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 680;
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = mood.lp;
     const g = AC.createGain(); g.gain.setValueAtTime(0, t);
     g.gain.linearRampToValueAtTime(.028, t + 1.6);
     g.gain.linearRampToValueAtTime(0, t + 5.2);
     lp.connect(g); g.connect(AC.destination);
-    chord.forEach(base => [base, base * 1.004].forEach(fr => {
+    chord.forEach(base => [base, base * mood.detune].forEach(fr => {
       const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
       o.connect(lp); o.start(t); o.stop(t + 5.4);
     }));
-    // às vezes uma nota solitária mais aguda (melodia esparsa, voz humana perdida)
-    if (chance(.42)) {
-      const mel = chord[chance(.5) ? 0 : 1] * (chance(.5) ? 4 : 2);
+    // MELODIA: caminha pelo motivo (um tema, não sorteio). Uma voz de sino
+    // perdida no zumbido. Sob regimes duros ela rareia — o mundo emudece.
+    if (chance(mood.mel)) {
+      const semi = M_MOTIF[(MUSIC.mstep = ((MUSIC.mstep || 0) + 1) % M_MOTIF.length)];
+      const mel = 220 * Math.pow(2, semi / 12);        // Lá4 como tônica do tema
       const ml = AC.createBiquadFilter(); ml.type = 'lowpass'; ml.frequency.value = 1500;
-      const mg = AC.createGain(); mg.gain.setValueAtTime(0, t + .4); mg.gain.linearRampToValueAtTime(.015, t + 1.1); mg.gain.linearRampToValueAtTime(0, t + 3.6);
+      const mg = AC.createGain(); mg.gain.setValueAtTime(0, t + .4); mg.gain.linearRampToValueAtTime(.016, t + 1.0); mg.gain.linearRampToValueAtTime(0, t + 3.6);
       ml.connect(mg); mg.connect(AC.destination);
       const mo = AC.createOscillator(); mo.type = 'sine'; mo.frequency.value = mel; mo.connect(ml); mo.start(t + .4); mo.stop(t + 3.8);
+      // um harmônico de sino uma oitava acima, bem tênue (dá corpo de metal)
+      const mo2 = AC.createOscillator(); mo2.type = 'sine'; mo2.frequency.value = mel * 2;
+      const mg2 = AC.createGain(); mg2.gain.setValueAtTime(0, t + .4); mg2.gain.linearRampToValueAtTime(.005, t + 1.0); mg2.gain.linearRampToValueAtTime(0, t + 2.8);
+      mo2.connect(mg2); mg2.connect(AC.destination); mo2.start(t + .4); mo2.stop(t + 3.0);
     }
   } catch (e) {}
 }
 function startMusic() {
   if (MUSIC.playing) return;
   MUSIC.playing = true;
-  MUSIC.idx = 0;
+  MUSIC.idx = 0; MUSIC.mstep = 0;
   // DRONE grave constante (pedal) — aterra a ambiência; um zumbido de posto sem fim
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
