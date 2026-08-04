@@ -1605,7 +1605,7 @@ function examSVG(f, phys) {
     w: 400, h: 480, bg: '#12130f',
     zoom: 1.55, focusY: 50, paintScale: 4,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 2, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
+    post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 1, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
   }, physAnomOpts(phys));
   const open = renderPortraitCanvas(f, o).toDataURL();
   let s = `<image href="${open}" width="200" height="240" preserveAspectRatio="none"/>`;
@@ -2002,7 +2002,7 @@ function eyeMacroSVG(f, phys) {
   const anom = (phys && phys.anom) || {};
   const dead = !!anom.deadStare, noBlink = !!(phys && phys.piscar);
   const seed = faceSeedOf(f);
-  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
+  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
   const C = { x: 0, y: 0 }, Lp = { x: -6, y: 1 }, Rp = { x: 6, y: 0.5 }, Up = { x: -1, y: -3 }, Dp = { x: 1, y: 2.6 };
   let frames;
   if (dead) {
@@ -2155,7 +2155,7 @@ function examZoneSVG(f, phys, zone) {
   const base = Object.assign({
     w: 260, h: 312, bg: '#101208', paintScale: 2.7,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.34 },
+    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.34 },
   }, physAnomOpts(phys));
   const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
 
@@ -2186,14 +2186,14 @@ function examZoneSVG(f, phys, zone) {
     // dessaturação padrão do VHS estava apagando o desvio.
     const mkF = (sh) => renderScene((c) => paintSkinMacro(c, f, phys, sh), seed ^ (0x51 + sh), {
       w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.12, vig: 0.4, sat: 0.62 },
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.12, vig: 0.4, sat: 0.62 },
     }).toDataURL();
     return seqSVG([{ url: mkF(0), len: 1.9 }, { url: mkF(1), len: 1.9 }]);
   }
   if (zone === 'maos') {
     const mkF = (mode, ps) => renderScene((c) => paintHandScene(c, f, phys, mode), seed ^ ps, {
       w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 },
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 },
     }).toDataURL();
     return seqSVG([
       { url: mkF('palm-far', 0x91), len: 0.9 },
