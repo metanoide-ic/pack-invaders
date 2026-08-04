@@ -644,7 +644,9 @@ function paintBust(ctx, f, opts) {
   ctx.quadraticCurveTo(cx + mw * 0.5, my + 3.4 + lipFull, cx, my + 3.6 + lipFull);
   ctx.quadraticCurveTo(cx - mw * 0.5, my + 3.4 + lipFull, cx - mw * 0.82, my + 0.4);
   ctx.closePath(); ctx.fill();
-  soft(ctx, cx - 1, my + 2.2 + lipFull * 0.5, mw * 0.42, 1 + lipFull * 0.4, 'rgba(255,240,220,.4)', 0.9); // brilho no lábio inferior
+  soft(ctx, cx - 1, my + 2.2 + lipFull * 0.5, mw * 0.42, 1 + lipFull * 0.4, 'rgba(255,240,220,.44)', 0.9); // brilho no lábio inferior
+  soft(ctx, cx - 1.6, my + 2.1 + lipFull * 0.5, mw * 0.14, 0.5, 'rgba(255,250,238,.4)', 0.5);            // faísca úmida (lado da luz)
+  soft(ctx, cx - 0.6, my - 1.4 - lipFull * 0.4, mw * 0.3, 0.55, 'rgba(255,238,220,.16)', 0.7);           // sheen do lábio superior (arco do cupido)
   // vinco da boca (a linha mais escura do rosto)
   ctx.strokeStyle = 'rgba(28,16,12,.85)'; ctx.lineWidth = 0.75;
   ctx.beginPath();
