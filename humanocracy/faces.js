@@ -587,6 +587,9 @@ function paintBust(ctx, f, opts) {
       ctx.fillStyle = 'rgba(90,66,44,.18)';
       ctx.fillRect(tx + tw * 0.62, my - 0.3, tw * 0.3, th * 0.8);
     }
+    // esmalte MOLHADO: uma banda de brilho horizontal atravessa os dentes de
+    // cima (saliva pega a lâmpada). Na dentição 'perfeita' fica dura e vítrea.
+    soft(ctx, cx - mw * 0.15, my + 0.4, mw * 0.6, 0.5, opts.teethPerfect ? 'rgba(255,255,255,.5)' : 'rgba(255,250,235,.28)', opts.teethPerfect ? 0.4 : 0.7);
     // dentes inferiores espiando (só com a boca bem aberta)
     if (op > 0.55) {
       const y1 = my + openH - 1.6;
@@ -594,7 +597,13 @@ function paintBust(ctx, f, opts) {
       for (let i = 0; i < nT; i++) {
         const tx = x0 + i * tw;
         const th = opts.teethPerfect ? 1.4 : 0.9 + rT() * 0.7;
-        ctx.fillRect(tx + 0.2, y1 - th + 1.6, tw - 0.4, th);
+        // cantos arredondados (dente não é tijolo): topo reto, base com raio
+        const bx = tx + 0.2, bw = tw - 0.4, byT = y1 - th + 1.6;
+        ctx.beginPath();
+        ctx.moveTo(bx, byT); ctx.lineTo(bx + bw, byT);
+        ctx.lineTo(bx + bw, byT + th * 0.5);
+        ctx.quadraticCurveTo(bx + bw * 0.5, byT + th + 0.4, bx, byT + th * 0.5);
+        ctx.closePath(); ctx.fill();
         ctx.strokeStyle = 'rgba(60,36,28,.35)'; ctx.lineWidth = 0.24;
         ctx.beginPath(); ctx.moveTo(tx, y1 + 0.2); ctx.lineTo(tx, y1 - th + 1.7); ctx.stroke();
       }
