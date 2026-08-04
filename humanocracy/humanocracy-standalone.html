@@ -270,6 +270,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   grid-area:left; display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0;
   background-color: var(--panel);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.05), inset 0 0 34px rgba(0,0,0,.32);
 }
 .stage-left { grid-area:left; border-right:2px solid #000; }
 .stage-right { grid-area:right; border-left:2px solid #000; }
@@ -277,6 +278,9 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:3px;
   font-size:11px; color:var(--accent2); padding-bottom:5px; margin-bottom:2px;
   border-bottom:1px solid rgba(139,138,122,.3);
+  /* rótulo gravado na chapa (deboss) */
+  text-shadow:0 1px 0 rgba(255,246,220,.12), 0 -1px 1px rgba(0,0,0,.5);
+  box-shadow:0 1px 0 rgba(255,246,220,.06);
 }
 
 /* Guichê — cidadão no centro, no topo */
@@ -285,12 +289,26 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   background-color: var(--panel);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
   display:flex; flex-direction:column; align-items:center; padding:12px 10px; min-height:0; gap:0;
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.05), inset 0 0 40px rgba(0,0,0,.34);
 }
 .booth-window {
   width:min(100%, 380px); background:#0d0f0c;
-  border:7px solid #2a2c24; border-radius:2px;
-  box-shadow: 0 0 0 2px #14150f, 0 10px 26px rgba(0,0,0,.6), inset 0 0 40px rgba(0,0,0,.7);
+  /* moldura de metal escovado com bisel: luz vem de cima-esquerda */
+  border:8px solid #2a2c24; border-radius:3px;
+  border-top-color:#3c3e33; border-left-color:#34362b;
+  border-right-color:#1b1d16; border-bottom-color:#17190f;
+  box-shadow:
+    0 0 0 1px #3d3f34,                       /* fio de luz do metal */
+    0 0 0 2px #101109,                        /* aresta externa */
+    inset 0 0 0 1px #000,                     /* borda do vidro */
+    inset 0 0 44px rgba(0,0,0,.72),           /* vinheta do tubo */
+    0 12px 28px rgba(0,0,0,.6);               /* sombra projetada */
   height:230px; position:relative; overflow:hidden; flex:none;
+}
+.booth-window::after { /* reflexo de vidro: um brilho diagonal fraco no topo */
+  content:''; position:absolute; inset:0; z-index:5; pointer-events:none;
+  background:linear-gradient(148deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.015) 12%, transparent 30%);
+  mix-blend-mode:screen;
 }
 #queue-canvas { position:absolute; inset:0; width:100%; height:100%; }
 #queue-toast {
@@ -381,16 +399,25 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   from { transform: translateY(260px) translateX(60px) rotate(14deg); opacity:0; }
   to   { transform: none; opacity:1; }
 }
-.doc-stamped { animation: stamp-slam .3s cubic-bezier(.2,2.2,.5,1) backwards; }
+.doc-stamped { animation: stamp-slam .34s cubic-bezier(.2,1.9,.35,1) backwards; }
 @keyframes stamp-slam {
-  0%   { transform: rotate(-18deg) scale(2.8); opacity:0; }
-  60%  { transform: rotate(-18deg) scale(.92); opacity:1; }
+  0%   { transform: rotate(-25deg) scale(3.2); opacity:0; filter:blur(1.2px); }
+  52%  { transform: rotate(-17deg) scale(.84); opacity:1; filter:blur(0); }   /* o baque: passa do ponto */
+  70%  { transform: rotate(-18.5deg) scale(1.07); }                            /* quica de volta */
   100% { transform: rotate(-18deg) scale(1); opacity:.85; }
+}
+/* o papel recua sob o carimbo (baque tátil) */
+.document.recoil { animation: doc-recoil .26s ease-out; }
+@keyframes doc-recoil {
+  0%   { transform: translateY(0) scale(1); }
+  22%  { transform: translateY(3px) scale(.995); }
+  55%  { transform: translateY(-1.5px) scale(1.003); }
+  100% { transform: translateY(0) scale(1); }
 }
 .bribe-note { animation: deal-in .55s ease-out backwards; }
 
 @media (prefers-reduced-motion: reduce) {
-  #npc-actor, .document, .doc-stamped, .bribe-note { animation: none !important; }
+  #npc-actor, .document, .doc-stamped, .bribe-note, .document.recoil { animation: none !important; }
 }
 .booth > .booth-counter, .booth > .npc-name, .booth > .speech { width:min(100%, 380px); }
 .npc-name { font-family:var(--font-display); font-weight:600; text-transform:uppercase; text-align:center; padding:6px; color:var(--accent2); letter-spacing:2px; font-size:15px; min-height:28px; }
@@ -575,6 +602,21 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 #endday-report .row { display:flex; justify-content:space-between; border-bottom:1px dotted rgba(143,138,122,.3); }
 .ending-body { font-size:14px; line-height:1.8; }
 .ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
+/* tela de FINAL: fundo solene com vinheta + painel que sobe devagar */
+#screen-ending { background: radial-gradient(ellipse at 50% 38%, #16150f 0%, #070605 68%, #000 100%); }
+#screen-ending .ending-panel {
+  background-color:#100f0b; border-color:#2a281e;
+  box-shadow: 0 0 0 1px rgba(201,163,74,.14), 0 20px 60px rgba(0,0,0,.7);
+  border-top:2px solid rgba(201,163,74,.4);
+}
+#screen-ending.active .ending-panel { animation: ending-rise 1.5s ease-out backwards; }
+@keyframes ending-rise { from { opacity:0; transform:translateY(16px); } }
+#screen-ending .ending-title {
+  text-shadow: 0 0 14px rgba(201,163,74,.35), 0 2px 3px rgba(0,0,0,.6);
+  animation: end-flicker 7s steps(1) infinite;
+}
+@keyframes end-flicker { 0%,95%,100% { opacity:1; } 96% { opacity:.55; } 97% { opacity:.9; } 98% { opacity:.45; } 99% { opacity:.85; } }
+@media (prefers-reduced-motion: reduce) { #screen-ending.active .ending-panel, #screen-ending .ending-title { animation:none; } }
 
 /* ============ MODAL ============ */
 .modal-overlay {
@@ -1761,15 +1803,20 @@ const HOME_EVENTS = {
   17: { texto: 'Sua mãe rasgou o formulário de ancestralidade. "Eu SEI quem eu sou." Vessa colou os pedaços de madrugada, chorando baixinho para ninguém ouvir.', efeito: null },
   20: { texto: 'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.', efeito: null },
   22: { texto: 'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.', efeito: null },
+  24: { texto: 'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.', efeito: null },
   26: { texto: 'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?', efeito: null },
   28: { texto: 'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.', efeito: null },
+  30: { texto: 'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."', efeito: null },
   33: { texto: 'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.', efeito: null },
+  35: { texto: 'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.', efeito: null },
   38: { texto: 'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.', efeito: null },
+  40: { texto: 'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.', efeito: null },
   31: { texto: 'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.', efeito: 'aluguel_maior' },
   36: { texto: 'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?', efeito: null },
   42: { texto: 'Tomi perguntou no jantar: "Pai, se trocarem você, eu vou perceber?" Ninguém riu. Ninguém respondeu. O relógio da cozinha nunca fez tanto barulho.', efeito: null },
   45: { texto: 'Vessa fez as malas. "Quando isso acabar, a gente atravessa também. Do outro lado deve ser igual — mas pelo menos é longe." Você concorda. Concordar é mais fácil.', efeito: null },
   46: { texto: 'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.', efeito: null },
+  47: { texto: 'A luz piscou a noite inteira. No escuro, Vessa segurou sua mão e perguntou baixinho se você ainda era você. Você disse que sim. Ela apertou mais forte — do jeito de quem confere, não de quem acredita.', efeito: null },
 };
 
 /* ---------- FINAIS ---------- */
@@ -2528,6 +2575,16 @@ const I18N_EN = {
     'The relocated family knocked on your door for the first time. The man smiled and offered warm bread. No one has ever seen them buy anything. Vessa thanked them and locked the door with both turns.',
   'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
     'No newspaper came, no radio, no orders. Tomi slept in your bed tonight — "just tonight." You lay awake listening to his breathing, counting, afraid a beat would come out wrong.',
+  'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.':
+    'Tomi brought home a "Family Surveillance Notebook" from school: each pupil records what their parents say at home. The pages come pre-numbered. Vessa filled the first with praise for the regime, in careful handwriting — and burned the rest in the stove.',
+  'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."':
+    'Overnight the flags changed: the People\'s Council governs now. Your mother looked out the window and only said: "The third I\'ve seen. Or the fourth. I\'ve lost count of how many governments promised me the same silence."',
+  'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.':
+    'The relocated family has a little girl. She never cries, never runs, never makes a sound. Today she smiled at Tomi in the hallway. He came back pale, wouldn\'t say why, and slept with the light on.',
+  'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.':
+    'An envelope arrived with no sender. Inside, a photo of you at the booth — taken from an angle that doesn\'t exist from outside. On the back, in pencil: "We are satisfied with your work." No one signs praise like that.',
+  'A luz piscou a noite inteira. No escuro, Vessa segurou sua mão e perguntou baixinho se você ainda era você. Você disse que sim. Ela apertou mais forte — do jeito de quem confere, não de quem acredita.':
+    'The lights flickered all night. In the dark, Vessa held your hand and asked quietly if you were still you. You said yes. She squeezed harder — the way someone checks, not the way someone believes.',
   'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?':
     'A man stood in front of the building and stared at your window for twenty minutes. Vessa noted the time: 9:13 PM. When you looked, there was no one. Was there ever?',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
@@ -3815,6 +3872,16 @@ const I18N_ES = {
     'La familia realojada tocó su puerta por primera vez. El hombre sonrió y ofreció pan tibio. Nadie los ha visto nunca comprar nada. Vessa agradeció y cerró la puerta con las dos vueltas.',
   'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
     'No vino periódico, no vino radio, no vino orden. Tomi durmió en su cama esta noche — "solo hoy". Usted se quedó despierto oyendo su respiración, contando, con miedo de que un latido viniera mal.',
+  'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.':
+    'Tomi trajo de la escuela un "Cuaderno de Vigilancia Familiar": cada alumno anota lo que sus padres dicen en casa. Las páginas ya vienen numeradas. Vessa llenó la primera con elogios al régimen, con buena letra — y quemó el resto en la estufa.',
+  'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."':
+    'De la noche a la mañana cambiaron las banderas: ahora gobierna el Consejo Popular. Su madre miró por la ventana y solo dijo: "El tercero que veo. O el cuarto. Ya perdí la cuenta de cuántos gobiernos me prometieron el mismo silencio."',
+  'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.':
+    'La familia realojada tiene una niña. Nunca llora, nunca corre, nunca hace ruido. Hoy le sonrió a Tomi en el pasillo. Él volvió pálido, no quiso decir por qué, y durmió con la luz encendida.',
+  'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.':
+    'Llegó un sobre sin remitente. Dentro, una foto suya en la ventanilla — tomada desde un ángulo que no existe desde afuera. Al dorso, a lápiz: "Estamos satisfechos con su trabajo." Nadie firma un elogio así.',
+  'A luz piscou a noite inteira. No escuro, Vessa segurou sua mão e perguntou baixinho se você ainda era você. Você disse que sim. Ela apertou mais forte — do jeito de quem confere, não de quem acredita.':
+    'La luz parpadeó toda la noche. En la oscuridad, Vessa tomó su mano y preguntó en voz baja si usted seguía siendo usted. Usted dijo que sí. Ella apretó más fuerte — como quien comprueba, no como quien cree.',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
     'El Consejo requisó la mitad de su apartamento para "una familia de trabajadores realojados". Son educados. Son silenciosos. Cocinan sin olor.',
   'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?':
@@ -6330,7 +6397,7 @@ function examSVG(f, phys) {
     w: 400, h: 480, bg: '#12130f',
     zoom: 1.55, focusY: 50, paintScale: 4,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 2, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
+    post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 1, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
   }, physAnomOpts(phys));
   const open = renderPortraitCanvas(f, o).toDataURL();
   let s = `<image href="${open}" width="200" height="240" preserveAspectRatio="none"/>`;
@@ -6727,7 +6794,7 @@ function eyeMacroSVG(f, phys) {
   const anom = (phys && phys.anom) || {};
   const dead = !!anom.deadStare, noBlink = !!(phys && phys.piscar);
   const seed = faceSeedOf(f);
-  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
+  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
   const C = { x: 0, y: 0 }, Lp = { x: -6, y: 1 }, Rp = { x: 6, y: 0.5 }, Up = { x: -1, y: -3 }, Dp = { x: 1, y: 2.6 };
   let frames;
   if (dead) {
@@ -6880,7 +6947,7 @@ function examZoneSVG(f, phys, zone) {
   const base = Object.assign({
     w: 260, h: 312, bg: '#101208', paintScale: 2.7,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.34 },
+    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.34 },
   }, physAnomOpts(phys));
   const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
 
@@ -6911,14 +6978,14 @@ function examZoneSVG(f, phys, zone) {
     // dessaturação padrão do VHS estava apagando o desvio.
     const mkF = (sh) => renderScene((c) => paintSkinMacro(c, f, phys, sh), seed ^ (0x51 + sh), {
       w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.12, vig: 0.4, sat: 0.62 },
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.12, vig: 0.4, sat: 0.62 },
     }).toDataURL();
     return seqSVG([{ url: mkF(0), len: 1.9 }, { url: mkF(1), len: 1.9 }]);
   }
   if (zone === 'maos') {
     const mkF = (mode, ps) => renderScene((c) => paintHandScene(c, f, phys, mode), seed ^ ps, {
       w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 2, scan: 0.13, vig: 0.5, sat: 0.36 },
+      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 },
     }).toDataURL();
     return seqSVG([
       { url: mkF('palm-far', 0x91), len: 0.9 },
@@ -7332,9 +7399,31 @@ function sfx(kind) {
     const t = AC.currentTime;
     const o = AC.createOscillator(), g = AC.createGain();
     o.connect(g); g.connect(AC.destination);
-    if (kind === 'stamp') { o.type = 'square'; o.frequency.setValueAtTime(70, t); g.gain.setValueAtTime(.25, t); g.gain.exponentialRampToValueAtTime(.001, t + .18); o.start(t); o.stop(t + .2); }
-    else if (kind === 'buzz') { o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .5); o.start(t); o.stop(t + .5); }
-    else if (kind === 'ding') { o.type = 'sine'; o.frequency.setValueAtTime(660, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
+    if (kind === 'stamp') {
+      // "ka-CHUNK" mecânico: corpo grave do impacto + clack de ruído (a borracha batendo)
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(46, t + .07);
+      g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.34, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + .17);
+      o.start(t); o.stop(t + .19);
+      const nb = AC.createBuffer(1, 1600, AC.sampleRate), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
+      const ns = AC.createBufferSource(); ns.buffer = nb;
+      const nf = AC.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1700; nf.Q.value = 0.8;
+      const ng = AC.createGain(); ng.gain.setValueAtTime(.2, t); ng.gain.exponentialRampToValueAtTime(.001, t + .05);
+      ns.connect(nf); nf.connect(ng); ng.connect(AC.destination); ns.start(t); ns.stop(t + .06);
+    }
+    else if (kind === 'buzz') { // cigarra de erro: saw descendo + batimento dissonante (menos "beep de robô")
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(115, t); o.frequency.linearRampToValueAtTime(78, t + .38);
+      g.gain.setValueAtTime(.11, t); g.gain.exponentialRampToValueAtTime(.001, t + .46); o.start(t); o.stop(t + .48);
+      const ob = AC.createOscillator(), gb = AC.createGain(); ob.connect(gb); gb.connect(AC.destination);
+      ob.type = 'square'; ob.frequency.setValueAtTime(86, t);
+      gb.gain.setValueAtTime(.055, t); gb.gain.exponentialRampToValueAtTime(.001, t + .4); ob.start(t); ob.stop(t + .42);
+    }
+    else if (kind === 'ding') { // sino curto: fundamental + parcial de oitava (mais orgânico que a senoide seca)
+      o.type = 'sine'; o.frequency.setValueAtTime(680, t); g.gain.setValueAtTime(.11, t); g.gain.exponentialRampToValueAtTime(.001, t + .45); o.start(t); o.stop(t + .46);
+      const od = AC.createOscillator(), gd = AC.createGain(); od.connect(gd); gd.connect(AC.destination);
+      od.type = 'sine'; od.frequency.setValueAtTime(1362, t); gd.gain.setValueAtTime(.045, t); gd.gain.exponentialRampToValueAtTime(.001, t + .28); od.start(t); od.stop(t + .3);
+    }
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'step') { o.type = 'sine'; o.frequency.setValueAtTime(44 + Math.random() * 10, t); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); o.start(t); o.stop(t + .1); }
     else if (kind === 'knock1') { o.type = 'sine'; o.frequency.setValueAtTime(52, t); g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
@@ -7387,35 +7476,75 @@ function mumble(pitch, syl) {
 
 /* ---------- MÚSICA (trilha melancólica procedural) ---------- */
 const MUSIC = { on: true, playing: false, timer: null };
-const M_NOTES = [110, 130.81, 146.83, 164.81, 196, 220]; // lá menor, esparso
+// progressão sombria (Lá menor / frígio): díades que a trilha percorre em ordem,
+// não notas soltas aleatórias — soa COMPOSTO, não gerado.
+const M_CHORDS = [
+  [110.00, 164.81], // Am (A+E)
+  [130.81, 196.00], // C+G
+  [146.83, 220.00], // Dm (D+A)
+  [123.47, 164.81], // tensão (B+E)
+  [110.00, 130.81], // A+C (terça menor)
+  [98.00, 146.83],  // G+D
+];
 function musicNote() {
   if (!MUSIC.on || !MUSIC.playing) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') return;
     const t = AC.currentTime;
-    const f = pick(M_NOTES) * (chance(.3) ? 2 : 1);
-    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    // caminha pela progressão (quase sempre em ordem, às vezes pula) — direção, não aleatório
+    MUSIC.idx = ((MUSIC.idx || 0) + (chance(.25) ? 2 : 1)) % M_CHORDS.length;
+    const chord = M_CHORDS[MUSIC.idx];
+    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 680;
     const g = AC.createGain(); g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(.032, t + 1.3);
-    g.gain.linearRampToValueAtTime(0, t + 4.6);
+    g.gain.linearRampToValueAtTime(.028, t + 1.6);
+    g.gain.linearRampToValueAtTime(0, t + 5.2);
     lp.connect(g); g.connect(AC.destination);
-    [f, f * 1.003].forEach(fr => {
+    chord.forEach(base => [base, base * 1.004].forEach(fr => {
       const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
-      o.connect(lp); o.start(t); o.stop(t + 4.8);
-    });
+      o.connect(lp); o.start(t); o.stop(t + 5.4);
+    }));
+    // às vezes uma nota solitária mais aguda (melodia esparsa, voz humana perdida)
+    if (chance(.42)) {
+      const mel = chord[chance(.5) ? 0 : 1] * (chance(.5) ? 4 : 2);
+      const ml = AC.createBiquadFilter(); ml.type = 'lowpass'; ml.frequency.value = 1500;
+      const mg = AC.createGain(); mg.gain.setValueAtTime(0, t + .4); mg.gain.linearRampToValueAtTime(.015, t + 1.1); mg.gain.linearRampToValueAtTime(0, t + 3.6);
+      ml.connect(mg); mg.connect(AC.destination);
+      const mo = AC.createOscillator(); mo.type = 'sine'; mo.frequency.value = mel; mo.connect(ml); mo.start(t + .4); mo.stop(t + 3.8);
+    }
   } catch (e) {}
 }
 function startMusic() {
   if (MUSIC.playing) return;
   MUSIC.playing = true;
+  MUSIC.idx = 0;
+  // DRONE grave constante (pedal) — aterra a ambiência; um zumbido de posto sem fim
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const dlp = AC.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 240;
+    const dg = AC.createGain(); dg.gain.setValueAtTime(0.0001, t); dg.gain.linearRampToValueAtTime(.02, t + 4);
+    dlp.connect(dg); dg.connect(AC.destination);
+    MUSIC.drone = [];
+    [[55, 1], [82.41, .5]].forEach(([fr, a]) => {
+      const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+      const og = AC.createGain(); og.gain.value = a; o.connect(og); og.connect(dlp);
+      o.start(t); MUSIC.drone.push(o);
+    });
+    MUSIC.droneGain = dg;
+  } catch (e) {}
   clearInterval(MUSIC.timer);
-  MUSIC.timer = setInterval(musicNote, 3200);
+  MUSIC.timer = setInterval(musicNote, 3600);
   musicNote();
 }
 function stopMusic() {
   MUSIC.playing = false;
   clearInterval(MUSIC.timer);
+  try {
+    if (MUSIC.droneGain) { const t = AC.currentTime; MUSIC.droneGain.gain.cancelScheduledValues(t); MUSIC.droneGain.gain.setValueAtTime(MUSIC.droneGain.gain.value, t); MUSIC.droneGain.gain.linearRampToValueAtTime(0, t + 1.2); }
+    if (MUSIC.drone) MUSIC.drone.forEach(o => { try { o.stop(AC.currentTime + 1.4); } catch (e) {} });
+  } catch (e) {}
+  MUSIC.drone = null; MUSIC.droneGain = null;
 }
 
 /* ---------- NEVE DO TÍTULO ---------- */
@@ -8818,6 +8947,9 @@ function drawFig(ctx, f, groundY, lampX) {
   ctx.lineTo(x - 0.8, top + 9.5); ctx.lineTo(x - 0.8, groundY - 5); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = `rgba(255,236,196,${(0.12 + lum * 0.26).toFixed(2)})`; ctx.lineWidth = 0.9;
   ctx.beginPath(); ctx.moveTo(x + cw, groundY - 5); ctx.quadraticCurveTo(x + cw + 0.6, top + 12, x + cw * 0.55, top + 9); ctx.stroke();
+  // rim frio na borda de SOMBRA (esquerda) — descola a silhueta do muro escuro
+  ctx.strokeStyle = 'rgba(150,172,205,.2)'; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(x - cw, groundY - 5); ctx.quadraticCurveTo(x - cw - 0.6, top + 12, x - cw * 0.55, top + 9); ctx.stroke();
   // fecho central
   ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(x, top + 8.5); ctx.lineTo(x, groundY - 6); ctx.stroke();
@@ -8844,6 +8976,9 @@ function drawFig(ctx, f, groundY, lampX) {
   ctx.beginPath(); ctx.arc(x - 1.2, top + 3.4, 3.9, Math.PI * 0.42, Math.PI * 1.42); ctx.fill();
   ctx.fillStyle = `rgba(255,238,200,${(0.08 + lum * 0.26).toFixed(2)})`; // bochecha direita na luz
   ctx.beginPath(); ctx.arc(x + 1.2, top + 2.7, 2.2, 0, 6.29); ctx.fill();
+  // rim frio na borda esquerda da cabeça (separa do fundo)
+  ctx.strokeStyle = 'rgba(150,172,205,.28)'; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.arc(x, top + 3.4, 3.9, Math.PI * 0.72, Math.PI * 1.28); ctx.stroke();
   // cabelo / chapéu
   if (f.hat === 2) { // lenço
     ctx.fillStyle = '#3a3630';
@@ -9911,6 +10046,9 @@ function stampDocs(decision) {
   try { st.appendChild(drawStamp(decision)); }
   catch (e) { st.classList.add(decision === 'approve' ? 'stamp-ok' : 'stamp-no'); st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO'; }
   first.appendChild(st);
+  // baque tátil: o papel recua sob o carimbo
+  first.classList.remove('recoil'); void first.offsetWidth; first.classList.add('recoil');
+  setTimeout(() => first.classList.remove('recoil'), 300);
 }
 
 /* ---------- ECOS (consequências tardias, sempre ambíguas) ---------- */
@@ -10651,8 +10789,8 @@ window.clearActorPhoto = clearActorPhoto;
 
 /* ---------- ESTADO ---------- */
 const FP = { W: 640, H: 360, FOV: Math.PI / 3 };
-let FLOORPIX = null;   // pixels do assoalho, extraídos uma vez para o floor casting
-let FLOORCV = null, FLOORCTX = null, FLOORBUF = null; // buffer offscreen de meia-res
+let FLOORPIX = null, CEILPIX = null;   // pixels do assoalho e do teto, extraídos uma vez
+let FLOORCV = null, FLOORCTX = null, FLOORBUF = null; // buffer offscreen de meia-res (compartilhado chão/teto)
 let LANTHALF = null;   // lanterna por coluna (meia-res), pré-computada
 let FLOOR_OK = true, FLOOR_N = 0, FLOOR_ACC = 0; // auto-benchmark: cai pro degradê em hardware fraco
 const HOUSE = {
@@ -11165,6 +11303,15 @@ function buildTextures() {
       x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect((p % 2 ? 20 : 44), y0, 1, plankH); // junta vertical deslocada
     }
     grain(x, 0.06);
+  });
+  TEX.ceil = mk(64, 64, (x) => { // reboco escuro do teto (usado pelo ceiling casting)
+    base(x, '#17130d');
+    x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 2;                 // frisos/vigas fracas
+    for (const gy of [0, 32]) { x.beginPath(); x.moveTo(0, gy); x.lineTo(64, gy); x.stroke(); }
+    x.fillStyle = 'rgba(255,246,220,.03)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
+    for (let i = 0; i < 4; i++) { x.fillStyle = `rgba(30,24,16,${.2 + rnd() * .2})`; x.fillRect(rnd() * 56, rnd() * 60, 6 + rnd() * 12, 2 + rnd() * 3); } // manchas de umidade
+    crack(x, 22, 10, 8, 1.2); crack(x, 44, 40, 6, 0.5);
+    grain(x, 0.05);
   });
 }
 function texAt(mx, my, tile) {
@@ -11987,6 +12134,39 @@ function renderHouse() {
     fg.addColorStop(0, '#171008'); fg.addColorStop(.5, '#20160b'); fg.addColorStop(1, '#100b06');
     ctx.fillStyle = fg; ctx.fillRect(0, Math.max(0, horizon), W, H);
   }
+  // TETO por casting (reboco escuro; fecha o ambiente por cima). Reaproveita o
+  // buffer do chão e é desenhado invertido — bem mais escuro que o assoalho.
+  if (!CEILPIX && TEX.ceil) { try { CEILPIX = TEX.ceil.getContext('2d').getImageData(0, 0, 64, 64).data; } catch (e) {} }
+  if (FLOORPIX && CEILPIX && FLOOR_OK && FLOORBUF && hInt > 1) {
+    const FW = W >> 1, FH = H >> 1, fd = FLOORBUF.data;
+    const dirX = Math.cos(HOUSE.ang), dirY = Math.sin(HOUSE.ang);
+    const planeX = -Math.sin(HOUSE.ang) * tanF, planeY = Math.cos(HOUSE.ang) * tanF;
+    const rd0x = dirX - planeX, rd0y = dirY - planeY;
+    const stepDX = (planeX * 2) / FW, stepDY = (planeY * 2) / FW, posZ = 0.5 * H;
+    const rows = Math.min(FH, (hInt + 1) >> 1);
+    for (let br = 0; br < rows; br++) {
+      const y = hInt - 1 - br * 2; if (y < 0) break;
+      const p = horizon - y, rowDist = posZ / (p < 0.5 ? 0.5 : p);
+      const sx = rowDist * stepDX, sy = rowDist * stepDY;
+      let fx = HOUSE.x + rowDist * rd0x, fy = HOUSE.y + rowDist * rd0y;
+      let lum = Math.min(1, 2.05 / (1 + rowDist * rowDist * .11)) * dimF0;
+      lum = (lum < .05 ? .05 : lum) * 0.4;                 // teto bem mais escuro que o chão
+      let di = br * FW * 4;
+      for (let xx = 0; xx < FW; xx++) {
+        const ti = ((((fy - Math.floor(fy)) * 64) | 0) * 64 + (((fx - Math.floor(fx)) * 64) | 0)) * 4;
+        const L = lum * LANTHALF[xx], iL = 1 - L;
+        fd[di] = CEILPIX[ti] * L + 5 * iL;
+        fd[di + 1] = CEILPIX[ti + 1] * L + 4 * iL;
+        fd[di + 2] = CEILPIX[ti + 2] * L + 3 * iL;
+        fd[di + 3] = 255;
+        di += 4; fx += sx; fy += sy;
+      }
+    }
+    FLOORCTX.putImageData(FLOORBUF, 0, 0, 0, 0, FW, rows);
+    ctx.save(); ctx.translate(0, hInt); ctx.scale(1, -1);
+    ctx.drawImage(FLOORCV, 0, 0, FW, rows, 0, 0, W, hInt);   // invertido: br=0 (horizonte) → base do teto
+    ctx.restore();
+  }
 
   const zbuf = new Float32Array(W);
   const pulse = HOUSE.knock && HOUSE.knock.active ? .5 + .5 * Math.sin(HOUSE.t * 6) : 0;
@@ -12029,6 +12209,37 @@ function renderHouse() {
     ctx.fillStyle = `rgba(6,4,2,${(1 - lum).toFixed(3)})`;
     ctx.fillRect(col, top, 1, lineH);
     if (tile === 2 && pulse) { ctx.fillStyle = `rgba(224,150,60,${(pulse * .22).toFixed(3)})`; ctx.fillRect(col, top, 1, lineH); }
+  }
+
+  // POÇAS DE LUZ no assoalho sob as lâmpadas — projeta o brilho morno no chão
+  // (elipse achatada = luz deitada na perspectiva). Additive, testada no z-buffer.
+  if (FLOOR_OK && FLOORPIX && !(HOUSE.mode === 'mirror')) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const posZf = 0.5 * H;
+    for (const e of ENTS) {
+      if (!e.glowWarm) continue;
+      const dx = e.x - HOUSE.x, dy = e.y - HOUSE.y, ldist = Math.hypot(dx, dy);
+      if (ldist < 0.4 || ldist > 11) continue;
+      let rel = Math.atan2(dy, dx) - HOUSE.ang;
+      while (rel > Math.PI) rel -= 6.283185; while (rel < -Math.PI) rel += 6.283185;
+      if (Math.abs(rel) > FP.FOV * 0.6) continue;
+      const corr = ldist * Math.cos(rel);
+      const sxp = (0.5 + Math.tan(rel) / (2 * tanF)) * W;
+      const syp = horizon + posZf / corr;                 // ponto do chão sob a lâmpada
+      const col = sxp | 0;
+      if (col < 0 || col >= W || syp <= horizon + 1 || syp > H + 40) continue;
+      if (corr >= zbuf[col] + 0.25) continue;             // atrás de parede → oculto
+      const rad = Math.min(150, (H / corr) * 0.5);
+      const wob = 0.5 + Math.sin(HOUSE.t * 9 + e.x) * 0.06;
+      const g = ctx.createRadialGradient(sxp, syp, 1, sxp, syp, rad);
+      g.addColorStop(0, `rgba(232,190,120,${(0.17 * wob * dimF0).toFixed(3)})`);
+      g.addColorStop(0.5, `rgba(210,160,96,${(0.07 * wob * dimF0).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(210,160,96,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(sxp, syp, rad, rad * 0.46, 0, 0, 6.29); ctx.fill();
+    }
+    ctx.restore();
   }
 
   // sprites (longe → perto)

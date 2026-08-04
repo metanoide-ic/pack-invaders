@@ -442,6 +442,16 @@ const I18N_EN = {
     'The relocated family knocked on your door for the first time. The man smiled and offered warm bread. No one has ever seen them buy anything. Vessa thanked them and locked the door with both turns.',
   'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
     'No newspaper came, no radio, no orders. Tomi slept in your bed tonight — "just tonight." You lay awake listening to his breathing, counting, afraid a beat would come out wrong.',
+  'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.':
+    'Tomi brought home a "Family Surveillance Notebook" from school: each pupil records what their parents say at home. The pages come pre-numbered. Vessa filled the first with praise for the regime, in careful handwriting — and burned the rest in the stove.',
+  'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."':
+    'Overnight the flags changed: the People\'s Council governs now. Your mother looked out the window and only said: "The third I\'ve seen. Or the fourth. I\'ve lost count of how many governments promised me the same silence."',
+  'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.':
+    'The relocated family has a little girl. She never cries, never runs, never makes a sound. Today she smiled at Tomi in the hallway. He came back pale, wouldn\'t say why, and slept with the light on.',
+  'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.':
+    'An envelope arrived with no sender. Inside, a photo of you at the booth — taken from an angle that doesn\'t exist from outside. On the back, in pencil: "We are satisfied with your work." No one signs praise like that.',
+  'A luz piscou a noite inteira. No escuro, Vessa segurou sua mão e perguntou baixinho se você ainda era você. Você disse que sim. Ela apertou mais forte — do jeito de quem confere, não de quem acredita.':
+    'The lights flickered all night. In the dark, Vessa held your hand and asked quietly if you were still you. You said yes. She squeezed harder — the way someone checks, not the way someone believes.',
   'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?':
     'A man stood in front of the building and stared at your window for twenty minutes. Vessa noted the time: 9:13 PM. When you looked, there was no one. Was there ever?',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
@@ -1729,6 +1739,16 @@ const I18N_ES = {
     'La familia realojada tocó su puerta por primera vez. El hombre sonrió y ofreció pan tibio. Nadie los ha visto nunca comprar nada. Vessa agradeció y cerró la puerta con las dos vueltas.',
   'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
     'No vino periódico, no vino radio, no vino orden. Tomi durmió en su cama esta noche — "solo hoy". Usted se quedó despierto oyendo su respiración, contando, con miedo de que un latido viniera mal.',
+  'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.':
+    'Tomi trajo de la escuela un "Cuaderno de Vigilancia Familiar": cada alumno anota lo que sus padres dicen en casa. Las páginas ya vienen numeradas. Vessa llenó la primera con elogios al régimen, con buena letra — y quemó el resto en la estufa.',
+  'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."':
+    'De la noche a la mañana cambiaron las banderas: ahora gobierna el Consejo Popular. Su madre miró por la ventana y solo dijo: "El tercero que veo. O el cuarto. Ya perdí la cuenta de cuántos gobiernos me prometieron el mismo silencio."',
+  'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.':
+    'La familia realojada tiene una niña. Nunca llora, nunca corre, nunca hace ruido. Hoy le sonrió a Tomi en el pasillo. Él volvió pálido, no quiso decir por qué, y durmió con la luz encendida.',
+  'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.':
+    'Llegó un sobre sin remitente. Dentro, una foto suya en la ventanilla — tomada desde un ángulo que no existe desde afuera. Al dorso, a lápiz: "Estamos satisfechos con su trabajo." Nadie firma un elogio así.',
+  'A luz piscou a noite inteira. No escuro, Vessa segurou sua mão e perguntou baixinho se você ainda era você. Você disse que sim. Ela apertou mais forte — do jeito de quem confere, não de quem acredita.':
+    'La luz parpadeó toda la noche. En la oscuridad, Vessa tomó su mano y preguntó en voz baja si usted seguía siendo usted. Usted dijo que sí. Ella apretó más fuerte — como quien comprueba, no como quien cree.',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
     'El Consejo requisó la mitad de su apartamento para "una familia de trabajadores realojados". Son educados. Son silenciosos. Cocinan sin olor.',
   'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?':
