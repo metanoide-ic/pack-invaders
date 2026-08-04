@@ -5240,12 +5240,12 @@ export class Renderer {
       ctx.globalAlpha = alpha;
       ctx.textAlign = 'center';
 
-      // "WARNING" flash
+      // "PERIGO" flash (was English "WARNING" in an otherwise-PT game)
       const flash = Math.sin(now * 0.015) > 0;
       if (flash) {
         ctx.font = `bold ${Math.floor(L.h * 0.018)}px monospace`;
         ctx.fillStyle = '#ef4444';
-        ctx.fillText('⚠ WARNING ⚠', L.cx, L.cy - Math.floor(L.h * 0.15));
+        ctx.fillText('⚠ PERIGO ⚠', L.cx, L.cy - Math.floor(L.h * 0.15));
       }
 
       // Boss name (large, with glow)
