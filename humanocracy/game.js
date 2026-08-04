@@ -859,8 +859,11 @@ function makeCitizen(day, opts) {
       features.uniformColor = us.color; features.uniformTrim = us.trim; features.seal = c.seal;
       features.hat = chance(.55) ? 3 : 0;          // boné militar às vezes
       features.beard = features.beard === 1 ? 0 : features.beard; // tropa raspada
-    } else if (!features.hat && chance(.4)) {
-      features.scarf = pick(SCARF_COLORS);
+    } else {
+      // casaco civil: cada um o seu (lã surrada em tons de época) — sem isso
+      // TODO MUNDO usava o mesmo verde no guichê, cara de fila de clones
+      features.coat = pick(COAT_COLORS);
+      if (!features.hat && chance(.4)) features.scarf = pick(SCARF_COLORS);
     }
   }
 

@@ -239,7 +239,9 @@ function paintBust(ctx, f, opts) {
     }
   };
   coatPath();
-  ctx.fillStyle = opts.coat || 'rgb(45,46,38)';
+  // opts.coat vence (família/casa); senão o casaco próprio da pessoa (f.coat);
+  // senão o verde padrão. Assim cada cidadão tem o SEU casaco em todo contexto.
+  ctx.fillStyle = opts.coat || (f.coat && !f.uniform ? (Array.isArray(f.coat) ? rgb(f.coat) : f.coat) : 'rgb(45,46,38)');
   ctx.fill();
   ctx.save();
   coatPath(); ctx.clip();

@@ -5064,7 +5064,9 @@ function paintBust(ctx, f, opts) {
     }
   };
   coatPath();
-  ctx.fillStyle = opts.coat || 'rgb(45,46,38)';
+  // opts.coat vence (família/casa); senão o casaco próprio da pessoa (f.coat);
+  // senão o verde padrão. Assim cada cidadão tem o SEU casaco em todo contexto.
+  ctx.fillStyle = opts.coat || (f.coat && !f.uniform ? (Array.isArray(f.coat) ? rgb(f.coat) : f.coat) : 'rgb(45,46,38)');
   ctx.fill();
   ctx.save();
   coatPath(); ctx.clip();
@@ -8293,8 +8295,11 @@ function makeCitizen(day, opts) {
       features.uniformColor = us.color; features.uniformTrim = us.trim; features.seal = c.seal;
       features.hat = chance(.55) ? 3 : 0;          // boné militar às vezes
       features.beard = features.beard === 1 ? 0 : features.beard; // tropa raspada
-    } else if (!features.hat && chance(.4)) {
-      features.scarf = pick(SCARF_COLORS);
+    } else {
+      // casaco civil: cada um o seu (lã surrada em tons de época) — sem isso
+      // TODO MUNDO usava o mesmo verde no guichê, cara de fila de clones
+      features.coat = pick(COAT_COLORS);
+      if (!features.hat && chance(.4)) features.scarf = pick(SCARF_COLORS);
     }
   }
 
