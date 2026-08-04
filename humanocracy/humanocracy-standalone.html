@@ -5211,6 +5211,10 @@ function paintBust(ctx, f, opts) {
     // hélix (borda) pega luz de leve no lado da lâmpada; concha em sombra
     soft(ctx, ex0 - s * 0.6, earY - 0.3, 0.7, 2.4, rgb(s < 0 ? lighten(SK, 0.15) : darken(SH, 0.05), 0.4), 0.7);
     soft(ctx, ex0 + s * 0.5, earY + 0.4, 0.9, 1.8, rgb(darken(SH, 0.3), 0.55), 0.7); // interior (concha)
+    // TRANSLUCIDEZ (subsurface): a cartilagem fina da orelha deixa a luz
+    // atravessar e acende vermelho-quente na borda superior. Renders de IA
+    // esquecem disso — orelha vira plástico opaco. Mais forte no lado da luz.
+    soft(ctx, ex0 - s * 0.3, earY - 1.4, 1.2, 1.8, rgb(mix(SK, [206, 92, 74], 0.6), s < 0 ? 0.34 : 0.16), 0.9);
   }
 
   /* cabeça: base + modelagem clipada */
@@ -5315,6 +5319,8 @@ function paintBust(ctx, f, opts) {
     soft(ctx, axx + s * 1.2, nTip - 0.5, 0.8, 1.6, rgb(darken(SH, 0.2), s < 0 ? 0.4 : 0.55), 0.7);                  // vinco alar
     ctx.fillStyle = rgb(darken(SH, 0.5), 0.82);                                                                     // narina
     ctx.beginPath(); ctx.ellipse(cx + s * (nw * 0.48), nTip + 1.15, 0.85, 0.62, s * 0.4, 0, 6.29); ctx.fill();
+    // asa fina também translúcida: um calor rosado na borda da narina
+    soft(ctx, axx + s * 0.4, nTip + 0.6, 0.9, 1.0, rgb(mix(SK, [200, 96, 82], 0.5), 0.2), 0.7);
   }
   // sombra projetada do nariz (lâmpada à esquerda → direita e pra baixo)
   ctx.save();
