@@ -8811,12 +8811,22 @@ function startAmbience() {
     const o1 = AC.createOscillator(); o1.type = 'sine'; o1.frequency.value = 50;
     const o2 = AC.createOscillator(); o2.type = 'sine'; o2.frequency.value = 50.7;
     o1.connect(g); o2.connect(g); o1.start(); o2.start();
-    droneNodes = { o1, o2, g };
+    // zumbido elétrico fraco (100 Hz, harmônico da rede) — a lâmpada/válvulas do posto
+    const oh = AC.createOscillator(); oh.type = 'triangle'; oh.frequency.value = 100;
+    const gh = AC.createGain(); gh.gain.value = .0035; oh.connect(gh); gh.connect(AC.destination); oh.start();
+    // "ar da sala": ruído filtrado em loop, bem baixo (ventilação) — tira o vazio digital
+    const nb = AC.createBuffer(1, AC.sampleRate * 2, AC.sampleRate), nd = nb.getChannelData(0);
+    for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
+    const ns = AC.createBufferSource(); ns.buffer = nb; ns.loop = true;
+    const nf = AC.createBiquadFilter(); nf.type = 'lowpass'; nf.frequency.value = 500; nf.Q.value = 0.4;
+    const ng = AC.createGain(); ng.gain.value = .006;
+    ns.connect(nf); nf.connect(ng); ng.connect(AC.destination); ns.start();
+    droneNodes = { o1, o2, oh, ns, g };
   } catch (e) { /* sem áudio */ }
 }
 function stopAmbience() {
   if (!droneNodes) return;
-  try { droneNodes.o1.stop(); droneNodes.o2.stop(); } catch (e) {}
+  try { droneNodes.o1.stop(); droneNodes.o2.stop(); if (droneNodes.oh) droneNodes.oh.stop(); if (droneNodes.ns) droneNodes.ns.stop(); } catch (e) {}
   droneNodes = null;
 }
 
