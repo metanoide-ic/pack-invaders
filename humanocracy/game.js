@@ -103,24 +103,53 @@ function sfx(kind) {
 }
 
 /* ---------- VOZES MURMURADAS (gibberish grave e triste) ---------- */
+/* VOZ MURMURADA: fala abafada atrás do vidro. Não é um bipe — cada sílaba
+   tem DUAS formantes (F1/F2) tiradas de um punhado de vogais, dando timbre de
+   voz; a frase inteira tem uma entonação que desce (declinação natural, e às
+   vezes sobe no fim, feito pergunta); consoantes entram como estalos curtos de
+   ruído. Soa gente falando baixo, não uma máquina. */
+const VOWELS = [ // [F1, F2] em múltiplos aproximados do pitch (relação de vogal)
+  [1.9, 6.5], // "é"
+  [2.6, 3.2], // "á"
+  [1.4, 5.8], // "i"
+  [1.6, 2.0], // "ô"
+  [1.2, 1.7], // "u"
+];
 function mumble(pitch, syl) {
   if (!SFX_ON) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') return;
     const t0 = AC.currentTime;
+    const rise = Math.random() < 0.28;                 // ~1 em 4 sobe no fim (pergunta)
     for (let i = 0; i < syl; i++) {
-      const t = t0 + i * 0.095 + Math.random() * 0.02;
-      const o = AC.createOscillator(), g = AC.createGain(), f = AC.createBiquadFilter();
-      f.type = 'bandpass'; f.frequency.value = pitch * 3.2; f.Q.value = 1.6;
+      const p = i / Math.max(1, syl - 1);              // 0..1 ao longo da frase
+      const decl = 1 - p * 0.16 + (rise && p > 0.7 ? (p - 0.7) * 0.9 : 0); // entonação
+      const t = t0 + i * 0.105 + Math.random() * 0.02;
+      const stress = 0.7 + Math.random() * 0.6;        // sílaba tônica x átona
+      const vow = VOWELS[(Math.random() * VOWELS.length) | 0];
+      const o = AC.createOscillator(), g = AC.createGain();
       o.type = 'sawtooth';
-      o.frequency.setValueAtTime(pitch * (0.92 + Math.random() * 0.22), t);
-      o.frequency.linearRampToValueAtTime(pitch * (0.85 + Math.random() * 0.3), t + 0.07);
+      const bp = pitch * decl;
+      o.frequency.setValueAtTime(bp * (0.96 + Math.random() * 0.12), t);
+      o.frequency.linearRampToValueAtTime(bp * (0.9 + Math.random() * 0.16), t + 0.08);
+      // duas formantes em série → vogal reconhecível
+      const f1 = AC.createBiquadFilter(); f1.type = 'bandpass'; f1.frequency.value = pitch * vow[0]; f1.Q.value = 4;
+      const f2 = AC.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = pitch * vow[1]; f2.Q.value = 5;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(.05, t + 0.015);
-      g.gain.linearRampToValueAtTime(0, t + 0.085);
-      o.connect(f); f.connect(g); g.connect(AC.destination);
-      o.start(t); o.stop(t + 0.09);
+      g.gain.linearRampToValueAtTime(.05 * stress, t + 0.02);
+      g.gain.exponentialRampToValueAtTime(.0006, t + 0.095);
+      o.connect(f1); f1.connect(f2); f2.connect(g); g.connect(AC.destination);
+      o.start(t); o.stop(t + 0.1);
+      // consoante: estalo curtinho de ruído antes de ~metade das sílabas
+      if (Math.random() < 0.5) {
+        const nb = AC.createBuffer(1, (AC.sampleRate * 0.03) | 0, AC.sampleRate), nd = nb.getChannelData(0);
+        for (let k = 0; k < nd.length; k++) nd[k] = (Math.random() * 2 - 1) * (1 - k / nd.length);
+        const ns = AC.createBufferSource(); ns.buffer = nb;
+        const nf = AC.createBiquadFilter(); nf.type = 'highpass'; nf.frequency.value = 1200;
+        const ng = AC.createGain(); ng.gain.value = 0.02 * stress;
+        ns.connect(nf); nf.connect(ng); ng.connect(AC.destination); ns.start(t - 0.012); ns.stop(t + 0.02);
+      }
     }
   } catch (e) {}
 }
