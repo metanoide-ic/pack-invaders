@@ -432,6 +432,16 @@ const I18N_EN = {
     'Your mother tore up the ancestry form. "I KNOW who I am." Vessa taped the pieces back together before dawn, crying quietly so no one would hear.',
   'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.':
     'Tomi drew the family at school. The teacher praised it — but asked why he drew "daddy with two faces". He couldn\'t explain. Neither could you.',
+  'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.':
+    'A new poster went up in the stairwell: "REPORT THEM. It is an act of love." Dario asked what there was to report. Vessa told him to stop asking questions in the stairwell.',
+  'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.':
+    'The radio asked every family to recite the new oath before sleep. Your mother moves her lips without sound. "God hears me better this way," she says. You pretend not to notice she says nothing at all.',
+  'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.':
+    'They renamed your street: it is now Unity Avenue. Old letters come back stamped "address does not exist" — as if the house where you sleep never existed.',
+  'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.':
+    'The relocated family knocked on your door for the first time. The man smiled and offered warm bread. No one has ever seen them buy anything. Vessa thanked them and locked the door with both turns.',
+  'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
+    'No newspaper came, no radio, no orders. Tomi slept in your bed tonight — "just tonight." You lay awake listening to his breathing, counting, afraid a beat would come out wrong.',
   'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?':
     'A man stood in front of the building and stared at your window for twenty minutes. Vessa noted the time: 9:13 PM. When you looked, there was no one. Was there ever?',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
@@ -1709,6 +1719,16 @@ const I18N_ES = {
     'Tomi dibujó a la familia en la escuela. La maestra lo elogió — pero preguntó por qué dibujó "a papá con dos caras". Él no supo explicarlo. Usted tampoco.',
   'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?':
     'Un hombre se detuvo frente al edificio y miró su ventana durante veinte minutos. Vessa anotó la hora: 21:13. Cuando usted miró, no había nadie. ¿Nunca lo hubo?',
+  'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.':
+    'Pegaron un cartel nuevo en la escalera: "DENUNCIE. Es un acto de amor." Dario preguntó qué había que denunciar. Vessa le dijo que dejara de hacer preguntas en la escalera.',
+  'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.':
+    'La radio pidió que cada familia recitara el nuevo juramento antes de dormir. Su madre mueve los labios sin sonido. "Dios me oye mejor así", dice ella. Usted finge no notar que no dice nada.',
+  'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.':
+    'Cambiaron el nombre de su calle: ahora es Avenida de la Unidad. Las cartas viejas vuelven selladas "dirección inexistente" — como si la casa donde usted duerme nunca hubiera existido.',
+  'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.':
+    'La familia realojada tocó su puerta por primera vez. El hombre sonrió y ofreció pan tibio. Nadie los ha visto nunca comprar nada. Vessa agradeció y cerró la puerta con las dos vueltas.',
+  'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.':
+    'No vino periódico, no vino radio, no vino orden. Tomi durmió en su cama esta noche — "solo hoy". Usted se quedó despierto oyendo su respiración, contando, con miedo de que un latido viniera mal.',
   'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.':
     'El Consejo requisó la mitad de su apartamento para "una familia de trabajadores realojados". Son educados. Son silenciosos. Cocinan sin olor.',
   'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?':

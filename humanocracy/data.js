@@ -467,11 +467,16 @@ const HOME_EVENTS = {
   15: { texto: 'A escola de Dario exigiu o Certificado de Ancestralidade dele — "pendência de linhagem materna". Ele ficou no portão. Vessa passou a manhã no cartório e voltou com um número de protocolo e nenhum papel.', efeito: null },
   17: { texto: 'Sua mãe rasgou o formulário de ancestralidade. "Eu SEI quem eu sou." Vessa colou os pedaços de madrugada, chorando baixinho para ninguém ouvir.', efeito: null },
   20: { texto: 'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.', efeito: null },
+  22: { texto: 'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.', efeito: null },
   26: { texto: 'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?', efeito: null },
+  28: { texto: 'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.', efeito: null },
+  33: { texto: 'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.', efeito: null },
+  38: { texto: 'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.', efeito: null },
   31: { texto: 'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.', efeito: 'aluguel_maior' },
   36: { texto: 'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?', efeito: null },
   42: { texto: 'Tomi perguntou no jantar: "Pai, se trocarem você, eu vou perceber?" Ninguém riu. Ninguém respondeu. O relógio da cozinha nunca fez tanto barulho.', efeito: null },
   45: { texto: 'Vessa fez as malas. "Quando isso acabar, a gente atravessa também. Do outro lado deve ser igual — mas pelo menos é longe." Você concorda. Concordar é mais fácil.', efeito: null },
+  46: { texto: 'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.', efeito: null },
 };
 
 /* ---------- FINAIS ---------- */
