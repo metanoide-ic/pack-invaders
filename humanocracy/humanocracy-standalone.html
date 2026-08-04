@@ -5639,6 +5639,24 @@ function paintBust(ctx, f, opts) {
       ctx.quadraticCurveTo(ex, ey - eh * 0.5 + 1.6, ex - ew, ey - eh * 0.1);
       ctx.closePath(); ctx.fill();
     }
+    // esclera cansada de TODO MUNDO: nunca é branca de pôster. Uma leve tinta
+    // quente e um ou dois vasinhos finos no canto externo — quem trabalha na
+    // fronteira dorme mal. (opts.veins é a versão FORTE, de Alternado.)
+    const carY = ctx.createLinearGradient(ex - ew, 0, ex + ew, 0);
+    const inSide = sgn < 0 ? 1 : 0; // canto interno (perto do nariz)
+    carY.addColorStop(0, inSide ? 'rgba(196,132,120,.16)' : 'rgba(150,60,48,.10)');
+    carY.addColorStop(0.5, 'rgba(0,0,0,0)');
+    carY.addColorStop(1, inSide ? 'rgba(150,60,48,.10)' : 'rgba(196,132,120,.16)');
+    ctx.fillStyle = carY; ctx.fillRect(ex - ew, ey - eh - 1, ew * 2, eh * 2 + 2);
+    if (!opts.veins) {
+      ctx.strokeStyle = 'rgba(158,72,58,.28)'; ctx.lineWidth = 0.24;
+      for (let i = 0; i < 2; i++) {
+        const oy = ey + (r() - 0.5) * eh * 0.9;
+        ctx.beginPath(); ctx.moveTo(ex + sgn * ew * 0.92, oy);
+        ctx.quadraticCurveTo(ex + sgn * ew * 0.5, oy + (r() - 0.5) * 1.4, ex + sgn * ew * 0.25, ey + (r() - 0.5) * 1.2);
+        ctx.stroke();
+      }
+    }
     if (opts.veins) {
       ctx.strokeStyle = 'rgba(150,44,32,.6)'; ctx.lineWidth = 0.32;
       for (let i = 0; i < 4; i++) {
