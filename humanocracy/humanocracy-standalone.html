@@ -8895,10 +8895,11 @@ const UNIFORM_STYLES = {
   linestan:   { color: [54, 58, 66], trim: [120, 120, 130] },
 };
 function makeFig(x) {
+  const child = chance(.12);   // de vez em quando, uma criança na fila (humaniza a multidão)
   return {
-    x, tx: x, phase: rnd() * 6.28, h: 32 + ri(0, 9),
-    coat: pick(COAT_COLORS), hat: ri(0, 3), skin: pick(SKINS), hair: pick(HAIRC),
-    scarf: chance(.5) ? pick(SCARF_COLORS) : null, wide: .86 + rnd() * .34,
+    x, tx: x, phase: rnd() * 6.28, h: child ? 19 + ri(0, 5) : 32 + ri(0, 9), child,
+    coat: pick(COAT_COLORS), hat: child ? (chance(.5) ? 2 : 0) : ri(0, 3), skin: pick(SKINS), hair: pick(HAIRC),
+    scarf: chance(child ? .7 : .5) ? pick(SCARF_COLORS) : null, wide: child ? .62 + rnd() * .16 : .86 + rnd() * .34,
     bag: chance(.28), fidget: rnd(), speed: .35 + rnd() * .25,
     // comportamento parado no frio: 0 quieto · 1 troca o peso · 2 esfrega os
     // braços · 3 bate o pé. cada um no seu ritmo (rate) e defasagem.
