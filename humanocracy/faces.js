@@ -1088,6 +1088,26 @@ function paintBust(ctx, f, opts) {
     // brilho de lâmpada no topo (banda especular do cabelo, no lado da luz)
     soft(ctx, cx - L.fw * 0.35, topY + 1, L.fw * 0.5, 2.6, rgb(lighten(HC, 0.55), 0.4), 1.6);
     ctx.restore();
+    // FIOS SOLTOS (flyaways): agora SEM recorte — quebram a silhueta limpa
+    // demais (capacete). Poucos, finos, saindo da coroa e das bordas. É o que
+    // separa "peruca renderizada" de cabelo de gente.
+    ctx.lineCap = 'round';
+    const nFly = L.fem ? 26 : 16;
+    for (let i = 0; i < nFly; i++) {
+      const edge = r();
+      let hx, hy, dirx, dl;
+      if (edge < 0.45) {                       // coroa / topo: sobem e caem
+        hx = cx + (r() - 0.5) * L.fw * 1.7; hy = topY - 3 + r() * 2; dirx = (r() - 0.5) * 3; dl = 3 + r() * 4;
+      } else {                                  // laterais: escapam pros lados
+        const sgn = r() < 0.5 ? -1 : 1;
+        hx = cx + sgn * (L.fw - 0.5); hy = topY + 6 + r() * (L.fem ? 40 : 14); dirx = sgn * (1.5 + r() * 3); dl = 4 + r() * 6;
+      }
+      ctx.lineWidth = 0.22 + r() * 0.26;
+      ctx.strokeStyle = rgb(r() < 0.5 ? darken(HC, 0.35) : lighten(HC, 0.3), 0.22 + r() * 0.2);
+      ctx.beginPath(); ctx.moveTo(hx, hy);
+      ctx.quadraticCurveTo(hx + dirx * 0.5, hy + dl * 0.4 - 1, hx + dirx + (r() - 0.5) * 2, hy + dl);
+      ctx.stroke();
+    }
     ctx.restore();
   }
 
