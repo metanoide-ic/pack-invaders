@@ -594,8 +594,13 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   display:flex; flex-direction:column; gap:14px;
 }
 .endday-title, .ending-title { font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:26px; letter-spacing:4px; color:var(--accent2); text-align:center; }
+/* relatório de fim de dia: um livro-razão do posto (letterhead dourado) */
+#screen-endday { background: radial-gradient(ellipse at 50% 40%, #14140f 0%, #080705 70%, #020202 100%); }
+#screen-endday .endday-panel { background-color:#12110c; border-color:#2a281e; border-top:2px solid rgba(201,163,74,.4); box-shadow:0 0 0 1px rgba(201,163,74,.12), 0 16px 48px rgba(0,0,0,.66); }
+#screen-endday.active .endday-panel { animation: ending-rise 1s ease-out backwards; }
 #endday-report { font-size:13px; line-height:1.7; }
-#endday-report .row { display:flex; justify-content:space-between; border-bottom:1px dotted rgba(143,138,122,.3); }
+#endday-report .row { display:flex; justify-content:space-between; gap:14px; padding:3px 2px; border-bottom:1px dotted rgba(143,138,122,.3); }
+#endday-report .row span:last-child { color:#d8cdb2; font-family:var(--font-mono); }
 .ending-body { font-size:14px; line-height:1.8; }
 .ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
 /* tela de FINAL: fundo solene com vinheta + painel que sobe devagar */
