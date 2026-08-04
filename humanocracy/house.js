@@ -1389,6 +1389,37 @@ function renderHouse() {
     if (tile === 2 && pulse) { ctx.fillStyle = `rgba(224,150,60,${(pulse * .22).toFixed(3)})`; ctx.fillRect(col, top, 1, lineH); }
   }
 
+  // POÇAS DE LUZ no assoalho sob as lâmpadas — projeta o brilho morno no chão
+  // (elipse achatada = luz deitada na perspectiva). Additive, testada no z-buffer.
+  if (FLOOR_OK && FLOORPIX && !(HOUSE.mode === 'mirror')) {
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    const posZf = 0.5 * H;
+    for (const e of ENTS) {
+      if (!e.glowWarm) continue;
+      const dx = e.x - HOUSE.x, dy = e.y - HOUSE.y, ldist = Math.hypot(dx, dy);
+      if (ldist < 0.4 || ldist > 11) continue;
+      let rel = Math.atan2(dy, dx) - HOUSE.ang;
+      while (rel > Math.PI) rel -= 6.283185; while (rel < -Math.PI) rel += 6.283185;
+      if (Math.abs(rel) > FP.FOV * 0.6) continue;
+      const corr = ldist * Math.cos(rel);
+      const sxp = (0.5 + Math.tan(rel) / (2 * tanF)) * W;
+      const syp = horizon + posZf / corr;                 // ponto do chão sob a lâmpada
+      const col = sxp | 0;
+      if (col < 0 || col >= W || syp <= horizon + 1 || syp > H + 40) continue;
+      if (corr >= zbuf[col] + 0.25) continue;             // atrás de parede → oculto
+      const rad = Math.min(150, (H / corr) * 0.5);
+      const wob = 0.5 + Math.sin(HOUSE.t * 9 + e.x) * 0.06;
+      const g = ctx.createRadialGradient(sxp, syp, 1, sxp, syp, rad);
+      g.addColorStop(0, `rgba(232,190,120,${(0.17 * wob * dimF0).toFixed(3)})`);
+      g.addColorStop(0.5, `rgba(210,160,96,${(0.07 * wob * dimF0).toFixed(3)})`);
+      g.addColorStop(1, 'rgba(210,160,96,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(sxp, syp, rad, rad * 0.46, 0, 0, 6.29); ctx.fill();
+    }
+    ctx.restore();
+  }
+
   // sprites (longe → perto)
   const vis = [];
   for (const e of ENTS) {
