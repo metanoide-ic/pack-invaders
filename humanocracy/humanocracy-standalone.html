@@ -5821,16 +5821,22 @@ function paintBust(ctx, f, opts) {
     ctx.closePath(); ctx.fill();
     // sombra que a sobrancelha projeta na órbita (logo abaixo)
     soft(ctx, arX, by + th + 0.6, L.eyeW * 0.9, 0.9, rgb(darken(SH, 0.14), 0.3), 1.1);
-    // fios por cima (seguem o arco, apontam pra cauda)
-    const n = L.fem ? 13 : 19;
-    ctx.lineWidth = 0.42;
+    // fios por cima: NÃO um pente. Posição sorteada (não igual espaçada),
+    // comprimento e grossura variados, e a DIREÇÃO segue o fluxo real da
+    // sobrancelha — na cabeça os fios sobem, no arco abrem, na cauda descem.
+    const n = L.fem ? 17 : 26;
     for (let i = 0; i < n; i++) {
-      const t = i / (n - 1);
-      const bx = inX + (tlX - inX) * t;
-      const yy = by + 1 - Math.sin(t * 2.6) * (f.brow ? 1.6 : 0.9) + (r() - 0.5) * 0.5;
+      const t = (i + (r() - 0.5) * 0.9) / (n - 1);
+      if (t < -0.02 || t > 1.04) continue;
+      const bx = inX + (tlX - inX) * t + (r() - 0.5) * 0.7;
+      const yy = by + 1 - Math.sin(t * 2.6) * (f.brow ? 1.6 : 0.9) + (r() - 0.5) * 1.0;
+      const len = 1.2 + (t < 0.45 ? 0.5 : 1.1) + r() * 0.9;    // cauda tem fios mais longos
+      const vdir = -1.0 + t * 2.0 + (r() - 0.5) * 0.5;          // cabeça sobe (−), cauda desce (+)
+      ctx.lineWidth = 0.28 + r() * 0.3;
       ctx.strokeStyle = rgb(r() < 0.5 ? darken(L.hair, 0.4) : lighten(L.hair, 0.28), dark ? 0.5 : 0.72);
       ctx.beginPath(); ctx.moveTo(bx, yy + 0.9);
-      ctx.lineTo(bx + sgn * (0.7 + t * 0.8), yy - 0.7 - r() * 0.4); ctx.stroke();
+      ctx.quadraticCurveTo(bx + sgn * len * 0.5, yy + 0.9 + vdir * 0.35, bx + sgn * len, yy + 0.9 + vdir);
+      ctx.stroke();
     }
   }
 
