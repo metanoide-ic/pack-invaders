@@ -2512,24 +2512,36 @@ function stopActorBlink() {
     for (let i = 0; i < 10; i++) { wx.fillStyle = `rgba(${20 + r() * 40 | 0},${10},${8},${0.1 + r() * 0.2})`; wx.beginPath(); wx.arc(r() * 240, r() * 160, 0.5 + r() * 1.1, 0, 6.29); wx.fill(); }
     set('--tex-wood', w);
 
-    // guilhochê de segurança: curvas espirográficas finas (marca d'água de documento)
-    const gl = mk2(200, 200); const glx = gl.getContext('2d');
-    glx.strokeStyle = 'rgba(60,50,30,.5)'; glx.lineWidth = 0.4;
-    for (let ring = 0; ring < 5; ring++) {
-      const R = 30 + ring * 16, k = 5 + ring, cxg = 100, cyg = 100;
-      glx.beginPath();
-      for (let a = 0; a <= 6.2832; a += 0.02) {
-        const rad = R + Math.sin(a * k) * 8;
-        const x = cxg + Math.cos(a) * rad, y = cyg + Math.sin(a) * rad * 0.96;
-        if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y);
+    // guilhochê de segurança: curvas espirográficas finas e ENTRELAÇADAS
+    // (marca d'água densa de documento oficial). Duas famílias de anéis com
+    // fases opostas se cruzam; roseta central; rosetas aninhadas nos cantos.
+    const gl = mk2(220, 220); const glx = gl.getContext('2d');
+    const cxg = 110, cyg = 110;
+    const rosace = (ox2, oy2, R0, petals, amp, layers, alpha) => {
+      for (let ring = 0; ring < layers; ring++) {
+        const R = R0 + ring * (amp * 0.55), k = petals + ring, ph = (ring % 2) * (Math.PI / petals);
+        glx.strokeStyle = `rgba(58,48,28,${alpha})`; glx.lineWidth = 0.32;
+        glx.beginPath();
+        for (let a = 0; a <= 6.2832; a += 0.018) {
+          const rad = R + Math.sin(a * k + ph) * amp;
+          const x = ox2 + Math.cos(a) * rad, y = oy2 + Math.sin(a) * rad * 0.97;
+          if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y);
+        }
+        glx.stroke();
       }
-      glx.stroke();
-    }
-    // rosetas nos cantos
-    for (const [ox2, oy2] of [[40, 40], [160, 40], [40, 160], [160, 160]]) {
-      glx.beginPath();
-      for (let a = 0; a <= 6.2832; a += 0.03) { const rad = 14 + Math.sin(a * 7) * 5; const x = ox2 + Math.cos(a) * rad, y = oy2 + Math.sin(a) * rad; if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y); }
-      glx.stroke();
+    };
+    // roseta central grande — duas famílias entrelaçadas
+    rosace(cxg, cyg, 26, 6, 8, 6, 0.42);
+    rosace(cxg, cyg, 34, 11, 5, 4, 0.3);
+    // anel externo com micro-ondulação (borda do documento)
+    glx.strokeStyle = 'rgba(58,48,28,.34)'; glx.lineWidth = 0.34;
+    glx.beginPath();
+    for (let a = 0; a <= 6.2832; a += 0.012) { const rad = 96 + Math.sin(a * 40) * 2.2; const x = cxg + Math.cos(a) * rad, y = cyg + Math.sin(a) * rad * 0.97; if (a === 0) glx.moveTo(x, y); else glx.lineTo(x, y); }
+    glx.stroke();
+    // rosetas aninhadas nos cantos
+    for (const [ox2, oy2] of [[42, 42], [178, 42], [42, 178], [178, 178]]) {
+      rosace(ox2, oy2, 10, 7, 4, 3, 0.4);
+      rosace(ox2, oy2, 4, 5, 2.4, 2, 0.3);
     }
     set('--tex-guilloche', gl);
   } catch (e) {}
