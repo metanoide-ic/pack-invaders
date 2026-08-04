@@ -4940,6 +4940,13 @@ function faceLayout(f) {
   const crownW = fw * (fem ? 0.62 : 0.66);         // largura do topo do crânio
   const ax = (r() - 0.5) * 1.6;                                    // assimetria global
   const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
+  // ASSIMETRIA POR TRAÇO: rosto perfeitamente espelhado é a maior "cara de
+  // IA". Todo rosto real tem um olho um tico mais alto, uma sobrancelha que
+  // sobe mais, um canto de boca que puxa. Pequeno mas SEMPRE presente.
+  const asymEye = (r() - 0.5) * 1.5;         // olho direito sobe/desce
+  const asymEyeH = 1 + (r() - 0.5) * 0.16;   // e um pouco maior/menor
+  const asymBrow = (r() - 0.5) * 2.0;         // sobrancelha direita mais alta/baixa
+  const asymMouth = (r() - 0.5) * 1.4;        // canto direito da boca puxa
   // fator uncanny: distribuído por TODO MUNDO (humano ou não — nunca
   // existe "cara de Alternado garantida"; o mundo inteiro sai errado
   // na fita). ~12% dos rostos carregam um detalhe fora do lugar.
@@ -4951,6 +4958,7 @@ function faceLayout(f) {
   return {
     r, fem, child, fw, jw, chinY, eyeY, eyeDX: eyeDX + eyeApart, eyeW, eyeH,
     browY, noseTip, noseW, mouthY, mouthW, ax, tilt,
+    asymEye, asymEyeH, asymBrow, asymMouth,
     cheekY, templeW, gonialY, jawSquare, chinW, crownW, girth,
     uncanny, pupilSkew, cornerUp,
     lip: E.lip, cheek: E.cheek, sardas: !!E.sardas && f.skin <= 1,
@@ -5458,7 +5466,7 @@ function paintBust(ctx, f, opts) {
   ctx.moveTo(cx - mw, my + droop * 0.5 - L.cornerUp);
   ctx.quadraticCurveTo(cx - mw * 0.45, my - 2 - lipFull * 0.5, cx - 1.2, my - 1.7 - lipFull * 0.6);
   ctx.quadraticCurveTo(cx, my - 1.2 - lipFull * 0.4, cx + 1.2, my - 1.7 - lipFull * 0.6);
-  ctx.quadraticCurveTo(cx + mw * 0.45, my - 2 - lipFull * 0.5, cx + mw, my + droop * 0.5 - L.cornerUp);
+  ctx.quadraticCurveTo(cx + mw * 0.45, my - 2 - lipFull * 0.5, cx + mw, my + droop * 0.5 - L.cornerUp + L.asymMouth);
   ctx.quadraticCurveTo(cx, my + 0.8, cx - mw, my + droop * 0.5 - L.cornerUp);
   ctx.closePath(); ctx.fill();
   // lábio inferior
@@ -5476,7 +5484,7 @@ function paintBust(ctx, f, opts) {
   ctx.strokeStyle = 'rgba(28,16,12,.85)'; ctx.lineWidth = 0.75;
   ctx.beginPath();
   ctx.moveTo(cx - mw, my + droop * 0.5 - L.cornerUp);
-  ctx.quadraticCurveTo(cx, my + droop, cx + mw, my + droop * 0.5 - L.cornerUp);
+  ctx.quadraticCurveTo(cx, my + droop, cx + mw, my + droop * 0.5 - L.cornerUp + L.asymMouth);
   ctx.stroke();
   soft(ctx, cx, my + 5.4, mw * 0.7, 1.7, rgb(darken(SH, 0.1), 0.45), 1.3); // sombra sob o lábio
   soft(ctx, cx - 1, L.chinY - 4.5, 4, 2.4, 'rgba(255,246,226,.16)', 1.4);  // bola do queixo
@@ -5585,8 +5593,8 @@ function paintBust(ctx, f, opts) {
   const lookX = opts.lookX || 0;            // "agora olhe para a esquerda."
   for (const sgn of [-1, 1]) {
     const ex = cx + sgn * L.eyeDX + (sgn > 0 ? L.ax * 0.5 : 0);
-    const ey = L.eyeY + (sgn > 0 ? L.ax * 0.35 : 0);
-    const ew = L.eyeW, eh = L.eyeH * (1 + wide * 0.65);
+    const ey = L.eyeY + (sgn > 0 ? L.ax * 0.35 + L.asymEye : 0);   // olho direito nunca no mesmo nível
+    const ew = L.eyeW, eh = L.eyeH * (1 + wide * 0.65) * (sgn > 0 ? L.asymEyeH : 1);
     const pull = opts.pullLid && sgn === 1; // a pálpebra inferior puxada pelo dedo
     if (eyes === 'closed') {
       ctx.strokeStyle = rgb(darken(SH, 0.35), 0.9); ctx.lineWidth = 0.8;
@@ -5735,7 +5743,7 @@ function paintBust(ctx, f, opts) {
   /* sobrancelhas: FORMA preenchida e afilada (grossa no meio, fina na cauda),
      seguindo a arcada — não um risco. A do lado da sombra é mais escura. */
   for (const sgn of [-1, 1]) {
-    const ex = cx + sgn * L.eyeDX, by = L.browY + (sgn > 0 ? L.ax * 0.5 : 0);
+    const ex = cx + sgn * L.eyeDX, by = L.browY + (sgn > 0 ? L.ax * 0.5 + L.asymBrow : 0);
     const dark = sgn > 0;
     const inX = ex - sgn * (L.eyeW * 0.92), inY = by + 1.5;          // cabeça (perto do nariz)
     const arX = ex - sgn * (L.eyeW * 0.05), arY = by - (f.brow ? 1.8 : 0.9); // arco (pico)
