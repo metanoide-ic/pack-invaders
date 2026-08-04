@@ -1555,6 +1555,44 @@ function ambienceEvent() {
     const wall = AC.createBiquadFilter(); wall.type = 'lowpass'; wall.frequency.value = 900; wall.Q.value = 0.6;
     const out = AC.createGain(); out.gain.value = 0.5; wall.connect(out); out.connect(AC.destination);
     const noise = (dur) => { const b = AC.createBuffer(1, AC.sampleRate * dur, AC.sampleRate), d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = AC.createBufferSource(); s.buffer = b; return s; };
+    // CONTEXTO: no posto ouve-se a fila/o alto-falante; em casa, a madeira, os
+    // canos, o vento na janela, a TV do vizinho. Um din-don de PA no seu
+    // apartamento à noite estaria errado.
+    const act = document.querySelector('.screen.active');
+    const atHome = act && (act.id === 'screen-house' || act.id === 'screen-morning');
+    if (atHome) {
+      const hk = Math.floor(Math.random() * 5);
+      if (hk === 0) { // rangido de assoalho: groan grave que verga devagar
+        const o = AC.createOscillator(); o.type = 'sawtooth'; o.frequency.setValueAtTime(58, t); o.frequency.linearRampToValueAtTime(44, t + .7);
+        const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 300;
+        const g = AC.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.05, t + .12); g.gain.linearRampToValueAtTime(0, t + .8);
+        o.connect(lp); lp.connect(g); g.connect(wall); o.start(t); o.stop(t + .82);
+      } else if (hk === 1) { // cano batendo: ping metálico com harmônico
+        [[196, .06], [523, .028], [740, .016]].forEach(([fr, a]) => {
+          const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
+          const g = AC.createGain(); g.gain.setValueAtTime(a, t); g.gain.exponentialRampToValueAtTime(.0004, t + .35);
+          o.connect(g); g.connect(wall); o.start(t); o.stop(t + .37);
+        });
+      } else if (hk === 2) { // vento na janela: sopro de ruído que incha e cai
+        const s = noise(2.4); const bp = AC.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 420; bp.Q.value = 0.7;
+        const g = AC.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(.04, t + 1); g.gain.linearRampToValueAtTime(0, t + 2.3);
+        s.connect(bp); bp.connect(g); g.connect(wall); s.start(t); s.stop(t + 2.4);
+      } else if (hk === 3) { // TV do vizinho: murmúrio muito abafado de duas vozes
+        const tv = AC.createBiquadFilter(); tv.type = 'lowpass'; tv.frequency.value = 500;
+        const tg = AC.createGain(); tg.gain.value = 0.5; tv.connect(tg); tg.connect(wall);
+        for (let k = 0; k < 5; k++) {
+          const tt = t + k * 0.12, o = AC.createOscillator(); o.type = 'sawtooth';
+          o.frequency.setValueAtTime(90 + Math.random() * 60, tt); o.frequency.linearRampToValueAtTime(80 + Math.random() * 50, tt + .1);
+          const g = AC.createGain(); g.gain.setValueAtTime(0, tt); g.gain.linearRampToValueAtTime(.03, tt + .02); g.gain.linearRampToValueAtTime(0, tt + .1);
+          o.connect(g); g.connect(tv); o.start(tt); o.stop(tt + .11);
+        }
+      } else { // a casa se ajeitando: um baque grave único
+        const o = AC.createOscillator(); o.type = 'sine'; o.frequency.setValueAtTime(70, t); o.frequency.exponentialRampToValueAtTime(38, t + .18);
+        const g = AC.createGain(); g.gain.setValueAtTime(.07, t); g.gain.exponentialRampToValueAtTime(.0005, t + .3);
+        o.connect(g); g.connect(wall); o.start(t); o.stop(t + .32);
+      }
+      return;
+    }
     const kind = Math.floor(Math.random() * 5);
     if (kind === 0) { // tosse: dois pulsos de ruído com formante
       for (let k = 0; k < (Math.random() < .5 ? 1 : 2); k++) {
