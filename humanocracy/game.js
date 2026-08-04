@@ -2631,6 +2631,9 @@ function stampDocs(decision) {
   try { st.appendChild(drawStamp(decision)); }
   catch (e) { st.classList.add(decision === 'approve' ? 'stamp-ok' : 'stamp-no'); st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO'; }
   first.appendChild(st);
+  // baque tátil: o papel recua sob o carimbo
+  first.classList.remove('recoil'); void first.offsetWidth; first.classList.add('recoil');
+  setTimeout(() => first.classList.remove('recoil'), 300);
 }
 
 /* ---------- ECOS (consequências tardias, sempre ambíguas) ---------- */
