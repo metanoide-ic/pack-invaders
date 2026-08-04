@@ -345,6 +345,23 @@ function buildSprites() {
     for (const [px, py, s] of [[18, 14, -1], [22, 14, 1], [18, 22, -1], [22, 22, 1]]) Ln(x, px, py, px + s * 6, py + 4, '#3a2c1c', 2);
     x.fillStyle = '#3a4038'; x.beginPath(); x.moveTo(12, 20); x.quadraticCurveTo(8, 44, 14, 60); x.lineTo(24, 60); x.quadraticCurveTo(28, 40, 24, 20); x.closePath(); x.fill(); // casaco
   });
+  SPR.counter = mk(76, 62, (x) => { // pia/bancada da cozinha
+    Rs(x, 4, 18, 68, 40, '#33302a', .14, .4);                          // armário
+    R(x, 10, 26, 22, 24, '#242019'); R(x, 44, 26, 22, 24, '#242019');  // portas
+    x.strokeStyle = 'rgba(255,246,220,.06)'; x.strokeRect(10.5, 26.5, 21, 23); x.strokeRect(44.5, 26.5, 21, 23);
+    R(x, 2, 14, 72, 5, '#454036'); edge(x, 2, 14, 72);                  // tampo esmaltado
+    R(x, 28, 10, 24, 8, '#1c1e18'); x.fillStyle = '#2a2c26'; x.fillRect(29, 11, 22, 6); // cuba
+    x.fillStyle = 'rgba(180,192,186,.14)'; x.fillRect(30, 12, 20, 2);   // brilho d'água
+    x.strokeStyle = '#8a8f88'; x.lineWidth = 2; x.beginPath(); x.moveTo(46, 11); x.lineTo(46, 3); x.quadraticCurveTo(46, 1, 42, 1.6); x.stroke(); // torneira
+    C(x, 14, 27, 1.4, '#8a734d'); C(x, 62, 27, 1.4, '#8a734d');         // puxadores
+  });
+  SPR.lowtable = mk(64, 46, (x) => { // mesa de centro da sala
+    R(x, 4, 12, 56, 7, '#4a3a26'); edge(x, 4, 12, 56);                  // tampo
+    R(x, 7, 19, 4, 22, '#2c2115'); R(x, 53, 19, 4, 22, '#2c2115');      // pernas frente
+    R(x, 22, 19, 3, 22, '#241a10'); R(x, 41, 19, 3, 22, '#241a10');     // pernas fundo
+    R(x, 22, 6, 15, 6, '#c9c2ab'); Ln(x, 24, 9, 35, 9, 'rgba(40,32,20,.4)', 0.6); // jornal dobrado
+    C(x, 46, 9, 3, '#6a6258'); C(x, 46, 8, 1, '#e8d8a0');               // xícara
+  });
 }
 
 /* ---------- TEXTURAS DE PAREDE (64×64, pintadas à mão) ---------- */
@@ -566,11 +583,12 @@ function buildEnts() {
     { spr: 'nightstand', x: 5.6, y: 1.55, sc: .4 }, { spr: 'chair', x: 2.5, y: 2.6, sc: .46 },        // quarto do Tomi
     { spr: 'dresser', x: 8.6, y: 1.6, sc: .52 }, { spr: 'crate', x: 8.6, y: 2.6, sc: .46 },           // hóspedes 1
     { spr: 'crate', x: 14.6, y: 1.6, sc: .46 }, { spr: 'chair', x: 15.2, y: 2.6, sc: .46 },           // hóspedes 2
-    { spr: 'chair', x: 22.6, y: 2.6, sc: .46 },                                                        // cozinha
+    { spr: 'chair', x: 22.6, y: 2.6, sc: .46 }, { spr: 'counter', x: 20.6, y: 2.6, sc: .5 },            // cozinha
     { spr: 'nightstand', x: 2.5, y: 9.5, sc: .4 }, { spr: 'dresser', x: 5.5, y: 9.5, sc: .52 },        // quarto da mãe
     { spr: 'shelf', x: 8.5, y: 9.5, sc: .78 }, { spr: 'chair', x: 8.6, y: 10.6, sc: .46 },             // quarto do Dario
     { spr: 'nightstand', x: 14.5, y: 9.5, sc: .4 }, { spr: 'dresser', x: 17.5, y: 9.5, sc: .52 },      // seu quarto
     { spr: 'plant', x: 25.7, y: 9.5, sc: .58 }, { spr: 'shelf', x: 30.6, y: 9.4, sc: .78 },            // sala
+    { spr: 'lowtable', x: 28.2, y: 6.4, sc: .34 },                                                      // mesa de centro (sala)
     { spr: 'coatrack', x: 1.7, y: 5.4, sc: .72 }, { spr: 'plant', x: 23.4, y: 6.6, sc: .55 },          // corredor
     // lâmpadas de teto: pouca luz, muita sombra
     ...[[4, 2], [10, 2], [16, 2], [22, 2], [4, 10], [10, 10], [16, 10], [6, 6], [13, 6], [20, 6], [28, 6]]
