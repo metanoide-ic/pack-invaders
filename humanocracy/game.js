@@ -1532,6 +1532,9 @@ function drawFig(ctx, f, groundY, lampX) {
   ctx.lineTo(x - 0.8, top + 9.5); ctx.lineTo(x - 0.8, groundY - 5); ctx.closePath(); ctx.fill();
   ctx.strokeStyle = `rgba(255,236,196,${(0.12 + lum * 0.26).toFixed(2)})`; ctx.lineWidth = 0.9;
   ctx.beginPath(); ctx.moveTo(x + cw, groundY - 5); ctx.quadraticCurveTo(x + cw + 0.6, top + 12, x + cw * 0.55, top + 9); ctx.stroke();
+  // rim frio na borda de SOMBRA (esquerda) — descola a silhueta do muro escuro
+  ctx.strokeStyle = 'rgba(150,172,205,.2)'; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.moveTo(x - cw, groundY - 5); ctx.quadraticCurveTo(x - cw - 0.6, top + 12, x - cw * 0.55, top + 9); ctx.stroke();
   // fecho central
   ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.5;
   ctx.beginPath(); ctx.moveTo(x, top + 8.5); ctx.lineTo(x, groundY - 6); ctx.stroke();
@@ -1558,6 +1561,9 @@ function drawFig(ctx, f, groundY, lampX) {
   ctx.beginPath(); ctx.arc(x - 1.2, top + 3.4, 3.9, Math.PI * 0.42, Math.PI * 1.42); ctx.fill();
   ctx.fillStyle = `rgba(255,238,200,${(0.08 + lum * 0.26).toFixed(2)})`; // bochecha direita na luz
   ctx.beginPath(); ctx.arc(x + 1.2, top + 2.7, 2.2, 0, 6.29); ctx.fill();
+  // rim frio na borda esquerda da cabeça (separa do fundo)
+  ctx.strokeStyle = 'rgba(150,172,205,.28)'; ctx.lineWidth = 0.7;
+  ctx.beginPath(); ctx.arc(x, top + 3.4, 3.9, Math.PI * 0.72, Math.PI * 1.28); ctx.stroke();
   // cabelo / chapéu
   if (f.hat === 2) { // lenço
     ctx.fillStyle = '#3a3630';
