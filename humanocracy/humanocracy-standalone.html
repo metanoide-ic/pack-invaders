@@ -2065,6 +2065,8 @@ const RADIO = {
     '[LIVRE] Entrevista: "falso positivo destruiu minha família", diz operário.',
     '[LIVRE] Cartas dos ouvintes: "meu vizinho voltou de viagem estranho". Encaminhamos ao Instituto. Não responderam.',
     '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…',
+    '[LIVRE] Coluna "Aprenda a Ver": o retrato mente devagar; o rosto, ao vivo, mente rápido. Compare os dois.',
+    '[CLANDESTINA] …um lado da cara nunca é igualzinho ao outro. quando batem certo demais, desconfia…',
   ],
   mehrvolk: [
     '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
@@ -2075,6 +2077,8 @@ const RADIO = {
     '[ESTATAL] Marcha "Filhos do Amanhã Limpo" — a pedido dos ouvintes. De todos eles.',
     '[ESTATAL] Novo horário do juramento: 21h. A ausência é anotada. A presença também.',
     '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…',
+    '[ESTATAL] Lembrete: relatar um vizinho é um gesto de amor à Pátria. E o amor, cidadão, é obrigatório.',
+    '[CLANDESTINA] …pele boa demais é pele que fecharam. procura o brilho errado, o de cera, não o de suor…',
   ],
   conselho: [
     '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
@@ -2084,6 +2088,8 @@ const RADIO = {
     '[CLANDESTINA] …eles trocaram a bandeira do prédio, não o que acontece no porão…',
     '[ESTATAL] A História foi revisada para a sua conveniência. Descarte as edições anteriores da sua memória.',
     '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…',
+    '[ESTATAL] Produtividade é felicidade. A felicidade será medida ao fim do turno, e comparada com a de ontem.',
+    '[CLANDESTINA] …repara quem não pisca. a gente pisca sem pensar; eles precisam lembrar de piscar…',
   ],
   colapso: [
     '‹estática›',
@@ -2093,6 +2099,8 @@ const RADIO = {
     '[?] …não abram para quem já mora com vocês… ‹corte›',
     '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›',
     '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›',
+    '[?] …os que você deixou passar lembram do seu rosto. só do seu… ‹corte›',
+    '‹alguém respira do outro lado do rádio. está esperando você desligar primeiro›',
   ],
 };
 
@@ -2107,6 +2115,8 @@ const QUEUE_EVENTS = [
   { t: 'Um velho desistiu. Dobrou os documentos com cuidado de quem dobra uma bandeira e foi embora.', delay: 0 },
   { t: 'A fila inteira olhou para o mesmo ponto do céu ao mesmo tempo. Você não viu nada lá. A fila voltou a olhar para frente.', delay: 6 },
   { t: 'Um guarda novo pergunta ao antigo se "é sempre assim". O antigo não responde. É sempre assim.', delay: 0 },
+  { t: 'Alguém na fila repete os próprios documentos em voz baixa, de novo e de novo, como uma reza esquecida no meio.', delay: 0 },
+  { t: 'Um homem encara o próprio reflexo no vidro do posto por tempo demais. Depois pede desculpa ao reflexo, baixinho.', delay: 6 },
 ];
 
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
@@ -2402,6 +2412,16 @@ const I18N_EN = {
   '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…': '[CLANDESTINE] …the family next door casts no shadow under the bulb. look next time…',
   '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›': '[?] …if you still count the heartbeats of the one you love… keep counting… ‹cut›',
   '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›': '‹a voice reading names, slowly, without stopping. yours hasn\'t come yet›',
+  '[LIVRE] Coluna "Aprenda a Ver": o retrato mente devagar; o rosto, ao vivo, mente rápido. Compare os dois.': '[FREE] "Learn to See" column: the photo lies slowly; the face, live, lies fast. Compare the two.',
+  '[CLANDESTINA] …um lado da cara nunca é igualzinho ao outro. quando batem certo demais, desconfia…': '[CLANDESTINE] …one side of a face is never quite the other. when they match too perfectly, be suspicious…',
+  '[ESTATAL] Lembrete: relatar um vizinho é um gesto de amor à Pátria. E o amor, cidadão, é obrigatório.': '[STATE] Reminder: reporting a neighbor is an act of love for the Fatherland. And love, citizen, is mandatory.',
+  '[CLANDESTINA] …pele boa demais é pele que fecharam. procura o brilho errado, o de cera, não o de suor…': '[CLANDESTINE] …skin too good is skin they sealed. look for the wrong shine — the waxy one, not sweat…',
+  '[ESTATAL] Produtividade é felicidade. A felicidade será medida ao fim do turno, e comparada com a de ontem.': '[STATE] Productivity is happiness. Happiness will be measured at shift\'s end, and compared to yesterday\'s.',
+  '[CLANDESTINA] …repara quem não pisca. a gente pisca sem pensar; eles precisam lembrar de piscar…': '[CLANDESTINE] …watch who doesn\'t blink. we blink without thinking; they have to remember to…',
+  '[?] …os que você deixou passar lembram do seu rosto. só do seu… ‹corte›': '[?] …the ones you let through remember your face. only yours… ‹cut›',
+  '‹alguém respira do outro lado do rádio. está esperando você desligar primeiro›': '‹someone breathes on the other side of the radio. they\'re waiting for you to switch off first›',
+  'Alguém na fila repete os próprios documentos em voz baixa, de novo e de novo, como uma reza esquecida no meio.': 'Someone in line repeats their own documents under their breath, over and over, like a prayer forgotten halfway through.',
+  'Um homem encara o próprio reflexo no vidro do posto por tempo demais. Depois pede desculpa ao reflexo, baixinho.': 'A man stares at his own reflection in the post\'s glass too long. Then he apologizes to the reflection, quietly.',
   '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.': '[STATE] Weather forecast: cold, with a chance of more cold.',
   '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.': '[FREE] Analysis: what the government isn\'t saying about the east post lines.',
   '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.': '[FREE] Sports: Valgrado draws at home; fans blame the referee. Or a substitute referee.',
@@ -3705,6 +3725,16 @@ const I18N_ES = {
   '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…': '[CLANDESTINA] …la familia del cuarto de al lado no proyecta sombra bajo la lámpara. fíjate la próxima vez…',
   '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›': '[?] …si aún cuentas los latidos del corazón de quien amas… sigue contando… ‹corte›',
   '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›': '‹una voz leyendo nombres, despacio, sin parar. el tuyo aún no vino›',
+  '[LIVRE] Coluna "Aprenda a Ver": o retrato mente devagar; o rosto, ao vivo, mente rápido. Compare os dois.': '[LIBRE] Columna "Aprende a Ver": el retrato miente despacio; la cara, en vivo, miente rápido. Compara los dos.',
+  '[CLANDESTINA] …um lado da cara nunca é igualzinho ao outro. quando batem certo demais, desconfia…': '[CLANDESTINA] …un lado de la cara nunca es igualito al otro. cuando coinciden demasiado bien, sospecha…',
+  '[ESTATAL] Lembrete: relatar um vizinho é um gesto de amor à Pátria. E o amor, cidadão, é obrigatório.': '[ESTATAL] Recordatorio: delatar a un vecino es un gesto de amor a la Patria. Y el amor, ciudadano, es obligatorio.',
+  '[CLANDESTINA] …pele boa demais é pele que fecharam. procura o brilho errado, o de cera, não o de suor…': '[CLANDESTINA] …piel demasiado buena es piel que cerraron. busca el brillo equivocado, el de cera, no el de sudor…',
+  '[ESTATAL] Produtividade é felicidade. A felicidade será medida ao fim do turno, e comparada com a de ontem.': '[ESTATAL] Productividad es felicidad. La felicidad se medirá al final del turno, y se comparará con la de ayer.',
+  '[CLANDESTINA] …repara quem não pisca. a gente pisca sem pensar; eles precisam lembrar de piscar…': '[CLANDESTINA] …fíjate en quién no parpadea. nosotros parpadeamos sin pensar; ellos tienen que acordarse…',
+  '[?] …os que você deixou passar lembram do seu rosto. só do seu… ‹corte›': '[?] …los que dejaste pasar recuerdan tu cara. solo la tuya… ‹corte›',
+  '‹alguém respira do outro lado do rádio. está esperando você desligar primeiro›': '‹alguien respira del otro lado de la radio. está esperando que apagues tú primero›',
+  'Alguém na fila repete os próprios documentos em voz baixa, de novo e de novo, como uma reza esquecida no meio.': 'Alguien en la fila repite sus propios documentos en voz baja, una y otra vez, como un rezo olvidado a la mitad.',
+  'Um homem encara o próprio reflexo no vidro do posto por tempo demais. Depois pede desculpa ao reflexo, baixinho.': 'Un hombre mira su propio reflejo en el vidrio del puesto demasiado tiempo. Luego le pide perdón al reflejo, bajito.',
   '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.': '[ESTATAL] Pronóstico del tiempo: frío, con posibilidad de más frío.',
   '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.': '[LIBRE] Análisis: lo que el gobierno no dice sobre las filas del puesto este.',
   '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.': '[LIBRE] Deportes: Valgrado empata en casa; la afición culpa al árbitro. O a un árbitro suplente.',

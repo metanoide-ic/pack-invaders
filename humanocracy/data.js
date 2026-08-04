@@ -721,6 +721,8 @@ const RADIO = {
     '[LIVRE] Entrevista: "falso positivo destruiu minha família", diz operário.',
     '[LIVRE] Cartas dos ouvintes: "meu vizinho voltou de viagem estranho". Encaminhamos ao Instituto. Não responderam.',
     '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…',
+    '[LIVRE] Coluna "Aprenda a Ver": o retrato mente devagar; o rosto, ao vivo, mente rápido. Compare os dois.',
+    '[CLANDESTINA] …um lado da cara nunca é igualzinho ao outro. quando batem certo demais, desconfia…',
   ],
   mehrvolk: [
     '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
@@ -731,6 +733,8 @@ const RADIO = {
     '[ESTATAL] Marcha "Filhos do Amanhã Limpo" — a pedido dos ouvintes. De todos eles.',
     '[ESTATAL] Novo horário do juramento: 21h. A ausência é anotada. A presença também.',
     '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…',
+    '[ESTATAL] Lembrete: relatar um vizinho é um gesto de amor à Pátria. E o amor, cidadão, é obrigatório.',
+    '[CLANDESTINA] …pele boa demais é pele que fecharam. procura o brilho errado, o de cera, não o de suor…',
   ],
   conselho: [
     '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
@@ -740,6 +744,8 @@ const RADIO = {
     '[CLANDESTINA] …eles trocaram a bandeira do prédio, não o que acontece no porão…',
     '[ESTATAL] A História foi revisada para a sua conveniência. Descarte as edições anteriores da sua memória.',
     '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…',
+    '[ESTATAL] Produtividade é felicidade. A felicidade será medida ao fim do turno, e comparada com a de ontem.',
+    '[CLANDESTINA] …repara quem não pisca. a gente pisca sem pensar; eles precisam lembrar de piscar…',
   ],
   colapso: [
     '‹estática›',
@@ -749,6 +755,8 @@ const RADIO = {
     '[?] …não abram para quem já mora com vocês… ‹corte›',
     '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›',
     '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›',
+    '[?] …os que você deixou passar lembram do seu rosto. só do seu… ‹corte›',
+    '‹alguém respira do outro lado do rádio. está esperando você desligar primeiro›',
   ],
 };
 
@@ -763,6 +771,8 @@ const QUEUE_EVENTS = [
   { t: 'Um velho desistiu. Dobrou os documentos com cuidado de quem dobra uma bandeira e foi embora.', delay: 0 },
   { t: 'A fila inteira olhou para o mesmo ponto do céu ao mesmo tempo. Você não viu nada lá. A fila voltou a olhar para frente.', delay: 6 },
   { t: 'Um guarda novo pergunta ao antigo se "é sempre assim". O antigo não responde. É sempre assim.', delay: 0 },
+  { t: 'Alguém na fila repete os próprios documentos em voz baixa, de novo e de novo, como uma reza esquecida no meio.', delay: 0 },
+  { t: 'Um homem encara o próprio reflexo no vidro do posto por tempo demais. Depois pede desculpa ao reflexo, baixinho.', delay: 6 },
 ];
 
 /* ---------- CIDADES/CLIMA flavor da fila ---------- */
