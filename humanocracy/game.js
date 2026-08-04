@@ -46,9 +46,31 @@ function sfx(kind) {
     const t = AC.currentTime;
     const o = AC.createOscillator(), g = AC.createGain();
     o.connect(g); g.connect(AC.destination);
-    if (kind === 'stamp') { o.type = 'square'; o.frequency.setValueAtTime(70, t); g.gain.setValueAtTime(.25, t); g.gain.exponentialRampToValueAtTime(.001, t + .18); o.start(t); o.stop(t + .2); }
-    else if (kind === 'buzz') { o.type = 'sawtooth'; o.frequency.setValueAtTime(120, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .5); o.start(t); o.stop(t + .5); }
-    else if (kind === 'ding') { o.type = 'sine'; o.frequency.setValueAtTime(660, t); g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
+    if (kind === 'stamp') {
+      // "ka-CHUNK" mecânico: corpo grave do impacto + clack de ruído (a borracha batendo)
+      o.type = 'triangle';
+      o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(46, t + .07);
+      g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.34, t + .006); g.gain.exponentialRampToValueAtTime(.001, t + .17);
+      o.start(t); o.stop(t + .19);
+      const nb = AC.createBuffer(1, 1600, AC.sampleRate), nd = nb.getChannelData(0);
+      for (let i = 0; i < nd.length; i++) nd[i] = (Math.random() * 2 - 1) * (1 - i / nd.length);
+      const ns = AC.createBufferSource(); ns.buffer = nb;
+      const nf = AC.createBiquadFilter(); nf.type = 'bandpass'; nf.frequency.value = 1700; nf.Q.value = 0.8;
+      const ng = AC.createGain(); ng.gain.setValueAtTime(.2, t); ng.gain.exponentialRampToValueAtTime(.001, t + .05);
+      ns.connect(nf); nf.connect(ng); ng.connect(AC.destination); ns.start(t); ns.stop(t + .06);
+    }
+    else if (kind === 'buzz') { // cigarra de erro: saw descendo + batimento dissonante (menos "beep de robô")
+      o.type = 'sawtooth'; o.frequency.setValueAtTime(115, t); o.frequency.linearRampToValueAtTime(78, t + .38);
+      g.gain.setValueAtTime(.11, t); g.gain.exponentialRampToValueAtTime(.001, t + .46); o.start(t); o.stop(t + .48);
+      const ob = AC.createOscillator(), gb = AC.createGain(); ob.connect(gb); gb.connect(AC.destination);
+      ob.type = 'square'; ob.frequency.setValueAtTime(86, t);
+      gb.gain.setValueAtTime(.055, t); gb.gain.exponentialRampToValueAtTime(.001, t + .4); ob.start(t); ob.stop(t + .42);
+    }
+    else if (kind === 'ding') { // sino curto: fundamental + parcial de oitava (mais orgânico que a senoide seca)
+      o.type = 'sine'; o.frequency.setValueAtTime(680, t); g.gain.setValueAtTime(.11, t); g.gain.exponentialRampToValueAtTime(.001, t + .45); o.start(t); o.stop(t + .46);
+      const od = AC.createOscillator(), gd = AC.createGain(); od.connect(gd); gd.connect(AC.destination);
+      od.type = 'sine'; od.frequency.setValueAtTime(1362, t); gd.gain.setValueAtTime(.045, t); gd.gain.exponentialRampToValueAtTime(.001, t + .28); od.start(t); od.stop(t + .3);
+    }
     else if (kind === 'scan') { o.type = 'sine'; o.frequency.setValueAtTime(220, t); o.frequency.linearRampToValueAtTime(440, t + .35); g.gain.setValueAtTime(.08, t); g.gain.exponentialRampToValueAtTime(.001, t + .4); o.start(t); o.stop(t + .4); }
     else if (kind === 'step') { o.type = 'sine'; o.frequency.setValueAtTime(44 + Math.random() * 10, t); g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.001, t + .09); o.start(t); o.stop(t + .1); }
     else if (kind === 'knock1') { o.type = 'sine'; o.frequency.setValueAtTime(52, t); g.gain.setValueAtTime(.3, t); g.gain.exponentialRampToValueAtTime(.001, t + .3); o.start(t); o.stop(t + .32); }
