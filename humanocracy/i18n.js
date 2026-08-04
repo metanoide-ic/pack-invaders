@@ -244,6 +244,14 @@ const I18N_EN = {
 
   /* ---- RÁDIO ---- */
   '[ESTATAL] O ministro pede calma e confiança nos processos de triagem.': '[STATE] The minister asks for calm and confidence in the screening process.',
+  '[LIVRE] Cartas dos ouvintes: "meu vizinho voltou de viagem estranho". Encaminhamos ao Instituto. Não responderam.': '[FREE] Listener mail: "my neighbor came back from a trip strange." We forwarded it to the Institute. No reply.',
+  '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…': '[CLANDESTINE] …count the fingers. always count the fingers. sometimes it\'s all we have…',
+  '[ESTATAL] Novo horário do juramento: 21h. A ausência é anotada. A presença também.': '[STATE] New oath time: 9pm. Absence is noted. So is presence.',
+  '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…': '[CLANDESTINE] …if the neck shows the seam, don\'t hesitate. they count on your hesitation…',
+  '[ESTATAL] A História foi revisada para a sua conveniência. Descarte as edições anteriores da sua memória.': '[STATE] History has been revised for your convenience. Discard the previous editions from your memory.',
+  '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…': '[CLANDESTINE] …the family next door casts no shadow under the bulb. look next time…',
+  '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›': '[?] …if you still count the heartbeats of the one you love… keep counting… ‹cut›',
+  '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›': '‹a voice reading names, slowly, without stopping. yours hasn\'t come yet›',
   '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.': '[STATE] Weather forecast: cold, with a chance of more cold.',
   '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.': '[FREE] Analysis: what the government isn\'t saying about the east post lines.',
   '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.': '[FREE] Sports: Valgrado draws at home; fans blame the referee. Or a substitute referee.',
@@ -1539,6 +1547,14 @@ const I18N_ES = {
 
   /* ---- RÁDIO ---- */
   '[ESTATAL] O ministro pede calma e confiança nos processos de triagem.': '[ESTATAL] El ministro pide calma y confianza en los procesos de control.',
+  '[LIVRE] Cartas dos ouvintes: "meu vizinho voltou de viagem estranho". Encaminhamos ao Instituto. Não responderam.': '[LIBRE] Cartas de los oyentes: "mi vecino volvió de viaje raro". Lo remitimos al Instituto. No respondieron.',
+  '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…': '[CLANDESTINA] …cuenta los dedos. siempre cuenta los dedos. a veces es todo lo que tenemos…',
+  '[ESTATAL] Novo horário do juramento: 21h. A ausência é anotada. A presença também.': '[ESTATAL] Nuevo horario del juramento: 21h. La ausencia se anota. La presencia también.',
+  '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…': '[CLANDESTINA] …si el cuello muestra la costura, no dudes. cuentan con tu duda…',
+  '[ESTATAL] A História foi revisada para a sua conveniência. Descarte as edições anteriores da sua memória.': '[ESTATAL] La Historia fue revisada para su conveniencia. Descarte las ediciones anteriores de su memoria.',
+  '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…': '[CLANDESTINA] …la familia del cuarto de al lado no proyecta sombra bajo la lámpara. fíjate la próxima vez…',
+  '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›': '[?] …si aún cuentas los latidos del corazón de quien amas… sigue contando… ‹corte›',
+  '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›': '‹una voz leyendo nombres, despacio, sin parar. el tuyo aún no vino›',
   '[ESTATAL] Previsão do tempo: frio, com possibilidade de mais frio.': '[ESTATAL] Pronóstico del tiempo: frío, con posibilidad de más frío.',
   '[LIVRE] Análise: o que o governo não diz sobre as filas do posto leste.': '[LIBRE] Análisis: lo que el gobierno no dice sobre las filas del puesto este.',
   '[LIVRE] Esportes: Valgrado empata em casa; a torcida culpa o juiz. Ou um substituto do juiz.': '[LIBRE] Deportes: Valgrado empata en casa; la afición culpa al árbitro. O a un árbitro suplente.',

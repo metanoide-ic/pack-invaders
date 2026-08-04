@@ -719,6 +719,8 @@ const RADIO = {
     '[CLANDESTINA] …se está ouvindo isto, o térmico do posto 7 está descalibrado desde terça…',
     '[ESTATAL] Música: "Manhãs de Ostra Velha", com a Orquestra Nacional.',
     '[LIVRE] Entrevista: "falso positivo destruiu minha família", diz operário.',
+    '[LIVRE] Cartas dos ouvintes: "meu vizinho voltou de viagem estranho". Encaminhamos ao Instituto. Não responderam.',
+    '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…',
   ],
   mehrvolk: [
     '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
@@ -727,6 +729,8 @@ const RADIO = {
     '[CLANDESTINA] …os números vazaram: nove inocentes por captura. repasse antes que cortem…',
     '[CLANDESTINA] …não usem as palavras deles. "substituído" é uma palavra deles…',
     '[ESTATAL] Marcha "Filhos do Amanhã Limpo" — a pedido dos ouvintes. De todos eles.',
+    '[ESTATAL] Novo horário do juramento: 21h. A ausência é anotada. A presença também.',
+    '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…',
   ],
   conselho: [
     '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
@@ -734,6 +738,8 @@ const RADIO = {
     '[CLANDESTINA] …o laboratório da Usina 9 recebeu caminhões de novo esta noite…',
     '[ESTATAL] Informe: o açúcar voltará às prateleiras quando você merecer. Correção: quando houver estoque.',
     '[CLANDESTINA] …eles trocaram a bandeira do prédio, não o que acontece no porão…',
+    '[ESTATAL] A História foi revisada para a sua conveniência. Descarte as edições anteriores da sua memória.',
+    '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…',
   ],
   colapso: [
     '‹estática›',
@@ -741,6 +747,8 @@ const RADIO = {
     '[?] …alguém aí? câmbio… …alguém… câmbio…',
     '‹o hino antigo, tocando sozinho, em loop, num estúdio vazio›',
     '[?] …não abram para quem já mora com vocês… ‹corte›',
+    '[?] …se você ainda conta as batidas do coração de quem ama… continua contando… ‹corte›',
+    '‹uma voz lendo nomes, devagar, sem parar. o seu ainda não veio›',
   ],
 };
 
