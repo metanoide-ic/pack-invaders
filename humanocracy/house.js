@@ -9,8 +9,8 @@
 
 /* ---------- ESTADO ---------- */
 const FP = { W: 640, H: 360, FOV: Math.PI / 3 };
-let FLOORPIX = null;   // pixels do assoalho, extraídos uma vez para o floor casting
-let FLOORCV = null, FLOORCTX = null, FLOORBUF = null; // buffer offscreen de meia-res
+let FLOORPIX = null, CEILPIX = null;   // pixels do assoalho e do teto, extraídos uma vez
+let FLOORCV = null, FLOORCTX = null, FLOORBUF = null; // buffer offscreen de meia-res (compartilhado chão/teto)
 let LANTHALF = null;   // lanterna por coluna (meia-res), pré-computada
 let FLOOR_OK = true, FLOOR_N = 0, FLOOR_ACC = 0; // auto-benchmark: cai pro degradê em hardware fraco
 const HOUSE = {
@@ -523,6 +523,15 @@ function buildTextures() {
       x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect((p % 2 ? 20 : 44), y0, 1, plankH); // junta vertical deslocada
     }
     grain(x, 0.06);
+  });
+  TEX.ceil = mk(64, 64, (x) => { // reboco escuro do teto (usado pelo ceiling casting)
+    base(x, '#17130d');
+    x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 2;                 // frisos/vigas fracas
+    for (const gy of [0, 32]) { x.beginPath(); x.moveTo(0, gy); x.lineTo(64, gy); x.stroke(); }
+    x.fillStyle = 'rgba(255,246,220,.03)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
+    for (let i = 0; i < 4; i++) { x.fillStyle = `rgba(30,24,16,${.2 + rnd() * .2})`; x.fillRect(rnd() * 56, rnd() * 60, 6 + rnd() * 12, 2 + rnd() * 3); } // manchas de umidade
+    crack(x, 22, 10, 8, 1.2); crack(x, 44, 40, 6, 0.5);
+    grain(x, 0.05);
   });
 }
 function texAt(mx, my, tile) {
@@ -1344,6 +1353,39 @@ function renderHouse() {
     const fg = ctx.createLinearGradient(0, horizon, 0, H);
     fg.addColorStop(0, '#171008'); fg.addColorStop(.5, '#20160b'); fg.addColorStop(1, '#100b06');
     ctx.fillStyle = fg; ctx.fillRect(0, Math.max(0, horizon), W, H);
+  }
+  // TETO por casting (reboco escuro; fecha o ambiente por cima). Reaproveita o
+  // buffer do chão e é desenhado invertido — bem mais escuro que o assoalho.
+  if (!CEILPIX && TEX.ceil) { try { CEILPIX = TEX.ceil.getContext('2d').getImageData(0, 0, 64, 64).data; } catch (e) {} }
+  if (FLOORPIX && CEILPIX && FLOOR_OK && FLOORBUF && hInt > 1) {
+    const FW = W >> 1, FH = H >> 1, fd = FLOORBUF.data;
+    const dirX = Math.cos(HOUSE.ang), dirY = Math.sin(HOUSE.ang);
+    const planeX = -Math.sin(HOUSE.ang) * tanF, planeY = Math.cos(HOUSE.ang) * tanF;
+    const rd0x = dirX - planeX, rd0y = dirY - planeY;
+    const stepDX = (planeX * 2) / FW, stepDY = (planeY * 2) / FW, posZ = 0.5 * H;
+    const rows = Math.min(FH, (hInt + 1) >> 1);
+    for (let br = 0; br < rows; br++) {
+      const y = hInt - 1 - br * 2; if (y < 0) break;
+      const p = horizon - y, rowDist = posZ / (p < 0.5 ? 0.5 : p);
+      const sx = rowDist * stepDX, sy = rowDist * stepDY;
+      let fx = HOUSE.x + rowDist * rd0x, fy = HOUSE.y + rowDist * rd0y;
+      let lum = Math.min(1, 2.05 / (1 + rowDist * rowDist * .11)) * dimF0;
+      lum = (lum < .05 ? .05 : lum) * 0.4;                 // teto bem mais escuro que o chão
+      let di = br * FW * 4;
+      for (let xx = 0; xx < FW; xx++) {
+        const ti = ((((fy - Math.floor(fy)) * 64) | 0) * 64 + (((fx - Math.floor(fx)) * 64) | 0)) * 4;
+        const L = lum * LANTHALF[xx], iL = 1 - L;
+        fd[di] = CEILPIX[ti] * L + 5 * iL;
+        fd[di + 1] = CEILPIX[ti + 1] * L + 4 * iL;
+        fd[di + 2] = CEILPIX[ti + 2] * L + 3 * iL;
+        fd[di + 3] = 255;
+        di += 4; fx += sx; fy += sy;
+      }
+    }
+    FLOORCTX.putImageData(FLOORBUF, 0, 0, 0, 0, FW, rows);
+    ctx.save(); ctx.translate(0, hInt); ctx.scale(1, -1);
+    ctx.drawImage(FLOORCV, 0, 0, FW, rows, 0, 0, W, hInt);   // invertido: br=0 (horizonte) → base do teto
+    ctx.restore();
   }
 
   const zbuf = new Float32Array(W);
