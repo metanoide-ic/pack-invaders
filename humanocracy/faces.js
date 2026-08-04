@@ -201,6 +201,22 @@ function paintBust(ctx, f, opts) {
   ctx.closePath(); ctx.fill();
   soft(ctx, cx, 88, 9, 4, rgb(darken(SH, 0.2), 0.4), 1.6);
 
+  /* JUNTA no pescoço: a linha onde a cabeça trocada se prende ao corpo.
+     Sutil ao vivo (a fita VHS embaralha), nítida no exame do PESCOÇO. */
+  if (opts.neckSeam) {
+    const sy = 82;
+    ctx.save(); ctx.lineCap = 'round';
+    // faixa de pele descolorida na altura da junta (faz a linha "aparecer" mesmo pequena)
+    soft(ctx, cx, sy, 9, 2.4, rgb(mix(SH, [150, 140, 140], 0.5), 0.28), 1.4);
+    ctx.strokeStyle = rgb(darken(SH, 0.55), 0.85); ctx.lineWidth = 1.2;    // sulco fundo
+    ctx.beginPath(); ctx.moveTo(cx - 8.5, sy - 0.5); ctx.quadraticCurveTo(cx, sy + 1.6, cx + 8.5, sy - 1); ctx.stroke();
+    ctx.strokeStyle = 'rgba(220,196,184,0.3)'; ctx.lineWidth = 0.6;        // borda de pele repuxada acima
+    ctx.beginPath(); ctx.moveTo(cx - 8, sy - 1.8); ctx.quadraticCurveTo(cx, sy - 0.2, cx + 8, sy - 2.2); ctx.stroke();
+    ctx.strokeStyle = rgb(darken(SH, 0.62), 0.7); ctx.lineWidth = 0.7;     // pontos de sutura (diagonais)
+    for (let i = -3; i <= 3; i++) { const px = cx + i * 2.5, py = sy + 0.5 + (1 - Math.abs(i / 3)) * 1.1; ctx.beginPath(); ctx.moveTo(px - 1.3, py - 1.7); ctx.lineTo(px + 1.3, py + 1.7); ctx.stroke(); }
+    ctx.restore();
+  }
+
   /* casaco e ombros — lã pesada com trama, dobras e gola de verdade.
      Criança: ombros estreitos e caídos (senão o cabeção fica em corpo de
      adulto e a criança vira anão). */
@@ -1489,7 +1505,7 @@ function portraitSVG(f) {
 /* close-up do exame: mesmo rosto, mais perto, marcas do corpo visíveis */
 function physAnomOpts(phys) {
   const a = (phys && phys.anom) || {};
-  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare, slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera };
+  return { skinShift: a.skinShift || 0, skinTone: a.skinTone, smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare, slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam };
 }
 function examSVG(f, phys) {
   phys = phys || {};
@@ -2162,7 +2178,7 @@ function actorAnomOpts(cz) {
   return {
     skinShift: a.skinShift || 0, skinTone: a.skinTone,
     smile: a.smile || 0, teethBright: !!a.teethBright, deadStare: !!a.deadStare,
-    slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera,
+    slitPupil: !!a.slitPupil, blackSclera: !!a.blackSclera, neckSeam: !!a.neckSeam,
     waxy: !!(cz && cz.phys && cz.phys.pele), veins: !!(cz && cz.phys && cz.phys.olhos),
   };
 }
