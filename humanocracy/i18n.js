@@ -525,6 +525,16 @@ const I18N_EN = {
   'Aliança guardada na caixinha, não no dedo': 'Wedding ring kept in its box, not on the finger',
   'Diário com as últimas dez páginas arrancadas': 'Diary with the last ten pages torn out',
   'Uniforme militar dobrado no fundo — sem insígnias': 'Military uniform folded at the bottom — no insignia',
+  'Um molho de chaves de portas que ninguém aqui reconhece': 'A ring of keys to doors no one here recognizes',
+  'Duas alianças idênticas — e a pessoa veio sozinha': 'Two identical wedding rings — and the person came alone',
+  'Sabonete ainda no papel, guardado como um tesouro': 'A bar of soap still in its paper, kept like a treasure',
+  'Um único brinco — o par ficou com alguém': 'A single earring — the other stayed with someone',
+  'Botas de trabalho com a sola remendada com arame': 'Work boots with the sole patched with wire',
+  'Óculos de leitura com uma das hastes presa por barbante': 'Reading glasses with one arm held on by string',
+  'Um brinquedo de corda que ainda funciona — e ninguém para dar': 'A wind-up toy that still works — and no one to give it to',
+  'Um diploma enrolado num tubo, com o nome raspado': 'A diploma rolled in a tube, the name scratched off',
+  'Um punhado de terra amarrado num lenço': 'A handful of earth tied in a handkerchief',
+  'Uma foto 3x4 sobrando, sem documento para colar': 'A spare passport photo, with no document to glue it to',
   'Isto não deveria estar aqui. Isto não tem explicação boa.': 'This shouldn\'t be here. There is no good explanation for this.',
 
   /* ---- A CASA (house.js): cômodos, família, batidas noturnas ---- */
@@ -1840,6 +1850,16 @@ const I18N_ES = {
   'Aliança guardada na caixinha, não no dedo': 'Anillo de bodas guardado en la cajita, no en el dedo',
   'Diário com as últimas dez páginas arrancadas': 'Diario con las últimas diez páginas arrancadas',
   'Uniforme militar dobrado no fundo — sem insígnias': 'Uniforme militar doblado en el fondo — sin insignias',
+  'Um molho de chaves de portas que ninguém aqui reconhece': 'Un manojo de llaves de puertas que nadie aquí reconoce',
+  'Duas alianças idênticas — e a pessoa veio sozinha': 'Dos alianzas idénticas — y la persona vino sola',
+  'Sabonete ainda no papel, guardado como um tesouro': 'Un jabón todavía en su papel, guardado como un tesoro',
+  'Um único brinco — o par ficou com alguém': 'Un solo pendiente — el par se quedó con alguien',
+  'Botas de trabalho com a sola remendada com arame': 'Botas de trabajo con la suela remendada con alambre',
+  'Óculos de leitura com uma das hastes presa por barbante': 'Gafas de lectura con una patilla atada con hilo',
+  'Um brinquedo de corda que ainda funciona — e ninguém para dar': 'Un juguete de cuerda que todavía funciona — y nadie a quien dárselo',
+  'Um diploma enrolado num tubo, com o nome raspado': 'Un diploma enrollado en un tubo, con el nombre raspado',
+  'Um punhado de terra amarrado num lenço': 'Un puñado de tierra atado en un pañuelo',
+  'Uma foto 3x4 sobrando, sem documento para colar': 'Una foto carné de sobra, sin documento donde pegarla',
   'Isto não deveria estar aqui. Isto não tem explicação boa.': 'Esto no debería estar aquí. Esto no tiene buena explicación.',
 
   /* ---- A CASA (house.js): cômodos, família, batidas noturnas ---- */

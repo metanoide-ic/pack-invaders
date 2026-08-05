@@ -688,13 +688,14 @@ const BAG_POOLS = {
     'Fotografia de família com o canto queimado', 'Terço gasto de tanto uso',
     'Caderno de endereços com metade dos nomes riscados', 'Relógio de bolso parado às 3h12',
     'Meias de lã tricotadas à mão', 'Livro sem capa, com frases sublinhadas a lápis',
+    'Sabonete ainda no papel, guardado como um tesouro', 'Um único brinco — o par ficou com alguém',
   ],
-  trabalho: ['Ferramentas envoltas em pano oleoso', 'Luvas de solda gastas', 'Carta de recomendação amassada e reamassada'],
-  tratamento: ['Frascos de remédio quase vazios', 'Radiografia em envelope pardo', 'Receita médica dobrada em oito'],
-  visita: ['Presente embrulhado (o papel foi aberto e refeito)', 'Bolo de mel envolto em pano de prato', 'Maço de cartas amarrado com barbante'],
-  estudo: ['Livros didáticos de segunda mão', 'Caderno novo com a primeira página arrancada'],
-  imigracao: ['A chave de uma porta que não existe mais', 'Escritura de uma casa vendida às pressas', 'Álbum de fotografias completo, pesado demais para quem viaja leve'],
-  transito: ['Quase nada: uma muda de roupa', 'Mapa com uma rota marcada a lápis — e outra, apagada'],
+  trabalho: ['Ferramentas envoltas em pano oleoso', 'Luvas de solda gastas', 'Carta de recomendação amassada e reamassada', 'Botas de trabalho com a sola remendada com arame'],
+  tratamento: ['Frascos de remédio quase vazios', 'Radiografia em envelope pardo', 'Receita médica dobrada em oito', 'Óculos de leitura com uma das hastes presa por barbante'],
+  visita: ['Presente embrulhado (o papel foi aberto e refeito)', 'Bolo de mel envolto em pano de prato', 'Maço de cartas amarrado com barbante', 'Um brinquedo de corda que ainda funciona — e ninguém para dar'],
+  estudo: ['Livros didáticos de segunda mão', 'Caderno novo com a primeira página arrancada', 'Um diploma enrolado num tubo, com o nome raspado'],
+  imigracao: ['A chave de uma porta que não existe mais', 'Escritura de uma casa vendida às pressas', 'Álbum de fotografias completo, pesado demais para quem viaja leve', 'Um punhado de terra amarrado num lenço'],
+  transito: ['Quase nada: uma muda de roupa', 'Mapa com uma rota marcada a lápis — e outra, apagada', 'Uma foto 3x4 sobrando, sem documento para colar'],
 };
 const BAG_ONEWAY = { fid: 'bag.oneway', txt: 'Passagem de trem — SÓ IDA', desc: 'Comprada há três dias. Não há passagem de volta em lugar nenhum desta bagagem.' };
 const BAG_CONTRABAND = [
@@ -707,6 +708,8 @@ const BAG_HERRINGS = [
   'Aliança guardada na caixinha, não no dedo',
   'Diário com as últimas dez páginas arrancadas',
   'Uniforme militar dobrado no fundo — sem insígnias',
+  'Um molho de chaves de portas que ninguém aqui reconhece',
+  'Duas alianças idênticas — e a pessoa veio sozinha',
 ];
 
 /* ---------- RÁDIO DIEGÉTICA (3 emissoras + estática) ---------- */

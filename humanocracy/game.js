@@ -1044,7 +1044,7 @@ function bagKind(txt, contra) {
   if (/aliança/.test(t)) return 'ring';
   if (/brinquedo/.test(t)) return 'toy';
   if (/uniforme/.test(t)) return 'uniform';
-  if (/escritura|carta|recomendação|diário|endereços/.test(t)) return 'papers';
+  if (/escritura|carta|recomendação|diário|endereços|diploma/.test(t)) return 'papers';
   if (/livro|caderno/.test(t)) return 'book';
   if (/roupa|meias|muda|presente|manta|lã/.test(t)) return 'clothing';
   return contra ? 'vial' : 'bundle';
