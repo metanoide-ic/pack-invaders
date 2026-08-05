@@ -2904,6 +2904,9 @@ function scheduleEcho(cz) {
     `${T('O reservatório de ')}${cz.destino}${T(' registrou "alterações químicas menores". O laudo foi arquivado.')}`,
     `${T('Um(a) ')}${T(cz.profissao)}${T(' recém-chegado(a) a ')}${cz.destino}${T(' foi promovido(a) em tempo recorde. Colegas o(a) descrevem como "perfeito(a) demais".')}`,
     `${T('Moradores de ')}${cz.destino}${T(' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.')}`,
+    T('Rio acima, uma cidade inteira parou de sonhar. Os médicos chamam de "sono eficiente" e não explicam como medem isso.'),
+    T('O censo desta semana fechou com a população EXATA que o Ministério previu. Nem uma alma a mais, nem uma a menos. Nunca bateu tão certo.'),
+    T('Uma fábrica bateu a meta do ano em um mês. Os operários dobram o turno sem reclamar. Sem nunca, jamais, reclamar.'),
   ];
   S.pendingNews.push({ day: S.day + delay, text: pick(txts) });
 }

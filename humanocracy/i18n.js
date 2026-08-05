@@ -1250,6 +1250,9 @@ const I18N_EN = {
     ' was promoted in record time. Colleagues describe them as "too perfect."',
   'Moradores de ': 'Residents of ',
   ' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.': ' report that the neighborhood dogs stopped barking. All of them. In the same week.',
+  'Rio acima, uma cidade inteira parou de sonhar. Os médicos chamam de "sono eficiente" e não explicam como medem isso.': 'Upriver, a whole city stopped dreaming. The doctors call it "efficient sleep" and don\'t explain how they measure it.',
+  'O censo desta semana fechou com a população EXATA que o Ministério previu. Nem uma alma a mais, nem uma a menos. Nunca bateu tão certo.': "This week's census closed with the EXACT population the Ministry predicted. Not one soul more, not one less. It has never matched so perfectly.",
+  'Uma fábrica bateu a meta do ano em um mês. Os operários dobram o turno sem reclamar. Sem nunca, jamais, reclamar.': 'A factory hit its yearly quota in a month. The workers pull double shifts without complaint. Without ever, ever complaining.',
 
   /* ---- REGULAMENTO (RULES) ---- */
   'Todo viajante deve portar PASSAPORTE válido.': 'Every traveler must carry a valid PASSPORT.',
@@ -2594,6 +2597,9 @@ const I18N_ES = {
     ' fue ascendido(a) en tiempo récord. Los colegas lo(a) describen como "demasiado perfecto(a)".',
   'Moradores de ': 'Los residentes de ',
   ' relatam que os cães do bairro pararam de latir. Todos. Na mesma semana.': ' reportan que los perros del barrio dejaron de ladrar. Todos. En la misma semana.',
+  'Rio acima, uma cidade inteira parou de sonhar. Os médicos chamam de "sono eficiente" e não explicam como medem isso.': 'Río arriba, una ciudad entera dejó de soñar. Los médicos lo llaman "sueño eficiente" y no explican cómo lo miden.',
+  'O censo desta semana fechou com a população EXATA que o Ministério previu. Nem uma alma a mais, nem uma a menos. Nunca bateu tão certo.': 'El censo de esta semana cerró con la población EXACTA que el Ministerio predijo. Ni un alma más, ni una menos. Nunca coincidió tan bien.',
+  'Uma fábrica bateu a meta do ano em um mês. Os operários dobram o turno sem reclamar. Sem nunca, jamais, reclamar.': 'Una fábrica alcanzó la meta del año en un mes. Los obreros doblan el turno sin quejarse. Sin nunca, jamás, quejarse.',
 
   /* ---- REGULAMENTO (RULES) ---- */
   'Todo viajante deve portar PASSAPORTE válido.': 'Todo viajero debe portar PASAPORTE válido.',
