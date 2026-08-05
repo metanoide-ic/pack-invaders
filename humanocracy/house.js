@@ -121,8 +121,8 @@ function famSprite(who) {
     if (typeof renderPortraitCanvas === 'function') {
       const bust = renderPortraitCanvas(f, {
         w: 64, h: bustH, paintScale: 2.2, coat, fullBody: true,   // corpo inteiro: mostra os braços
-        // sem franja cromática no rosto da família (o grão/scanline mantém o clima)
-        post: { levels: 11, grain: 8, aberr: 0, scan: 0.09, sat: 0.46 },
+        // pixel-art limpo (mesmo do guichê): sem lama de dither/grão pesado
+        post: { levels: 6, ditherAmp: 0.12, grain: 2, aberr: 0, scan: 0.06, sat: 0.5, contrast: 1.22 },
       });
       x.drawImage(bust, 0, headY);
     }
@@ -135,8 +135,7 @@ function famSprite(who) {
       x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1;
       x.beginPath(); x.moveTo(24, headY + bustH - 12); x.lineTo(40, headY + bustH - 12); x.stroke();
     }
-    // passa o corpo pintado pela mesma fita (leve — o busto já veio degradado)
-    if (window.analogPostCanvas) analogPostCanvas(x.canvas, f.fseed, { levels: 12, grain: 6, aberr: 0, scan: 0.06, sat: 0.6 });
+    // busto já veio degradado no tamanho certo; segunda fita só sujaria os pixels
   });
 }
 function buildSprites() {

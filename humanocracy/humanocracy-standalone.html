@@ -5541,48 +5541,47 @@ function paintBust(ctx, f, opts) {
   ctx.strokeStyle = 'rgba(150,178,214,.32)'; ctx.lineWidth = 1.1;
   ctx.beginPath(); ctx.moveTo(93, 105); ctx.quadraticCurveTo(88, 94, 72, 91.4); ctx.quadraticCurveTo(62, 90.5, 56, 92); ctx.stroke();
 
-  /* BRAÇOS (mãos entrelaçadas na frente): SÓ em corpo inteiro (sprite da
-     família na casa). No busto do guichê/documento é um recorte cabeça-e-ombros
-     — mão no meio do peito virava um nó estranho, então lá fica só o ombro
-     largo. Some no bebê de colo (os braços já embalam o cobertor). */
-  if (opts.fullBody && !opts.companion) {
+  /* BRAÇOS PENDENTES (reais, não cruzados): um de cada lado, descendo do ombro
+     ao longo do tronco e terminando numa MÃO visível na base. Separados do
+     tronco por uma cava (sombra) e com aresta de luz na frente. Some só no bebê
+     de colo (lá os braços já embalam o cobertor). */
+  if (!opts.companion) {
     const kid = L.child;
     const sleeve = f.uniform ? rgb(f.uniformColor || [58, 66, 48]) : coatCol;
-    const hy = kid ? 108 : 112;                          // altura das mãos entrelaçadas
-    const sx = kid ? 11 : 15.5, out = kid ? 3 : 6.5;     // abertura dos antebraços
-    const cxL = 50 - (kid ? 2.7 : 3.8), cxR = 50 + (kid ? 2.7 : 3.8);
-    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    // antebraços (mangas) — descem dos ombros e cruzam pra frente
-    ctx.strokeStyle = sleeve; ctx.lineWidth = kid ? 6.6 : 8.8;
-    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 13); ctx.quadraticCurveTo(50 - sx, hy - 3, cxL, hy); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 13); ctx.quadraticCurveTo(50 + sx, hy - 3, cxR, hy); ctx.stroke();
-    // sombra por baixo (volume + separa a manga do peito)
-    ctx.strokeStyle = 'rgba(0,0,0,.34)'; ctx.lineWidth = kid ? 2.6 : 3.4;
-    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 10.5); ctx.quadraticCurveTo(50 - sx, hy - 0.5, cxL, hy + 2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 10.5); ctx.quadraticCurveTo(50 + sx, hy - 0.5, cxR, hy + 2); ctx.stroke();
-    // luz no topo das mangas (aresta que descola do fundo/peito escuro)
-    ctx.strokeStyle = 'rgba(240,240,218,.12)'; ctx.lineWidth = 1.3;
-    ctx.beginPath(); ctx.moveTo(50 - sx - out, hy - 14.5); ctx.quadraticCurveTo(50 - sx, hy - 5, cxL - 1, hy - 1.5); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(50 + sx + out, hy - 14.5); ctx.quadraticCurveTo(50 + sx, hy - 5, cxR + 1, hy - 1.5); ctx.stroke();
-    // PUNHOS (cuffs): banda escura onde a manga vira mão — dá a leitura de braço
-    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = kid ? 6.6 : 8.8; ctx.lineCap = 'butt';
-    ctx.beginPath(); ctx.moveTo(cxL - 2.2, hy - 1.4); ctx.lineTo(cxL + 0.4, hy - 0.2); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(cxR + 2.2, hy - 1.4); ctx.lineTo(cxR - 0.4, hy - 0.2); ctx.stroke();
-    ctx.lineCap = 'round';
-    // MÃOS entrelaçadas: mão de trás (dir), depois a da frente (esq) por cima
-    const hr = kid ? 3.3 : 4.2;
-    ctx.fillStyle = rgb(mix(SK, SH, 0.42));
-    ctx.beginPath(); ctx.ellipse(cxR + 0.6, hy + 0.6, hr, hr * 0.82, 0.25, 0, 6.29); ctx.fill();
-    ctx.fillStyle = rgb(SK);
-    ctx.beginPath(); ctx.ellipse(cxL - 0.2, hy + 1, hr + 0.5, hr * 0.84, -0.2, 0, 6.29); ctx.fill();
-    // dedos entrelaçados (sulcos) + brilho nos nós + polegar por cima
-    ctx.strokeStyle = 'rgba(0,0,0,.22)'; ctx.lineWidth = 0.5;
-    for (let k = 0; k < 4; k++) { const fxx = cxL - 2.6 + k * 1.6; ctx.beginPath(); ctx.moveTo(fxx, hy - hr * 0.5); ctx.lineTo(fxx + 0.6, hy + hr * 0.75); ctx.stroke(); }
-    ctx.fillStyle = rgb(mix(SK, SH, 0.2)); ctx.beginPath(); ctx.ellipse(cxL + hr * 0.7, hy - 0.4, hr * 0.42, hr * 0.28, 0.7, 0, 6.29); ctx.fill(); // polegar
-    soft(ctx, cxL - 1.4, hy - 0.6, hr * 0.7, hr * 0.4, rgb(lighten(SK, 0.16), 0.5), 1.2);
-    // contato das mãos com o casaco
-    soft(ctx, 50, hy + hr + 0.4, hr + 3, 1.6, 'rgba(0,0,0,.3)', 1.8);
-    ctx.restore();
+    const aTop = kid ? 99 : 96, aBot = kid ? 120 : 120;
+    for (const s of [-1, 1]) {
+      const shX = 50 + s * (kid ? 19 : 27);   // topo da manga (no ombro)
+      const wrX = 50 + s * (kid ? 17 : 24);   // punho (quase reto pra baixo)
+      const wO = kid ? 5 : 6.5, wI = kid ? 3.6 : 5;   // largura externa/interna da manga
+      const midY = (aTop + aBot) / 2;
+      ctx.save(); ctx.lineJoin = 'round';
+      // manga
+      ctx.fillStyle = sleeve;
+      ctx.beginPath();
+      ctx.moveTo(shX + s * wO, aTop);
+      ctx.quadraticCurveTo(shX + s * (wO + 1), midY, wrX + s * wI, aBot);
+      ctx.lineTo(wrX - s * wI, aBot);
+      ctx.quadraticCurveTo(shX - s * (wI + 0.5), midY, shX - s * wI, aTop);
+      ctx.closePath(); ctx.fill();
+      // cava: sombra separando a manga do tronco (lado interno)
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = 1.7;
+      ctx.beginPath(); ctx.moveTo(shX - s * wI, aTop + 1); ctx.quadraticCurveTo(shX - s * wI, midY, wrX - s * (wI - 0.6), aBot - 1); ctx.stroke();
+      // aresta de luz na frente do braço
+      ctx.strokeStyle = 'rgba(240,240,218,.10)'; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(shX + s * (wO - 1), aTop + 2); ctx.quadraticCurveTo(shX + s * wO, midY, wrX + s * (wI - 1), aBot - 2); ctx.stroke();
+      // punho: banda escura na base da manga
+      ctx.lineCap = 'butt'; ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = (wO + wI) * 0.95;
+      ctx.beginPath(); ctx.moveTo(wrX - s * (wI - 0.5), aBot - 4); ctx.lineTo(wrX + s * (wI - 0.5), aBot - 4); ctx.stroke();
+      // MÃO saindo do punho (pele — trai a cor do Alternado junto com o rosto)
+      const hr = kid ? 2.8 : 3.6;
+      ctx.fillStyle = rgb(mix(SK, SH, 0.28));
+      ctx.beginPath(); ctx.ellipse(wrX, aBot - 0.5, hr, hr * 1.05, 0, 0, 6.29); ctx.fill();
+      ctx.fillStyle = rgb(SK);
+      ctx.beginPath(); ctx.ellipse(wrX - s * 0.6, aBot - 1.4, hr * 0.7, hr * 0.7, 0, 0, 6.29); ctx.fill(); // costas da mão na luz
+      ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 0.5; // sulcos dos dedos
+      for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(wrX + k * 1.3, aBot + 0.4); ctx.lineTo(wrX + k * 1.3, aBot + hr * 0.9); ctx.stroke(); }
+      ctx.restore();
+    }
   }
 
   /* a cabeça inteira levemente inclinada — mugshot de verdade nunca é reto */
@@ -6902,9 +6901,9 @@ function renderPortraitCanvas(f, o) {
    barata), contraste alto de impressão ruim, grão de papel e posterização
    grosseira. Assim a foto do passaporte deixa de ser gêmea do feed ao vivo do
    guichê — e a comparação foto×rosto fica mais legível como fic­ção. */
-const PORTRAIT_POST = { levels: 6, ditherAmp: 0.9, grain: 14, aberr: 0, bleed: 0.05, scan: 0, vig: 0.42, sat: 0.13, contrast: 1.35 };
+const PORTRAIT_POST = { levels: 5, ditherAmp: 0.5, grain: 7, aberr: 0, bleed: 0.05, scan: 0, vig: 0.42, sat: 0.13, contrast: 1.35 };
 function portraitSVG(f) {
-  const cv = renderPortraitCanvas(f, { w: 160, h: 192, bg: '#8a8778', post: PORTRAIT_POST });
+  const cv = renderPortraitCanvas(f, { w: 84, h: 100, bg: '#8a8778', post: PORTRAIT_POST });
   return `<image href="${cv.toDataURL()}" width="100" height="120" style="image-rendering:pixelated" preserveAspectRatio="none"/>`;
 }
 
@@ -6916,19 +6915,19 @@ function physAnomOpts(phys) {
 function examSVG(f, phys) {
   phys = phys || {};
   const o = Object.assign({
-    w: 400, h: 480, bg: '#12130f',
+    w: 150, h: 180, bg: '#12130f',
     zoom: 1.55, focusY: 50, paintScale: 4,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 13, ditherAmp: 0.6, grain: 8, aberr: 1, scan: 0.13, vig: 0.55, tears: 1, sat: 0.34 },
+    post: { levels: 6, ditherAmp: 0.14, grain: 3, aberr: 0, scan: 0.06, vig: 0.55, tears: 0, sat: 0.4 },
   }, physAnomOpts(phys));
   const open = renderPortraitCanvas(f, o).toDataURL();
-  let s = `<image href="${open}" width="200" height="240" preserveAspectRatio="none"/>`;
+  let s = `<image href="${open}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated"/>`;
   if (!phys.piscar) {
     // humanos piscam: um segundo frame com os olhos fechados cruza por cima.
     // quem não pisca, não pisca — o frame simplesmente não existe.
     const closed = renderPortraitCanvas(f, Object.assign({}, o, { eyesClosed: true, postSeed: 0 })).toDataURL();
     const dur = (3.2 + (faceSeedOf(f) % 5) * 0.55).toFixed(2);
-    s += `<image href="${closed}" width="200" height="240" preserveAspectRatio="none" opacity="0">` +
+    s += `<image href="${closed}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated" opacity="0">` +
       `<animate attributeName="opacity" values="0;0;1;0" keyTimes="0;0.94;0.965;1" dur="${dur}s" repeatCount="indefinite"/></image>`;
   }
   return s;
@@ -7247,7 +7246,7 @@ function seqSVG(frames) {
     if (i === 0) anim = `values="1;0" keyTimes="0;${t1.toFixed(4)}"`;
     else if (t1 >= 0.9999) anim = `values="0;1" keyTimes="0;${t0.toFixed(4)}"`;
     else anim = `values="0;1;0" keyTimes="0;${t0.toFixed(4)};${t1.toFixed(4)}"`;
-    out += `<image href="${fr.url}" width="200" height="240" preserveAspectRatio="none" opacity="${i === 0 ? 1 : 0}">` +
+    out += `<image href="${fr.url}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated" opacity="${i === 0 ? 1 : 0}">` +
       `<animate attributeName="opacity" calcMode="discrete" ${anim} dur="${dur}s" repeatCount="indefinite"/></image>`;
   });
   return out;
@@ -7330,7 +7329,7 @@ function eyeMacroSVG(f, phys) {
   const anom = (phys && phys.anom) || {};
   const dead = !!anom.deadStare, noBlink = !!(phys && phys.piscar);
   const seed = faceSeedOf(f);
-  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 280, h: 336, paintScale: 3.4, post: { levels: 13, ditherAmp: 0.5, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 } }).toDataURL();
+  const mk = (gaze, ps) => renderScene((c) => paintEyeMacro(c, f, phys, gaze), seed ^ ps, { w: 150, h: 180, paintScale: 3.4, post: { levels: 8, ditherAmp: 0.18, grain: 3, aberr: 0, scan: 0.06, vig: 0.5, sat: 0.4 } }).toDataURL();
   const C = { x: 0, y: 0 }, Lp = { x: -6, y: 1 }, Rp = { x: 6, y: 0.5 }, Up = { x: -1, y: -3 }, Dp = { x: 1, y: 2.6 };
   let frames;
   if (dead) {
@@ -7481,9 +7480,9 @@ function examZoneSVG(f, phys, zone) {
   phys = phys || {};
   const seed = faceSeedOf(f);
   const base = Object.assign({
-    w: 260, h: 312, bg: '#101208', paintScale: 2.7,
+    w: 132, h: 158, bg: '#101208', paintScale: 2.7,
     waxy: !!phys.pele, veins: !!phys.olhos, brightSclera: !!phys.piscar,
-    post: { levels: 12, ditherAmp: 0.65, grain: 9, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.34 },
+    post: { levels: 6, ditherAmp: 0.14, grain: 3, aberr: 0, scan: 0.06, vig: 0.5, sat: 0.34 },
   }, physAnomOpts(phys));
   const F = (o) => renderPortraitCanvas(f, Object.assign({}, base, o)).toDataURL();
 
@@ -7495,8 +7494,8 @@ function examZoneSVG(f, phys, zone) {
   if (zone === 'corpo') {
     // scanner térmico do corpo: volume oculto + assinatura térmica, com a
     // linha de varredura descendo (o feixe do scanner).
-    const url = renderScene((c) => paintBodyScan(c, f, phys), seed ^ 0xB0D, { w: 260, h: 312, paintScale: 2.7, post: { levels: 16, ditherAmp: 0.3, grain: 6, aberr: 1, scan: 0.1, sat: 0.62 } }).toDataURL();
-    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none"/>` +
+    const url = renderScene((c) => paintBodyScan(c, f, phys), seed ^ 0xB0D, { w: 150, h: 180, paintScale: 2.7, post: { levels: 8, ditherAmp: 0.2, grain: 3, aberr: 0, scan: 0.06, sat: 0.62 } }).toDataURL();
+    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated"/>` +
       `<rect x="0" y="0" width="200" height="2.5" fill="rgba(120,255,200,.55)"><animate attributeName="y" values="0;238;0" dur="2.6s" repeatCount="indefinite"/></rect>`;
   }
   if (zone === 'boca') {
@@ -7513,15 +7512,15 @@ function examZoneSVG(f, phys, zone) {
     // sat mais alta aqui: a cor da pele (azul/livor) É a informação; a
     // dessaturação padrão do VHS estava apagando o desvio.
     const mkF = (sh) => renderScene((c) => paintSkinMacro(c, f, phys, sh), seed ^ (0x51 + sh), {
-      w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.12, vig: 0.4, sat: 0.62 },
+      w: 132, h: 158, paintScale: 2.7,
+      post: { levels: 6, ditherAmp: 0.14, grain: 3, aberr: 0, scan: 0.06, vig: 0.4, sat: 0.62 },
     }).toDataURL();
     return seqSVG([{ url: mkF(0), len: 1.9 }, { url: mkF(1), len: 1.9 }]);
   }
   if (zone === 'maos') {
     const mkF = (mode, ps) => renderScene((c) => paintHandScene(c, f, phys, mode), seed ^ ps, {
-      w: 260, h: 312, paintScale: 2.7,
-      post: { levels: 12, ditherAmp: 0.6, grain: 10, aberr: 1, scan: 0.13, vig: 0.5, sat: 0.36 },
+      w: 132, h: 158, paintScale: 2.7,
+      post: { levels: 6, ditherAmp: 0.14, grain: 3, aberr: 0, scan: 0.06, vig: 0.5, sat: 0.4 },
     }).toDataURL();
     return seqSVG([
       { url: mkF('palm-far', 0x91), len: 0.9 },
@@ -7542,7 +7541,7 @@ function examZoneSVG(f, phys, zone) {
       `<animate attributeName="opacity" values="0;.26;0" keyTimes="0;.06;.16" dur="${per}s" repeatCount="indefinite"/></ellipse>` +
       `<ellipse cx="${mapX(44.5)}" cy="${mapY(76)}" rx="4.5" ry="7" fill="rgb(210,150,128)" opacity="0">` +
       `<animate attributeName="opacity" values="0;.3;0" keyTimes="0;.06;.14" dur="${per}s" repeatCount="indefinite"/></ellipse>`;
-    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none"/>${pulse}`;
+    return `<image href="${url}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated"/>${pulse}`;
   }
   return examSVG(f, phys);
 }
@@ -7605,11 +7604,15 @@ function actorAnomOpts(cz) {
     waxy: !!(cz && cz.phys && cz.phys.pele), veins: !!(cz && cz.phys && cz.phys.olhos),
   };
 }
+// PIXEL-ART: rendemos numa resolução BAIXA (64×77) e deixamos o blitActor
+// ampliar com nearest-neighbor. O look é assumidamente pixelado — mão-de-obra
+// humana de serigrafia/8-bit, o oposto do airbrush liso de imagem-de-IA.
+// Sem aberração/tears/dither pesado: isso vira lama nesse tamanho de pixel.
 function renderActorFrame(cz, eyesClosed) {
-  if (cz && cz.isSilente) return silentePortraitCanvas({ w: 260, h: 312 });
+  if (cz && cz.isSilente) return silentePortraitCanvas({ w: 64, h: 77 });
   return renderPortraitCanvas(cz.features, Object.assign({
-    w: 260, h: 312, paintScale: 3.6, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
-    post: { levels: 14, ditherAmp: 0.55, grain: 9, aberr: 1, scan: 0.10, tears: 1, sat: 0.38 },
+    w: 64, h: 77, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
+    post: { levels: 6, ditherAmp: 0.12, grain: 2, aberr: 0, scan: 0.06, tears: 0, sat: 0.5, contrast: 1.25 },
   }, actorAnomOpts(cz)));
 }
 function blitActor(cv, src) {
@@ -11645,8 +11648,8 @@ function famSprite(who) {
     if (typeof renderPortraitCanvas === 'function') {
       const bust = renderPortraitCanvas(f, {
         w: 64, h: bustH, paintScale: 2.2, coat, fullBody: true,   // corpo inteiro: mostra os braços
-        // sem franja cromática no rosto da família (o grão/scanline mantém o clima)
-        post: { levels: 11, grain: 8, aberr: 0, scan: 0.09, sat: 0.46 },
+        // pixel-art limpo (mesmo do guichê): sem lama de dither/grão pesado
+        post: { levels: 6, ditherAmp: 0.12, grain: 2, aberr: 0, scan: 0.06, sat: 0.5, contrast: 1.22 },
       });
       x.drawImage(bust, 0, headY);
     }
@@ -11659,8 +11662,7 @@ function famSprite(who) {
       x.strokeStyle = 'rgba(0,0,0,.25)'; x.lineWidth = 1;
       x.beginPath(); x.moveTo(24, headY + bustH - 12); x.lineTo(40, headY + bustH - 12); x.stroke();
     }
-    // passa o corpo pintado pela mesma fita (leve — o busto já veio degradado)
-    if (window.analogPostCanvas) analogPostCanvas(x.canvas, f.fseed, { levels: 12, grain: 6, aberr: 0, scan: 0.06, sat: 0.6 });
+    // busto já veio degradado no tamanho certo; segunda fita só sujaria os pixels
   });
 }
 function buildSprites() {
