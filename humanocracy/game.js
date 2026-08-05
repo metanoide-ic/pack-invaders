@@ -2450,11 +2450,11 @@ function drawWorldMap() {
     for (let h = 3; h >= 1; h--) { mapBlob(ctx, cxp, cyp, rp * (1 + h * 0.05), seed); ctx.strokeStyle = `rgba(180,168,120,${0.05 + (3 - h) * 0.04})`; ctx.lineWidth = 1; ctx.stroke(); }
     // sombra da terra no mar
     ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, seed); ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill(); ctx.restore();
-    // terra
+    // terra: TINTA CHAPADA (carta impressa), não gradiente lustroso. A textura
+    // vem da hachura de relevo e do estipulado por cima — como numa gravura.
     mapBlob(ctx, cxp, cyp, rp, seed);
-    const g = ctx.createRadialGradient(cxp - rp * 0.3, cyp - rp * 0.3, rp * 0.2, cxp, cyp, rp);
-    g.addColorStop(0, sel ? shade(c.color, 40) : shade(c.color, 18)); g.addColorStop(1, shade(c.color, -20));
-    ctx.fillStyle = g; ctx.fill();
+    ctx.fillStyle = sel ? shade(c.color, 24) : shade(c.color, 4);
+    ctx.fill();
     // relevo: hachura de montanhas/terreno recortada à terra
     ctx.save(); mapBlob(ctx, cxp, cyp, rp, seed); ctx.clip();
     ctx.strokeStyle = 'rgba(30,22,12,.14)'; ctx.lineWidth = 0.7;
