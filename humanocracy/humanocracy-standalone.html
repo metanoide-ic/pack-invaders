@@ -7088,8 +7088,8 @@ function paintHandScene(ctx, f, phys, mode) {
   const dorsal = mode === 'dorsal';
   const sc = far ? 0.72 : 1.24;           // aproximando do vidro (mão enche mais o quadro)
   const cy = far ? 70 : 60;               // centro da palma
-  const fingerLen = (anom ? 42 : 32) * sc; // dedos mais longos (antes pareciam luva/nadadeira)
-  const palmW = 13.5 * sc, palmH = 18 * sc; // palma mais estreita e menos alta
+  const fingerLen = (anom ? 38 : 27) * sc; // comprimento base dos dedos
+  const palmW = 15 * sc, palmH = 19 * sc;   // palma
   const tone = mix(SK, [255, 238, 214], far ? 0.02 : 0.06); // pele quente (prensada = um tico mais pálida)
   ctx.save();
   ctx.translate(50 + (far ? 4 : 0), 0);
@@ -7107,119 +7107,129 @@ function paintHandScene(ctx, f, phys, mode) {
     // botão do punho
     ctx.fillStyle = 'rgba(70,62,44,.9)'; ctx.beginPath(); ctx.arc(palmW * 0.5, cy + palmH * 1.3, 1.1, 0, 6.29); ctx.fill();
   }
-  // dedos — colunas com juntas. normal: 4. anômalo (sextoDedo): 5 espremidos.
+  // GEOMETRIA DOS DEDOS — compartilhada pela silhueta e pelos detalhes.
+  // normal: 4 dedos. anômalo (sextoDedo): 5 espremidos.
   const nFing = sixth ? 5 : 4;
   const flenP = sixth ? [0.8, 0.95, 1, 0.94, 0.76] : [0.82, 1, 0.96, 0.78];
+  const palmTop = cy - palmH * 0.82;       // linha dos nós (base dos dedos)
+  const palmBot = cy + palmH * 1.02;       // punho
+  const spanL = -palmW + 2.4, spanR = palmW - 2.4;
+  const fing = [];
   for (let i = 0; i < nFing; i++) {
-    const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / (nFing - 1));
-    const fw2 = (2.9 - Math.abs(i - (sixth ? 1.9 : 1.6)) * 0.30) * sc * (sixth ? 0.88 : 1);
+    const fx = spanL + i * ((spanR - spanL) / (nFing - 1));
+    const fw2 = (3.4 - Math.abs(i - (sixth ? 1.9 : 1.55)) * 0.34) * sc * (sixth ? 0.86 : 1);
     const fl = fingerLen * flenP[i];
-    const top = cy - palmH * 0.85 - fl;
-    ctx.fillStyle = rgb(tone);
+    fing.push({ x: fx, w: fw2, len: fl, ty: palmTop - fl });
+  }
+  const valleyY = palmTop - fingerLen * 0.22;  // reentrância (membrana) entre dedos
+
+  // SILHUETA ÚNICA: palma + dedos num só contorno. Os dedos NASCEM da palma
+  // (com membrana entre eles), em vez de flutuarem como colunas atrás de uma
+  // elipse. É isso que faz a mão ler como mão de verdade.
+  const handOutline = () => {
     ctx.beginPath();
-    ctx.moveTo(fx - fw2, cy - palmH * 0.5);
-    ctx.lineTo(fx - fw2 * 0.92, top + fw2);
-    ctx.quadraticCurveTo(fx, top - fw2 * 0.5, fx + fw2 * 0.92, top + fw2);
-    ctx.lineTo(fx + fw2, cy - palmH * 0.5);
-    ctx.closePath(); ctx.fill();
-    // sombra lateral do dedo (lâmpada à esquerda)
-    ctx.fillStyle = rgb(darken(SH, 0.1), 0.35);
-    ctx.fillRect(fx + fw2 * 0.4, top + fw2, fw2 * 0.55, fl);
+    ctx.moveTo(-palmW * 0.8, palmBot);                                          // punho esq.
+    ctx.quadraticCurveTo(-palmW * 1.06, cy, fing[0].x - fing[0].w, palmTop);    // borda esq. sobe até a base do 1º dedo
+    for (let i = 0; i < nFing; i++) {
+      const t = fing[i];
+      ctx.lineTo(t.x - t.w, t.ty + t.w);                                        // sobe pelo lado esq. do dedo
+      ctx.quadraticCurveTo(t.x, t.ty - t.w * 0.7, t.x + t.w, t.ty + t.w);       // ponta arredondada
+      if (i < nFing - 1) {
+        ctx.lineTo(t.x + t.w, valleyY);                                         // desce pro vale
+        ctx.lineTo(fing[i + 1].x - fing[i + 1].w, valleyY);                     // membrana até o próximo dedo
+      } else {
+        ctx.lineTo(t.x + t.w, palmTop);
+      }
+    }
+    ctx.quadraticCurveTo(palmW * 1.06, cy, palmW * 0.8, palmBot);               // borda dir. desce até o punho
+    ctx.closePath();
+  };
+  // POLEGAR: massa própria que se funde à base da palma (canto inf. esq.)
+  const thumbOutline = () => {
+    ctx.beginPath();
+    ctx.moveTo(-palmW * 0.5, cy + palmH * 0.5);
+    ctx.quadraticCurveTo(-palmW - 5 * sc, cy + palmH * 0.35, -palmW - 8.5 * sc, cy - palmH * 0.3);
+    ctx.quadraticCurveTo(-palmW - 10 * sc, cy - palmH * 0.7, -palmW - 6 * sc, cy - palmH * 0.82);
+    ctx.quadraticCurveTo(-palmW - 3 * sc, cy - palmH * 0.72, -palmW - 1.5 * sc, cy - palmH * 0.18);
+    ctx.quadraticCurveTo(-palmW - 0.3 * sc, cy + palmH * 0.12, -palmW * 0.5, cy + palmH * 0.5);
+    ctx.closePath();
+  };
+
+  // preenche a mão inteira de uma vez (polegar + palma/dedos), tudo na mesma cor
+  ctx.fillStyle = rgb(tone);
+  thumbOutline(); ctx.fill();
+  handOutline(); ctx.fill();
+
+  // MODELAGEM: luz da esquerda, sombra à direita — recortada ao contorno da mão
+  ctx.save(); handOutline(); ctx.clip();
+  const shade = ctx.createLinearGradient(-palmW, 0, palmW * 1.15, 0);
+  shade.addColorStop(0, 'rgba(255,246,224,.14)');
+  shade.addColorStop(0.55, 'rgba(0,0,0,0)');
+  shade.addColorStop(1, rgb(darken(SH, 0.15), 0.42));
+  ctx.fillStyle = shade; ctx.fillRect(-palmW * 2, 0, palmW * 4, 130);
+  soft(ctx, palmW * 0.2, palmTop + 1, palmW * 1.2, 2.5, rgb(darken(SH, 0.2), 0.28), 3); // sombra na dobra dedo-palma
+  ctx.restore();
+
+  // fenda escura entre dedos (reforça a separação sem quebrar a silhueta)
+  ctx.strokeStyle = rgb(darken(SH, 0.32), 0.5); ctx.lineWidth = 0.55 * sc;
+  for (let i = 0; i < nFing - 1; i++) {
+    const mx = (fing[i].x + fing[i].w + fing[i + 1].x - fing[i + 1].w) / 2;
+    ctx.beginPath(); ctx.moveTo(mx, valleyY); ctx.lineTo(mx, valleyY + fingerLen * 0.16); ctx.stroke();
+  }
+
+  // DETALHE por dedo: unhas (dorso) ou polpas + vincos das falanges (palma)
+  for (let i = 0; i < nFing; i++) {
+    const t = fing[i], fx = t.x, fw2 = t.w, fl = t.len, top = t.ty;
     if (dorsal) {
-      // unhas: com meia-lua (normal) ou ovais idênticas sem meia-lua (anômalo)
       const nw = fw2 * 0.72, nh = anom ? fw2 * 1.5 : fw2 * 1.15;
       ctx.fillStyle = anom ? 'rgb(214,206,196)' : rgb(mix(tone, [235, 220, 200], 0.6));
       ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5, nw, nh, 0, 0, 6.29); ctx.fill();
       ctx.strokeStyle = rgb(darken(SH, 0.25), 0.5); ctx.lineWidth = 0.35;
       ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5, nw, nh, 0, 0, 6.29); ctx.stroke();
       if (!anom) {
-        // a meia-lua
         ctx.fillStyle = 'rgba(245,242,232,.8)';
         ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.5 + nh * 0.55, nw * 0.66, nh * 0.3, 0, 0, 6.29); ctx.fill();
-        if (i === 2) { // uma unha machucada — vida real
-          ctx.fillStyle = 'rgba(64,40,60,.55)';
-          ctx.beginPath(); ctx.ellipse(fx - nw * 0.2, top + fw2 * 1.4, nw * 0.5, nh * 0.4, 0.4, 0, 6.29); ctx.fill();
-        }
+        if (i === 2) { ctx.fillStyle = 'rgba(64,40,60,.55)'; ctx.beginPath(); ctx.ellipse(fx - nw * 0.2, top + fw2 * 1.4, nw * 0.5, nh * 0.4, 0.4, 0, 6.29); ctx.fill(); }
       }
-      // juntas do dorso: vincos + pele esticada
       ctx.strokeStyle = rgb(darken(SH, 0.2), anom ? 0.18 : 0.5); ctx.lineWidth = 0.4;
-      for (const t of [0.42, 0.72]) {
-        const jy = top + fl * t;
-        ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.8, jy);
-        ctx.quadraticCurveTo(fx, jy + 1, fx + fw2 * 0.8, jy); ctx.stroke();
-      }
+      for (const tt of [0.42, 0.72]) { const jy = top + fl * tt; ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.8, jy); ctx.quadraticCurveTo(fx, jy + 1, fx + fw2 * 0.8, jy); ctx.stroke(); }
     } else {
-      // palma contra o vidro: polpas prensadas, mais claras
-      ctx.fillStyle = rgb(lighten(tone, 0.35), far ? 0.2 : 0.75);
+      ctx.fillStyle = rgb(lighten(tone, 0.32), far ? 0.18 : 0.55);
       ctx.beginPath(); ctx.ellipse(fx, top + fw2 * 1.6, fw2 * 0.8, fw2 * 1.1, 0, 0, 6.29); ctx.fill();
-      // vincos das falanges
-      ctx.strokeStyle = rgb(darken(SH, 0.25), anom ? 0.15 : 0.55); ctx.lineWidth = 0.45;
-      for (const t of [0.38, 0.68]) {
-        const jy = top + fl * t;
-        ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.85, jy);
-        ctx.quadraticCurveTo(fx, jy + 1.2, fx + fw2 * 0.85, jy); ctx.stroke();
-      }
+      ctx.strokeStyle = rgb(darken(SH, 0.25), anom ? 0.15 : 0.5); ctx.lineWidth = 0.45;
+      for (const tt of [0.4, 0.7]) { const jy = top + fl * tt; ctx.beginPath(); ctx.moveTo(fx - fw2 * 0.82, jy); ctx.quadraticCurveTo(fx, jy + 1.2, fx + fw2 * 0.82, jy); ctx.stroke(); }
     }
   }
-  // polegar
-  ctx.fillStyle = rgb(tone);
-  ctx.beginPath();
-  ctx.moveTo(-palmW - 1, cy + 2);
-  ctx.quadraticCurveTo(-palmW - 8 * sc, cy - 4, -palmW - 9 * sc, cy - 12 * sc);
-  ctx.quadraticCurveTo(-palmW - 8.5 * sc, cy - 16 * sc, -palmW - 5.5 * sc, cy - 15 * sc);
-  ctx.quadraticCurveTo(-palmW - 1.5, cy - 8, -palmW + 2, cy - 2);
-  ctx.closePath(); ctx.fill();
-  // palma / dorso
-  ctx.fillStyle = rgb(tone);
-  ctx.beginPath(); ctx.ellipse(0, cy, palmW, palmH, 0, 0, 6.29); ctx.fill();
-  const shade = ctx.createLinearGradient(-palmW, 0, palmW, 0);
-  shade.addColorStop(0, 'rgba(255,246,224,.12)');
-  shade.addColorStop(0.6, 'rgba(0,0,0,0)');
-  shade.addColorStop(1, rgb(darken(SH, 0.15), 0.4));
-  ctx.fillStyle = shade;
-  ctx.beginPath(); ctx.ellipse(0, cy, palmW, palmH, 0, 0, 6.29); ctx.fill();
+
+  // PALMA: linhas da mão + calos (só na vista palmar)
   if (!dorsal && !far) {
-    // área de contato: um halo de condensação em volta da carne prensada
-    soft(ctx, 0, cy - 2, palmW * 1.5, palmH * 1.3, 'rgba(224,230,214,.10)', 4);
-    soft(ctx, 0, cy - 1, palmW * 0.8, palmH * 0.7, rgb(lighten(tone, 0.3), 0.5), 3);
+    soft(ctx, 0, cy - 1, palmW * 1.1, palmH * 0.9, rgb(lighten(tone, 0.28), 0.4), 4);
     if (anom) {
-      // palma SEM linhas. ninguém repara até reparar.
       soft(ctx, 0, cy, palmW * 0.7, palmH * 0.6, rgb(lighten(tone, 0.15), 0.5), 3);
     } else {
-      // as três linhas que toda palma tem
-      ctx.strokeStyle = rgb(darken(SH, 0.3), 0.6); ctx.lineWidth = 0.6;
-      ctx.beginPath(); ctx.moveTo(-palmW * 0.7, cy - palmH * 0.35);
-      ctx.quadraticCurveTo(0, cy - palmH * 0.05, palmW * 0.75, cy - palmH * 0.3); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-palmW * 0.75, cy + palmH * 0.05);
-      ctx.quadraticCurveTo(-palmW * 0.1, cy + palmH * 0.3, palmW * 0.7, cy + palmH * 0.12) ; ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(-palmW * 0.5, cy + palmH * 0.8);
-      ctx.quadraticCurveTo(-palmW * 0.55, cy + palmH * 0.3, -palmW * 0.25, cy - palmH * 0.5); ctx.stroke();
-      // calos na base dos dedos
-      for (let i = 0; i < nFing; i++) {
-        const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / (nFing - 1));
-        soft(ctx, fx, cy - palmH * 0.62, 1.8, 1.2, rgb(mix(tone, [200, 170, 130], 0.5), 0.5), 1);
-      }
+      ctx.strokeStyle = rgb(darken(SH, 0.3), 0.55); ctx.lineWidth = 0.6 * sc;
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.7, cy - palmH * 0.3); ctx.quadraticCurveTo(0, cy - palmH * 0.02, palmW * 0.75, cy - palmH * 0.28); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.75, cy + palmH * 0.1); ctx.quadraticCurveTo(-palmW * 0.1, cy + palmH * 0.32, palmW * 0.7, cy + palmH * 0.15); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-palmW * 0.5, cy + palmH * 0.85); ctx.quadraticCurveTo(-palmW * 0.55, cy + palmH * 0.3, -palmW * 0.25, cy - palmH * 0.4); ctx.stroke();
+      for (let i = 0; i < nFing; i++) soft(ctx, fing[i].x, palmTop + 1.5, 1.8, 1.2, rgb(mix(tone, [200, 170, 130], 0.5), 0.5), 1);
     }
   }
+
+  // ALIANÇA apertada demais (dedo anelar, vista dorsal)
   if (dorsal && !anom && !sixth) {
-    // a aliança apertada demais para sair (dedo anelar)
-    const fx = -palmW + 2.6 + 2 * ((palmW * 2 - 5) / 3);
-    const ry = cy - palmH * 0.85 - fingerLen * 0.96 * 0.30;
-    ctx.fillStyle = 'rgb(158,132,72)';
-    ctx.fillRect(fx - 3.2, ry, 6.4, 1.7);
-    ctx.fillStyle = 'rgba(255,246,214,.75)';
-    ctx.fillRect(fx - 2.2, ry + 0.3, 1.6, 0.55);
-    // a carne levemente inchada dos dois lados do anel
+    const t = fing[2], fx = t.x, ry = t.ty + t.len * 0.32;
+    ctx.fillStyle = 'rgb(158,132,72)'; ctx.fillRect(fx - 3.2, ry, 6.4, 1.7);
+    ctx.fillStyle = 'rgba(255,246,214,.75)'; ctx.fillRect(fx - 2.2, ry + 0.3, 1.6, 0.55);
     soft(ctx, fx, ry - 1.2, 3, 1, rgb(mix(SK, [180, 100, 90], 0.3), 0.4), 0.8);
     soft(ctx, fx, ry + 2.6, 3, 1, rgb(mix(SK, [180, 100, 90], 0.3), 0.4), 0.8);
   }
+
+  // VEIAS do dorso (fracas no anômalo — pele lisa demais)
   if (dorsal) {
-    // veias do dorso (fracas no anômalo — pele lisa demais)
     ctx.strokeStyle = `rgba(86,96,110,${anom ? 0.12 : 0.4})`; ctx.lineWidth = 0.7;
     for (let i = 0; i < 3; i++) {
-      const x0 = -palmW * 0.6 + i * palmW * 0.55;
-      ctx.beginPath(); ctx.moveTo(x0, cy + palmH * 0.75);
-      ctx.quadraticCurveTo(x0 + 2, cy - palmH * 0.2, x0 + 1 + i, cy - palmH * 0.8); ctx.stroke();
+      const x0 = -palmW * 0.55 + i * palmW * 0.5;
+      ctx.beginPath(); ctx.moveTo(x0, cy + palmH * 0.7); ctx.quadraticCurveTo(x0 + 2, cy - palmH * 0.2, x0 + 1 + i, palmTop + 2); ctx.stroke();
     }
   }
   ctx.restore();
