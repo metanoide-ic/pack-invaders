@@ -240,6 +240,10 @@ const ADS = [
   'Aulas de caligrafia oficial. Assine como um patriota.',
   'Compra-se ouro, relógios e memórias de família. Beco do Sal, 3.',
   'Perdeu seus documentos? A fila do Cartório começa às 4h.',
+  'Espelhos usados pela metade do preço. Não perguntamos por que você não quer mais o seu.',
+  'Repintamos o retrato da sua família enquanto você espera. Fica igualzinho. Igualzinho.',
+  'Curso noturno: reconheça a própria letra em três lições. Certificado oficial.',
+  'Aluga-se quarto sem janelas. "Mais seguro assim", diz o senhorio, sorrindo.',
 ];
 
 /* ---------- COMUNICADOS (bulletins) ---------- */
