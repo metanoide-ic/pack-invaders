@@ -5356,10 +5356,10 @@ function paintBust(ctx, f, opts) {
   ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 80, cx + 7, 62);
   ctx.closePath(); ctx.fill();
   // sombra cilíndrica nas laterais (dá volume de tubo) + sombra do queixo no pescoço
-  soft(ctx, cx - 5.6, 82, 2.6, 13, rgb(darken(SH, 0.28), 0.5), 2);
-  soft(ctx, cx + 5.6, 82, 2.6, 13, rgb(darken(SH, 0.42), 0.55), 2);
-  soft(ctx, cx, 67, 8.5, 3.4, 'rgba(0,0,0,.36)', 2.2);
-  soft(ctx, cx + 3, 74, 4, 6, rgb(lighten(SK, 0.1), 0.3), 2); // realce central do pescoço
+  soft(ctx, cx - 5.6, 80, 2.4, 12, rgb(darken(SH, 0.24), 0.36), 2);
+  soft(ctx, cx + 5.6, 80, 2.4, 12, rgb(darken(SH, 0.34), 0.4), 2);
+  soft(ctx, cx, 67, 8, 3, 'rgba(0,0,0,.28)', 2.2);
+  soft(ctx, cx, 74, 4.5, 6, rgb(lighten(SK, 0.12), 0.34), 2); // realce central do pescoço (tubo)
 
   /* JUNTA no pescoço: a linha onde a cabeça trocada se prende ao corpo.
      Sutil ao vivo (a fita VHS embaralha), nítida no exame do PESCOÇO. */
@@ -5497,7 +5497,7 @@ function paintBust(ctx, f, opts) {
     ctx.fillStyle = 'rgba(70,62,44,.9)';
     for (const by of [104, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.85, 0, 6.29); ctx.fill(); }
     // gola do casaco: duas abas emoldurando o pescoço, encontrando no decote
-    ctx.fillStyle = 'rgba(0,0,0,.36)';
+    ctx.fillStyle = 'rgba(0,0,0,.24)';
     ctx.beginPath(); ctx.moveTo(41, 92.6); ctx.lineTo(50, 96.4); ctx.lineTo(45, 101); ctx.lineTo(36.5, 94.6); ctx.closePath(); ctx.fill();
     ctx.beginPath(); ctx.moveTo(59, 92.6); ctx.lineTo(50, 96.4); ctx.lineTo(55, 101); ctx.lineTo(63.5, 94.6); ctx.closePath(); ctx.fill();
     ctx.strokeStyle = 'rgba(255,246,220,.18)'; ctx.lineWidth = 1; ctx.lineJoin = 'round';  // aresta de luz na dobra
@@ -5531,7 +5531,7 @@ function paintBust(ctx, f, opts) {
     soft(ctx, 50, L.chinY + 1, L.chinW * 0.8, 1.2, rgb(lighten(SK, 0.14), 0.4), 1.4); // brilho no topo do rolo
   }
   // sombra da cabeça caindo no colarinho (mais estreita, sob o pescoço)
-  soft(ctx, 50, 91, 9, 3.2, 'rgba(0,0,0,.34)', 2.4);
+  soft(ctx, 50, 92, 7, 2.2, 'rgba(0,0,0,.22)', 2.2);
   // luz de recorte nos ombros (separa o casaco preto do fundo preto):
   // ombro esquerdo pega a key (morna), ombro direito pega o rim (frio).
   ctx.lineCap = 'round';
@@ -5546,39 +5546,39 @@ function paintBust(ctx, f, opts) {
      de colo (lá os braços já embalam o cobertor). */
   if (!opts.companion) {
     const kid = L.child;
-    const sleeve = f.uniform ? rgb(f.uniformColor || [58, 66, 48]) : coatCol;
-    const aTop = kid ? 99 : 96, aBot = kid ? 120 : 120;
+    const aTop = kid ? 99 : 96, aBot = kid ? 120 : 122;   // braço desce até a borda do busto (recortado pelo quadro)
     for (const s of [-1, 1]) {
       const shX = 50 + s * (kid ? 19 : 27);   // topo da manga (no ombro)
       const wrX = 50 + s * (kid ? 17 : 24);   // punho (quase reto pra baixo)
       const wO = kid ? 5 : 6.5, wI = kid ? 3.6 : 5;   // largura externa/interna da manga
       const midY = (aTop + aBot) / 2;
       ctx.save(); ctx.lineJoin = 'round';
-      // manga
-      ctx.fillStyle = sleeve;
-      ctx.beginPath();
-      ctx.moveTo(shX + s * wO, aTop);
-      ctx.quadraticCurveTo(shX + s * (wO + 1), midY, wrX + s * wI, aBot);
-      ctx.lineTo(wrX - s * wI, aBot);
-      ctx.quadraticCurveTo(shX - s * (wI + 0.5), midY, shX - s * wI, aTop);
-      ctx.closePath(); ctx.fill();
-      // cava: sombra separando a manga do tronco (lado interno)
-      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.42)'; ctx.lineWidth = 1.7;
+      const sleevePath = () => {
+        ctx.beginPath();
+        ctx.moveTo(shX + s * wO, aTop);
+        ctx.quadraticCurveTo(shX + s * (wO + 1), midY, wrX + s * wI, aBot);
+        ctx.lineTo(wrX - s * wI, aBot);
+        ctx.quadraticCurveTo(shX - s * (wI + 0.5), midY, shX - s * wI, aTop);
+        ctx.closePath();
+      };
+      // manga na cor do casaco, mas ESCURECIDA — assim o braço lê como volume
+      // próprio, separado do tronco (antes era a mesma cor e sumia, só a mão
+      // aparecia como um borrão solto na base).
+      ctx.fillStyle = f.uniform ? rgb(f.uniformColor || [58, 66, 48]) : coatCol;
+      sleevePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.26)'; sleevePath(); ctx.fill();
+      // cava funda separando o braço do tronco (lado interno)
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 1.6;
       ctx.beginPath(); ctx.moveTo(shX - s * wI, aTop + 1); ctx.quadraticCurveTo(shX - s * wI, midY, wrX - s * (wI - 0.6), aBot - 1); ctx.stroke();
-      // aresta de luz na frente do braço
-      ctx.strokeStyle = 'rgba(240,240,218,.10)'; ctx.lineWidth = 1.1;
-      ctx.beginPath(); ctx.moveTo(shX + s * (wO - 1), aTop + 2); ctx.quadraticCurveTo(shX + s * wO, midY, wrX + s * (wI - 1), aBot - 2); ctx.stroke();
-      // punho: banda escura na base da manga
-      ctx.lineCap = 'butt'; ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = (wO + wI) * 0.95;
-      ctx.beginPath(); ctx.moveTo(wrX - s * (wI - 0.5), aBot - 4); ctx.lineTo(wrX + s * (wI - 0.5), aBot - 4); ctx.stroke();
-      // MÃO saindo do punho (pele — trai a cor do Alternado junto com o rosto)
-      const hr = kid ? 2.8 : 3.6;
-      ctx.fillStyle = rgb(mix(SK, SH, 0.28));
-      ctx.beginPath(); ctx.ellipse(wrX, aBot - 0.5, hr, hr * 1.05, 0, 0, 6.29); ctx.fill();
-      ctx.fillStyle = rgb(SK);
-      ctx.beginPath(); ctx.ellipse(wrX - s * 0.6, aBot - 1.4, hr * 0.7, hr * 0.7, 0, 0, 6.29); ctx.fill(); // costas da mão na luz
-      ctx.strokeStyle = 'rgba(0,0,0,.2)'; ctx.lineWidth = 0.5; // sulcos dos dedos
-      for (let k = -1; k <= 1; k++) { ctx.beginPath(); ctx.moveTo(wrX + k * 1.3, aBot + 0.4); ctx.lineTo(wrX + k * 1.3, aBot + hr * 0.9); ctx.stroke(); }
+      // aresta de luz na frente do braço (define o tubo)
+      ctx.strokeStyle = 'rgba(240,240,218,.16)'; ctx.lineWidth = 1.1;
+      ctx.beginPath(); ctx.moveTo(shX + s * (wO - 0.8), aTop + 2); ctx.quadraticCurveTo(shX + s * (wO + 0.3), midY, wrX + s * (wI - 0.7), aBot - 2); ctx.stroke();
+      // fecho arredondado na base da manga (o punho) — sem MÃO de pele: num
+      // busto peito-para-cima a mão cai bem na borda do quadro e vira um borrão
+      // solto. Os braços pendentes já entregam os "membros"; a mão aparece de
+      // corpo inteiro só no exame (paintHandScene).
+      ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(wrX - s * (wI - 0.4), aBot - 2.4); ctx.lineTo(wrX + s * (wI - 0.4), aBot - 2.4); ctx.stroke();
       ctx.restore();
     }
   }
