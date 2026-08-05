@@ -120,7 +120,7 @@ function famSprite(who) {
     // busto do motor procedural (transparente fora da figura)
     if (typeof renderPortraitCanvas === 'function') {
       const bust = renderPortraitCanvas(f, {
-        w: 64, h: bustH, paintScale: 2.2, coat,
+        w: 64, h: bustH, paintScale: 2.2, coat, fullBody: true,   // corpo inteiro: mostra os braços
         // sem franja cromática no rosto da família (o grão/scanline mantém o clima)
         post: { levels: 11, grain: 8, aberr: 0, scan: 0.09, sat: 0.46 },
       });

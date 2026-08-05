@@ -201,13 +201,18 @@ function paintBust(ctx, f, opts) {
     SH = mix(SH, darken(tgt, 0.4), opts.skinShift);
   }
 
-  /* pescoço primeiro — a gola do casaco cobre a base depois */
-  ctx.fillStyle = rgb(mix(SK, SH, 0.4));
+  /* pescoço primeiro — mais estreito e cilíndrico; a gola do casaco abraça a
+     base depois (o pescoço ENTRA na roupa, não fica atrás dela). */
+  ctx.fillStyle = rgb(mix(SK, SH, 0.32));
   ctx.beginPath();
-  ctx.moveTo(cx - 9, 66); ctx.quadraticCurveTo(cx - 10, 82, cx - 12, 92);
-  ctx.lineTo(cx + 12, 92); ctx.quadraticCurveTo(cx + 10, 82, cx + 9, 66);
+  ctx.moveTo(cx - 7, 62); ctx.quadraticCurveTo(cx - 8, 80, cx - 8.5, 95);
+  ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 80, cx + 7, 62);
   ctx.closePath(); ctx.fill();
-  soft(ctx, cx, 88, 9, 4, rgb(darken(SH, 0.2), 0.4), 1.6);
+  // sombra cilíndrica nas laterais (dá volume de tubo) + sombra do queixo no pescoço
+  soft(ctx, cx - 5.6, 82, 2.6, 13, rgb(darken(SH, 0.28), 0.5), 2);
+  soft(ctx, cx + 5.6, 82, 2.6, 13, rgb(darken(SH, 0.42), 0.55), 2);
+  soft(ctx, cx, 67, 8.5, 3.4, 'rgba(0,0,0,.36)', 2.2);
+  soft(ctx, cx + 3, 74, 4, 6, rgb(lighten(SK, 0.1), 0.3), 2); // realce central do pescoço
 
   /* JUNTA no pescoço: a linha onde a cabeça trocada se prende ao corpo.
      Sutil ao vivo (a fita VHS embaralha), nítida no exame do PESCOÇO. */
@@ -228,14 +233,29 @@ function paintBust(ctx, f, opts) {
   /* casaco e ombros — lã pesada com trama, dobras e gola de verdade.
      Criança: ombros estreitos e caídos (senão o cabeção fica em corpo de
      adulto e a criança vira anão). */
+  /* OMBROS LARGOS + DECOTE: a linha do ombro é ampla e quase reta no topo, sobe
+     até a base do pescoço e ali abre um decote (gola) onde o pescoço entra —
+     antes era um morro arredondado que parecia "sem ombros". */
   const coatPath = () => {
     ctx.beginPath();
     if (L.child) {
-      ctx.moveTo(26, 122); ctx.bezierCurveTo(27, 100, 39, 92, 50, 91.5);
-      ctx.bezierCurveTo(61, 92, 73, 100, 74, 122); ctx.closePath();
+      ctx.moveTo(20, 122);
+      ctx.lineTo(23, 104);
+      ctx.quadraticCurveTo(26, 96, 38, 94);
+      ctx.quadraticCurveTo(44, 93.2, 46, 94.6);
+      ctx.quadraticCurveTo(50, 96.6, 54, 94.6);
+      ctx.quadraticCurveTo(56, 93.2, 62, 94);
+      ctx.quadraticCurveTo(74, 96, 77, 104);
+      ctx.lineTo(80, 122); ctx.closePath();
     } else {
-      ctx.moveTo(10, 122); ctx.bezierCurveTo(11, 94, 30, 86, 50, 85);
-      ctx.bezierCurveTo(70, 86, 89, 94, 90, 122); ctx.closePath();
+      ctx.moveTo(3, 122);
+      ctx.lineTo(7, 100);
+      ctx.quadraticCurveTo(10, 93.5, 26, 91.5);     // ombro esquerdo: largo e alto
+      ctx.quadraticCurveTo(37, 90.5, 43, 92.5);     // sobe até a base do pescoço
+      ctx.quadraticCurveTo(50, 95.2, 57, 92.5);     // DECOTE — a gola abraça o pescoço
+      ctx.quadraticCurveTo(63, 90.5, 74, 91.5);     // base do pescoço → ombro direito
+      ctx.quadraticCurveTo(90, 93.5, 93, 100);      // ombro direito: largo e alto
+      ctx.lineTo(97, 122); ctx.closePath();
     }
   };
   coatPath();
@@ -322,21 +342,20 @@ function paintBust(ctx, f, opts) {
       ctx.fillText(f.seal, 60, 106.3);
     }
   } else {
-    // abertura central: camisa e botão
-    ctx.fillStyle = 'rgba(12,11,8,.85)';
-    ctx.beginPath(); ctx.moveTo(46, 96); ctx.lineTo(54, 96); ctx.lineTo(53, 122); ctx.lineTo(47, 122); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgb(148,140,116)';
-    ctx.beginPath(); ctx.moveTo(47.5, 96); ctx.lineTo(52.5, 96); ctx.lineTo(51.8, 122); ctx.lineTo(48.2, 122); ctx.closePath(); ctx.fill();
+    // camisa em V aparecendo sob a gola + fileira de botões
+    ctx.fillStyle = 'rgb(150,142,118)';
+    ctx.beginPath(); ctx.moveTo(45.5, 95); ctx.lineTo(54.5, 95); ctx.lineTo(51.5, 122); ctx.lineTo(48.5, 122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(12,11,8,.7)';   // vão escuro no meio da camisa
+    ctx.beginPath(); ctx.moveTo(48.4, 97); ctx.lineTo(51.6, 97); ctx.lineTo(50.6, 122); ctx.lineTo(49.4, 122); ctx.closePath(); ctx.fill();
     ctx.fillStyle = 'rgba(70,62,44,.9)';
-    for (const by of [103, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.8, 0, 6.29); ctx.fill(); }
-    // gola dobrada (duas abas pegando luz de jeitos diferentes)
-    ctx.fillStyle = rgb(mix([45, 46, 38], [235, 238, 210], 0.10));
-    ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.lineTo(33, 93.5); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = rgb(mix([45, 46, 38], [10, 10, 8], 0.35));
-    ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.lineTo(67, 93.5); ctx.closePath(); ctx.fill();
-    ctx.strokeStyle = 'rgba(0,0,0,.5)'; ctx.lineWidth = 0.5;
-    ctx.beginPath(); ctx.moveTo(38, 90); ctx.lineTo(47, 95.5); ctx.lineTo(42, 101); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(62, 90); ctx.lineTo(53, 95.5); ctx.lineTo(58, 101); ctx.stroke();
+    for (const by of [104, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.85, 0, 6.29); ctx.fill(); }
+    // gola do casaco: duas abas emoldurando o pescoço, encontrando no decote
+    ctx.fillStyle = 'rgba(0,0,0,.36)';
+    ctx.beginPath(); ctx.moveTo(41, 92.6); ctx.lineTo(50, 96.4); ctx.lineTo(45, 101); ctx.lineTo(36.5, 94.6); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(59, 92.6); ctx.lineTo(50, 96.4); ctx.lineTo(55, 101); ctx.lineTo(63.5, 94.6); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(255,246,220,.18)'; ctx.lineWidth = 1; ctx.lineJoin = 'round';  // aresta de luz na dobra
+    ctx.beginPath(); ctx.moveTo(36.5, 94.4); ctx.lineTo(41, 92.7); ctx.lineTo(49.6, 96.2); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(63.5, 94.4); ctx.lineTo(59, 92.7); ctx.lineTo(50.4, 96.2); ctx.stroke();
     // cachecol de lã ocasional (civil, no frio) — enrolado no pescoço
     if (f.scarf) {
       const sc = toRGB(f.scarf);
@@ -364,23 +383,21 @@ function paintBust(ctx, f, opts) {
     soft(ctx, 50, L.chinY + 4.5 + gg * 2, L.chinW + gg * 2, 1.4 + gg * 1.5, 'rgba(0,0,0,.28)', 2);
     soft(ctx, 50, L.chinY + 1, L.chinW * 0.8, 1.2, rgb(lighten(SK, 0.14), 0.4), 1.4); // brilho no topo do rolo
   }
-  // sombra da cabeça caindo no peito
-  soft(ctx, 50, 92, 15, 5, 'rgba(0,0,0,.45)', 2.6);
+  // sombra da cabeça caindo no colarinho (mais estreita, sob o pescoço)
+  soft(ctx, 50, 91, 9, 3.2, 'rgba(0,0,0,.34)', 2.4);
   // luz de recorte nos ombros (separa o casaco preto do fundo preto):
   // ombro esquerdo pega a key (morna), ombro direito pega o rim (frio).
   ctx.lineCap = 'round';
-  ctx.strokeStyle = 'rgba(226,220,190,.34)'; ctx.lineWidth = 1.1;
-  ctx.beginPath(); ctx.moveTo(17, 106); ctx.bezierCurveTo(24, 92, 38, 88, 49, 87.4); ctx.stroke();
-  ctx.strokeStyle = 'rgba(150,178,214,.3)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(83, 106); ctx.bezierCurveTo(76, 92, 62, 88, 51, 87.4); ctx.stroke();
+  ctx.strokeStyle = 'rgba(226,220,190,.36)'; ctx.lineWidth = 1.2;
+  ctx.beginPath(); ctx.moveTo(7, 105); ctx.quadraticCurveTo(12, 94, 28, 91.4); ctx.quadraticCurveTo(38, 90.5, 44, 92); ctx.stroke();
+  ctx.strokeStyle = 'rgba(150,178,214,.32)'; ctx.lineWidth = 1.1;
+  ctx.beginPath(); ctx.moveTo(93, 105); ctx.quadraticCurveTo(88, 94, 72, 91.4); ctx.quadraticCurveTo(62, 90.5, 56, 92); ctx.stroke();
 
-  /* BRAÇOS: o busto tinha cabeça e ombros mas nenhum membro — ficava "sem
-     braços". Agora dois antebraços (mangas do casaco) descem e se juntam na
-     frente, com as mãos entrelaçadas na altura do cinto — pose de quem espera
-     no frio. Some no bebê de colo (lá os braços já embalam o cobertor) e
-     encolhe pra criança. As mãos usam a MESMA pele do rosto, então também
-     traem a cor doentia do Alternado (skinShift) junto com a cara. */
-  if (!opts.companion) {
+  /* BRAÇOS (mãos entrelaçadas na frente): SÓ em corpo inteiro (sprite da
+     família na casa). No busto do guichê/documento é um recorte cabeça-e-ombros
+     — mão no meio do peito virava um nó estranho, então lá fica só o ombro
+     largo. Some no bebê de colo (os braços já embalam o cobertor). */
+  if (opts.fullBody && !opts.companion) {
     const kid = L.child;
     const sleeve = f.uniform ? rgb(f.uniformColor || [58, 66, 48]) : coatCol;
     const hy = kid ? 108 : 112;                          // altura das mãos entrelaçadas
@@ -1924,8 +1941,8 @@ function paintHandScene(ctx, f, phys, mode) {
   const dorsal = mode === 'dorsal';
   const sc = far ? 0.72 : 1.24;           // aproximando do vidro (mão enche mais o quadro)
   const cy = far ? 70 : 60;               // centro da palma
-  const fingerLen = (anom ? 30 : 23) * sc; // "dedos compridos demais para as mãos"
-  const palmW = 17 * sc, palmH = 21 * sc;
+  const fingerLen = (anom ? 42 : 32) * sc; // dedos mais longos (antes pareciam luva/nadadeira)
+  const palmW = 13.5 * sc, palmH = 18 * sc; // palma mais estreita e menos alta
   const tone = mix(SK, [255, 238, 214], far ? 0.02 : 0.06); // pele quente (prensada = um tico mais pálida)
   ctx.save();
   ctx.translate(50 + (far ? 4 : 0), 0);
@@ -1948,7 +1965,7 @@ function paintHandScene(ctx, f, phys, mode) {
   const flenP = sixth ? [0.8, 0.95, 1, 0.94, 0.76] : [0.82, 1, 0.96, 0.78];
   for (let i = 0; i < nFing; i++) {
     const fx = -palmW + 2.6 + i * ((palmW * 2 - 5) / (nFing - 1));
-    const fw2 = (3.4 - Math.abs(i - (sixth ? 1.9 : 1.6)) * 0.34) * sc * (sixth ? 0.88 : 1);
+    const fw2 = (2.9 - Math.abs(i - (sixth ? 1.9 : 1.6)) * 0.30) * sc * (sixth ? 0.88 : 1);
     const fl = fingerLen * flenP[i];
     const top = cy - palmH * 0.85 - fl;
     ctx.fillStyle = rgb(tone);
