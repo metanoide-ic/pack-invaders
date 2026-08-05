@@ -213,6 +213,10 @@ const I18N_EN = {
   '"…o inspetor de sexta é pior…"': '"…the Friday inspector is worse…"',
   '"…açúcar. eles odeiam açúcar…"': '"…sugar. they hate sugar…"',
   '"…quieto, tem gente ouvindo…"': '"…quiet, people are listening…"',
+  '"…não conta os dedos dele. conta os SEUS…"': '"…don\'t count his fingers. count YOURS…"',
+  '"…a fila de ontem sumiu inteira. inteira…"': '"…yesterday\'s whole line vanished. the whole line…"',
+  '"…leva o casaco mais grosso. lá dentro é pior…"': '"…bring your thickest coat. it\'s worse on the inside…"',
+  '"…se ele pedir pra sorrir, não sorri de mais…"': '"…if he asks you to smile, don\'t smile too much…"',
 
   /* ---- EVENTOS DA FILA (QUEUE_EVENTS) ---- */
   'Uma mulher desmaiou na fila. Os guardas afastam os curiosos com a coronha.':
@@ -1553,6 +1557,10 @@ const I18N_ES = {
   '"…o inspetor de sexta é pior…"': '"…el inspector del viernes es peor…"',
   '"…açúcar. eles odeiam açúcar…"': '"…azúcar. odian el azúcar…"',
   '"…quieto, tem gente ouvindo…"': '"…silencio, hay gente escuchando…"',
+  '"…não conta os dedos dele. conta os SEUS…"': '"…no le cuentes los dedos a él. cuéntate los TUYOS…"',
+  '"…a fila de ontem sumiu inteira. inteira…"': '"…la fila de ayer desapareció entera. entera…"',
+  '"…leva o casaco mais grosso. lá dentro é pior…"': '"…lleva el abrigo más grueso. adentro es peor…"',
+  '"…se ele pedir pra sorrir, não sorri de mais…"': '"…si te pide sonreír, no sonrías de más…"',
 
   /* ---- EVENTOS DA FILA (QUEUE_EVENTS) ---- */
   'Uma mulher desmaiou na fila. Os guardas afastam os curiosos com a coronha.':

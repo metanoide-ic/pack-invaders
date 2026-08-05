@@ -790,6 +790,8 @@ const QUEUE_CHATTER = [
   '"…três dias nessa fila…"', '"…dizem que o scanner morde…"', '"…meu primo passou ontem…"',
   '"…ela não era ela, eu juro…"', '"…vendo pão, meia ostra…"', '"…não olha nos olhos dele…"',
   '"…o inspetor de sexta é pior…"', '"…açúcar. eles odeiam açúcar…"', '"…quieto, tem gente ouvindo…"',
+  '"…não conta os dedos dele. conta os SEUS…"', '"…a fila de ontem sumiu inteira. inteira…"',
+  '"…leva o casaco mais grosso. lá dentro é pior…"', '"…se ele pedir pra sorrir, não sorri de mais…"',
 ];
 
 /* ---------- REDE SOCIAL INVISÍVEL: boatos sobre ESTE inspetor ---------- */
