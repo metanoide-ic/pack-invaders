@@ -2060,12 +2060,18 @@ const COMPANION_BABY = [ // bebê de colo — peso emocional, não pista de jogo
   'Nasceu na estrada. Não tem documento ainda. Ninguém me disse que precisava.',
   'Ele não chorou uma vez a viagem inteira. Bom menino.',
   'Só quero que ela cresça do outro lado. Só isso.',
+  'O leite secou faz dois dias. Ela ainda não sabe reclamar. Eu sei.',
+  'É o único documento que eu tenho dele: sei o peso dele de cor.',
+  'Se precisar carimbar, carimbe rápido. Ela acorda com barulho de metal.',
 ];
 const COMPANION_CHILD = [
   'Diz "bom dia" pro moço. — …ele é tímido.',
   'Ela não solta a minha mão desde que saímos de casa.',
   'Meu filho. Os papéis dele estão junto dos meus. Estão, sim.',
   'Não olhe assim pra ela. Ela não fez nada. Nenhum de nós fez.',
+  'Ele decorou o próprio nome e o meu. Caso perguntem. Caso a gente se perca.',
+  'Ela perguntou se do outro lado também tem inverno. Não soube mentir.',
+  'Não trouxe brinquedo. Trouxe os documentos dele no lugar. Ele entende — crianças entendem cedo demais aqui.',
 ];
 function clueFor(cz) {
   const subtle = cz.isAlternado && (!cz.anom || (!cz.anom.skinShift && !cz.anom.deadStare && !cz.anom.smile));
