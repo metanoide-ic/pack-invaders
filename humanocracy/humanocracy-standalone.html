@@ -86,8 +86,8 @@ button {
   box-shadow: inset 0 1px 0 rgba(255,255,255,.06), inset 0 -1px 0 rgba(0,0,0,.35);
   border: 1px solid var(--ink-dim); padding: 6px 12px;
 }
-button:hover:not(:disabled) { background-color: var(--accent); background-image:none; color:#fff; }
-button:active:not(:disabled) { box-shadow: inset 0 1px 3px rgba(0,0,0,.5); }
+button:hover:not(:disabled) { color:#f4ecce; border-color:rgba(201,163,74,.55); box-shadow: inset 0 1px 0 rgba(255,246,220,.10), 0 0 12px rgba(201,163,74,.22); }
+button:active:not(:disabled) { box-shadow: inset 0 1px 3px rgba(0,0,0,.5); transform:translateY(1px); }
 button:disabled { opacity:.35; cursor:not-allowed; }
 
 /* superfícies com textura procedural (faces.js gera --tex-* em runtime) */
@@ -124,26 +124,58 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   display:inline-block;
 }
 .title-quote { margin:24px auto 22px; font-family:var(--font-doc); color:#cdbf98; font-size:15px; font-style:italic; max-width:440px; }
-.title-menu { display:flex; flex-direction:column; gap:9px; align-items:center; margin:18px 0 6px; }
+.title-menu { display:flex; flex-direction:column; gap:8px; align-items:center; margin:20px 0 6px; width:308px; margin-left:auto; margin-right:auto; }
+.title-row { display:flex; gap:8px; width:100%; }
+/* placa gravada escura: bisel, aresta dourada interna, rótulo estampado */
 .btn-title {
-  width:280px; padding:11px; font-size:14px; letter-spacing:2px;
-  border:1px solid var(--ink-dim); color:var(--ink);
-  background: linear-gradient(180deg, rgba(255,246,220,.06), rgba(0,0,0,.25)), linear-gradient(#22241d,#17190f);
-  box-shadow: inset 0 1px 0 rgba(255,246,220,.07), 0 2px 6px rgba(0,0,0,.5);
-  transition: color .1s, box-shadow .12s, transform .06s;
+  width:100%; padding:12px 14px; font-size:13.5px; letter-spacing:2.5px;
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
+  color:#cabd98; border:1px solid #05060400; border-radius:4px; position:relative; cursor:pointer;
+  background:
+    linear-gradient(180deg, rgba(255,246,220,.10), rgba(0,0,0,.02) 30%, rgba(0,0,0,.34)),
+    linear-gradient(#2b2d23, #171911);
+  box-shadow:
+    inset 0 1px 0 rgba(255,246,220,.12),
+    inset 0 0 0 1px rgba(120,104,60,.22),
+    inset 0 -8px 14px rgba(0,0,0,.32),
+    0 3px 7px rgba(0,0,0,.55);
+  text-shadow: 0 1px 1px rgba(0,0,0,.6);
+  transition: color .12s, box-shadow .16s, transform .07s, border-color .12s;
 }
-.btn-title:hover:not(:disabled) { color:#f0e6c8; background-image:none; background-color:transparent; box-shadow: inset 0 1px 0 rgba(255,246,220,.1), 0 0 14px rgba(201,163,74,.3); }
+/* filete dourado tênue nas laterais, como moldura de latão */
+.btn-title::before {
+  content:""; position:absolute; inset:3px; border-radius:2px; pointer-events:none;
+  box-shadow: inset 0 0 0 1px rgba(201,163,74,.10);
+}
+.btn-title:hover:not(:disabled) {
+  color:#f4ecce; border-color:rgba(201,163,74,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,246,220,.16),
+    inset 0 0 0 1px rgba(201,163,74,.3),
+    inset 0 -8px 14px rgba(0,0,0,.3),
+    0 0 18px rgba(201,163,74,.28), 0 4px 9px rgba(0,0,0,.6);
+  transform:translateY(-1px);
+}
+.btn-title:active:not(:disabled) { transform:translateY(1px); box-shadow: inset 0 2px 7px rgba(0,0,0,.6), inset 0 0 0 1px rgba(120,104,60,.2); }
+.btn-title-sm { font-size:11.5px; letter-spacing:1.6px; padding:9px 10px; }
+.btn-half { flex:1; min-width:0; }
 /* botão primário: selo de cera do Ministério */
 #btn-new {
-  width:308px; padding:16px; font-size:17px; letter-spacing:4px; margin-bottom:4px;
-  color:#14130c; border:1px solid #8a6a20;
-  background: linear-gradient(180deg, #ecd48a 0%, #c9a34a 100%);
-  box-shadow: 0 0 22px rgba(201,163,74,.4), inset 0 1px 0 rgba(255,248,224,.6), inset 0 -2px 4px rgba(120,90,20,.4);
+  width:100%; padding:16px; font-size:17px; letter-spacing:4px; margin-bottom:3px;
+  color:#14130c; border:1px solid #8a6a20; text-shadow:0 1px 0 rgba(255,248,224,.35);
+  background: linear-gradient(180deg, #f2dc95 0%, #ddb85f 46%, #c9a34a 100%);
+  box-shadow: 0 0 22px rgba(201,163,74,.4), inset 0 1px 0 rgba(255,248,224,.7), inset 0 -3px 5px rgba(120,90,20,.45);
 }
-#btn-new:hover:not(:disabled) { color:#000; background:linear-gradient(180deg,#f6e6a4,#d8b45a); box-shadow:0 0 30px rgba(201,163,74,.6), inset 0 1px 0 rgba(255,248,224,.7); transform:translateY(-1px); }
-.btn-toggle { font-size:11px; width:250px; padding:8px; opacity:.7; }
-.btn-toggle:hover { opacity:1; }
-.btn-toggle.on { opacity:1; color:var(--stamp-green); border-color:var(--stamp-green); }
+#btn-new::before { box-shadow: inset 0 0 0 1px rgba(255,248,224,.25); }
+#btn-new:hover:not(:disabled) { color:#000; background:linear-gradient(180deg,#f8eaab,#d8b45a); box-shadow:0 0 32px rgba(201,163,74,.6), inset 0 1px 0 rgba(255,248,224,.8), inset 0 -3px 5px rgba(120,90,20,.4); transform:translateY(-1px); }
+/* alternadores (settings): indicador de caixa + estado ligado esverdeado */
+.btn-toggle { font-size:12px; letter-spacing:1.4px; padding:9px 12px; color:#b0a47f; }
+.btn-toggle:hover:not(:disabled) { color:#e9dfc0; }
+.btn-toggle.on {
+  color:#a6d29a; border-color:rgba(52,116,58,.55);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.12), inset 0 0 0 1px rgba(52,116,58,.35), inset 0 -8px 14px rgba(0,0,0,.28), 0 0 12px rgba(52,116,58,.22), 0 3px 7px rgba(0,0,0,.5);
+}
+.btn-toggle.on::before { box-shadow: inset 0 0 0 1px rgba(120,190,110,.2); }
 .title-warning { font-size:10.5px; color:var(--ink-dim); margin-top:22px; line-height:1.55; max-width:480px; margin-left:auto; margin-right:auto; }
 .title-version { font-size:10px; color:var(--ink-dim); margin-top:12px; opacity:.55; letter-spacing:1px; }
 
@@ -259,7 +291,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .shift-clock { font-family:var(--font-display); font-weight:600; font-size:26px; color:var(--accent2); min-width:84px; font-variant-numeric:tabular-nums; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
-.btn-small { font-size:11px; }
+.btn-small { font-size:11px; border-radius:3px; padding:6px 12px; }
 
 .shift-main {
   flex:1; min-height:0; display:grid;
@@ -671,7 +703,26 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   display:flex; flex-direction:column; gap:10px; min-width:320px;
 }
 .pause-title { font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:18px; text-align:center; letter-spacing:6px; color:var(--accent2); margin-bottom:8px; }
-.pause-panel button { padding:11px; letter-spacing:1px; }
+/* botões do menu de pausa: mesma placa gravada do título (nada de painel chapado) */
+.pause-panel button {
+  padding:12px 16px; letter-spacing:2px; font-size:13px; border-radius:4px; position:relative;
+  color:#cabd98; border:1px solid #00000000;
+  background:
+    linear-gradient(180deg, rgba(255,246,220,.10), rgba(0,0,0,.02) 30%, rgba(0,0,0,.34)),
+    linear-gradient(#2b2d23, #171911);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.12), inset 0 0 0 1px rgba(120,104,60,.22), inset 0 -8px 14px rgba(0,0,0,.32), 0 3px 7px rgba(0,0,0,.55);
+  text-shadow:0 1px 1px rgba(0,0,0,.6);
+  transition: color .12s, box-shadow .16s, transform .07s, border-color .12s;
+}
+.pause-panel button:hover:not(:disabled) {
+  color:#f4ecce; background-color:transparent; border-color:rgba(201,163,74,.5);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.16), inset 0 0 0 1px rgba(201,163,74,.3), inset 0 -8px 14px rgba(0,0,0,.3), 0 0 18px rgba(201,163,74,.28), 0 4px 9px rgba(0,0,0,.6);
+  transform:translateY(-1px);
+}
+.pause-panel button:active:not(:disabled) { transform:translateY(1px); box-shadow: inset 0 2px 7px rgba(0,0,0,.6); }
+/* CONTINUAR em destaque dourado (ação primária) */
+#pz-continue { color:#14130c; border-color:#8a6a20; background:linear-gradient(180deg,#f2dc95,#c9a34a); text-shadow:0 1px 0 rgba(255,248,224,.35); box-shadow:0 0 16px rgba(201,163,74,.35), inset 0 1px 0 rgba(255,248,224,.7); }
+#pz-continue:hover:not(:disabled) { color:#000; background:linear-gradient(180deg,#f8eaab,#d8b45a); box-shadow:0 0 26px rgba(201,163,74,.55), inset 0 1px 0 rgba(255,248,224,.8); }
 .pause-note { margin-top:10px; text-align:center; font-size:10px; color:var(--ink-dim); font-style:italic; }
 
 /* Citação */
@@ -949,8 +1000,15 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .exam-face svg { width:100%; max-width:330px; height:auto; filter: contrast(1.08); }
 .exam-right { display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0; }
 .exam-zones { display:flex; flex-wrap:wrap; gap:6px; }
-.exam-zones button { font-size:11px; padding:6px 10px; }
-.exam-zones button.done { opacity:.5; }
+.exam-zones button {
+  font-size:11px; padding:7px 12px; border-radius:3px; letter-spacing:1px;
+  color:#c7bb96; border:1px solid #000;
+  background: linear-gradient(180deg, rgba(255,246,220,.08), rgba(0,0,0,.30)), linear-gradient(#282a21,#181a12);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.09), 0 1px 3px rgba(0,0,0,.45);
+}
+.exam-zones button:hover:not(:disabled) { color:#f4ecce; border-color:rgba(201,163,74,.5); box-shadow: inset 0 1px 0 rgba(255,246,220,.12), 0 0 10px rgba(201,163,74,.26); }
+.exam-zones button.done { color:#8fae86; border-color:rgba(52,116,58,.4); }
+.exam-zones button.done::after { content:" ✓"; color:var(--stamp-green); font-weight:bold; }
 .exam-log { flex:1; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--ink); }
 .exam-log .anomalia { color:#d98b7c; }
 /* achado clicável: registra a discrepância (estilo Papers Please) */
@@ -1080,12 +1138,14 @@ body.text-large .np-body { font-size:15px; }
         <div class="title-menu">
           <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
           <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
-          <button id="btn-second-reading" class="btn-title" style="display:none;font-size:12px;width:260px;padding:8px" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-          <button id="btn-fullscreen" class="btn-title" style="font-size:12px;width:200px;padding:8px">⛶ TELA CHEIA (F)</button>
+          <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
+          <div class="title-row">
+            <button id="btn-fullscreen" class="btn-title btn-title-sm btn-half">⛶ TELA CHEIA (F)</button>
+            <button id="btn-achievements" class="btn-title btn-title-sm btn-half">🏆 CONQUISTAS</button>
+          </div>
           <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
           <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
-          <button id="btn-lang" class="btn-title btn-toggle" style="width:200px" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
-          <button id="btn-achievements" class="btn-title" style="font-size:12px;width:200px;padding:8px">🏆 CONQUISTAS</button>
+          <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
         </div>
         <div class="title-warning">
           Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
