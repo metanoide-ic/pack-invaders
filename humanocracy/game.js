@@ -1878,6 +1878,20 @@ function drawQueue(ctx, w, h) {
     if (s.y > h) { s.y = -2; s.x = rnd() * w; }
     ctx.fillRect(s.x, s.y, 1.4, 1.4);
   });
+  // HALO atrás do sujeito: um brilho morno recorta a cabeça do fundo escuro
+  // (o busto é overlay por cima, então isto fica ATRÁS dele — dá relevo
+  // cinematográfico sem tocar no rosto).
+  const hx = w * 0.5, hy = h * 0.44;
+  const halo = ctx.createRadialGradient(hx, hy, 6, hx, hy, h * 0.6);
+  halo.addColorStop(0, 'rgba(210,186,132,.20)');
+  halo.addColorStop(0.5, 'rgba(150,150,140,.06)');
+  halo.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = halo; ctx.fillRect(0, 0, w, h);
+  // VINHETA da fita: escurece os cantos do feed (o sujeito, overlay, fica limpo)
+  const vig = ctx.createRadialGradient(w * 0.5, h * 0.5, Math.min(w, h) * 0.32, w * 0.5, h * 0.52, Math.max(w, h) * 0.72);
+  vig.addColorStop(0, 'rgba(0,0,0,0)');
+  vig.addColorStop(1, 'rgba(4,5,3,.55)');
+  ctx.fillStyle = vig; ctx.fillRect(0, 0, w, h);
 }
 function queueAdvance() {
   // o primeiro da fila caminha até o guichê; os outros avançam; chega gente atrás
