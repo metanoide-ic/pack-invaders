@@ -12862,8 +12862,11 @@ document.addEventListener('mousemove', (e) => {
   if (!mouseLook || !HOUSE.active || HD.open) return;       // arrastar para olhar
   const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
   if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
-  HOUSE.ang += dx * .0036;
-  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .34));
+  // sensibilidade um pouco maior que a do pointer lock: como o arrasto é
+  // limitado à largura da tela por gesto, virar de costas precisa render bem
+  // num único arrasto, sem ficar nervoso demais no movimento fino.
+  HOUSE.ang += dx * .0048;
+  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .40));
   mouseLook.x = e.clientX; mouseLook.y = e.clientY;
 });
 document.addEventListener('mouseup', () => {
