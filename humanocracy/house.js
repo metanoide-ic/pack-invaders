@@ -1123,7 +1123,7 @@ function enterHouse() {
   HOUSE.raf = requestAnimationFrame(houseLoop);
   if (S.day === 1) setTimeout(() => hSay('SUA CASA', [
     '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.',
-    'Ande com WASD ou setas. Clique na tela e mexa o mouse para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.',
+    'Ande com WASD ou setas. Arraste o mouse na tela para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.',
     'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.',
   ]), 900);
 }
@@ -1545,18 +1545,38 @@ document.addEventListener('keydown', (e) => {
 });
 document.addEventListener('keyup', (e) => { KEYS[e.key] = false; });
 document.addEventListener('pointerlockchange', () => {});
-document.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement !== $('house-canvas')) return;
-  HOUSE.ang += e.movementX * .0028;
-  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .35));
-});
-$('house-canvas').addEventListener('click', () => {
+/* OLHAR COM O MOUSE: arrastar (segurar o botão e mover) gira a câmera — igual
+   ao arrastar do dedo no touch. NÃO exige mais travar o ponteiro (pointer lock
+   falhava em vários navegadores/embeds e ainda sumia com o cursor, então o
+   jogador acabava girando só nas setas). Um clique curto, sem arrastar,
+   interage com quem está à frente (ou avança o diálogo). Se o pointer lock
+   estiver ativo por algum motivo, ainda é respeitado. */
+let mouseLook = null;
+const hcanvas = $('house-canvas');
+hcanvas.addEventListener('mousedown', (e) => {
   if (!HOUSE.active) return;
-  if (HD.open) { hAdvance(); return; }
-  if (document.pointerLockElement !== $('house-canvas')) {
-    $('house-canvas').requestPointerLock();
+  mouseLook = { x: e.clientX, y: e.clientY, moved: false };
+  if (!HD.open) hcanvas.style.cursor = 'grabbing';   // durante diálogo o clique só avança
+});
+document.addEventListener('mousemove', (e) => {
+  if (document.pointerLockElement === hcanvas) {           // pointer lock (se ativo)
+    HOUSE.ang += e.movementX * .0028;
+    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .35));
     return;
   }
+  if (!mouseLook || !HOUSE.active || HD.open) return;       // arrastar para olhar
+  const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
+  if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
+  HOUSE.ang += dx * .0036;
+  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .34));
+  mouseLook.x = e.clientX; mouseLook.y = e.clientY;
+});
+document.addEventListener('mouseup', () => {
+  if (!mouseLook) return;
+  const wasClick = !mouseLook.moved;
+  mouseLook = null; hcanvas.style.cursor = '';
+  if (!wasClick || !HOUSE.active) return;                   // arrastou = só olhou
+  if (HD.open) { hAdvance(); return; }
   const t = interactTarget();
   if (t) interactWith(t.spot);
 });

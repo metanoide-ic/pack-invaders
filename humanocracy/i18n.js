@@ -76,8 +76,8 @@ const I18N_EN = {
   'COMEÇAR DE NOVO': 'START OVER',
 
   /* ---- casa ---- */
-  'WASD/setas andar · clique e mexa o mouse para olhar · E interagir · ESC solta o mouse':
-    'WASD/arrows to walk · click and move mouse to look · E to interact · ESC to release mouse',
+  'WASD/setas andar · arraste o mouse para olhar · E interagir':
+    'WASD/arrows to walk · drag the mouse to look · E to interact',
   'clique / E para continuar': 'click / E to continue',
 
   /* ---- exame / bagagem ---- */
@@ -897,8 +897,8 @@ const I18N_EN = {
   'DIA 48': 'DAY 48',
   '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.':
     "8:30 PM. The apartment smells of thin soup and an old heater. Everyone's here: your mother in the living room, Vessa in the kitchen, the boys in their rooms.",
-  'Ande com WASD ou setas. Clique na tela e mexa o mouse para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
-    "Move with WASD or arrow keys. Click the screen and move the mouse to look around. Get close to someone and press E to talk — they know things the post doesn't.",
+  'Ande com WASD ou setas. Arraste o mouse na tela para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
+    "Move with WASD or arrow keys. Drag the mouse across the screen to look around. Get close to someone and press E to talk — they know things the post doesn't.",
   'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.':
     "When you're done, sleep in your bed, in the last room. There's a line tomorrow.",
   'SUA CASA': 'YOUR HOUSE',
@@ -1408,8 +1408,8 @@ const I18N_ES = {
   'COMEÇAR DE NOVO': 'EMPEZAR DE NUEVO',
 
   /* ---- casa ---- */
-  'WASD/setas andar · clique e mexa o mouse para olhar · E interagir · ESC solta o mouse':
-    'WASD/flechas para caminar · clic y mueve el mouse para mirar · E interactuar · ESC libera el mouse',
+  'WASD/setas andar · arraste o mouse para olhar · E interagir':
+    'WASD/flechas para caminar · arrastra el mouse para mirar · E interactuar',
   'clique / E para continuar': 'clic / E para continuar',
 
   /* ---- exame / bagagem ---- */
@@ -2229,8 +2229,8 @@ const I18N_ES = {
   'DIA 48': 'DÍA 48',
   '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.':
     '20:30. El apartamento huele a sopa aguada y a calefactor viejo. Están todos aquí: su madre en la sala, Vessa en la cocina, los niños en sus cuartos.',
-  'Ande com WASD ou setas. Clique na tela e mexa o mouse para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
-    'Camine con WASD o flechas. Haga clic en la pantalla y mueva el mouse para mirar alrededor. Acérquese a alguien y presione E para hablar — ellos saben cosas que el puesto no sabe.',
+  'Ande com WASD ou setas. Arraste o mouse na tela para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.':
+    'Camine con WASD o flechas. Arrastre el mouse por la pantalla para mirar alrededor. Acérquese a alguien y presione E para hablar — ellos saben cosas que el puesto no sabe.',
   'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.':
     'Cuando termine, duerma en su cama, en el último cuarto. Mañana hay fila.',
   'SUA CASA': 'SU CASA',
