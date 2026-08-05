@@ -726,6 +726,9 @@ const RADIO = {
     '[CLANDESTINA] …conta os dedos. sempre conta os dedos. às vezes é tudo que a gente tem…',
     '[LIVRE] Coluna "Aprenda a Ver": o retrato mente devagar; o rosto, ao vivo, mente rápido. Compare os dois.',
     '[CLANDESTINA] …um lado da cara nunca é igualzinho ao outro. quando batem certo demais, desconfia…',
+    '[ESTATAL] Comunicado: a fila é um privilégio, cidadão. Agradeça a fila.',
+    '[LIVRE] Economia: o pão subiu de novo. O Ministério respondeu subindo a definição de "pão".',
+    '[CLANDESTINA] …o olho deles brilha seco. olho de gente reflete úmido; repara na luz da lâmpada…',
   ],
   mehrvolk: [
     '[ESTATAL] Hoje celebramos mais uma semana de PUREZA e ORDEM.',
@@ -738,6 +741,8 @@ const RADIO = {
     '[CLANDESTINA] …se o pescoço mostra a costura, não hesita. eles contam com a sua hesitação…',
     '[ESTATAL] Lembrete: relatar um vizinho é um gesto de amor à Pátria. E o amor, cidadão, é obrigatório.',
     '[CLANDESTINA] …pele boa demais é pele que fecharam. procura o brilho errado, o de cera, não o de suor…',
+    '[ESTATAL] O cidadão modelo desta semana denunciou a própria mãe. Repita o gesto com orgulho.',
+    '[CLANDESTINA] …a resposta sai rápida demais e certa demais. gente de verdade gagueja no medo…',
   ],
   conselho: [
     '[ESTATAL] Trabalhadores: os "Alternados" eram o medo que o capital vendia. Sigam produzindo.',
@@ -749,6 +754,8 @@ const RADIO = {
     '[CLANDESTINA] …a família do quarto ao lado não projeta sombra sob a lâmpada. repara da próxima vez…',
     '[ESTATAL] Produtividade é felicidade. A felicidade será medida ao fim do turno, e comparada com a de ontem.',
     '[CLANDESTINA] …repara quem não pisca. a gente pisca sem pensar; eles precisam lembrar de piscar…',
+    '[ESTATAL] Racionamento é solidariedade, trabalhador. Quem tem fome tem, ao menos, companhia.',
+    '[CLANDESTINA] …a mão fria não é do frio. aperta a mão deles e conta até três — o calor não vem…',
   ],
   colapso: [
     '‹estática›',
