@@ -6785,15 +6785,17 @@ function analogPost(ctx, w, h, seed, o) {
     let rr = lum + (D[i] - lum) * sat;
     let gg = lum + (D[i + 1] - lum) * sat;
     let bb = lum + (D[i + 2] - lum) * sat;
-    rr *= 1.045; gg *= 1.03; bb *= 0.90;
-    rr = (rr - 118) * con + 118 - 6; gg = (gg - 118) * con + 118 - 6; bb = (bb - 118) * con + 118 - 6;
+    // grade âmbar-morno (pele saudável), não olive/verde-doentio: vermelho
+    // domina, verde fica neutro, azul cai de leve. O cast verde ficava zumbi.
+    rr *= 1.05; gg *= 0.995; bb *= 0.93;
+    rr = (rr - 118) * con + 118 - 3; gg = (gg - 118) * con + 118 - 3; bb = (bb - 118) * con + 118 - 4;
     // SPLIT-TONE: sombras mornas (tungstênio), luzes levemente frias. Dá
     // profundidade cinematográfica sem mexer no grão/scanline da fita.
     const nl = lum / 255;
     const shT = nl < 0.5 ? (0.5 - nl) * 2 : 0;      // 1 no preto → 0 no meio-tom
     const hiT = nl > 0.55 ? (nl - 0.55) / 0.45 : 0; // 0 no meio → 1 no branco
-    rr += shT * 8.5 - hiT * 3.5;
-    gg += shT * 3.0 - hiT * 1.0;
+    rr += shT * 8.5 - hiT * 3.0;
+    gg += shT * 1.4 - hiT * 1.0;                    // menos verde na sombra (era 3.0)
     bb += shT * -5.5 + hiT * 8.0;
     D[i] = rr < 0 ? 0 : rr > 255 ? 255 : rr;
     D[i + 1] = gg < 0 ? 0 : gg > 255 ? 255 : gg;
@@ -7623,7 +7625,7 @@ function renderActorFrame(cz, eyesClosed) {
     // 72px: pixel-art chunky, mas com resolução suficiente pros olhos lerem
     // vivos (a 64 alguns viravam órbitas escuras).
     w: 72, h: 86, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
-    post: { levels: 6, ditherAmp: 0.12, grain: 2, aberr: 0, scan: 0.06, tears: 0, sat: 0.5, contrast: 1.25 },
+    post: { levels: 8, ditherAmp: 0.08, grain: 1.5, aberr: 0, scan: 0.06, tears: 0, sat: 0.58, contrast: 1.22 },
   }, actorAnomOpts(cz)));
 }
 function blitActor(cv, src) {
