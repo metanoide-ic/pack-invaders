@@ -2097,12 +2097,16 @@ function greetingFor(cz) {
     'Bom dia. Está frio hoje, não?', 'Aqui estão meus papéis.', 'Espero que esteja tudo em ordem.',
     'É a minha terceira vez nesta fila.', 'Por favor, seja rápido. Meu trem sai ao meio-dia.',
     'Eu não tenho nada a esconder.', '…', 'Deus abençoe este posto.',
+    'Não durmo direito desde o último comunicado.',
+    'O senhor tem um rosto fácil de esquecer. No meu ofício, isso é elogio.',
+    'Meu pai dizia: fila boa é fila que anda. Esta anda?',
+    'Prometo que não vou dar trabalho. Todo mundo promete, eu sei.',
   ];
   const porRegime = {
-    republica: ['Dizem que o senhor é dos justos. Dizem.', 'A fila estava menor na semana passada. Tudo estava menor na semana passada.'],
-    mehrvolk: ['Glória à Pureza. — A voz não acredita no que diz.', 'Está tudo em ordem. Eu JURO que está tudo em ordem.', 'O certificado custou dois meses de salário. Está aí dentro. Por favor.'],
-    conselho: ['Saudações, camarada inspetor.', 'Trouxe o selo novo. E o antigo. E o anterior ao antigo. Qual vale hoje?', 'O sindicato disse que agora é diferente. É diferente?'],
-    colapso: ['Ainda tem alguém aí dentro?', 'Não sei por que a gente ainda faz fila. Mas fazemos.', 'Carimba qualquer coisa. Já não importa. Importa?'],
+    republica: ['Dizem que o senhor é dos justos. Dizem.', 'A fila estava menor na semana passada. Tudo estava menor na semana passada.', 'O jornal de hoje diz que melhorou. O de ontem também dizia.'],
+    mehrvolk: ['Glória à Pureza. — A voz não acredita no que diz.', 'Está tudo em ordem. Eu JURO que está tudo em ordem.', 'O certificado custou dois meses de salário. Está aí dentro. Por favor.', 'Eu tenho os documentos certos. Eu SOU a pessoa certa. Não sou?'],
+    conselho: ['Saudações, camarada inspetor.', 'Trouxe o selo novo. E o antigo. E o anterior ao antigo. Qual vale hoje?', 'O sindicato disse que agora é diferente. É diferente?', 'Reparti meu pão com o da frente na fila. Ele não comeu. Só olhou.'],
+    colapso: ['Ainda tem alguém aí dentro?', 'Não sei por que a gente ainda faz fila. Mas fazemos.', 'Carimba qualquer coisa. Já não importa. Importa?', 'Ouvi que amanhã não abre. Ouvi que nunca mais abre.'],
   }[regimeOfDay(S.day)] || [];
   const nervous = ['Desculpe… eu fico nervoso(a) com uniformes.', 'Minhas mãos estão tremendo de frio. Só de frio.', 'Eu decorei tudo o que ia dizer e esqueci agora.'];
   const pool = g.concat(porRegime, porRegime);
