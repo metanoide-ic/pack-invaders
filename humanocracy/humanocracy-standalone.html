@@ -1037,18 +1037,17 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .bag-item {
   display:flex; flex-direction:column; align-items:center; text-align:center;
   padding:15px 10px 11px; cursor:pointer; position:relative;
-  background-color:#26251d;
-  background-image: radial-gradient(ellipse at 50% 40%, rgba(78,82,60,.42), rgba(16,16,12,.9) 74%);
-  border:1px solid rgba(120,96,58,.4); border-radius:4px;
-  box-shadow: inset 0 2px 11px rgba(0,0,0,.62), inset 0 0 0 1px rgba(0,0,0,.35), 0 3px 8px rgba(0,0,0,.42);
+  background-color:#23251b;              /* tinta chapada, sem glow radial (de-IA) */
+  border:1.5px solid #0b0c07; border-radius:1px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.5);  /* sombra dura deslocada, sem blur */
   font-size:11px; line-height:1.4; color:var(--ink);
-  transition: transform .08s ease, box-shadow .1s ease;
+  transition: transform .07s ease;
 }
-.bag-item::before { /* costura da divisória */
-  content:""; position:absolute; inset:4px; border:1px dashed rgba(150,124,80,.22); border-radius:3px; pointer-events:none;
+.bag-item::before { /* costura da divisória do compartimento */
+  content:""; position:absolute; inset:4px; border:1px dashed rgba(150,124,80,.22); pointer-events:none;
 }
-.bag-item:hover { transform:translateY(-2px); box-shadow: inset 0 2px 11px rgba(0,0,0,.5), 0 7px 16px rgba(0,0,0,.55); border-color:rgba(150,124,80,.6); }
-.bag-ico { width:68px; height:68px; image-rendering:auto; margin-bottom:8px; filter:drop-shadow(0 3px 4px rgba(0,0,0,.6)); }
+.bag-item:hover { transform:translate(-2px,-2px); box-shadow: 5px 5px 0 rgba(0,0,0,.5); border-color:#c9a34a; }
+.bag-ico { width:68px; height:68px; image-rendering:pixelated; margin-bottom:8px; filter:drop-shadow(2px 2px 0 rgba(0,0,0,.55)); }
 .bag-cap { color:#e2d7bb; }
 .bag-item.picked { outline:2px solid var(--stamp-red); outline-offset:1px; }
 .bag-item .bag-desc { display:block; color:var(--ink-dim); font-size:10px; margin-top:3px; font-style:italic; }
