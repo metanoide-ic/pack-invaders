@@ -7618,9 +7618,11 @@ function actorAnomOpts(cz) {
 // humana de serigrafia/8-bit, o oposto do airbrush liso de imagem-de-IA.
 // Sem aberração/tears/dither pesado: isso vira lama nesse tamanho de pixel.
 function renderActorFrame(cz, eyesClosed) {
-  if (cz && cz.isSilente) return silentePortraitCanvas({ w: 64, h: 77 });
+  if (cz && cz.isSilente) return silentePortraitCanvas({ w: 72, h: 86 });
   return renderPortraitCanvas(cz.features, Object.assign({
-    w: 64, h: 77, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
+    // 72px: pixel-art chunky, mas com resolução suficiente pros olhos lerem
+    // vivos (a 64 alguns viravam órbitas escuras).
+    w: 72, h: 86, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
     post: { levels: 6, ditherAmp: 0.12, grain: 2, aberr: 0, scan: 0.06, tears: 0, sat: 0.5, contrast: 1.25 },
   }, actorAnomOpts(cz)));
 }
