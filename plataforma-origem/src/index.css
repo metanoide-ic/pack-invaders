@@ -1,0 +1,125 @@
+@import 'tailwindcss';
+
+/* ------------------------------------------------------------------ */
+/*  Identidade visual Origem — violeta elétrico sobre preto profundo   */
+/* ------------------------------------------------------------------ */
+@theme {
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', sans-serif;
+
+  --color-brand-50: #f3edff;
+  --color-brand-100: #e6dcff;
+  --color-brand-200: #cbb4ff;
+  --color-brand-300: #ad86ff;
+  --color-brand-400: #935cff;
+  --color-brand-500: #7c3aed;
+  --color-brand-600: #6d28d9;
+  --color-brand-700: #5b21b6;
+  --color-brand-800: #4c1d95;
+  --color-brand-900: #3b1478;
+  --color-brand-950: #23094d;
+
+  --color-ink-950: #08080f;
+  --color-ink-900: #0b0b16;
+  --color-ink-850: #0f0f1e;
+  --color-ink-800: #14142a;
+  --color-ink-700: #1c1c38;
+  --color-ink-600: #262648;
+
+  --color-line: #23233f;
+
+  --radius-xl2: 1.25rem;
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in oklab, var(--color-line) 100%, transparent);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    font-family: var(--font-sans);
+    color: #e9e9f4;
+    background: var(--color-ink-950);
+    background-image:
+      radial-gradient(60rem 40rem at 82% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
+      radial-gradient(48rem 40rem at -10% 8%, rgba(59, 20, 120, 0.28), transparent 55%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  ::selection {
+    background: rgba(124, 58, 237, 0.35);
+    color: #fff;
+  }
+
+  /* Scrollbars discretas */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2b2b4d transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb {
+    background: #2b2b4d;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: #3a3a63; background-clip: padding-box; }
+}
+
+@layer components {
+  .card {
+    background: color-mix(in oklab, var(--color-ink-850) 92%, transparent);
+    border: 1px solid var(--color-line);
+    border-radius: var(--radius-xl2);
+    backdrop-filter: blur(12px);
+  }
+
+  .glass {
+    background: color-mix(in oklab, var(--color-ink-800) 60%, transparent);
+    backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .glow {
+    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35), 0 12px 40px -12px rgba(124, 58, 237, 0.55);
+  }
+
+  .btn-brand {
+    background-image: linear-gradient(135deg, #935cff 0%, #6d28d9 100%);
+    box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.7);
+  }
+  .btn-brand:hover { filter: brightness(1.08); }
+  .btn-brand:active { transform: translateY(1px); }
+
+  .text-gradient {
+    background: linear-gradient(120deg, #ffffff 10%, #c9b4ff 55%, #935cff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .grid-noise {
+    background-image:
+      linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+}
+
+@keyframes float-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-14px); }
+}
+.animate-float { animation: float-slow 6s ease-in-out infinite; }

@@ -1,0 +1,294 @@
+import { useMemo, useState } from 'react';
+import {
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  Tooltip,
+  CartesianGrid,
+} from 'recharts';
+import {
+  Plus,
+  TrendingUp,
+  TrendingDown,
+  Wallet,
+  Trash2,
+  ArrowDownLeft,
+  ArrowUpRight,
+} from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+import { Button, Field, Input, Modal, Select, Badge, EmptyState } from '@/components/ui';
+import { useData } from '@/lib/dataStore';
+import { useClientMap, monthKey } from '@/lib/hooks';
+import { money, todayISO, cn } from '@/lib/utils';
+import type { TxType, TxStatus } from '@/lib/types';
+
+const CATEGORIES = ['Contrato', 'Projeto', 'Mídia', 'Software', 'Terceiros', 'Equipe', 'Outros'];
+
+export default function Finance() {
+  const { transactions, clients, addTx, updateTx, removeTx } = useData();
+  const clientMap = useClientMap();
+  const [open, setOpen] = useState(false);
+  const [filter, setFilter] = useState<'todos' | TxType>('todos');
+
+  const [form, setForm] = useState({
+    type: 'receita' as TxType,
+    description: '',
+    amount: '',
+    category: 'Contrato',
+    clientId: '',
+    date: todayISO(),
+    status: 'pago' as TxStatus,
+  });
+
+  const totals = useMemo(() => {
+    const receita = transactions.filter((t) => t.type === 'receita' && t.status === 'pago').reduce((a, t) => a + t.amount, 0);
+    const despesa = transactions.filter((t) => t.type === 'despesa' && t.status === 'pago').reduce((a, t) => a + t.amount, 0);
+    const pendente = transactions.filter((t) => t.status === 'pendente' && t.type === 'receita').reduce((a, t) => a + t.amount, 0);
+    return { receita, despesa, saldo: receita - despesa, pendente };
+  }, [transactions]);
+
+  const chart = useMemo(() => {
+    const map = new Map<string, { receita: number; despesa: number }>();
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      map.set(d.toISOString().slice(0, 7), { receita: 0, despesa: 0 });
+    }
+    transactions.forEach((t) => {
+      const e = map.get(monthKey(t.date));
+      if (e) e[t.type] += t.amount;
+    });
+    return [...map.entries()].map(([k, v]) => ({
+      mes: new Date(k + '-02').toLocaleDateString('pt-BR', { month: 'short' }),
+      ...v,
+    }));
+  }, [transactions]);
+
+  const list = useMemo(
+    () =>
+      transactions
+        .filter((t) => filter === 'todos' || t.type === filter)
+        .sort((a, b) => b.date.localeCompare(a.date)),
+    [transactions, filter],
+  );
+
+  function save() {
+    const amount = parseFloat(form.amount.replace(',', '.'));
+    if (!form.description.trim() || !amount || amount <= 0) return;
+    addTx({
+      type: form.type,
+      description: form.description.trim(),
+      amount,
+      category: form.category,
+      clientId: form.clientId || undefined,
+      date: form.date,
+      status: form.status,
+    });
+    setForm({ ...form, description: '', amount: '' });
+    setOpen(false);
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Financeiro"
+        subtitle="Receitas, despesas e saldo da agência."
+        action={
+          <Button onClick={() => setOpen(true)}>
+            <Plus size={18} /> Lançamento
+          </Button>
+        }
+      />
+
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Receitas (pagas)" value={money(totals.receita)} tint="#10b981" icon={<TrendingUp size={18} />} />
+        <Stat label="Despesas (pagas)" value={money(totals.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
+        <Stat label="Saldo" value={money(totals.saldo)} tint="#7c3aed" icon={<Wallet size={18} />} />
+        <Stat label="A receber" value={money(totals.pendente)} tint="#f59e0b" icon={<ArrowDownLeft size={18} />} />
+      </div>
+
+      <div className="mt-6 card p-5">
+        <h3 className="mb-4 font-semibold text-white">Evolução (6 meses)</h3>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chart}>
+              <defs>
+                <linearGradient id="gR" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+              <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: '#ffffff66', fontSize: 12 }} />
+              <YAxis tickLine={false} axisLine={false} width={44} tick={{ fill: '#ffffff44', fontSize: 11 }} tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)} />
+              <Tooltip
+                contentStyle={{ background: '#14142a', border: '1px solid #23233f', borderRadius: 12, color: '#fff' }}
+                formatter={(v: number) => money(v)}
+              />
+              <Area type="monotone" dataKey="receita" name="Receita" stroke="#10b981" strokeWidth={2} fill="url(#gR)" />
+              <Area type="monotone" dataKey="despesa" name="Despesa" stroke="#7c3aed" strokeWidth={2} fill="url(#gD)" />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+
+      {/* Lançamentos */}
+      <div className="mt-6">
+        <div className="mb-3 flex items-center gap-2">
+          {(['todos', 'receita', 'despesa'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={cn(
+                'rounded-full px-3.5 py-1.5 text-sm font-medium capitalize transition',
+                filter === f ? 'bg-brand-500/20 text-brand-100' : 'text-white/50 hover:bg-white/5',
+              )}
+            >
+              {f === 'todos' ? 'Todos' : f === 'receita' ? 'Receitas' : 'Despesas'}
+            </button>
+          ))}
+        </div>
+
+        {list.length === 0 ? (
+          <EmptyState
+            icon={<Wallet size={40} />}
+            title="Nenhum lançamento"
+            description="Registre receitas e despesas para acompanhar o caixa."
+            action={<Button onClick={() => setOpen(true)}><Plus size={18} /> Novo lançamento</Button>}
+          />
+        ) : (
+          <div className="card divide-y divide-line overflow-hidden">
+            {list.map((t) => {
+              const client = t.clientId ? clientMap[t.clientId] : undefined;
+              const income = t.type === 'receita';
+              return (
+                <div key={t.id} className="group flex items-center gap-3 px-4 py-3.5">
+                  <span
+                    className={cn(
+                      'grid h-9 w-9 shrink-0 place-items-center rounded-lg',
+                      income ? 'bg-emerald-500/15 text-emerald-400' : 'bg-brand-500/15 text-brand-300',
+                    )}
+                  >
+                    {income ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-white">{t.description}</div>
+                    <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-white/45">
+                      <span>{new Date(t.date + 'T00:00').toLocaleDateString('pt-BR')}</span>
+                      <span>· {t.category}</span>
+                      {client && (
+                        <span className="inline-flex items-center gap-1">
+                          · <span className="h-1.5 w-1.5 rounded-full" style={{ background: client.color }} /> {client.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => updateTx(t.id, { status: t.status === 'pago' ? 'pendente' : 'pago' })}
+                    title="Alternar status"
+                  >
+                    <Badge color={t.status === 'pago' ? '#10b981' : '#f59e0b'}>
+                      {t.status === 'pago' ? 'Pago' : 'Pendente'}
+                    </Badge>
+                  </button>
+                  <div className={cn('w-28 text-right font-semibold tabular-nums', income ? 'text-emerald-400' : 'text-white')}>
+                    {income ? '+' : '−'} {money(t.amount)}
+                  </div>
+                  <button
+                    onClick={() => removeTx(t.id)}
+                    className="text-white/20 opacity-0 transition hover:text-red-300 group-hover:opacity-100"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title="Novo lançamento"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button onClick={save}>Salvar</Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-2">
+            {(['receita', 'despesa'] as TxType[]).map((tp) => (
+              <button
+                key={tp}
+                onClick={() => setForm({ ...form, type: tp })}
+                className={cn(
+                  'rounded-xl border px-4 py-3 text-sm font-medium capitalize transition',
+                  form.type === tp
+                    ? tp === 'receita'
+                      ? 'border-emerald-400/50 bg-emerald-500/10 text-emerald-300'
+                      : 'border-brand-400/50 bg-brand-500/10 text-brand-200'
+                    : 'border-line text-white/50 hover:border-white/20',
+                )}
+              >
+                {tp}
+              </button>
+            ))}
+          </div>
+          <Field label="Descrição">
+            <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Ex.: Fee mensal — Cliente X" autoFocus />
+          </Field>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Valor (R$)">
+              <Input value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} placeholder="0,00" inputMode="decimal" />
+            </Field>
+            <Field label="Data">
+              <Input type="date" value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </Field>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Categoria">
+              <Select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                {CATEGORIES.map((c) => <option key={c}>{c}</option>)}
+              </Select>
+            </Field>
+            <Field label="Status">
+              <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as TxStatus })}>
+                <option value="pago">Pago</option>
+                <option value="pendente">Pendente</option>
+              </Select>
+            </Field>
+          </div>
+          <Field label="Cliente (opcional)">
+            <Select value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+              <option value="">—</option>
+              {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </Select>
+          </Field>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+function Stat({ label, value, tint, icon }: { label: string; value: string; tint: string; icon: React.ReactNode }) {
+  return (
+    <div className="card p-5">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-white/55">{label}</span>
+        <span className="grid h-9 w-9 place-items-center rounded-lg" style={{ background: `${tint}22`, color: tint }}>
+          {icon}
+        </span>
+      </div>
+      <div className="mt-3 font-display text-2xl font-bold text-white">{value}</div>
+    </div>
+  );
+}
