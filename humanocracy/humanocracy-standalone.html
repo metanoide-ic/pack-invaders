@@ -7393,6 +7393,196 @@ function bodyLayout(f) {
   return { r, fem, build, girth, height, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
+/* EXAME FÍSICO — CORPO INTEIRO DESPIDO. É a mecânica de verificação de sexo
+   biológico do posto (satiriza a inspeção corporal invasiva dos regimes): o
+   corpo segue o sexo BIOLÓGICO (bodySex), o rosto/documento seguem a
+   apresentação (f.sexo). Quando divergem, a anatomia denuncia o disfarce —
+   e só este exame vê. Registro clínico/frio, anatômico e esquemático, não
+   erótico: o horror aqui é o Estado exigir tirar a roupa de todo mundo. */
+function paintBodyNude(ctx, f, phys) {
+  const cold = !!(phys && phys.pescoco);
+  const conceal = !!(phys && phys.concealed);
+  const B = bodyLayout(f);
+  const cx = 50;
+  const pal = F_SKIN[(f.skin || 0) % F_SKIN.length];
+  let SK = pal.b.slice(), SH = pal.s.slice();
+  if (cold) { SK = mix(SK, [86, 128, 172], 0.5); SH = mix(SH, [40, 70, 110], 0.5); }  // corpo frio: lívido/azulado
+  const hairC = F_HAIR[(f.hair || 0) % F_HAIR.length];
+  const fem = B.fem;                    // sexo BIOLÓGICO
+  // fundo de sala de exame: preto esverdeado, grade fraca do scanner
+  ctx.fillStyle = '#0a0f0d'; ctx.fillRect(0, 0, 100, 120);
+  ctx.strokeStyle = 'rgba(70,150,120,.07)'; ctx.lineWidth = 0.3;
+  for (let x = 0; x <= 100; x += 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 120); ctx.stroke(); }
+  for (let y = 0; y <= 120; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(100, y); ctx.stroke(); }
+
+  // marcos verticais (do físico desta pessoa)
+  const headCy = B.topY + B.headR + 1, chinY = headCy + B.headR, neckY = chinY + 1.5;
+  const shoulderY = neckY + 5, chestY = shoulderY + 13, waistY = chestY + 15, hipY = waistY + 9, footY = 115;
+  const sh = B.shoulder, chest = B.chest, waist = B.waist, hip = B.hip;
+
+  const fillSkin = () => { ctx.fillStyle = rgb(SK); ctx.fill(); };
+  // ---- PERNAS (atrás do tronco) ----
+  const legTop = hipY - 1;
+  for (const s of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + s * 1.2, legTop);
+    ctx.lineTo(cx + s * (hip - 0.5), legTop + 1);
+    ctx.quadraticCurveTo(cx + s * (hip - 1), legTop + 18, cx + s * (waist * 0.42 + 2), footY - 20); // coxa→joelho
+    ctx.quadraticCurveTo(cx + s * (waist * 0.34 + 1.5), footY - 6, cx + s * (waist * 0.36 + 2.4), footY); // panturrilha→tornozelo
+    ctx.lineTo(cx + s * 1.2, footY);
+    ctx.closePath(); fillSkin();
+    // sombra interna da coxa (volume)
+    ctx.fillStyle = rgb(SH, 0.28); ctx.beginPath();
+    ctx.moveTo(cx + s * 1.2, legTop + 4); ctx.lineTo(cx + s * 3.5, legTop + 4);
+    ctx.quadraticCurveTo(cx + s * 3, footY - 22, cx + s * 3, footY - 4); ctx.lineTo(cx + s * 1.2, footY - 4); ctx.closePath(); ctx.fill();
+    // joelho + pé
+    soft(ctx, cx + s * (waist * 0.42 + 2), footY - 20, 2.4, 2.2, rgb(lighten(SK, 0.1), 0.5), 1.6);
+    ctx.fillStyle = rgb(SH); ctx.beginPath(); ctx.ellipse(cx + s * (waist * 0.36 + 3.5), footY + 1.5, 4, 2.4, 0, 0, 6.29); ctx.fill();
+  }
+  // vão entre as pernas
+  ctx.fillStyle = '#0a0f0d'; ctx.beginPath();
+  ctx.moveTo(cx - 1, hipY + 5); ctx.lineTo(cx + 1, hipY + 5); ctx.lineTo(cx + 1, footY); ctx.lineTo(cx - 1, footY); ctx.closePath(); ctx.fill();
+
+  // ---- BRAÇOS (SEMPRE presentes, caídos ao lado do corpo) ----
+  for (const s of [-1, 1]) {
+    ctx.beginPath();
+    ctx.moveTo(cx + s * (sh - 1), shoulderY);
+    ctx.quadraticCurveTo(cx + s * (sh + 1.5), chestY - 2, cx + s * (chest + 1), chestY + 3);   // ombro→bíceps
+    ctx.quadraticCurveTo(cx + s * (waist + 3), waistY, cx + s * (waist + 2.5), hipY - 1);       // cotovelo→antebraço
+    ctx.lineTo(cx + s * (waist - 1), hipY - 2);
+    ctx.quadraticCurveTo(cx + s * (chest - 2), chestY + 2, cx + s * (sh - 3), shoulderY + 2);
+    ctx.closePath(); fillSkin();
+    ctx.fillStyle = rgb(SH, 0.3); ctx.beginPath();   // sombra interna do braço
+    ctx.moveTo(cx + s * (waist - 1), hipY - 2); ctx.quadraticCurveTo(cx + s * (chest - 2), chestY + 2, cx + s * (sh - 3), shoulderY + 2);
+    ctx.lineTo(cx + s * (sh - 5), shoulderY + 3); ctx.quadraticCurveTo(cx + s * (chest - 4), chestY + 4, cx + s * (waist - 3), hipY - 2); ctx.closePath(); ctx.fill();
+    // mão
+    ctx.fillStyle = rgb(SK); ctx.beginPath(); ctx.ellipse(cx + s * (waist + 2), hipY + 2, 2.6, 4, s * 0.15, 0, 6.29); ctx.fill();
+    ctx.strokeStyle = rgb(SH, 0.5); ctx.lineWidth = 0.4;
+    for (let i = -1; i <= 2; i++) { ctx.beginPath(); ctx.moveTo(cx + s * (waist + 0.6), hipY + 3 + i * 1.1); ctx.lineTo(cx + s * (waist + 3.6), hipY + 3.4 + i * 1.1); ctx.stroke(); }
+  }
+
+  // ---- TRONCO ----
+  ctx.beginPath();
+  ctx.moveTo(cx - B.neckW, neckY);
+  ctx.quadraticCurveTo(cx - sh * 0.7, shoulderY - 2, cx - sh, shoulderY + 1);      // ombro esq
+  ctx.quadraticCurveTo(cx - chest - 1, chestY, cx - waist, waistY);                // flanco → cintura
+  ctx.quadraticCurveTo(cx - hip - 1, hipY - 3, cx - hip, hipY + 2);                // quadril
+  ctx.quadraticCurveTo(cx - hip * 0.6, hipY + 6, cx, hipY + 6);                    // virilha
+  ctx.quadraticCurveTo(cx + hip * 0.6, hipY + 6, cx + hip, hipY + 2);
+  ctx.quadraticCurveTo(cx + hip + 1, hipY - 3, cx + waist, waistY);
+  ctx.quadraticCurveTo(cx + chest + 1, chestY, cx + sh, shoulderY + 1);
+  ctx.quadraticCurveTo(cx + sh * 0.7, shoulderY - 2, cx + B.neckW, neckY);
+  ctx.closePath(); fillSkin();
+  // modelagem: luz vinda de cima-esquerda, sombra à direita e nas laterais
+  ctx.save(); ctx.beginPath();
+  ctx.moveTo(cx - B.neckW, neckY); ctx.quadraticCurveTo(cx - sh * 0.7, shoulderY - 2, cx - sh, shoulderY + 1);
+  ctx.quadraticCurveTo(cx - chest - 1, chestY, cx - waist, waistY); ctx.quadraticCurveTo(cx - hip - 1, hipY - 3, cx - hip, hipY + 2);
+  ctx.quadraticCurveTo(cx - hip * 0.6, hipY + 6, cx, hipY + 6); ctx.quadraticCurveTo(cx + hip * 0.6, hipY + 6, cx + hip, hipY + 2);
+  ctx.quadraticCurveTo(cx + hip + 1, hipY - 3, cx + waist, waistY); ctx.quadraticCurveTo(cx + chest + 1, chestY, cx + sh, shoulderY + 1);
+  ctx.quadraticCurveTo(cx + sh * 0.7, shoulderY - 2, cx + B.neckW, neckY); ctx.closePath(); ctx.clip();
+  const gl = ctx.createLinearGradient(cx - sh, 0, cx + sh, 0);
+  gl.addColorStop(0, rgb(lighten(SK, 0.14), 0.5)); gl.addColorStop(0.5, 'rgba(0,0,0,0)'); gl.addColorStop(1, rgb(SH, 0.42));
+  ctx.fillStyle = gl; ctx.fillRect(0, 0, 100, 120);
+  // clavículas + esterno + linha alba + navel
+  ctx.strokeStyle = rgb(SH, 0.4); ctx.lineWidth = 0.5;
+  ctx.beginPath(); ctx.moveTo(cx - sh * 0.5, shoulderY + 2); ctx.quadraticCurveTo(cx, shoulderY + 4, cx + sh * 0.5, shoulderY + 2); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx, chestY - 1); ctx.lineTo(cx, waistY + 3); ctx.stroke();
+  ctx.fillStyle = rgb(SH, 0.6); ctx.beginPath(); ctx.ellipse(cx, waistY + 1, 0.9, 1.3, 0, 0, 6.29); ctx.fill();  // umbigo
+  if (!fem) { // leve definição peitoral/abdominal masculina
+    soft(ctx, cx - chest * 0.5, chestY, chest * 0.42, 3, rgb(SH, 0.3), 2);
+    soft(ctx, cx + chest * 0.5, chestY, chest * 0.42, 3, rgb(SH, 0.3), 2);
+    for (let i = 0; i < 2; i++) { soft(ctx, cx - 3.5, chestY + 5 + i * 4, 2.2, 1.4, rgb(SH, 0.22), 1.6); soft(ctx, cx + 3.5, chestY + 5 + i * 4, 2.2, 1.4, rgb(SH, 0.22), 1.6); }
+  }
+  ctx.restore();
+
+  // ---- CARACTERES SEXUAIS ----
+  if (fem) {
+    // seios: dois volumes com sombra inferior, aréola e mamilo
+    for (const s of [-1, 1]) {
+      const bx = cx + s * chest * 0.44, by = chestY + 1.5, br = chest * 0.4 + 1;
+      const rgd = ctx.createRadialGradient(bx - s * 1.5, by - 1.5, 1, bx, by + 1, br);
+      rgd.addColorStop(0, rgb(lighten(SK, 0.16))); rgd.addColorStop(0.7, rgb(SK)); rgd.addColorStop(1, rgb(SH, 0.85));
+      ctx.fillStyle = rgd; ctx.beginPath(); ctx.ellipse(bx, by, br, br * 1.02, 0, 0, 6.29); ctx.fill();
+      soft(ctx, bx, by + br * 0.7, br * 0.9, 1.6, rgb(SH, 0.5), 2);            // dobra inframamária
+      ctx.fillStyle = rgb(mix(SH, [150, 80, 78], 0.5), 0.75); ctx.beginPath(); ctx.ellipse(bx + s * 0.4, by + 1.5, 1.9, 1.7, 0, 0, 6.29); ctx.fill(); // aréola
+      ctx.fillStyle = rgb(darken([150, 80, 78], 0.2)); ctx.beginPath(); ctx.ellipse(bx + s * 0.4, by + 1.5, 0.8, 0.8, 0, 0, 6.29); ctx.fill(); // mamilo
+    }
+    // pube + vulva (esquemático)
+    const py = hipY + 3.5;
+    ctx.fillStyle = rgb(darken(hairC, 0.05), 0.92); ctx.beginPath();
+    ctx.moveTo(cx - 4, py - 1.5); ctx.lineTo(cx + 4, py - 1.5); ctx.lineTo(cx, py + 3.5); ctx.closePath(); ctx.fill();  // triângulo púbico
+    ctx.strokeStyle = rgb(SH, 0.7); ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(cx, py + 2); ctx.lineTo(cx, py + 5.5); ctx.stroke(); // fenda
+  } else {
+    // mamilos masculinos
+    ctx.fillStyle = rgb(mix(SH, [140, 84, 78], 0.4), 0.7);
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + s * chest * 0.5, chestY + 1, 1, 1, 0, 0, 6.29); ctx.fill(); }
+    // pube + pênis/escroto (esquemático, pendente)
+    const py = hipY + 3;
+    ctx.fillStyle = rgb(darken(hairC, 0.05), 0.92); ctx.beginPath();
+    ctx.moveTo(cx - 4, py - 1.5); ctx.quadraticCurveTo(cx, py + 1, cx + 4, py - 1.5); ctx.lineTo(cx + 3, py + 1.5); ctx.lineTo(cx - 3, py + 1.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rgb(mix(SK, SH, 0.35)); ctx.beginPath();     // haste
+    ctx.moveTo(cx - 1.4, py + 1); ctx.lineTo(cx + 1.4, py + 1); ctx.lineTo(cx + 1.1, py + 6.5); ctx.quadraticCurveTo(cx, py + 8, cx - 1.1, py + 6.5); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = rgb(darken(mix(SK, SH, 0.35), 0.12)); ctx.beginPath(); ctx.ellipse(cx, py + 7, 1.4, 1.6, 0, 0, 6.29); ctx.fill(); // glande
+    ctx.fillStyle = rgb(mix(SK, SH, 0.5)); ctx.beginPath(); ctx.ellipse(cx - 1.6, py + 4.5, 1.7, 2.2, 0.2, 0, 6.29); ctx.ellipse(cx + 1.6, py + 4.8, 1.7, 2.2, -0.2, 0, 6.29); ctx.fill(); // escroto
+  }
+
+  // ---- CABEÇA (oval simples com cabelo; o rosto detalhado é a zona 'olhos') ----
+  ctx.fillStyle = rgb(SK); ctx.beginPath(); ctx.ellipse(cx, headCy, B.headR * 0.82, B.headR, 0, 0, 6.29); ctx.fill();
+  soft(ctx, cx - B.headR * 0.3, headCy - 1, B.headR * 0.4, B.headR * 0.5, rgb(lighten(SK, 0.14), 0.5), 3);
+  ctx.fillStyle = rgb(SH, 0.4); ctx.beginPath(); ctx.ellipse(cx + B.headR * 0.34, headCy + 1, B.headR * 0.36, B.headR * 0.7, 0, 0, 6.29); ctx.fill();
+  if (!B.hasCap) { // cabelo (calota)
+    ctx.fillStyle = rgb(hairC); ctx.beginPath();
+    ctx.ellipse(cx, headCy - B.headR * 0.42, B.headR * 0.84, B.headR * 0.72, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    ctx.fillRect(cx - B.headR * 0.84, headCy - B.headR * 0.5, B.headR * 1.68, B.headR * 0.3);
+  }
+  // olhos/traços mínimos (só pra ler como pessoa, não como manequim)
+  ctx.fillStyle = rgb(darken(SH, 0.3), 0.7);
+  ctx.beginPath(); ctx.ellipse(cx - B.headR * 0.32, headCy + 0.5, 1, 0.7, 0, 0, 6.29); ctx.ellipse(cx + B.headR * 0.32, headCy + 0.5, 1, 0.7, 0, 0, 6.29); ctx.fill();
+  // pescoço
+  ctx.fillStyle = rgb(mix(SK, SH, 0.15)); ctx.fillRect(cx - B.neckW, chinY - 0.5, B.neckW * 2, neckY - chinY + 4);
+  soft(ctx, cx, chinY + 2, B.neckW * 1.4, 1.6, rgb(SH, 0.4), 1.6);   // sombra do queixo
+
+  // contorno geral fino (define a silhueta contra o preto)
+  ctx.strokeStyle = cold ? 'rgba(150,200,225,.5)' : rgb(lighten(SK, 0.2), 0.45); ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - B.neckW, neckY); ctx.quadraticCurveTo(cx - sh * 0.7, shoulderY - 2, cx - sh, shoulderY + 1);
+  ctx.quadraticCurveTo(cx - chest - 1, chestY, cx - waist, waistY); ctx.quadraticCurveTo(cx - hip - 1, hipY - 3, cx - hip, hipY + 2);
+  ctx.stroke();
+
+  // objeto denso escondido (contrabando na virilha/cintura)
+  if (conceal) {
+    const ox = cx - 7, oy = waistY - 4;
+    ctx.fillStyle = 'rgba(16,26,34,.85)'; ctx.fillRect(ox, oy, 14, 8);
+    ctx.strokeStyle = 'rgba(120,255,200,.9)'; ctx.lineWidth = 0.7; ctx.strokeRect(ox, oy, 14, 8);
+    ctx.fillStyle = 'rgba(255,70,70,.95)'; ctx.beginPath(); ctx.arc(ox + 16, oy - 1, 1.4, 0, 6.29); ctx.fill();
+  }
+
+  // DISCREPÂNCIA: a anatomia contradiz o sexo declarado → marcas do scanner
+  if (B.mismatch) {
+    const cross = 'rgba(255,70,70,.9)';
+    const mark = (x, y, w) => { ctx.strokeStyle = cross; ctx.lineWidth = 0.7; ctx.beginPath(); ctx.moveTo(x - w, y - w); ctx.lineTo(x + w, y + w); ctx.moveTo(x + w, y - w); ctx.lineTo(x - w, y + w); ctx.stroke();
+      ctx.strokeStyle = 'rgba(255,70,70,.45)'; ctx.beginPath(); ctx.arc(x, y, w + 1.5, 0, 6.29); ctx.stroke(); };
+    mark(cx, chestY + 2, 3);            // peito
+    mark(cx, hipY + 4, 2.6);            // virilha
+    mark(cx + sh - 1, shoulderY + 1, 2.4);
+  }
+
+  // ---- LEITURAS CLÍNICAS ----
+  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+  ctx.fillText('EXAME FISICO', 6, 9);
+  ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 14);
+  const biotermo = B.girth > 0.5 ? 'PESADO' : (B.girth > 0.28 ? 'CHEIO' : ['MAGRO', 'MEDIO', 'FORTE'][B.build]);
+  const altura = B.height > 0.4 ? ' ALTO' : (B.height < -0.4 ? ' BAIXO' : '');
+  const bio = biotermo + (fem ? ' F' : ' M') + altura;
+  if (B.mismatch) {
+    ctx.fillStyle = 'rgba(255,80,80,.95)'; ctx.fillText('DECL: ' + (B.apparentFem ? 'F' : 'M'), 6, 111);
+    ctx.fillText('ANAT: ' + (fem ? 'F' : 'M') + ' !! ' + bio, 6, 116);
+  } else {
+    ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.fillText('SEXO ' + (fem ? 'F' : 'M') + ' · ' + bio, 6, 116);
+  }
+  ctx.textAlign = 'right'; ctx.fillStyle = 'rgba(120,255,200,.85)';
+  ctx.fillText(conceal ? 'OBJ: 1 !!' : 'OBJ: --', 94, 116);
+}
 /* SCANNER DE CORPO (térmico/raio-X): a silhueta É a pessoa; revela volume
    oculto sob o casaco e a assinatura térmica (fraca = corpo frio de Alternado). */
 function paintBodyScan(ctx, f, phys) {
@@ -7512,11 +7702,12 @@ function examZoneSVG(f, phys, zone) {
     return eyeMacroSVG(f, phys);
   }
   if (zone === 'corpo') {
-    // scanner térmico do corpo: volume oculto + assinatura térmica, com a
-    // linha de varredura descendo (o feixe do scanner).
-    const url = renderScene((c) => paintBodyScan(c, f, phys), seed ^ 0xB0D, { w: 150, h: 180, paintScale: 2.7, post: { levels: 8, ditherAmp: 0.2, grain: 3, aberr: 0, scan: 0.06, sat: 0.62 } }).toDataURL();
+    // EXAME FÍSICO: o corpo inteiro despido desta pessoa (verificação de sexo
+    // biológico), com o feixe do scanner descendo. A anatomia denuncia o
+    // disfarce de gênero — e um objeto de contrabando escondido na cintura.
+    const url = renderScene((c) => paintBodyNude(c, f, phys), seed ^ 0xB0D, { w: 150, h: 180, paintScale: 2.7, post: { levels: 8, ditherAmp: 0.16, grain: 3, aberr: 0, scan: 0.06, sat: 0.7 } }).toDataURL();
     return `<image href="${url}" width="200" height="240" preserveAspectRatio="none" style="image-rendering:pixelated"/>` +
-      `<rect x="0" y="0" width="200" height="2.5" fill="rgba(120,255,200,.55)"><animate attributeName="y" values="0;238;0" dur="2.6s" repeatCount="indefinite"/></rect>`;
+      `<rect x="0" y="0" width="200" height="2.5" fill="rgba(120,255,200,.5)"><animate attributeName="y" values="0;238;0" dur="2.6s" repeatCount="indefinite"/></rect>`;
   }
   if (zone === 'boca') {
     const zo = { zoom: 2.9, focusY: 63 };
