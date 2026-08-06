@@ -9,18 +9,21 @@
 
 
 :root {
-  --bg: #1a1c19;
-  --panel: #24261f;
-  --panel2: #2d2f27;
-  --ink: #cfc9b8;
-  --ink-dim: #8f8a7a;
-  --accent: #7a8c5f;       /* verde burocrático da República */
-  --accent2: #b9a45c;
+  /* DIREÇÃO: impressão institucional de alto contraste, não "vintage quente"
+     lavado (a cara de IA). Painéis frios (aço/chumbo) contra papel quente —
+     esse contraste frio×quente é o que a repartição real tem e a IA não faz. */
+  --bg: #0f1210;
+  --panel: #1b1f19;
+  --panel2: #262b23;
+  --ink: #ddd8c6;
+  --ink-dim: #8b8778;
+  --accent: #6d8a52;       /* verde burocrático da República */
+  --accent2: #c2a24a;
   --danger: #a2493c;
   --approve: #4f7a4a;
-  --paper: #d8d2bd;
-  --paper-ink: #2b2820;
-  --stamp-red: #8c2f24;
+  --paper: #dad4be;
+  --paper-ink: #201d15;
+  --stamp-red: #9a2f22;
   --stamp-green: #2f5c33;
   /* SISTEMA TIPOGRÁFICO — três vozes:
      --font-display  Oswald (condensada institucional): logo, títulos, HUD, botões;
@@ -32,8 +35,8 @@
   /* washes translúcidos por cima das texturas de --tex-* (faces.js gera
      papel/painel/madeira em runtime): controlam quanto grão aparece sem
      multiplicar luminância — funciona igual sob qualquer tema de regime. */
-  --panel-wash: rgba(36,38,31,.84);
-  --paper-wash: rgba(216,210,189,.86);
+  --panel-wash: rgba(27,31,25,.9);
+  --paper-wash: rgba(218,212,190,.9);
   --tex-panel: none; --tex-paper: none; --tex-wood: none; --tex-guilloche: none; /* fallback antes do faces.js rodar */
 }
 
@@ -441,12 +444,12 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   grid-area:desk; position:relative; overflow:hidden;
   background-color: #4a3b28;
   background-image:
-    linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 30px),
-    radial-gradient(ellipse 46% 62% at 20% 34%, rgba(255,236,196,.13), transparent 72%), /* poça da luminária sobre os papéis */
-    radial-gradient(ellipse 70% 80% at 50% 40%, transparent 52%, rgba(6,4,2,.5) 100%),    /* vinheta das bordas da mesa */
+    linear-gradient(rgba(13,10,7,.52), rgba(13,10,7,.52)),                                 /* rebaixa a madeira: superfície fosca, veio como sugestão (não render foto-realista) */
+    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,0) 30px),
+    radial-gradient(ellipse 74% 84% at 50% 42%, transparent 48%, rgba(4,4,3,.62) 100%),    /* vinheta dura das bordas (sem poça de luz soft = menos cara de IA) */
     var(--tex-wood);
   background-size: auto, auto, auto, 240px 160px;
-  background-repeat: no-repeat, no-repeat, no-repeat, repeat;
+  background-repeat: repeat, no-repeat, no-repeat, repeat;
   min-height:0; border-top:3px solid #14100a;
   box-shadow: inset 0 6px 16px rgba(0,0,0,.55);
 }

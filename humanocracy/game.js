@@ -1882,9 +1882,9 @@ function drawQueue(ctx, w, h) {
   // (o busto é overlay por cima, então isto fica ATRÁS dele — dá relevo
   // cinematográfico sem tocar no rosto).
   const hx = w * 0.5, hy = h * 0.44;
-  const halo = ctx.createRadialGradient(hx, hy, 6, hx, hy, h * 0.6);
-  halo.addColorStop(0, 'rgba(210,186,132,.20)');
-  halo.addColorStop(0.5, 'rgba(150,150,140,.06)');
+  const halo = ctx.createRadialGradient(hx, hy, 6, hx, hy, h * 0.52);
+  halo.addColorStop(0, 'rgba(198,178,132,.10)');
+  halo.addColorStop(0.6, 'rgba(150,150,140,.03)');
   halo.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = halo; ctx.fillRect(0, 0, w, h);
   // VINHETA da fita: escurece os cantos do feed (o sujeito, overlay, fica limpo)
