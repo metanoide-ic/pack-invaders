@@ -6826,6 +6826,35 @@ function paintBust(ctx, f, opts) {
   }
 
   ctx.restore(); // fim da inclinação da cabeça
+  // MÃOS NO BALCÃO (só no busto ao vivo do guichê): as mãos da pessoa apoiadas
+  // na beira da bancada, à frente do casaco. Dá presença corporal — a pessoa
+  // TEM braços — sem sair do enquadramento de busto. Precisa de opts.paintH>120.
+  if (opts.counterHands) {
+    const hy = 126, foreCol = rgb(mix(SK, SH, 0.35)), skC = rgb(SK), shC = rgb(SH, 0.5);
+    ctx.save();
+    // BEIRA DO BALCÃO: uma faixa horizontal onde as mãos se apoiam
+    ctx.fillStyle = 'rgba(30,26,20,.9)'; ctx.fillRect(0, hy + 3, 100, 12);
+    ctx.fillStyle = 'rgba(200,190,160,.10)'; ctx.fillRect(0, hy + 3, 100, 1.2);            // aresta iluminada da bancada
+    ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, hy + 1.5, 100, 2);                    // sombra de contato sob as mãos
+    const hand = (hx, s) => {
+      // antebraço descendo do casaco, quase vertical, até a mão
+      ctx.strokeStyle = foreCol; ctx.lineWidth = 9; ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(hx + s * 6, 105); ctx.lineTo(hx, hy - 3); ctx.stroke();
+      // dorso da mão pousado na beira
+      ctx.fillStyle = skC; ctx.beginPath(); ctx.ellipse(hx, hy, 8, 4.6, 0, 0, 6.29); ctx.fill();
+      // dedos curtos curvando sobre a aresta
+      ctx.strokeStyle = skC; ctx.lineWidth = 2.8; ctx.lineCap = 'round';
+      for (let i = -2; i <= 2; i++) { const fx = hx + i * 2.9; ctx.beginPath(); ctx.moveTo(fx, hy + 0.5); ctx.lineTo(fx, hy + 4.5); ctx.stroke(); }
+      // polegar de lado
+      ctx.beginPath(); ctx.moveTo(hx + s * 7, hy - 1); ctx.lineTo(hx + s * 4.5, hy + 2.5); ctx.stroke();
+      // vincos entre os dedos + realce no dorso
+      ctx.strokeStyle = shC; ctx.lineWidth = 0.6;
+      for (let i = -2; i < 2; i++) { const fx = hx + i * 2.9 + 1.45; ctx.beginPath(); ctx.moveTo(fx, hy + 0.8); ctx.lineTo(fx, hy + 4); ctx.stroke(); }
+      ctx.strokeStyle = rgb(lighten(SK, 0.12), 0.5); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(hx - 3.5, hy - 2); ctx.lineTo(hx + 3.5, hy - 2); ctx.stroke();
+    };
+    hand(30, 1); hand(70, -1);
+    ctx.restore();
+  }
   // ACOMPANHANTE: bebê de colo ou criança agarrada ao lado — na altura do
   // peito, por cima do busto (não tomba com a cabeça). Famílias na fronteira.
   if (opts.companion) paintCompanion(ctx, opts.companion);
@@ -7092,7 +7121,7 @@ function renderPortraitCanvas(f, o) {
   cv.width = W; cv.height = H;
   const hi = document.createElement('canvas');
   const S = o.paintScale || 3.2;
-  hi.width = Math.round(100 * S); hi.height = Math.round(120 * S);
+  hi.width = Math.round(100 * S); hi.height = Math.round((o.paintH || 120) * S);
   const hc = hi.getContext('2d');
   if (o.bg) {
     // fundo de estúdio de repartição: gradiente vertical, não chapado
@@ -8095,8 +8124,10 @@ function renderActorFrame(cz, eyesClosed) {
   if (cz && cz.isSilente) return silentePortraitCanvas({ w: 72, h: 86 });
   return renderPortraitCanvas(cz.features, Object.assign({
     // 72px: pixel-art chunky, mas com resolução suficiente pros olhos lerem
-    // vivos (a 64 alguns viravam órbitas escuras).
-    w: 72, h: 86, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
+    // vivos (a 64 alguns viravam órbitas escuras). paintH maior (134) abre
+    // espaço embaixo pras MÃOS apoiadas no balcão — a pessoa tem braços.
+    w: 72, h: 96, paintH: 134, eyesClosed: !!eyesClosed, companion: cz && cz.companion,
+    counterHands: !(cz && cz.companion),   // quem segura bebê/criança está de mãos ocupadas
     post: { levels: 8, ditherAmp: 0.08, grain: 1.5, aberr: 0, scan: 0.06, tears: 0, sat: 0.58, contrast: 1.22 },
   }, actorAnomOpts(cz)));
 }
