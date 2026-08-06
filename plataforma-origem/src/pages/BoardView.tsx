@@ -26,8 +26,9 @@ import {
   CheckSquare,
   Calendar,
 } from 'lucide-react';
-import { Button, Badge, Input } from '@/components/ui';
+import { Button, Badge, Input, Avatar } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { useClientMap } from '@/lib/hooks';
 import { PRIORITY_META } from '@/lib/labels';
 import { cn } from '@/lib/utils';
@@ -352,6 +353,7 @@ function CardTile({
   dragging?: boolean;
 }) {
   const clientMap = useClientMap();
+  const assignee = useAuth((s) => (card.assigneeId ? s.accounts.find((a) => a.id === card.assigneeId) : undefined));
   const client = card.clientId ? clientMap[card.clientId] : undefined;
   const doneCk = card.checklist.filter((c) => c.done).length;
   const today = new Date().toISOString().slice(0, 10);
@@ -414,6 +416,11 @@ function CardTile({
               <span className="ml-auto inline-flex items-center gap-1 text-[11px] text-white/50">
                 <span className="h-2 w-2 rounded-full" style={{ background: client.color }} />
                 {client.name}
+              </span>
+            )}
+            {assignee && (
+              <span className={cn(client ? '' : 'ml-auto')}>
+                <Avatar name={assignee.name} color={assignee.color} size={20} />
               </span>
             )}
           </div>

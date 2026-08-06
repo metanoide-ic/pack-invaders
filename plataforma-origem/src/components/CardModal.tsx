@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Plus, Trash2, X, Check } from 'lucide-react';
 import { Modal, Button, Field, Input, Textarea, Select } from './ui';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { PRIORITY_META, LABEL_PALETTE } from '@/lib/labels';
 import { uid, cn } from '@/lib/utils';
 import type { Priority } from '@/lib/types';
@@ -17,6 +18,7 @@ export function CardModal({
 }) {
   const board = useData((s) => s.boards.find((b) => b.id === boardId));
   const clients = useData((s) => s.clients);
+  const members = useAuth((s) => s.accounts);
   const updateCard = useData((s) => s.updateCard);
   const removeCard = useData((s) => s.removeCard);
   const [newCk, setNewCk] = useState('');
@@ -88,6 +90,18 @@ export function CardModal({
             </Select>
           </Field>
         </div>
+
+        <Field label="Responsável">
+          <Select
+            value={card.assigneeId ?? ''}
+            onChange={(e) => updateCard(boardId, cardId, { assigneeId: e.target.value || undefined })}
+          >
+            <option value="">Ninguém atribuído</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>{m.name} · {m.role}</option>
+            ))}
+          </Select>
+        </Field>
 
         {/* Etiquetas */}
         <div>

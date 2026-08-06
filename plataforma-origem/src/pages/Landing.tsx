@@ -1,207 +1,120 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {
-  ArrowRight,
-  KanbanSquare,
-  Wallet,
-  CalendarCheck,
-  ShieldCheck,
-  Sparkles,
-  Zap,
-} from 'lucide-react';
+import { ArrowRight, KanbanSquare, Wallet, CalendarCheck, Clapperboard, Zap, Library } from 'lucide-react';
 import { Logo, LogoMark } from '@/components/Logo';
 import { Button } from '@/components/ui';
 
-const features = [
-  {
-    icon: KanbanSquare,
-    title: 'Quadros',
-    desc: 'Organize demandas em colunas arrastáveis. Do briefing à entrega, tudo visível em um só lugar.',
-  },
-  {
-    icon: CalendarCheck,
-    title: 'Checklist de posts',
-    desc: 'Acompanhe cada publicação da ideia ao ar: roteiro, produção, edição, aprovação e agendamento.',
-  },
-  {
-    icon: Wallet,
-    title: 'Financeiro',
-    desc: 'Receitas, despesas e saldo por cliente. Saiba exatamente quanto cada conta gera para a agência.',
-  },
-];
-
-const stat = [
-  { n: '3 em 1', l: 'Gestão, conteúdo e finanças' },
-  { n: '100%', l: 'A sua identidade' },
-  { n: 'Web + App', l: 'Instale no celular' },
+const modules = [
+  { icon: KanbanSquare, title: 'Quadros', desc: 'Do briefing à entrega, cada demanda visível em um fluxo só.' },
+  { icon: CalendarCheck, title: 'Posts', desc: 'Da ideia ao ar, com copy por IA e aprovação no WhatsApp.' },
+  { icon: Clapperboard, title: 'Vídeos', desc: 'Pipeline de edição com versões, links e pedidos de alteração.' },
+  { icon: Wallet, title: 'Financeiro', desc: 'Receitas, despesas e saldo por cliente, com acesso restrito.' },
+  { icon: Zap, title: 'Automações', desc: 'Aprovou no grupo, publica no feed e no story. Sozinho.' },
+  { icon: Library, title: 'Biblioteca', desc: 'Modelos de legenda prontos para reaproveitar em qualquer conta.' },
 ];
 
 export default function Landing() {
   return (
-    <div className="relative min-h-screen overflow-hidden">
-      <div className="pointer-events-none absolute inset-0 grid-noise opacity-40" />
-      <div className="pointer-events-none absolute -top-40 right-0 h-[36rem] w-[36rem] rounded-full bg-brand-600/25 blur-[120px]" />
-
-      {/* Top bar */}
-      <header className="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-5 py-6">
+    <div className="relative min-h-screen">
+      {/* topo */}
+      <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
         <Logo size="sm" />
         <Link to="/entrar">
-          <Button variant="outline" size="sm">
-            Entrar
-          </Button>
+          <Button variant="outline" size="sm">Entrar</Button>
         </Link>
       </header>
 
-      {/* Hero */}
-      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-20 pt-10 sm:pt-16">
-        <div className="grid items-center gap-12 lg:grid-cols-2">
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 rounded-full border border-line bg-white/[0.03] px-3 py-1.5 text-xs text-white/60"
-            >
-              <Sparkles size={14} className="text-brand-300" />
-              A plataforma interna da Origem
-            </motion.div>
+      {/* hero — assimétrico, editorial */}
+      <section className="mx-auto grid max-w-6xl items-center gap-14 px-6 pb-16 pt-10 lg:grid-cols-[1.1fr_0.9fr] lg:pt-20">
+        <div>
+          <div className="mb-6 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-white/40">
+            <span className="h-px w-8 bg-brand-500/70" />
+            Plataforma interna
+          </div>
+          <h1 className="font-display text-[2.6rem] font-semibold leading-[1.02] text-white sm:text-6xl">
+            Resultado tem nome.
+            <br />
+            Estratégia tem <span className="text-brand-300">Origem</span>.
+          </h1>
+          <p className="mt-6 max-w-md text-lg leading-relaxed text-white/55">
+            Quadros, posts, vídeos e financeiro no mesmo lugar — com aprovação e
+            publicação automatizadas. Feita para a rotina da agência.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Link to="/entrar">
+              <Button size="lg" className="group">
+                Entrar na plataforma
+                <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Button>
+            </Link>
+            <Link to="/entrar">
+              <Button size="lg" variant="ghost">Criar uma conta</Button>
+            </Link>
+          </div>
+        </div>
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 }}
-              className="mt-5 font-display text-4xl font-bold leading-[1.05] text-white sm:text-6xl"
-            >
-              Resultado tem nome.
-              <br />
-              <span className="text-gradient">Estratégia tem Origem.</span>
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.12 }}
-              className="mt-5 max-w-lg text-lg text-white/60"
-            >
-              Quadros, checklist de posts e financeiro reunidos em um só lugar. Uma
-              ferramenta feita para a rotina da nossa agência — moderna, completa e
-              simples de usar.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.18 }}
-              className="mt-8 flex flex-wrap items-center gap-3"
-            >
-              <Link to="/entrar">
-                <Button size="lg" className="group">
-                  Criar minha conta
-                  <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-              <Link to="/entrar">
-                <Button size="lg" variant="outline">
-                  Já tenho conta
-                </Button>
-              </Link>
-            </motion.div>
-
-            <div className="mt-10 flex flex-wrap gap-x-10 gap-y-4">
-              {stat.map((s) => (
-                <div key={s.l}>
-                  <div className="font-display text-2xl font-bold text-white">{s.n}</div>
-                  <div className="text-xs text-white/45">{s.l}</div>
+        {/* marca — bloco sóbrio, sem orbe/glow */}
+        <div className="relative">
+          <div className="card relative overflow-hidden">
+            <div className="hairline-grid absolute inset-0 opacity-60" />
+            <div className="relative grid place-items-center px-10 py-16">
+              <LogoMark className="h-28 w-28" />
+              <div className="mt-8 text-center">
+                <div className="font-display text-xl font-semibold tracking-[0.32em] text-white">ORIGEM</div>
+                <div className="mt-2 text-[10px] tracking-[0.3em] text-white/35">COMUNICAÇÃO &amp; MARKETING</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
+              {[['Web + App', 'instale no celular'], ['3 em 1', 'gestão completa'], ['IA', 'copy automática']].map(([a, b]) => (
+                <div key={a} className="px-3 py-4">
+                  <div className="font-display text-sm font-semibold text-white">{a}</div>
+                  <div className="mt-0.5 text-[11px] text-white/40">{b}</div>
                 </div>
               ))}
             </div>
           </div>
-
-          {/* Visual */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.94 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.1 }}
-            className="relative"
-          >
-            <div className="animate-float relative mx-auto grid aspect-square max-w-md place-items-center">
-              <div className="absolute inset-0 rounded-full bg-brand-500/20 blur-3xl" />
-              <div className="card relative grid h-full w-full place-items-center overflow-hidden p-10">
-                <div className="grid-noise absolute inset-0 opacity-30" />
-                <LogoMark className="relative h-40 w-40 drop-shadow-[0_0_40px_rgba(124,58,237,0.6)]" />
-                <div className="relative mt-8 text-center">
-                  <div className="font-display text-2xl font-semibold tracking-[0.3em] text-white">
-                    ORIGEM
-                  </div>
-                  <div className="mt-1 text-[10px] tracking-[0.34em] text-white/40">
-                    COMUNICAÇÃO &amp; MARKETING
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-20">
-        <div className="grid gap-4 sm:grid-cols-3">
-          {features.map((f, i) => (
+      {/* módulos — grade densa, sem “3 cards genéricos” */}
+      <section className="mx-auto max-w-6xl px-6 pb-24">
+        <div className="mb-8 flex items-end justify-between border-b border-line pb-4">
+          <h2 className="font-display text-2xl font-semibold text-white">Tudo o que a operação precisa</h2>
+          <span className="hidden text-sm text-white/40 sm:block">6 módulos integrados</span>
+        </div>
+        <div className="grid gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
+          {modules.map((m, i) => (
             <motion.div
-              key={f.title}
-              initial={{ opacity: 0, y: 20 }}
+              key={m.title}
+              initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.08 }}
-              className="card p-6"
+              viewport={{ once: true, margin: '-40px' }}
+              transition={{ delay: i * 0.04, duration: 0.3 }}
+              className="group bg-ink-900 p-6 transition-colors duration-200 hover:bg-ink-850"
             >
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-brand-500/15 text-brand-300">
-                <f.icon size={22} />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold text-white">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-white/55">{f.desc}</p>
+              <m.icon size={20} strokeWidth={1.75} className="text-brand-300" />
+              <h3 className="mt-4 font-display text-lg font-semibold text-white">{m.title}</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/50">{m.desc}</p>
             </motion.div>
           ))}
         </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          {[
-            { icon: Zap, t: 'Rápida e fluida', d: 'Interface leve, com atalhos e arrastar-e-soltar.' },
-            { icon: ShieldCheck, t: 'Seus dados, seu navegador', d: 'Tudo salvo localmente no dispositivo.' },
-            { icon: Sparkles, t: 'Cara de Origem', d: 'Identidade visual da agência em cada tela.' },
-          ].map((f) => (
-            <div key={f.t} className="flex items-start gap-3 rounded-2xl border border-line p-5">
-              <f.icon size={18} className="mt-0.5 text-brand-300" />
-              <div>
-                <div className="text-sm font-semibold text-white">{f.t}</div>
-                <div className="text-xs text-white/50">{f.d}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="relative z-10 mx-auto max-w-6xl px-5 pb-24">
-        <div className="glow card relative overflow-hidden p-10 text-center">
-          <div className="grid-noise absolute inset-0 opacity-20" />
-          <h2 className="relative font-display text-3xl font-bold text-white sm:text-4xl">
-            Pronto para começar?
-          </h2>
-          <p className="relative mx-auto mt-3 max-w-md text-white/60">
-            Crie sua conta em segundos e traga toda a operação da agência para a
-            Plataforma Origem.
-          </p>
-          <Link to="/entrar" className="relative mt-7 inline-block">
-            <Button size="lg" className="group">
-              Criar conta grátis
-              <ArrowRight size={18} className="transition-transform group-hover:translate-x-1" />
+        <div className="mt-14 flex flex-col items-start justify-between gap-6 rounded-xl border border-line bg-ink-900 p-8 sm:flex-row sm:items-center">
+          <div>
+            <h3 className="font-display text-xl font-semibold text-white">Pronto para começar?</h3>
+            <p className="mt-1 text-sm text-white/50">Entre com sua conta da equipe e traga tudo para um lugar só.</p>
+          </div>
+          <Link to="/entrar">
+            <Button size="lg" className="group whitespace-nowrap">
+              Acessar agora
+              <ArrowRight size={18} className="transition-transform duration-200 group-hover:translate-x-0.5" />
             </Button>
           </Link>
         </div>
       </section>
 
-      <footer className="relative z-10 border-t border-line py-8 text-center text-xs text-white/40">
-        Plataforma Origem · Estratégia · Criatividade · Resultados
+      <footer className="border-t border-line py-8 text-center text-xs tracking-wide text-white/35">
+        Origem · Estratégia · Criatividade · Resultados
       </footer>
     </div>
   );

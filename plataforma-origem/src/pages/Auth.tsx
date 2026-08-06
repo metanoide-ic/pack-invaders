@@ -47,23 +47,25 @@ export default function Auth() {
 
   return (
     <div className="relative grid min-h-screen lg:grid-cols-2">
-      <div className="relative hidden overflow-hidden lg:block">
-        <div className="absolute inset-0 grid-noise opacity-30" />
-        <div className="absolute -bottom-32 -left-24 h-[32rem] w-[32rem] rounded-full bg-brand-600/30 blur-[120px]" />
+      <div className="relative hidden overflow-hidden border-r border-line bg-ink-900 lg:block">
+        <div className="hairline-grid absolute inset-0 opacity-70" />
         <div className="relative flex h-full flex-col justify-between p-12">
           <Logo />
           <div>
-            <h2 className="font-display text-4xl font-bold leading-tight text-white">
+            <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-white/40">
+              <span className="h-px w-8 bg-brand-500/70" /> Acesso da equipe
+            </div>
+            <h2 className="font-display text-4xl font-semibold leading-tight text-white">
               A operação da agência,
               <br />
-              <span className="text-gradient">num só lugar.</span>
+              num só lugar.
             </h2>
             <p className="mt-4 max-w-sm text-white/55">
-              Quadros, posts, vídeos, financeiro e automações com IA. Entre e leve a
-              Origem para o próximo nível.
+              Quadros, posts, vídeos, financeiro e automações. Entre com sua conta e
+              continue de onde parou.
             </p>
           </div>
-          <p className="text-xs text-white/40">Estratégia · Criatividade · Resultados</p>
+          <p className="text-xs tracking-wide text-white/35">Estratégia · Criatividade · Resultados</p>
         </div>
       </div>
 

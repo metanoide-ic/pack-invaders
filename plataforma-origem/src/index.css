@@ -1,39 +1,52 @@
 @import 'tailwindcss';
 
 /* ------------------------------------------------------------------ */
-/*  Identidade visual Origem — violeta elétrico sobre preto profundo   */
+/*  Origem — dark editorial. Violeta como acento, não como enchente.   */
 /* ------------------------------------------------------------------ */
 @theme {
-  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Space Grotesk Variable', 'Inter Variable', sans-serif;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Geist Variable', sans-serif;
 
-  --color-brand-50: #f3edff;
-  --color-brand-100: #e6dcff;
-  --color-brand-200: #cbb4ff;
-  --color-brand-300: #ad86ff;
-  --color-brand-400: #935cff;
-  --color-brand-500: #7c3aed;
-  --color-brand-600: #6d28d9;
-  --color-brand-700: #5b21b6;
-  --color-brand-800: #4c1d95;
-  --color-brand-900: #3b1478;
-  --color-brand-950: #23094d;
+  /* Acento da marca — usado com parcimônia */
+  --color-brand-50: #f4f1ff;
+  --color-brand-100: #e8e2ff;
+  --color-brand-200: #d2c6ff;
+  --color-brand-300: #b6a2ff;
+  --color-brand-400: #9a7dff;
+  --color-brand-500: #7c5cff;
+  --color-brand-600: #6b46e5;
+  --color-brand-700: #5836c4;
+  --color-brand-800: #442a99;
+  --color-brand-900: #2f1d6b;
+  --color-brand-950: #1a1140;
 
-  --color-ink-950: #08080f;
-  --color-ink-900: #0b0b16;
-  --color-ink-850: #0f0f1e;
-  --color-ink-800: #14142a;
-  --color-ink-700: #1c1c38;
-  --color-ink-600: #262648;
+  /* Neutros — base do produto (frios, quase-preto) */
+  --color-ink-950: #0a0a0c;
+  --color-ink-900: #0e0e11;
+  --color-ink-850: #121216;
+  --color-ink-800: #17171c;
+  --color-ink-700: #1e1e25;
+  --color-ink-600: #26262f;
 
-  --color-line: #23233f;
+  --color-line: #24242c;
 
-  --radius-xl2: 1.25rem;
+  --radius-xl2: 0.875rem;
 }
 
 @layer base {
+  :root {
+    color-scheme: dark;
+  }
+
   * {
-    border-color: color-mix(in oklab, var(--color-line) 100%, transparent);
+    border-color: var(--color-line);
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+    background: #0a0a0c;
   }
 
   html {
@@ -44,82 +57,68 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    color: #e9e9f4;
-    background: var(--color-ink-950);
-    background-image:
-      radial-gradient(60rem 40rem at 82% -10%, rgba(124, 58, 237, 0.22), transparent 60%),
-      radial-gradient(48rem 40rem at -10% 8%, rgba(59, 20, 120, 0.28), transparent 55%);
-    background-attachment: fixed;
-    min-height: 100vh;
+    color: #e7e7ea;
+    letter-spacing: -0.006em;
   }
 
-  h1, h2, h3, h4, .font-display {
+  /* Fundo pintado no container raiz — não depende do host/iframe */
+  #root {
+    background-color: #0a0a0c;
+    background-image:
+      radial-gradient(70rem 50rem at 100% -20%, rgba(124, 92, 255, 0.08), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
+    font-weight: 600;
   }
 
   ::selection {
-    background: rgba(124, 58, 237, 0.35);
+    background: rgba(124, 92, 255, 0.28);
     color: #fff;
   }
 
-  /* Scrollbars discretas */
   * {
     scrollbar-width: thin;
-    scrollbar-color: #2b2b4d transparent;
+    scrollbar-color: #2a2a33 transparent;
   }
   *::-webkit-scrollbar { width: 10px; height: 10px; }
   *::-webkit-scrollbar-thumb {
-    background: #2b2b4d;
+    background: #2a2a33;
     border-radius: 999px;
-    border: 2px solid transparent;
+    border: 3px solid transparent;
     background-clip: padding-box;
   }
-  *::-webkit-scrollbar-thumb:hover { background: #3a3a63; background-clip: padding-box; }
+  *::-webkit-scrollbar-thumb:hover { background: #383843; background-clip: padding-box; }
 }
 
 @layer components {
+  /* Superfície padrão: plana, com traço fino — sem glassmorphism */
   .card {
-    background: color-mix(in oklab, var(--color-ink-850) 92%, transparent);
+    background: var(--color-ink-850);
     border: 1px solid var(--color-line);
     border-radius: var(--radius-xl2);
-    backdrop-filter: blur(12px);
   }
 
-  .glass {
-    background: color-mix(in oklab, var(--color-ink-800) 60%, transparent);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-  }
-
-  .glow {
-    box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.35), 0 12px 40px -12px rgba(124, 58, 237, 0.55);
+  .panel {
+    background: var(--color-ink-900);
+    border: 1px solid var(--color-line);
   }
 
   .btn-brand {
-    background-image: linear-gradient(135deg, #935cff 0%, #6d28d9 100%);
-    box-shadow: 0 10px 30px -10px rgba(124, 58, 237, 0.7);
+    background: var(--color-brand-500);
+    color: #fff;
   }
-  .btn-brand:hover { filter: brightness(1.08); }
-  .btn-brand:active { transform: translateY(1px); }
+  .btn-brand:hover { background: var(--color-brand-400); }
+  .btn-brand:active { transform: translateY(0.5px); }
 
-  .text-gradient {
-    background: linear-gradient(120deg, #ffffff 10%, #c9b4ff 55%, #935cff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-
-  .grid-noise {
+  /* textura discreta, sem orbes roxos */
+  .hairline-grid {
     background-image:
-      linear-gradient(rgba(124, 58, 237, 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(124, 58, 237, 0.06) 1px, transparent 1px);
-    background-size: 44px 44px;
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    background-size: 56px 56px;
   }
 }
-
-@keyframes float-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-14px); }
-}
-.animate-float { animation: float-slow 6s ease-in-out infinite; }

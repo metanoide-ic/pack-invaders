@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, KanbanSquare, Wallet, CalendarCheck, Users, Settings, LogOut,
-  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle,
+  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle, Building2,
 } from 'lucide-react';
 import { Logo, LogoMark } from './Logo';
 import { Avatar } from './ui';
@@ -23,7 +23,8 @@ function useNav(): NavDef[] {
     { to: '/app/videos', label: 'Vídeos', icon: Clapperboard },
     { to: '/app/biblioteca', label: 'Biblioteca', icon: Library },
     { to: '/app/automacoes', label: 'Automações', icon: Zap },
-    { to: '/app/clientes', label: 'Clientes', icon: Users },
+    { to: '/app/clientes', label: 'Clientes', icon: Building2 },
+    { to: '/app/equipe', label: 'Equipe', icon: Users },
   ];
   if (canFinance) items.push({ to: '/app/financeiro', label: 'Financeiro', icon: Wallet });
   items.push({ to: '/app/integracoes', label: 'Integrações', icon: Plug });
@@ -75,7 +76,7 @@ function NotificationBell() {
           <div className="absolute right-0 z-50 mt-2 w-80 rounded-2xl border border-line bg-ink-850 p-2 shadow-2xl">
             <div className="px-3 py-2 text-sm font-semibold text-white">Precisa postar</div>
             {pending.length === 0 ? (
-              <p className="px-3 py-6 text-center text-sm text-white/40">Tudo em dia. 🎉</p>
+              <p className="px-3 py-6 text-center text-sm text-white/40">Tudo em dia por aqui.</p>
             ) : (
               <div className="max-h-80 space-y-1 overflow-y-auto">
                 {pending.map(({ post, overdue }) => (
@@ -103,7 +104,7 @@ function UserCard() {
   const navigate = useNavigate();
   if (!user) return null;
   return (
-    <div className="glass rounded-2xl p-3">
+    <div className="rounded-xl border border-line bg-ink-850 p-3">
       <div className="flex items-center gap-3">
         <Avatar name={user.name} color={user.color} size={38} />
         <div className="min-w-0 flex-1">

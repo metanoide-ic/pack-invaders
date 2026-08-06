@@ -125,8 +125,8 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader
-        title={`Olá, ${firstName} 👋`}
-        subtitle="Aqui está o panorama da agência hoje."
+        title={`Bom te ver, ${firstName}`}
+        subtitle="Panorama da agência hoje."
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -222,7 +222,7 @@ export default function Dashboard() {
                 </Link>
               ))
             ) : (
-              <p className="py-6 text-center text-sm text-white/40">Nada em aberto. 🎉</p>
+              <p className="py-6 text-center text-sm text-white/40">Nada em aberto no momento.</p>
             )}
           </div>
         </div>

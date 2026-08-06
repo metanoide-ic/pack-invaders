@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
+import { Lock } from 'lucide-react';
 import { useAuth } from '@/lib/authStore';
 import { AppShell } from '@/components/AppShell';
 import Landing from '@/pages/Landing';
@@ -13,6 +14,7 @@ import Videos from '@/pages/Videos';
 import Library from '@/pages/Library';
 import Automations from '@/pages/Automations';
 import Clients from '@/pages/Clients';
+import Team from '@/pages/Team';
 import Integrations from '@/pages/Integrations';
 import Settings from '@/pages/Settings';
 
@@ -31,8 +33,10 @@ function FinanceGuard() {
 function NoAccess() {
   return (
     <div className="grid place-items-center py-24 text-center">
-      <div className="text-5xl">🔒</div>
-      <h2 className="mt-4 text-xl font-semibold text-white">Acesso restrito</h2>
+      <div className="grid h-14 w-14 place-items-center rounded-xl border border-line bg-ink-850 text-white/50">
+        <Lock size={24} strokeWidth={1.75} />
+      </div>
+      <h2 className="mt-5 text-xl font-semibold text-white">Acesso restrito</h2>
       <p className="mt-1 max-w-sm text-sm text-white/50">
         O Financeiro é visível apenas para contas com permissão especial. Peça a um
         administrador para liberar em Integrações → Permissões.
@@ -59,6 +63,7 @@ export default function App() {
         <Route path="/app/biblioteca" element={<Protected><Library /></Protected>} />
         <Route path="/app/automacoes" element={<Protected><Automations /></Protected>} />
         <Route path="/app/clientes" element={<Protected><Clients /></Protected>} />
+        <Route path="/app/equipe" element={<Protected><Team /></Protected>} />
         <Route path="/app/financeiro" element={<Protected><FinanceGuard /></Protected>} />
         <Route path="/app/integracoes" element={<Protected><Integrations /></Protected>} />
         <Route path="/app/config" element={<Protected><Settings /></Protected>} />

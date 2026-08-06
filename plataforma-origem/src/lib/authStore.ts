@@ -25,6 +25,8 @@ interface AuthState {
   logout: () => void;
   updateProfile: (patch: Partial<Pick<Account, 'name' | 'role' | 'color'>>) => void;
   setPermission: (id: string, patch: Partial<Pick<Account, 'canFinance' | 'admin' | 'role'>>) => void;
+  addMember: (input: { name: string; password: string; role?: string; canFinance?: boolean; admin?: boolean }) => { ok: boolean; error?: string };
+  removeMember: (id: string) => void;
   current: () => Account | null;
 }
 
@@ -92,6 +94,24 @@ export const useAuth = create<AuthState>()(
 
       setPermission: (id, patch) =>
         set((s) => ({ accounts: s.accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+
+      addMember: ({ name, password, role, canFinance, admin }) => {
+        const loginId = name.trim();
+        if (!loginId) return { ok: false, error: 'Informe o nome.' };
+        if (password.length < 4) return { ok: false, error: 'Senha de ao menos 4 caracteres.' };
+        if (get().accounts.some((a) => norm(a.login) === norm(loginId)))
+          return { ok: false, error: 'Já existe um membro com este login.' };
+        const account: Account = {
+          id: uid('user'), name: loginId, login: loginId,
+          passHash: hash(password), role: role?.trim() || 'Membro da equipe',
+          color: pickColor(loginId), canFinance: !!canFinance, admin: !!admin, createdAt: Date.now(),
+        };
+        set((s) => ({ accounts: [...s.accounts, account] }));
+        return { ok: true };
+      },
+
+      removeMember: (id) =>
+        set((s) => (id === s.currentId ? s : { accounts: s.accounts.filter((a) => a.id !== id) })),
 
       current: () => {
         const { accounts, currentId } = get();
