@@ -98,36 +98,72 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 /* ============ TÍTULO ============ */
 #screen-title { display:none; align-items:center; justify-content:center; position:relative; }
 #screen-title.active { display:flex; }
-#title-snow { position:absolute; inset:0; width:100%; height:100%; }
-.title-inner {
-  text-align:center; max-width:720px; padding:34px 44px 26px; position:relative; z-index:2;
-  animation: title-in 2.4s ease both;
-  background: radial-gradient(ellipse at 50% 42%, rgba(10,11,8,.82) 40%, rgba(10,11,8,.35) 75%, transparent);
+#screen-title::after {  /* escurece a cena atrás do dossiê, foca o card */
+  content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 46%, rgba(8,9,6,.7) 30%, rgba(8,9,6,.35) 60%, rgba(8,9,6,.72) 100%);
 }
-@keyframes title-in { from { opacity:0; transform: translateY(14px); } to { opacity:1; transform:none; } }
-/* brasão do Ministério (desenhado em canvas) */
-.title-crest {
-  width:150px; height:150px; margin:0 auto -2px; display:block;
-  filter: drop-shadow(2px 3px 0 rgba(0,0,0,.55));   /* sombra dura, sem glow (de-IA) */
+#title-snow { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
+
+/* ===== DOSSIÊ DE SERVIÇO (novo menu principal) ===== */
+.title-card {
+  position:relative; z-index:2; width:min(540px, 92vw); margin:16px;
+  background:
+    linear-gradient(180deg, rgba(38,39,30,.98), rgba(24,25,19,.98));
+  border:1.5px solid #0a0b07;
+  box-shadow: 0 0 0 1px rgba(201,163,74,.5), 0 0 0 6px rgba(10,11,8,.9), 10px 12px 0 rgba(0,0,0,.5);
+  animation: title-in 1.6s ease both;
+  max-height:96vh; overflow:auto;
 }
+@keyframes title-in { from { opacity:0; transform: translateY(16px) scale(.99); } to { opacity:1; transform:none; } }
+/* faixa de classificação no topo */
+.tc-band {
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  background: repeating-linear-gradient(45deg, #7a2a20 0 9px, #6a231a 9px 18px);
+  color:#f0e3cf; font-family:var(--font-display); font-weight:700;
+  font-size:10.5px; letter-spacing:3px; text-transform:uppercase;
+  padding:5px 12px; border-bottom:1.5px solid #0a0b07;
+}
+.tc-band-mid { opacity:.9; font-weight:500; letter-spacing:2px; }
+.tc-body { padding:20px 30px 22px; text-align:center; position:relative; }
+/* punção de arquivo (dois furos no topo do card) */
+.tc-body::before, .tc-body::after {
+  content:''; position:absolute; top:9px; width:11px; height:11px; border-radius:50%;
+  background:#0a0b07; box-shadow: inset 0 1px 2px rgba(0,0,0,.9);
+}
+.tc-body::before { left:26px; } .tc-body::after { right:26px; }
+
+.tc-letterhead { display:flex; align-items:center; justify-content:center; gap:12px; margin:2px 0 4px; }
+.title-crest { width:60px; height:60px; display:block; flex:none; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.6)); }
+.tc-lh-txt { text-align:left; }
+.tc-ministry { font-family:var(--font-display); font-weight:600; color:var(--accent2); letter-spacing:2px; font-size:11.5px; text-transform:uppercase; }
+.tc-republic { font-family:var(--font-display); font-weight:500; color:#a79a76; letter-spacing:4px; font-size:10px; text-transform:uppercase; margin-top:2px; }
+
+.tc-logo-wrap { position:relative; margin:8px 0 2px; }
 .title-logo {
-  font-family:var(--font-display); font-weight:700; white-space:nowrap;
-  font-size:clamp(34px, 8.2vw, 62px); letter-spacing:.14em; margin:6px 0 2px;
-  /* ouro em duas faixas duras (folha metálica gravada), não gradiente liso */
-  background: linear-gradient(180deg, #e9d49a 0%, #e9d49a 49%, #a98442 50%, #a98442 100%);
+  font-family:var(--font-display); font-weight:700; white-space:nowrap; line-height:.9;
+  font-size:clamp(38px, 9vw, 68px); letter-spacing:.06em; margin:0;
+  background: linear-gradient(180deg, #efdca2 0%, #e6cf8f 48%, #b1893f 52%, #9c7734 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
-  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.6));    /* letterpress, sem glow dourado */
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.7)) drop-shadow(0 0 1px rgba(0,0,0,.6));
+  position:relative;
 }
-.title-sub {
-  font-family:var(--font-display); font-weight:500; color:var(--accent2); letter-spacing:3px;
-  font-size:12px; text-transform:uppercase; opacity:.85;
-  padding:0 0 10px; margin-bottom:2px;
-  border-bottom:1px solid rgba(201,163,74,.28);
-  display:inline-block;
+/* carimbo vermelho batido por cima do canto do wordmark */
+.tc-stamp {
+  position:absolute; right:-2px; top:-16px; transform: rotate(-11deg);
+  border:2px solid rgba(176,52,40,.85); color:rgba(176,52,40,.9); border-radius:3px;
+  padding:2px 7px 3px; font-family:var(--font-display); font-weight:700;
+  font-size:11px; letter-spacing:2px; line-height:1.05; text-align:center;
+  text-shadow:none; box-shadow: inset 0 0 0 1px rgba(176,52,40,.3);
+  opacity:.92; animation: stamp-in .5s .9s both;
 }
-.title-quote { margin:24px auto 22px; font-family:var(--font-doc); color:#cdbf98; font-size:15px; font-style:italic; max-width:440px; }
-.title-menu { display:flex; flex-direction:column; gap:8px; align-items:center; margin:20px 0 6px; width:308px; margin-left:auto; margin-right:auto; }
-.title-row { display:flex; gap:8px; width:100%; }
+.tc-stamp span { display:block; font-size:8.5px; letter-spacing:1.5px; opacity:.85; }
+.tc-stamp b { font-size:12px; letter-spacing:1.5px; }
+@keyframes stamp-in { 0% { opacity:0; transform: rotate(-11deg) scale(1.7); } 70% { opacity:.92; transform: rotate(-11deg) scale(.94); } 100% { opacity:.92; transform: rotate(-11deg) scale(1); } }
+.tc-rule { height:0; border-top:1px solid rgba(201,163,74,.5); border-bottom:1px solid rgba(201,163,74,.18); width:78%; margin:12px auto 0; }
+
+.title-quote { margin:16px auto 16px; font-family:var(--font-doc); color:#cdbf98; font-size:14.5px; font-style:italic; max-width:420px; }
+.title-menu { display:flex; flex-direction:column; gap:7px; align-items:center; margin:14px 0 4px; width:296px; margin-left:auto; margin-right:auto; }
+.title-row { display:flex; gap:7px; width:100%; }
 /* CHAPA DE REPARTIÇÃO: cor lisa, borda dura, sombra deslocada SEM blur
    (impressão/letterpress). Nada de gradiente, bisel ou glow — isso é "cara de
    IA". Hover = a chapa INVERTE de cor, como um campo de formulário selecionado. */
@@ -1108,28 +1144,40 @@ body.text-large .np-body { font-size:15px; }
     <!-- ===== TELA DE TÍTULO ===== -->
     <div id="screen-title" class="screen active">
       <canvas id="title-snow"></canvas>
-      <div class="title-inner">
-        <canvas id="title-crest" class="title-crest" width="300" height="300"></canvas>
-        <h1 class="title-logo">HUMANOCRACY</h1>
-        <div class="title-sub">MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA</div>
-        <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
-        <div class="title-menu">
-          <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
-          <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
-          <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-          <div class="title-row">
-            <button id="btn-fullscreen" class="btn-title btn-title-sm btn-half">⛶ TELA CHEIA (F)</button>
-            <button id="btn-achievements" class="btn-title btn-title-sm btn-half">🏆 CONQUISTAS</button>
+      <div class="title-card">
+        <div class="tc-band"><span>CONFIDENCIAL</span><span class="tc-band-mid">USO INTERNO DO MINISTÉRIO</span><span>Nº 7</span></div>
+        <div class="tc-body">
+          <div class="tc-letterhead">
+            <canvas id="title-crest" class="title-crest" width="300" height="300"></canvas>
+            <div class="tc-lh-txt">
+              <div class="tc-ministry">MINISTÉRIO DE TRIAGEM E FRONTEIRAS</div>
+              <div class="tc-republic">REPÚBLICA DE OSTERIA</div>
+            </div>
           </div>
-          <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
-          <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
-          <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
+          <div class="tc-logo-wrap">
+            <h1 class="title-logo" data-text="HUMANOCRACY">HUMANOCRACY</h1>
+            <div class="tc-rule"></div>
+            <div class="tc-stamp"><span>POSTO Nº 7</span><b>FRONTEIRA LESTE</b></div>
+          </div>
+          <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
+          <div class="title-menu">
+            <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
+            <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
+            <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
+            <div class="title-row">
+              <button id="btn-fullscreen" class="btn-title btn-title-sm btn-half">⛶ TELA CHEIA (F)</button>
+              <button id="btn-achievements" class="btn-title btn-title-sm btn-half">🏆 CONQUISTAS</button>
+            </div>
+            <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
+            <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
+            <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
+          </div>
+          <div class="title-warning">
+            Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
+            perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
+          </div>
+          <div class="title-version">FORM. 7-A · v1.0 · 48 DIAS · POSTO DE TRIAGEM Nº 7 — FRONTEIRA LESTE</div>
         </div>
-        <div class="title-warning">
-          Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
-          perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
-        </div>
-        <div class="title-version">v1.0 — 48 dias — Posto de Triagem Nº 7, Fronteira Leste</div>
       </div>
     </div>
 
@@ -7380,17 +7428,31 @@ function bodyLayout(f) {
   const girth = Math.max(0, f.girth || 0);             // 0 magro .. ~0.8 pesado (barriga)
   const gw = girth * 9;                                // quanto a massa alarga o meio
   const L = faceLayout(f);
-  const headR = (L.fw + L.jw) * 0.28 + 3.4 + girth * 1.4; // cara mais cheia se pesado
-  const shoulder = (fem ? 15 : 18) + bw + (fem ? 0 : 1) + girth * 2;
-  const hip = (fem ? 14 : 12.5) + bw * 0.8 + gw * 0.7;
-  const waist = (fem ? 10.5 : 11) + bw * 0.9 + gw;     // a cintura é onde a massa mais aparece
-  const chest = (fem ? 12.5 : 13.5) + bw + gw * 0.6;
-  const neckW = (fem ? 2.6 : 3.4) + build * 0.3 + girth * 1.2;
+  // PROPORÇÃO POR IDADE: a cabeça cresce cedo e quase para (aos ~2 anos já tem
+  // ~85-90% do tamanho adulto), enquanto o corpo continua crescendo por mais de
+  // uma década. Então quanto mais novo, MAIOR a cabeça em relação ao corpo — o
+  // "cabeção" de criança. childF: 0 = adulto (16+) → ~1 = bebê. A cabeça encolhe
+  // pouquíssimo; as larguras e o comprimento do corpo é que despencam.
+  const age = f.idade != null ? f.idade : 30;
+  const childF = age >= 16 ? 0 : Math.min(1, (16 - age) / 15.5);
+  const headK = 1 - childF * 0.14;     // cabeça: quase constante
+  const bodyK = 1 - childF * 0.44;     // larguras do corpo: bem menores na criança
+  const neckK = 1 - childF * 0.34;
+  const headR = ((L.fw + L.jw) * 0.28 + 3.4 + girth * 1.4) * headK; // cara mais cheia se pesado
+  const shoulder = ((fem ? 15 : 18) + bw + (fem ? 0 : 1) + girth * 2) * bodyK;
+  const hip = ((fem ? 14 : 12.5) + bw * 0.8 + gw * 0.7) * bodyK;
+  const waist = ((fem ? 10.5 : 11) + bw * 0.9 + gw) * bodyK;     // a cintura é onde a massa mais aparece
+  const chest = ((fem ? 12.5 : 13.5) + bw + gw * 0.6) * bodyK;
+  const neckW = ((fem ? 2.6 : 3.4) + build * 0.3 + girth * 1.2) * neckK;
   const height = f.height || 0;                        // -0.9..0.9
   // footY é fixo (116) e todos os marcos descem de topY: subir topY (mais alto)
   // já estica as pernas junto — não precisa escalar segmentos à parte.
   const topY = 8 - height * 5;
+  // comprimento do tronco+pernas encolhe com a idade (corpo mais curto), mas a
+  // cabeça mantém o tamanho → cabeça ocupa fração bem maior da altura total.
+  const bodyLen = 1 - childF * 0.4;
   return { r, fem, build, girth, height, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
+    childF, bodyLen, age, child: childF > 0.05,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
 /* EXAME FÍSICO — CORPO INTEIRO DESPIDO. É a mecânica de verificação de sexo
@@ -7415,28 +7477,74 @@ function paintBodyNude(ctx, f, phys) {
   for (let x = 0; x <= 100; x += 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 120); ctx.stroke(); }
   for (let y = 0; y <= 120; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(100, y); ctx.stroke(); }
 
-  // marcos verticais (do físico desta pessoa)
+  // marcos verticais (do físico desta pessoa). O tronco+pernas encolhem com a
+  // idade (bodyLen), mas a cabeça mantém o tamanho → a criança fica cabeçuda,
+  // como de verdade. Adulto: bl=1 (marcos originais).
+  const bl = B.bodyLen || 1;
   const headCy = B.topY + B.headR + 1, chinY = headCy + B.headR, neckY = chinY + 1.5;
-  const shoulderY = neckY + 5, chestY = shoulderY + 13, waistY = chestY + 15, hipY = waistY + 9, footY = 115;
+  const shoulderY = neckY + 5 * bl, chestY = shoulderY + 13 * bl, waistY = chestY + 15 * bl, hipY = waistY + 9 * bl;
+  const footY = neckY + (115 - neckY) * bl;   // pernas encolhem junto (base dos pés sobe na criança)
   const sh = B.shoulder, chest = B.chest, waist = B.waist, hip = B.hip;
+
+  // SALVAGUARDA: o exame corporal DESPIDO (verificação de sexo) é SÓ para
+  // adultos. Qualquer MENOR de 18 jamais é mostrado nu — rende-se vestido, com
+  // aviso clínico de que o exame corporal é dispensado por lei. (É o único
+  // limite que a sátira do regime não cruza aqui.)
+  if (B.age < 18) {
+    const coat = '#3a4652';
+    // pernas/calça
+    ctx.fillStyle = '#26282a';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * 1, hipY); ctx.lineTo(cx + s * (hip - 1), hipY); ctx.lineTo(cx + s * (waist * 0.5 + 2), footY); ctx.lineTo(cx + s * 1, footY); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = '#141310'; for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + s * (waist * 0.5 + 2.5), footY + 1.5, 3.6, 2.2, 0, 0, 6.29); ctx.fill(); }
+    // braços do casaco (sempre presentes)
+    ctx.strokeStyle = coat; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * (sh - 2), shoulderY + 2); ctx.quadraticCurveTo(cx + s * (chest + 2), chestY + 4, cx + s * (waist + 3), hipY - 1); ctx.stroke(); }
+    ctx.lineCap = 'butt';
+    // mãos
+    ctx.fillStyle = rgb(SK); for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + s * (waist + 3), hipY + 1, 2.4, 0, 6.29); ctx.fill(); }
+    // tronco vestido (casaco abotoado)
+    ctx.fillStyle = coat; ctx.beginPath();
+    ctx.moveTo(cx - B.neckW - 1, neckY); ctx.quadraticCurveTo(cx - sh, shoulderY, cx - chest, chestY);
+    ctx.lineTo(cx - waist - 1, hipY + 1); ctx.lineTo(cx + waist + 1, hipY + 1); ctx.lineTo(cx + chest, chestY);
+    ctx.quadraticCurveTo(cx + sh, shoulderY, cx + B.neckW + 1, neckY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(cx, neckY + 2); ctx.lineTo(cx, hipY); ctx.stroke();
+    ctx.fillStyle = 'rgba(230,230,220,.5)'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx, chestY - 2 + i * 5, 0.8, 0, 6.29); ctx.fill(); }
+    // pescoço + cabeça (grande: cabeção de criança)
+    ctx.fillStyle = rgb(mix(SK, SH, 0.15)); ctx.fillRect(cx - B.neckW, chinY - 0.5, B.neckW * 2, neckY - chinY + 3);
+    ctx.fillStyle = rgb(SK); ctx.beginPath(); ctx.ellipse(cx, headCy, B.headR * 0.84, B.headR, 0, 0, 6.29); ctx.fill();
+    soft(ctx, cx - B.headR * 0.3, headCy - 1, B.headR * 0.4, B.headR * 0.5, rgb(lighten(SK, 0.14), 0.5), 3);
+    ctx.fillStyle = rgb(SH, 0.36); ctx.beginPath(); ctx.ellipse(cx + B.headR * 0.34, headCy + 1, B.headR * 0.34, B.headR * 0.68, 0, 0, 6.29); ctx.fill();
+    ctx.fillStyle = rgb(hairC); ctx.beginPath(); ctx.ellipse(cx, headCy - B.headR * 0.44, B.headR * 0.86, B.headR * 0.72, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    ctx.fillRect(cx - B.headR * 0.86, headCy - B.headR * 0.5, B.headR * 1.72, B.headR * 0.28);
+    ctx.fillStyle = rgb(darken(SH, 0.3), 0.7); ctx.beginPath(); ctx.ellipse(cx - B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.ellipse(cx + B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.fill();
+    // aviso clínico
+    ctx.fillStyle = 'rgba(120,255,200,.9)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('EXAME FISICO', 6, 9); ctx.fillText('IDADE ' + Math.round(B.age) + ' — MENOR', 6, 14);
+    ctx.fillStyle = 'rgba(255,220,120,.95)'; ctx.textAlign = 'center';
+    ctx.fillText('MENOR DE IDADE', cx, footY + 8); ctx.fillText('EXAME CORPORAL DISPENSADO', cx, footY + 13);
+    ctx.textAlign = 'left';
+    return;
+  }
 
   const fillSkin = () => { ctx.fillStyle = rgb(SK); ctx.fill(); };
   // ---- PERNAS (atrás do tronco) ----
   const legTop = hipY - 1;
+  const legLen = footY - legTop;                 // comprimento real (curto na criança)
+  const kneeY = legTop + legLen * 0.52, thighY = legTop + legLen * 0.42;
   for (const s of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(cx + s * 1.2, legTop);
     ctx.lineTo(cx + s * (hip - 0.5), legTop + 1);
-    ctx.quadraticCurveTo(cx + s * (hip - 1), legTop + 18, cx + s * (waist * 0.42 + 2), footY - 20); // coxa→joelho
-    ctx.quadraticCurveTo(cx + s * (waist * 0.34 + 1.5), footY - 6, cx + s * (waist * 0.36 + 2.4), footY); // panturrilha→tornozelo
+    ctx.quadraticCurveTo(cx + s * (hip - 1), thighY, cx + s * (waist * 0.42 + 2), kneeY); // coxa→joelho
+    ctx.quadraticCurveTo(cx + s * (waist * 0.34 + 1.5), footY - legLen * 0.14, cx + s * (waist * 0.36 + 2.4), footY); // panturrilha→tornozelo
     ctx.lineTo(cx + s * 1.2, footY);
     ctx.closePath(); fillSkin();
     // sombra interna da coxa (volume)
     ctx.fillStyle = rgb(SH, 0.28); ctx.beginPath();
     ctx.moveTo(cx + s * 1.2, legTop + 4); ctx.lineTo(cx + s * 3.5, legTop + 4);
-    ctx.quadraticCurveTo(cx + s * 3, footY - 22, cx + s * 3, footY - 4); ctx.lineTo(cx + s * 1.2, footY - 4); ctx.closePath(); ctx.fill();
+    ctx.quadraticCurveTo(cx + s * 3, footY - legLen * 0.1, cx + s * 3, footY - 4); ctx.lineTo(cx + s * 1.2, footY - 4); ctx.closePath(); ctx.fill();
     // joelho + pé
-    soft(ctx, cx + s * (waist * 0.42 + 2), footY - 20, 2.4, 2.2, rgb(lighten(SK, 0.1), 0.5), 1.6);
+    soft(ctx, cx + s * (waist * 0.42 + 2), kneeY, 2.4, 2.2, rgb(lighten(SK, 0.1), 0.5), 1.6);
     ctx.fillStyle = rgb(SH); ctx.beginPath(); ctx.ellipse(cx + s * (waist * 0.36 + 3.5), footY + 1.5, 4, 2.4, 0, 0, 6.29); ctx.fill();
   }
   // vão entre as pernas

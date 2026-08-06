@@ -2228,17 +2228,31 @@ function bodyLayout(f) {
   const girth = Math.max(0, f.girth || 0);             // 0 magro .. ~0.8 pesado (barriga)
   const gw = girth * 9;                                // quanto a massa alarga o meio
   const L = faceLayout(f);
-  const headR = (L.fw + L.jw) * 0.28 + 3.4 + girth * 1.4; // cara mais cheia se pesado
-  const shoulder = (fem ? 15 : 18) + bw + (fem ? 0 : 1) + girth * 2;
-  const hip = (fem ? 14 : 12.5) + bw * 0.8 + gw * 0.7;
-  const waist = (fem ? 10.5 : 11) + bw * 0.9 + gw;     // a cintura é onde a massa mais aparece
-  const chest = (fem ? 12.5 : 13.5) + bw + gw * 0.6;
-  const neckW = (fem ? 2.6 : 3.4) + build * 0.3 + girth * 1.2;
+  // PROPORÇÃO POR IDADE: a cabeça cresce cedo e quase para (aos ~2 anos já tem
+  // ~85-90% do tamanho adulto), enquanto o corpo continua crescendo por mais de
+  // uma década. Então quanto mais novo, MAIOR a cabeça em relação ao corpo — o
+  // "cabeção" de criança. childF: 0 = adulto (16+) → ~1 = bebê. A cabeça encolhe
+  // pouquíssimo; as larguras e o comprimento do corpo é que despencam.
+  const age = f.idade != null ? f.idade : 30;
+  const childF = age >= 16 ? 0 : Math.min(1, (16 - age) / 15.5);
+  const headK = 1 - childF * 0.14;     // cabeça: quase constante
+  const bodyK = 1 - childF * 0.44;     // larguras do corpo: bem menores na criança
+  const neckK = 1 - childF * 0.34;
+  const headR = ((L.fw + L.jw) * 0.28 + 3.4 + girth * 1.4) * headK; // cara mais cheia se pesado
+  const shoulder = ((fem ? 15 : 18) + bw + (fem ? 0 : 1) + girth * 2) * bodyK;
+  const hip = ((fem ? 14 : 12.5) + bw * 0.8 + gw * 0.7) * bodyK;
+  const waist = ((fem ? 10.5 : 11) + bw * 0.9 + gw) * bodyK;     // a cintura é onde a massa mais aparece
+  const chest = ((fem ? 12.5 : 13.5) + bw + gw * 0.6) * bodyK;
+  const neckW = ((fem ? 2.6 : 3.4) + build * 0.3 + girth * 1.2) * neckK;
   const height = f.height || 0;                        // -0.9..0.9
   // footY é fixo (116) e todos os marcos descem de topY: subir topY (mais alto)
   // já estica as pernas junto — não precisa escalar segmentos à parte.
   const topY = 8 - height * 5;
+  // comprimento do tronco+pernas encolhe com a idade (corpo mais curto), mas a
+  // cabeça mantém o tamanho → cabeça ocupa fração bem maior da altura total.
+  const bodyLen = 1 - childF * 0.4;
   return { r, fem, build, girth, height, mismatch, apparentFem: f.sexo === 'f', headR, shoulder, hip, waist, chest, neckW, topY,
+    childF, bodyLen, age, child: childF > 0.05,
     hasCap: f.hat === 3 || f.hat === 1, scarf: !!f.scarf, uniform: !!f.uniform };
 }
 /* EXAME FÍSICO — CORPO INTEIRO DESPIDO. É a mecânica de verificação de sexo
@@ -2263,28 +2277,74 @@ function paintBodyNude(ctx, f, phys) {
   for (let x = 0; x <= 100; x += 8) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 120); ctx.stroke(); }
   for (let y = 0; y <= 120; y += 8) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(100, y); ctx.stroke(); }
 
-  // marcos verticais (do físico desta pessoa)
+  // marcos verticais (do físico desta pessoa). O tronco+pernas encolhem com a
+  // idade (bodyLen), mas a cabeça mantém o tamanho → a criança fica cabeçuda,
+  // como de verdade. Adulto: bl=1 (marcos originais).
+  const bl = B.bodyLen || 1;
   const headCy = B.topY + B.headR + 1, chinY = headCy + B.headR, neckY = chinY + 1.5;
-  const shoulderY = neckY + 5, chestY = shoulderY + 13, waistY = chestY + 15, hipY = waistY + 9, footY = 115;
+  const shoulderY = neckY + 5 * bl, chestY = shoulderY + 13 * bl, waistY = chestY + 15 * bl, hipY = waistY + 9 * bl;
+  const footY = neckY + (115 - neckY) * bl;   // pernas encolhem junto (base dos pés sobe na criança)
   const sh = B.shoulder, chest = B.chest, waist = B.waist, hip = B.hip;
+
+  // SALVAGUARDA: o exame corporal DESPIDO (verificação de sexo) é SÓ para
+  // adultos. Qualquer MENOR de 18 jamais é mostrado nu — rende-se vestido, com
+  // aviso clínico de que o exame corporal é dispensado por lei. (É o único
+  // limite que a sátira do regime não cruza aqui.)
+  if (B.age < 18) {
+    const coat = '#3a4652';
+    // pernas/calça
+    ctx.fillStyle = '#26282a';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * 1, hipY); ctx.lineTo(cx + s * (hip - 1), hipY); ctx.lineTo(cx + s * (waist * 0.5 + 2), footY); ctx.lineTo(cx + s * 1, footY); ctx.closePath(); ctx.fill(); }
+    ctx.fillStyle = '#141310'; for (const s of [-1, 1]) { ctx.beginPath(); ctx.ellipse(cx + s * (waist * 0.5 + 2.5), footY + 1.5, 3.6, 2.2, 0, 0, 6.29); ctx.fill(); }
+    // braços do casaco (sempre presentes)
+    ctx.strokeStyle = coat; ctx.lineWidth = 5; ctx.lineCap = 'round';
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(cx + s * (sh - 2), shoulderY + 2); ctx.quadraticCurveTo(cx + s * (chest + 2), chestY + 4, cx + s * (waist + 3), hipY - 1); ctx.stroke(); }
+    ctx.lineCap = 'butt';
+    // mãos
+    ctx.fillStyle = rgb(SK); for (const s of [-1, 1]) { ctx.beginPath(); ctx.arc(cx + s * (waist + 3), hipY + 1, 2.4, 0, 6.29); ctx.fill(); }
+    // tronco vestido (casaco abotoado)
+    ctx.fillStyle = coat; ctx.beginPath();
+    ctx.moveTo(cx - B.neckW - 1, neckY); ctx.quadraticCurveTo(cx - sh, shoulderY, cx - chest, chestY);
+    ctx.lineTo(cx - waist - 1, hipY + 1); ctx.lineTo(cx + waist + 1, hipY + 1); ctx.lineTo(cx + chest, chestY);
+    ctx.quadraticCurveTo(cx + sh, shoulderY, cx + B.neckW + 1, neckY); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,.4)'; ctx.lineWidth = 0.6; ctx.beginPath(); ctx.moveTo(cx, neckY + 2); ctx.lineTo(cx, hipY); ctx.stroke();
+    ctx.fillStyle = 'rgba(230,230,220,.5)'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(cx, chestY - 2 + i * 5, 0.8, 0, 6.29); ctx.fill(); }
+    // pescoço + cabeça (grande: cabeção de criança)
+    ctx.fillStyle = rgb(mix(SK, SH, 0.15)); ctx.fillRect(cx - B.neckW, chinY - 0.5, B.neckW * 2, neckY - chinY + 3);
+    ctx.fillStyle = rgb(SK); ctx.beginPath(); ctx.ellipse(cx, headCy, B.headR * 0.84, B.headR, 0, 0, 6.29); ctx.fill();
+    soft(ctx, cx - B.headR * 0.3, headCy - 1, B.headR * 0.4, B.headR * 0.5, rgb(lighten(SK, 0.14), 0.5), 3);
+    ctx.fillStyle = rgb(SH, 0.36); ctx.beginPath(); ctx.ellipse(cx + B.headR * 0.34, headCy + 1, B.headR * 0.34, B.headR * 0.68, 0, 0, 6.29); ctx.fill();
+    ctx.fillStyle = rgb(hairC); ctx.beginPath(); ctx.ellipse(cx, headCy - B.headR * 0.44, B.headR * 0.86, B.headR * 0.72, 0, Math.PI, 2 * Math.PI); ctx.fill();
+    ctx.fillRect(cx - B.headR * 0.86, headCy - B.headR * 0.5, B.headR * 1.72, B.headR * 0.28);
+    ctx.fillStyle = rgb(darken(SH, 0.3), 0.7); ctx.beginPath(); ctx.ellipse(cx - B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.ellipse(cx + B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.fill();
+    // aviso clínico
+    ctx.fillStyle = 'rgba(120,255,200,.9)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+    ctx.fillText('EXAME FISICO', 6, 9); ctx.fillText('IDADE ' + Math.round(B.age) + ' — MENOR', 6, 14);
+    ctx.fillStyle = 'rgba(255,220,120,.95)'; ctx.textAlign = 'center';
+    ctx.fillText('MENOR DE IDADE', cx, footY + 8); ctx.fillText('EXAME CORPORAL DISPENSADO', cx, footY + 13);
+    ctx.textAlign = 'left';
+    return;
+  }
 
   const fillSkin = () => { ctx.fillStyle = rgb(SK); ctx.fill(); };
   // ---- PERNAS (atrás do tronco) ----
   const legTop = hipY - 1;
+  const legLen = footY - legTop;                 // comprimento real (curto na criança)
+  const kneeY = legTop + legLen * 0.52, thighY = legTop + legLen * 0.42;
   for (const s of [-1, 1]) {
     ctx.beginPath();
     ctx.moveTo(cx + s * 1.2, legTop);
     ctx.lineTo(cx + s * (hip - 0.5), legTop + 1);
-    ctx.quadraticCurveTo(cx + s * (hip - 1), legTop + 18, cx + s * (waist * 0.42 + 2), footY - 20); // coxa→joelho
-    ctx.quadraticCurveTo(cx + s * (waist * 0.34 + 1.5), footY - 6, cx + s * (waist * 0.36 + 2.4), footY); // panturrilha→tornozelo
+    ctx.quadraticCurveTo(cx + s * (hip - 1), thighY, cx + s * (waist * 0.42 + 2), kneeY); // coxa→joelho
+    ctx.quadraticCurveTo(cx + s * (waist * 0.34 + 1.5), footY - legLen * 0.14, cx + s * (waist * 0.36 + 2.4), footY); // panturrilha→tornozelo
     ctx.lineTo(cx + s * 1.2, footY);
     ctx.closePath(); fillSkin();
     // sombra interna da coxa (volume)
     ctx.fillStyle = rgb(SH, 0.28); ctx.beginPath();
     ctx.moveTo(cx + s * 1.2, legTop + 4); ctx.lineTo(cx + s * 3.5, legTop + 4);
-    ctx.quadraticCurveTo(cx + s * 3, footY - 22, cx + s * 3, footY - 4); ctx.lineTo(cx + s * 1.2, footY - 4); ctx.closePath(); ctx.fill();
+    ctx.quadraticCurveTo(cx + s * 3, footY - legLen * 0.1, cx + s * 3, footY - 4); ctx.lineTo(cx + s * 1.2, footY - 4); ctx.closePath(); ctx.fill();
     // joelho + pé
-    soft(ctx, cx + s * (waist * 0.42 + 2), footY - 20, 2.4, 2.2, rgb(lighten(SK, 0.1), 0.5), 1.6);
+    soft(ctx, cx + s * (waist * 0.42 + 2), kneeY, 2.4, 2.2, rgb(lighten(SK, 0.1), 0.5), 1.6);
     ctx.fillStyle = rgb(SH); ctx.beginPath(); ctx.ellipse(cx + s * (waist * 0.36 + 3.5), footY + 1.5, 4, 2.4, 0, 0, 6.29); ctx.fill();
   }
   // vão entre as pernas
