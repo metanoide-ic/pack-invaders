@@ -193,6 +193,67 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .title-warning { font-size:10.5px; color:var(--ink-dim); margin-top:22px; line-height:1.55; max-width:480px; margin-left:auto; margin-right:auto; }
 .title-version { font-size:10px; color:var(--ink-dim); margin-top:12px; opacity:.55; letter-spacing:1px; }
 
+/* ===== SELEÇÃO DE MODO (character-select, arte do jogo) ===== */
+#screen-modeselect { display:none; flex-direction:column; align-items:center; justify-content:center; position:relative; gap:8px; }
+#screen-modeselect.active { display:flex; }
+#ms-snow { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
+#screen-modeselect::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
+  background: radial-gradient(ellipse at 50% 40%, rgba(8,9,6,.55) 40%, rgba(8,9,6,.8) 100%); }
+.ms-banner {
+  position:relative; z-index:2; text-align:center; margin-bottom:4px;
+  padding:8px 40px; background: linear-gradient(180deg,#2a2c21,#1b1c15);
+  border:1.5px solid #0a0b07; box-shadow: 0 0 0 1px rgba(201,163,74,.5), 6px 6px 0 rgba(0,0,0,.5);
+}
+.ms-banner span { display:block; font-family:var(--font-display); font-weight:700; font-size:26px; letter-spacing:8px;
+  color:transparent; background:linear-gradient(180deg,#efdca2,#a9823c); -webkit-background-clip:text; background-clip:text;
+  filter: drop-shadow(2px 2px 0 rgba(0,0,0,.7)); text-transform:uppercase; }
+.ms-banner small { display:block; font-family:var(--font-display); font-size:10.5px; letter-spacing:4px; color:var(--accent2); opacity:.8; margin-top:2px; }
+.ms-stage { position:relative; z-index:2; display:flex; align-items:center; gap:14px; }
+.ms-slots { display:flex; gap:26px; align-items:flex-end; }
+.ms-slot {
+  position:relative; width:min(300px, 40vw); cursor:pointer; text-align:center;
+  padding-top:70px; opacity:.5; filter: grayscale(.7) brightness(.7);
+  transform: translateY(6px) scale(.94); transition: all .18s ease;
+}
+.ms-slot.sel { opacity:1; filter:none; transform: translateY(-6px) scale(1); }
+.ms-slot:not(.sel):hover { opacity:.75; filter: grayscale(.4) brightness(.85); }
+/* holofote de cima (só no selecionado) */
+.ms-spot { position:absolute; top:-6px; left:50%; width:230px; height:280px; margin-left:-115px; z-index:0; opacity:0; transition:opacity .2s; pointer-events:none;
+  background: linear-gradient(180deg, rgba(232,214,150,.22), rgba(232,214,150,.05) 55%, transparent 78%);
+  clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); }
+.ms-slot.sel .ms-spot { opacity:1; }
+.ms-figure { position:relative; z-index:1; height:200px; display:flex; align-items:flex-end; justify-content:center; }
+.ms-emblem { width:190px; height:190px; image-rendering:auto; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.5)); }
+.ms-stamp-sel {
+  position:absolute; top:8px; right:14px; transform: rotate(-12deg); opacity:0; transition:opacity .15s;
+  border:2px solid rgba(176,52,40,.9); color:rgba(176,52,40,.95); border-radius:3px;
+  padding:2px 7px; font-family:var(--font-display); font-weight:700; font-size:11px; letter-spacing:2px;
+}
+.ms-slot.sel .ms-stamp-sel { opacity:.92; animation: stamp-in .4s both; }
+.ms-plinth {
+  position:relative; z-index:1; margin:6px auto 0; width:86%;
+  background: linear-gradient(180deg,#3a3b30,#22231a); border:1.5px solid #0a0b07;
+  box-shadow: inset 0 2px 0 rgba(255,246,220,.05), 5px 6px 0 rgba(0,0,0,.5); padding:9px 6px 11px;
+}
+.ms-badge { font-family:var(--font-display); font-weight:700; font-size:20px; letter-spacing:3px; text-transform:uppercase;
+  color:transparent; background:linear-gradient(180deg,#efdca2,#b1893f); -webkit-background-clip:text; background-clip:text;
+  filter: drop-shadow(1px 1px 0 rgba(0,0,0,.6)); }
+.ms-slot.sel .ms-badge { background:linear-gradient(180deg,#141207,#141207); -webkit-background-clip:text; }
+.ms-slot.sel .ms-plinth { background:linear-gradient(180deg,#e2bb56,#c9a34a); }
+.ms-desc { font-family:var(--font-doc); font-size:12.5px; color:#c8bd9c; line-height:1.5; margin:12px auto 0; max-width:280px; min-height:56px; }
+.ms-arrow {
+  z-index:2; flex:none; width:52px; height:52px; border-radius:50%; font-size:30px; line-height:1; padding:0 0 4px;
+  color:#d3c9a6; background:#23251b; border:1.5px solid #0a0b07; box-shadow:3px 3px 0 rgba(0,0,0,.5); cursor:pointer;
+  font-family:var(--font-display); transition: transform .05s, background-color .1s, color .1s;
+}
+.ms-arrow:hover { background:#c9a34a; color:#141207; }
+.ms-arrow:active { transform: translate(2px,2px); box-shadow:0 0 0; }
+.ms-actions { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:7px; width:308px; margin-top:6px; }
+#ms-confirm { width:100%; padding:15px; font-size:16px; letter-spacing:3px; color:#141207; background:#c9a34a; border:1.5px solid #0b0c07; box-shadow:3px 3px 0 rgba(0,0,0,.55); }
+#ms-confirm:hover { background:#e2bb56; }
+#ms-confirm:active { transform: translate(3px,3px); box-shadow:0 0 0; }
+@media (max-width:640px) { .ms-slots { gap:10px; } .ms-slot { padding-top:40px; } .ms-emblem { width:130px; height:130px; } .ms-figure { height:140px; } .ms-banner span { font-size:18px; letter-spacing:4px; } }
+
 /* ============ MANHÃ ============ */
 #screen-morning.active { display:flex; align-items:center; justify-content:center; }
 .morning-grid {
@@ -1178,6 +1239,34 @@ body.text-large .np-body { font-size:15px; }
           </div>
           <div class="title-version">FORM. 7-A · v1.0 · 48 DIAS · POSTO DE TRIAGEM Nº 7 — FRONTEIRA LESTE</div>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== SELEÇÃO DE MODO (estilo "character select") ===== -->
+    <div id="screen-modeselect" class="screen">
+      <canvas id="ms-snow"></canvas>
+      <div class="ms-banner"><span>ESCALA DE SERVIÇO</span><small>SELECIONE O TIPO DE POSTO</small></div>
+      <div class="ms-stage">
+        <button class="ms-arrow ms-prev" aria-label="anterior">‹</button>
+        <div class="ms-slots">
+          <div class="ms-slot sel" data-mode="story" tabindex="0">
+            <div class="ms-spot"></div>
+            <div class="ms-figure"><canvas class="ms-emblem" width="200" height="200"></canvas><div class="ms-stamp-sel">SELECIONADO</div></div>
+            <div class="ms-plinth"><div class="ms-badge">HISTÓRIA</div></div>
+            <div class="ms-desc">48 dias no Posto Nº 7. Sua família depende de cada carimbo. Começo, meio e fim — e oito finais.</div>
+          </div>
+          <div class="ms-slot" data-mode="infinite" tabindex="0">
+            <div class="ms-spot"></div>
+            <div class="ms-figure"><canvas class="ms-emblem" width="200" height="200"></canvas><div class="ms-stamp-sel">SELECIONADO</div></div>
+            <div class="ms-plinth"><div class="ms-badge">MODO INFINITO</div></div>
+            <div class="ms-desc">Turno sem fim. A fila nunca esvazia. Quantos você carimba certo antes de errar demais?</div>
+          </div>
+        </div>
+        <button class="ms-arrow ms-next" aria-label="próximo">›</button>
+      </div>
+      <div class="ms-actions">
+        <button id="ms-confirm" class="btn-title">▸ ASSUMIR O POSTO</button>
+        <button id="ms-back" class="btn-title btn-title-sm">‹ VOLTAR</button>
       </div>
     </div>
 
@@ -2292,6 +2381,21 @@ const I18N_EN = {
   'MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA': 'MINISTRY OF SCREENING AND BORDERS — REPUBLIC OF OSTERIA',
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"The truth exists. You just never get full access to it."',
   'INICIAR SERVIÇO': 'BEGIN SERVICE',
+  'ESCALA DE SERVIÇO': 'DUTY ROSTER',
+  'SELECIONE O TIPO DE POSTO': 'SELECT POST TYPE',
+  'HISTÓRIA': 'STORY',
+  'MODO INFINITO': 'ENDLESS MODE',
+  '48 dias no Posto Nº 7. Sua família depende de cada carimbo. Começo, meio e fim — e oito finais.':
+    '48 days at Post Nº 7. Your family depends on every stamp. A beginning, middle and end — and eight endings.',
+  'Turno sem fim. A fila nunca esvazia. Quantos você carimba certo antes de errar demais?':
+    'A shift with no end. The queue never empties. How many can you stamp right before you slip too many times?',
+  '▸ ASSUMIR O POSTO': '▸ TAKE THE POST',
+  '‹ VOLTAR': '‹ BACK',
+  'Turno': 'Shift',
+  'ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7': 'PERMANENT DUTY ORDER — POST Nº 7',
+  'Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.':
+    'This form has no end date. The queue does not close. You stay at the booth until you slip too many times — or until you can no longer bear to stay.\n\nEvery correct decision is one more number. No one keeps that number but you.\n\nTake the post.',
+  'ASSUMIR O POSTO': 'TAKE THE POST',
   'RETOMAR TURNO': 'RESUME SHIFT',
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SECOND READING (same campaign)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
@@ -3727,6 +3831,21 @@ const I18N_ES = {
   'MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA': 'MINISTERIO DE CONTROL Y FRONTERAS — REPÚBLICA DE OSTERIA',
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"La verdad existe. Solo que nunca tendrás acceso completo a ella."',
   'INICIAR SERVIÇO': 'INICIAR SERVICIO',
+  'ESCALA DE SERVIÇO': 'ROL DE SERVICIO',
+  'SELECIONE O TIPO DE POSTO': 'ELIGE EL TIPO DE PUESTO',
+  'HISTÓRIA': 'HISTORIA',
+  'MODO INFINITO': 'MODO INFINITO',
+  '48 dias no Posto Nº 7. Sua família depende de cada carimbo. Começo, meio e fim — e oito finais.':
+    '48 días en el Puesto Nº 7. Tu familia depende de cada sello. Principio, medio y fin — y ocho finales.',
+  'Turno sem fim. A fila nunca esvazia. Quantos você carimba certo antes de errar demais?':
+    'Un turno sin fin. La fila nunca se vacía. ¿Cuántos sellas bien antes de fallar demasiado?',
+  '▸ ASSUMIR O POSTO': '▸ ASUMIR EL PUESTO',
+  '‹ VOLTAR': '‹ VOLVER',
+  'Turno': 'Turno',
+  'ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7': 'ORDEN DE SERVICIO PERMANENTE — PUESTO Nº 7',
+  'Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.':
+    'Este formulario no tiene fecha de término. La fila no cierra. Te quedas en la ventanilla hasta fallar demasiado — o hasta no soportar más quedarte.\n\nCada decisión correcta es un número más. Nadie guarda ese número salvo tú.\n\nAsume el puesto.',
+  'ASSUMIR O POSTO': 'ASUMIR EL PUESTO',
   'RETOMAR TURNO': 'REANUDAR TURNO',
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SEGUNDA LECTURA (misma campaña)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
@@ -5167,6 +5286,7 @@ function T(s) {
 const I18N_STATIC_SELECTORS = [
   '.title-sub', '.title-quote', '#btn-new', '#btn-continue', '#btn-second-reading',
   '#btn-fullscreen', '.title-warning', '.title-version',
+  '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
   '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
   '.bc-doc', '.bc-stamp', '#desk-hint',
@@ -8691,7 +8811,8 @@ function showAchievementsModal() {
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
-function freshState(forceSeed) {
+function freshState(forceSeed, opts) {
+  opts = opts || {};
   const seedBase = forceSeed != null ? forceSeed : Math.floor(Math.random() * 1e9);
   // dias do Silente também vêm da seed — segunda leitura reencontra ele nos mesmos dias
   const silRng = makeRng(hashSeed(seedBase, 'silente'));
@@ -8716,6 +8837,8 @@ function freshState(forceSeed) {
     rent: 15,
     seedBase,
     secondReading: forceSeed != null,
+    infinite: !!opts.infinite,   // MODO INFINITO: turno sem fim, sem os finais da campanha
+    infDay: 0, infScore: 0,      // contador de turnos e placar (decisões corretas) do infinito
   };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -9634,7 +9757,9 @@ function startDay() {
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
   });
 
-  $('shift-day').textContent = `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
+  $('shift-day').textContent = S.infinite
+    ? `${T('MODO INFINITO')} · ${T('Turno')} ${S.infDay + 1} · ✓ ${S.infScore} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`
+    : `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
   renderRulebook();
   updateHud();
   clearDesk();
@@ -9644,13 +9769,13 @@ function startDay() {
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
-  $('btn-scan-bio').style.display = S.day >= 10 ? '' : 'none';
-  $('btn-reject').classList.toggle('hidden', S.day >= 47);
-  $('btn-detain').classList.toggle('hidden', S.day >= 47);
+  $('btn-scan-bio').style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
+  $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
+  $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
   showBulletin(() => {
-    if (S.day >= 48) { enterMirror48(); return; } // o último dia não tem fila. tem você.
+    if (S.day >= 48 && !S.infinite) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
     clearInterval(shift.tickId);
     shift.tickId = setInterval(tickClock, 1000);
@@ -10159,7 +10284,7 @@ function nextCitizen() {
     setTimeout(endShift, 1800);
     return;
   }
-  if (S.day === 48) { presentMirror(); return; }
+  if (S.day === 48 && !S.infinite) { presentMirror(); return; }
 
   // seed própria deste cidadão/slot: mesma seedBase + dia + posição na fila
   // => mesma pessoa em qualquer repetição da campanha (Modo Segunda Leitura),
@@ -11066,7 +11191,7 @@ function decide(decision) {
     if (cz.encounter) encounterOutcome(cz.encounter, 'detain');
   }
 
-  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); }
+  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); if (S.infinite) S.infScore++; }
   else { S.counters.wrong++; citation(note || 'Decisão em desacordo com o regulamento.'); }
 
   stampDocs(decision);
@@ -11244,8 +11369,9 @@ function afterNight() {
   applyNight();
   if (checkArrest()) return;
   if (S.day === 1) unlockAchievement('ACH_DIA1');
-  if (S.day >= 48) { finishGame(); return; }
-  S.day++;
+  if (!S.infinite && S.day >= 48) { finishGame(); return; }
+  if (S.infinite) { S.infDay++; S.day = 5 + (S.infDay % 10); }  // turno sem fim: o "dia de história" cicla numa faixa média (nunca alcança os gatilhos de final: 43/47/48)
+  else S.day++;
   save();
   showMorning();
 }
@@ -11625,13 +11751,99 @@ document.addEventListener('click', (e) => {
 });
 
 /* ---------- BOTÕES ---------- */
-$('btn-new').onclick = () => {
+/* ---------- SELEÇÃO DE MODO (character-select) ---------- */
+const MS = { idx: 0, modes: ['story', 'infinite'] };
+function drawModeEmblem(cv, mode) {
+  if (!cv) return;
+  const x = cv.getContext('2d'), N = cv.width, C = N / 2; x.clearRect(0, 0, N, N);
+  const GOLD = '#c9a34a', GOLDL = '#e6cf8f', INK = '#0c0d09', SIL = '#14150f';
+  // moldura circular gravada
+  x.fillStyle = 'rgba(16,17,11,.6)'; x.beginPath(); x.arc(C, C, 92, 0, 6.29); x.fill();
+  x.strokeStyle = GOLD; x.lineWidth = 3; x.beginPath(); x.arc(C, C, 90, 0, 6.29); x.stroke();
+  x.lineWidth = 1; x.beginPath(); x.arc(C, C, 80, 0, 6.29); x.stroke();
+  const fig = (fx, fy, h, w) => { // silhueta simples de pessoa
+    x.fillStyle = SIL;
+    x.beginPath(); x.arc(fx, fy - h, w * 0.5, 0, 6.29); x.fill();               // cabeça
+    x.beginPath(); x.moveTo(fx - w * 0.55, fy); x.quadraticCurveTo(fx - w * 0.5, fy - h * 0.82, fx, fy - h * 0.82);
+    x.quadraticCurveTo(fx + w * 0.5, fy - h * 0.82, fx + w * 0.55, fy); x.closePath(); x.fill();  // tronco
+  };
+  if (mode === 'story') {
+    // O OLHO acima, a FAMÍLIA embaixo (você carimba por eles)
+    const ey = C - 34;
+    x.save();
+    x.strokeStyle = 'rgba(232,214,150,.4)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; x.beginPath(); x.moveTo(C + Math.cos(a) * 24, ey + Math.sin(a) * 15); x.lineTo(C + Math.cos(a) * 33, ey + Math.sin(a) * 20); x.stroke(); }
+    x.fillStyle = '#efe7d0'; x.beginPath(); x.moveTo(C - 26, ey); x.quadraticCurveTo(C, ey - 17, C + 26, ey); x.quadraticCurveTo(C, ey + 17, C - 26, ey); x.closePath(); x.fill();
+    x.strokeStyle = GOLD; x.lineWidth = 1.6; x.stroke();
+    x.fillStyle = '#2e5068'; x.beginPath(); x.arc(C, ey, 9, 0, 6.29); x.fill();
+    x.fillStyle = INK; x.beginPath(); x.arc(C, ey, 4, 0, 6.29); x.fill();
+    x.restore();
+    // chão + família (adulto, criança, criança menor + bebê no colo)
+    x.fillStyle = 'rgba(201,163,74,.25)'; x.fillRect(C - 60, C + 52, 120, 2);
+    fig(C - 30, C + 52, 46, 22); fig(C - 4, C + 52, 32, 16); fig(C + 18, C + 52, 26, 13);
+    x.fillStyle = SIL; x.beginPath(); x.arc(C + 34, C + 40, 6, 0, 6.29); x.fill(); // bebê no colo
+  } else {
+    // FILA SEM FIM em perspectiva, rumo a um guichê minúsculo; ∞ acima
+    x.save();
+    x.strokeStyle = 'rgba(201,163,74,.3)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(C - 62, C + 58); x.lineTo(C - 6, C - 20); x.moveTo(C + 62, C + 58); x.lineTo(C + 6, C - 20); x.stroke(); // corredor
+    // guichê ao fundo
+    x.fillStyle = SIL; x.fillRect(C - 7, C - 30, 14, 12);
+    x.fillStyle = 'rgba(220,200,140,.5)'; x.fillRect(C - 4, C - 27, 8, 5);
+    // fila recuando (figuras menores ao fundo)
+    const zs = [[-42, 56, 40, 19], [-24, 40, 30, 14], [-12, 26, 22, 10], [26, 40, 30, 14], [12, 26, 22, 10], [42, 56, 40, 19]];
+    zs.forEach(([dx, dy, h, w]) => fig(C + dx, C - 6 + dy, h, w));
+    // símbolo do infinito, gravado, no topo
+    x.strokeStyle = GOLDL; x.lineWidth = 4; x.lineCap = 'round';
+    const iy = C - 46, rr = 11;
+    x.beginPath();
+    x.ellipse(C - rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.ellipse(C + rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.stroke();
+    x.restore();
+  }
+}
+function msRender() {
+  document.querySelectorAll('#screen-modeselect .ms-slot').forEach((el, i) => el.classList.toggle('sel', i === MS.idx));
+}
+function msMove(d) { MS.idx = (MS.idx + d + MS.modes.length) % MS.modes.length; sfx('ticket'); msRender(); }
+function showModeSelect() {
+  MS.idx = 0;
+  document.querySelectorAll('#screen-modeselect .ms-slot').forEach(el => drawModeEmblem(el.querySelector('.ms-emblem'), el.dataset.mode));
+  msRender();
+  showScreen('screen-modeselect');
+}
+function msConfirm() {
+  sfx('stamp');
+  if (MS.modes[MS.idx] === 'story') startStoryGame();
+  else startInfiniteGame();
+}
+function startStoryGame() {
   S = freshState();
   modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM',
     T('Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nHorário: 08h às 18h. Você chega em casa às 20h30.\nSalário: ') + MOEDA + ' 5' +
     T(' por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família depende do seu salário: Vessa (sua esposa), Tomi (8 anos), Dario (15 anos, do seu primeiro casamento) e sua mãe, Odila.\n\nAssine abaixo. A recusa não consta do formulário como opção.'),
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
-};
+}
+function startInfiniteGame() {
+  S = freshState(null, { infinite: true });
+  modal(T('ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7'),
+    T('Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.'),
+    [{ label: 'ASSUMIR O POSTO', fn: () => { showMorning(); } }]);
+}
+$('btn-new').onclick = showModeSelect;
+$('ms-confirm').onclick = msConfirm;
+$('ms-back').onclick = () => { sfx('ticket'); showScreen('screen-title'); };
+document.querySelector('#screen-modeselect .ms-prev').onclick = () => msMove(-1);
+document.querySelector('#screen-modeselect .ms-next').onclick = () => msMove(1);
+document.querySelectorAll('#screen-modeselect .ms-slot').forEach((el, i) => {
+  el.onclick = () => { if (i === MS.idx) msConfirm(); else { MS.idx = i; sfx('ticket'); msRender(); } };
+});
+document.addEventListener('keydown', (e) => {
+  if (!$('screen-modeselect').classList.contains('active')) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); msMove(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); msMove(1); }
+  else if (e.key === 'Enter') { e.preventDefault(); msConfirm(); }
+  else if (e.key === 'Escape') { e.preventDefault(); showScreen('screen-title'); }
+});
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
 $('btn-second-reading').onclick = () => {
   if (SETTINGS.lastSeed == null) return;

@@ -478,7 +478,8 @@ function showAchievementsModal() {
 /* ---------- ESTADO ---------- */
 const SAVE_KEY = 'humanocracy_save_v1';
 let S = null;
-function freshState(forceSeed) {
+function freshState(forceSeed, opts) {
+  opts = opts || {};
   const seedBase = forceSeed != null ? forceSeed : Math.floor(Math.random() * 1e9);
   // dias do Silente também vêm da seed — segunda leitura reencontra ele nos mesmos dias
   const silRng = makeRng(hashSeed(seedBase, 'silente'));
@@ -503,6 +504,8 @@ function freshState(forceSeed) {
     rent: 15,
     seedBase,
     secondReading: forceSeed != null,
+    infinite: !!opts.infinite,   // MODO INFINITO: turno sem fim, sem os finais da campanha
+    infDay: 0, infScore: 0,      // contador de turnos e placar (decisões corretas) do infinito
   };
 }
 function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
@@ -1421,7 +1424,9 @@ function startDay() {
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
   });
 
-  $('shift-day').textContent = `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
+  $('shift-day').textContent = S.infinite
+    ? `${T('MODO INFINITO')} · ${T('Turno')} ${S.infDay + 1} · ✓ ${S.infScore} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`
+    : `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
   renderRulebook();
   updateHud();
   clearDesk();
@@ -1431,13 +1436,13 @@ function startDay() {
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
-  $('btn-scan-bio').style.display = S.day >= 10 ? '' : 'none';
-  $('btn-reject').classList.toggle('hidden', S.day >= 47);
-  $('btn-detain').classList.toggle('hidden', S.day >= 47);
+  $('btn-scan-bio').style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
+  $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
+  $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
   showBulletin(() => {
-    if (S.day >= 48) { enterMirror48(); return; } // o último dia não tem fila. tem você.
+    if (S.day >= 48 && !S.infinite) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
     clearInterval(shift.tickId);
     shift.tickId = setInterval(tickClock, 1000);
@@ -1946,7 +1951,7 @@ function nextCitizen() {
     setTimeout(endShift, 1800);
     return;
   }
-  if (S.day === 48) { presentMirror(); return; }
+  if (S.day === 48 && !S.infinite) { presentMirror(); return; }
 
   // seed própria deste cidadão/slot: mesma seedBase + dia + posição na fila
   // => mesma pessoa em qualquer repetição da campanha (Modo Segunda Leitura),
@@ -2853,7 +2858,7 @@ function decide(decision) {
     if (cz.encounter) encounterOutcome(cz.encounter, 'detain');
   }
 
-  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); }
+  if (correct) { S.counters.correct++; S.money += salaryForDay(S.day); if (S.infinite) S.infScore++; }
   else { S.counters.wrong++; citation(note || 'Decisão em desacordo com o regulamento.'); }
 
   stampDocs(decision);
@@ -3031,8 +3036,9 @@ function afterNight() {
   applyNight();
   if (checkArrest()) return;
   if (S.day === 1) unlockAchievement('ACH_DIA1');
-  if (S.day >= 48) { finishGame(); return; }
-  S.day++;
+  if (!S.infinite && S.day >= 48) { finishGame(); return; }
+  if (S.infinite) { S.infDay++; S.day = 5 + (S.infDay % 10); }  // turno sem fim: o "dia de história" cicla numa faixa média (nunca alcança os gatilhos de final: 43/47/48)
+  else S.day++;
   save();
   showMorning();
 }
@@ -3412,13 +3418,99 @@ document.addEventListener('click', (e) => {
 });
 
 /* ---------- BOTÕES ---------- */
-$('btn-new').onclick = () => {
+/* ---------- SELEÇÃO DE MODO (character-select) ---------- */
+const MS = { idx: 0, modes: ['story', 'infinite'] };
+function drawModeEmblem(cv, mode) {
+  if (!cv) return;
+  const x = cv.getContext('2d'), N = cv.width, C = N / 2; x.clearRect(0, 0, N, N);
+  const GOLD = '#c9a34a', GOLDL = '#e6cf8f', INK = '#0c0d09', SIL = '#14150f';
+  // moldura circular gravada
+  x.fillStyle = 'rgba(16,17,11,.6)'; x.beginPath(); x.arc(C, C, 92, 0, 6.29); x.fill();
+  x.strokeStyle = GOLD; x.lineWidth = 3; x.beginPath(); x.arc(C, C, 90, 0, 6.29); x.stroke();
+  x.lineWidth = 1; x.beginPath(); x.arc(C, C, 80, 0, 6.29); x.stroke();
+  const fig = (fx, fy, h, w) => { // silhueta simples de pessoa
+    x.fillStyle = SIL;
+    x.beginPath(); x.arc(fx, fy - h, w * 0.5, 0, 6.29); x.fill();               // cabeça
+    x.beginPath(); x.moveTo(fx - w * 0.55, fy); x.quadraticCurveTo(fx - w * 0.5, fy - h * 0.82, fx, fy - h * 0.82);
+    x.quadraticCurveTo(fx + w * 0.5, fy - h * 0.82, fx + w * 0.55, fy); x.closePath(); x.fill();  // tronco
+  };
+  if (mode === 'story') {
+    // O OLHO acima, a FAMÍLIA embaixo (você carimba por eles)
+    const ey = C - 34;
+    x.save();
+    x.strokeStyle = 'rgba(232,214,150,.4)'; x.lineWidth = 1.4;
+    for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; x.beginPath(); x.moveTo(C + Math.cos(a) * 24, ey + Math.sin(a) * 15); x.lineTo(C + Math.cos(a) * 33, ey + Math.sin(a) * 20); x.stroke(); }
+    x.fillStyle = '#efe7d0'; x.beginPath(); x.moveTo(C - 26, ey); x.quadraticCurveTo(C, ey - 17, C + 26, ey); x.quadraticCurveTo(C, ey + 17, C - 26, ey); x.closePath(); x.fill();
+    x.strokeStyle = GOLD; x.lineWidth = 1.6; x.stroke();
+    x.fillStyle = '#2e5068'; x.beginPath(); x.arc(C, ey, 9, 0, 6.29); x.fill();
+    x.fillStyle = INK; x.beginPath(); x.arc(C, ey, 4, 0, 6.29); x.fill();
+    x.restore();
+    // chão + família (adulto, criança, criança menor + bebê no colo)
+    x.fillStyle = 'rgba(201,163,74,.25)'; x.fillRect(C - 60, C + 52, 120, 2);
+    fig(C - 30, C + 52, 46, 22); fig(C - 4, C + 52, 32, 16); fig(C + 18, C + 52, 26, 13);
+    x.fillStyle = SIL; x.beginPath(); x.arc(C + 34, C + 40, 6, 0, 6.29); x.fill(); // bebê no colo
+  } else {
+    // FILA SEM FIM em perspectiva, rumo a um guichê minúsculo; ∞ acima
+    x.save();
+    x.strokeStyle = 'rgba(201,163,74,.3)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(C - 62, C + 58); x.lineTo(C - 6, C - 20); x.moveTo(C + 62, C + 58); x.lineTo(C + 6, C - 20); x.stroke(); // corredor
+    // guichê ao fundo
+    x.fillStyle = SIL; x.fillRect(C - 7, C - 30, 14, 12);
+    x.fillStyle = 'rgba(220,200,140,.5)'; x.fillRect(C - 4, C - 27, 8, 5);
+    // fila recuando (figuras menores ao fundo)
+    const zs = [[-42, 56, 40, 19], [-24, 40, 30, 14], [-12, 26, 22, 10], [26, 40, 30, 14], [12, 26, 22, 10], [42, 56, 40, 19]];
+    zs.forEach(([dx, dy, h, w]) => fig(C + dx, C - 6 + dy, h, w));
+    // símbolo do infinito, gravado, no topo
+    x.strokeStyle = GOLDL; x.lineWidth = 4; x.lineCap = 'round';
+    const iy = C - 46, rr = 11;
+    x.beginPath();
+    x.ellipse(C - rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.ellipse(C + rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.stroke();
+    x.restore();
+  }
+}
+function msRender() {
+  document.querySelectorAll('#screen-modeselect .ms-slot').forEach((el, i) => el.classList.toggle('sel', i === MS.idx));
+}
+function msMove(d) { MS.idx = (MS.idx + d + MS.modes.length) % MS.modes.length; sfx('ticket'); msRender(); }
+function showModeSelect() {
+  MS.idx = 0;
+  document.querySelectorAll('#screen-modeselect .ms-slot').forEach(el => drawModeEmblem(el.querySelector('.ms-emblem'), el.dataset.mode));
+  msRender();
+  showScreen('screen-modeselect');
+}
+function msConfirm() {
+  sfx('stamp');
+  if (MS.modes[MS.idx] === 'story') startStoryGame();
+  else startInfiniteGame();
+}
+function startStoryGame() {
   S = freshState();
   modal('CONTRATO DE SERVIÇO — MINISTÉRIO DE TRIAGEM',
     T('Você foi sorteado na Loteria de Ofícios para servir como INSPETOR DE FRONTEIRA no Posto Nº 7, por 48 dias.\n\nHorário: 08h às 18h. Você chega em casa às 20h30.\nSalário: ') + MOEDA + ' 5' +
     T(' por decisão correta.\nErros: advertência; a partir da 3ª do dia, multa.\n\nSua família depende do seu salário: Vessa (sua esposa), Tomi (8 anos), Dario (15 anos, do seu primeiro casamento) e sua mãe, Odila.\n\nAssine abaixo. A recusa não consta do formulário como opção.'),
     [{ label: 'ASSINAR', fn: () => { showMorning(); } }]);
-};
+}
+function startInfiniteGame() {
+  S = freshState(null, { infinite: true });
+  modal(T('ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7'),
+    T('Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.'),
+    [{ label: 'ASSUMIR O POSTO', fn: () => { showMorning(); } }]);
+}
+$('btn-new').onclick = showModeSelect;
+$('ms-confirm').onclick = msConfirm;
+$('ms-back').onclick = () => { sfx('ticket'); showScreen('screen-title'); };
+document.querySelector('#screen-modeselect .ms-prev').onclick = () => msMove(-1);
+document.querySelector('#screen-modeselect .ms-next').onclick = () => msMove(1);
+document.querySelectorAll('#screen-modeselect .ms-slot').forEach((el, i) => {
+  el.onclick = () => { if (i === MS.idx) msConfirm(); else { MS.idx = i; sfx('ticket'); msRender(); } };
+});
+document.addEventListener('keydown', (e) => {
+  if (!$('screen-modeselect').classList.contains('active')) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); msMove(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); msMove(1); }
+  else if (e.key === 'Enter') { e.preventDefault(); msConfirm(); }
+  else if (e.key === 'Escape') { e.preventDefault(); showScreen('screen-title'); }
+});
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
 $('btn-second-reading').onclick = () => {
   if (SETTINGS.lastSeed == null) return;

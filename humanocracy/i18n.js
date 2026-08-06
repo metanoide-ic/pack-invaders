@@ -23,6 +23,21 @@ const I18N_EN = {
   'MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA': 'MINISTRY OF SCREENING AND BORDERS — REPUBLIC OF OSTERIA',
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"The truth exists. You just never get full access to it."',
   'INICIAR SERVIÇO': 'BEGIN SERVICE',
+  'ESCALA DE SERVIÇO': 'DUTY ROSTER',
+  'SELECIONE O TIPO DE POSTO': 'SELECT POST TYPE',
+  'HISTÓRIA': 'STORY',
+  'MODO INFINITO': 'ENDLESS MODE',
+  '48 dias no Posto Nº 7. Sua família depende de cada carimbo. Começo, meio e fim — e oito finais.':
+    '48 days at Post Nº 7. Your family depends on every stamp. A beginning, middle and end — and eight endings.',
+  'Turno sem fim. A fila nunca esvazia. Quantos você carimba certo antes de errar demais?':
+    'A shift with no end. The queue never empties. How many can you stamp right before you slip too many times?',
+  '▸ ASSUMIR O POSTO': '▸ TAKE THE POST',
+  '‹ VOLTAR': '‹ BACK',
+  'Turno': 'Shift',
+  'ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7': 'PERMANENT DUTY ORDER — POST Nº 7',
+  'Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.':
+    'This form has no end date. The queue does not close. You stay at the booth until you slip too many times — or until you can no longer bear to stay.\n\nEvery correct decision is one more number. No one keeps that number but you.\n\nTake the post.',
+  'ASSUMIR O POSTO': 'TAKE THE POST',
   'RETOMAR TURNO': 'RESUME SHIFT',
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SECOND READING (same campaign)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
@@ -1458,6 +1473,21 @@ const I18N_ES = {
   'MINISTÉRIO DE TRIAGEM E FRONTEIRAS — REPÚBLICA DE OSTERIA': 'MINISTERIO DE CONTROL Y FRONTERAS — REPÚBLICA DE OSTERIA',
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"La verdad existe. Solo que nunca tendrás acceso completo a ella."',
   'INICIAR SERVIÇO': 'INICIAR SERVICIO',
+  'ESCALA DE SERVIÇO': 'ROL DE SERVICIO',
+  'SELECIONE O TIPO DE POSTO': 'ELIGE EL TIPO DE PUESTO',
+  'HISTÓRIA': 'HISTORIA',
+  'MODO INFINITO': 'MODO INFINITO',
+  '48 dias no Posto Nº 7. Sua família depende de cada carimbo. Começo, meio e fim — e oito finais.':
+    '48 días en el Puesto Nº 7. Tu familia depende de cada sello. Principio, medio y fin — y ocho finales.',
+  'Turno sem fim. A fila nunca esvazia. Quantos você carimba certo antes de errar demais?':
+    'Un turno sin fin. La fila nunca se vacía. ¿Cuántos sellas bien antes de fallar demasiado?',
+  '▸ ASSUMIR O POSTO': '▸ ASUMIR EL PUESTO',
+  '‹ VOLTAR': '‹ VOLVER',
+  'Turno': 'Turno',
+  'ORDEM DE SERVIÇO PERMANENTE — POSTO Nº 7': 'ORDEN DE SERVICIO PERMANENTE — PUESTO Nº 7',
+  'Este formulário não tem data de término. A fila não fecha. Você fica no guichê até errar demais — ou até não aguentar mais ficar.\n\nCada decisão correta é um número a mais. Ninguém guarda esse número além de você.\n\nAssuma o posto.':
+    'Este formulario no tiene fecha de término. La fila no cierra. Te quedas en la ventanilla hasta fallar demasiado — o hasta no soportar más quedarte.\n\nCada decisión correcta es un número más. Nadie guarda ese número salvo tú.\n\nAsume el puesto.',
+  'ASSUMIR O POSTO': 'ASUMIR EL PUESTO',
   'RETOMAR TURNO': 'REANUDAR TURNO',
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SEGUNDA LECTURA (misma campaña)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
@@ -2898,6 +2928,7 @@ function T(s) {
 const I18N_STATIC_SELECTORS = [
   '.title-sub', '.title-quote', '#btn-new', '#btn-continue', '#btn-second-reading',
   '#btn-fullscreen', '.title-warning', '.title-version',
+  '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
   '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
   '.bc-doc', '.bc-stamp', '#desk-hint',
