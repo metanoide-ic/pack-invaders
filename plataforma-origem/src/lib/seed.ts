@@ -1,4 +1,4 @@
-import type { Board, Card, Client, Post, Transaction, WorkspaceData } from './types';
+import type { Board, Card, Client, LibraryItem, Post, Transaction, VideoProject, WorkspaceData } from './types';
 import { uid } from './utils';
 
 function daysFromNow(n: number): string {
@@ -77,7 +77,9 @@ export function seedData(): WorkspaceData {
     {
       id: uid('post'), title: 'Carrossel — 5 tendências de verão', platform: 'Instagram',
       clientId: aurora.id, stage: 'aprovacao', scheduledDate: daysFromNow(2),
-      caption: 'O verão chegou e o guarda-roupa pede novidade ☀️',
+      caption: 'O verão chegou e o guarda-roupa pede novidade ☀️', sentForApproval: true,
+      copy: 'O verão chegou e o guarda-roupa pede novidade ☀️\n\nSepararamos 5 tendências que vão bombar. Salva esse post! 🔖\n\n#moda #verao #tendencias #origem #marketing',
+      revisions: [],
       checklist: [
         { id: uid('ck'), text: 'Copy aprovada', done: true },
         { id: uid('ck'), text: 'Arte finalizada', done: true },
@@ -86,25 +88,69 @@ export function seedData(): WorkspaceData {
     },
     {
       id: uid('post'), title: 'Reels — receita do café especial', platform: 'TikTok',
-      clientId: cafe.id, stage: 'edicao', scheduledDate: daysFromNow(4),
+      clientId: cafe.id, stage: 'edicao', scheduledDate: daysFromNow(4), revisions: [],
       checklist: [{ id: uid('ck'), text: 'Gravação', done: true }, { id: uid('ck'), text: 'Edição', done: false }],
       createdAt: Date.now(),
     },
     {
-      id: uid('post'), title: 'Tour do apê decorado', platform: 'YouTube',
-      clientId: vertice.id, stage: 'agendado', scheduledDate: daysFromNow(1),
+      id: uid('post'), title: 'Tour do apê decorado', platform: 'Instagram',
+      clientId: vertice.id, stage: 'agendado', scheduledDate: daysFromNow(0), revisions: [],
       checklist: [], createdAt: Date.now(),
     },
     {
       id: uid('post'), title: 'Post institucional — nova unidade', platform: 'LinkedIn',
-      clientId: vertice.id, stage: 'ideia', checklist: [], createdAt: Date.now(),
+      clientId: vertice.id, stage: 'alteracao', revisions: [
+        { id: uid('rev'), text: 'Trocar a foto de capa pela fachada nova.', resolved: false, createdAt: Date.now() },
+        { id: uid('rev'), text: 'Deixar a legenda mais curta e direta.', resolved: false, createdAt: Date.now() },
+      ], checklist: [], createdAt: Date.now(),
     },
     {
       id: uid('post'), title: 'Stories — enquete de sabores', platform: 'Instagram',
-      clientId: cafe.id, stage: 'publicado', scheduledDate: daysFromNow(-2),
+      clientId: cafe.id, stage: 'publicado', scheduledDate: daysFromNow(-2), published: true, revisions: [],
       checklist: [{ id: uid('ck'), text: 'Publicado', done: true }], createdAt: Date.now(),
     },
   ];
 
-  return { clients, boards, transactions, posts };
+  const videos: VideoProject[] = [
+    {
+      id: uid('vid'), title: 'VSL — Vértice Imóveis', clientId: vertice.id, stage: 'edicao',
+      editor: 'Bruno', dueDate: daysFromNow(2), notes: 'Vídeo de vendas de 90s para tráfego.',
+      links: [{ id: uid('lnk'), label: 'Material bruto (Drive)', url: 'https://drive.google.com' }],
+      checklist: [{ id: uid('ck'), text: 'Decupagem', done: true }, { id: uid('ck'), text: 'Corte v1', done: false }],
+      revisions: [], createdAt: Date.now(),
+    },
+    {
+      id: uid('vid'), title: 'Reels bastidores — Café Matriz', clientId: cafe.id, stage: 'alteracao',
+      editor: 'Marina', dueDate: daysFromNow(1),
+      links: [], checklist: [],
+      revisions: [
+        { id: uid('rev'), text: 'Cortar os 3 primeiros segundos.', resolved: false, createdAt: Date.now() },
+        { id: uid('rev'), text: 'Aumentar o volume da trilha.', resolved: true, createdAt: Date.now() },
+      ], createdAt: Date.now(),
+    },
+    {
+      id: uid('vid'), title: 'Institucional 60s — Studio Aurora', clientId: aurora.id, stage: 'gravacao',
+      editor: 'Bruno', dueDate: daysFromNow(5), links: [], checklist: [], revisions: [], createdAt: Date.now(),
+    },
+  ];
+
+  const library: LibraryItem[] = [
+    {
+      id: uid('lib'), title: 'Prova social — depoimento', platform: 'Instagram', category: 'Autoridade',
+      caption: 'Quem confia, colhe resultado. Veja o que [CLIENTE] alcançou com a gente 👇',
+      hashtags: '#resultado #depoimento #origem #marketing', createdAt: Date.now(),
+    },
+    {
+      id: uid('lib'), title: 'Bastidores da equipe', platform: 'Instagram', category: 'Conexão',
+      caption: 'Por trás de cada campanha tem gente que ama o que faz. ✨ Bora criar junto?',
+      hashtags: '#bastidores #agencia #time', createdAt: Date.now(),
+    },
+    {
+      id: uid('lib'), title: 'Dica rápida de marketing', platform: 'TikTok', category: 'Educativo',
+      caption: 'Anota essa: [DICA]. Simples assim. Salva pra aplicar hoje. 🔖',
+      hashtags: '#dica #marketingdigital #estrategia', createdAt: Date.now(),
+    },
+  ];
+
+  return { clients, boards, transactions, posts, videos, library, events: [] };
 }

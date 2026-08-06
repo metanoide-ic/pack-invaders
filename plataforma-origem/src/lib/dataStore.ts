@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type {
+  AutomationEvent,
   Board,
   Card,
   Client,
   Column,
+  LibraryItem,
   Post,
   PostStage,
   Transaction,
+  VideoLink,
+  VideoProject,
+  VideoStage,
 } from './types';
 import { uid } from './utils';
 import { seedData } from './seed';
@@ -17,6 +22,9 @@ interface DataState {
   boards: Board[];
   transactions: Transaction[];
   posts: Post[];
+  videos: VideoProject[];
+  library: LibraryItem[];
+  events: AutomationEvent[];
   seeded: boolean;
 
   loadDemo: () => void;
@@ -50,13 +58,38 @@ interface DataState {
   removeTx: (id: string) => void;
 
   // Posts
-  addPost: (p: Omit<Post, 'id' | 'createdAt' | 'checklist'> & { checklist?: Post['checklist'] }) => void;
+  addPost: (p: Omit<Post, 'id' | 'createdAt' | 'checklist' | 'revisions'> & { checklist?: Post['checklist'] }) => void;
   updatePost: (id: string, patch: Partial<Post>) => void;
   setPostStage: (id: string, stage: PostStage) => void;
   removePost: (id: string) => void;
+  addRevision: (postId: string, text: string) => void;
+  updateRevision: (postId: string, revId: string, patch: Partial<{ text: string; resolved: boolean }>) => void;
+  removeRevision: (postId: string, revId: string) => void;
+
+  // Vídeos
+  addVideo: (v: { title: string; clientId?: string; editor?: string; dueDate?: string }) => VideoProject;
+  updateVideo: (id: string, patch: Partial<VideoProject>) => void;
+  removeVideo: (id: string) => void;
+  moveVideo: (id: string, stage: VideoStage) => void;
+  addVideoLink: (id: string, link: Omit<VideoLink, 'id'>) => void;
+  removeVideoLink: (id: string, linkId: string) => void;
+  addVideoRevision: (id: string, text: string) => void;
+  toggleVideoRevision: (id: string, revId: string) => void;
+
+  // Biblioteca
+  addLibraryItem: (i: Omit<LibraryItem, 'id' | 'createdAt'>) => void;
+  updateLibraryItem: (id: string, patch: Partial<LibraryItem>) => void;
+  removeLibraryItem: (id: string) => void;
+
+  // Automações
+  addEvent: (e: Omit<AutomationEvent, 'id' | 'createdAt'>) => void;
+  clearEvents: () => void;
 }
 
-const empty = { clients: [], boards: [], transactions: [], posts: [] };
+const empty = {
+  clients: [], boards: [], transactions: [], posts: [],
+  videos: [], library: [], events: [],
+};
 
 export const useData = create<DataState>()(
   persist(
@@ -214,7 +247,7 @@ export const useData = create<DataState>()(
       addPost: (p) =>
         set((s) => ({
           posts: [
-            { ...p, id: uid('post'), createdAt: Date.now(), checklist: p.checklist ?? [] },
+            { ...p, id: uid('post'), createdAt: Date.now(), checklist: p.checklist ?? [], revisions: [] },
             ...s.posts,
           ],
         })),
@@ -227,6 +260,86 @@ export const useData = create<DataState>()(
           posts: s.posts.map((p) => (p.id === id ? { ...p, stage } : p)),
         })),
       removePost: (id) => set((s) => ({ posts: s.posts.filter((p) => p.id !== id) })),
+      addRevision: (postId, text) =>
+        set((s) => ({
+          posts: s.posts.map((p) =>
+            p.id === postId
+              ? { ...p, revisions: [...(p.revisions ?? []), { id: uid('rev'), text, resolved: false, createdAt: Date.now() }] }
+              : p,
+          ),
+        })),
+      updateRevision: (postId, revId, patch) =>
+        set((s) => ({
+          posts: s.posts.map((p) =>
+            p.id === postId
+              ? { ...p, revisions: (p.revisions ?? []).map((r) => (r.id === revId ? { ...r, ...patch } : r)) }
+              : p,
+          ),
+        })),
+      removeRevision: (postId, revId) =>
+        set((s) => ({
+          posts: s.posts.map((p) =>
+            p.id === postId ? { ...p, revisions: (p.revisions ?? []).filter((r) => r.id !== revId) } : p,
+          ),
+        })),
+
+      // ---------- Vídeos ----------
+      addVideo: ({ title, clientId, editor, dueDate }) => {
+        const video: VideoProject = {
+          id: uid('vid'), title, clientId, editor, dueDate,
+          stage: 'briefing', links: [], checklist: [], revisions: [], createdAt: Date.now(),
+        };
+        set((s) => ({ videos: [video, ...s.videos] }));
+        return video;
+      },
+      updateVideo: (id, patch) =>
+        set((s) => ({ videos: s.videos.map((v) => (v.id === id ? { ...v, ...patch } : v)) })),
+      removeVideo: (id) => set((s) => ({ videos: s.videos.filter((v) => v.id !== id) })),
+      moveVideo: (id, stage) =>
+        set((s) => ({ videos: s.videos.map((v) => (v.id === id ? { ...v, stage } : v)) })),
+      addVideoLink: (id, link) =>
+        set((s) => ({
+          videos: s.videos.map((v) =>
+            v.id === id ? { ...v, links: [...v.links, { ...link, id: uid('lnk') }] } : v,
+          ),
+        })),
+      removeVideoLink: (id, linkId) =>
+        set((s) => ({
+          videos: s.videos.map((v) =>
+            v.id === id ? { ...v, links: v.links.filter((l) => l.id !== linkId) } : v,
+          ),
+        })),
+      addVideoRevision: (id, text) =>
+        set((s) => ({
+          videos: s.videos.map((v) =>
+            v.id === id
+              ? { ...v, revisions: [...v.revisions, { id: uid('rev'), text, resolved: false, createdAt: Date.now() }] }
+              : v,
+          ),
+        })),
+      toggleVideoRevision: (id, revId) =>
+        set((s) => ({
+          videos: s.videos.map((v) =>
+            v.id === id
+              ? { ...v, revisions: v.revisions.map((r) => (r.id === revId ? { ...r, resolved: !r.resolved } : r)) }
+              : v,
+          ),
+        })),
+
+      // ---------- Biblioteca ----------
+      addLibraryItem: (i) =>
+        set((s) => ({ library: [{ ...i, id: uid('lib'), createdAt: Date.now() }, ...s.library] })),
+      updateLibraryItem: (id, patch) =>
+        set((s) => ({ library: s.library.map((l) => (l.id === id ? { ...l, ...patch } : l)) })),
+      removeLibraryItem: (id) =>
+        set((s) => ({ library: s.library.filter((l) => l.id !== id) })),
+
+      // ---------- Automações ----------
+      addEvent: (e) =>
+        set((s) => ({
+          events: [{ ...e, id: uid('ev'), createdAt: Date.now() }, ...s.events].slice(0, 200),
+        })),
+      clearEvents: () => set({ events: [] }),
     }),
     { name: 'origem.data' },
   ),

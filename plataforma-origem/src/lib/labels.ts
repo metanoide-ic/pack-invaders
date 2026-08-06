@@ -1,4 +1,4 @@
-import type { PostPlatform, PostStage, Priority } from './types';
+import type { PostPlatform, PostStage, Priority, VideoStage } from './types';
 
 export const STAGE_META: Record<PostStage, { label: string; color: string }> = {
   ideia: { label: 'Ideia', color: '#94a3b8' },
@@ -6,11 +6,25 @@ export const STAGE_META: Record<PostStage, { label: string; color: string }> = {
   producao: { label: 'Produção', color: '#a855f7' },
   edicao: { label: 'Edição', color: '#f59e0b' },
   aprovacao: { label: 'Aprovação', color: '#ec4899' },
+  alteracao: { label: 'Alteração', color: '#f43f5e' },
   agendado: { label: 'Agendado', color: '#6366f1' },
   publicado: { label: 'Publicado', color: '#10b981' },
 };
 
+/** Colunas do pipeline de posts (inclui Alteração como ramo). */
 export const STAGE_ORDER: PostStage[] = [
+  'ideia',
+  'roteiro',
+  'producao',
+  'edicao',
+  'aprovacao',
+  'alteracao',
+  'agendado',
+  'publicado',
+];
+
+/** Funil linear para cálculo de progresso (sem o ramo Alteração). */
+export const STAGE_FUNNEL: PostStage[] = [
   'ideia',
   'roteiro',
   'producao',
@@ -18,6 +32,21 @@ export const STAGE_ORDER: PostStage[] = [
   'aprovacao',
   'agendado',
   'publicado',
+];
+
+export const VIDEO_STAGE_META: Record<VideoStage, { label: string; color: string }> = {
+  briefing: { label: 'Briefing', color: '#94a3b8' },
+  gravacao: { label: 'Gravação', color: '#38bdf8' },
+  decupagem: { label: 'Decupagem', color: '#22d3ee' },
+  edicao: { label: 'Edição', color: '#a855f7' },
+  revisao: { label: 'Revisão', color: '#f59e0b' },
+  aprovacao: { label: 'Aprovação', color: '#ec4899' },
+  alteracao: { label: 'Alteração', color: '#f43f5e' },
+  entregue: { label: 'Entregue', color: '#10b981' },
+};
+
+export const VIDEO_STAGE_ORDER: VideoStage[] = [
+  'briefing', 'gravacao', 'decupagem', 'edicao', 'revisao', 'aprovacao', 'alteracao', 'entregue',
 ];
 
 export const PRIORITY_META: Record<Priority, { label: string; color: string }> = {

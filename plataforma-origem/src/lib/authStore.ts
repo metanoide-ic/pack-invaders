@@ -3,18 +3,28 @@ import { persist } from 'zustand/middleware';
 import type { Account } from './types';
 import { hash, pickColor, uid } from './utils';
 
+/** Contas oficiais da equipe Origem (criadas automaticamente). */
+const TEAM: Array<Omit<Account, 'id' | 'passHash' | 'color' | 'createdAt'> & { password: string }> = [
+  { name: 'Daniel Designer', login: 'Daniel Designer', role: 'Designer', canFinance: false, admin: false, password: 'Criar0001*' },
+  { name: 'Jr Social Media', login: 'Jr Social Media', role: 'Social Media', canFinance: false, admin: false, password: 'Organizar0002*' },
+  { name: 'Angélica Leal', login: 'Angélica Leal', role: 'Direção', canFinance: true, admin: true, password: 'OriginalSempre1*' },
+  { name: 'João Paulo', login: 'João Paulo', role: 'Direção', canFinance: true, admin: true, password: 'OriginalSempre2*' },
+  { name: 'Luiz Paulo SM', login: 'Luiz Paulo SM', role: 'Social Media', canFinance: false, admin: false, password: 'Organizar0003*' },
+];
+
+function norm(s: string) {
+  return s.trim().toLowerCase();
+}
+
 interface AuthState {
   accounts: Account[];
   currentId: string | null;
-  signup: (input: {
-    name: string;
-    email: string;
-    password: string;
-    role?: string;
-  }) => { ok: boolean; error?: string };
-  login: (email: string, password: string) => { ok: boolean; error?: string };
+  ensureTeam: () => void;
+  signup: (input: { name: string; login?: string; email?: string; password: string; role?: string }) => { ok: boolean; error?: string };
+  login: (identifier: string, password: string) => { ok: boolean; error?: string };
   logout: () => void;
   updateProfile: (patch: Partial<Pick<Account, 'name' | 'role' | 'color'>>) => void;
+  setPermission: (id: string, patch: Partial<Pick<Account, 'canFinance' | 'admin' | 'role'>>) => void;
   current: () => Account | null;
 }
 
@@ -24,35 +34,53 @@ export const useAuth = create<AuthState>()(
       accounts: [],
       currentId: null,
 
-      signup: ({ name, email, password, role }) => {
-        const cleanEmail = email.trim().toLowerCase();
-        if (!name.trim()) return { ok: false, error: 'Informe seu nome.' };
-        if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cleanEmail))
-          return { ok: false, error: 'E-mail inválido.' };
-        if (password.length < 4)
-          return { ok: false, error: 'A senha precisa de ao menos 4 caracteres.' };
-        if (get().accounts.some((a) => a.email === cleanEmail))
-          return { ok: false, error: 'Já existe uma conta com este e-mail.' };
+      ensureTeam: () => {
+        const existing = get().accounts;
+        const toAdd: Account[] = [];
+        for (const t of TEAM) {
+          if (existing.some((a) => norm(a.login) === norm(t.login))) continue;
+          toAdd.push({
+            id: uid('user'),
+            name: t.name,
+            login: t.login,
+            role: t.role,
+            canFinance: t.canFinance,
+            admin: t.admin,
+            passHash: hash(t.password),
+            color: pickColor(t.login),
+            createdAt: Date.now(),
+          });
+        }
+        if (toAdd.length) set((s) => ({ accounts: [...s.accounts, ...toAdd] }));
+      },
 
+      signup: ({ name, login, email, password, role }) => {
+        const loginId = (login || name).trim();
+        if (!name.trim()) return { ok: false, error: 'Informe seu nome.' };
+        if (password.length < 4) return { ok: false, error: 'A senha precisa de ao menos 4 caracteres.' };
+        if (get().accounts.some((a) => norm(a.login) === norm(loginId)))
+          return { ok: false, error: 'Já existe uma conta com este login.' };
         const account: Account = {
           id: uid('user'),
           name: name.trim(),
-          email: cleanEmail,
+          login: loginId,
+          email: email?.trim() || undefined,
           passHash: hash(password),
           role: role?.trim() || 'Membro da equipe',
-          color: pickColor(cleanEmail),
+          color: pickColor(loginId),
+          canFinance: false,
+          admin: false,
           createdAt: Date.now(),
         };
         set((s) => ({ accounts: [...s.accounts, account], currentId: account.id }));
         return { ok: true };
       },
 
-      login: (email, password) => {
-        const cleanEmail = email.trim().toLowerCase();
-        const acc = get().accounts.find((a) => a.email === cleanEmail);
+      login: (identifier, password) => {
+        const id = norm(identifier);
+        const acc = get().accounts.find((a) => norm(a.login) === id || (a.email && norm(a.email) === id));
         if (!acc) return { ok: false, error: 'Conta não encontrada.' };
-        if (acc.passHash !== hash(password))
-          return { ok: false, error: 'Senha incorreta.' };
+        if (acc.passHash !== hash(password)) return { ok: false, error: 'Senha incorreta.' };
         set({ currentId: acc.id });
         return { ok: true };
       },
@@ -60,11 +88,10 @@ export const useAuth = create<AuthState>()(
       logout: () => set({ currentId: null }),
 
       updateProfile: (patch) =>
-        set((s) => ({
-          accounts: s.accounts.map((a) =>
-            a.id === s.currentId ? { ...a, ...patch } : a,
-          ),
-        })),
+        set((s) => ({ accounts: s.accounts.map((a) => (a.id === s.currentId ? { ...a, ...patch } : a)) })),
+
+      setPermission: (id, patch) =>
+        set((s) => ({ accounts: s.accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
 
       current: () => {
         const { accounts, currentId } = get();

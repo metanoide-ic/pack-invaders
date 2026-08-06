@@ -54,8 +54,8 @@ export default function Settings() {
                 <Input value={role} onChange={(e) => setRole(e.target.value)} placeholder="Ex.: Diretor de arte" />
               </Field>
             </div>
-            <Field label="E-mail">
-              <Input value={user.email} disabled className="mt-4 opacity-60" />
+            <Field label="Login">
+              <Input value={user.login} disabled className="mt-4 opacity-60" />
             </Field>
 
             <div className="mt-5">
@@ -105,7 +105,7 @@ export default function Settings() {
           <section className="card p-6">
             <h3 className="font-semibold text-white">Sessão</h3>
             <p className="mt-1 text-sm text-white/50">
-              Conectado como <span className="text-white">{user.email}</span>.
+              Conectado como <span className="text-white">{user.login}</span>.
             </p>
             <Button
               variant="outline"
