@@ -254,6 +254,22 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 #ms-confirm:active { transform: translate(3px,3px); box-shadow:0 0 0; }
 @media (max-width:640px) { .ms-slots { gap:10px; } .ms-slot { padding-top:40px; } .ms-emblem { width:130px; height:130px; } .ms-figure { height:140px; } .ms-banner span { font-size:18px; letter-spacing:4px; } }
 
+/* ===== MENU PRINCIPAL EM PEDESTAIS (reusa .ms-slot, versão compacta) ===== */
+.title-card { width:min(700px, 95vw); }
+.title-slots { justify-content:center; gap:14px; margin:16px auto 2px; flex-wrap:wrap; align-items:flex-end; }
+.title-slot { width:132px; padding-top:32px; opacity:.72; filter:grayscale(.35) brightness(.82); }
+.title-slot:not(.sel):hover { opacity:.9; filter:grayscale(.15) brightness(.92); }
+.title-slot.sel { opacity:1; filter:none; }
+.title-slot .ms-figure { height:112px; }
+.title-slot .ms-emblem { width:106px; height:106px; }
+.title-slot .ms-spot { width:150px; height:170px; margin-left:-75px; }
+.title-slot .ms-plinth { padding:7px 5px 8px; }
+.title-slot .ms-badge { font-size:14.5px; letter-spacing:2px; }
+.title-slot .ms-stamp-sel { display:none; }   /* sem "SELECIONADO" no menu principal */
+.title-options { display:flex; flex-direction:column; gap:7px; width:300px; margin:12px auto 2px; }
+.title-options[hidden] { display:none; }
+@media (max-width:560px) { .title-slot { width:104px; } .title-slot .ms-emblem { width:84px; height:84px; } .title-slot .ms-figure { height:90px; } .title-slot .ms-badge { font-size:12px; } }
+
 /* ============ MANHÃ ============ */
 #screen-morning.active { display:flex; align-items:center; justify-content:center; }
 .morning-grid {
@@ -1221,18 +1237,40 @@ body.text-large .np-body { font-size:15px; }
             <div class="tc-stamp"><span>POSTO Nº 7</span><b>FRONTEIRA LESTE</b></div>
           </div>
           <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
-          <div class="title-menu">
-            <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
+          <!-- MENU EM PEDESTAIS (estilo Castle Crashers, arte do jogo) -->
+          <div class="ms-slots title-slots" id="title-slots">
+            <div class="ms-slot title-slot" data-act="continue" tabindex="0" style="display:none">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">RETOMAR</div></div>
+            </div>
+            <div class="ms-slot title-slot sel" data-act="play" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">JOGAR</div></div>
+            </div>
+            <div class="ms-slot title-slot" data-act="achievements" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">CONQUISTAS</div></div>
+            </div>
+            <div class="ms-slot title-slot" data-act="options" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">OPÇÕES</div></div>
+            </div>
+          </div>
+          <!-- painel de opções (abre pelo pedestal OPÇÕES); mantém os botões e seus handlers -->
+          <div class="title-options" id="title-options" hidden>
             <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
             <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-            <div class="title-row">
-              <button id="btn-fullscreen" class="btn-title btn-title-sm btn-half">⛶ TELA CHEIA (F)</button>
-              <button id="btn-achievements" class="btn-title btn-title-sm btn-half">🏆 CONQUISTAS</button>
-            </div>
+            <button id="btn-fullscreen" class="btn-title btn-title-sm">⛶ TELA CHEIA (F)</button>
             <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
             <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
             <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
           </div>
+          <button id="btn-new" style="display:none" aria-hidden="true"></button>
+          <button id="btn-achievements" style="display:none" aria-hidden="true"></button>
           <div class="title-warning">
             Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
             perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
@@ -2382,6 +2420,9 @@ const I18N_EN = {
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"The truth exists. You just never get full access to it."',
   'INICIAR SERVIÇO': 'BEGIN SERVICE',
   'ESCALA DE SERVIÇO': 'DUTY ROSTER',
+  'JOGAR': 'PLAY',
+  'RETOMAR': 'RESUME',
+  'OPÇÕES': 'OPTIONS',
   'SELECIONE O TIPO DE POSTO': 'SELECT POST TYPE',
   'HISTÓRIA': 'STORY',
   'MODO INFINITO': 'ENDLESS MODE',
@@ -3832,6 +3873,9 @@ const I18N_ES = {
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"La verdad existe. Solo que nunca tendrás acceso completo a ella."',
   'INICIAR SERVIÇO': 'INICIAR SERVICIO',
   'ESCALA DE SERVIÇO': 'ROL DE SERVICIO',
+  'JOGAR': 'JUGAR',
+  'RETOMAR': 'REANUDAR',
+  'OPÇÕES': 'OPCIONES',
   'SELECIONE O TIPO DE POSTO': 'ELIGE EL TIPO DE PUESTO',
   'HISTÓRIA': 'HISTORIA',
   'MODO INFINITO': 'MODO INFINITO',
@@ -11844,6 +11888,61 @@ document.addEventListener('keydown', (e) => {
   else if (e.key === 'Enter') { e.preventDefault(); msConfirm(); }
   else if (e.key === 'Escape') { e.preventDefault(); showScreen('screen-title'); }
 });
+
+/* ---------- MENU PRINCIPAL EM PEDESTAIS (character-select) ---------- */
+const TM = { idx: 0 };
+function drawTitleMenuEmblem(cv, act) {
+  if (!cv) return;
+  const x = cv.getContext('2d'), N = cv.width, C = N / 2; x.clearRect(0, 0, N, N);
+  const GOLD = '#c9a34a', GOLDL = '#e6cf8f';
+  x.fillStyle = 'rgba(16,17,11,.6)'; x.beginPath(); x.arc(C, C, 70, 0, 6.29); x.fill();
+  x.strokeStyle = GOLD; x.lineWidth = 2.6; x.beginPath(); x.arc(C, C, 68, 0, 6.29); x.stroke();
+  x.save(); x.translate(C, C); x.lineCap = 'round'; x.lineJoin = 'round';
+  if (act === 'play') {                 // um carimbo pressionando
+    x.fillStyle = GOLDL; x.fillRect(-15, -30, 30, 9);
+    x.fillStyle = GOLD; x.fillRect(-6, -22, 12, 18);
+    x.fillStyle = GOLDL; x.fillRect(-22, -6, 44, 12);
+    x.strokeStyle = 'rgba(176,52,40,.9)'; x.lineWidth = 3.5; x.beginPath(); x.moveTo(-17, 24); x.lineTo(17, 24); x.stroke();
+  } else if (act === 'continue') {       // seta de retomar
+    x.strokeStyle = GOLDL; x.lineWidth = 4; x.beginPath(); x.arc(0, 2, 22, Math.PI * 0.35, Math.PI * 1.85); x.stroke();
+    x.fillStyle = GOLDL; x.save(); x.translate(Math.cos(Math.PI * 0.35) * 22, 2 + Math.sin(Math.PI * 0.35) * 22); x.rotate(Math.PI * 0.35 + 1.6);
+    x.beginPath(); x.moveTo(0, -8); x.lineTo(9, 0); x.lineTo(0, 8); x.closePath(); x.fill(); x.restore();
+  } else if (act === 'achievements') {   // estrela com fita
+    x.fillStyle = GOLDL; x.beginPath();
+    for (let k = 0; k < 5; k++) { const a1 = -Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566; x.lineTo(Math.cos(a1) * 24, Math.sin(a1) * 24 - 4); x.lineTo(Math.cos(a2) * 10, Math.sin(a2) * 10 - 4); } x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(176,52,40,.85)'; x.lineWidth = 3; x.beginPath(); x.moveTo(-9, 18); x.lineTo(-5, 34); x.moveTo(9, 18); x.lineTo(5, 34); x.stroke();
+  } else if (act === 'options') {        // engrenagem
+    x.strokeStyle = GOLDL; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 15, 0, 6.29); x.stroke();
+    for (let k = 0; k < 8; k++) { const a = k / 8 * 6.283; x.beginPath(); x.moveTo(Math.cos(a) * 15, Math.sin(a) * 15); x.lineTo(Math.cos(a) * 25, Math.sin(a) * 25); x.stroke(); }
+    x.fillStyle = GOLD; x.beginPath(); x.arc(0, 0, 6, 0, 6.29); x.fill();
+  }
+  x.restore();
+}
+function tmSlots() { return [...document.querySelectorAll('#title-slots .title-slot')].filter(el => el.style.display !== 'none'); }
+function tmRender() { const s = tmSlots(); s.forEach((el, i) => el.classList.toggle('sel', i === TM.idx)); }
+function tmMove(d) { const n = tmSlots().length; if (!n) return; TM.idx = (TM.idx + d + n) % n; sfx('ticket'); tmRender(); }
+function tmDo(act) {
+  if (act === 'play') { sfx('stamp'); showModeSelect(); }
+  else if (act === 'continue') { const j = loadSave(); if (j) { S = j; showMorning(); } }
+  else if (act === 'achievements') { showAchievementsModal(); }
+  else if (act === 'options') { const p = $('title-options'); if (p) { p.hidden = !p.hidden; sfx('ticket'); } }
+}
+function tmAct() { const el = tmSlots()[TM.idx]; if (el) tmDo(el.dataset.act); }
+function initTitleMenu() {
+  const cont = document.querySelector('#title-slots .title-slot[data-act="continue"]');
+  if (cont && loadSave()) cont.style.display = '';
+  document.querySelectorAll('#title-slots .title-slot').forEach(el => drawTitleMenuEmblem(el.querySelector('.tm-emblem'), el.dataset.act));
+  const s = tmSlots(); TM.idx = Math.max(0, s.findIndex(el => el.dataset.act === 'play'));
+  tmRender();
+  s.forEach((el, i) => { el.onclick = () => { if (i === TM.idx) tmAct(); else { TM.idx = i; sfx('ticket'); tmRender(); } }; });
+}
+document.addEventListener('keydown', (e) => {
+  if (!$('screen-title').classList.contains('active')) return;
+  if ($('modal-overlay').classList.contains('active')) return;
+  if (e.key === 'ArrowLeft') { e.preventDefault(); tmMove(-1); }
+  else if (e.key === 'ArrowRight') { e.preventDefault(); tmMove(1); }
+  else if (e.key === 'Enter') { e.preventDefault(); tmAct(); }
+});
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };
 $('btn-second-reading').onclick = () => {
   if (SETTINGS.lastSeed == null) return;
@@ -12009,6 +12108,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   renderLangBtn();
   renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
+  initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();
   window.addEventListener('resize', () => { if ($('screen-shift').classList.contains('active')) drawDeskProps(); });

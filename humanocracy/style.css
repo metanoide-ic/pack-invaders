@@ -247,6 +247,22 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 #ms-confirm:active { transform: translate(3px,3px); box-shadow:0 0 0; }
 @media (max-width:640px) { .ms-slots { gap:10px; } .ms-slot { padding-top:40px; } .ms-emblem { width:130px; height:130px; } .ms-figure { height:140px; } .ms-banner span { font-size:18px; letter-spacing:4px; } }
 
+/* ===== MENU PRINCIPAL EM PEDESTAIS (reusa .ms-slot, versão compacta) ===== */
+.title-card { width:min(700px, 95vw); }
+.title-slots { justify-content:center; gap:14px; margin:16px auto 2px; flex-wrap:wrap; align-items:flex-end; }
+.title-slot { width:132px; padding-top:32px; opacity:.72; filter:grayscale(.35) brightness(.82); }
+.title-slot:not(.sel):hover { opacity:.9; filter:grayscale(.15) brightness(.92); }
+.title-slot.sel { opacity:1; filter:none; }
+.title-slot .ms-figure { height:112px; }
+.title-slot .ms-emblem { width:106px; height:106px; }
+.title-slot .ms-spot { width:150px; height:170px; margin-left:-75px; }
+.title-slot .ms-plinth { padding:7px 5px 8px; }
+.title-slot .ms-badge { font-size:14.5px; letter-spacing:2px; }
+.title-slot .ms-stamp-sel { display:none; }   /* sem "SELECIONADO" no menu principal */
+.title-options { display:flex; flex-direction:column; gap:7px; width:300px; margin:12px auto 2px; }
+.title-options[hidden] { display:none; }
+@media (max-width:560px) { .title-slot { width:104px; } .title-slot .ms-emblem { width:84px; height:84px; } .title-slot .ms-figure { height:90px; } .title-slot .ms-badge { font-size:12px; } }
+
 /* ============ MANHÃ ============ */
 #screen-morning.active { display:flex; align-items:center; justify-content:center; }
 .morning-grid {

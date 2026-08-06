@@ -28,18 +28,40 @@
             <div class="tc-stamp"><span>POSTO Nº 7</span><b>FRONTEIRA LESTE</b></div>
           </div>
           <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
-          <div class="title-menu">
-            <button id="btn-new" class="btn-title">INICIAR SERVIÇO</button>
+          <!-- MENU EM PEDESTAIS (estilo Castle Crashers, arte do jogo) -->
+          <div class="ms-slots title-slots" id="title-slots">
+            <div class="ms-slot title-slot" data-act="continue" tabindex="0" style="display:none">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">RETOMAR</div></div>
+            </div>
+            <div class="ms-slot title-slot sel" data-act="play" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">JOGAR</div></div>
+            </div>
+            <div class="ms-slot title-slot" data-act="achievements" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">CONQUISTAS</div></div>
+            </div>
+            <div class="ms-slot title-slot" data-act="options" tabindex="0">
+              <div class="ms-spot"></div>
+              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
+              <div class="ms-plinth"><div class="ms-badge">OPÇÕES</div></div>
+            </div>
+          </div>
+          <!-- painel de opções (abre pelo pedestal OPÇÕES); mantém os botões e seus handlers -->
+          <div class="title-options" id="title-options" hidden>
             <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
             <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-            <div class="title-row">
-              <button id="btn-fullscreen" class="btn-title btn-title-sm btn-half">⛶ TELA CHEIA (F)</button>
-              <button id="btn-achievements" class="btn-title btn-title-sm btn-half">🏆 CONQUISTAS</button>
-            </div>
+            <button id="btn-fullscreen" class="btn-title btn-title-sm">⛶ TELA CHEIA (F)</button>
             <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
             <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
             <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
           </div>
+          <button id="btn-new" style="display:none" aria-hidden="true"></button>
+          <button id="btn-achievements" style="display:none" aria-hidden="true"></button>
           <div class="title-warning">
             Este jogo retrata mecanismos de regimes totalitários — propaganda, pseudociência e
             perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
