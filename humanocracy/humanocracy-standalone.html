@@ -339,7 +339,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 #npc-photo { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:230px; width:auto; display:none; image-rendering:pixelated; }
 #npc-actor.use-photo #npc-portrait { display:none; }
 #npc-actor.use-photo #npc-photo { display:block; }
-#npc-actor.pickable:hover { filter: drop-shadow(0 0 7px var(--accent2)); }
+#npc-actor.pickable:hover { filter: brightness(1.14) contrast(1.05); }  /* realça sem glow */
 
 /* carimbos no canto da janela do guichê (visão tipo Papers, Please) */
 .window-stamps { position:absolute; top:8px; right:8px; z-index:4; display:flex; flex-direction:column; gap:5px; }
@@ -632,14 +632,14 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 /* tela de FINAL: fundo solene com vinheta + painel que sobe devagar */
 #screen-ending { background: radial-gradient(ellipse at 50% 38%, #16150f 0%, #070605 68%, #000 100%); }
 #screen-ending .ending-panel {
-  background-color:#100f0b; border-color:#2a281e;
-  box-shadow: 0 0 0 1px rgba(201,163,74,.14), 0 20px 60px rgba(0,0,0,.7);
+  background-color:#100f0b; border:1.5px solid #0b0c07;
+  box-shadow: 5px 5px 0 rgba(0,0,0,.6);          /* offset duro, sem float difuso */
   border-top:2px solid rgba(201,163,74,.4);
 }
 #screen-ending.active .ending-panel { animation: ending-rise 1.5s ease-out backwards; }
 @keyframes ending-rise { from { opacity:0; transform:translateY(16px); } }
 #screen-ending .ending-title {
-  text-shadow: 0 0 14px rgba(201,163,74,.35), 0 2px 3px rgba(0,0,0,.6);
+  text-shadow: 2px 2px 0 rgba(0,0,0,.7);         /* letterpress, sem halo dourado */
   animation: end-flicker 7s steps(1) infinite;
 }
 @keyframes end-flicker { 0%,95%,100% { opacity:1; } 96% { opacity:.55; } 97% { opacity:.9; } 98% { opacity:.45; } 99% { opacity:.85; } }
@@ -672,7 +672,7 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:var(--accent2); font-family:var(--font-display); }
 .ach-row { padding:6px 8px; border-bottom:1px solid rgba(0,0,0,.14); display:flex; gap:9px; align-items:center; border-left:2px solid transparent; }
 .ach-row.locked { opacity:.42; }
-.ach-row.unlocked { color:#e8d9a6; border-left-color:var(--accent2); background:linear-gradient(90deg, rgba(201,163,74,.10), transparent 70%); text-shadow:0 0 8px rgba(201,163,74,.25); }
+.ach-row.unlocked { color:#e8d9a6; border-left-color:var(--accent2); background:rgba(201,163,74,.08); }
 .ach-icon { font-size:15px; width:22px; text-align:center; flex-shrink:0; }
 
 /* ============ PAUSA ============ */
