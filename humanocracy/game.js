@@ -263,10 +263,8 @@ function drawTitleCrest(lidAmt) {
     x.beginPath(); x.moveTo(0, -30 * u); x.lineTo(6 * u, -142 * u); x.lineTo(-6 * u, -142 * u); x.closePath(); x.fill();
   }
   x.restore();
-  // disco de fundo
-  const disc = x.createRadialGradient(C, C - 10 * u, 6 * u, C, C, 116 * u);
-  disc.addColorStop(0, 'rgba(30,26,16,.75)'); disc.addColorStop(1, 'rgba(10,9,6,.9)');
-  x.fillStyle = disc; x.beginPath(); x.arc(C, C, 112 * u, 0, 6.29); x.fill();
+  // disco de fundo — tinta chapada (selo impresso), não gradiente lustroso
+  x.fillStyle = 'rgba(22,19,12,.92)'; x.beginPath(); x.arc(C, C, 112 * u, 0, 6.29); x.fill();
   // anéis
   x.strokeStyle = GOLD; x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 110 * u, 0, 6.29); x.stroke();
   x.lineWidth = 1.2 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
@@ -287,12 +285,14 @@ function drawTitleCrest(lidAmt) {
   x.fillStyle = '#f2ead2'; x.beginPath();
   x.moveTo(C - 46 * u, ey); x.quadraticCurveTo(C, ey - 34 * u, C + 46 * u, ey); x.quadraticCurveTo(C, ey + 34 * u, C - 46 * u, ey); x.closePath(); x.fill();
   x.strokeStyle = GOLD; x.lineWidth = 2.2 * u; x.stroke();
-  // íris
-  const ig = x.createRadialGradient(C - 4 * u, ey - 4 * u, 2 * u, C, ey, 22 * u);
-  ig.addColorStop(0, '#7ea6c0'); ig.addColorStop(0.7, '#2e5068'); ig.addColorStop(1, '#12222e');
-  x.fillStyle = ig; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
+  // íris em anéis chapados (gravura), não gradiente liso de IA
+  x.fillStyle = '#12222e'; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
+  x.fillStyle = '#2e5068'; x.beginPath(); x.arc(C, ey, 16 * u, 0, 6.29); x.fill();
+  x.fillStyle = '#5f89a4'; x.beginPath(); x.arc(C, ey, 12 * u, 0, 6.29); x.fill();
+  x.strokeStyle = 'rgba(18,34,46,.6)'; x.lineWidth = 1 * u;                 // estrias radiais da íris
+  for (let i = 0; i < 16; i++) { const a = i / 16 * 6.283; x.beginPath(); x.moveTo(C + Math.cos(a) * 9 * u, ey + Math.sin(a) * 9 * u); x.lineTo(C + Math.cos(a) * 19 * u, ey + Math.sin(a) * 19 * u); x.stroke(); }
   x.fillStyle = DARK; x.beginPath(); x.arc(C, ey, 9 * u, 0, 6.29); x.fill();
-  x.fillStyle = 'rgba(255,255,255,.85)'; x.beginPath(); x.arc(C - 5 * u, ey - 5 * u, 3 * u, 0, 6.29); x.fill();
+  x.fillStyle = '#f4efe2'; x.beginPath(); x.arc(C - 5 * u, ey - 5 * u, 3 * u, 0, 6.29); x.fill(); // brilho especular chapado
   // PÁLPEBRA (piscar ocasional): desce sobre o olho — recorta no formato dele
   if (lidAmt > 0) {
     x.save();
