@@ -641,6 +641,19 @@ function buildEnts() {
     { spr: 'poster', x: 7, y: 5.16, sc: .3, lift: .5 }, { spr: 'retrato', x: 13, y: 5.16, sc: .26, lift: .52 }, { spr: 'poster', x: 19, y: 5.16, sc: .3, lift: .5 },
     { spr: 'retrato', x: 13, y: 6.84, sc: .26, lift: .52 },
     { spr: 'tapestry', x: 28, y: 2.34, sc: .72, lift: .38 }, // estandarte do Ministério na sala
+    // ---- mais tralha: a casa vivida, cheia de coisas de gente ----
+    // SALA (o cômodo maior — estava vazia demais)
+    { spr: 'chair', x: 25.6, y: 4.4, sc: .5 }, { spr: 'plant', x: 25.6, y: 7.6, sc: .56 },
+    { spr: 'shelf', x: 30.6, y: 4.4, sc: .8 }, { spr: 'crate', x: 30.4, y: 8.4, sc: .44 },
+    { spr: 'lowtable', x: 30.4, y: 6.4, sc: .32 },
+    // COZINHA (louças e caixas)
+    { spr: 'shelf', x: 23.6, y: 1.5, sc: .72 }, { spr: 'crate', x: 20.4, y: 2.62, sc: .44 },
+    // SEU QUARTO e QUARTO DA MÃE (um pouco de vida)
+    { spr: 'chair', x: 14.6, y: 10.6, sc: .48 }, { spr: 'shelf', x: 17.6, y: 9.5, sc: .74 },
+    { spr: 'chair', x: 5.4, y: 10.6, sc: .48 },
+    // CORREDOR (bancos encostados, mais planta, mais quadros na parede)
+    { spr: 'crate', x: 5, y: 6.6, sc: .46 }, { spr: 'chair', x: 21, y: 6.6, sc: .48 }, { spr: 'plant', x: 2.4, y: 6.55, sc: .5 },
+    { spr: 'retrato', x: 10, y: 5.16, sc: .26, lift: .52 }, { spr: 'poster', x: 16, y: 6.84, sc: .3, lift: .5 }, { spr: 'retrato', x: 22, y: 6.84, sc: .26, lift: .52 },
     // lâmpadas de teto: pouca luz, muita sombra
     ...[[4, 2], [10, 2], [16, 2], [22, 2], [4, 10], [10, 10], [16, 10], [6, 6], [13, 6], [20, 6], [28, 6]]
       .map(([lx, ly]) => ({ spr: 'lamp', x: lx, y: ly, sc: .16, lift: .74, glowWarm: true })),
@@ -1256,6 +1269,14 @@ function houseLoop(ts) {
     fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
     if (K('ArrowLeft')) HOUSE.ang -= dt * .0024;
     if (K('ArrowRight')) HOUSE.ang += dt * .0024;
+    // HOVER-STEER: gira/inclina conforme o cursor sobre a tela (zona morta central)
+    if (hoverActive && !mouseLook) {
+      const dz = 0.14;
+      const hx = Math.abs(hoverX) > dz ? (hoverX - Math.sign(hoverX) * dz) / (1 - dz) : 0;
+      HOUSE.ang += hx * dt * .0026;
+      const tp = Math.max(-90, Math.min(90, -hoverY * 30));   // olhar p/ cima/baixo conforme o cursor
+      HOUSE.pitch += (tp - HOUSE.pitch) * Math.min(1, dt * .005);
+    }
     HOUSE.moving = Math.abs(fwd) > .05 || Math.abs(str) > .05;
     if (HOUSE.moving) {
       const sp = dt * .0028;
@@ -1543,37 +1564,30 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.addEventListener('keyup', (e) => { KEYS[e.key] = false; });
-/* OLHAR COM O MOUSE (v2): clicar na tela TRAVA o ponteiro e liga o mouse-look
-   livre — mexe o mouse e a câmera gira, sem segurar botão. Esc solta o cursor.
-   Se o navegador/embed recusar o pointer lock, cai automaticamente no modo de
-   arrastar (segurar o botão e mover), que continua funcionando. Ao abrir um
-   diálogo o lock é solto (hSay chama exitPointerLock) para poder clicar nas
-   escolhas; depois é só clicar de novo para voltar a olhar livre. */
+/* OLHAR COM O MOUSE: HOVER-STEER — basta MOVER o mouse sobre a tela e a câmera
+   gira na direção do cursor (zona morta no centro fica parada). Sem clicar, sem
+   arrastar, sem pointer lock — funciona em qualquer navegador/embed (inclusive
+   dentro de iframe, onde o lock costuma ser bloqueado). Um clique curto (ou E)
+   interage com quem está à frente / avança o diálogo. Arrastar (segurar e mover)
+   também gira, como alternativa para quem preferir. */
 let mouseLook = null;
-let plDenied = false;                 // o navegador recusou o pointer lock: usa arrasto
+let hoverX = 0, hoverY = 0, hoverActive = false;   // hover-steer (mouse sobre a tela)
 const hcanvas = $('house-canvas');
-const isLocked = () => document.pointerLockElement === hcanvas;
-function houseLock() {
-  if (HD.open || !HOUSE.active || plDenied || isLocked()) return;
-  try { hcanvas.requestPointerLock && hcanvas.requestPointerLock(); } catch (e) { plDenied = true; }
-}
-document.addEventListener('pointerlockchange', () => {
-  hcanvas.style.cursor = isLocked() ? 'none' : '';
-});
-document.addEventListener('pointerlockerror', () => { plDenied = true; hcanvas.style.cursor = ''; });
 hcanvas.addEventListener('mousedown', (e) => {
-  if (!HOUSE.active || isLocked()) return;    // travado: mousemove olha; mouseup interage
+  if (!HOUSE.active) return;
   mouseLook = { x: e.clientX, y: e.clientY, moved: false };
   if (!HD.open) hcanvas.style.cursor = 'grabbing';
 });
-document.addEventListener('mousemove', (e) => {
-  if (isLocked()) {                            // MOUSE-LOOK LIVRE (ponteiro travado)
-    if (HD.open) return;
-    HOUSE.ang += e.movementX * .0026;
-    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .32));
-    return;
-  }
-  if (!mouseLook || !HOUSE.active || HD.open) return;       // fallback: arrastar para olhar
+hcanvas.addEventListener('mousemove', (e) => {              // HOVER-STEER
+  if (mouseLook || HD.open || !HOUSE.active) { hoverActive = false; return; }  // arrastando/diálogo: ignora
+  const r = hcanvas.getBoundingClientRect();
+  hoverX = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
+  hoverY = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));
+  hoverActive = true;
+});
+hcanvas.addEventListener('mouseleave', () => { hoverActive = false; });
+document.addEventListener('mousemove', (e) => {            // ARRASTO (alternativa)
+  if (!mouseLook || !HOUSE.active || HD.open) return;
   const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
   if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
   HOUSE.ang += dx * .0048;
@@ -1582,12 +1596,10 @@ document.addEventListener('mousemove', (e) => {
 });
 document.addEventListener('mouseup', () => {
   const wasDrag = mouseLook && mouseLook.moved;
-  mouseLook = null;
-  if (!isLocked()) hcanvas.style.cursor = '';
+  mouseLook = null; hcanvas.style.cursor = '';
   if (wasDrag || !HOUSE.active) return;                     // arrastou = só olhou
   if (HD.open) { hAdvance(); return; }                      // diálogo: clique avança
-  if (isLocked()) { const t = interactTarget(); if (t) interactWith(t.spot); }  // travado: interage
-  else houseLock();                                         // solto: clique trava e libera o olhar
+  const t = interactTarget(); if (t) interactWith(t.spot);  // clique curto: interage
 });
 $('house-dialog').addEventListener('click', (e) => { if (!e.target.closest('button')) hAdvance(); });
 
