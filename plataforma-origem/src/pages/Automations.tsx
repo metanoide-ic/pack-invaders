@@ -10,7 +10,7 @@ const CH: Record<EventChannel, { icon: typeof Cpu; color: string; label: string 
   whatsapp: { icon: MessageCircle, color: '#25D366', label: 'WhatsApp' },
   instagram: { icon: Instagram, color: '#ec4899', label: 'Instagram' },
   ia: { icon: Sparkles, color: '#a855f7', label: 'IA' },
-  sistema: { icon: Cpu, color: '#7c3aed', label: 'Sistema' },
+  sistema: { icon: Cpu, color: '#7c5cff', label: 'Sistema' },
 };
 
 const ST: Record<EventStatus, string> = { ok: '#10b981', simulado: '#f59e0b', erro: '#ef4444' };

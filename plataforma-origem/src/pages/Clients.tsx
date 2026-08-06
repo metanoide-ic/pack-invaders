@@ -112,7 +112,7 @@ export default function Clients() {
                 </div>
                 {c.briefing && <p className="mt-3 line-clamp-2 text-xs text-white/50">{c.briefing}</p>}
                 <div className="mt-3 flex flex-wrap gap-1.5">
-                  {dias > 0 && <Badge color="#7c3aed"><CalendarRange size={11} /> {dias}x/semana</Badge>}
+                  {dias > 0 && <Badge color="#7c5cff"><CalendarRange size={11} /> {dias}x/semana</Badge>}
                   {c.whatsappGroup && <Badge color="#25D366"><MessageCircle size={11} /> grupo</Badge>}
                   {c.city && <Badge>{c.city}</Badge>}
                 </div>

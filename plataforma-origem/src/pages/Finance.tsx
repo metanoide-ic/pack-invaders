@@ -105,7 +105,7 @@ export default function Finance() {
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Stat label="Receitas (pagas)" value={money(totals.receita)} tint="#10b981" icon={<TrendingUp size={18} />} />
         <Stat label="Despesas (pagas)" value={money(totals.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
-        <Stat label="Saldo" value={money(totals.saldo)} tint="#7c3aed" icon={<Wallet size={18} />} />
+        <Stat label="Saldo" value={money(totals.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} />
         <Stat label="A receber" value={money(totals.pendente)} tint="#f59e0b" icon={<ArrowDownLeft size={18} />} />
       </div>
 
@@ -120,19 +120,19 @@ export default function Finance() {
                   <stop offset="100%" stopColor="#10b981" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="gD" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#7c3aed" stopOpacity={0.4} />
-                  <stop offset="100%" stopColor="#7c3aed" stopOpacity={0} />
+                  <stop offset="0%" stopColor="#7c5cff" stopOpacity={0.4} />
+                  <stop offset="100%" stopColor="#7c5cff" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
               <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: '#ffffff66', fontSize: 12 }} />
               <YAxis tickLine={false} axisLine={false} width={44} tick={{ fill: '#ffffff44', fontSize: 11 }} tickFormatter={(v) => (v >= 1000 ? `${v / 1000}k` : v)} />
               <Tooltip
-                contentStyle={{ background: '#14142a', border: '1px solid #23233f', borderRadius: 12, color: '#fff' }}
+                contentStyle={{ background: '#17171c', border: '1px solid #24242c', borderRadius: 12, color: '#fff' }}
                 formatter={(v: number) => money(v)}
               />
               <Area type="monotone" dataKey="receita" name="Receita" stroke="#10b981" strokeWidth={2} fill="url(#gR)" />
-              <Area type="monotone" dataKey="despesa" name="Despesa" stroke="#7c3aed" strokeWidth={2} fill="url(#gD)" />
+              <Area type="monotone" dataKey="despesa" name="Despesa" stroke="#7c5cff" strokeWidth={2} fill="url(#gD)" />
             </AreaChart>
           </ResponsiveContainer>
         </div>

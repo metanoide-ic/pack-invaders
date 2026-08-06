@@ -90,7 +90,7 @@ export default function Dashboard() {
     return Object.entries(counts).map(([stage, value]) => ({
       name: STAGE_META[stage as keyof typeof STAGE_META]?.label ?? stage,
       value,
-      color: STAGE_META[stage as keyof typeof STAGE_META]?.color ?? '#7c3aed',
+      color: STAGE_META[stage as keyof typeof STAGE_META]?.color ?? '#7c5cff',
     }));
   }, [posts]);
 
@@ -133,7 +133,7 @@ export default function Dashboard() {
         <Kpi label="Receita do mês" value={money(fin.receita)} tint="#10b981" icon={<TrendingUp size={18} />} hint="Pagamentos confirmados" />
         <Kpi label="A receber" value={money(fin.aReceber)} tint="#f59e0b" icon={<Clock size={18} />} hint="Pendências em aberto" />
         <Kpi label="Despesas do mês" value={money(fin.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
-        <Kpi label="Saldo do mês" value={money(fin.saldo)} tint="#7c3aed" icon={<Wallet size={18} />} hint="Receitas − despesas" />
+        <Kpi label="Saldo do mês" value={money(fin.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} hint="Receitas − despesas" />
       </div>
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
@@ -151,11 +151,11 @@ export default function Dashboard() {
                 <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: '#ffffff66', fontSize: 12 }} />
                 <Tooltip
                   cursor={{ fill: '#ffffff08' }}
-                  contentStyle={{ background: '#14142a', border: '1px solid #23233f', borderRadius: 12, color: '#fff' }}
+                  contentStyle={{ background: '#17171c', border: '1px solid #24242c', borderRadius: 12, color: '#fff' }}
                   formatter={(v: number) => money(v)}
                 />
                 <Bar dataKey="receita" name="Receita" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={26} />
-                <Bar dataKey="despesa" name="Despesa" fill="#7c3aed" radius={[6, 6, 0, 0]} maxBarSize={26} />
+                <Bar dataKey="despesa" name="Despesa" fill="#7c5cff" radius={[6, 6, 0, 0]} maxBarSize={26} />
               </BarChart>
             </ResponsiveContainer>
           </div>

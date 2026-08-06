@@ -84,7 +84,7 @@ export default function Integrations() {
             <Input value={s.whatsappWebhook} onChange={(e) => s.update({ whatsappWebhook: e.target.value })} placeholder="https://hook.make.com/…" />
           </Field>
           <label className="flex items-center gap-2.5 text-sm text-white/70">
-            <input type="checkbox" checked={s.sendOnApprovalStage} onChange={(e) => s.update({ sendOnApprovalStage: e.target.checked })} className="h-4 w-4 accent-[#7c3aed]" />
+            <input type="checkbox" checked={s.sendOnApprovalStage} onChange={(e) => s.update({ sendOnApprovalStage: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
             Enviar ao grupo automaticamente ao mover para “Aprovação”
           </label>
           <div>
@@ -117,7 +117,7 @@ export default function Integrations() {
             <Input value={s.publishWebhook} onChange={(e) => s.update({ publishWebhook: e.target.value })} placeholder="https://hook.make.com/…" />
           </Field>
           <label className="flex items-center gap-2.5 text-sm text-white/70">
-            <input type="checkbox" checked={s.autoPublishOnApproval} onChange={(e) => s.update({ autoPublishOnApproval: e.target.checked })} className="h-4 w-4 accent-[#7c3aed]" />
+            <input type="checkbox" checked={s.autoPublishOnApproval} onChange={(e) => s.update({ autoPublishOnApproval: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
             Publicar automaticamente quando aprovado
           </label>
           <Note>Postar no Instagram exige a Graph API oficial (conta Profissional + Meta). O webhook entrega os dados prontos para seu fluxo publicar — do jeito seguro, sem risco às contas.</Note>
@@ -131,7 +131,7 @@ export default function Integrations() {
               const on = e.target.checked;
               if (on) { const ok = await requestNotifyPermission(); if (!ok) { setNotifMsg('Permissão negada pelo navegador.'); return; } }
               s.update({ notifyEnabled: on }); setNotifMsg(on ? 'Notificações ativadas.' : '');
-            }} className="h-4 w-4 accent-[#7c3aed]" />
+            }} className="h-4 w-4 accent-[#7c5cff]" />
             Ativar notificações do navegador (funciona no app instalado)
           </label>
           {notifMsg && <p className="text-xs text-white/50">{notifMsg}</p>}
@@ -151,13 +151,13 @@ export default function Integrations() {
                     <div className="truncate text-sm font-medium text-white">{a.name} {a.id === user.id && <span className="text-white/40">(você)</span>}</div>
                     <div className="text-xs text-white/45">{a.role}</div>
                   </div>
-                  {a.admin && <Badge color="#7c3aed">admin</Badge>}
+                  {a.admin && <Badge color="#7c5cff">admin</Badge>}
                   <label className="flex items-center gap-2 text-xs text-white/70">
-                    <input type="checkbox" checked={a.canFinance} onChange={(e) => setPermission(a.id, { canFinance: e.target.checked })} className="h-4 w-4 accent-[#7c3aed]" />
+                    <input type="checkbox" checked={a.canFinance} onChange={(e) => setPermission(a.id, { canFinance: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
                     Financeiro
                   </label>
                   <label className="flex items-center gap-2 text-xs text-white/70">
-                    <input type="checkbox" checked={a.admin} onChange={(e) => setPermission(a.id, { admin: e.target.checked })} className="h-4 w-4 accent-[#7c3aed]" />
+                    <input type="checkbox" checked={a.admin} onChange={(e) => setPermission(a.id, { admin: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
                     Admin
                   </label>
                 </div>
