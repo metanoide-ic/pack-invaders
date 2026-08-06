@@ -11,9 +11,10 @@ import {
   type DragStartEvent,
   type DragEndEvent,
 } from '@dnd-kit/core';
-import { Plus, CheckSquare, GripVertical, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Plus, CheckSquare, GripVertical, MessageSquare, AlertTriangle, LayoutGrid, CalendarDays } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Modal, Select, Badge } from '@/components/ui';
+import { PostsCalendar } from '@/components/PostsCalendar';
 import { useData } from '@/lib/dataStore';
 import { useClientMap } from '@/lib/hooks';
 import { STAGE_META, STAGE_ORDER, STAGE_FUNNEL, PLATFORMS, PLATFORM_COLOR } from '@/lib/labels';
@@ -28,6 +29,7 @@ export default function Posts() {
   const [openId, setOpenId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [view, setView] = useState<'pipeline' | 'calendario'>('pipeline');
 
   const [form, setForm] = useState({
     title: '', platform: 'Instagram' as PostPlatform, clientId: '',
@@ -72,9 +74,24 @@ export default function Posts() {
       <PageHeader
         title="Checklist de Posts"
         subtitle="Arraste entre as etapas. Ao chegar em Aprovação, a copy vai para o grupo."
-        action={<Button onClick={() => setCreating(true)}><Plus size={18} /> Novo post</Button>}
+        action={
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-line p-0.5">
+              <button onClick={() => setView('pipeline')} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition', view === 'pipeline' ? 'bg-brand-500/20 text-brand-100' : 'text-white/50 hover:text-white')}>
+                <LayoutGrid size={15} /> Pipeline
+              </button>
+              <button onClick={() => setView('calendario')} className={cn('flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition', view === 'calendario' ? 'bg-brand-500/20 text-brand-100' : 'text-white/50 hover:text-white')}>
+                <CalendarDays size={15} /> Calendário
+              </button>
+            </div>
+            <Button onClick={() => setCreating(true)}><Plus size={18} /> Novo post</Button>
+          </div>
+        }
       />
 
+      {view === 'calendario' ? (
+        <PostsCalendar posts={posts} onOpen={setOpenId} />
+      ) : (
       <DndContext
         sensors={sensors}
         collisionDetection={pointerWithin}
@@ -88,6 +105,7 @@ export default function Posts() {
         </div>
         <DragOverlay>{activePost ? <PostCard post={activePost} clientMap={clientMap} dragging /> : null}</DragOverlay>
       </DndContext>
+      )}
 
       {openId && <PostModal postId={openId} onClose={() => setOpenId(null)} />}
 

@@ -17,7 +17,11 @@ import {
   CalendarCheck,
   ArrowUpRight,
   Wallet,
+  KanbanSquare,
+  Clapperboard,
+  AlertTriangle,
 } from 'lucide-react';
+import type { Post } from '@/lib/types';
 import { PageHeader } from '@/components/PageHeader';
 import { Badge } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
@@ -55,7 +59,8 @@ function Kpi({
 
 export default function Dashboard() {
   const user = useAuth((s) => s.current());
-  const { transactions, posts, boards } = useData();
+  const canFinance = !!user?.canFinance;
+  const { transactions, posts, boards, videos } = useData();
   const clientMap = useClientMap();
 
   const fin = useMemo(() => {
@@ -122,6 +127,18 @@ export default function Dashboard() {
 
   const firstName = user?.name.split(' ')[0] ?? '';
 
+  const op = useMemo(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const tarefas = boards.reduce((acc, b) => {
+      const doneCol = b.columns[b.columns.length - 1]?.id;
+      return acc + b.columns.filter((c) => c.id !== doneCol).reduce((n, c) => n + c.cardIds.length, 0);
+    }, 0);
+    const hoje = posts.filter((p) => p.stage !== 'publicado' && p.scheduledDate && p.scheduledDate <= today).length;
+    const emProducao = posts.filter((p) => !['publicado', 'agendado'].includes(p.stage)).length;
+    const videosAtivos = videos.filter((v) => v.stage !== 'entregue').length;
+    return { tarefas, hoje, emProducao, videosAtivos };
+  }, [boards, posts, videos]);
+
   return (
     <div>
       <PageHeader
@@ -129,37 +146,58 @@ export default function Dashboard() {
         subtitle="Panorama da agência hoje."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Kpi label="Receita do mês" value={money(fin.receita)} tint="#10b981" icon={<TrendingUp size={18} />} hint="Pagamentos confirmados" />
-        <Kpi label="A receber" value={money(fin.aReceber)} tint="#f59e0b" icon={<Clock size={18} />} hint="Pendências em aberto" />
-        <Kpi label="Despesas do mês" value={money(fin.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
-        <Kpi label="Saldo do mês" value={money(fin.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} hint="Receitas − despesas" />
-      </div>
+      {canFinance ? (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Kpi label="Receita do mês" value={money(fin.receita)} tint="#10b981" icon={<TrendingUp size={18} />} hint="Pagamentos confirmados" />
+          <Kpi label="A receber" value={money(fin.aReceber)} tint="#f59e0b" icon={<Clock size={18} />} hint="Pendências em aberto" />
+          <Kpi label="Despesas do mês" value={money(fin.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
+          <Kpi label="Saldo do mês" value={money(fin.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} hint="Receitas − despesas" />
+        </div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <Kpi label="Tarefas em aberto" value={String(op.tarefas)} tint="#7c5cff" icon={<KanbanSquare size={18} />} />
+          <Kpi label="Posts para hoje" value={String(op.hoje)} tint="#f59e0b" icon={<AlertTriangle size={18} />} hint="Precisam ir hoje" />
+          <Kpi label="Posts em produção" value={String(op.emProducao)} tint="#38bdf8" icon={<CalendarCheck size={18} />} />
+          <Kpi label="Vídeos ativos" value={String(op.videosAtivos)} tint="#a855f7" icon={<Clapperboard size={18} />} />
+        </div>
+      )}
 
       <div className="mt-6 grid gap-4 lg:grid-cols-3">
-        {/* Gráfico financeiro */}
-        <div className="card p-5 lg:col-span-2">
-          <div className="mb-4 flex items-center justify-between">
-            <h3 className="font-semibold text-white">Receitas x Despesas</h3>
-            <Link to="/app/financeiro" className="inline-flex items-center gap-1 text-xs text-brand-300 hover:text-brand-200">
-              Ver financeiro <ArrowUpRight size={14} />
-            </Link>
+        {/* Gráfico financeiro — apenas com permissão */}
+        {canFinance ? (
+          <div className="card p-5 lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-semibold text-white">Receitas x Despesas</h3>
+              <Link to="/app/financeiro" className="inline-flex items-center gap-1 text-xs text-brand-300 hover:text-brand-200">
+                Ver financeiro <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={monthly} barGap={6}>
+                  <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: '#ffffff66', fontSize: 12 }} />
+                  <Tooltip
+                    cursor={{ fill: '#ffffff08' }}
+                    contentStyle={{ background: '#17171c', border: '1px solid #24242c', borderRadius: 12, color: '#fff' }}
+                    formatter={(v: number) => money(v)}
+                  />
+                  <Bar dataKey="receita" name="Receita" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={26} />
+                  <Bar dataKey="despesa" name="Despesa" fill="#7c5cff" radius={[6, 6, 0, 0]} maxBarSize={26} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={monthly} barGap={6}>
-                <XAxis dataKey="mes" tickLine={false} axisLine={false} tick={{ fill: '#ffffff66', fontSize: 12 }} />
-                <Tooltip
-                  cursor={{ fill: '#ffffff08' }}
-                  contentStyle={{ background: '#17171c', border: '1px solid #24242c', borderRadius: 12, color: '#fff' }}
-                  formatter={(v: number) => money(v)}
-                />
-                <Bar dataKey="receita" name="Receita" fill="#10b981" radius={[6, 6, 0, 0]} maxBarSize={26} />
-                <Bar dataKey="despesa" name="Despesa" fill="#7c5cff" radius={[6, 6, 0, 0]} maxBarSize={26} />
-              </BarChart>
-            </ResponsiveContainer>
+        ) : (
+          <div className="card p-5 lg:col-span-2">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="font-semibold text-white">Agenda dos próximos dias</h3>
+              <Link to="/app/posts" className="inline-flex items-center gap-1 text-xs text-brand-300 hover:text-brand-200">
+                Ver calendário <ArrowUpRight size={14} />
+              </Link>
+            </div>
+            <MiniAgenda posts={posts} clientMap={clientMap} />
           </div>
-        </div>
+        )}
 
         {/* Posts por etapa */}
         <div className="card p-5">
@@ -249,6 +287,30 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+function MiniAgenda({ posts, clientMap }: { posts: Post[]; clientMap: ReturnType<typeof useClientMap> }) {
+  const today = new Date().toISOString().slice(0, 10);
+  const items = [...posts]
+    .filter((p) => p.stage !== 'publicado' && p.scheduledDate && p.scheduledDate >= today)
+    .sort((a, b) => (a.scheduledDate! < b.scheduledDate! ? -1 : 1))
+    .slice(0, 6);
+  if (items.length === 0) return <p className="grid h-56 place-items-center text-sm text-white/40">Nada agendado para os próximos dias.</p>;
+  return (
+    <div className="space-y-2">
+      {items.map((p) => {
+        const client = p.clientId ? clientMap[p.clientId] : undefined;
+        return (
+          <div key={p.id} className="flex items-center gap-3 rounded-xl border border-line bg-white/[0.02] px-3.5 py-3">
+            <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: STAGE_META[p.stage].color }} />
+            <span className="min-w-0 flex-1 truncate text-sm text-white/85">{p.title}</span>
+            {client && <Badge>{client.name}</Badge>}
+            {p.scheduledDate && <DueChip iso={p.scheduledDate} />}
+          </div>
+        );
+      })}
     </div>
   );
 }
