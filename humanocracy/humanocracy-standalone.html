@@ -1269,7 +1269,7 @@ body.text-large .np-body { font-size:15px; }
       <div class="house-top">
         <span id="house-clock">20:30</span>
         <span id="house-room"></span>
-        <span class="house-help">WASD/setas andar · arraste o mouse para olhar · E interagir</span>
+        <span class="house-help">WASD/setas andar · clique p/ olhar (mouse livre) · E interagir · Esc solta</span>
       </div>
       <div id="house-viewport">
         <canvas id="house-canvas"></canvas>
@@ -2297,8 +2297,8 @@ const I18N_EN = {
   'COMEÇAR DE NOVO': 'START OVER',
 
   /* ---- casa ---- */
-  'WASD/setas andar · arraste o mouse para olhar · E interagir':
-    'WASD/arrows to walk · drag the mouse to look · E to interact',
+  'WASD/setas andar · clique p/ olhar (mouse livre) · E interagir · Esc solta':
+    'WASD/arrows to walk · click to look (free mouse) · E interact · Esc releases',
   'clique / E para continuar': 'click / E to continue',
 
   /* ---- exame / bagagem ---- */
@@ -3732,8 +3732,8 @@ const I18N_ES = {
   'COMEÇAR DE NOVO': 'EMPEZAR DE NUEVO',
 
   /* ---- casa ---- */
-  'WASD/setas andar · arraste o mouse para olhar · E interagir':
-    'WASD/flechas para caminar · arrastra el mouse para mirar · E interactuar',
+  'WASD/setas andar · clique p/ olhar (mouse livre) · E interagir · Esc solta':
+    'WASD/flechas caminar · clic para mirar (ratón libre) · E interactuar · Esc suelta',
   'clique / E para continuar': 'clic / E para continuar',
 
   /* ---- exame / bagagem ---- */
@@ -5497,8 +5497,8 @@ function paintBust(ctx, f, opts) {
     // camisa em V aparecendo sob a gola + fileira de botões
     ctx.fillStyle = 'rgb(150,142,118)';
     ctx.beginPath(); ctx.moveTo(45.5, 95); ctx.lineTo(54.5, 95); ctx.lineTo(51.5, 122); ctx.lineTo(48.5, 122); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(12,11,8,.7)';   // vão escuro no meio da camisa
-    ctx.beginPath(); ctx.moveTo(48.4, 97); ctx.lineTo(51.6, 97); ctx.lineTo(50.6, 122); ctx.lineTo(49.4, 122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(44,38,26,.42)';   // vão discreto entre as pregas da camisa (sutil: não pode virar barra preta no pescoço)
+    ctx.beginPath(); ctx.moveTo(48.8, 100); ctx.lineTo(51.2, 100); ctx.lineTo(50.5, 118); ctx.lineTo(49.5, 118); ctx.closePath(); ctx.fill();
     ctx.fillStyle = 'rgba(70,62,44,.9)';
     for (const by of [104, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.85, 0, 6.29); ctx.fill(); }
     // gola do casaco: duas abas emoldurando o pescoço, encontrando no decote
@@ -6911,7 +6911,7 @@ function renderPortraitCanvas(f, o) {
    barata), contraste alto de impressão ruim, grão de papel e posterização
    grosseira. Assim a foto do passaporte deixa de ser gêmea do feed ao vivo do
    guichê — e a comparação foto×rosto fica mais legível como fic­ção. */
-const PORTRAIT_POST = { levels: 5, ditherAmp: 0.5, grain: 7, aberr: 0, bleed: 0.05, scan: 0, vig: 0.42, sat: 0.13, contrast: 1.35 };
+const PORTRAIT_POST = { levels: 6, ditherAmp: 0.26, grain: 5, aberr: 0, bleed: 0.05, scan: 0, vig: 0.34, sat: 0.28, contrast: 1.18 };
 function portraitSVG(f) {
   const cv = renderPortraitCanvas(f, { w: 84, h: 100, bg: '#8a8778', post: PORTRAIT_POST });
   return `<image href="${cv.toDataURL()}" width="100" height="120" style="image-rendering:pixelated" preserveAspectRatio="none"/>`;
@@ -13106,44 +13106,51 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.addEventListener('keyup', (e) => { KEYS[e.key] = false; });
-document.addEventListener('pointerlockchange', () => {});
-/* OLHAR COM O MOUSE: arrastar (segurar o botão e mover) gira a câmera — igual
-   ao arrastar do dedo no touch. NÃO exige mais travar o ponteiro (pointer lock
-   falhava em vários navegadores/embeds e ainda sumia com o cursor, então o
-   jogador acabava girando só nas setas). Um clique curto, sem arrastar,
-   interage com quem está à frente (ou avança o diálogo). Se o pointer lock
-   estiver ativo por algum motivo, ainda é respeitado. */
+/* OLHAR COM O MOUSE (v2): clicar na tela TRAVA o ponteiro e liga o mouse-look
+   livre — mexe o mouse e a câmera gira, sem segurar botão. Esc solta o cursor.
+   Se o navegador/embed recusar o pointer lock, cai automaticamente no modo de
+   arrastar (segurar o botão e mover), que continua funcionando. Ao abrir um
+   diálogo o lock é solto (hSay chama exitPointerLock) para poder clicar nas
+   escolhas; depois é só clicar de novo para voltar a olhar livre. */
 let mouseLook = null;
+let plDenied = false;                 // o navegador recusou o pointer lock: usa arrasto
 const hcanvas = $('house-canvas');
+const isLocked = () => document.pointerLockElement === hcanvas;
+function houseLock() {
+  if (HD.open || !HOUSE.active || plDenied || isLocked()) return;
+  try { hcanvas.requestPointerLock && hcanvas.requestPointerLock(); } catch (e) { plDenied = true; }
+}
+document.addEventListener('pointerlockchange', () => {
+  hcanvas.style.cursor = isLocked() ? 'none' : '';
+});
+document.addEventListener('pointerlockerror', () => { plDenied = true; hcanvas.style.cursor = ''; });
 hcanvas.addEventListener('mousedown', (e) => {
-  if (!HOUSE.active) return;
+  if (!HOUSE.active || isLocked()) return;    // travado: mousemove olha; mouseup interage
   mouseLook = { x: e.clientX, y: e.clientY, moved: false };
-  if (!HD.open) hcanvas.style.cursor = 'grabbing';   // durante diálogo o clique só avança
+  if (!HD.open) hcanvas.style.cursor = 'grabbing';
 });
 document.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement === hcanvas) {           // pointer lock (se ativo)
-    HOUSE.ang += e.movementX * .0028;
-    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .35));
+  if (isLocked()) {                            // MOUSE-LOOK LIVRE (ponteiro travado)
+    if (HD.open) return;
+    HOUSE.ang += e.movementX * .0026;
+    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .32));
     return;
   }
-  if (!mouseLook || !HOUSE.active || HD.open) return;       // arrastar para olhar
+  if (!mouseLook || !HOUSE.active || HD.open) return;       // fallback: arrastar para olhar
   const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
   if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
-  // sensibilidade um pouco maior que a do pointer lock: como o arrasto é
-  // limitado à largura da tela por gesto, virar de costas precisa render bem
-  // num único arrasto, sem ficar nervoso demais no movimento fino.
   HOUSE.ang += dx * .0048;
   HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .40));
   mouseLook.x = e.clientX; mouseLook.y = e.clientY;
 });
 document.addEventListener('mouseup', () => {
-  if (!mouseLook) return;
-  const wasClick = !mouseLook.moved;
-  mouseLook = null; hcanvas.style.cursor = '';
-  if (!wasClick || !HOUSE.active) return;                   // arrastou = só olhou
-  if (HD.open) { hAdvance(); return; }
-  const t = interactTarget();
-  if (t) interactWith(t.spot);
+  const wasDrag = mouseLook && mouseLook.moved;
+  mouseLook = null;
+  if (!isLocked()) hcanvas.style.cursor = '';
+  if (wasDrag || !HOUSE.active) return;                     // arrastou = só olhou
+  if (HD.open) { hAdvance(); return; }                      // diálogo: clique avança
+  if (isLocked()) { const t = interactTarget(); if (t) interactWith(t.spot); }  // travado: interage
+  else houseLock();                                         // solto: clique trava e libera o olhar
 });
 $('house-dialog').addEventListener('click', (e) => { if (!e.target.closest('button')) hAdvance(); });
 

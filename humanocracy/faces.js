@@ -345,8 +345,8 @@ function paintBust(ctx, f, opts) {
     // camisa em V aparecendo sob a gola + fileira de botões
     ctx.fillStyle = 'rgb(150,142,118)';
     ctx.beginPath(); ctx.moveTo(45.5, 95); ctx.lineTo(54.5, 95); ctx.lineTo(51.5, 122); ctx.lineTo(48.5, 122); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = 'rgba(12,11,8,.7)';   // vão escuro no meio da camisa
-    ctx.beginPath(); ctx.moveTo(48.4, 97); ctx.lineTo(51.6, 97); ctx.lineTo(50.6, 122); ctx.lineTo(49.4, 122); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(44,38,26,.42)';   // vão discreto entre as pregas da camisa (sutil: não pode virar barra preta no pescoço)
+    ctx.beginPath(); ctx.moveTo(48.8, 100); ctx.lineTo(51.2, 100); ctx.lineTo(50.5, 118); ctx.lineTo(49.5, 118); ctx.closePath(); ctx.fill();
     ctx.fillStyle = 'rgba(70,62,44,.9)';
     for (const by of [104, 112, 120]) { ctx.beginPath(); ctx.arc(50, by, 0.85, 0, 6.29); ctx.fill(); }
     // gola do casaco: duas abas emoldurando o pescoço, encontrando no decote
@@ -1759,7 +1759,7 @@ function renderPortraitCanvas(f, o) {
    barata), contraste alto de impressão ruim, grão de papel e posterização
    grosseira. Assim a foto do passaporte deixa de ser gêmea do feed ao vivo do
    guichê — e a comparação foto×rosto fica mais legível como fic­ção. */
-const PORTRAIT_POST = { levels: 5, ditherAmp: 0.5, grain: 7, aberr: 0, bleed: 0.05, scan: 0, vig: 0.42, sat: 0.13, contrast: 1.35 };
+const PORTRAIT_POST = { levels: 6, ditherAmp: 0.26, grain: 5, aberr: 0, bleed: 0.05, scan: 0, vig: 0.34, sat: 0.28, contrast: 1.18 };
 function portraitSVG(f) {
   const cv = renderPortraitCanvas(f, { w: 84, h: 100, bg: '#8a8778', post: PORTRAIT_POST });
   return `<image href="${cv.toDataURL()}" width="100" height="120" style="image-rendering:pixelated" preserveAspectRatio="none"/>`;

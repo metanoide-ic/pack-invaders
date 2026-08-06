@@ -1543,44 +1543,51 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.addEventListener('keyup', (e) => { KEYS[e.key] = false; });
-document.addEventListener('pointerlockchange', () => {});
-/* OLHAR COM O MOUSE: arrastar (segurar o botão e mover) gira a câmera — igual
-   ao arrastar do dedo no touch. NÃO exige mais travar o ponteiro (pointer lock
-   falhava em vários navegadores/embeds e ainda sumia com o cursor, então o
-   jogador acabava girando só nas setas). Um clique curto, sem arrastar,
-   interage com quem está à frente (ou avança o diálogo). Se o pointer lock
-   estiver ativo por algum motivo, ainda é respeitado. */
+/* OLHAR COM O MOUSE (v2): clicar na tela TRAVA o ponteiro e liga o mouse-look
+   livre — mexe o mouse e a câmera gira, sem segurar botão. Esc solta o cursor.
+   Se o navegador/embed recusar o pointer lock, cai automaticamente no modo de
+   arrastar (segurar o botão e mover), que continua funcionando. Ao abrir um
+   diálogo o lock é solto (hSay chama exitPointerLock) para poder clicar nas
+   escolhas; depois é só clicar de novo para voltar a olhar livre. */
 let mouseLook = null;
+let plDenied = false;                 // o navegador recusou o pointer lock: usa arrasto
 const hcanvas = $('house-canvas');
+const isLocked = () => document.pointerLockElement === hcanvas;
+function houseLock() {
+  if (HD.open || !HOUSE.active || plDenied || isLocked()) return;
+  try { hcanvas.requestPointerLock && hcanvas.requestPointerLock(); } catch (e) { plDenied = true; }
+}
+document.addEventListener('pointerlockchange', () => {
+  hcanvas.style.cursor = isLocked() ? 'none' : '';
+});
+document.addEventListener('pointerlockerror', () => { plDenied = true; hcanvas.style.cursor = ''; });
 hcanvas.addEventListener('mousedown', (e) => {
-  if (!HOUSE.active) return;
+  if (!HOUSE.active || isLocked()) return;    // travado: mousemove olha; mouseup interage
   mouseLook = { x: e.clientX, y: e.clientY, moved: false };
-  if (!HD.open) hcanvas.style.cursor = 'grabbing';   // durante diálogo o clique só avança
+  if (!HD.open) hcanvas.style.cursor = 'grabbing';
 });
 document.addEventListener('mousemove', (e) => {
-  if (document.pointerLockElement === hcanvas) {           // pointer lock (se ativo)
-    HOUSE.ang += e.movementX * .0028;
-    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .35));
+  if (isLocked()) {                            // MOUSE-LOOK LIVRE (ponteiro travado)
+    if (HD.open) return;
+    HOUSE.ang += e.movementX * .0026;
+    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .32));
     return;
   }
-  if (!mouseLook || !HOUSE.active || HD.open) return;       // arrastar para olhar
+  if (!mouseLook || !HOUSE.active || HD.open) return;       // fallback: arrastar para olhar
   const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
   if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
-  // sensibilidade um pouco maior que a do pointer lock: como o arrasto é
-  // limitado à largura da tela por gesto, virar de costas precisa render bem
-  // num único arrasto, sem ficar nervoso demais no movimento fino.
   HOUSE.ang += dx * .0048;
   HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .40));
   mouseLook.x = e.clientX; mouseLook.y = e.clientY;
 });
 document.addEventListener('mouseup', () => {
-  if (!mouseLook) return;
-  const wasClick = !mouseLook.moved;
-  mouseLook = null; hcanvas.style.cursor = '';
-  if (!wasClick || !HOUSE.active) return;                   // arrastou = só olhou
-  if (HD.open) { hAdvance(); return; }
-  const t = interactTarget();
-  if (t) interactWith(t.spot);
+  const wasDrag = mouseLook && mouseLook.moved;
+  mouseLook = null;
+  if (!isLocked()) hcanvas.style.cursor = '';
+  if (wasDrag || !HOUSE.active) return;                     // arrastou = só olhou
+  if (HD.open) { hAdvance(); return; }                      // diálogo: clique avança
+  if (isLocked()) { const t = interactTarget(); if (t) interactWith(t.spot); }  // travado: interage
+  else houseLock();                                         // solto: clique trava e libera o olhar
 });
 $('house-dialog').addEventListener('click', (e) => { if (!e.target.closest('button')) hAdvance(); });
 

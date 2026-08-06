@@ -76,8 +76,8 @@ const I18N_EN = {
   'COMEÇAR DE NOVO': 'START OVER',
 
   /* ---- casa ---- */
-  'WASD/setas andar · arraste o mouse para olhar · E interagir':
-    'WASD/arrows to walk · drag the mouse to look · E to interact',
+  'WASD/setas andar · clique p/ olhar (mouse livre) · E interagir · Esc solta':
+    'WASD/arrows to walk · click to look (free mouse) · E interact · Esc releases',
   'clique / E para continuar': 'click / E to continue',
 
   /* ---- exame / bagagem ---- */
@@ -1511,8 +1511,8 @@ const I18N_ES = {
   'COMEÇAR DE NOVO': 'EMPEZAR DE NUEVO',
 
   /* ---- casa ---- */
-  'WASD/setas andar · arraste o mouse para olhar · E interagir':
-    'WASD/flechas para caminar · arrastra el mouse para mirar · E interactuar',
+  'WASD/setas andar · clique p/ olhar (mouse livre) · E interagir · Esc solta':
+    'WASD/flechas caminar · clic para mirar (ratón libre) · E interactuar · Esc suelta',
   'clique / E para continuar': 'clic / E para continuar',
 
   /* ---- exame / bagagem ---- */
