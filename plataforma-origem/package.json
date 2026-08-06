@@ -7,6 +7,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:demo": "vite build --config vite.demo.config.ts",
     "preview": "vite preview",
     "check": "tsc -b --noEmit"
   },
@@ -35,6 +36,7 @@
     "tailwindcss": "^4.1.16",
     "typescript": "^5.7.2",
     "vite": "^6.3.6",
-    "vite-plugin-pwa": "^0.21.2"
+    "vite-plugin-pwa": "^0.21.2",
+    "vite-plugin-singlefile": "^2.3.3"
   }
 }
