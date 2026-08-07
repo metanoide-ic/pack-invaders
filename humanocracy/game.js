@@ -3674,36 +3674,39 @@ $('btn-detain').onclick = () => decide('detain');
 $('btn-restart').onclick = () => { location.reload(); };
 
 /* ícones de instrumento das ferramentas (desenhados, não emoji feio) */
+/* Ícones PIXEL-ART (14x14, blocos, sem antialias) — combinam com a fonte
+   pixelada e a estética VHS. O CSS escala com image-rendering: pixelated. */
 function drawToolIcon(kind) {
-  const S = 2, cv = document.createElement('canvas'); cv.width = 30 * S; cv.height = 30 * S; cv.className = 'tool-ico';
-  const x = cv.getContext('2d'); x.scale(S, S); x.lineCap = 'round'; x.lineJoin = 'round';
-  const GOLD = '#d8c68a', DARK = '#1a1c15', GLASS = 'rgba(150,200,210,.5)';
-  x.strokeStyle = GOLD; x.fillStyle = GOLD; x.lineWidth = 1.6;
+  const G = 14, CELL = 3, cv = document.createElement('canvas');
+  cv.width = G * CELL; cv.height = G * CELL; cv.className = 'tool-ico';
+  const x = cv.getContext('2d'); x.imageSmoothingEnabled = false;
+  const GOLD = '#d8c68a', DARK = '#171912', RED = '#cf5a30', GLASS = '#4d6f77';
+  const p = (cx, cy, c) => { x.fillStyle = c || GOLD; x.fillRect(cx * CELL, cy * CELL, CELL, CELL); };
+  const ring = (x0, y0, w, h, c) => { for (let i = 0; i < w; i++) { p(x0 + i, y0, c); p(x0 + i, y0 + h - 1, c); } for (let j = 0; j < h; j++) { p(x0, y0 + j, c); p(x0 + w - 1, y0 + j, c); } };
+  const fill = (x0, y0, w, h, c) => { for (let i = 0; i < w; i++) for (let j = 0; j < h; j++) p(x0 + i, y0 + j, c); };
+  const hline = (x0, x1, y, c) => { for (let i = x0; i <= x1; i++) p(i, y, c); };
+  const vline = (y0, y1, cx, c) => { for (let j = y0; j <= y1; j++) p(cx, j, c); };
   switch (kind) {
     case 'inspect': // lupa
-      x.beginPath(); x.arc(13, 13, 7, 0, 6.29); x.stroke();
-      x.fillStyle = GLASS; x.beginPath(); x.arc(13, 13, 6, 0, 6.29); x.fill();
-      x.strokeStyle = GOLD; x.lineWidth = 2.4; x.beginPath(); x.moveTo(18, 18); x.lineTo(24, 24); x.stroke(); break;
+      fill(3, 3, 5, 5, GLASS); ring(2, 2, 7, 7, GOLD);
+      p(3, 2, GOLD); p(7, 2, GOLD); p(3, 8, GOLD); p(7, 8, GOLD); p(2, 3, GOLD); p(8, 3, GOLD); p(2, 7, GOLD); p(8, 7, GOLD);
+      p(9, 9, GOLD); p(10, 10, GOLD); p(11, 11, GOLD); p(12, 12, GOLD); p(10, 9, GOLD); p(12, 11, GOLD); break;
     case 'exam': // olho
-      x.beginPath(); x.moveTo(4, 15); x.quadraticCurveTo(15, 5, 26, 15); x.quadraticCurveTo(15, 25, 4, 15); x.closePath(); x.stroke();
-      x.fillStyle = GLASS; x.beginPath(); x.arc(15, 15, 4.4, 0, 6.29); x.fill(); x.fillStyle = DARK; x.beginPath(); x.arc(15, 15, 2, 0, 6.29); x.fill(); break;
+      hline(4, 9, 6, GOLD); hline(3, 10, 7, GOLD); hline(4, 9, 8, GOLD); p(3, 6, GOLD); p(10, 6, GOLD);
+      fill(5, 6, 4, 3, GLASS); fill(6, 6, 2, 3, DARK); p(6, 6, '#e8eef0'); break;
     case 'bag': // mala
-      x.strokeRect(6, 11, 18, 14); x.beginPath(); x.moveTo(11, 11); x.lineTo(11, 7); x.lineTo(19, 7); x.lineTo(19, 11); x.stroke();
-      x.beginPath(); x.moveTo(6, 17); x.lineTo(24, 17); x.stroke(); x.fillRect(13, 15, 4, 4); break;
-    case 'lifeline': // pergaminho + linha
-      x.strokeRect(7, 6, 16, 18); x.lineWidth = 1; for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(10, 11 + i * 3.4); x.lineTo(20, 11 + i * 3.4); x.stroke(); }
-      x.fillStyle = GOLD; for (let i = 0; i < 3; i++) { x.beginPath(); x.arc(9, 11 + i * 4.6, 1, 0, 6.29); x.fill(); } break;
+      ring(2, 4, 11, 8, GOLD); hline(6, 8, 3, GOLD); p(5, 3, GOLD); p(9, 3, GOLD); vline(4, 11, 7, DARK); p(7, 7, GOLD); break;
+    case 'lifeline': // dossiê + linha do tempo
+      ring(3, 2, 8, 11, GOLD); hline(5, 9, 5, GOLD); hline(5, 9, 8, GOLD); hline(5, 9, 11, GOLD); p(4, 5, RED); p(4, 8, GOLD); p(4, 11, GOLD); break;
     case 'thermo': // termômetro
-      x.lineWidth = 2.6; x.beginPath(); x.moveTo(15, 6); x.lineTo(15, 19); x.stroke();
-      x.beginPath(); x.arc(15, 22, 4, 0, 6.29); x.fillStyle = '#c9552f'; x.fill(); x.strokeStyle = GOLD; x.lineWidth = 1; x.stroke();
-      x.strokeStyle = '#c9552f'; x.lineWidth = 1.6; x.beginPath(); x.moveTo(15, 14); x.lineTo(15, 20); x.stroke();
-      x.strokeStyle = GOLD; x.lineWidth = 1; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(17, 9 + i * 3); x.lineTo(19, 9 + i * 3); x.stroke(); } break;
-    case 'pulse': // ECG
-      x.lineWidth = 1.8; x.beginPath(); x.moveTo(3, 15); x.lineTo(9, 15); x.lineTo(12, 8); x.lineTo(15, 22); x.lineTo(18, 12); x.lineTo(21, 15); x.lineTo(27, 15); x.stroke(); break;
-    case 'bio': // hélice
-      x.lineWidth = 1.6;
-      for (const s of [0, 1]) { x.beginPath(); for (let t = 0; t <= 1; t += 0.05) { const yy = 6 + t * 18, xx = 15 + Math.sin(t * 6.28 + s * Math.PI) * 6; t === 0 ? x.moveTo(xx, yy) : x.lineTo(xx, yy); } x.stroke(); }
-      x.lineWidth = 1; for (let i = 1; i < 5; i++) { const yy = 6 + i / 5 * 18; x.beginPath(); x.moveTo(15 + Math.sin(i / 5 * 6.28) * 6, yy); x.lineTo(15 - Math.sin(i / 5 * 6.28) * 6, yy); x.stroke(); } break;
+      vline(2, 9, 6, GOLD); vline(2, 9, 7, GOLD); fill(4, 8, 3, 3, RED); vline(4, 9, 7, RED); p(9, 4, GOLD); p(9, 6, GOLD); p(9, 8, GOLD); break;
+    case 'pulse': { // ECG
+      const pts = [[1, 7], [3, 7], [4, 5], [5, 9], [6, 3], [7, 11], [8, 6], [9, 7], [12, 7]];
+      for (const [px, py] of pts) p(px, py, RED);
+      hline(1, 4, 7, RED); hline(9, 12, 7, RED); p(4, 6, RED); p(5, 8, RED); p(6, 4, RED); p(6, 10, RED); p(7, 5, RED); break;
+    }
+    case 'bio': // hélice de DNA
+      for (let j = 2; j <= 11; j++) { const o = Math.round(Math.sin((j - 2) / 9 * 6.28) * 3); p(7 + o, j, GOLD); p(7 - o, j, GOLD); if (j % 3 === 0) hline(7 - Math.abs(o), 7 + Math.abs(o), j, GLASS); } break;
   }
   return cv;
 }
