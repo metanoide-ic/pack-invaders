@@ -76,25 +76,40 @@ body {
 @keyframes screen-in { from { opacity:0; } to { opacity:1; } }
 @media (prefers-reduced-motion: reduce) { .screen.active { animation:none; } }
 
+/* TECLA DE CONSOLE: baquelite com topo chanfrado, LATERAL de verdade (a tecla
+   tem corpo) e legenda cravada. Apertar AFUNDA a tecla — o corpo some e ela
+   desce. Nada de retângulo chapado. */
 button {
   font-family: var(--font-display); font-weight:600; letter-spacing:.06em;
   text-transform:uppercase; cursor:pointer;
-  background-color: #23251b; color: var(--ink);
-  /* chapa de repartição: meio-tom (dois pontilhados deslocados = leve moiré) +
-     relevo impresso + letterpress. Mata o retângulo cinza chapado "de IA". */
+  background-color: #262820; color: var(--ink);
   background-image:
-    radial-gradient(rgba(238,232,214,.05) .6px, transparent .8px),
-    radial-gradient(rgba(0,0,0,.20) .6px, transparent .8px),
-    linear-gradient(180deg, rgba(238,232,214,.05), rgba(0,0,0,.16));
-  background-size: 3px 3px, 3px 3px, 100% 100%;
-  background-position: 0 0, 1.5px 1.5px, 0 0;
-  border: 1.5px solid #0b0c07; padding: 6px 12px; border-radius:1px;
-  box-shadow: inset 0 1px 0 rgba(238,232,214,.06), 2px 2px 0 rgba(0,0,0,.4);
+    radial-gradient(rgba(238,232,214,.04) .6px, transparent .8px),
+    linear-gradient(180deg, #32352a, #23251d 55%, #1a1c15);
+  background-size: 3px 3px, 100% 100%;
+  border: 1px solid #0a0b07; padding: 6px 12px; border-radius: 3px;
+  box-shadow:
+    inset 0 1px 0 rgba(238,240,230,.14),
+    inset 0 -2px 0 rgba(0,0,0,.38),
+    0 3px 0 #0c0d09,
+    0 5px 7px rgba(0,0,0,.45);
+  text-shadow: 0 -1px 0 rgba(0,0,0,.65);
+  transition: transform .05s, box-shadow .05s, background-color .09s, color .09s;
 }
-button:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(0,0,0,.1), 2px 2px 0 rgba(0,0,0,.35); }
-button:active:not(:disabled) { box-shadow: 1px 1px 0 rgba(0,0,0,.3); }
-button:hover:not(:disabled) { background-color:#c9a34a; color:#141207; }
-button:active:not(:disabled) { transform:translateY(1px); }
+button:hover:not(:disabled) {
+  background-image:
+    radial-gradient(rgba(238,232,214,.04) .6px, transparent .8px),
+    linear-gradient(180deg, #3d4033, #2c2f25 55%, #202218);
+  color:#f0e6c8;
+}
+button:active:not(:disabled) {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 1px 0 rgba(238,240,230,.06),
+    inset 0 -1px 0 rgba(0,0,0,.35),
+    0 0 0 #0c0d09,
+    0 1px 2px rgba(0,0,0,.4);
+}
 button:disabled { opacity:.35; cursor:not-allowed; }
 
 /* superfícies com textura procedural (faces.js gera --tex-* em runtime) */
@@ -173,20 +188,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 /* CHAPA DE REPARTIÇÃO: cor lisa, borda dura, sombra deslocada SEM blur
    (impressão/letterpress). Nada de gradiente, bisel ou glow — isso é "cara de
    IA". Hover = a chapa INVERTE de cor, como um campo de formulário selecionado. */
-.btn-title {
-  width:100%; padding:12px 14px; font-size:13.5px; letter-spacing:2.5px;
-  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
-  color:#d3c9a6; background-color:#23251b; border:1.5px solid #0b0c07; border-radius:1px;
-  background-image:
-    radial-gradient(rgba(238,232,214,.05) .6px, transparent .8px),
-    radial-gradient(rgba(0,0,0,.20) .6px, transparent .8px),
-    linear-gradient(180deg, rgba(238,232,214,.05), rgba(0,0,0,.16));
-  background-size: 3px 3px, 3px 3px, 100% 100%; background-position: 0 0, 1.5px 1.5px, 0 0;
-  box-shadow: inset 0 1px 0 rgba(238,232,214,.06), 3px 3px 0 rgba(0,0,0,.5); cursor:pointer;
-  transition: transform .05s, background-color .08s, color .08s;
-}
-.btn-title:hover:not(:disabled) { background-color:#c9a34a; color:#141207; }
-.btn-title:active:not(:disabled) { transform:translate(3px,3px); box-shadow:0 0 0 rgba(0,0,0,0); }
+.btn-title { width:100%; padding:12px 14px; font-size:15px; letter-spacing:2.5px; }
 .btn-title-sm { font-size:11.5px; letter-spacing:1.6px; padding:9px 10px; }
 .btn-half { flex:1; min-width:0; }
 /* primário: chapa cheia cor de latão/carimbo, lisa */
@@ -260,9 +262,14 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .ms-arrow:hover { background:#c9a34a; color:#141207; }
 .ms-arrow:active { transform: translate(2px,2px); box-shadow:0 0 0; }
 .ms-actions { position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:7px; width:308px; margin-top:6px; }
-#ms-confirm { width:100%; padding:15px; font-size:16px; letter-spacing:3px; color:#141207; background:#c9a34a; border:1.5px solid #0b0c07; box-shadow:3px 3px 0 rgba(0,0,0,.55); }
-#ms-confirm:hover { background:#e2bb56; }
-#ms-confirm:active { transform: translate(3px,3px); box-shadow:0 0 0; }
+#ms-confirm {
+  width:100%; padding:15px; font-size:17px; letter-spacing:3px; color:#181305;
+  background-image: linear-gradient(180deg,#e4c265,#c9a34a 55%,#9c7c34);
+  text-shadow: 0 1px 0 rgba(255,240,200,.35);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.5), inset 0 -2px 0 rgba(0,0,0,.28), 0 3px 0 #6a5320, 0 5px 7px rgba(0,0,0,.5);
+}
+#ms-confirm:hover { background-image: linear-gradient(180deg,#efce72,#d5ae50 55%,#a5842f); color:#181305; }
+#ms-confirm:active { transform:translateY(3px); box-shadow: inset 0 1px 0 rgba(255,246,220,.4), inset 0 -1px 0 rgba(0,0,0,.25), 0 0 0 #6a5320, 0 1px 2px rgba(0,0,0,.4); }
 @media (max-width:640px) { .ms-slots { gap:10px; } .ms-slot { padding-top:40px; } .ms-emblem { width:130px; height:130px; } .ms-figure { height:140px; } .ms-banner span { font-size:18px; letter-spacing:4px; } }
 
 /* ===== MENU PRINCIPAL EM PEDESTAIS (reusa .ms-slot, versão compacta) ===== */
@@ -279,6 +286,19 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .title-slot .ms-stamp-sel { display:none; }   /* sem "SELECIONADO" no menu principal */
 .title-options { display:flex; flex-direction:column; gap:7px; width:300px; margin:12px auto 2px; }
 .title-options[hidden] { display:none; }
+/* ENTRADA ANIMADA: pedestais sobem em cascata; banner da seleção cai; ações sobem */
+#screen-title.active .title-slot { animation: slot-rise .55s cubic-bezier(.2,1.5,.4,1) backwards; }
+#screen-title.active .title-slot:nth-child(1) { animation-delay:.1s; }
+#screen-title.active .title-slot:nth-child(2) { animation-delay:.22s; }
+#screen-title.active .title-slot:nth-child(3) { animation-delay:.34s; }
+#screen-title.active .title-slot:nth-child(4) { animation-delay:.46s; }
+#screen-modeselect.active .ms-slot { animation: slot-rise .5s cubic-bezier(.2,1.5,.4,1) backwards; }
+#screen-modeselect.active .ms-slot:nth-child(2) { animation-delay:.14s; }
+#screen-modeselect.active .ms-banner { animation: banner-drop .45s cubic-bezier(.25,1.6,.45,1) backwards; }
+#screen-modeselect.active .ms-actions { animation: slot-rise .5s .28s cubic-bezier(.2,1.5,.4,1) backwards; }
+@keyframes slot-rise { from { opacity:0; transform: translateY(30px); } }
+@keyframes banner-drop { from { opacity:0; transform: translateY(-26px); } }
+@media (prefers-reduced-motion: reduce) { .title-slot, .ms-slot, .ms-banner, .ms-actions { animation:none !important; } }
 @media (max-width:560px) { .title-slot { width:104px; } .title-slot .ms-emblem { width:84px; height:84px; } .title-slot .ms-figure { height:90px; } .title-slot .ms-badge { font-size:12px; } }
 
 /* ============ MANHÃ ============ */
