@@ -29,6 +29,8 @@ export interface SaveGameData {
   playerMaxHp: number;
   aliencoreMode: boolean;
   aliencoreUnlocked: boolean;
+  /** Difficulty selected for this run (undefined on saves from before this field existed) */
+  currentDifficulty?: string;
   items: SavedItem[];
   stats: {
     enemiesKilled: number;

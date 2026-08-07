@@ -71,6 +71,52 @@ const ELEMENT_COLORS: Record<string, { dark: string; mid: string; light: string 
   poison:   { dark: '#1b3a1b', mid: '#388e3c', light: '#76ff03' },
 };
 
+/**
+ * Adds a 1px dark rim around the silhouette and soft directional shading
+ * (lighter upper-left, darker lower-right) to a procedural sprite. Closes
+ * some of the perceived-detail gap against the hand-painted PNG art used
+ * for characters that have it, without hand-placing extra pixels — this
+ * only touches the alpha/color of pixels already drawn.
+ */
+function polishSprite(canvas: HTMLCanvasElement): HTMLCanvasElement {
+  const ctx = canvas.getContext('2d')!;
+  const w = canvas.width, h = canvas.height;
+  const src = ctx.getImageData(0, 0, w, h);
+  const data = src.data;
+  const alphaAt = (x: number, y: number): number => {
+    if (x < 0 || y < 0 || x >= w || y >= h) return 0;
+    return data[(y * w + x) * 4 + 3];
+  };
+  const out = ctx.createImageData(w, h);
+  const outData = out.data;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const a = data[i + 3];
+      if (a === 0) {
+        const hasOpaqueNeighbor = alphaAt(x - 1, y) > 0 || alphaAt(x + 1, y) > 0 || alphaAt(x, y - 1) > 0 || alphaAt(x, y + 1) > 0;
+        if (hasOpaqueNeighbor) {
+          outData[i] = 8; outData[i + 1] = 6; outData[i + 2] = 12; outData[i + 3] = 190;
+        }
+        continue;
+      }
+      const onTopEdge = alphaAt(x, y - 1) === 0;
+      const onLeftEdge = alphaAt(x - 1, y) === 0;
+      const onBottomEdge = alphaAt(x, y + 1) === 0;
+      const onRightEdge = alphaAt(x + 1, y) === 0;
+      let factor = 1;
+      if (onTopEdge || onLeftEdge) factor = 1.16;
+      else if (onBottomEdge || onRightEdge) factor = 0.86;
+      outData[i] = Math.min(255, Math.round(data[i] * factor));
+      outData[i + 1] = Math.min(255, Math.round(data[i + 1] * factor));
+      outData[i + 2] = Math.min(255, Math.round(data[i + 2] * factor));
+      outData[i + 3] = a;
+    }
+  }
+  ctx.putImageData(out, 0, 0);
+  return canvas;
+}
+
 // ─── Player Top-Down Character Generation ────────────────────────────────────
 
 const TD_SKIN      = '#d4a574';
@@ -82,7 +128,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
 
   switch (charId) {
     case 'grass_man': {
-      // Raiz — earthy rags, wooden staff pointing up
+      // Rômulo — jungle survivor, wooden staff pointing up
       rect(ctx, 15, 0, 2, 6, '#5d4037'); // staff shaft
       rect(ctx, 13, 0, 6, 2, '#4ade80'); // staff tip leaves
       px(ctx, 12, 1, '#22c55e'); px(ctx, 19, 1, '#22c55e');
@@ -105,7 +151,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'fire_lord': {
-      // Cinza — dark jacket, mechanical right arm, flamethrower above
+      // Kagutsuchi — dark jacket, mechanical right arm, flamethrower above
       rect(ctx, 18, 0, 3, 8, '#374151'); // flamethrower barrel
       rect(ctx, 16, 0, 6, 2, '#4b5563');
       px(ctx, 20, 0, '#f97316'); px(ctx, 21, 0, '#fbbf24');
@@ -131,7 +177,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'aqua_sage': {
-      // Maré — navy military uniform, beret, water cannon
+      // Mazu — navy military uniform, beret, water cannon
       rect(ctx, 14, 0, 4, 7, '#546e7a'); // water cannon
       rect(ctx, 13, 0, 6, 2, '#78909c');
       rect(ctx, 15, 0, 2, 1, '#80d8ff');
@@ -155,7 +201,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'storm_runner': {
-      // Pulso — half alien, torn lab coat, energy hands
+      // Frank — half alien, torn lab coat, energy hands
       rect(ctx, 7, 0, 4, 5, '#a3e635'); // energy glow left
       px(ctx, 7, 0, '#86efac'); px(ctx, 10, 1, '#fbbf24');
       // Head (left = skin, right = alien)
@@ -181,7 +227,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'void_walker': {
-      // Fenda — white lab coat, glasses, purple shimmer
+      // Dr. Eon — white lab coat, glasses, purple shimmer
       px(ctx, 14, 2, '#a855f7'); px(ctx, 16, 1, '#c084fc');
       px(ctx, 18, 3, '#7c3aed'); px(ctx, 12, 3, '#a855f7');
       // Head
@@ -211,7 +257,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'beast_tamer': {
-      // Nex — tactical vest, ponytail, whip up, small alien ahead
+      // Diana — tactical vest, ponytail, whip up, small alien ahead
       rect(ctx, 13, 0, 6, 5, '#4d7c0f'); // alien companion
       px(ctx, 14, 0, '#a3e635'); px(ctx, 18, 0, '#a3e635');
       rect(ctx, 12, 2, 2, 2, '#3a5e09'); rect(ctx, 18, 2, 2, 2, '#3a5e09');
@@ -239,7 +285,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
       break;
     }
     case 'firefighter': {
-      // Fênix — heavy helmet, fire axe up, foam tank hump, red gear
+      // Florian — heavy helmet, fire axe up, foam tank hump, red gear
       rect(ctx, 14, 0, 2, 8, '#9e9e9e'); // axe handle
       rect(ctx, 11, 0, 6, 3, '#ef4444'); // axe head
       rect(ctx, 11, 0, 3, 3, '#bdbdbd');
@@ -277,7 +323,7 @@ function generatePlayerTopDown(charId: string): HTMLCanvasElement {
     }
   }
 
-  return c;
+  return polishSprite(c);
 }
 
 /** Backward-compat alias */
@@ -2081,7 +2127,7 @@ const ENEMY_IDS = [
 
 const SHIP_COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b'];
 
-const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter'];
+const CHARACTER_ORDER = ['grass_man', 'fire_lord', 'aqua_sage', 'storm_runner', 'void_walker', 'beast_tamer', 'firefighter', 'scrapper', 'renegade'];
 
 let cachedSprites: SpriteSheet | null = null;
 
@@ -2159,6 +2205,12 @@ export function generateAllSprites(): SpriteSheet {
   enemies.set('tide_walker', generateSpecialEnemy('tide_walker', 'water'));
   enemies.set('void_dancer', generateSpecialEnemy('void_dancer', 'dark'));
   enemies.set('war_drum', generateSpecialEnemy('war_drum', 'normal'));
+
+  // Outline + directional shading so the procedural enemies (the ones
+  // without cut-out art) sit closer to the painted sprites next to them
+  for (const [id, canvas] of enemies) {
+    enemies.set(id, polishSprite(canvas));
+  }
 
   // Item icons
   const items = new Map<string, HTMLCanvasElement>();

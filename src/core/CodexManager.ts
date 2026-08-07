@@ -96,9 +96,17 @@ export class CodexManager {
     return this.entries.get(id);
   }
 
+  isUnlocked(id: string): boolean {
+    return this.entries.get(id)?.unlocked ?? false;
+  }
+
   getAllByCategory(category: CodexEntry['category']): CodexEntry[] {
     return Array.from(this.entries.values())
       .filter(e => e.category === category);
+  }
+
+  getUnlockedIdsByCategory(category: CodexEntry['category']): Set<string> {
+    return new Set(this.getAllByCategory(category).filter(e => e.unlocked).map(e => e.id));
   }
 
   getProgress(): { unlocked: number; total: number } {
@@ -133,6 +141,7 @@ export class CodexManager {
       44: ['storm_runner'], // Pulso lore2 (47 days reference)
       46: ['void_walker'], // Abismo lore2
       48: ['beast_tamer'], // Domadora lore2
+      50: ['firefighter'], // Guardião lore2
     };
 
     const idsToUnlock = timeUnlocks[totalMonths];

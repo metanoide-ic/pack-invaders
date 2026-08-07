@@ -10,6 +10,7 @@ import { ItemDefinition } from '../core/ItemSystem';
 import { AudioManager } from './AudioManager';
 import { TwitchIntegration } from './TwitchIntegration';
 import { togglePause, isPaused, setPaused } from './PauseState';
+import { GamepadInput } from './GamepadInput';
 import { SaveManager } from '../core/SaveManager';
 import { ALL_DIFFICULTIES, getUnlockedDifficulties } from '../data/difficulties';
 import { ALL_MISSIONS, getMissionProgress, getClaimedMissions, claimMission } from '../data/missions';
@@ -63,12 +64,32 @@ export class InputHandler {
   /** Which settings slider is being dragged: 'vol' | 'sfx' | null */
   private _sliderDrag: 'vol' | 'sfx' | null = null;
 
+  // ── Touch controls (mobile) ──────────────────────────────────────────────
+  /** Touch identifier currently steering the player (null = none) */
+  private touchMoveId: number | null = null;
+  /** Target X (canvas coords) the player walks toward while touching */
+  private touchTargetX: number | null = null;
+  /** One-shot action queues consumed by the main loop's check* methods */
+  private queuedSkill = -1;
+  private queuedPotion = -1;
+  private queuedDash = false;
+  /** Whether any touch has ever happened (to show touch hints) */
+  touchModeUsed = false;
+
+  /** Gamepad support: PS/Xbox/Switch/arcade via the standard mapping */
+  readonly gamepad: GamepadInput;
+
   constructor(
     private canvas: HTMLCanvasElement,
     private game: GameManager,
     private renderer: Renderer,
     private audio: AudioManager
   ) {
+    this.gamepad = new GamepadInput(canvas);
+    // A real mouse move takes the cursor back from the pad
+    canvas.addEventListener('mousemove', (e) => {
+      if (e.isTrusted) this.gamepad.cursorVisible = false;
+    });
     canvas.addEventListener('click', (e) => this.onClick(e));
     canvas.addEventListener('contextmenu', (e) => this.onRightClick(e));
     canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
@@ -76,6 +97,12 @@ export class InputHandler {
     canvas.addEventListener('mouseup', () => { this._sliderDrag = null; });
     window.addEventListener('mouseup', () => { this._sliderDrag = null; });
     canvas.addEventListener('wheel', (e) => this.onWheel(e));
+
+    // Touch controls: finger steers the player in combat; HUD icons are buttons
+    canvas.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: false });
+    canvas.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: false });
+    canvas.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: false });
+    canvas.addEventListener('touchcancel', (e) => this.onTouchEnd(e), { passive: false });
 
     // Keyboard for combat movement + Twitch input
     window.addEventListener('keydown', (e) => {
@@ -232,6 +259,11 @@ export class InputHandler {
   /** Get current player movement direction: -1, 0, or 1 */
   getPlayerDir(): number {
     let dir = 0;
+    // Gamepad: left stick / d-pad drive P1 directly (analog wins over keys)
+    if (this.gamepad.connected) {
+      const gDir = this.gamepad.moveDir();
+      if (gDir !== 0) return gDir;
+    }
     const isCoopP2Active = this.game.phase === 'COOP' && this.game.combat.state.player2Active;
     // In COOP mode P1 uses only A/D; otherwise A/D and arrow keys work for P1
     if (isCoopP2Active) {
@@ -240,6 +272,12 @@ export class InputHandler {
     } else {
       if (this.keysDown.has('a') || this.keysDown.has('arrowleft')) dir -= 1;
       if (this.keysDown.has('d') || this.keysDown.has('arrowright')) dir += 1;
+    }
+    // Touch steering: walk toward the finger (with a small deadzone so the
+    // character settles instead of jittering under the touch point)
+    if (dir === 0 && this.touchTargetX !== null) {
+      const dx = this.touchTargetX - this.game.combat.state.playerX;
+      if (Math.abs(dx) > 14) dir = Math.sign(dx);
     }
     return dir;
   }
@@ -268,6 +306,11 @@ export class InputHandler {
   /** Check if dash was pressed this frame */
   private dashPressed = false;
   checkDash(): boolean {
+    if (this.queuedDash) {
+      this.queuedDash = false;
+      return true;
+    }
+    if (this.gamepad.connected && this.gamepad.dashPressed()) return true;
     const shiftDown = this.keysDown.has('shift') || this.keysDown.has(' ');
     if (shiftDown && !this.dashPressed) {
       this.dashPressed = true;
@@ -282,6 +325,15 @@ export class InputHandler {
   /** Check if a skill key was pressed (1, 2, 3). Returns slot index or -1. */
   private skillPressed: Set<string> = new Set();
   checkSkillInput(): number {
+    if (this.queuedSkill >= 0) {
+      const s = this.queuedSkill;
+      this.queuedSkill = -1;
+      return s;
+    }
+    if (this.gamepad.connected) {
+      const gs = this.gamepad.skillPressed();
+      if (gs >= 0) return gs;
+    }
     const keys = ['1', '2', '3'];
     for (let i = 0; i < keys.length; i++) {
       if (this.keysDown.has(keys[i]) && !this.skillPressed.has(keys[i])) {
@@ -297,6 +349,15 @@ export class InputHandler {
 
   /** Check if a potion key was pressed (4, 5, 6). Returns slot index or -1. */
   checkPotionInput(): number {
+    if (this.queuedPotion >= 0) {
+      const p = this.queuedPotion;
+      this.queuedPotion = -1;
+      return p;
+    }
+    if (this.gamepad.connected) {
+      const gp = this.gamepad.potionPressed();
+      if (gp >= 0) return gp;
+    }
     const keys = ['4', '5', '6'];
     for (let i = 0; i < keys.length; i++) {
       if (this.keysDown.has(keys[i]) && !this.skillPressed.has(keys[i])) {
@@ -311,12 +372,19 @@ export class InputHandler {
   }
 
   private getCanvasPos(e: MouseEvent): { x: number; y: number } {
+    return this.clientToCanvas(e.clientX, e.clientY);
+  }
+
+  /** Map viewport coords to internal 1280x720 space, accounting for
+   *  object-fit: contain letterboxing on non-16:9 screens. */
+  private clientToCanvas(clientX: number, clientY: number): { x: number; y: number } {
     const rect = this.canvas.getBoundingClientRect();
-    const scaleX = this.canvas.width / rect.width;
-    const scaleY = this.canvas.height / rect.height;
+    const scale = Math.min(rect.width / this.canvas.width, rect.height / this.canvas.height);
+    const offX = (rect.width - this.canvas.width * scale) / 2;
+    const offY = (rect.height - this.canvas.height * scale) / 2;
     return {
-      x: (e.clientX - rect.left) * scaleX,
-      y: (e.clientY - rect.top) * scaleY,
+      x: (clientX - rect.left - offX) / scale,
+      y: (clientY - rect.top - offY) / scale,
     };
   }
 
@@ -326,8 +394,116 @@ export class InputHandler {
     return getRotatedShape(this.heldItem.definition.gridShape, this.heldItem.rotation);
   }
 
+  // ─── Touch Controls ────────────────────────────────────────────────────────
+
+  /** Handle a combat-HUD button press at canvas pos. Returns true if consumed. */
+  private tryCombatButton(pos: { x: number; y: number }): boolean {
+    const L = this.renderer.getLayout();
+    const h = this.canvas.height;
+
+    // Geometry mirrors renderCombatHUD's skill/potion bars
+    const skillBarX = Math.floor(L.w * 0.01);
+    const skillBarY = h - Math.floor(L.h * 0.12);
+    const skillSize = Math.floor(L.h * 0.06);
+    const skillGap = Math.floor(L.w * 0.005);
+    const pad = 8; // generous touch padding
+
+    // Skill slots 1-3
+    for (let i = 0; i < this.game.skills.length; i++) {
+      const sx = skillBarX + i * (skillSize + skillGap);
+      if (pos.x >= sx - pad && pos.x <= sx + skillSize + pad &&
+          pos.y >= skillBarY - pad && pos.y <= skillBarY + skillSize + pad) {
+        this.queuedSkill = i;
+        return true;
+      }
+    }
+
+    // Dash slot (right after skills; beast_tamer has no dash)
+    if (this.game.characterId !== 'beast_tamer') {
+      const dashX = skillBarX + this.game.skills.length * (skillSize + skillGap) + skillGap;
+      if (pos.x >= dashX - pad && pos.x <= dashX + skillSize + pad &&
+          pos.y >= skillBarY - pad && pos.y <= skillBarY + skillSize + pad) {
+        this.queuedDash = true;
+        return true;
+      }
+    }
+
+    // Potion slots
+    const potBarX = Math.floor(L.w * 0.20);
+    const potBarY = h - Math.floor(L.h * 0.12);
+    const potSize = Math.floor(L.h * 0.05);
+    const potGap = Math.floor(L.w * 0.004);
+    for (let pi = 0; pi < this.game.potions.length; pi++) {
+      const px = potBarX + pi * (potSize + potGap);
+      if (pos.x >= px - pad && pos.x <= px + potSize + pad &&
+          pos.y >= potBarY - pad && pos.y <= potBarY + potSize + pad) {
+        this.queuedPotion = pi;
+        return true;
+      }
+    }
+
+    // Pause button (top-right corner, below the HUD strip)
+    const pbSize = Math.floor(L.h * 0.05);
+    const pbX = L.w - pbSize - Math.floor(L.w * 0.008);
+    const pbY = Math.floor(L.h * 0.075);
+    if (pos.x >= pbX - pad && pos.x <= pbX + pbSize + pad &&
+        pos.y >= pbY - pad && pos.y <= pbY + pbSize + pad) {
+      this.audio.buttonClick();
+      togglePause();
+      return true;
+    }
+
+    return false;
+  }
+
+  private onTouchStart(e: TouchEvent): void {
+    this.touchModeUsed = true;
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (!inCombat) return; // menus: let the browser synthesize click events
+
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      const pos = this.clientToCanvas(t.clientX, t.clientY);
+      if (this.tryCombatButton(pos)) continue;
+      // Anything else steers the player toward the finger
+      this.touchMoveId = t.identifier;
+      this.touchTargetX = pos.x;
+    }
+  }
+
+  private onTouchMove(e: TouchEvent): void {
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (!inCombat) return;
+    e.preventDefault();
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      const t = e.changedTouches[i];
+      if (t.identifier === this.touchMoveId) {
+        this.touchTargetX = this.clientToCanvas(t.clientX, t.clientY).x;
+      }
+    }
+  }
+
+  private onTouchEnd(e: TouchEvent): void {
+    for (let i = 0; i < e.changedTouches.length; i++) {
+      if (e.changedTouches[i].identifier === this.touchMoveId) {
+        this.touchMoveId = null;
+        this.touchTargetX = null;
+      }
+    }
+    const inCombat = (this.game.phase === 'COMBAT' || this.game.phase === 'COOP') && !isPaused();
+    if (inCombat) e.preventDefault();
+  }
+
   private onClick(e: MouseEvent): void {
     const pos = this.getCanvasPos(e);
+
+    // Controls overlay promises "click or any key to continue" — honor the click
+    if (this.game.showControlsOverlay) {
+      this.game.dismissControlsOverlay();
+      this.audio.buttonClick();
+      return;
+    }
 
     // Dismiss Twitch input on click outside
     if (this.twitchInputActive && this.game.phase === 'TITLE') {
@@ -506,13 +682,13 @@ export class InputHandler {
     }
 
     // Mode cards — same layout as renderExtraModes
-    const cardW = Math.floor(L.w * 0.24);
+    const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP', 'DAILY'] as const;
+    const cardW = Math.floor(L.w * (modes.length >= 4 ? 0.185 : 0.24));
     const cardH = Math.floor(L.h * 0.52);
-    const totalW = cardW * 3 + Math.floor(L.w * 0.04) * 2;
+    const gap = Math.floor(L.w * (modes.length >= 4 ? 0.025 : 0.04));
+    const totalW = cardW * modes.length + gap * (modes.length - 1);
     const startX = L.cx - Math.floor(totalW / 2);
     const cardY = Math.floor(L.h * 0.22);
-    const gap = Math.floor(L.w * 0.04);
-    const modes = ['COOP', 'VERSUS_SHIPS', 'VERSUS_PVP'] as const;
 
     for (let i = 0; i < modes.length; i++) {
       const cx = startX + i * (cardW + gap);
@@ -524,8 +700,8 @@ export class InputHandler {
           this.game.enterVersusPvp();
         } else if (modes[i] === 'COOP') {
           this.game.enterCoop();
-        } else {
-          this.game.phase = modes[i];
+        } else if (modes[i] === 'DAILY') {
+          this.game.startDailyChallenge();
         }
         return;
       }
@@ -1041,16 +1217,36 @@ export class InputHandler {
       return;
     }
 
-    // Check if clicking a shop item to buy
-    const shopAreaW = L.w - L.panelX - Math.floor(L.w * 0.02);
-    const itemW = Math.floor(shopAreaW / Math.max(this.shopItems.length, 1)) - 10;
-    const itemCardW = Math.min(itemW, Math.floor(L.w * 0.13));
-    const itemCardH = Math.floor(L.h * 0.45);
-    const itemTopY = Math.floor(L.h * 0.14);
+    // Not holding: clicking a placed backpack item picks it up so it can be
+    // moved, rearranged or sold — this pickup was missing in the shop, so
+    // items were stuck in place until you left. Mirrors handleInventoryClick.
+    {
+      const gridCol = Math.floor((pos.x - L.gridX) / L.cell);
+      const gridRow = Math.floor((pos.y - L.gridY) / L.cell);
+      if (gridCol >= 0 && gridRow >= 0 && gridCol < this.game.backpack.cols && gridRow < this.game.backpack.rows) {
+        const item = this.game.backpack.getItemAt(gridCol, gridRow);
+        if (item) {
+          this.heldItem = {
+            definition: item.definition,
+            rotation: 0,
+            fromInstanceId: item.instanceId,
+          };
+          this.game.backpack.removeItem(item.instanceId);
+          this.audio.buttonClick();
+          return;
+        }
+      }
+    }
+
+    // Check if clicking a shop item to buy — geometry shared with the
+    // renderer so cards are clickable exactly where they're drawn
+    const SL = this.renderer.getShopCardLayout(this.shopItems.length);
+    const itemCardW = SL.cardW;
+    const itemCardH = SL.cardH;
 
     for (let i = 0; i < this.shopItems.length; i++) {
-      const x = L.panelX + i * (itemCardW + 10);
-      const y = itemTopY;
+      const x = SL.x0 + i * (itemCardW + SL.gap);
+      const y = SL.y;
       if (pos.x >= x && pos.x <= x + itemCardW && pos.y >= y && pos.y <= y + itemCardH) {
         const item = this.shopItems[i];
         if (this.game.buyItem(item)) {
@@ -1194,7 +1390,18 @@ export class InputHandler {
     }
     cy += lineH;
 
-    // ─── Fullscreen toggle (row 4) ──────────────────────────────────────
+    // ─── CRT toggle (row 4) ─────────────────────────────────────────────
+    const crtBtnY = cy + Math.floor(lineH * 0.15);
+    if (pos.x >= sliderX && pos.x <= sliderX + shakeBtnW &&
+        pos.y >= crtBtnY && pos.y <= crtBtnY + shakeBtnH) {
+      this.audio.buttonClick();
+      const current = localStorage.getItem('packinvaders_crt') !== 'off';
+      localStorage.setItem('packinvaders_crt', current ? 'off' : 'on');
+      return;
+    }
+    cy += lineH;
+
+    // ─── Fullscreen toggle (row 5) ──────────────────────────────────────
     const fsBtnW = Math.floor(panelW * 0.4);
     const fsBtnH = Math.floor(L.h * 0.045);
     const fsBtnX = L.cx - fsBtnW / 2;

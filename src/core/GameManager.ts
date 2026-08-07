@@ -5,7 +5,7 @@
  */
 
 import { BackpackGrid, BackpackConfig } from './BackpackGrid';
-import { CombatEngine } from './CombatEngine';
+import { CombatEngine, Enemy, computeWaveCount } from './CombatEngine';
 import { ItemDefinition } from './ItemSystem';
 import { ALL_ITEMS } from '../data/items';
 import { pickRandomCards } from '../data/cards';
@@ -21,8 +21,10 @@ import { updateGlobalStats, checkAchievements } from '../data/achievements';
 import { getMetaGoldBonus } from '../data/missions';
 import { getDifficultyById, Difficulty, unlockNextDifficulty } from '../data/difficulties';
 import { addToLeaderboard } from '../data/leaderboard';
-import { getRelicBonuses, getRandomNewRelic, addRelic, Relic, getEquippedRelics } from '../data/relics';
+import { getRelicBonuses, getRandomNewRelic, getRelicForBoss, addRelic, Relic, getEquippedRelics } from '../data/relics';
 import { VersusEngine } from './VersusEngine';
+import { getDailyChallenge, getDailyBest, setDailyBest } from '../data/dailyChallenge';
+import { NORMAL_PHASE_VARIANTS, BOSS_PHASE_VARIANTS } from '../data/phaseVariants';
 
 export type GamePhase = 'SPLASH' | 'MAIN_MENU' | 'SAVE_SELECT' | 'CREDITS' | 'ACHIEVEMENTS' | 'MISSIONS' | 'TITLE' | 'INVENTORY' | 'COMBAT' | 'CARDS' | 'SHOP' | 'GAME_OVER' | 'VICTORY' | 'CODEX' | 'TWITCH_VOTE' | 'SETTINGS' | 'EXTRA_MODES' | 'COOP' | 'VERSUS_SHIPS' | 'VERSUS_PVP';
 
@@ -43,6 +45,28 @@ const WAVE_EVENTS: WaveEvent[] = [
   { id: 'crit_wave', name: 'Crit Zone', description: '30% chance de crit em tudo.', icon: '⚡', color: '#f97316' },
   { id: 'no_shield', name: 'Exposed', description: 'Sem escudo essa wave.', icon: '⚠', color: '#dc2626' },
   { id: 'double_combo', name: 'Streak', description: 'Timer de combo 2x maior.', icon: '🔥', color: '#f97316' },
+  { id: 'meteor_rain', name: 'Chuva de Meteoros', description: 'Meteoros caem do céu — desvie!', icon: '☄', color: '#f97316' },
+  { id: 'supply_drop', name: 'Suprimentos', description: 'Power-ups caem 3x mais!', icon: '🎁', color: '#22d3ee' },
+];
+
+/**
+ * Year Anomalies — from Year 2 on, each year rolls one global modifier that
+ * lasts all 12 months. Every anomaly pairs a threat with a payoff so late
+ * runs change texture instead of only inflating numbers.
+ */
+export interface YearAnomaly {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+}
+
+export const YEAR_ANOMALIES: YearAnomaly[] = [
+  { id: 'horde', name: 'Ano da Horda', description: '+35% inimigos, porém 15% mais fracos. +10% gold.', icon: '👾', color: '#f472b6' },
+  { id: 'haste', name: 'Ano da Pressa', description: 'Inimigos 20% mais rápidos. +25% gold.', icon: '💨', color: '#fbbf24' },
+  { id: 'elites', name: 'Ano das Elites', description: 'Muito mais elites. +30% gold.', icon: '👑', color: '#38bdf8' },
+  { id: 'bounty', name: 'Ano da Fartura', description: 'Power-ups 2x mais comuns. Inimigos +15% HP.', icon: '🎁', color: '#4ade80' },
 ];
 
 export interface CardChoice {
@@ -147,10 +171,30 @@ export class GameManager {
   pendingCollectible: Collectible | null = null;
   /** Current wave event modifier (null = normal wave) */
   currentWaveEvent: WaveEvent | null = null;
+  /** Year Anomaly (Year 2+): global modifier for the whole current year */
+  currentAnomaly: YearAnomaly | null = null;
+  private anomalyYear = 0;
   /** Relic dropped this wave (shown on card screen) */
   pendingRelic: Relic | null = null;
   /** Newly unlocked difficulty ID (shown on game over screen) */
   newlyUnlockedDifficulty: string | null = null;
+  /** Interest earned on banked gold last wave (shown on cards screen) */
+  lastInterest: number = 0;
+  /** Whether the current run is today's Daily Challenge (fixed character + anomaly) */
+  isDailyChallenge: boolean = false;
+  /** Date key (YYYY-MM-DD) of the active/last-played daily challenge */
+  dailyDateKey: string = '';
+  /** Best months survived on today's daily challenge (0 if not played yet) */
+  dailyBest: number = 0;
+
+  /** Preview of next month's wave for the inventory screen */
+  getNextWavePreview(): { count: number; isBoss: boolean; isMegaBoss: boolean } {
+    const nextTotal = this.totalMonths + 1;
+    const m = this.month + 1 > 12 ? 1 : this.month + 1;
+    const schedule = this.monthSchedule(m);
+    const count = nextTotal === 1 ? 4 : computeWaveCount(nextTotal);
+    return { count: Math.floor(count), isBoss: schedule.boss, isMegaBoss: schedule.megaBoss };
+  }
 
   constructor(characterId: string = 'grass_man') {
     this.characterId = characterId;
@@ -184,6 +228,7 @@ export class GameManager {
     // Shield scales with character: tankier chars get more shield
     const shieldAmounts: Record<string, number> = {
       grass_man: 25, fire_lord: 15, aqua_sage: 35, storm_runner: 20, void_walker: 10, beast_tamer: 20, firefighter: 40,
+      scrapper: 15, renegade: 0, // Sétimo's xeno carapace rejects human shield tech
     };
     this.combat.state.playerMaxShield = shieldAmounts[characterId] ?? 25;
     this.combat.state.playerShield = this.combat.state.playerMaxShield;
@@ -204,6 +249,9 @@ export class GameManager {
     this.wave = 0;
     this.newAchievements = [];
     this.newlyUnlockedDifficulty = null;
+    this.currentAnomaly = null;
+    this.anomalyYear = 0;
+    this.isDailyChallenge = false;
     this.aliencoreMode = false;
     this.aliencoreUnlocked = SaveManager.isAliencoreEverUnlocked();
 
@@ -244,15 +292,137 @@ export class GameManager {
     return getMonthlyFlavorText(this.totalMonths);
   }
 
-  /** Check if current month should have a boss based on timeline schedule */
+  /** Per-wave gold multiplier — shop visits went from every month to ~every
+   * 3rd, so raw income is cut to roughly what 3 old waves' worth would have
+   * been across those 3 waves combined (not 3x it), keeping each shop trip's
+   * buying power close to before while total gold earned over a run drops
+   * for real. Tune here if runs feel too rich or too broke. */
+  private static readonly GOLD_ECONOMY_SCALE = 0.35;
+
+  /** Soft cap on a single wave's post-multiplier gold, keyed to totalMonths
+   * (progression) instead of enemy count. Enemy count alone climbs to 80/wave
+   * by year 3+ and each kill's reward also grows with wave, so uncapped gold
+   * compounds into the thousands per wave while the shop's item catalog stays
+   * flat (30-300g) — a run would end up sitting on tens of thousands of idle
+   * gold with nothing worth buying. Square-root growth keeps early/mid-game
+   * rewards close to their natural value (where the cap rarely binds) while
+   * damping the late-game runaway so the shop stays meaningful all the way
+   * through a long run. */
+  private static waveGoldCap(totalMonths: number): number {
+    return Math.floor(50 + 130 * Math.sqrt(totalMonths));
+  }
+
+  /**
+   * Fixed 12-month schedule, identical every year: boss + shop every 3
+   * months (3/6/9/12), a shop-only stop at 11 to gear up before the big
+   * fight, cards every month except the three boss-only ones, and month 12
+   * is always the giant screen-filling boss instead of a regular one.
+   * Index 0 = month 1 ... index 11 = month 12.
+   */
+  private static readonly MONTH_SCHEDULE: { boss: boolean; megaBoss: boolean; cards: boolean; shop: boolean }[] = [
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 1
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 2
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 3
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 4
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 5
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 6
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 7
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 8
+    { boss: true, megaBoss: false, cards: false, shop: true },   // 9
+    { boss: false, megaBoss: false, cards: true, shop: false },  // 10
+    { boss: false, megaBoss: false, cards: false, shop: true },  // 11
+    { boss: true, megaBoss: true, cards: true, shop: true },     // 12
+  ];
+
+  private monthSchedule(month: number): { boss: boolean; megaBoss: boolean; cards: boolean; shop: boolean } {
+    return GameManager.MONTH_SCHEDULE[Math.max(1, Math.min(12, month)) - 1];
+  }
+
+  /** Check if current month should have a boss based on the fixed schedule */
   isBossMonth(): boolean {
-    // Year 3+: boss EVERY month
-    if (this.year >= 3) return true;
-    // Year 2+: months 3, 6, 9, 12
-    if (this.year >= 2 && (this.month === 3 || this.month === 9)) return true;
-    // All years: months 6 and 12
-    if (this.month === 6 || this.month === 12) return true;
-    return false;
+    return this.monthSchedule(this.month).boss;
+  }
+
+  /** The giant screen-filling boss (always month 12) instead of a regular one */
+  isMegaBossMonth(): boolean {
+    return this.monthSchedule(this.month).megaBoss;
+  }
+
+  /** Whether this month offers a card choice after combat */
+  hasCardsThisMonth(): boolean {
+    return this.monthSchedule(this.month).cards;
+  }
+
+  /** Whether this month's post-combat flow includes a shop visit. Month 1 of
+   * the very first run gets a one-time bonus shop so the player isn't stuck
+   * with zero purchases until month 3 — later years' month 1 does not repeat it. */
+  hasShopThisMonth(): boolean {
+    return this.monthSchedule(this.month).shop || this.totalMonths === 1;
+  }
+
+  // ─── Phase Variants (alternate month layouts) ──────────────────────────────
+  // Each year rolls a fixed plan up front: 2 of that year's normal-fight
+  // months get a normal-variant layout (Frostbite, etc.), and 1 of that
+  // year's regular boss months (3/6/9 — never 12, the mega boss) gets a
+  // boss-variant layout (Copycat, etc.). Only `implemented` pool entries are
+  // eligible, so the schedule never rolls a variant whose gameplay hasn't
+  // shipped yet — see src/data/phaseVariants.ts.
+
+  yearPhasePlan: { normalMonths: number[]; normalVariantIds: (string | null)[]; bossMonth: number | null; bossVariantId: string | null } =
+    { normalMonths: [], normalVariantIds: [], bossMonth: null, bossVariantId: null };
+  private phaseVariantPlanYear = 0;
+  private usedNormalVariants: string[] = [];
+  private usedBossVariants: string[] = [];
+
+  /** Picks a pool entry not used in the immediately preceding roll(s) when
+   * possible, so the same variant doesn't show up two years running — resets
+   * once the whole pool has been used, same shuffle-bag idea as the boss
+   * lap-mutation system. */
+  private pickPhaseVariant(pool: { id: string }[], used: string[]): string | null {
+    if (pool.length === 0) return null;
+    let available = pool.filter(v => !used.includes(v.id));
+    if (available.length === 0) {
+      used.length = 0;
+      available = pool;
+    }
+    const pick = available[Math.floor(Math.random() * available.length)];
+    used.push(pick.id);
+    return pick.id;
+  }
+
+  private rollYearPhasePlan(): void {
+    const eligibleNormalMonths: number[] = [];
+    const eligibleBossMonths: number[] = [];
+    for (let m = 1; m <= 12; m++) {
+      const s = GameManager.MONTH_SCHEDULE[m - 1];
+      if (!s.boss) eligibleNormalMonths.push(m);
+      else if (!s.megaBoss) eligibleBossMonths.push(m);
+    }
+
+    const shuffled = [...eligibleNormalMonths].sort(() => Math.random() - 0.5);
+    const normalMonths = shuffled.slice(0, 2).sort((a, b) => a - b);
+
+    const implementedNormal = NORMAL_PHASE_VARIANTS.filter(v => v.implemented);
+    const implementedBoss = BOSS_PHASE_VARIANTS.filter(v => v.implemented);
+
+    const normalVariantIds = normalMonths.map(() => this.pickPhaseVariant(implementedNormal, this.usedNormalVariants));
+    const bossMonth = implementedBoss.length > 0 && eligibleBossMonths.length > 0
+      ? eligibleBossMonths[Math.floor(Math.random() * eligibleBossMonths.length)]
+      : null;
+    const bossVariantId = bossMonth !== null ? this.pickPhaseVariant(implementedBoss, this.usedBossVariants) : null;
+
+    this.yearPhasePlan = { normalMonths, normalVariantIds, bossMonth, bossVariantId };
+  }
+
+  /** Normal-variant id active this month, or null for a standard fight */
+  getActiveNormalVariant(month: number = this.month): string | null {
+    const idx = this.yearPhasePlan.normalMonths.indexOf(month);
+    return idx >= 0 ? this.yearPhasePlan.normalVariantIds[idx] : null;
+  }
+
+  /** Boss-variant id active this month, or null for a standard boss fight */
+  getActiveBossVariant(month: number = this.month): string | null {
+    return this.yearPhasePlan.bossMonth === month ? this.yearPhasePlan.bossVariantId : null;
   }
 
   // ─── Phase Transitions ────────────────────────────────────────────────────
@@ -285,6 +455,7 @@ export class GameManager {
     this.combat.state.playerMaxHp = data.playerMaxHp;
     this.aliencoreMode = data.aliencoreMode;
     this.aliencoreUnlocked = data.aliencoreUnlocked;
+    this.currentDifficulty = data.currentDifficulty ?? 'soldier';
     this.stats.enemiesKilled = data.stats.enemiesKilled;
     this.stats.damageDealt = data.stats.damageDealt;
     this.stats.itemsBought = data.stats.itemsBought;
@@ -330,6 +501,7 @@ export class GameManager {
       playerMaxHp: this.combat.state.playerMaxHp,
       aliencoreMode: this.aliencoreMode,
       aliencoreUnlocked: this.aliencoreUnlocked,
+      currentDifficulty: this.currentDifficulty,
       items,
       stats: {
         enemiesKilled: this.stats.enemiesKilled,
@@ -350,16 +522,56 @@ export class GameManager {
     this.totalMonths++;
     this.wave = this.totalMonths; // legacy compat
 
-    // Determine if boss month (can be forced by Twitch)
+    // Determine if boss month (can be forced by Twitch — always a regular
+    // boss when forced this way, never the scheduled mega boss)
     const isBoss = this.isBossMonth() || this.twitch.bossNextWave;
+    const isMegaBoss = this.isMegaBossMonth();
     this.twitch.bossNextWave = false;
 
-    this.phase = 'COMBAT';
-    this.combat.startWave(this.totalMonths, isBoss);
+    // ─── Year Anomaly (Year 2+): rolled once per year, shapes every wave ──
+    // Daily Challenge pins its anomaly for the whole run (set in
+    // startDailyChallenge, active from month 1) instead of the normal
+    // year-2+/random roll.
+    const ca = this.combat as any;
+    if (this.isDailyChallenge) {
+      // currentAnomaly stays as pinned.
+    } else if (this.year >= 2) {
+      if (this.anomalyYear !== this.year) {
+        this.anomalyYear = this.year;
+        this.currentAnomaly = YEAR_ANOMALIES[Math.floor(Math.random() * YEAR_ANOMALIES.length)];
+      }
+    } else {
+      this.currentAnomaly = null;
+    }
+    ca._anomalyCountMult = 1; ca._anomalyHpMult = 1; ca._anomalySpeedMult = 1;
+    ca._anomalyGoldMult = 1; ca._anomalyEliteBonus = 0; ca._anomalyDropMult = 1;
+    switch (this.currentAnomaly?.id) {
+      case 'horde': ca._anomalyCountMult = 1.35; ca._anomalyHpMult = 0.85; ca._anomalyGoldMult = 1.1; break;
+      case 'haste': ca._anomalySpeedMult = 1.2; ca._anomalyGoldMult = 1.25; break;
+      case 'elites': ca._anomalyEliteBonus = 0.12; ca._anomalyGoldMult = 1.3; break;
+      case 'bounty': ca._anomalyDropMult = 2; ca._anomalyHpMult = 1.15; break;
+    }
 
-    // Wave Event (20% chance after month 4, never on boss months)
+    // ─── Phase Variant plan: rolled once per year alongside the anomaly ───
+    if (this.month === 1 && this.phaseVariantPlanYear !== this.year) {
+      this.phaseVariantPlanYear = this.year;
+      this.rollYearPhasePlan();
+    }
+    const normalVariant = !isBoss ? this.getActiveNormalVariant() : null;
+    const bossVariant = (isBoss && !isMegaBoss) ? this.getActiveBossVariant() : null;
+
+    this.phase = 'COMBAT';
+    this.combat.startWave(this.totalMonths, isBoss, isMegaBoss, normalVariant, bossVariant, this.characterId);
+
+    // Announce the anomaly at the start of each year
+    if (this.currentAnomaly && this.month === 1) {
+      this.combat.spawnFloatingText(640, 230, `${this.currentAnomaly.icon} ${this.currentAnomaly.name.toUpperCase()}!`, this.currentAnomaly.color);
+      this.combat.spawnFloatingText(640, 260, this.currentAnomaly.description, '#e2e8f0');
+    }
+
+    // Wave Event (20% chance after month 4, never on boss months or phase-variant months)
     this.currentWaveEvent = null;
-    if (!isBoss && this.totalMonths > 4 && Math.random() < 0.2) {
+    if (!isBoss && !normalVariant && this.totalMonths > 4 && Math.random() < 0.2) {
       this.currentWaveEvent = WAVE_EVENTS[Math.floor(Math.random() * WAVE_EVENTS.length)];
       // Apply event modifiers
       switch (this.currentWaveEvent.id) {
@@ -392,6 +604,11 @@ export class GameManager {
     const g = this as any;
     const c = this.combat as any;
 
+    // Wave event: Suprimentos triples power-up drop chance (reset each wave);
+    // the Fartura anomaly stacks on top of it
+    c._dropChanceMult = (this.currentWaveEvent?.id === 'supply_drop' ? 3 : 1) * (c._anomalyDropMult ?? 1);
+    (this as any)._meteorTimer = 0;
+
     if (g._goldPerHit) { c._goldPerHitActive = true; c._goldPerHitAmount = g._goldPerHit; }
     if (g._secondWind) { c._secondWindActive = true; c._secondWindUsed = false; }
     if (g._bouncyShots) c._bouncyShots = g._bouncyShots;
@@ -412,6 +629,36 @@ export class GameManager {
     // Reset per-wave timers
     c._empTimer = 0; c._lightningTimer = 0;
 
+    // Revives & one-shot defensive cards
+    if (g._riftWalk) { c._riftWalkActive = true; c._riftWalkUsed = false; } // 1x/wave
+    if (g._phoenixRevive) c._phoenixReviveActive = true; // 1x/run (used-flag lives on CombatEngine itself)
+    if (g._nuclearRevive) c._nuclearReviveActive = true; // 1x/run
+    if (g._regenShield) c._regenShield = g._regenShield; // 1x/wave (state.regenShieldUsed resets in startWave)
+
+    // Diana (beast_tamer) cards
+    if (g._paralyzeFirst) c._paralyzeFirstDuration = g._paralyzeFirst;
+    if (g._mindControl) c._mindControlActive = true;
+    if (g._reanimate) c._reanimate = g._reanimate;
+    if (g._dronePerKills) c._dronePerKills = g._dronePerKills;
+    if (g._deathPoison) c._deathPoison = g._deathPoison;
+    if (g._bossGoldMult) c._bossGoldMult = g._bossGoldMult;
+
+    // Dr. Eon (void_walker) cards
+    if (g._blackHoleInterval) c._blackHoleInterval = g._blackHoleInterval;
+    if (g._enemyProjSlow) c._enemyProjSlow = g._enemyProjSlow;
+    if (g._deathProjectiles) c._deathProjectiles = g._deathProjectiles;
+    if (g._antiMatter) c._antiMatter = true;
+
+    // Neutral cards
+    if (g._comboDmgPerHit) c._comboDmgPerHit = g._comboDmgPerHit;
+    if (g._bossDamageMult) c._bossDamageMult = g._bossDamageMult;
+    if (g._eliteDamageMult) c._eliteDamageMult = g._eliteDamageMult;
+    if (g._dashCooldownMult) c._dashCooldownMult = g._dashCooldownMult;
+    if (g._shieldRegenMult) c._shieldRegenMult = g._shieldRegenMult;
+    if (g._shieldRegenFlat) c._shieldRegenFlat = g._shieldRegenFlat;
+    if (g._armorPierce) c._armorPierce = g._armorPierce;
+    if (g._healOnKillChance) { c._healOnKillChance = g._healOnKillChance; c._healOnKillAmount = g._healOnKillAmount; }
+
     // Apply Aliencore mode effects
     if (this.aliencoreMode) {
       for (const e of this.combat.state.enemies) {
@@ -424,6 +671,28 @@ export class GameManager {
       }
     }
 
+    // Pacto Sombrio: max-HP penalty while equipped (delta-tracked so buying
+    // or selling the item adjusts cleanly between waves)
+    let hpPenalty = 0;
+    for (const it of this.backpack.getAllItems()) {
+      hpPenalty += ((it.state as any).maxHpPenalty ?? 0);
+    }
+    const prevPenalty = (this as any)._appliedHpPenalty ?? 0;
+    if (hpPenalty !== prevPenalty) {
+      this.combat.state.playerMaxHp = Math.max(10, this.combat.state.playerMaxHp - (hpPenalty - prevPenalty));
+      this.combat.state.playerHp = Math.min(this.combat.state.playerHp, this.combat.state.playerMaxHp);
+      (this as any)._appliedHpPenalty = hpPenalty;
+    }
+
+    // Surto de Crescimento (Rômulo): self-inflicted enemy HP penalty from the card
+    const enemyHpBonus = (this as any)._enemyHpBonus ?? 0;
+    if (enemyHpBonus > 0) {
+      for (const e of this.combat.state.enemies) {
+        e.hp = Math.floor(e.hp * (1 + enemyHpBonus));
+        e.maxHp = Math.floor(e.maxHp * (1 + enemyHpBonus));
+      }
+    }
+
     // Apply difficulty modifiers
     const diff = getDifficultyById(this.currentDifficulty);
     for (const e of this.combat.state.enemies) {
@@ -432,6 +701,22 @@ export class GameManager {
       e.damage = Math.floor(e.damage * diff.enemyDamageMult);
       e.speed *= diff.enemySpeedMult;
       e.baseSpeed *= diff.enemySpeedMult;
+    }
+    // Difficulty: extra enemies (Veterano+ promise bigger waves, but nothing
+    // ever read extraEnemyPct — clone existing enemies the same way the
+    // Twitch curse does)
+    if (diff.extraEnemyPct > 0 && this.combat.state.enemies.length > 0) {
+      const extraCount = Math.ceil(this.combat.state.enemies.length * (diff.extraEnemyPct / 100));
+      for (let i = 0; i < extraCount; i++) {
+        const template = this.combat.state.enemies[i % this.combat.state.enemies.length];
+        this.combat.state.enemies.push({
+          ...template,
+          id: `diff_enemy_${Date.now()}_${i}`,
+          x: 80 + Math.random() * 1120,
+          y: -50 - Math.random() * 250,
+        });
+      }
+      this.combat.state.totalEnemies = this.combat.state.enemies.length;
     }
 
     // Apply Twitch curse (more enemies)
@@ -484,7 +769,22 @@ export class GameManager {
     const goldMultiplier = this.aliencoreMode ? 1.5 : 1;
     // Perfect Wave: +50% gold if no damage taken
     const perfectBonus = this.combat.state.damageTakenThisWave === 0 ? 1.5 : 1.0;
-    this.lastWaveGold = Math.floor(this.combat.state.gold * goldMultiplier * perfectBonus);
+    // Cards: Sorte Grande / Mercador Fantasma / Magnetismo Dourado stack additively
+    const cardGoldBonus = 1 + ((this as any)._goldBonus ?? 0);
+    // Relic: Cristal de Criox (+10% gold, permanent meta-progression)
+    const relicGoldBonus = 1 + (getRelicBonuses().goldPercent ?? 0) / 100;
+    // Difficulty: harder settings promise more gold (Veterano +20% .. Extinção +150%)
+    const difficultyGoldMult = getDifficultyById(this.currentDifficulty).goldMult;
+    // Shop visits dropped from every month to ~every 3rd (MONTH_SCHEDULE) —
+    // per-wave income is cut to match, so total gold earned over a run is
+    // genuinely lower (not just "the same money, less often to spend it").
+    // A single scale point here covers every gold source above, since they
+    // all funnel through combat.state.gold before this line.
+    this.lastWaveGold = Math.min(
+      Math.floor(this.combat.state.gold * GameManager.GOLD_ECONOMY_SCALE
+        * goldMultiplier * perfectBonus * cardGoldBonus * relicGoldBonus * difficultyGoldMult),
+      GameManager.waveGoldCap(this.totalMonths),
+    );
     this.gold += this.lastWaveGold;
 
     // Track stats
@@ -502,11 +802,26 @@ export class GameManager {
     // Check character unlocks before game over check
     this.checkCharacterUnlocks();
 
+    // Per-wave global stats — runs for EVERY wave including the fatal one,
+    // so nothing is double-counted at game over and boss kills from every
+    // wave (not just the last) reach achievements/missions.
+    updateGlobalStats({
+      totalKills: this.currentWaveKills,
+      totalGoldEarned: this.lastWaveGold,
+      bossesKilled: this.combat.state.killedEnemyIds.filter(id => id.startsWith('boss_')).length,
+      maxCombo: (this.combat.state as any).maxCombo || 0,
+    });
+
     if (this.combat.state.playerHp <= 0) {
       // Save best run
       if (this.totalMonths > this.bestRun) {
         this.bestRun = this.totalMonths;
         localStorage.setItem('packinvaders_best_run', String(this.totalMonths));
+      }
+
+      if (this.isDailyChallenge && this.totalMonths > this.dailyBest) {
+        this.dailyBest = this.totalMonths;
+        setDailyBest(this.dailyDateKey, this.totalMonths);
       }
 
       // Unlock next difficulty at month 48
@@ -544,6 +859,13 @@ export class GameManager {
       return;
     }
 
+    // Juros: reward banking gold between waves (capped so it doesn't snowball).
+    // Creates a real spend-vs-save decision at the shop.
+    // Investimento Sábio card raises both the rate and the cap together.
+    const interestMult = (this as any)._interestBonusMult ?? 1;
+    this.lastInterest = Math.min(Math.floor(20 * interestMult), Math.floor(this.gold * 0.08 * interestMult));
+    this.gold += this.lastInterest;
+
     // No victory condition — endless roguelike until death
     // Auto-save after each wave
     this.autoSave();
@@ -551,7 +873,7 @@ export class GameManager {
     // 20% chance of finding a collectible
     this.pendingCollectible = null;
     if (Math.random() < 0.2) {
-      const col = getRandomCollectible(this.unlockedCharIds);
+      const col = getRandomCollectible(this.unlockedCharIds, this.codex.getUnlockedIdsByCategory('collectible'));
       if (col) {
         this.pendingCollectible = col;
         this.codex.unlockEntry(col.id);
@@ -559,32 +881,40 @@ export class GameManager {
       }
     }
 
-    // Boss kill = relic drop (guaranteed new relic if available)
+    // Boss kill = relic drop: the boss's own signature relic first,
+    // falling back to a random uncollected one
     this.pendingRelic = null;
-    const bossKilledThisWave = this.combat.state.killedEnemyIds.some(id => id.startsWith('boss_'));
-    if (bossKilledThisWave) {
-      const newRelic = getRandomNewRelic();
+    const killedBossId = this.combat.state.killedEnemyIds.find(id => id.startsWith('boss_'));
+    if (killedBossId) {
+      const newRelic = getRelicForBoss(killedBossId) ?? getRandomNewRelic();
       if (newRelic) {
         this.pendingRelic = newRelic;
         addRelic(newRelic.id);
       }
     }
 
-    // Go to card selection
-    this.cardChoices = this.generateCardChoices();
-
-    // Update global stats for mid-run achievement checks
-    updateGlobalStats({
-      totalKills: this.currentWaveKills,
-      totalGoldEarned: this.lastWaveGold,
-      maxCombo: (this.combat.state as any).maxCombo || 0,
-    });
+    // Mid-run achievement check (stats already updated above, pre-game-over)
     const newAchs = checkAchievements();
     if (newAchs.length > 0) {
       this.newAchievements.push(...newAchs);
     }
 
-    this.phase = 'CARDS';
+    // Card selection only on scheduled months (skipped on the regular boss
+    // months 3/6/9 and the shop-only stop at 11 — see MONTH_SCHEDULE). On a
+    // skipped month go straight to goToShop()'s own gate instead, same as
+    // skipCards() would, but with no gold bonus since the player didn't
+    // choose to skip anything.
+    if (this.hasCardsThisMonth()) {
+      this.cardChoices = this.generateCardChoices();
+      this.phase = 'CARDS';
+    } else {
+      // No CARDS screen this month to show the collectible/relic toast on —
+      // every card-skipped month has a shop (see MONTH_SCHEDULE), so keep
+      // pendingCollectible/pendingRelic alive and let the shop screen render
+      // them instead of silently dropping the notification.
+      this.cardChoices = [];
+      this.goToShop();
+    }
   }
 
   selectCard(index: number): void {
@@ -602,8 +932,17 @@ export class GameManager {
     this.goToShop();
   }
 
-  /** Go to shop (or skip if vendor ghost chance triggers or no-shop waves) */
+  /** Go to shop (or skip if it's not a shop month, vendor ghost chance
+   * triggers, or a "Febre do Ouro"-style no-shop-waves card is active) */
   private goToShop(): void {
+    // Shop cadence: only scheduled months (3/6/9/11/12, plus the very first
+    // month of a fresh run) offer a shop at all — see MONTH_SCHEDULE.
+    if (!this.hasShopThisMonth()) {
+      this.phase = 'INVENTORY';
+      this.updateActiveSynergies();
+      return;
+    }
+
     // Febre do Ouro: skip shop for N waves
     if ((this as any)._noShopWaves && (this as any)._noShopWaves > 0) {
       (this as any)._noShopWaves--;
@@ -624,6 +963,8 @@ export class GameManager {
 
   exitShop(): void {
     this.currentVendor = null; // Reset for next shop visit
+    this.pendingCollectible = null;
+    this.pendingRelic = null;
     this.updateActiveSynergies();
     this.phase = 'INVENTORY';
   }
@@ -668,6 +1009,21 @@ export class GameManager {
     this.phase = 'VERSUS_PVP';
   }
 
+  /** Start today's Daily Challenge: a fixed character + Year Anomaly shared by
+   * everyone who plays today, regardless of character-unlock progress. */
+  startDailyChallenge(): void {
+    const daily = getDailyChallenge();
+    this.dailyDateKey = daily.dateKey;
+    this.dailyBest = getDailyBest(daily.dateKey);
+    this.currentDifficulty = 'soldier';
+    this.initGame(daily.characterId);
+    this.isDailyChallenge = true;
+    this.currentAnomaly = YEAR_ANOMALIES[daily.anomalyIndex];
+    this.anomalyYear = 1; // pinned for the whole run; see startCombat's anomaly block
+    this.updateActiveSynergies();
+    this.phase = 'INVENTORY';
+  }
+
   tickVersus(dt: number): void {
     this.versusEngine?.tick(dt);
   }
@@ -684,30 +1040,82 @@ export class GameManager {
     // Get items from the current vendor's pool
     const vendorItemIds = new Set(this.currentVendor.exclusiveItems);
     const available = ALL_ITEMS.filter(i => i.cost > 0 && vendorItemIds.has(i.id));
-    const shuffled = [...available].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 5);
+
+    // Pedra da Sorte: bias the shuffle toward rarer items
+    let luckBonus = 0;
+    let extraItemSlots = 0;
+    for (const it of this.backpack.getAllItems()) {
+      luckBonus += ((it.state as any).shopRarityBonus ?? 0);
+      extraItemSlots += ((it.state as any).extraShopItem ?? 0); // Insígnia de Mercador
+    }
+    const shuffled = [...available].sort(() =>
+      Math.random() - 0.5
+    ).sort((a, b) =>
+      // Stable-ish rarity nudge: each luck point gives rare items a head start
+      luckBonus > 0 ? (Math.random() - luckBonus * b.rarity * 0.15) - (Math.random() - luckBonus * a.rarity * 0.15) : 0
+    );
+
+    // Character shop size: Diana sees 3 items, Dr. Eon sees 4 (their disadvantages)
+    let shopSize = this.characterId === 'beast_tamer' ? 3
+      : this.characterId === 'void_walker' ? 4 : 5;
+    shopSize += extraItemSlots;
+    // Novo Estoque card: next shop only gets extra slots, consumed on use
+    const extraSlots = (this as any)._extraShopSlots ?? 0;
+    if (extraSlots > 0) {
+      shopSize += extraSlots;
+      (this as any)._extraShopSlots = 0;
+    }
+    return shuffled.slice(0, shopSize);
+  }
+
+  /** Final shop price after card discounts and character affinities */
+  getItemCost(itemDef: ItemDefinition): number {
+    let discount = (this as any)._shopDiscount ?? 0;
+    // Zabel (scrapper): Olho de Lixão — everything is cheaper for her
+    if (this.characterId === 'scrapper') discount += 0.2;
+    // Relic: Planta do Arquiteto — permanent shop discount
+    discount += (getRelicBonuses().shopDiscountPercent ?? 0) / 100;
+    // Insígnia de Mercador: item-based shop discount
+    for (const it of this.backpack.getAllItems()) {
+      discount += ((it.state as any).shopDiscount ?? 0);
+    }
+    let cost = itemDef.cost * (1 - Math.min(0.6, discount));
+    // Rômulo: organic items -20%
+    if (this.characterId === 'grass_man' && itemDef.tags.includes('Orgânico')) cost *= 0.8;
+    return Math.floor(cost);
+  }
+
+  /** Sell rate (Reciclador de Sucata raises the base 50%) */
+  getSellRate(): number {
+    // Zabel (scrapper): selling is her whole business — 75% back
+    let rate = this.characterId === 'scrapper' ? 0.75 : 0.5;
+    for (const it of this.backpack.getAllItems()) {
+      const b = (it.state as any).sellBonus ?? 0;
+      if (b) rate = Math.max(rate, 0.5 + b);
+    }
+    // Faro de Comerciante card
+    rate += (this as any)._sellBonusGlobal ?? 0;
+    return Math.min(0.8, rate);
   }
 
   buyItem(itemDef: ItemDefinition): boolean {
-    // Apply shop discount from cards
-    const discount = (this as any)._shopDiscount ?? 0;
-    const finalCost = Math.floor(itemDef.cost * (1 - discount));
+    const finalCost = this.getItemCost(itemDef);
     if (this.gold < finalCost) return false;
     this.gold -= finalCost;
     this.stats.itemsBought++;
     return true; // Item needs to be placed by the player
   }
 
-  /** Sell an item for 50% of its cost */
+  /** Sell an item (base 50%; Reciclador de Sucata raises to 75%) */
   sellItem(itemDef: ItemDefinition): number {
-    const sellPrice = Math.floor(itemDef.cost * 0.5);
+    const sellPrice = Math.floor(itemDef.cost * this.getSellRate());
     this.gold += sellPrice;
     return sellPrice;
   }
 
   /** Reroll shop items (costs gold) */
   rerollShop(): boolean {
-    const cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    const cost = this.getRerollCost();
     if (this.gold < cost) return false;
     this.gold -= cost;
     // Force new vendor selection on next getShopItems call
@@ -717,7 +1125,11 @@ export class GameManager {
 
   /** Get reroll cost */
   getRerollCost(): number {
-    return 10 + this.totalMonths * 2;
+    let cost = 10 + this.totalMonths * 2; // Gets more expensive over time
+    // Estoque Rotativo card
+    cost = Math.floor(cost * (1 - ((this as any)._rerollDiscount ?? 0)));
+    // Zabel (scrapper): rummaging through stock is half price
+    return this.characterId === 'scrapper' ? Math.floor(cost / 2) : cost;
   }
 
   // ─── Card Generation ──────────────────────────────────────────────────────
@@ -749,7 +1161,7 @@ export class GameManager {
     const ctx: SkillContext = {
       arenaWidth: this.combat.arenaWidth,
       arenaHeight: this.combat.arenaHeight,
-      spawnBurst: (count, damage, speed, _color) => {
+      spawnBurst: (count, damage, speed, _color, homing) => {
         for (let i = 0; i < count; i++) {
           const angle = (i / count) * Math.PI * 2;
           this.combat.state.projectiles.push({
@@ -761,7 +1173,7 @@ export class GameManager {
             damage,
             piercing: 1,
             aoeRadius: 10,
-            tags: [],
+            tags: homing ? ['Guiado'] : [],
             alive: true,
             trail: [],
           });
@@ -769,6 +1181,7 @@ export class GameManager {
       },
       damageArea: (x, y, radius, damage) => {
         const scaledDmg = damage * powerMult;
+        const killed: Enemy[] = [];
         for (const e of this.combat.state.enemies) {
           const dx = e.x - x;
           const dy = e.y - y;
@@ -778,17 +1191,15 @@ export class GameManager {
             e.hp -= dmg;
             this.combat.state.damageDealtThisSecond += dmg;
             this.combat.state.score += dmg;
+            if (e.hp <= 0) killed.push(e);
           }
         }
-        // Remove dead enemies
-        this.combat.state.enemies = this.combat.state.enemies.filter(e => {
-          if (e.hp <= 0) {
-            this.combat.state.gold += e.goldReward;
-            this.combat.state.killedEnemyIds.push(e.defId);
-            return false;
-          }
-          return true;
-        });
+        // Route through the real kill pipeline: combo, gold scaling, power-up
+        // drops, elite affixes, boss fanfare, and every card mechanic that
+        // hooks killEnemy (Reanimação, Necrose, Curto-Circuito, etc.)
+        for (const e of killed) {
+          this.combat.killEnemyExternal(e);
+        }
       },
       heal: (amount) => {
         this.combat.state.playerHp = Math.min(
@@ -813,6 +1224,7 @@ export class GameManager {
           e.y = Math.max(-100, e.y); // Don't push above spawn area
         }
       },
+      reanimateStrongest: () => this.combat.reanimateStrongestKill(),
     };
 
     skill.definition.activate(this.combat.state, ctx);
@@ -838,6 +1250,23 @@ export class GameManager {
         case 'no_shield':
           this.combat.state.playerShield = 0;
           break;
+        case 'meteor_rain': {
+          // Falling rocks the player must dodge
+          (this as any)._meteorTimer = ((this as any)._meteorTimer ?? 0) + dt;
+          if ((this as any)._meteorTimer >= 1.1) {
+            (this as any)._meteorTimer = 0;
+            this.combat.state.enemyProjectiles.push({
+              id: `meteor_${Date.now()}`,
+              x: 40 + Math.random() * (this.combat.arenaWidth - 80),
+              y: -10,
+              vx: (Math.random() - 0.5) * 40,
+              vy: 240 + Math.random() * 80,
+              damage: 8 + Math.floor(this.totalMonths * 0.4),
+              alive: true,
+            });
+          }
+          break;
+        }
       }
     } else {
       (this.combat as any)._waveEventCritBonus = 0;
@@ -866,15 +1295,29 @@ export class GameManager {
     let rateMult = 1 + (relicBonus.fireRatePercent ?? 0) / 100;
     if (this.isSkillActive('self_ignite')) dmgMult *= 2.0;
     if (this.isSkillActive('overclock')) rateMult *= 3.0;
-    if (this.isSkillActive('frenzy')) rateMult *= 2.0;
     (this.combat as any)._skillDamageMult = dmgMult;
     (this.combat as any)._skillFireRateMult = rateMult;
+    // Relic combat bonuses (crit/dodge/damage reduction/pickup radius)
+    (this.combat as any)._relicCrit = (relicBonus.critPercent ?? 0) / 100;
+    (this.combat as any)._relicDodge = (relicBonus.dodgePercent ?? 0) / 100;
+    (this.combat as any)._relicDR = (relicBonus.damageReductionPercent ?? 0) / 100;
+    (this.combat as any)._relicPickup = (relicBonus.pickupRadiusPercent ?? 0) / 100;
+    // Frenzy is pet-specific ("Pets atacam 3x mais rápido") — scoped inside
+    // fireWeapons() by tag instead of the global multiplier above.
+    (this.combat as any)._frenzyActive = this.isSkillActive('frenzy');
 
     // Relic: heal per second
     if (relicBonus.healPerSecond) {
       this.combat.state.playerHp = Math.min(
         this.combat.state.playerMaxHp,
         this.combat.state.playerHp + relicBonus.healPerSecond * dt
+      );
+    }
+    // Sétimo (renegade): Biologia Xeno — constant regeneration in place of a shield
+    if (this.characterId === 'renegade' && this.combat.state.playerHp > 0) {
+      this.combat.state.playerHp = Math.min(
+        this.combat.state.playerMaxHp,
+        this.combat.state.playerHp + 1.5 * dt
       );
     }
     // Relic: skill cooldown reduction
@@ -899,6 +1342,7 @@ export class GameManager {
       if (skill.activeTimer <= 0) continue;
       switch (skill.definition.id) {
         case 'thorn_shield':
+        case 'rescue_shield':
           // Block incoming enemy projectiles near player
           this.combat.state.enemyProjectiles = this.combat.state.enemyProjectiles.filter(p => {
             const dx = p.x - this.combat.state.playerX;
@@ -908,8 +1352,9 @@ export class GameManager {
             return true;
           });
           break;
-        case 'whirlpool':
+        case 'whirlpool': {
           // Pull enemies toward center continuously
+          const whirlKilled: Enemy[] = [];
           for (const e of this.combat.state.enemies) {
             const cx = this.combat.arenaWidth / 2;
             const cy = this.combat.arenaHeight / 2;
@@ -919,17 +1364,12 @@ export class GameManager {
             e.x += (dx / dist) * 80 * dt;
             e.y += (dy / dist) * 80 * dt;
             e.hp -= 3 * dt;
+            if (e.hp <= 0) whirlKilled.push(e);
           }
-          // Remove dead enemies from whirlpool
-          this.combat.state.enemies = this.combat.state.enemies.filter(e => {
-            if (e.hp <= 0) {
-              this.combat.state.gold += e.goldReward;
-              this.combat.state.killedEnemyIds.push(e.defId);
-              return false;
-            }
-            return true;
-          });
+          // Route through the real kill pipeline (combo, drops, card mechanics)
+          for (const e of whirlKilled) this.combat.killEnemyExternal(e);
           break;
+        }
         case 'photosynthesis_active':
           // Heal over time (40 HP / 5s = 8 HP/s)
           this.combat.state.playerHp = Math.min(
@@ -1156,6 +1596,14 @@ export class GameManager {
     if (this.combat.state.waveCleared && this.combat.state.damageTakenThisWave === 0 && this.totalMonths >= 5) {
       this.unlockCharacter('firefighter');
     }
+    // scrapper: Hold 500 gold at once — think like a merchant
+    if (this.gold + this.combat.state.gold >= 500) {
+      this.unlockCharacter('scrapper');
+    }
+    // renegade: Reach Year 4 (month 37) — the year Sétimo surrendered
+    if (this.totalMonths >= 37) {
+      this.unlockCharacter('renegade');
+    }
   }
 
   /** Unlock a character and persist to localStorage */
@@ -1177,15 +1625,13 @@ export class GameManager {
 
   /** Update global achievement stats at end of run */
   private updateAchievementStats(): void {
+    // Kills/gold/bosses/combo are accumulated per wave in endCombat (before
+    // the game-over branch), so only run-scoped stats are added here.
     updateGlobalStats({
-      totalKills: this.stats.enemiesKilled,
-      totalGoldEarned: this.combat.state.gold + this.gold,
       totalItemsBought: this.stats.itemsBought,
       totalMonthsSurvived: this.totalMonths,
       totalRuns: 1,
-      bossesKilled: this.combat.state.killedEnemyIds.filter(id => id.startsWith('boss_')).length,
-      maxCombo: (this.combat.state as any).maxCombo || this.combat.state.combo,
-      charactersUnlocked: this.unlockedCharIds.length,
+      charactersUnlocked: this.unlockedCharIds.length, // max-semantics
       collectiblesFound: this.stats.codexUnlockedThisRun.length,
     });
     this.newAchievements = checkAchievements();

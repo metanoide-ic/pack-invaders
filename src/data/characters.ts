@@ -1,7 +1,7 @@
 /**
- * CHARACTER DEFINITIONS — 7 playable characters.
+ * CHARACTER DEFINITIONS — 9 playable characters.
  * Post-Apocalyptic Alien Invasion lore. After "O Evento", each survived differently.
- * Only Raiz is unlocked initially.
+ * Only Rômulo is unlocked initially.
  */
 
 export interface CharacterDefinition {
@@ -36,7 +36,7 @@ export interface CharacterDefinition {
 
 export const GRASS_MAN: CharacterDefinition = {
   id: 'grass_man',
-  name: 'Romulo',
+  name: 'Rômulo',
   title: 'O Sobrevivente',
   description: 'Um biologo amador que se perdeu na mata durante o Evento. A floresta mutante o achou primeiro.',
   backstory: 'Estava acampando no Parque Nacional da Serra da Canastra quando o Evento comecou. Biologo amador, nao um heroi. Por 6 meses sobreviveu sozinho enquanto os esporos alienigenas mutavam a vegetacao ao redor. A floresta nao morreu — evoluiu para algo estranho, agressivo, e, descobriu ele, util. Aprendeu que as plantas mutadas reconhecem o Enxame como ameaca. Hoje ele e a floresta sao a mesma coisa.',
@@ -55,7 +55,7 @@ export const GRASS_MAN: CharacterDefinition = {
   advantages: [
     'Itens empilhados: +75% dano por camada',
     'Itens [Planta] curam 1 HP/s',
-    'Começa com 6x6 mochila (maior)',
+    'Começa com mochila 6x6 ampla',
     'Itens [Orgânico] custam -20% na loja',
     'Fusões de planta dão +30% extra',
     '+10 HP ao plantar um item na linha inferior',
@@ -79,9 +79,9 @@ export const FIRE_LORD: CharacterDefinition = {
   backpackRule: 'freeform',
   startingHp: 80,
   startingGold: 40,
-  startingItems: ['fire_gun'],
+  startingItems: ['flamethrower'],
   shipColorIndex: 1,
-  unlockCondition: 'Alcance wave 10 com Raiz.',
+  unlockCondition: 'Alcance wave 10 com Rômulo.',
   unlockedByDefault: false,
   lore1: 'O fogo levou tudo que eu amava. Levou meu braco. Mas o fogo tambem nao questiona. Nao hesita. Nao chora. Por isso eu o uso.',
   lore2: 'Toda vez que incinero um deles, abro o relicario. Conto ate tres. Fecho. E queimo o proximo.',
@@ -114,14 +114,14 @@ export const AQUA_SAGE: CharacterDefinition = {
   startingGold: 45,
   startingItems: ['basic_gun', 'watering_can'],
   shipColorIndex: 0,
-  unlockCondition: 'Derrote o boss Hidra.',
+  unlockCondition: 'Derrote Nydra, a Multifauce — a "Hidra".',
   unlockedByDefault: false,
   lore1: 'Embaixo d\'agua tudo faz sentido. Ordens. Missoes. Objetivos. La em cima e so caos. E o meu trabalho transformar caos em derrota alien.',
   lore2: 'Mandei meus filhos para um abrigo antes de embarcar. Ainda nao sei se o abrigo existe. Essa incerteza e o que me faz voltar. Todo. Dia.',
   advantages: [
     'Projeteis [Água] desaceleram inimigos 30%',
     '+2 HP/s cura passiva constante',
-    'Começa com 120 HP (o maior)',
+    'Começa com 120 HP sólidos',
     'Itens [Água] ganham +25% cadência',
     'Inimigos [Fogo] recebem 2x dano',
     'Regeneração dobra quando HP < 50%',
@@ -186,7 +186,7 @@ export const VOID_WALKER: CharacterDefinition = {
   lore2: 'Do outro lado eu vi de onde eles vem. Um vazio imenso e faminto. E vi algo pior: eles tambem tem medo. Do vazio. Vieram aqui fugindo de algo maior.',
   advantages: [
     'Chance de ficar intangível e ignorar dano',
-    'Começa com 150 HP (o maior do jogo)',
+    'Começa com 150 HP (segundo maior do jogo)',
     'Mochila 7x5 (alta, posição livre)',
     'Quanto menor o HP, maior o dano (até +100%)',
     'Crits tem +20% chance adicional',
@@ -265,10 +265,77 @@ export const FIREFIGHTER: CharacterDefinition = {
   ],
 };
 
+export const SCRAPPER: CharacterDefinition = {
+  id: 'scrapper',
+  name: 'Zabel',
+  title: 'A Sucateira',
+  description: 'Rainha do lixão de São Paulo. Se o Enxame derruba, ela desmonta, vende e lucra.',
+  backstory: 'Zabel tinha 19 anos e uma banda que nunca estreou quando o Evento acabou com o mundo. Enquanto todos corriam dos destroços, ela correu PARA eles. Aprendeu que carcaça de alien vale mais que ouro — literalmente: os circuitos orgânicos deles são a única moeda que todo abrigo aceita. Hoje comanda a maior rede de sucata da zona sul. Não luta por vingança nem por esperança. Luta porque cada alien abatido é estoque novo, e negócio é negócio.',
+  passive: 'Olho de Lixão: itens custam -20%, vender devolve 75% e rerolar a loja custa metade.',
+  backpackRows: 6,
+  backpackCols: 6,
+  backpackRule: 'freeform',
+  startingHp: 90,
+  startingGold: 80,
+  startingItems: ['basic_gun', 'scrap_recycler'],
+  shipColorIndex: 2,
+  unlockCondition: 'Acumule 500 de gold em uma única run.',
+  unlockedByDefault: false,
+  lore1: 'Todo mundo chora o fim do mundo. Eu faço inventário dele. Alguém tem que transformar apocalipse em economia.',
+  lore2: 'Achei um gravador na sucata com a demo da minha banda. Toco ela nos alto-falantes do lixão toda noite. Os aliens evitam o quarteirão. Crítica é crítica.',
+  advantages: [
+    'Itens custam -20% na loja',
+    'Vender itens devolve 75% do valor',
+    'Rerolar a loja custa metade',
+    'Começa com 80 de gold e um Reciclador',
+    'Granada de Sucata: rajada de estilhaços (skill)',
+    'Chuva de Parafusos: dano em toda a arena (skill)',
+  ],
+  disadvantages: [
+    'HP baixo (90) — sucateira, não soldada',
+    'Escudo inicial fraco (15)',
+    'Nenhum bônus elemental — pragmatismo puro',
+  ],
+};
+
+export const RENEGADE: CharacterDefinition = {
+  id: 'renegade',
+  name: 'Sétimo',
+  title: 'O Rendido',
+  description: 'O sétimo alien que se rendeu — e o primeiro que não foi dissecado. Luta contra o próprio Enxame.',
+  backstory: 'Ano 4 da guerra: um alien largou as armas diante de um abrigo e esperou. Seis já tinham tentado antes — nenhum entrou em registro algum: foram dissecados em silêncio e os relatórios, queimados. O sétimo caiu no abrigo errado — ou certo: ninguém ali tinha estômago para abrir mais um corpo. Virou o primeiro caso documentado da guerra. Chamaram-no de Sétimo. Ele não fala, mas entende. Não explica por que desertou, mas aponta para o céu e depois para o chão: o que vem de lá em cima não poupa nem os próprios. Veste a carapaça de batalha original e mata o Enxame com uma eficiência que nenhum humano alcança. O abrigo confia nele. Quase.',
+  passive: 'Biologia Xeno: sem escudo, mas regenera 1.5 HP/s. Itens [Orgânico] e [Veneno] causam +30% de dano.',
+  backpackRows: 5,
+  backpackCols: 8,
+  backpackRule: 'freeform',
+  startingHp: 110,
+  startingGold: 40,
+  startingItems: ['poison_dart', 'snake'],
+  shipColorIndex: 3,
+  unlockCondition: 'Sobreviva até o Ano 4 (mês 37) — o ano em que ele se rendeu.',
+  unlockedByDefault: false,
+  lore1: '(Sétimo não escreve. Mas deixou isto arranhado na parede do abrigo: um círculo, riscado. O símbolo do Enxame, cancelado.)',
+  lore2: '(Uma criança do abrigo pergunta por que ele desertou. Sétimo aponta para ela. Depois para si mesmo. Depois para ela de novo. A mãe entendeu primeiro: o Enxame também tem filhos. E também os envia para morrer.)',
+  advantages: [
+    'Regenera 1.5 HP/s permanentemente',
+    'Itens [Orgânico] e [Veneno] +30% de dano',
+    'Mochila 5x8 — a mais larga do jogo',
+    'HP sólido (110)',
+    'Grito do Enxame: empurra e desacelera tudo (skill)',
+    'Fome Antiga: dano em área que cura (skill)',
+  ],
+  disadvantages: [
+    'Sem escudo — a carapaça não aceita tecnologia humana',
+    'Começa pobre (40 de gold) — aliens não têm bolso',
+    'Desbloqueio tardio (Ano 4)',
+  ],
+};
+
 // ─── All Characters Export ───────────────────────────────────────────────────
 
 export const ALL_CHARACTERS: CharacterDefinition[] = [
   GRASS_MAN, FIRE_LORD, AQUA_SAGE, STORM_RUNNER, VOID_WALKER, BEAST_TAMER, FIREFIGHTER,
+  SCRAPPER, RENEGADE,
 ];
 
 export function getCharacterById(id: string): CharacterDefinition | undefined {

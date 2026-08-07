@@ -1,6 +1,6 @@
 /**
- * COLLECTIBLES — 36 discoverable items that tell the story of "O Evento".
- * 6 base + 6 per character (5 characters with locked sets) = 36 total.
+ * COLLECTIBLES — 48 discoverable items that tell the story of "O Evento".
+ * 6 base + 6 per character (7 characters with lore sets) = 48 total.
  * 20% chance to spawn one per wave as a floating item.
  */
 
@@ -80,7 +80,7 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_raiz_seeds',
     name: 'Sementes Mutantes',
-    lore: 'Seis sementes guardadas em um tubo de vidro lacrado. Cada uma pulsa com bioluminescencia verde. Etiqueta manuscrita: "ESPECIE DESCONHECIDA — NAO PLANTAR SEM SUPERVISAO". Romulo plantou uma no Dia 10. Em 48 horas, havia uma arvore de 12 metros que respondia a comandos de voz. As outras cinco ainda esperam. Ele diz que ainda nao e hora.',
+    lore: 'Seis sementes guardadas em um tubo de vidro lacrado. Cada uma pulsa com bioluminescencia verde. Etiqueta manuscrita: "ESPECIE DESCONHECIDA — NAO PLANTAR SEM SUPERVISAO". Rômulo plantou uma no Dia 10. Em 48 horas, havia uma arvore de 12 metros que respondia a comandos de voz. As outras cinco ainda esperam. Ele diz que ainda nao e hora.',
     characterId: 'grass_man',
     order: 1,
     spriteHint: 'seed',
@@ -96,7 +96,7 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_raiz_spore_sample',
     name: 'Amostra de Esporo — Analise',
-    lore: 'RELATORIO CIENTIFICO — Submarino Tupi. Amostra #0023: Esporos alienigenas coletados por operativo "Raiz". Composicao: 60% carbono, 15% silicio, 25% elementos desconhecidos (nao presentes na tabela periodica). Comportamento: os esporos tentam se FUNDIR com qualquer materia organica em contato. Em plantas, causam crescimento acelerado e mutação controlada. Em humanos... fusao e possivel, mas requer compatibilidade genetica extremamente rara. Nota: operativo "Raiz" apresenta fusao bem-sucedida. Caso unico. Nao replicavel.',
+    lore: 'RELATORIO CIENTIFICO — Submarino Tupi. Amostra #0023: Esporos alienigenas coletados por operativo "Rômulo". Composicao: 60% carbono, 15% silicio, 25% elementos desconhecidos (nao presentes na tabela periodica). Comportamento: os esporos tentam se FUNDIR com qualquer materia organica em contato. Em plantas, causam crescimento acelerado e mutação controlada. Em humanos... fusao e possivel, mas requer compatibilidade genetica extremamente rara. Nota: operativo "Rômulo" apresenta fusao bem-sucedida. Caso unico. Nao replicavel.',
     characterId: 'grass_man',
     order: 3,
     spriteHint: 'vial',
@@ -120,7 +120,7 @@ export const RAIZ_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_raiz_root_network',
     name: 'Diagrama — Rede de Raizes',
-    lore: 'Diagrama cientifico mostrando a rede neural subterranea que conecta todas as plantas mutantes na Zona Verde. Similar a uma rede de internet biologica, cada arvore e um "no" que transmite informacao quimica. No centro do diagrama, um X vermelho com a anotacao: "PONTO CENTRAL — coordenadas de Romulo. Ele e o servidor. A floresta o usa como cerebro. Ou ele usa a floresta. Nao sabemos qual." Embaixo, uma pergunta sem resposta: "Se ele morrer, a floresta morre?"',
+    lore: 'Diagrama cientifico mostrando a rede neural subterranea que conecta todas as plantas mutantes na Zona Verde. Similar a uma rede de internet biologica, cada arvore e um "no" que transmite informacao quimica. No centro do diagrama, um X vermelho com a anotacao: "PONTO CENTRAL — coordenadas de Rômulo. Ele e o servidor. A floresta o usa como cerebro. Ou ele usa a floresta. Nao sabemos qual." Embaixo, uma pergunta sem resposta: "Se ele morrer, a floresta morre?"',
     characterId: 'grass_man',
     order: 6,
     spriteHint: 'diagram',
@@ -190,7 +190,7 @@ export const MARE_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_mare_mission_log',
     name: 'Log de Missao — Op. Ancora',
-    lore: 'SUBMARINO TUPI — LOG DE MISSAO #012. Operacao: Ancora. Objetivo: Reconhecimento da costa de Santos. Status: FRACASSO. Detalhes: "Superficie confirmada hostil. Detectamos 3 naves alien classe-media em patrulha a 50m de altitude. Porto de Santos completamente destruido. Nenhuma atividade humana detectada em 30km. Lancamos drone de superficie — destruido em 8 segundos. Recomendacao: Santos e territorio perdido. Nao alocar recursos." Assinado: Tenente-Comandante "Mare".',
+    lore: 'SUBMARINO TUPI — LOG DE MISSAO #012. Operacao: Ancora. Objetivo: Reconhecimento da costa de Santos. Status: FRACASSO. Detalhes: "Superficie confirmada hostil. Detectamos 3 naves alien classe-media em patrulha a 50m de altitude. Porto de Santos completamente destruido. Nenhuma atividade humana detectada em 30km. Lancamos drone de superficie — destruido em 8 segundos. Recomendacao: Santos e territorio perdido. Nao alocar recursos." Assinado: Tenente-Comandante "Mazu".',
     characterId: 'aqua_sage',
     order: 1,
     spriteHint: 'document',
@@ -206,7 +206,7 @@ export const MARE_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_mare_dissection',
     name: 'Relatorio de Dissecacao — Especie 07',
-    lore: 'SUBMARINO TUPI — LABORATORIO BIOLOGICO. Especie: 07-"Atirador". Especimen: Capturado vivo na costa de Paraty, incapacitado por pressao submarina. Observacoes: Sistema circulatorio baseado em cobre (sangue azul-esverdeado). Tres coracoes. Cerebro descentralizado — ganglio principal no torax, secundarios nos membros. Implicacao: "tiros na cabeca" sao ineficazes. Mirar no peito. SEMPRE no peito.',
+    lore: 'SUBMARINO TUPI — LABORATORIO BIOLOGICO. Especie: 07-"Agulha". Especimen: Capturado vivo na costa de Paraty, incapacitado por pressao submarina. Observacoes: Sistema circulatorio baseado em cobre (sangue azul-esverdeado). Tres coracoes. Cerebro descentralizado — ganglio principal no torax, secundarios nos membros. Implicacao: "tiros na cabeca" sao ineficazes. Mirar no peito. SEMPRE no peito.',
     characterId: 'aqua_sage',
     order: 3,
     spriteHint: 'document',
@@ -261,7 +261,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_reactor_log',
     name: 'Log do Reator — Ultimas Horas',
-    lore: 'ANGRA III — REGISTRO AUTOMATICO. 02:14 — Alerta sismico. Origem: impacto externo. 02:15 — Integridade do contencao: 97%. 02:16 — ALERTA: Objeto nao-identificado penetrou a cupula de contencao. 02:16 — ALERTA CRITICO: Barras de controle nao respondem. 02:17 — Temperatura do nucleo: 800°C e subindo. 02:17 — Evacuacao automatica iniciada. 02:18 — Temperatura: 2400°C. Fusao do nucleo em progresso. 02:18 — [SENSOR DESTRUIDO] 02:19 — [SEM DADOS] [O registro para aqui. Pulso diz que lembra dos proximos 11 minutos. Cada segundo. Nao conta o que aconteceu.]',
+    lore: 'ANGRA III — REGISTRO AUTOMATICO. 02:14 — Alerta sismico. Origem: impacto externo. 02:15 — Integridade do contencao: 97%. 02:16 — ALERTA: Objeto nao-identificado penetrou a cupula de contencao. 02:16 — ALERTA CRITICO: Barras de controle nao respondem. 02:17 — Temperatura do nucleo: 800°C e subindo. 02:17 — Evacuacao automatica iniciada. 02:18 — Temperatura: 2400°C. Fusao do nucleo em progresso. 02:18 — [SENSOR DESTRUIDO] 02:19 — [SEM DADOS] [O registro para aqui. Frank diz que lembra dos proximos 11 minutos. Cada segundo. Nao conta o que aconteceu.]',
     characterId: 'storm_runner',
     order: 3,
     spriteHint: 'device',
@@ -269,7 +269,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_voices',
     name: 'Transcricao — "Vozes do Enxame"',
-    lore: 'TRANSCRICAO DE SESSAO — Paciente "Pulso". Psicologo: "Descreva o que voce ouve." Pulso: "Nao e ouvir. E como... sentir palavras. Sem som. Sem lingua. So significado." Psicologo: "O que eles dizem?" Pulso: "A maioria e... coordenacao. Direcoes. Ordens. Ir aqui. Fazer isso. Como formigas. Mas as vezes..." Psicologo: "As vezes?" Pulso: "As vezes eles falam sobre nos. Sobre humanos. E nao e odio. E... curiosidade. Como um cientista olhando para uma bacteria. Nos somos interessantes. So isso. Nao importantes. Nao ameaca. Interessantes."',
+    lore: 'TRANSCRICAO DE SESSAO — Paciente "Frank". Psicologo: "Descreva o que voce ouve." Frank: "Nao e ouvir. E como... sentir palavras. Sem som. Sem lingua. So significado." Psicologo: "O que eles dizem?" Frank: "A maioria e... coordenacao. Direcoes. Ordens. Ir aqui. Fazer isso. Como formigas. Mas as vezes..." Psicologo: "As vezes?" Frank: "As vezes eles falam sobre nos. Sobre humanos. E nao e odio. E... curiosidade. Como um cientista olhando para uma bacteria. Nos somos interessantes. So isso. Nao importantes. Nao ameaca. Interessantes."',
     characterId: 'storm_runner',
     order: 4,
     spriteHint: 'document',
@@ -277,7 +277,7 @@ export const PULSO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_pulso_countdown',
     name: 'Relatorio Medico — 47 Dias',
-    lore: 'RELATORIO MEDICO — CONFIDENCIAL. Paciente: "Pulso". Condicao: Fusao celular progressiva human-alien. Prognostico: A taxa de conversao celular e constante. Em 47 dias (+/- 3), a porcentagem de tecido alien ultrapassara 50%. Apos esse ponto: desconhecido. Hipoteses: (A) Morte por rejeicao sistemica. (B) Conversao completa — perda da consciencia humana. (C) Estabilizacao em estado hibrido permanente. Probabilidades: A=40%, B=35%, C=25%. Recomendacao: maximizar utilidade operacional no tempo restante. [Nota manuscrita de Pulso: "Ou D: eu me torno algo novo. Algo melhor. Algo que eles nao esperam."]',
+    lore: 'RELATORIO MEDICO — CONFIDENCIAL. Paciente: "Frank". Condicao: Fusao celular progressiva human-alien. Prognostico: A taxa de conversao celular e constante. Em 47 dias (+/- 3), a porcentagem de tecido alien ultrapassara 50%. Apos esse ponto: desconhecido. Hipoteses: (A) Morte por rejeicao sistemica. (B) Conversao completa — perda da consciencia humana. (C) Estabilizacao em estado hibrido permanente. Probabilidades: A=40%, B=35%, C=25%. Recomendacao: maximizar utilidade operacional no tempo restante. [Nota manuscrita de Frank: "Ou D: eu me torno algo novo. Algo melhor. Algo que eles nao esperam."]',
     characterId: 'storm_runner',
     order: 5,
     spriteHint: 'document',
@@ -300,7 +300,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_notebook',
     name: 'Caderno de Equacoes Quanticas',
-    lore: 'Caderno universitario de 200 paginas, completamente preenchido. As primeiras 50 paginas sao fisica quantica convencional — equacoes de Schrodinger, diagramas de Feynman. As seguintes 100 sao... algo mais. Simbolos que nao existem em nenhuma notacao cientifica. Equacoes que se contradizem e se resolvem simultaneamente. As ultimas 50 paginas foram escritas apos o retorno de Dr. Eon. Os fisicos do submarino dizem que "fazem sentido impossivel". Que descrevem coisas que nao deveriam ser descritíveis.',
+    lore: 'Caderno universitario de 200 paginas, completamente preenchido. As primeiras 50 paginas sao fisica quantica convencional — equações de Schrodinger, diagramas de Feynman. As seguintes 100 sao... algo mais. Simbolos que nao existem em nenhuma notação cientifica. Equações que se contradizem e se resolvem simultaneamente. As ultimas 50 paginas foram escritas apos o retorno de Dr. Eon. Os fisicos do submarino dizem que "fazem sentido impossível". Que descrevem coisas que nao deveriam ser descritíveis.',
     characterId: 'void_walker',
     order: 1,
     spriteHint: 'book',
@@ -308,7 +308,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_photo_other',
     name: 'Foto — "O Outro Lado"',
-    lore: 'Uma fotografia Polaroid que nao deveria existir. Dr. Eon nao levou camera ao outro lado. A foto apareceu no bolso de sua calca quando voltou. Mostra: um horizonte sem chao e sem ceu. Estruturas que parecem cidades invertidas, pendendo de nada. Luz vindo de todas as direcoes simultaneamente. E no centro, muito distante, algo escuro. Enorme. Esferico. Com olhos. Muitos olhos. Ninguem alem de Dr. Eon olha para esta foto por mais de 5 segundos sem sentir nausea.',
+    lore: 'Uma fotografia Polaroid que nao deveria existir. Dr. Eon nao levou camera ao outro lado. A foto apareceu no bolso de sua calca quando voltou. Mostra: um horizonte sem chao e sem ceu. Estruturas que parecem cidades invertidas, pendendo de nada. Luz vindo de todas as direcoes simultaneamente. E no centro, muito distante, algo escuro. Enorme. Esférico. Com olhos. Muitos olhos. Ninguem alem de Dr. Eon olha para esta foto por mais de 5 segundos sem sentir nausea.',
     characterId: 'void_walker',
     order: 2,
     spriteHint: 'photo',
@@ -316,7 +316,7 @@ export const ABISMO_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_abismo_clock',
     name: 'Relogio Distorcido',
-    lore: 'Relogio de pulso Casio F-91W. O mais comum do mundo. Mas este marca o tempo ao contrario. O ponteiro dos segundos gira no sentido anti-horario. A hora diminui em vez de aumentar. A data retrocede. Dr. Eon o usava quando caiu na fenda. Quando voltou, o relogio marcava uma data 300 anos no passado. E continua voltando. Os cientistas calculam que, pela taxa atual, em 2 meses o relogio marcara o momento exato do Big Bang. Ninguem sabe o que acontece depois.',
+    lore: 'Relogio de pulso Casio F-91W. O mais comum do mundo. Mas este marca o tempo ao contrário. O ponteiro dos segundos gira no sentido anti-horário. A hora diminui em vez de aumentar. A data retrocede. Dr. Eon o usava quando caiu na fenda. Quando voltou, o relogio marcava uma data 300 anos no passado. E continua voltando. Os cientistas calculam que, pela taxa atual, em 2 meses o relogio marcará o momento exato do Big Bang. Ninguem sabe o que acontece depois.',
     characterId: 'void_walker',
     order: 3,
     spriteHint: 'watch',
@@ -363,7 +363,7 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_domadora_frequencies',
     name: 'Lista de Frequencias EM',
-    lore: 'Folha de caderno coberta de numeros. "FREQUENCIAS DE CONTROLE: Scout: 2.4 GHz (pulso curto). Recruta: 2.4 GHz (pulso longo). Tanque: 1.8 GHz (onda quadrada). Atirador: 3.1 GHz (modulacao AM). NOTA: Frequencia do Enxame (comunicacao): 5.8 GHz. NAO USAR. Risco de atrair vivos. FREQUENCIA PROIBIDA: 7.7 GHz. Causa despertar completo — alien volta a consciencia. Recupera memorias. Recupera RAIVA. Testei uma vez. Nunca mais."',
+    lore: 'Folha de caderno coberta de numeros. "FREQUENCIAS DE CONTROLE: Cuspidor: 2.4 GHz (pulso curto). Grunto: 2.4 GHz (pulso longo). Couraça: 1.8 GHz (onda quadrada). Agulha: 3.1 GHz (modulacao AM). NOTA: Frequencia do Enxame (comunicacao): 5.8 GHz. NAO USAR. Risco de atrair vivos. FREQUENCIA PROIBIDA: 7.7 GHz. Causa despertar completo — alien volta a consciencia. Recupera memorias. Recupera RAIVA. Testei uma vez. Nunca mais."',
     characterId: 'beast_tamer',
     order: 2,
     spriteHint: 'paper',
@@ -387,7 +387,7 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
   {
     id: 'col_domadora_dog_tags',
     name: 'Plaqueta de Identificacao — "Rex"',
-    lore: 'Plaqueta metalica de coleira de cachorro. "REX — Se encontrado, ligar: (21) 98xxx-xxxx". Rex era um pastor-alemao que Diana tratou por 4 anos na clinica. Artrite, problemas de quadril, coracao grande. Nunca soube o que aconteceu com ele apos o Evento. Ate que um dia, em missao, encontrou um corpo canino mutado por esporos, irreconhecivel. Mas a plaqueta estava la. Ela enterrou o corpo. Foi a unica vez que os outros a viram chorar.',
+    lore: 'Plaqueta metalica de coleira de cachorro. "REX — Se encontrado, ligar: (21) 98xxx-xxxx". Rex era um pastor-alemao que Diana tratou por 4 anos na clinica. Artrite, problemas de quadril, coracao grande. Nunca soube o que aconteceu com ele apos o Evento. Ate que um dia, em missao, encontrou um corpo canino mutado por esporos, irreconhecível. Mas a plaqueta estava la. Ela enterrou o corpo. Foi a unica vez que os outros a viram chorar.',
     characterId: 'beast_tamer',
     order: 5,
     spriteHint: 'tag',
@@ -403,6 +403,61 @@ export const DOMADORA_COLLECTIBLES: Collectible[] = [
 ];
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// FLORIAN COLLECTIBLES — O Guardiao Quebrado
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export const GUARDIAO_COLLECTIBLES: Collectible[] = [
+  {
+    id: 'col_guardiao_helmet',
+    name: 'Capacete Rachado — Turno 4',
+    lore: 'Capacete de bombeiro, modelo antigo, rachado do lado direito. Etiqueta interna: "SGT. F. KREUZ — CB-GO — 18 ANOS DE SERVICO". A rachadura nao veio de fogo ou escombro. Veio de um dos dezesseis olhos, quando Florian tentou correr na direcao errada. Ele guarda o capacete rachado em vez do substituto que ganhou depois. Diz que precisa lembrar do angulo exato em que falhou. Para nunca mais ficar naquele angulo.',
+    characterId: 'firefighter',
+    order: 1,
+    spriteHint: 'helmet',
+  },
+  {
+    id: 'col_guardiao_dispatch',
+    name: 'Registro de Chamado — 08:41',
+    lore: 'CORPO DE BOMBEIROS — REGISTRO DE OCORRENCIA #4471. "08:41 — Chamado recebido: gato preso em arvore, Rua das Acacias. Solicitante: menor, aprox. 9 anos, tom de voz calmo. Guarnicao despachada: Sgt. Kreuz + 2. 08:47 — Chegada ao local. 08:49 — [SEM REGISTRO POSTERIOR]." O relatorio para ai. Nao ha 08:50. Nao ha conclusao. Nao ha nomes das criancas — ningues os cadastrou antes do Evento. Florian e a unica testemunha que resta, e ele nao registrou nada. Nunca conseguiu escrever o que viu.',
+    characterId: 'firefighter',
+    order: 2,
+    spriteHint: 'document',
+  },
+  {
+    id: 'col_guardiao_medal',
+    name: 'Medalha por Bravura — Nunca Usada',
+    lore: 'Medalha do Corpo de Bombeiros de Goias, "Bravura em Servico", numa caixinha de veludo ainda selada. Concedida por um resgate ANTERIOR ao Evento — um incendio residencial, 2021, tres vidas salvas. Florian nunca a usou. Nunca abriu a caixa depois de receber. Quando perguntam por que, ele responde sempre igual: "Bravura e pra quem conseguiu. Guarda isso pra quem merece." Ele carrega a caixinha fechada na mochila, junto com o equipamento. Nunca no peito.',
+    characterId: 'firefighter',
+    order: 3,
+    spriteHint: 'badge',
+  },
+  {
+    id: 'col_guardiao_logbook',
+    name: 'Caderno de Turnos — Contagem',
+    lore: 'Caderno de capa dura, cada pagina uma data, cada data um numero circulado: "112 EVACUADOS. 89 EVACUADOS. 203 EVACUADOS." Nenhuma pagina fala de baixas — so de salvos. No verso da ultima pagina preenchida, uma frase riscada e reescrita tres vezes, cada vez com letra mais firme: "Nao consigo trazer os tres de volta. Consigo trazer os proximos cem." A contagem continua todos os dias, sem excecao, desde o Evento.',
+    characterId: 'firefighter',
+    order: 4,
+    spriteHint: 'book',
+  },
+  {
+    id: 'col_guardiao_letter_dad',
+    name: 'Carta do Pai — Antes do Evento',
+    lore: '"Filho, sei que voce acha que escolheu o nome errado pra carreira errada. Floriao, padroeiro dos bombeiros, sempre me pareceu grande demais pra um menino teimoso de Goiania. Mas eu vi voce treinar todo santo dia por seis anos pra passar naquele concurso. Voce nao carrega o nome como peso. Voce carrega ele como escolha. Ta na hora de voce ver isso tambem. Com orgulho, sempre — Pai." A carta chegou uma semana antes do Evento. Florian a leu uma vez. Guardou. Nunca releu.',
+    characterId: 'firefighter',
+    order: 5,
+    spriteHint: 'letter',
+  },
+  {
+    id: 'col_guardiao_foam_canister',
+    name: 'Cilindro de Espuma — Prototipo',
+    lore: 'Cilindro de metal com valvula improvisada, soldada por maos que claramente nao sao profissionais. Rotulo escrito a mao: "ESPUMA MK1 — NAO TESTAR PERTO DO ROSTO (Sgt. Kreuz, aprenda com os erros dos outros)." Florian adaptou equipamento de combate a incendio para conter aliens organicos — a espuma expande e prende, desacelera, ganha tempo. Ele testou cada versao pessoalmente antes de usar em missao. Diz que prefere o risco pra si mesmo. Sempre prefere.',
+    characterId: 'firefighter',
+    order: 6,
+    spriteHint: 'vial',
+  },
+];
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // ALL COLLECTIBLES EXPORT
 // ═══════════════════════════════════════════════════════════════════════════════
 
@@ -414,6 +469,7 @@ export const ALL_COLLECTIBLES: Collectible[] = [
   ...PULSO_COLLECTIBLES,
   ...ABISMO_COLLECTIBLES,
   ...DOMADORA_COLLECTIBLES,
+  ...GUARDIAO_COLLECTIBLES,
 ];
 
 /** Get collectibles available for current unlocked characters */
@@ -423,9 +479,14 @@ export function getAvailableCollectibles(unlockedCharIds: string[]): Collectible
   );
 }
 
-/** Get a random collectible to spawn (20% chance called externally) */
-export function getRandomCollectible(unlockedCharIds: string[]): Collectible | null {
+/** Get a random collectible to spawn (20% chance called externally).
+ * Prefers ones not yet found (per the codex) so late-game players keep
+ * discovering new lore instead of re-rolling entries they already have;
+ * once everything available is found, falls back to the full pool. */
+export function getRandomCollectible(unlockedCharIds: string[], alreadyFoundIds?: Set<string>): Collectible | null {
   const available = getAvailableCollectibles(unlockedCharIds);
   if (available.length === 0) return null;
-  return available[Math.floor(Math.random() * available.length)];
+  const novel = alreadyFoundIds ? available.filter(c => !alreadyFoundIds.has(c.id)) : available;
+  const pool = novel.length > 0 ? novel : available;
+  return pool[Math.floor(Math.random() * pool.length)];
 }

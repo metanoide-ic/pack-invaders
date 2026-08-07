@@ -26,6 +26,9 @@ export interface EnemyDefinition {
   minWave: number;
   /** Spawn weight (higher = more common) */
   weight: number;
+  /** If set, this enemy only appears in the named phase variant (e.g. 'truck')
+   * and is excluded from the normal wave roster — see getEnemiesForWave. */
+  variantOnly?: string;
 }
 
 export type EnemySpecial =
@@ -36,7 +39,13 @@ export type EnemySpecial =
   | { type: 'phase'; chance: number }
   | { type: 'armor'; hits: number }
   | { type: 'slow_on_hit'; duration: number }
-  | { type: 'drain'; range: number; dps: number };
+  | { type: 'drain'; range: number; dps: number }
+  /** Allies within range take reduced damage — kill the shielder first */
+  | { type: 'shield_aura'; range: number; reduction: number }
+  /** Periodically drops bombs that explode on the ground line */
+  | { type: 'bomber'; interval: number; damage: number }
+  /** Chance to fire a shot back at the player when hit — punishes tunneling */
+  | { type: 'reflect'; chance: number; projectileSpeed: number };
 
 // ─── Basic Enemies (available from start) ────────────────────────────────────
 
@@ -76,7 +85,7 @@ export const ENEMY_GRUNT: EnemyDefinition = {
 
 export const ENEMY_TANK: EnemyDefinition = {
   id: 'tank',
-  name: 'Coura�a',
+  name: 'Couraça',
   tags: [],
   hp: 60,
   speed: 15,
@@ -345,7 +354,7 @@ export const ENEMY_TELEPORTER: EnemyDefinition = {
 
 export const ENEMY_SPLITTER: EnemyDefinition = {
   id: 'splitter',
-  name: 'Cis�o',
+  name: 'Cisão',
   tags: [],
   hp: 24,
   speed: 30,
@@ -391,10 +400,49 @@ export const ENEMY_REFLECTOR: EnemyDefinition = {
   goldReward: 6,
   armor: 2,
   movement: 'straight',
-  special: { type: 'armor', hits: 5 },
+  // Finally lives up to its name: hits have a chance to bounce a shot back
+  special: { type: 'reflect', chance: 0.3, projectileSpeed: 200 },
   spriteId: 'reflector',
   minWave: 6,
   weight: 3,
+};
+
+export const ENEMY_AEGIS: EnemyDefinition = {
+  id: 'aegis',
+  name: 'Égide',
+  tags: [],
+  hp: 90,
+  speed: 12,
+  damage: 8,
+  width: 34,
+  height: 34,
+  goldReward: 20,
+  armor: 1,
+  movement: 'strafe',
+  // Priority target: halves damage taken by everything near it
+  special: { type: 'shield_aura', range: 130, reduction: 0.5 },
+  spriteId: 'aegis',
+  minWave: 8,
+  weight: 2,
+};
+
+export const ENEMY_ZEPPELIN: EnemyDefinition = {
+  id: 'zeppelin',
+  name: 'Zepelim',
+  tags: ['Explosivo'],
+  hp: 55,
+  speed: 18,
+  damage: 10,
+  width: 38,
+  height: 26,
+  goldReward: 14,
+  armor: 0,
+  movement: 'strafe',
+  // Area denial: drops bombs that burst on the ground line
+  special: { type: 'bomber', interval: 3.5, damage: 14 },
+  spriteId: 'zeppelin',
+  minWave: 9,
+  weight: 2,
 };
 
 export const ENEMY_SPAWNER: EnemyDefinition = {
@@ -452,7 +500,7 @@ export const ENEMY_GHOST_SHIP: EnemyDefinition = {
 
 export const ENEMY_ACID_BLOB: EnemyDefinition = {
   id: 'acid_blob',
-  name: 'Corr�i',
+  name: 'Corrói',
   tags: ['Veneno', 'Orgânico'],
   hp: 22,
   speed: 20,
@@ -490,7 +538,7 @@ export const ENEMY_SENTINEL: EnemyDefinition = {
 // 26. Frost Archer
 export const ENEMY_FROST_ARCHER: EnemyDefinition = {
   id: 'frost_archer',
-  name: 'Estilha�o',
+  name: 'Estilhaço',
   tags: ['Gelo'],
   hp: 18,
   speed: 28,
@@ -734,7 +782,7 @@ export const ENEMY_IRON_MAIDEN: EnemyDefinition = {
 // 39. Time Warp
 export const ENEMY_TIME_WARP: EnemyDefinition = {
   id: 'time_warp',
-  name: 'Cr�nos',
+  name: 'Crônos',
   tags: [],
   hp: 18,
   speed: 25,
@@ -774,7 +822,7 @@ export const BOSS_SWARM_QUEEN: EnemyDefinition = {
 // 41. Kamikaze
 export const ENEMY_KAMIKAZE: EnemyDefinition = {
   id: 'kamikaze',
-  name: 'Vol�til',
+  name: 'Volátil',
   tags: ['Explosivo'],
   hp: 10,
   speed: 180,
@@ -793,7 +841,7 @@ export const ENEMY_KAMIKAZE: EnemyDefinition = {
 // 42. Helix
 export const ENEMY_HELIX: EnemyDefinition = {
   id: 'helix',
-  name: 'H�lice',
+  name: 'Hélice',
   tags: [],
   hp: 14,
   speed: 40,
@@ -812,7 +860,7 @@ export const ENEMY_HELIX: EnemyDefinition = {
 // 43. Phase Wraith
 export const ENEMY_PHASE_WRAITH: EnemyDefinition = {
   id: 'phase_wraith',
-  name: '�tera',
+  name: 'Étera',
   tags: [],
   hp: 20,
   speed: 35,
@@ -850,7 +898,7 @@ export const ENEMY_HIVE_MIND: EnemyDefinition = {
 // 45. Spore Cloud
 export const ENEMY_SPORE_CLOUD: EnemyDefinition = {
   id: 'spore_cloud',
-  name: 'M�celo',
+  name: 'Micélio',
   tags: ['Orgânico', 'Veneno'],
   hp: 35,
   speed: 5,
@@ -907,7 +955,7 @@ export const ENEMY_MAGNETIC_CORE: EnemyDefinition = {
 // 48. Flame Elemental
 export const ENEMY_FLAME_ELEMENTAL: EnemyDefinition = {
   id: 'flame_elemental',
-  name: 'Ign�voro',
+  name: 'Ignívoro',
   tags: ['Fogo'],
   hp: 30,
   speed: 35,
@@ -963,7 +1011,7 @@ export const ENEMY_STORM_DJINN: EnemyDefinition = {
 // 51. Plague Carrier
 export const ENEMY_PLAGUE_CARRIER: EnemyDefinition = {
   id: 'plague_carrier',
-  name: 'Pest�fero',
+  name: 'Pestífero',
   tags: ['Veneno'],
   hp: 18,
   speed: 30,
@@ -1001,7 +1049,7 @@ export const ENEMY_ROOT_GOLEM: EnemyDefinition = {
 // 53. Void Dancer
 export const ENEMY_VOID_DANCER: EnemyDefinition = {
   id: 'void_dancer',
-  name: 'Noct�vaga',
+  name: 'Noctívaga',
   tags: [],
   hp: 16,
   speed: 55,
@@ -1261,14 +1309,35 @@ export const BOSS_HARBINGER: EnemyDefinition = {
   spriteId: 'boss_harbinger', minWave: 25, weight: 0,
 };
 
-// 20. Zyr'Goth, the Fallen God
+// 20. Zyr'Goth, the Fallen God — the final boss. Rendered as a screen-tall
+// colossus with a cinematic entrance (see Renderer.renderZyrgothGiant);
+// stands still and vomits broods of spawnlings instead of moving.
 export const BOSS_EPOCH: EnemyDefinition = {
   id: 'boss_epoch', name: 'Zyr-Goth, o Deus Caído',
   tags: ['Explosivo'], hp: 1200, speed: 3, damage: 35,
   width: 72, height: 72, goldReward: 250, armor: 10,
   movement: 'straight',
-  special: { type: 'explode', radius: 150, damage: 50 },
+  special: { type: 'spawn', childId: 'zyr_spawnling', interval: 4.5 },
   spriteId: 'boss_epoch', minWave: 28, weight: 0,
+};
+
+// Zyr-Goth's brood — only ever spawned by the Fallen God himself (weight 0)
+export const ENEMY_ZYR_SPAWNLING: EnemyDefinition = {
+  id: 'zyr_spawnling',
+  name: 'Cria de Zyr-Goth',
+  tags: ['Explosivo', 'Orgânico'],
+  hp: 45,
+  speed: 55,
+  damage: 12,
+  width: 26,
+  height: 26,
+  goldReward: 8,
+  armor: 0,
+  movement: 'sine',
+  special: { type: 'explode', radius: 60, damage: 14 },
+  spriteId: 'zyr_spawnling',
+  minWave: 999,
+  weight: 0,
 };
 
 // ─── Leech — drains HP from player when close ────────────────────────────────
@@ -1292,6 +1361,60 @@ export const ENEMY_LEECH: EnemyDefinition = {
 
 // ─── All Enemies Export ──────────────────────────────────────────────────────
 
+// ─── Estrada de Fuga — dedicated road-chase roster ──────────────────────────
+// These only spawn during the 'truck' normal variant (variantOnly), so they
+// never dilute the normal pool. Stats reuse existing archetypes to stay in
+// balance; the theme is "things that dive onto the moving truck".
+
+export const ENEMY_ROAD_WASP: EnemyDefinition = {
+  id: 'road_wasp', name: 'Vespa da Pista', tags: [], hp: 10, speed: 68, damage: 4,
+  width: 18, height: 18, goldReward: 3, armor: 0, movement: 'erratic',
+  spriteId: 'road_wasp', minWave: 1, weight: 10, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_MANTA: EnemyDefinition = {
+  id: 'road_manta', name: 'Arraia Alada', tags: ['Orgânico'], hp: 15, speed: 60, damage: 5,
+  width: 26, height: 22, goldReward: 4, armor: 0, movement: 'sine',
+  spriteId: 'road_manta', minWave: 1, weight: 9, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_JELLY: EnemyDefinition = {
+  id: 'road_jelly', name: 'Água-Viva Flutuante', tags: ['Elétrico'], hp: 18, speed: 30, damage: 5,
+  width: 24, height: 26, goldReward: 5, armor: 0, movement: 'sine',
+  special: { type: 'shoot', fireRate: 0.5, projectileSpeed: 120 },
+  spriteId: 'road_jelly', minWave: 1, weight: 6, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_GARGOYLE: EnemyDefinition = {
+  id: 'road_gargoyle', name: 'Gárgula de Ferro', tags: [], hp: 28, speed: 48, damage: 9,
+  width: 30, height: 26, goldReward: 6, armor: 0, movement: 'charge',
+  spriteId: 'road_gargoyle', minWave: 1, weight: 5, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_BIKER: EnemyDefinition = {
+  id: 'road_biker', name: 'Motoqueiro Rival', tags: ['Fogo'], hp: 32, speed: 54, damage: 8,
+  width: 28, height: 30, goldReward: 7, armor: 1, movement: 'strafe',
+  special: { type: 'shoot', fireRate: 0.9, projectileSpeed: 150 },
+  spriteId: 'road_biker', minWave: 1, weight: 6, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_HANGER: EnemyDefinition = {
+  id: 'road_hanger', name: 'Aberração Pendente', tags: ['Veneno'], hp: 42, speed: 20, damage: 8,
+  width: 32, height: 30, goldReward: 7, armor: 1, movement: 'straight',
+  spriteId: 'road_hanger', minWave: 1, weight: 5, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_MOSS: EnemyDefinition = {
+  id: 'road_moss', name: 'Rochedo Musgoso', tags: ['Orgânico'], hp: 55, speed: 14, damage: 10,
+  width: 34, height: 32, goldReward: 8, armor: 2, movement: 'straight',
+  spriteId: 'road_moss', minWave: 1, weight: 4, variantOnly: 'truck',
+};
+export const ENEMY_ROAD_BRUTE: EnemyDefinition = {
+  id: 'road_brute', name: 'Bruto de Sucata', tags: [], hp: 72, speed: 16, damage: 12,
+  width: 38, height: 36, goldReward: 10, armor: 3, movement: 'straight',
+  spriteId: 'road_brute', minWave: 1, weight: 3, variantOnly: 'truck',
+};
+
+/** Estrada de Fuga roster — the truck variant spawns exclusively from this. */
+export const ESTRADA_ENEMIES: EnemyDefinition[] = [
+  ENEMY_ROAD_WASP, ENEMY_ROAD_MANTA, ENEMY_ROAD_JELLY, ENEMY_ROAD_GARGOYLE,
+  ENEMY_ROAD_BIKER, ENEMY_ROAD_HANGER, ENEMY_ROAD_MOSS, ENEMY_ROAD_BRUTE,
+];
+
 export const ALL_ENEMIES: EnemyDefinition[] = [
   ENEMY_SCOUT, ENEMY_GRUNT, ENEMY_TANK, ENEMY_SHOOTER, ENEMY_ZIGZAG,
   ENEMY_SWARM, ENEMY_SHIELD_BEARER, ENEMY_BOMBER,
@@ -1299,6 +1422,7 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   BOSS_DRILL_SERGEANT, BOSS_HYDRA,
   ENEMY_HEALER, ENEMY_TELEPORTER, ENEMY_SPLITTER, ENEMY_MAGNETIC, ENEMY_REFLECTOR,
   ENEMY_SPAWNER, ENEMY_BERSERKER, ENEMY_GHOST_SHIP, ENEMY_ACID_BLOB, ENEMY_SENTINEL,
+  ENEMY_AEGIS, ENEMY_ZEPPELIN,
   ENEMY_FROST_ARCHER, ENEMY_FIRE_DANCER, ENEMY_EARTH_GOLEM, ENEMY_WIND_SPRITE,
   ENEMY_POISON_MUSHROOM, ENEMY_CRYSTAL_GUARDIAN, ENEMY_SHADOW_ASSASSIN, ENEMY_LAVA_SLIME,
   ENEMY_STORM_CLOUD, ENEMY_BONE_WARRIOR, ENEMY_MIMIC, ENEMY_PLAGUE_DOCTOR,
@@ -1307,13 +1431,18 @@ export const ALL_ENEMIES: EnemyDefinition[] = [
   ENEMY_KAMIKAZE, ENEMY_HELIX, ENEMY_PHASE_WRAITH, ENEMY_HIVE_MIND, ENEMY_SPORE_CLOUD,
   ENEMY_CRYSTALLINE, ENEMY_MAGNETIC_CORE, ENEMY_FLAME_ELEMENTAL, ENEMY_TIDE_WALKER,
   ENEMY_STORM_DJINN, ENEMY_PLAGUE_CARRIER, ENEMY_ROOT_GOLEM, ENEMY_VOID_DANCER,
-  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF, ENEMY_LEECH,
+  ENEMY_WAR_DRUM, ENEMY_GOLD_THIEF, ENEMY_LEECH, ENEMY_ZYR_SPAWNLING,
   BOSS_TITAN_PRIME, BOSS_DEVOURER, BOSS_STORM_KING, BOSS_ARCHITECT, BOSS_KEPLER_PRIME,
   // New bosses (9-20)
   BOSS_TOXAR, BOSS_CRIOX, BOSS_VULKRA, BOSS_PHANTAX, BOSS_TERRAVOX, BOSS_SOLYX,
   BOSS_ABYSSARA, BOSS_MECHRON, BOSS_VOIDMAW, BOSS_ASTRAL_SERPENT, BOSS_HARBINGER, BOSS_EPOCH,
+  // Estrada de Fuga roster — listed here so their sprites load; excluded from
+  // the normal wave pool by getEnemiesForWave (variantOnly).
+  ...ESTRADA_ENEMIES,
 ];
 
+/** All bosses, including the giant Zyr-Goth — kept for anything (codex,
+ * relics-per-boss lookups, etc.) that needs the full historical roster. */
 export const BOSSES: EnemyDefinition[] = [
   BOSS_DRILL_SERGEANT, BOSS_HYDRA, BOSS_SWARM_QUEEN, BOSS_TOXAR,
   BOSS_TITAN_PRIME, BOSS_CRIOX, BOSS_PHANTAX, BOSS_DEVOURER,
@@ -1322,14 +1451,38 @@ export const BOSSES: EnemyDefinition[] = [
   BOSS_ASTRAL_SERPENT, BOSS_HARBINGER, BOSS_KEPLER_PRIME, BOSS_EPOCH,
 ];
 
+/** Regular boss-month roster (months 3/6/9 of every year) — everything
+ * except the giant screen-filling boss(es), which get their own dedicated
+ * pool below so they don't get diluted into this rotation. */
+export const REGULAR_BOSSES: EnemyDefinition[] = BOSSES.filter(b => b.id !== 'boss_epoch');
+
+/** Giant, screen-filling, month-12-only bosses. Currently just Zyr-Goth —
+ * more will join this pool later so month 12 isn't the same fight every
+ * single year; getMegaBossForEncounter() already rotates/mutates it like
+ * any other boss pool, so adding entries here is the only step needed. */
+export const MEGA_BOSSES: EnemyDefinition[] = [BOSS_EPOCH];
+
 /** Get enemies available for a given wave */
 export function getEnemiesForWave(wave: number): EnemyDefinition[] {
-  return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0);
+  return ALL_ENEMIES.filter(e => e.minWave <= wave && e.weight > 0 && !e.variantOnly);
 }
 
-/** Get boss for a wave (bosses appear every 5 waves) */
-export function getBossForWave(wave: number): EnemyDefinition | null {
-  if (wave % 5 !== 0) return null;
-  const bossIndex = Math.floor(wave / 5) - 1;
-  return BOSSES[bossIndex % BOSSES.length] || null;
+/**
+ * Get the regular boss for the Nth *regular* boss encounter of a run
+ * (1-indexed, months 3/6/9), rotating through REGULAR_BOSSES before
+ * repeating. Kept separate from the mega-boss pool/counter so laps and
+ * mutation escalation for the two don't interfere with each other.
+ */
+export function getBossForEncounter(encounterNumber: number): EnemyDefinition {
+  const idx = Math.max(0, encounterNumber - 1) % REGULAR_BOSSES.length;
+  return REGULAR_BOSSES[idx];
+}
+
+/**
+ * Get the mega boss for the Nth mega-boss encounter of a run (1-indexed,
+ * always month 12) — rotates through MEGA_BOSSES once more than one exists.
+ */
+export function getMegaBossForEncounter(encounterNumber: number): EnemyDefinition {
+  const idx = Math.max(0, encounterNumber - 1) % MEGA_BOSSES.length;
+  return MEGA_BOSSES[idx];
 }
