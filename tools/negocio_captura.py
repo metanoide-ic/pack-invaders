@@ -9,74 +9,29 @@ Uso:
 """
 
 import math
-import subprocess
 import sys
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+
+from chroma_common import (  # noqa: E402
+    CHROMA, FILL, FILL_DARK, FPS, H, INK, SS, W, clamp01, ease_in, ease_in_out,
+    ease_out, encode, lerp, pick_font, seg,
+)
 
 # ---------------------------------------------------------------- configuracao
 
-W, H = 1920, 1080
-FPS = 30
 DURATION = 5.0
 NFRAMES = int(round(FPS * DURATION))  # 150
-SS = 2  # supersampling: desenha em 2x e reduz com LANCZOS
 
-CHROMA = (0, 255, 0)
-INK = (16, 26, 56)  # azul quase preto: contorno da palavra e cordas
-FILL = (255, 122, 26)  # laranja: preenchimento da palavra
-FILL_DARK = (214, 84, 8)
 ROPE = (26, 38, 74)
 ROPE_LIT = (78, 96, 148)
 WEIGHT = (58, 66, 92)
 SWEAT = (70, 150, 240)
 
-FONT_DIR = Path("/mnt/skills/examples/canvas-design/canvas-fonts")
-FONT_CANDIDATES = [
-    FONT_DIR / "Outfit-Bold.ttf",
-    FONT_DIR / "WorkSans-Bold.ttf",
-    Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
-]
-
 WORD = "NEGÓCIO"
-
-# ------------------------------------------------------------------- utilidades
-
-
-def pick_font(size):
-    for path in FONT_CANDIDATES:
-        if path.exists():
-            return ImageFont.truetype(str(path), size)
-    raise RuntimeError("nenhuma fonte disponivel")
-
-
-def ease_out(x):
-    return 1.0 - (1.0 - x) ** 3
-
-
-def ease_in(x):
-    return x * x * x
-
-
-def ease_in_out(x):
-    return 3 * x * x - 2 * x * x * x
-
-
-def clamp01(x):
-    return max(0.0, min(1.0, x))
-
-
-def seg(t, t0, t1):
-    """Progresso normalizado de t dentro da janela [t0, t1]."""
-    if t1 <= t0:
-        return 1.0
-    return clamp01((t - t0) / (t1 - t0))
-
-
-def lerp(a, b, k):
-    return a + (b - a) * k
-
 
 # --------------------------------------------------------- sprite da palavra
 
@@ -506,30 +461,7 @@ def render_frame(i):
 
 def main():
     dest = Path(sys.argv[1] if len(sys.argv) > 1 else "negocio_capturado.mp4")
-    import imageio_ffmpeg
-
-    ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
-    cmd = [
-        ffmpeg, "-y",
-        "-f", "rawvideo", "-pix_fmt", "rgb24",
-        "-s", f"{W}x{H}", "-r", str(FPS), "-i", "pipe:0",
-        "-an",
-        "-c:v", "libx264", "-preset", "slow", "-crf", "16",
-        "-pix_fmt", "yuv420p", "-profile:v", "high", "-level", "4.2",
-        "-movflags", "+faststart",
-        str(dest),
-    ]
-    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.DEVNULL,
-                            stderr=subprocess.PIPE)
-    for i in range(NFRAMES):
-        proc.stdin.write(render_frame(i).tobytes())
-        if i % 25 == 0:
-            print(f"frame {i}/{NFRAMES}", flush=True)
-    proc.stdin.close()
-    err = proc.stderr.read().decode(errors="ignore")
-    if proc.wait() != 0:
-        raise SystemExit(err[-3000:])
-    print(f"ok -> {dest}")
+    encode((render_frame(i) for i in range(NFRAMES)), dest)
 
 
 if __name__ == "__main__":
