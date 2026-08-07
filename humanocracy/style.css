@@ -611,6 +611,23 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
   color:rgba(255,255,255,.25); font-size:16px; letter-spacing:2px; pointer-events:none;
 }
+/* ---- INSTRUMENTOS FÍSICOS na mesa (arraste até o cidadão) ---- */
+.legacy-scan { display:none !important; }   /* os botões viraram objetos de verdade */
+#instruments { position:absolute; right:16px; top:34%; display:flex; flex-direction:column; align-items:center; gap:16px; z-index:60; }
+.inst-slot { position:relative; }
+.inst { cursor:grab; position:relative; touch-action:none; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)); transition:transform .12s; }
+.inst:hover { transform:translateY(-2px); }
+.inst.dragging { cursor:grabbing; transform:none; }
+.inst.busy { pointer-events:none; }
+.inst canvas { display:block; image-rendering:pixelated; }
+.inst-tag {
+  position:absolute; left:50%; transform:translateX(-50%) rotate(-3deg); bottom:-15px;
+  background:#d8cdb0; color:#332b1f; font-family:var(--font-mono); font-size:12px; line-height:1.25;
+  padding:0 4px; border:1px solid #0b0c07; white-space:nowrap; pointer-events:none;
+  box-shadow:1px 2px 0 rgba(0,0,0,.4); display:none;
+}
+.inst-tag.on { display:block; animation:tag-pop .25s cubic-bezier(.2,1.8,.4,1); }
+@keyframes tag-pop { from { transform:translateX(-50%) rotate(-3deg) scale(.4); } }
 .document {
   position:absolute; width:250px; background-color:var(--paper); color:var(--paper-ink);
   background-image: linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);

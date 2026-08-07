@@ -185,9 +185,11 @@
             <button id="btn-exam" class="btn-tool" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
             <button id="btn-bag" class="btn-tool" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
             <button id="btn-lifeline" class="btn-tool" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
-            <button id="btn-scan-thermo" class="btn-tool" data-ico="thermo" title="Scanner Térmico (15 min)"><span class="tool-name">TÉRMICO</span></button>
-            <button id="btn-scan-pulse" class="btn-tool" data-ico="pulse" title="Scanner de Pulsação (15 min)"><span class="tool-name">PULSAÇÃO</span></button>
-            <button id="btn-scan-bio" class="btn-tool" data-ico="bio" title="Detector Biológico (30 min)"><span class="tool-name">BIOLÓGICO</span></button>
+            <!-- térmico/pulsação/biológico viraram INSTRUMENTOS FÍSICOS na mesa
+                 (arraste até o cidadão); os botões ficam ocultos por compat. -->
+            <button id="btn-scan-thermo" class="btn-tool legacy-scan" data-ico="thermo" title="Scanner Térmico (15 min)"><span class="tool-name">TÉRMICO</span></button>
+            <button id="btn-scan-pulse" class="btn-tool legacy-scan" data-ico="pulse" title="Scanner de Pulsação (15 min)"><span class="tool-name">PULSAÇÃO</span></button>
+            <button id="btn-scan-bio" class="btn-tool legacy-scan" data-ico="bio" title="Detector Biológico (30 min)"><span class="tool-name">BIOLÓGICO</span></button>
           </div>
           <div class="rulebook" id="rulebook">
             <div class="rb-title">REGULAMENTO DO DIA</div>
@@ -201,6 +203,18 @@
         <div class="desk" id="desk">
           <canvas class="desk-props" id="desk-props"></canvas>
           <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
+          <!-- INSTRUMENTOS FÍSICOS: arraste até o cidadão no vidro -->
+          <div id="instruments">
+            <div class="inst-slot" style="width:26px;height:92px">
+              <div class="inst" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
+            </div>
+            <div class="inst-slot" style="width:54px;height:54px">
+              <div class="inst" id="inst-pulse" title="Estetoscópio — arraste até o cidadão e ouça"><canvas width="54" height="54"></canvas></div>
+            </div>
+            <div class="inst-slot" id="inst-bio-slot" style="width:30px;height:72px">
+              <div class="inst" id="inst-bio" title="Coletor K-7 — arraste até o cidadão; o resultado sai na etiqueta"><canvas width="30" height="72"></canvas><span class="inst-tag" id="bio-tag"></span></div>
+            </div>
+          </div>
         </div>
       </div>
 

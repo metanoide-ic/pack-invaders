@@ -154,78 +154,107 @@ function mumble(pitch, syl) {
   } catch (e) {}
 }
 
-/* ---------- MÚSICA (trilha melancólica procedural) ---------- */
+/* ---------- MÚSICA: "Marcha do Posto Nº 7" (procedural, mas COMPOSTA) ----------
+   No espírito de Papers Please: ostinato grave martelado, percussão de marcha,
+   melodia em frases que retornam. Sequenciador por compasso com lookahead —
+   ritmo cravado, nada de notas soltas ao vento. */
 const MUSIC = { on: true, playing: false, timer: null };
-// progressão sombria (Lá menor / frígio): díades que a trilha percorre em ordem,
-// não notas soltas aleatórias — soa COMPOSTO, não gerado.
-const M_CHORDS = [
-  [110.00, 164.81], // Am (A+E)
-  [130.81, 196.00], // C+G
-  [146.83, 220.00], // Dm (D+A)
-  [123.47, 164.81], // tensão (B+E)
-  [110.00, 130.81], // A+C (terça menor)
-  [98.00, 146.83],  // G+D
-];
-/* MOTIVO: um tema curto e triste (não notas aleatórias — isso soa "gerado").
-   Semitons a partir de Lá; frase que balança e desce, feito um sino de fim de
-   turno. Retorna sempre — o ouvido aprende a cantarolar. */
-const M_MOTIF = [0, 3, 5, 3, 0, -2, 0, -5]; // Lá Dó Ré Dó Lá Sol Lá Mí(baixo)
-// deriva de humor por regime: quanto pior o Estado, mais grave e desafinado
+const MT = {
+  bpm: 96, root: 73.4162,                       // Ré 2 — tônica da marcha (Ré menor)
+  // 8 compassos: Dm Dm Bb A | Dm Gm A Dm  (semitons sobre a tônica)
+  chords: [[0, 3, 7], [0, 3, 7], [-4, 0, 3], [-5, -1, 2], [0, 3, 7], [5, 8, 12], [-5, -1, 2], [0, 3, 7]],
+  bass: [0, 0, 7, 0, 0, 10, 7, 0],              // ostinato em colcheias (relativo à fundamental)
+  // frases de 2 compassos (16 colcheias; null = pausa), semitons sobre a tônica
+  mel: [
+    [24, null, 27, 29, 31, null, 29, 27, 24, null, 22, null, 24, null, null, null],
+    [27, null, 29, 31, 32, null, 31, 29, 27, null, 26, null, 27, null, null, null],
+    [24, null, 27, 29, 31, null, 29, 27, 24, null, 22, null, 24, null, null, null],
+    [22, null, 20, 19, 17, null, 19, 20, 22, null, 26, null, 24, null, null, null],
+  ],
+};
+const mHz = (s) => MT.root * Math.pow(2, s / 12);
+// humor por regime: quanto pior o Estado, mais lenta, fechada e desafinada
 const M_MOOD = {
-  republica: { detune: 1.004, mel: 1.0, lp: 680 },
-  mehrvolk: { detune: 1.006, mel: 0.94, lp: 620 },
-  conselho: { detune: 1.009, mel: 0.5, lp: 560 },  // melodia rareia, quase muda
-  colapso: { detune: 1.013, mel: 0.4, lp: 500 },   // tudo desce e desafina
+  republica: { det: 3, lp: 1300, tempo: 1 },
+  mehrvolk:  { det: 5, lp: 1150, tempo: 1 },
+  conselho:  { det: 8, lp: 950,  tempo: .95 },
+  colapso:   { det: 14, lp: 780, tempo: .88 },
 };
 function mMood() { try { return M_MOOD[regimeOfDay(S.day)] || M_MOOD.republica; } catch (e) { return M_MOOD.republica; } }
-function musicNote() {
+function mv(fr, t, dur, type, vol, lpf, det) {   // uma voz: osc → lowpass → envelope
+  const o = AC.createOscillator(); o.type = type; o.frequency.value = fr;
+  if (det) o.detune.value = det;
+  const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lpf;
+  const g = AC.createGain();
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .015);
+  g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  o.connect(f); f.connect(g); g.connect(AC.destination);
+  o.start(t); o.stop(t + dur + .05);
+}
+function mDrum(kind, t, vol) {
+  if (kind === 'kick') {
+    const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(110, t); o.frequency.exponentialRampToValueAtTime(42, t + .09);
+    g.gain.setValueAtTime(vol || .2, t); g.gain.exponentialRampToValueAtTime(.001, t + .16);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .18);
+    return;
+  }
+  const n = AC.createBuffer(1, 2400, AC.sampleRate), d = n.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+  const s = AC.createBufferSource(); s.buffer = n;
+  const f = AC.createBiquadFilter(); f.type = kind === 'hat' ? 'highpass' : 'bandpass';
+  f.frequency.value = kind === 'hat' ? 7000 : 1700; f.Q.value = .9;
+  const g = AC.createGain(); g.gain.setValueAtTime(vol || (kind === 'hat' ? .022 : .09), t);
+  g.gain.exponentialRampToValueAtTime(.001, t + (kind === 'hat' ? .03 : .09));
+  s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + .1);
+}
+function musicTick() {  // agenda um compasso à frente (lookahead de ~0.6s)
   if (!MUSIC.on || !MUSIC.playing) return;
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     if (AC.state === 'suspended') return;
-    const t = AC.currentTime;
-    // caminha pela progressão (quase sempre em ordem, às vezes pula) — direção, não aleatório
     const mood = mMood();
-    MUSIC.idx = ((MUSIC.idx || 0) + (chance(.25) ? 2 : 1)) % M_CHORDS.length;
-    const chord = M_CHORDS[MUSIC.idx];
-    const lp = AC.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = mood.lp;
-    const g = AC.createGain(); g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(.028, t + 1.6);
-    g.gain.linearRampToValueAtTime(0, t + 5.2);
-    lp.connect(g); g.connect(AC.destination);
-    chord.forEach(base => [base, base * mood.detune].forEach(fr => {
-      const o = AC.createOscillator(); o.type = 'triangle'; o.frequency.value = fr;
-      o.connect(lp); o.start(t); o.stop(t + 5.4);
-    }));
-    // MELODIA: caminha pelo motivo (um tema, não sorteio). Uma voz de sino
-    // perdida no zumbido. Sob regimes duros ela rareia — o mundo emudece.
-    if (chance(mood.mel)) {
-      const semi = M_MOTIF[(MUSIC.mstep = ((MUSIC.mstep || 0) + 1) % M_MOTIF.length)];
-      const mel = 220 * Math.pow(2, semi / 12);        // Lá4 como tônica do tema
-      const ml = AC.createBiquadFilter(); ml.type = 'lowpass'; ml.frequency.value = 1500;
-      const mg = AC.createGain(); mg.gain.setValueAtTime(0, t + .4); mg.gain.linearRampToValueAtTime(.016, t + 1.0); mg.gain.linearRampToValueAtTime(0, t + 3.6);
-      ml.connect(mg); mg.connect(AC.destination);
-      const mo = AC.createOscillator(); mo.type = 'sine'; mo.frequency.value = mel; mo.connect(ml); mo.start(t + .4); mo.stop(t + 3.8);
-      // um harmônico de sino uma oitava acima, bem tênue (dá corpo de metal)
-      const mo2 = AC.createOscillator(); mo2.type = 'sine'; mo2.frequency.value = mel * 2;
-      const mg2 = AC.createGain(); mg2.gain.setValueAtTime(0, t + .4); mg2.gain.linearRampToValueAtTime(.005, t + 1.0); mg2.gain.linearRampToValueAtTime(0, t + 2.8);
-      mo2.connect(mg2); mg2.connect(AC.destination); mo2.start(t + .4); mo2.stop(t + 3.0);
+    const e8 = (60 / (MT.bpm * mood.tempo)) / 2;         // uma colcheia
+    if (MUSIC.next == null || MUSIC.next < AC.currentTime - .5) MUSIC.next = AC.currentTime + .1;
+    if (MUSIC.next > AC.currentTime + .6) return;        // compasso já agendado
+    const t0 = MUSIC.next, bar = MUSIC.bar || 0;
+    const chord = MT.chords[bar % 8];
+    const phrase = MT.mel[(bar >> 1) % 4], off = (bar % 2) * 8;
+    const stabs = (bar % 32) >= 8;                       // adensa após 8 compassos
+    for (let i = 0; i < 8; i++) {
+      const t = t0 + i * e8;
+      // OSTINATO grave — o coração da marcha
+      mv(mHz(chord[0] + MT.bass[i]), t, e8 * .92, 'sawtooth', .05, 420, 0);
+      // percussão: bumbo 1/3 · caixa 2/4 · chimbal em todas as colcheias
+      if (i === 0 || i === 4) mDrum('kick', t);
+      if (i === 2 || i === 6) mDrum('snare', t);
+      mDrum('hat', t, i % 2 ? .014 : .026);
+      // STABS de acorde no contratempo (metal cansado)
+      if (stabs && (i === 2 || i === 6)) chord.forEach(s2 => mv(mHz(s2 + 12), t, e8 * .5, 'sawtooth', .012, 900, mood.det));
+      // MELODIA — voz dupla levemente desafinada
+      const semi = phrase[off + i];
+      if (semi != null) {
+        mv(mHz(semi), t, e8 * 1.8, 'square', .026, mood.lp, 0);
+        mv(mHz(semi), t, e8 * 1.8, 'sawtooth', .015, mood.lp, mood.det + 3);
+      }
     }
+    MUSIC.next = t0 + 8 * e8;
+    MUSIC.bar = bar + 1;
   } catch (e) {}
 }
 function startMusic() {
   if (MUSIC.playing) return;
   MUSIC.playing = true;
-  MUSIC.idx = 0; MUSIC.mstep = 0;
-  // DRONE grave constante (pedal) — aterra a ambiência; um zumbido de posto sem fim
+  MUSIC.next = null; MUSIC.bar = 0;
+  // DRONE grave constante (pedal) sob a marcha — o zumbido de posto sem fim
   try {
     AC = AC || new (window.AudioContext || window.webkitAudioContext)();
     const t = AC.currentTime;
     const dlp = AC.createBiquadFilter(); dlp.type = 'lowpass'; dlp.frequency.value = 240;
-    const dg = AC.createGain(); dg.gain.setValueAtTime(0.0001, t); dg.gain.linearRampToValueAtTime(.02, t + 4);
+    const dg = AC.createGain(); dg.gain.setValueAtTime(0.0001, t); dg.gain.linearRampToValueAtTime(.012, t + 4);
     dlp.connect(dg); dg.connect(AC.destination);
     MUSIC.drone = [];
-    [[55, 1], [82.41, .5]].forEach(([fr, a]) => {
+    [[36.7, 1], [73.42, .4]].forEach(([fr, a]) => {   // Ré 1 + Ré 2 (afinado com a marcha)
       const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
       const og = AC.createGain(); og.gain.value = a; o.connect(og); og.connect(dlp);
       o.start(t); MUSIC.drone.push(o);
@@ -233,8 +262,8 @@ function startMusic() {
     MUSIC.droneGain = dg;
   } catch (e) {}
   clearInterval(MUSIC.timer);
-  MUSIC.timer = setInterval(musicNote, 3600);
-  musicNote();
+  MUSIC.timer = setInterval(musicTick, 110);
+  musicTick();
 }
 function stopMusic() {
   MUSIC.playing = false;
@@ -1440,6 +1469,7 @@ function startDay() {
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
   $('btn-scan-bio').style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
+  const bioSlot = $('inst-bio-slot'); if (bioSlot) bioSlot.style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
   $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
@@ -2142,6 +2172,7 @@ function greetingFor(cz) {
 }
 
 function presentCitizen(cz) {
+  resetInstruments();                                       // leituras do anterior somem
   $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
   const a = $('npc-actor');
   a.className = 'pickable';
@@ -2704,14 +2735,18 @@ function scan(kind) {
   // escanear de novo, e inclusive numa segunda leitura da mesma campanha.
   const prevRng = beginRng(hashSeed(cz.seed || 0, 'scan', kind));
   try {
-  let out = '';
+  let out = '', info = null;
   if (kind === 'thermo') {
     spendTime(15);
     const anom = cz.isAlternado ? chance(.35) : chance(cz.nervous ? .2 : .08);
+    // a leitura que o termômetro mostra (fria/assimétrica = corpo errado)
+    const temp = anom ? (30.4 + ri(0, 26) / 10) : (36.2 + ri(0, 9) / 10);
+    info = { anom, temp };
     out = anom ? 'TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : 'TÉRMICO: padrão dentro da faixa humana comum.';
   } else if (kind === 'pulse') {
     spendTime(15);
     const calm = cz.isAlternado ? chance(.7) : chance(cz.nervous ? .1 : .5);
+    info = { calm };
     out = calm ? 'PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : 'PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
   } else if (kind === 'bio') {
     spendTime(30);
@@ -2728,6 +2763,7 @@ function scan(kind) {
     const tp = decal ? .5 : .8, fp = decal ? .3 : .1;
     const positive = cz.isAlternado ? chance(tp) : chance(fp);
     cz.bioResult = positive;
+    info = { positive };
     if (positive) {
       cz.evidence = true;
       $('btn-detain').disabled = false;
@@ -2735,9 +2771,174 @@ function scan(kind) {
     } else out = 'BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
   }
   $('scan-result').textContent = out;
+  return info;
   } finally {
     _rng = prevRng;
   }
+}
+
+/* ---------- INSTRUMENTOS FÍSICOS NA MESA (ferramentas diegéticas) ----------
+   Térmico/pulsação/biológico não são mais botões: são OBJETOS na mesa que
+   você pega e arrasta até o cidadão no vidro. O termômetro volta pra mesa
+   com a leitura; o estetoscópio deixa OUVIR o coração; o coletor K-7 volta
+   com a etiqueta do resultado. Mesmos custos de tempo e mesma determinística
+   (tudo passa pelo scan(kind) seedado). */
+function sfxTool(k) {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    if (k === 'pickup' || k === 'drop') {          // clac de objeto na madeira
+      const o = AC.createOscillator(), g = AC.createGain(); o.type = 'triangle';
+      o.frequency.setValueAtTime(k === 'pickup' ? 330 : 190, t);
+      o.frequency.exponentialRampToValueAtTime(90, t + .05);
+      g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .09);
+      o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .1);
+    } else if (k === 'beep') {                     // bip curto do termômetro
+      [0, .16].forEach(off => {
+        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square';
+        o.frequency.value = 1560;
+        g.gain.setValueAtTime(.05, t + off); g.gain.exponentialRampToValueAtTime(.001, t + off + .09);
+        o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + .1);
+      });
+    }
+  } catch (e) {}
+}
+function sfxHeartbeat(fast) {                      // o que o estetoscópio ouve
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t0 = AC.currentTime + .15, iv = fast ? .4 : .96, n = fast ? 6 : 3;
+    for (let kBeat = 0; kBeat < n; kBeat++) {
+      [[0, 62, .26], [.15, 46, .17]].forEach(([off, fr, vol]) => {   // tum-tá
+        const t = t0 + kBeat * iv + off;
+        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine';
+        o.frequency.setValueAtTime(fr, t); o.frequency.exponentialRampToValueAtTime(32, t + .11);
+        g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + .17);
+        o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .2);
+      });
+    }
+  } catch (e) {}
+}
+function drawInstThermo(temp) {   // termômetro de mercúrio; a coluna sobe com a leitura
+  const cv = document.querySelector('#inst-thermo canvas'); if (!cv) return;
+  const x = cv.getContext('2d'); x.clearRect(0, 0, 26, 92); x.imageSmoothingEnabled = false;
+  x.fillStyle = 'rgba(190,205,212,.25)'; x.fillRect(9, 4, 8, 70);           // tubo de vidro
+  x.strokeStyle = 'rgba(210,220,226,.8)'; x.lineWidth = 1; x.strokeRect(9.5, 4.5, 7, 69);
+  x.strokeStyle = 'rgba(230,236,240,.55)';
+  for (let i = 0; i < 10; i++) { x.beginPath(); x.moveTo(17, 8 + i * 7); x.lineTo(20, 8 + i * 7); x.stroke(); }
+  const frac = temp == null ? .08 : Math.max(.06, Math.min(1, (temp - 29) / 12));
+  x.fillStyle = '#c9352a';
+  x.fillRect(11.5, 72 - 64 * frac, 3, 64 * frac + 2);                       // coluna de mercúrio
+  x.beginPath(); x.arc(13, 81, 7.5, 0, 6.29); x.fill();                     // bulbo
+  x.fillStyle = 'rgba(236,240,246,.35)'; x.fillRect(10.5, 6, 1.4, 64);      // brilho do vidro
+}
+function drawInstPulse() {        // estetoscópio: campânula + tubo + auriculares
+  const cv = document.querySelector('#inst-pulse canvas'); if (!cv) return;
+  const x = cv.getContext('2d'); x.clearRect(0, 0, 54, 54); x.imageSmoothingEnabled = false;
+  x.strokeStyle = '#2a2620'; x.lineWidth = 3.4; x.lineCap = 'round';
+  x.beginPath(); x.moveTo(18, 30); x.bezierCurveTo(6, 16, 20, 4, 34, 9); x.stroke();   // tubo
+  x.beginPath(); x.moveTo(34, 9); x.lineTo(43, 6); x.moveTo(34, 9); x.lineTo(44, 16); x.stroke(); // forquilha
+  x.fillStyle = '#b3ab97'; x.beginPath(); x.arc(44, 5, 3, 0, 6.29); x.arc(46, 17, 3, 0, 6.29); x.fill(); // auriculares
+  const g = x.createRadialGradient(16, 36, 2, 20, 40, 13);
+  g.addColorStop(0, '#cfc6b2'); g.addColorStop(.7, '#8f887a'); g.addColorStop(1, '#565043');
+  x.fillStyle = g; x.beginPath(); x.arc(20, 40, 12, 0, 6.29); x.fill();     // campânula
+  x.fillStyle = '#3a362e'; x.beginPath(); x.arc(20, 40, 6.5, 0, 6.29); x.fill();
+  x.fillStyle = 'rgba(236,240,246,.4)'; x.beginPath(); x.arc(16, 36, 2, 0, 6.29); x.fill();
+}
+function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -âmbar)
+  const cv = document.querySelector('#inst-bio canvas'); if (!cv) return;
+  const x = cv.getContext('2d'); x.clearRect(0, 0, 30, 72); x.imageSmoothingEnabled = false;
+  x.fillStyle = '#6d5230'; x.fillRect(9, 4, 12, 10);                        // rolha
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(9, 12, 12, 2);
+  x.fillStyle = 'rgba(190,205,212,.22)'; x.fillRect(7, 14, 16, 52);         // vidro
+  x.strokeStyle = 'rgba(210,220,226,.8)'; x.lineWidth = 1; x.strokeRect(7.5, 14.5, 15, 51);
+  if (state) {                                                              // amostra colhida
+    x.fillStyle = state === 'pos' ? 'rgba(178,52,40,.85)' : 'rgba(150,130,60,.8)';
+    x.fillRect(8.5, 44, 13, 21);
+    x.fillStyle = 'rgba(236,240,246,.25)'; x.fillRect(8.5, 44, 13, 2);
+  }
+  x.strokeStyle = '#c9b98a'; x.lineWidth = 2;                                // haste do swab
+  x.beginPath(); x.moveTo(15, 14); x.lineTo(15, 58); x.stroke();
+  x.fillStyle = '#e2ddcc'; x.beginPath(); x.arc(15, 60, 4, 0, 6.29); x.fill();
+  x.fillStyle = '#d8cdb0'; x.fillRect(4, 26, 22, 9);                         // etiqueta
+  x.fillStyle = '#332b1f'; x.font = '8px monospace'; x.textAlign = 'center'; x.fillText('K-7', 15, 33);
+}
+function instReturn(el, home, delay) {
+  el.classList.add('busy');
+  setTimeout(() => {
+    el.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1)';
+    el.style.left = home.x + 'px'; el.style.top = home.y + 'px';
+    setTimeout(() => { el.style.cssText = ''; el.classList.remove('busy'); sfxTool('drop'); }, 520);
+  }, delay || 0);
+}
+function setupInstruments() {
+  const acts = {
+    'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
+      el.classList.add('busy');
+      setTimeout(() => {
+        const res = scan('thermo') || {};
+        sfxTool('beep');
+        drawInstThermo(res.temp);
+        const tag = $('thermo-tag');
+        if (tag && res.temp != null) { tag.textContent = String(res.temp.toFixed(1)).replace('.', ',') + ' °C'; tag.classList.add('on'); }
+        instReturn(el, home, 450);
+      }, 650);
+    },
+    'inst-pulse': (el, home) => {                  // encosta e OUVE o coração
+      el.classList.add('busy');
+      const res = scan('pulse') || {};
+      sfxHeartbeat(!res.calm);
+      instReturn(el, home, res.calm ? 3100 : 2700);
+    },
+    'inst-bio': (el, home) => {                    // colhe a amostra; etiqueta com o resultado
+      el.classList.add('busy');
+      setTimeout(() => {
+        const res = scan('bio');
+        const state = res ? (res.positive ? 'pos' : 'neg') : null;
+        drawInstBio(state);
+        const tag = $('bio-tag');
+        if (tag) { tag.textContent = res ? (res.positive ? 'K-7 ▲ POSITIVO' : 'K-7 negativo') : '— ilegível —'; tag.classList.add('on'); }
+        instReturn(el, home, 500);
+      }, 800);
+    },
+  };
+  Object.keys(acts).forEach(id => {
+    const el = $(id); if (!el) return;
+    el.addEventListener('pointerdown', (ev) => {
+      if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
+      if (shift.citizen.isSilente && id !== 'inst-bio') return;   // com o Silente, só o coletor reage
+      ev.preventDefault();
+      el.setPointerCapture(ev.pointerId);
+      const r = el.getBoundingClientRect();
+      const home = { x: r.left, y: r.top };
+      el.classList.add('dragging');
+      el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.zIndex = 400;
+      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px'; };
+      const up = (e) => {
+        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up);
+        el.classList.remove('dragging');
+        const st = $('npc-stage').getBoundingClientRect();
+        const inside = e.clientX > st.left && e.clientX < st.right && e.clientY > st.top - 20 && e.clientY < st.bottom + 30;
+        if (inside && shift.citizen && shift.running) {
+          // encosta no cidadão: centraliza no peito dele antes de agir
+          el.style.transition = 'left .18s ease-out, top .18s ease-out';
+          el.style.left = (st.left + st.width * .5 - r.width / 2) + 'px';
+          el.style.top = (st.top + st.height * .55 - r.height / 2) + 'px';
+          acts[id](el, home);
+        } else instReturn(el, home);
+      };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
+      sfxTool('pickup');
+    });
+  });
+  drawInstThermo(); drawInstPulse(); drawInstBio();
+}
+function resetInstruments() {   // novo cidadão: leituras antigas somem
+  const tt = $('thermo-tag'), bt = $('bio-tag');
+  if (tt) tt.classList.remove('on');
+  if (bt) bt.classList.remove('on');
+  drawInstThermo(); drawInstBio();
 }
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
@@ -3781,6 +3982,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   renderLangBtn();
   renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
+  setupInstruments();
   initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();
