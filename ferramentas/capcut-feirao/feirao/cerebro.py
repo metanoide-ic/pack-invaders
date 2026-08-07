@@ -17,7 +17,7 @@ import os
 from . import acoes, media
 
 MODELO = "claude-opus-5"
-MAX_TOKENS = 16000
+MAX_TOKENS = 32000        # o teto cobre pensamento + resposta; folga evita truncar
 QUADROS_AMOSTRA = 6          # quantos frames o modelo ve do video
 
 
@@ -154,6 +154,9 @@ def monta_plano(pedido: str, info: media.InfoMidia, falas: list,
     if resposta.stop_reason == "refusal":
         raise RuntimeError("O modelo recusou esse pedido. Reformule e tente "
                            "de novo.")
+    if resposta.stop_reason == "max_tokens":
+        raise RuntimeError("O plano saiu grande demais e foi truncado. "
+                           "Tente um pedido mais curto ou um video menor.")
 
     texto = "".join(b.text for b in resposta.content if b.type == "text")
     if not texto.strip():

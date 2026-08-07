@@ -320,6 +320,20 @@ class App(tk.Tk):
         r = executor.aplica(plano, entrada, PASTA_SAIDA,
                             progresso=self.escreve)
 
+        # a transcricao ja existe; vira .srt acompanhando os cortes do plano
+        if falas:
+            nome = os.path.splitext(os.path.basename(entrada))[0]
+            cortes = plano.por_tipo("cortar")
+            if cortes:
+                dur = media.sonda(entrada).duracao
+                trechos = executor.trechos_apos_cortes(dur, cortes)
+                finais = legendas.desloca(falas, trechos)
+            else:
+                finais = falas
+            srt = os.path.join(PASTA_SAIDA, f"{nome}.srt")
+            legendas.salva_srt(finais, srt)
+            self.escreve(f"  legendas: {srt}")
+
         self.escreve("")
         if r["previa"]:
             self.escreve(f"  prévia: {r['previa']}")

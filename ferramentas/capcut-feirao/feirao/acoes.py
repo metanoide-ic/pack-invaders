@@ -218,11 +218,13 @@ def esquema_json() -> dict:
 
                 obj({"tipo": {"const": "legendas_fonte"},
                      "fonte": {"type": "string"},
-                     "tamanho": {"type": "integer"},
+                     "tamanho": {"type": "integer",
+                                 "description": "Corpo da letra; 64 e um bom "
+                                                "padrao para celular."},
                      "cor": {"type": "string",
                              "description": "Hex, ex: #FFD700"},
                      "motivo": motivo},
-                    ["tipo", "fonte", "motivo"]),
+                    ["tipo", "fonte", "tamanho", "cor", "motivo"]),
 
                 obj({"tipo": {"const": "animacao"},
                      "nome": {"type": "string", "enum": sorted(ANIMACOES)},
@@ -230,16 +232,19 @@ def esquema_json() -> dict:
                      "duracao": {"type": "number"},
                      "texto": {"type": "string",
                                "description": "A palavra que aparece na "
-                                              "animacao. Curta — uma palavra."},
+                                              "animacao. Curta — uma palavra. "
+                                              "Vazia se a animacao nao usa "
+                                              "texto (confete, zoom)."},
                      "motivo": motivo},
-                    ["tipo", "nome", "inicio", "duracao", "motivo"]),
+                    ["tipo", "nome", "inicio", "duracao", "texto", "motivo"]),
 
                 obj({"tipo": {"const": "cor"},
                      "preset": {"type": "string", "enum": sorted(CORES)},
                      "intensidade": {"type": "number",
-                                     "description": "0.0 a 1.0"},
+                                     "description": "0.0 a 1.0; 1.0 e o "
+                                                    "efeito cheio."},
                      "motivo": motivo},
-                    ["tipo", "preset", "motivo"]),
+                    ["tipo", "preset", "intensidade", "motivo"]),
 
                 obj({"tipo": {"const": "texto"},
                      "texto": {"type": "string"},
@@ -250,7 +255,7 @@ def esquema_json() -> dict:
                      "atras_da_pessoa": {"type": "boolean"},
                      "motivo": motivo},
                     ["tipo", "texto", "inicio", "duracao", "posicao",
-                     "estilo", "motivo"]),
+                     "estilo", "atras_da_pessoa", "motivo"]),
             ]},
         },
     }, ["resumo", "acoes"])

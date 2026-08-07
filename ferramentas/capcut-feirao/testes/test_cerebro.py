@@ -223,3 +223,87 @@ def test_erro_util_sem_chave(monkeypatch):
 
 def test_modelo_e_o_esperado():
     assert cerebro.MODELO == "claude-opus-5"
+
+
+# ------------------------------------------- regressoes da revisao (Fable)
+
+def test_intensidade_zero_nao_vira_um(tmp_path):
+    """Bug: `dados.get('intensidade', 1.0) or 1.0` transformava 0.0 em 1.0."""
+    import inspect
+    fonte = inspect.getsource(executor.aplica)
+    assert '"intensidade") or' not in fonte and "'intensidade') or" not in fonte
+    # e o filtro com 0.0 tem de sair neutro
+    assert "saturation=1.0" in executor.filtro_de_cor("quente_vibrante", 0.0)
+
+
+def test_cortes_totais_nao_derrubam(tmp_path):
+    """Cortes cobrindo o video inteiro viram aviso, nao erro do ffmpeg."""
+    plano = acoes.valida_plano({
+        "resumo": "t",
+        "acoes": [{"tipo": "cortar", "inicio": 0, "fim": 99, "motivo": "x"},
+                  {"tipo": "cor", "preset": "natural_limpo",
+                   "intensidade": 1.0, "motivo": "x"}],
+    }, 10.0)
+    import feirao.media as m
+    chamadas = {}
+    original = executor._renderiza
+
+    def falso(entrada, saida, trechos, filtro, tem_audio=True):
+        chamadas["trechos"] = trechos
+        open(saida, "w").close()
+
+    executor._renderiza = falso
+    m_sonda = m.sonda
+    m.sonda = lambda c: m.InfoMidia(c, 10.0, 640, 360, 30.0, True)
+    try:
+        r = executor.aplica(plano, "video.mp4", str(tmp_path))
+    finally:
+        executor._renderiza = original
+        m.sonda = m_sonda
+    assert chamadas["trechos"] == [(0.0, 10.0)]
+    assert any("video inteiro" in a for a in r["avisos"])
+
+
+def test_renderiza_video_sem_audio(tmp_path):
+    """O grafo de filtros nao pode citar [0:a] quando nao ha trilha."""
+    import subprocess as sp
+    capturado = {}
+    original = executor.subprocess.run
+
+    def falso(cmd, **kw):
+        capturado["cmd"] = cmd
+
+        class R:
+            returncode = 0
+            stderr = ""
+        return R()
+
+    executor.subprocess.run = falso
+    try:
+        executor._renderiza("in.mp4", "out.mp4", [(0.0, 5.0)], None,
+                            tem_audio=False)
+    finally:
+        executor.subprocess.run = original
+    grafo = capturado["cmd"][capturado["cmd"].index("-filter_complex") + 1]
+    assert "[0:a]" not in grafo and "a=0" in grafo
+    assert "[ao]" not in capturado["cmd"]
+
+
+def test_renderiza_sem_trechos_levanta():
+    try:
+        executor._renderiza("in.mp4", "out.mp4", [], None)
+        assert False, "deveria ter levantado"
+    except ValueError:
+        pass
+
+
+def test_esquema_tudo_obrigatorio():
+    """Strict mode sem zona cinzenta: required cobre todas as propriedades."""
+    for v in acoes.esquema_json()["properties"]["acoes"]["items"]["anyOf"]:
+        assert set(v["properties"]) == set(v["required"])
+
+
+def test_desloca_com_trechos_vazios_devolve_como_esta():
+    from feirao.legendas import Fala, desloca
+    falas = [Fala(1.0, 2.0, "oi")]
+    assert desloca(falas, []) == falas

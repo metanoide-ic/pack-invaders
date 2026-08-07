@@ -150,7 +150,7 @@ feirao/acoes.py       o vocabulário fechado + validação do plano
 feirao/cerebro.py     pedido em português -> plano (Claude)
 feirao/animacoes.py   as animações, desenhadas por código
 feirao/executor.py    aplica o plano; nada aqui é decidido por modelo
-testes/               testes do núcleo (57, sem chamar a API)
+testes/               testes do núcleo (63, sem chamar a API)
 ```
 
 A interface só chama o núcleo — a lógica toda está em `feirao/` e é testada

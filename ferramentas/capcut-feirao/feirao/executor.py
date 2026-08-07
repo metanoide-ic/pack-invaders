@@ -98,12 +98,23 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
         else [(0.0, info.duracao)]
     converte = _mapa_de_tempo(trechos)
 
+    if cortes and not trechos:
+        resultado["avisos"].append(
+            "os cortes pedidos removeriam o video inteiro; ignorei os cortes")
+        cortes = []
+        trechos = [(0.0, info.duracao)]
+        converte = _mapa_de_tempo(trechos)
+
     acoes_cor = plano.por_tipo("cor")
     filtro = None
     if acoes_cor:
         a = acoes_cor[0]
-        filtro = filtro_de_cor(a.dados["preset"],
-                               float(a.dados.get("intensidade", 1.0) or 1.0))
+        try:
+            # 0.0 e um valor legitimo (quase neutro) — nao usar `or`
+            inten = float(a.dados.get("intensidade"))
+        except (TypeError, ValueError):
+            inten = 1.0
+        filtro = filtro_de_cor(a.dados["preset"], inten)
         resultado["roteiro"].append(
             f"COR: {FILTROS_COR[a.dados['preset']][1]} — {a.motivo}")
         if len(acoes_cor) > 1:
@@ -114,7 +125,7 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
         saida = os.path.join(pasta_saida, f"{nome}_previa.mp4")
         log(f"aplicando {len(cortes)} corte(s)"
             + (" e tratamento de cor" if filtro else "") + "...")
-        _renderiza(entrada, saida, trechos, filtro)
+        _renderiza(entrada, saida, trechos, filtro, tem_audio=info.tem_audio)
         resultado["previa"] = saida
         removido = round(info.duracao - sum(f - i for i, f in trechos), 1)
         if cortes:
@@ -216,25 +227,36 @@ def _grava_roteiro(caminho: str, plano: acoes.Plano, resultado: dict) -> None:
         fh.write("\n".join(linhas) + "\n")
 
 
-def _renderiza(entrada: str, saida: str, trechos: list, filtro: str | None):
-    """Corta e trata cor num passe so."""
+def _renderiza(entrada: str, saida: str, trechos: list, filtro: str | None,
+               tem_audio: bool = True):
+    """Corta e trata cor num passe so. Aguenta video sem trilha de audio."""
+    if not trechos:
+        raise ValueError("nenhum trecho para renderizar")
+
     partes, rotulos = [], ""
     for i, (ini, fim) in enumerate(trechos):
         cadeia = f"[0:v]trim=start={ini}:end={fim},setpts=PTS-STARTPTS"
         if filtro:
             cadeia += "," + filtro
         partes.append(cadeia + f"[v{i}]")
-        partes.append(f"[0:a]atrim=start={ini}:end={fim},"
-                      f"asetpts=PTS-STARTPTS[a{i}]")
-        rotulos += f"[v{i}][a{i}]"
-    grafo = ";".join(partes) + ";" + rotulos + \
-        f"concat=n={len(trechos)}:v=1:a=1[vo][ao]"
+        if tem_audio:
+            partes.append(f"[0:a]atrim=start={ini}:end={fim},"
+                          f"asetpts=PTS-STARTPTS[a{i}]")
+            rotulos += f"[v{i}][a{i}]"
+        else:
+            rotulos += f"[v{i}]"
 
-    r = subprocess.run(
-        [media.ffmpeg(), "-y", "-hide_banner", "-i", entrada,
-         "-filter_complex", grafo, "-map", "[vo]", "-map", "[ao]",
-         "-c:v", "libx264", "-preset", "medium", "-crf", "18",
-         "-c:a", "aac", "-b:a", "192k", saida],
-        capture_output=True, text=True, encoding="utf-8", errors="replace")
+    n_saidas = ":v=1:a=1[vo][ao]" if tem_audio else ":v=1:a=0[vo]"
+    grafo = ";".join(partes) + ";" + rotulos + \
+        f"concat=n={len(trechos)}" + n_saidas
+
+    cmd = [media.ffmpeg(), "-y", "-hide_banner", "-i", entrada,
+           "-filter_complex", grafo, "-map", "[vo]"]
+    if tem_audio:
+        cmd += ["-map", "[ao]", "-c:a", "aac", "-b:a", "192k"]
+    cmd += ["-c:v", "libx264", "-preset", "medium", "-crf", "18", saida]
+
+    r = subprocess.run(cmd, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
     if r.returncode != 0:
         raise RuntimeError(r.stderr[-1500:])
