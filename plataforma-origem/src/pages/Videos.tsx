@@ -8,6 +8,7 @@ import { Plus, GripVertical, CheckSquare, MessageSquare, Link2, Clapperboard } f
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Modal, Select } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { useClientMap } from '@/lib/hooks';
 import { VIDEO_STAGE_META, VIDEO_STAGE_ORDER } from '@/lib/labels';
 import { cn, todayISO } from '@/lib/utils';
@@ -128,6 +129,7 @@ function VideoCard({ video, onOpen, clientMap, handleProps, dragging }: {
   handleProps?: Record<string, unknown>; dragging?: boolean;
 }) {
   const client = video.clientId ? clientMap[video.clientId] : undefined;
+  const assignee = useAuth((s) => (video.assigneeId ? s.accounts.find((a) => a.id === video.assigneeId) : undefined));
   const done = video.checklist.filter((c) => c.done).length;
   const pendRev = video.revisions.filter((r) => !r.resolved).length;
   const late = video.dueDate && video.dueDate < todayISO() && video.stage !== 'entregue';
@@ -136,7 +138,7 @@ function VideoCard({ video, onOpen, clientMap, handleProps, dragging }: {
       <div className="flex items-start gap-2">
         <button {...handleProps} className="mt-0.5 cursor-grab touch-none text-white/20 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing"><GripVertical size={15} /></button>
         <button onClick={onOpen} className="min-w-0 flex-1 text-left">
-          <div className="flex items-center gap-1.5 text-brand-300"><Clapperboard size={13} /><span className="text-[11px] text-white/40">{video.editor || 'sem editor'}</span></div>
+          <div className="flex items-center gap-1.5 text-brand-300"><Clapperboard size={13} /><span className="text-[11px] text-white/40">{assignee?.name || video.editor || 'sem responsável'}</span></div>
           <p className="mt-1 line-clamp-2 text-sm leading-snug text-white/90">{video.title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/45">
             {client && <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full" style={{ background: client.color }} />{client.name}</span>}

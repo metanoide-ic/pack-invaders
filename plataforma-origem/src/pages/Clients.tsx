@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Trash2, Pencil, CalendarRange, Sparkles, MessageCircle } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Textarea, Modal, EmptyState, Badge } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { generateMonthlyPlan } from '@/lib/planner';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
 import type { Client, WeeklyPlan } from '@/lib/types';
@@ -29,20 +31,23 @@ function fromWeeklyPlan(p?: WeeklyPlan): Record<number, string> {
 }
 
 export default function Clients() {
-  const { clients, transactions, posts, boards, addClient, updateClient, removeClient } = useData();
+  const { clients, transactions, posts, boards, videos, addClient, updateClient, removeClient } = useData();
+  const canFinance = !!useAuth((s) => s.current()?.canFinance);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [form, setForm] = useState(blank);
   const [planMsg, setPlanMsg] = useState('');
+  const navigate = useNavigate();
 
   const metrics = useMemo(() => {
-    const m: Record<string, { receita: number; posts: number; tarefas: number }> = {};
-    clients.forEach((c) => (m[c.id] = { receita: 0, posts: 0, tarefas: 0 }));
+    const m: Record<string, { receita: number; posts: number; tarefas: number; videos: number }> = {};
+    clients.forEach((c) => (m[c.id] = { receita: 0, posts: 0, tarefas: 0, videos: 0 }));
     transactions.forEach((t) => { if (t.clientId && m[t.clientId] && t.type === 'receita') m[t.clientId].receita += t.amount; });
     posts.forEach((p) => p.clientId && m[p.clientId] && m[p.clientId].posts++);
     boards.forEach((b) => Object.values(b.cards).forEach((c) => c.clientId && m[c.clientId] && m[c.clientId].tarefas++));
+    videos.forEach((v) => v.clientId && m[v.clientId] && m[v.clientId].videos++);
     return m;
-  }, [clients, transactions, posts, boards]);
+  }, [clients, transactions, posts, boards, videos]);
 
   function openNew() { setEditing(null); setForm(blank); setOpen(true); }
   function openEdit(c: Client) {
@@ -98,7 +103,7 @@ export default function Clients() {
             const m = metrics[c.id];
             const dias = c.weeklyPlan ? Object.keys(c.weeklyPlan).length : 0;
             return (
-              <div key={c.id} className="card group p-5">
+              <div key={c.id} onClick={() => navigate(`/app/clientes/${c.id}`)} className="card group cursor-pointer p-5 transition hover:border-brand-400/40">
                 <div className="flex items-start gap-3">
                   <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl font-semibold text-white" style={{ background: c.color }}>{initials(c.name)}</div>
                   <div className="min-w-0 flex-1">
@@ -106,8 +111,8 @@ export default function Clients() {
                     {c.contact && <p className="truncate text-sm text-white/45">{c.contact}</p>}
                   </div>
                   <div className="flex gap-1 opacity-0 transition group-hover:opacity-100">
-                    <button onClick={() => openEdit(c)} className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/5 hover:text-white"><Pencil size={15} /></button>
-                    <button onClick={() => removeClient(c.id)} className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-red-500/10 hover:text-red-300"><Trash2 size={15} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); openEdit(c); }} className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-white/5 hover:text-white"><Pencil size={15} /></button>
+                    <button onClick={(e) => { e.stopPropagation(); removeClient(c.id); }} className="grid h-8 w-8 place-items-center rounded-lg text-white/50 hover:bg-red-500/10 hover:text-red-300"><Trash2 size={15} /></button>
                   </div>
                 </div>
                 {c.briefing && <p className="mt-3 line-clamp-2 text-xs text-white/50">{c.briefing}</p>}
@@ -117,7 +122,9 @@ export default function Clients() {
                   {c.city && <Badge>{c.city}</Badge>}
                 </div>
                 <div className="mt-4 grid grid-cols-3 gap-2 text-center">
-                  <Metric label="Receita" value={money(m?.receita ?? 0)} />
+                  {canFinance
+                    ? <Metric label="Receita" value={money(m?.receita ?? 0)} />
+                    : <Metric label="Vídeos" value={String(m?.videos ?? 0)} />}
                   <Metric label="Posts" value={String(m?.posts ?? 0)} />
                   <Metric label="Tarefas" value={String(m?.tarefas ?? 0)} />
                 </div>

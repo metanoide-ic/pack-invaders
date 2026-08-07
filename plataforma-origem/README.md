@@ -7,9 +7,9 @@ lugar, três ferramentas do dia a dia da equipe:
   etiquetas, prioridade, prazo, checklist e vínculo com cliente).
 - ✅ **Checklist de Posts** — pipeline arrastável da _ideia_ à _veiculação_
   (ideia → roteiro → produção → edição → aprovação → alteração → agendado →
-  publicado), com **copy gerada por IA**, upload de mídia, checklist e o loop de
-  aprovação (aprovar → publica; reprovar → vai para _Alteração_ com cada pedido
-  registrado separadamente).
+  publicado) **ou visão de calendário mensal**, com **copy gerada por IA**, upload
+  de mídia, responsável, checklist e o loop de aprovação (aprovar → publica;
+  reprovar → vai para _Alteração_ com cada pedido registrado separadamente).
 - 🎬 **Edição de Vídeo** — pipeline próprio (briefing → gravação → decupagem →
   edição → revisão → aprovação → alteração → entregue) com links de material,
   checklist e pedidos de alteração empilhados.
@@ -24,8 +24,12 @@ lugar, três ferramentas do dia a dia da equipe:
   externa (endpoint compatível com OpenAI: Groq, OpenRouter, OpenAI, etc.).
   Planejamento mensal automático por cliente (cadência semanal + datas
   comemorativas, com post extra para todos nas datas universais).
+- 👥 **Equipe & Clientes** — todos no mesmo workflow; responsáveis atribuíveis em
+  tarefas, posts e vídeos; página de cada cliente com posts, tarefas, vídeos e
+  financeiro consolidados. Cadastro de clientes com briefing e cadência semanal.
 - 💰 **Financeiro** — receitas, despesas, saldo e "a receber", com gráfico de
-  evolução e visão por cliente. **Acesso restrito** a contas com permissão especial.
+  evolução e visão por cliente. **Acesso restrito** a contas com permissão especial
+  (o Painel e os cards de clientes também ocultam valores para quem não tem acesso).
 
 Funciona como **site** e como **aplicativo** (PWA instalável no celular e no
 desktop). Interface moderna, com a identidade visual da Origem (violeta elétrico

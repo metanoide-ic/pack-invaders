@@ -13,9 +13,10 @@ import {
 } from '@dnd-kit/core';
 import { Plus, CheckSquare, GripVertical, MessageSquare, AlertTriangle, LayoutGrid, CalendarDays } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { Button, Field, Input, Modal, Select, Badge } from '@/components/ui';
+import { Button, Field, Input, Modal, Select, Badge, Avatar } from '@/components/ui';
 import { PostsCalendar } from '@/components/PostsCalendar';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { useClientMap } from '@/lib/hooks';
 import { STAGE_META, STAGE_ORDER, STAGE_FUNNEL, PLATFORMS, PLATFORM_COLOR } from '@/lib/labels';
 import { onPostStageChange } from '@/lib/automations';
@@ -197,6 +198,7 @@ function PostCard({
   dragging?: boolean;
 }) {
   const client = post.clientId ? clientMap[post.clientId] : undefined;
+  const assignee = useAuth((s) => (post.assigneeId ? s.accounts.find((a) => a.id === post.assigneeId) : undefined));
   const done = post.checklist.filter((c) => c.done).length;
   const pendRev = post.revisions.filter((r) => !r.resolved).length;
   const funnelIdx = STAGE_FUNNEL.indexOf(post.stage);
@@ -232,6 +234,7 @@ function PostCard({
             {pendRev > 0 && <span className="inline-flex items-center gap-1 text-rose-300"><MessageSquare size={11} /> {pendRev}</span>}
             {post.sentForApproval && post.stage === 'aprovacao' && <Badge color="#ec4899">no grupo</Badge>}
             {post.scheduledDate && <span className="ml-auto">{new Date(post.scheduledDate + 'T00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>}
+            {assignee && <span className={cn(post.scheduledDate ? '' : 'ml-auto')}><Avatar name={assignee.name} color={assignee.color} size={18} /></span>}
           </div>
         </button>
       </div>

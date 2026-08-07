@@ -125,6 +125,8 @@ export interface Post {
   caption?: string;
   /** Copy gerada (IA ou template). */
   copy?: string;
+  /** Responsável (id da conta). */
+  assigneeId?: ID;
   notes?: string;
   /** Imagem/mídia de referência (data URL). */
   mediaUrl?: string;
@@ -161,6 +163,7 @@ export interface VideoProject {
   stage: VideoStage;
   dueDate?: string;
   editor?: string;
+  assigneeId?: ID;
   notes?: string;
   links: VideoLink[];
   checklist: ChecklistItem[];

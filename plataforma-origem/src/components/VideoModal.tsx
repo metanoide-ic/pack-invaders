@@ -3,12 +3,14 @@ import { Trash2, Plus, X, Check, Link2, ExternalLink } from 'lucide-react';
 import { Modal, Button, Field, Input, Textarea, Select } from './ui';
 import { RevisionList } from './RevisionList';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { VIDEO_STAGE_META, VIDEO_STAGE_ORDER } from '@/lib/labels';
 import { uid, cn } from '@/lib/utils';
 
 export function VideoModal({ videoId, onClose }: { videoId: string; onClose: () => void }) {
   const video = useData((s) => s.videos.find((v) => v.id === videoId));
   const clients = useData((s) => s.clients);
+  const members = useAuth((s) => s.accounts);
   const update = useData((s) => s.updateVideo);
   const remove = useData((s) => s.removeVideo);
   const move = useData((s) => s.moveVideo);
@@ -50,7 +52,12 @@ export function VideoModal({ videoId, onClose }: { videoId: string; onClose: () 
               {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </Field>
-          <Field label="Editor(a)"><Input value={video.editor ?? ''} onChange={(e) => update(videoId, { editor: e.target.value })} /></Field>
+          <Field label="Responsável">
+            <Select value={video.assigneeId ?? ''} onChange={(e) => update(videoId, { assigneeId: e.target.value || undefined })}>
+              <option value="">—</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </Select>
+          </Field>
           <Field label="Prazo"><Input type="date" value={video.dueDate ?? ''} onChange={(e) => update(videoId, { dueDate: e.target.value || undefined })} /></Field>
         </div>
 

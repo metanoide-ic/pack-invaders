@@ -3,6 +3,7 @@ import { Trash2, Sparkles, Loader2, Send, Check, X, Image as ImageIcon, Copy as 
 import { Modal, Button, Field, Input, Textarea, Select } from './ui';
 import { RevisionList } from './RevisionList';
 import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
 import { useSettings } from '@/lib/settingsStore';
 import { STAGE_META, STAGE_ORDER, PLATFORMS } from '@/lib/labels';
 import { generateCopy } from '@/lib/ai';
@@ -15,6 +16,7 @@ export function PostModal({ postId, onClose }: { postId: string; onClose: () => 
   const clients = useData((s) => s.clients);
   const updatePost = useData((s) => s.updatePost);
   const removePost = useData((s) => s.removePost);
+  const members = useAuth((s) => s.accounts);
   const addRevision = useData((s) => s.addRevision);
   const updateRevision = useData((s) => s.updateRevision);
   const removeRevision = useData((s) => s.removeRevision);
@@ -166,10 +168,17 @@ export function PostModal({ postId, onClose }: { postId: string; onClose: () => 
               {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </Select>
           </Field>
-          <Field label="Data prevista">
-            <Input type="date" value={post.scheduledDate ?? ''} onChange={(e) => updatePost(postId, { scheduledDate: e.target.value || undefined })} />
+          <Field label="Responsável">
+            <Select value={post.assigneeId ?? ''} onChange={(e) => updatePost(postId, { assigneeId: e.target.value || undefined })}>
+              <option value="">—</option>
+              {members.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+            </Select>
           </Field>
         </div>
+
+        <Field label="Data prevista">
+          <Input type="date" value={post.scheduledDate ?? ''} onChange={(e) => updatePost(postId, { scheduledDate: e.target.value || undefined })} />
+        </Field>
 
         {/* Mídia */}
         <div>
