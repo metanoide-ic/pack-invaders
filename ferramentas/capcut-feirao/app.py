@@ -17,7 +17,8 @@ from tkinter import filedialog, messagebox, ttk
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from feirao import capcut, inspetor, legendas, media, template  # noqa: E402
+from feirao import (capcut, cerebro, executor, inspetor,  # noqa: E402
+                    legendas, media, template)
 
 PASTA_SAIDA = os.path.join(os.path.expanduser("~"), "Desktop", "Feirao")
 
@@ -81,6 +82,23 @@ class App(tk.Tk):
         self.btn_rodar = ttk.Button(p2, text="Preparar",
                                     command=self.preparar)
         self.btn_rodar.pack(anchor="w", padx=8, pady=(0, 8))
+
+        p2b = ttk.LabelFrame(self, text="Passo 3 — Pedir a edição em português")
+        p2b.pack(fill="x", **pad)
+        ttk.Label(p2b, wraplength=700, justify="left", text=(
+            "Escreva o que quer, como falaria com um editor. Ex.: \"corta os "
+            "silêncios, deixa a cor puxada pro quente e quando ele falar "
+            "RASGANDO PREÇO mostra a palavra PREÇO num papel sendo rasgado\"."
+        )).pack(anchor="w", padx=8, pady=(6, 2))
+        self.pedido = tk.Text(p2b, height=4, wrap="word")
+        self.pedido.pack(fill="x", padx=8, pady=(0, 6))
+        linha = ttk.Frame(p2b)
+        linha.pack(fill="x", padx=8, pady=(0, 8))
+        self.btn_editar = ttk.Button(linha, text="Editar com IA",
+                                     command=self.editar_ia)
+        self.btn_editar.pack(side="left")
+        self.lbl_ia = ttk.Label(linha, foreground="#777", text="")
+        self.lbl_ia.pack(side="left", padx=10)
 
         p3 = ttk.LabelFrame(self, text="Andamento")
         p3.pack(fill="both", expand=True, **pad)
@@ -249,6 +267,68 @@ class App(tk.Tk):
 
         self.fila.put(("barra", 100))
         self.escreve("\nPronto.")
+
+    # ------------------------------------------------------- edicao por IA
+
+    def editar_ia(self):
+        if not self.video.get():
+            messagebox.showinfo("Falta o vídeo", "Escolha um vídeo primeiro.")
+            return
+        if not self.pedido.get("1.0", "end").strip():
+            messagebox.showinfo("Falta o pedido",
+                                "Escreva o que você quer que eu faça.")
+            return
+        if not cerebro.disponivel():
+            messagebox.showinfo(
+                "Falta configurar",
+                "Para a edição por IA:\n\n"
+                "1) pip install anthropic\n"
+                '2) setx ANTHROPIC_API_KEY "sua-chave"\n'
+                "   (pegue em console.anthropic.com)\n\n"
+                "Depois feche e abra o app.")
+            return
+        self._em_thread(self._editar_ia)
+
+    def _editar_ia(self):
+        entrada = self.video.get()
+        pedido = self.pedido.get("1.0", "end").strip()
+        os.makedirs(PASTA_SAIDA, exist_ok=True)
+
+        self.fila.put(("barra", 10))
+        self.escreve(f"\nOuvindo {os.path.basename(entrada)}...")
+        falas = []
+        if legendas.disponivel():
+            falas = legendas.transcreve(entrada, modelo=self.modelo.get(),
+                                        progresso=self.escreve)
+            self.escreve(f"  {len(falas)} fala(s)")
+        else:
+            self.escreve("  sem faster-whisper: vou planejar só pela imagem, "
+                         "sem saber o que foi dito")
+
+        self.fila.put(("barra", 35))
+        plano = cerebro.entende_e_planeja(entrada, pedido, falas,
+                                          progresso=self.escreve)
+
+        self.escreve(f"\nPLANO: {plano.resumo}")
+        for a in plano.acoes:
+            self.escreve(f"  {a!r} {a.motivo}")
+        for aviso in plano.avisos:
+            self.escreve(f"  (!) {aviso}")
+
+        self.fila.put(("barra", 60))
+        self.escreve("\nAplicando...")
+        r = executor.aplica(plano, entrada, PASTA_SAIDA,
+                            progresso=self.escreve)
+
+        self.escreve("")
+        if r["previa"]:
+            self.escreve(f"  prévia: {r['previa']}")
+        for c in r["camadas"]:
+            self.escreve(f"  camada: {c}")
+        self.escreve(f"  roteiro: {r['arquivo_roteiro']}")
+        self.escreve("\nAbra o roteiro: ele diz em que segundo entra cada "
+                     "camada no CapCut.")
+        self.fila.put(("barra", 100))
 
 
 if __name__ == "__main__":
