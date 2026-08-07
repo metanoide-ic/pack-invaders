@@ -85,8 +85,19 @@ button {
   font-family: var(--font-display); font-weight:600; letter-spacing:.06em;
   text-transform:uppercase; cursor:pointer;
   background-color: #23251b; color: var(--ink);
+  /* chapa de repartição: meio-tom (dois pontilhados deslocados = leve moiré) +
+     relevo impresso + letterpress. Mata o retângulo cinza chapado "de IA". */
+  background-image:
+    radial-gradient(rgba(238,232,214,.05) .6px, transparent .8px),
+    radial-gradient(rgba(0,0,0,.20) .6px, transparent .8px),
+    linear-gradient(180deg, rgba(238,232,214,.05), rgba(0,0,0,.16));
+  background-size: 3px 3px, 3px 3px, 100% 100%;
+  background-position: 0 0, 1.5px 1.5px, 0 0;
   border: 1.5px solid #0b0c07; padding: 6px 12px; border-radius:1px;
+  box-shadow: inset 0 1px 0 rgba(238,232,214,.06), 2px 2px 0 rgba(0,0,0,.4);
 }
+button:hover:not(:disabled) { box-shadow: inset 0 1px 0 rgba(0,0,0,.1), 2px 2px 0 rgba(0,0,0,.35); }
+button:active:not(:disabled) { box-shadow: 1px 1px 0 rgba(0,0,0,.3); }
 button:hover:not(:disabled) { background-color:#c9a34a; color:#141207; }
 button:active:not(:disabled) { transform:translateY(1px); }
 button:disabled { opacity:.35; cursor:not-allowed; }
@@ -170,11 +181,16 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .btn-title {
   width:100%; padding:12px 14px; font-size:13.5px; letter-spacing:2.5px;
   font-family:var(--font-display); font-weight:600; text-transform:uppercase;
-  color:#d3c9a6; background:#23251b; border:1.5px solid #0b0c07; border-radius:1px;
-  box-shadow: 3px 3px 0 rgba(0,0,0,.5); cursor:pointer;
+  color:#d3c9a6; background-color:#23251b; border:1.5px solid #0b0c07; border-radius:1px;
+  background-image:
+    radial-gradient(rgba(238,232,214,.05) .6px, transparent .8px),
+    radial-gradient(rgba(0,0,0,.20) .6px, transparent .8px),
+    linear-gradient(180deg, rgba(238,232,214,.05), rgba(0,0,0,.16));
+  background-size: 3px 3px, 3px 3px, 100% 100%; background-position: 0 0, 1.5px 1.5px, 0 0;
+  box-shadow: inset 0 1px 0 rgba(238,232,214,.06), 3px 3px 0 rgba(0,0,0,.5); cursor:pointer;
   transition: transform .05s, background-color .08s, color .08s;
 }
-.btn-title:hover:not(:disabled) { background:#c9a34a; color:#141207; }
+.btn-title:hover:not(:disabled) { background-color:#c9a34a; color:#141207; }
 .btn-title:active:not(:disabled) { transform:translate(3px,3px); box-shadow:0 0 0 rgba(0,0,0,0); }
 .btn-title-sm { font-size:11.5px; letter-spacing:1.6px; padding:9px 10px; }
 .btn-half { flex:1; min-width:0; }
@@ -889,7 +905,12 @@ body.blackout #screen-shift { filter: brightness(.45) saturate(.4); }
 }
 #crt-overlay::before {
   content:''; position:absolute; inset:0;
-  background: repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 3px);
+  /* meio-tom (moiré fino) + scanlines: dá textura de impressão/fita em TODAS as
+     telas, matando o "cinza chapado". Sutil pra não atrapalhar a leitura. */
+  background:
+    radial-gradient(rgba(0,0,0,.11) .5px, transparent .85px) 0 0 / 3px 3px,
+    radial-gradient(rgba(235,240,246,.03) .5px, transparent .85px) 1.5px 1.5px / 3px 3px,
+    repeating-linear-gradient(0deg, rgba(0,0,0,.07) 0 1px, transparent 1px 3px);
 }
 #crt-overlay::after {
   content:''; position:absolute; left:0; right:0; height:90px;
