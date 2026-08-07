@@ -18,6 +18,7 @@
   "build": {
     "appId": "com.origem.plataforma",
     "productName": "Plataforma Origem",
+    "artifactName": "PlataformaOrigem-${version}.${ext}",
     "directories": {
       "output": "release",
       "buildResources": "build"

@@ -1,0 +1,66 @@
+name: Instaladores do app desktop
+
+on:
+  push:
+    branches:
+      - main
+      - claude/plataforma-origem-site-app-52kx29
+    paths:
+      - '.github/workflows/desktop-installers.yml'
+      - 'plataforma-origem/electron/**'
+      - 'plataforma-origem/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            files: plataforma-origem/release/*.exe
+          - os: macos-latest
+            files: plataforma-origem/release/*.dmg
+          - os: ubuntu-latest
+            files: plataforma-origem/release/*.AppImage
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: plataforma-origem/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: plataforma-origem
+        run: npm ci
+
+      - name: Build do app
+        working-directory: plataforma-origem
+        run: npm run build:desktop
+
+      - name: Gerar instalador
+        working-directory: plataforma-origem
+        run: npx electron-builder --publish never
+
+      - name: Publicar na página de Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: instaladores-v1
+          name: 'Plataforma Origem — Instaladores'
+          body: |
+            Instaladores do aplicativo desktop da Plataforma Origem.
+
+            - Windows: PlataformaOrigem-1.0.0.exe
+            - macOS: PlataformaOrigem-1.0.0.dmg
+            - Linux: PlataformaOrigem-1.0.0.AppImage
+
+            Os instaladores não são assinados digitalmente; na primeira execução
+            o sistema pode pedir confirmação (Windows: "Mais informações →
+            Executar assim mesmo"; macOS: clique direito → Abrir).
+          files: ${{ matrix.files }}
