@@ -108,7 +108,7 @@ export default function Boards() {
             </Select>
           </Field>
           <p className="text-xs text-white/40">
-            O quadro já vem com as colunas <b>A fazer</b>, <b>Em produção</b>, <b>Revisão</b> e <b>Concluído</b>. Você pode editar depois.
+            O quadro já vem com as colunas <b>A fazer</b>, <b>Em produção</b>, <b>Revisão</b>, <b>Prontos</b> e <b>Concluído</b>. Você pode editar depois.
           </p>
         </div>
       </Modal>

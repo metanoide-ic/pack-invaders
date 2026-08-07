@@ -2,8 +2,8 @@ import { type ReactNode, useEffect, useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  LayoutDashboard, KanbanSquare, Wallet, CalendarCheck, Users, Settings, LogOut,
-  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle, Building2,
+  LayoutDashboard, KanbanSquare, Wallet, Users, Settings, LogOut,
+  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle, Building2, Columns3,
 } from 'lucide-react';
 import { Logo, LogoMark } from './Logo';
 import { Avatar } from './ui';
@@ -17,10 +17,10 @@ interface NavDef { to: string; label: string; icon: typeof LayoutDashboard; end?
 function useNav(): NavDef[] {
   const canFinance = useAuth((s) => s.current()?.canFinance);
   const items: NavDef[] = [
-    { to: '/app', label: 'Painel', icon: LayoutDashboard, end: true },
-    { to: '/app/quadros', label: 'Quadros', icon: KanbanSquare },
-    { to: '/app/posts', label: 'Posts', icon: CalendarCheck },
+    { to: '/app/posts', label: 'Posts', icon: KanbanSquare },
+    { to: '/app/quadros', label: 'Quadros', icon: Columns3 },
     { to: '/app/videos', label: 'Vídeos', icon: Clapperboard },
+    { to: '/app/painel', label: 'Painel', icon: LayoutDashboard },
     { to: '/app/biblioteca', label: 'Biblioteca', icon: Library },
     { to: '/app/automacoes', label: 'Automações', icon: Zap },
     { to: '/app/clientes', label: 'Clientes', icon: Building2 },

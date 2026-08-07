@@ -55,7 +55,8 @@ export function seedData(): WorkspaceData {
     columns: [
       { id: uid('col'), title: 'A fazer', cardIds: [c4.id, c5.id] },
       { id: uid('col'), title: 'Em produção', cardIds: [c1.id, c2.id] },
-      { id: uid('col'), title: 'Revisão', cardIds: [c3.id] },
+      { id: uid('col'), title: 'Revisão', cardIds: [] },
+      { id: uid('col'), title: 'Prontos', cardIds: [c3.id] },
       { id: uid('col'), title: 'Concluído', cardIds: [c6.id] },
     ],
     cards,

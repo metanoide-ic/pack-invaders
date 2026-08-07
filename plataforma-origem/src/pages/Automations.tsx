@@ -25,7 +25,7 @@ export default function Automations() {
     <div>
       <PageHeader
         title="Automações"
-        subtitle="O fluxo que roda sozinho — e tudo o que aconteceu."
+        subtitle="Histórico e status do fluxo de aprovação e publicação."
         action={events.length > 0 ? <Button variant="ghost" onClick={clearEvents}><Trash2 size={16} /> Limpar</Button> : undefined}
       />
 
@@ -53,8 +53,8 @@ export default function Automations() {
       </div>
 
       {events.length === 0 ? (
-        <EmptyState icon={<Zap size={40} />} title="Nenhuma automação ainda"
-          description="Arraste um post para Aprovação e veja a mágica acontecer aqui." />
+        <EmptyState icon={<Zap size={40} />} title="Nenhuma atividade registrada"
+          description="Mova um post para Aprovação para iniciar o fluxo. Cada etapa fica registrada aqui." />
       ) : (
         <div className="card divide-y divide-line overflow-hidden">
           {events.map((e) => <EventRow key={e.id} e={e} />)}

@@ -26,20 +26,26 @@ import type { Post, PostStage } from '@/lib/types';
 import { PostModal } from '@/components/PostModal';
 
 export default function Posts() {
-  const { posts, movePost } = useData();
+  const { posts, clients, movePost } = useData();
   const clientMap = useClientMap();
   const [openId, setOpenId] = useState<string | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [view, setView] = useState<'pipeline' | 'calendario'>('pipeline');
+  const [clientFilter, setClientFilter] = useState<string>('');
 
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+
+  const visible = useMemo(
+    () => (clientFilter ? posts.filter((p) => p.clientId === clientFilter) : posts),
+    [posts, clientFilter],
+  );
 
   const byStage = useMemo(() => {
     const m: Record<string, Post[]> = {};
     STAGE_ORDER.forEach((s) => (m[s] = []));
-    posts.forEach((p) => (m[p.stage] ??= []).push(p));
+    visible.forEach((p) => (m[p.stage] ??= []).push(p));
     return m;
-  }, [posts]);
+  }, [visible]);
 
   const activePost = activeId ? posts.find((p) => p.id === activeId) : null;
 
@@ -82,8 +88,30 @@ export default function Posts() {
         }
       />
 
+      {clients.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          <button
+            onClick={() => setClientFilter('')}
+            className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition', !clientFilter ? 'bg-white/10 text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
+          >
+            Todos os clientes
+          </button>
+          {clients.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setClientFilter(clientFilter === c.id ? '' : c.id)}
+              className={cn('inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', clientFilter === c.id ? 'text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
+              style={clientFilter === c.id ? { background: `${c.color}26`, boxShadow: `inset 0 0 0 1px ${c.color}66` } : undefined}
+            >
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {view === 'calendario' ? (
-        <PostsCalendar posts={posts} onOpen={setOpenId} />
+        <PostsCalendar posts={visible} onOpen={setOpenId} />
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCorners}
           onDragStart={(e: DragStartEvent) => setActiveId(String(e.active.id))} onDragEnd={onDragEnd}>

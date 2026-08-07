@@ -122,7 +122,7 @@ export const useData = create<DataState>()(
           name,
           description,
           clientId,
-          columns: [mk('A fazer'), mk('Em produção'), mk('Revisão'), mk('Concluído')],
+          columns: [mk('A fazer'), mk('Em produção'), mk('Revisão'), mk('Prontos'), mk('Concluído')],
           cards: {},
           createdAt: Date.now(),
         };

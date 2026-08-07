@@ -56,7 +56,9 @@ export default function App() {
         <Route path="/" element={currentId ? <Navigate to="/app" replace /> : <Landing />} />
         <Route path="/entrar" element={currentId ? <Navigate to="/app" replace /> : <Auth />} />
 
-        <Route path="/app" element={<Protected><Dashboard /></Protected>} />
+        {/* O quadro de posts é a tela principal da plataforma. */}
+        <Route path="/app" element={<Navigate to="/app/posts" replace />} />
+        <Route path="/app/painel" element={<Protected><Dashboard /></Protected>} />
         <Route path="/app/quadros" element={<Protected><Boards /></Protected>} />
         <Route path="/app/quadros/:boardId" element={<Protected><BoardView /></Protected>} />
         <Route path="/app/posts" element={<Protected><Posts /></Protected>} />

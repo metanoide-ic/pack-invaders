@@ -88,8 +88,6 @@ export default function Dashboard() {
     [posts],
   );
 
-  const firstName = user?.name.split(' ')[0] ?? '';
-
   const op = useMemo(() => {
     const today = new Date().toISOString().slice(0, 10);
     const tarefas = boards.reduce((acc, b) => {
@@ -105,8 +103,8 @@ export default function Dashboard() {
   return (
     <div>
       <PageHeader
-        title={`Bom te ver, ${firstName}`}
-        subtitle="Panorama da agência hoje."
+        title="Painel"
+        subtitle="Visão geral da agência."
       />
 
       {canFinance ? (

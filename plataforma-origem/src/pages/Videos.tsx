@@ -4,7 +4,7 @@ import {
   useDraggable, useDroppable, pointerWithin,
   type DragStartEvent, type DragEndEvent,
 } from '@dnd-kit/core';
-import { Plus, GripVertical, CheckSquare, MessageSquare, Link2, Clapperboard } from 'lucide-react';
+import { Plus, CheckSquare, MessageSquare, Link2, Clapperboard } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Modal, Select } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
@@ -118,15 +118,14 @@ function VideoColumn({ stage, videos, onOpen, clientMap }: {
 function DraggableVideo({ video, onOpen, clientMap }: { video: VideoProject; onOpen: () => void; clientMap: ReturnType<typeof useClientMap> }) {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: video.id });
   return (
-    <div ref={setNodeRef} style={{ opacity: isDragging ? 0.4 : 1 }}>
-      <VideoCard video={video} onOpen={onOpen} clientMap={clientMap} handleProps={{ ...attributes, ...listeners }} />
+    <div ref={setNodeRef} style={{ opacity: isDragging ? 0.4 : 1 }} {...attributes} {...listeners} onClick={onOpen}>
+      <VideoCard video={video} clientMap={clientMap} />
     </div>
   );
 }
 
-function VideoCard({ video, onOpen, clientMap, handleProps, dragging }: {
-  video: VideoProject; onOpen?: () => void; clientMap: ReturnType<typeof useClientMap>;
-  handleProps?: Record<string, unknown>; dragging?: boolean;
+function VideoCard({ video, clientMap, dragging }: {
+  video: VideoProject; clientMap: ReturnType<typeof useClientMap>; dragging?: boolean;
 }) {
   const client = video.clientId ? clientMap[video.clientId] : undefined;
   const assignee = useAuth((s) => (video.assigneeId ? s.accounts.find((a) => a.id === video.assigneeId) : undefined));
@@ -134,10 +133,9 @@ function VideoCard({ video, onOpen, clientMap, handleProps, dragging }: {
   const pendRev = video.revisions.filter((r) => !r.resolved).length;
   const late = video.dueDate && video.dueDate < todayISO() && video.stage !== 'entregue';
   return (
-    <div className={cn('group rounded-xl border border-line bg-ink-850 p-3 transition hover:border-brand-400/40', dragging && 'rotate-2 border-brand-400/60 shadow-2xl')}>
+    <div className={cn('cursor-pointer touch-none select-none rounded-lg border border-line bg-ink-850 p-3 transition hover:border-white/20', dragging && 'rotate-2 border-brand-400/60 shadow-2xl')}>
       <div className="flex items-start gap-2">
-        <button {...handleProps} className="mt-0.5 cursor-grab touch-none text-white/20 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing"><GripVertical size={15} /></button>
-        <button onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <div className="min-w-0 flex-1 text-left">
           <div className="flex items-center gap-1.5 text-brand-300"><Clapperboard size={13} /><span className="text-[11px] text-white/40">{assignee?.name || video.editor || 'sem responsável'}</span></div>
           <p className="mt-1 line-clamp-2 text-sm leading-snug text-white/90">{video.title}</p>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-white/45">
@@ -147,7 +145,7 @@ function VideoCard({ video, onOpen, clientMap, handleProps, dragging }: {
             {pendRev > 0 && <span className="inline-flex items-center gap-1 text-rose-300"><MessageSquare size={11} /> {pendRev}</span>}
             {video.dueDate && <span className={cn('ml-auto', late && 'text-red-300')}>{new Date(video.dueDate + 'T00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</span>}
           </div>
-        </button>
+        </div>
       </div>
     </div>
   );

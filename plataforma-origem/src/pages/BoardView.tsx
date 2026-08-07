@@ -22,7 +22,6 @@ import {
   Plus,
   MoreVertical,
   Trash2,
-  GripVertical,
   CheckSquare,
   Calendar,
 } from 'lucide-react';
@@ -335,21 +334,17 @@ function SortableCard({ card, onOpen }: { card: CardT; onOpen: () => void }) {
     opacity: isDragging ? 0.4 : 1,
   };
   return (
-    <div ref={setNodeRef} style={style}>
-      <CardTile card={card} onOpen={onOpen} handleProps={{ ...attributes, ...listeners }} />
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners} onClick={onOpen}>
+      <CardTile card={card} />
     </div>
   );
 }
 
 function CardTile({
   card,
-  onOpen,
-  handleProps,
   dragging,
 }: {
   card: CardT;
-  onOpen?: () => void;
-  handleProps?: Record<string, unknown>;
   dragging?: boolean;
 }) {
   const clientMap = useClientMap();
@@ -361,19 +356,12 @@ function CardTile({
   return (
     <div
       className={cn(
-        'group rounded-xl border border-line bg-ink-850 p-3 shadow-sm transition hover:border-brand-400/40',
+        'cursor-pointer touch-none select-none rounded-lg border border-line bg-ink-850 p-3 shadow-sm transition hover:border-white/20',
         dragging && 'rotate-2 border-brand-400/60 shadow-2xl',
       )}
     >
       <div className="flex items-start gap-2">
-        <button
-          {...handleProps}
-          className="mt-0.5 cursor-grab touch-none text-white/20 opacity-0 transition group-hover:opacity-100 active:cursor-grabbing"
-          aria-label="Arrastar"
-        >
-          <GripVertical size={15} />
-        </button>
-        <button onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <div className="min-w-0 flex-1 text-left">
           {card.labels.length > 0 && (
             <div className="mb-1.5 flex flex-wrap gap-1">
               {card.labels.map((l) => (
@@ -424,7 +412,7 @@ function CardTile({
               </span>
             )}
           </div>
-        </button>
+        </div>
       </div>
     </div>
   );

@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Palette, Database, LogOut, Check } from 'lucide-react';
+import { User, Palette, Database, LogOut, Check, Download, Upload } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Avatar, Modal } from '@/components/ui';
 import { useAuth } from '@/lib/authStore';
 import { useData } from '@/lib/dataStore';
 import { AVATAR_COLORS, cn } from '@/lib/utils';
+
+/** Chaves persistidas no navegador que compõem um backup completo. */
+const BACKUP_KEYS = ['origem.data', 'origem.auth', 'origem.settings'] as const;
 
 export default function Settings() {
   const user = useAuth((s) => s.current());
@@ -13,12 +16,14 @@ export default function Settings() {
   const logout = useAuth((s) => s.logout);
   const data = useData();
   const navigate = useNavigate();
+  const importRef = useRef<HTMLInputElement>(null);
 
   const [name, setName] = useState(user?.name ?? '');
   const [role, setRole] = useState(user?.role ?? '');
   const [color, setColor] = useState(user?.color ?? AVATAR_COLORS[0]);
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
+  const [backupMsg, setBackupMsg] = useState('');
 
   if (!user) return null;
 
@@ -26,6 +31,44 @@ export default function Settings() {
     updateProfile({ name: name.trim() || user!.name, role: role.trim(), color });
     setSaved(true);
     setTimeout(() => setSaved(false), 1800);
+  }
+
+  function exportBackup() {
+    const payload: Record<string, unknown> = { _tipo: 'backup-plataforma-origem', _versao: 1, _data: new Date().toISOString() };
+    for (const k of BACKUP_KEYS) {
+      const raw = localStorage.getItem(k);
+      if (raw) payload[k] = JSON.parse(raw);
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `origem-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    setBackupMsg('Backup exportado. Guarde o arquivo em local seguro.');
+    setTimeout(() => setBackupMsg(''), 5000);
+  }
+
+  function importBackup(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const parsed = JSON.parse(String(reader.result));
+        if (parsed?._tipo !== 'backup-plataforma-origem') throw new Error('Arquivo não é um backup da plataforma.');
+        for (const k of BACKUP_KEYS) {
+          if (parsed[k]) localStorage.setItem(k, JSON.stringify(parsed[k]));
+        }
+        setBackupMsg('Backup restaurado. Recarregando…');
+        setTimeout(() => window.location.reload(), 900);
+      } catch (err) {
+        setBackupMsg(`Falha ao importar: ${(err as Error).message}`);
+        setTimeout(() => setBackupMsg(''), 6000);
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   }
 
   return (
@@ -86,10 +129,18 @@ export default function Settings() {
               <h3 className="font-semibold">Dados da plataforma</h3>
             </div>
             <p className="text-sm text-white/50">
-              Os dados ficam salvos localmente neste navegador/dispositivo. Você pode
-              recarregar o conteúdo de exemplo ou limpar tudo para começar do zero.
+              Os dados ficam salvos localmente neste navegador/dispositivo. Exporte um
+              backup regularmente para não perder nada — e use a importação para
+              restaurar ou levar os dados a outro computador.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
+              <Button onClick={exportBackup}>
+                <Download size={16} /> Exportar backup
+              </Button>
+              <Button variant="outline" onClick={() => importRef.current?.click()}>
+                <Upload size={16} /> Importar backup
+              </Button>
+              <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
               <Button variant="outline" onClick={() => data.loadDemo()}>
                 Recarregar dados de exemplo
               </Button>
@@ -97,6 +148,9 @@ export default function Settings() {
                 Limpar todos os dados
               </Button>
             </div>
+            {backupMsg && (
+              <p className="mt-3 rounded-lg border border-line bg-white/[0.02] px-3.5 py-2.5 text-sm text-white/70">{backupMsg}</p>
+            )}
           </section>
         </div>
 
