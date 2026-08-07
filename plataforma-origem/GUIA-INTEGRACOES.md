@@ -1,5 +1,9 @@
 # Guia de conexão — postagem automática e WhatsApp
 
+> Atalho: a pasta [`integracoes/`](./integracoes/) tem **blueprints prontos do
+> Make.com** (importáveis em 2 minutos) para o WhatsApp e o Instagram, com o
+> passo a passo em [`integracoes/LEIA-ME.md`](./integracoes/LEIA-ME.md).
+
 A plataforma **já está pronta e dispara tudo**. O que falta para "postar
 sozinho" não é código: é **conectar as contas** (Instagram, WhatsApp e, se
 quiser, uma IA melhor). Enquanto não conectar, tudo funciona em modo
