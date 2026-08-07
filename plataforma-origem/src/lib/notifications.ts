@@ -51,7 +51,7 @@ export function fireDueNotifications(pending: Pending[]) {
   for (const { post, overdue } of pending) {
     if (already.has(post.id)) continue;
     all.add(post.id);
-    new Notification(overdue ? '⚠️ Post atrasado' : '📅 Precisa postar hoje', {
+    new Notification(overdue ? 'Post atrasado' : 'Precisa postar hoje', {
       body: `${post.title} — ${post.platform}`,
       tag: post.id,
       icon: './icon-192.png',

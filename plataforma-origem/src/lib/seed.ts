@@ -77,8 +77,8 @@ export function seedData(): WorkspaceData {
     {
       id: uid('post'), title: 'Carrossel — 5 tendências de verão', platform: 'Instagram',
       clientId: aurora.id, stage: 'aprovacao', scheduledDate: daysFromNow(2),
-      caption: 'O verão chegou e o guarda-roupa pede novidade ☀️', sentForApproval: true,
-      copy: 'O verão chegou e o guarda-roupa pede novidade ☀️\n\nSepararamos 5 tendências que vão bombar. Salva esse post! 🔖\n\n#moda #verao #tendencias #origem #marketing',
+      caption: 'O verão chegou e o guarda-roupa pede novidade.', sentForApproval: true,
+      copy: 'O verão chegou e o guarda-roupa pede novidade.\n\nSeparamos 5 tendências que vão bombar. Salva esse post!\n\n#moda #verao #tendencias #origem #marketing',
       revisions: [],
       checklist: [
         { id: uid('ck'), text: 'Copy aprovada', done: true },
@@ -137,17 +137,17 @@ export function seedData(): WorkspaceData {
   const library: LibraryItem[] = [
     {
       id: uid('lib'), title: 'Prova social — depoimento', platform: 'Instagram', category: 'Autoridade',
-      caption: 'Quem confia, colhe resultado. Veja o que [CLIENTE] alcançou com a gente 👇',
+      caption: 'Quem confia, colhe resultado. Veja o que [CLIENTE] alcançou com a gente.',
       hashtags: '#resultado #depoimento #origem #marketing', createdAt: Date.now(),
     },
     {
       id: uid('lib'), title: 'Bastidores da equipe', platform: 'Instagram', category: 'Conexão',
-      caption: 'Por trás de cada campanha tem gente que ama o que faz. ✨ Bora criar junto?',
+      caption: 'Por trás de cada campanha tem gente que ama o que faz. Bora criar junto?',
       hashtags: '#bastidores #agencia #time', createdAt: Date.now(),
     },
     {
       id: uid('lib'), title: 'Dica rápida de marketing', platform: 'TikTok', category: 'Educativo',
-      caption: 'Anota essa: [DICA]. Simples assim. Salva pra aplicar hoje. 🔖',
+      caption: 'Anota essa: [DICA]. Simples assim. Salva pra aplicar hoje.',
       hashtags: '#dica #marketingdigital #estrategia', createdAt: Date.now(),
     },
   ];

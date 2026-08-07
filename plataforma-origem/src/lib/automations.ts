@@ -42,7 +42,7 @@ export async function sendForApproval(postId: string): Promise<void> {
   store.updatePost(postId, { copy, sentForApproval: true });
 
   const message =
-    `📢 *Segue aqui para aprovação*\n\n` +
+    `*Segue aqui para aprovação*\n\n` +
     `*${post.title}* — ${post.platform}${client ? ` (${client.name})` : ''}\n\n` +
     `${copy}\n\n` +
     `Responda *APROVADO* para publicar, ou diga o que ajustar.`;
@@ -108,7 +108,7 @@ export async function publishPost(postId: string): Promise<void> {
  */
 export async function onApproved(postId: string): Promise<void> {
   const s = useSettings.getState();
-  log('whatsapp', 'Aprovação recebida do grupo ✅', 'ok', undefined, postId);
+  log('whatsapp', 'Aprovação recebida do grupo', 'ok', undefined, postId);
   if (s.autoPublishOnApproval) {
     await publishPost(postId);
   } else {
@@ -124,7 +124,7 @@ export function onRejected(postId: string, changeText: string): void {
   const store = useData.getState();
   store.addRevision(postId, changeText);
   store.updatePost(postId, { stage: 'alteracao', sentForApproval: false });
-  log('whatsapp', 'Alteração solicitada pelo grupo ✍️', 'ok', changeText, postId);
+  log('whatsapp', 'Alteração solicitada pelo grupo', 'ok', changeText, postId);
 }
 
 /**

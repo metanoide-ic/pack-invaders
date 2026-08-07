@@ -10,52 +10,15 @@ import {
   PieChart,
   Pie,
 } from 'recharts';
-import {
-  TrendingUp,
-  TrendingDown,
-  Clock,
-  CalendarCheck,
-  ArrowUpRight,
-  Wallet,
-  KanbanSquare,
-  Clapperboard,
-  AlertTriangle,
-} from 'lucide-react';
+import { CalendarCheck, ArrowUpRight } from 'lucide-react';
 import type { Post } from '@/lib/types';
 import { PageHeader } from '@/components/PageHeader';
-import { Badge } from '@/components/ui';
+import { Badge, Stat } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { useClientMap, isSameMonth, monthKey } from '@/lib/hooks';
 import { money, cn } from '@/lib/utils';
 import { STAGE_META } from '@/lib/labels';
-
-function Kpi({
-  label,
-  value,
-  icon,
-  tint,
-  hint,
-}: {
-  label: string;
-  value: string;
-  icon: React.ReactNode;
-  tint: string;
-  hint?: string;
-}) {
-  return (
-    <div className="card p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-white/55">{label}</span>
-        <span className="grid h-9 w-9 place-items-center rounded-lg" style={{ background: `${tint}22`, color: tint }}>
-          {icon}
-        </span>
-      </div>
-      <div className="mt-3 font-display text-2xl font-bold text-white">{value}</div>
-      {hint && <div className="mt-1 text-xs text-white/40">{hint}</div>}
-    </div>
-  );
-}
 
 export default function Dashboard() {
   const user = useAuth((s) => s.current());
@@ -148,17 +111,17 @@ export default function Dashboard() {
 
       {canFinance ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Kpi label="Receita do mês" value={money(fin.receita)} tint="#10b981" icon={<TrendingUp size={18} />} hint="Pagamentos confirmados" />
-          <Kpi label="A receber" value={money(fin.aReceber)} tint="#f59e0b" icon={<Clock size={18} />} hint="Pendências em aberto" />
-          <Kpi label="Despesas do mês" value={money(fin.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
-          <Kpi label="Saldo do mês" value={money(fin.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} hint="Receitas − despesas" />
+          <Stat label="Receita do mês" value={money(fin.receita)} valueColor="#34d399" hint="Pagamentos confirmados" />
+          <Stat label="A receber" value={money(fin.aReceber)} hint="Pendências em aberto" dot="#f59e0b" />
+          <Stat label="Despesas do mês" value={money(fin.despesa)} valueColor="#f87171" />
+          <Stat label="Saldo do mês" value={money(fin.saldo)} hint="Receitas − despesas" dot="#7c5cff" />
         </div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          <Kpi label="Tarefas em aberto" value={String(op.tarefas)} tint="#7c5cff" icon={<KanbanSquare size={18} />} />
-          <Kpi label="Posts para hoje" value={String(op.hoje)} tint="#f59e0b" icon={<AlertTriangle size={18} />} hint="Precisam ir hoje" />
-          <Kpi label="Posts em produção" value={String(op.emProducao)} tint="#38bdf8" icon={<CalendarCheck size={18} />} />
-          <Kpi label="Vídeos ativos" value={String(op.videosAtivos)} tint="#a855f7" icon={<Clapperboard size={18} />} />
+          <Stat label="Tarefas em aberto" value={String(op.tarefas)} dot="#7c5cff" />
+          <Stat label="Posts para hoje" value={String(op.hoje)} hint="Precisam ir hoje" dot="#f59e0b" />
+          <Stat label="Posts em produção" value={String(op.emProducao)} dot="#38bdf8" />
+          <Stat label="Vídeos ativos" value={String(op.videosAtivos)} dot="#a855f7" />
         </div>
       )}
 

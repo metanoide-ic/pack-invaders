@@ -204,6 +204,34 @@ export function Modal({
   );
 }
 
+/* ----------------------------- Stat ----------------------------- */
+export function Stat({
+  label,
+  value,
+  hint,
+  dot,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  dot?: string;
+  valueColor?: string;
+}) {
+  return (
+    <div className="card p-5">
+      <div className="flex items-center gap-2">
+        {dot && <span className="h-1.5 w-1.5 rounded-full" style={{ background: dot }} />}
+        <span className="text-[11px] font-medium uppercase tracking-wider text-white/45">{label}</span>
+      </div>
+      <div className="mt-2 font-display text-2xl font-semibold tabular-nums" style={{ color: valueColor || '#fff' }}>
+        {value}
+      </div>
+      {hint && <div className="mt-1 text-xs text-white/40">{hint}</div>}
+    </div>
+  );
+}
+
 /* ---------------------------- Empty ----------------------------- */
 export function EmptyState({
   icon,

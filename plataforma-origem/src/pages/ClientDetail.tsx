@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CalendarRange, MessageCircle, MapPin, CalendarCheck, KanbanSquare, Clapperboard, Wallet } from 'lucide-react';
-import { Badge } from '@/components/ui';
+import { ArrowLeft, CalendarRange, MessageCircle, MapPin, Clapperboard, Wallet } from 'lucide-react';
+import { Badge, Stat } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { STAGE_META, VIDEO_STAGE_META, PLATFORM_COLOR } from '@/lib/labels';
@@ -87,10 +87,10 @@ export default function ClientDetail() {
 
       {/* Métricas */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {canFinance && <StatCard label="Receita (paga)" value={money(data.receita)} icon={<Wallet size={16} />} tint="#10b981" />}
-        <StatCard label="Posts" value={String(data.cposts.length)} icon={<CalendarCheck size={16} />} tint="#7c5cff" />
-        <StatCard label="Tarefas" value={String(data.ctasks.length)} icon={<KanbanSquare size={16} />} tint="#38bdf8" />
-        <StatCard label="Vídeos" value={String(data.cvideos.length)} icon={<Clapperboard size={16} />} tint="#a855f7" />
+        {canFinance && <Stat label="Receita (paga)" value={money(data.receita)} valueColor="#34d399" />}
+        <Stat label="Posts" value={String(data.cposts.length)} dot="#7c5cff" />
+        <Stat label="Tarefas" value={String(data.ctasks.length)} dot="#38bdf8" />
+        <Stat label="Vídeos" value={String(data.cvideos.length)} dot="#a855f7" />
       </div>
 
       <div className="mt-4 grid gap-4 lg:grid-cols-2">
@@ -129,18 +129,6 @@ export default function ClientDetail() {
           </Panel>
         )}
       </div>
-    </div>
-  );
-}
-
-function StatCard({ label, value, icon, tint }: { label: string; value: string; icon: React.ReactNode; tint: string }) {
-  return (
-    <div className="card p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-white/55">{label}</span>
-        <span className="grid h-8 w-8 place-items-center rounded-lg" style={{ background: `${tint}22`, color: tint }}>{icon}</span>
-      </div>
-      <div className="mt-2 font-display text-xl font-semibold text-white">{value}</div>
     </div>
   );
 }

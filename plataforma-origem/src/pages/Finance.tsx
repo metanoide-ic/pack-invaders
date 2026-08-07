@@ -10,15 +10,13 @@ import {
 } from 'recharts';
 import {
   Plus,
-  TrendingUp,
-  TrendingDown,
   Wallet,
   Trash2,
   ArrowDownLeft,
   ArrowUpRight,
 } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { Button, Field, Input, Modal, Select, Badge, EmptyState } from '@/components/ui';
+import { Button, Field, Input, Modal, Select, Badge, EmptyState, Stat } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
 import { useClientMap, monthKey } from '@/lib/hooks';
 import { money, todayISO, cn } from '@/lib/utils';
@@ -103,10 +101,10 @@ export default function Finance() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Receitas (pagas)" value={money(totals.receita)} tint="#10b981" icon={<TrendingUp size={18} />} />
-        <Stat label="Despesas (pagas)" value={money(totals.despesa)} tint="#ef4444" icon={<TrendingDown size={18} />} />
-        <Stat label="Saldo" value={money(totals.saldo)} tint="#7c5cff" icon={<Wallet size={18} />} />
-        <Stat label="A receber" value={money(totals.pendente)} tint="#f59e0b" icon={<ArrowDownLeft size={18} />} />
+        <Stat label="Receitas (pagas)" value={money(totals.receita)} valueColor="#34d399" />
+        <Stat label="Despesas (pagas)" value={money(totals.despesa)} valueColor="#f87171" />
+        <Stat label="Saldo" value={money(totals.saldo)} dot="#7c5cff" />
+        <Stat label="A receber" value={money(totals.pendente)} dot="#f59e0b" />
       </div>
 
       <div className="mt-6 card p-5">
@@ -279,16 +277,3 @@ export default function Finance() {
   );
 }
 
-function Stat({ label, value, tint, icon }: { label: string; value: string; tint: string; icon: React.ReactNode }) {
-  return (
-    <div className="card p-5">
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-white/55">{label}</span>
-        <span className="grid h-9 w-9 place-items-center rounded-lg" style={{ background: `${tint}22`, color: tint }}>
-          {icon}
-        </span>
-      </div>
-      <div className="mt-3 font-display text-2xl font-bold text-white">{value}</div>
-    </div>
-  );
-}

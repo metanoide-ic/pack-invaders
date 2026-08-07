@@ -32,7 +32,7 @@ const defaults: Settings = {
   aiKey: '',
   aiModel: 'llama-3.3-70b-versatile',
   brandVoice:
-    'Tom moderno, direto e confiante. Marketing com estratégia e resultado. Use no máximo 3 emojis relevantes.',
+    'Tom moderno, direto e confiante. Marketing com estratégia e resultado. Não use emojis.',
   publishWebhook: '',
   autoPublishOnApproval: true,
   whatsappWebhook: '',

@@ -66,7 +66,12 @@ export function PostsCalendar({ posts, onOpen }: { posts: Post[]; onOpen: (id: s
             <div key={i} className="min-h-[104px] border-b border-r border-line/60 p-1.5">
               <div className="mb-1 flex items-center justify-between">
                 <span className={cn('grid h-6 w-6 place-items-center rounded-full text-xs font-medium', isToday ? 'bg-brand-500 text-white' : 'text-white/55')}>{d}</span>
-                {hol && <span className="truncate rounded px-1 text-[9px] font-medium text-amber-300/90" title={hol.name}>{hol.name.split(' ')[0]}{hol.universal ? '★' : ''}</span>}
+                {hol && (
+                  <span className={cn('inline-flex max-w-[70%] items-center gap-1 truncate rounded px-1 text-[9px] font-medium', hol.universal ? 'bg-amber-400/15 text-amber-300' : 'text-amber-300/80')} title={hol.name + (hol.universal ? ' (todos os clientes)' : '')}>
+                    {hol.universal && <span className="h-1 w-1 shrink-0 rounded-full bg-amber-300" />}
+                    {hol.name.split(' ')[0]}
+                  </span>
+                )}
               </div>
               <div className="space-y-1">
                 {list.slice(0, 3).map((p) => {

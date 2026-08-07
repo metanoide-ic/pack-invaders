@@ -10,11 +10,11 @@ const HOOKS = [
 ];
 
 const CTAS = [
-  'Comenta “EU QUERO” que a gente te chama. 🚀',
-  'Chama no direct e vamos tirar do papel. 💬',
-  'Salva esse post pra não esquecer. 🔖',
-  'Marca aquele sócio que precisa ver isso. 👇',
-  'Bora crescer junto? Fala com a gente. ✨',
+  'Comenta “EU QUERO” que a gente te chama.',
+  'Chama no direct e vamos tirar do papel.',
+  'Salva esse post pra não esquecer.',
+  'Marca aquele sócio que precisa ver isso.',
+  'Bora crescer junto? Fala com a gente.',
 ];
 
 function pick<T>(arr: T[], seed: number): T {
@@ -38,7 +38,7 @@ export function templateCopy(post: Post, client?: Client): string {
   const tema = post.title.replace(/[.:-].*$/, '').trim();
 
   return (
-    `${hook} ${tema}${marca} é sobre transformar ideia em resultado. ✨\n\n` +
+    `${hook} ${tema}${marca} é sobre transformar ideia em resultado.\n\n` +
     `Na Origem, a gente une estratégia, criatividade e execução pra sua marca ` +
     `aparecer do jeito certo, pra pessoa certa, na hora certa.\n\n` +
     `${cta}\n\n${hashados(post.platform)}`
@@ -53,7 +53,7 @@ function buildPrompt(post: Post, client?: Client, brandVoice?: string): string {
     `Cliente: ${client?.name || 'Origem'}.\n` +
     `Tema do post: ${post.title}.\n` +
     (post.notes ? `Observações: ${post.notes}.\n` : '') +
-    `Regras: português do Brasil, gancho forte na 1ª linha, no máximo 3 emojis, ` +
+    `Regras: português do Brasil, gancho forte na 1ª linha, SEM emojis, ` +
     `chamada para ação no fim e 5 a 7 hashtags relevantes. Devolva apenas a legenda.`
   );
 }

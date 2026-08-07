@@ -61,6 +61,7 @@ interface DataState {
   addPost: (p: Omit<Post, 'id' | 'createdAt' | 'checklist' | 'revisions'> & { checklist?: Post['checklist'] }) => void;
   updatePost: (id: string, patch: Partial<Post>) => void;
   setPostStage: (id: string, stage: PostStage) => void;
+  movePost: (postId: string, toStage: PostStage, toIndex: number) => void;
   removePost: (id: string) => void;
   addRevision: (postId: string, text: string) => void;
   updateRevision: (postId: string, revId: string, patch: Partial<{ text: string; resolved: boolean }>) => void;
@@ -259,6 +260,25 @@ export const useData = create<DataState>()(
         set((s) => ({
           posts: s.posts.map((p) => (p.id === id ? { ...p, stage } : p)),
         })),
+      movePost: (postId, toStage, toIndex) =>
+        set((s) => {
+          const moving = s.posts.find((p) => p.id === postId);
+          if (!moving) return {};
+          const without = s.posts.filter((p) => p.id !== postId);
+          const updated = { ...moving, stage: toStage };
+          const targetIds = without.filter((p) => p.stage === toStage).map((p) => p.id);
+          const idx = Math.max(0, Math.min(toIndex, targetIds.length));
+          let globalIndex: number;
+          if (idx >= targetIds.length) {
+            const lastId = targetIds[targetIds.length - 1];
+            globalIndex = lastId ? without.findIndex((p) => p.id === lastId) + 1 : without.length;
+          } else {
+            globalIndex = without.findIndex((p) => p.id === targetIds[idx]);
+          }
+          const result = [...without];
+          result.splice(globalIndex, 0, updated);
+          return { posts: result };
+        }),
       removePost: (id) => set((s) => ({ posts: s.posts.filter((p) => p.id !== id) })),
       addRevision: (postId, text) =>
         set((s) => ({
