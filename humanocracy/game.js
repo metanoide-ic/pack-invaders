@@ -438,7 +438,7 @@ function unlockAchievement(id) {
   sfx('achieve');
   const el = document.createElement('div');
   el.className = 'achievement-toast';
-  el.innerHTML = `🏆 <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
+  el.innerHTML = `★ <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
   achievementToasts.push(el);
   restackAchievementToasts();
   document.body.appendChild(el);
@@ -463,7 +463,7 @@ function showAchievementsModal() {
   const ids = Object.keys(ACHIEVEMENTS);
   const rows = ids.map(id => {
     const unlocked = got.includes(id);
-    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '🏆' : '🔒'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '★' : '☆'}</span>${T(ACHIEVEMENTS[id])}</div>`;
   }).join('');
   $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
   const box = $('modal-actions'); box.innerHTML = '';
@@ -685,7 +685,7 @@ function openExam() {
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   // acompanhante Alternado: o horror está no colo, não no rosto que você examina
   if (cz.companion && cz.companion.anom) {
-    $('exam-log').innerHTML += `<div class="anomalia" data-tell="companion">⚠ ${T('O acompanhante não é uma criança. As pupilas são fendas; os olhos não têm fundo; não pisca. O adulto aperta-o mais forte quando você olha.')}</div>`;
+    $('exam-log').innerHTML += `<div class="anomalia" data-tell="companion">▲ ${T('O acompanhante não é uma criança. As pupilas são fendas; os olhos não têm fundo; não pisca. O adulto aperta-o mais forte quando você olha.')}</div>`;
   }
   const zones = $('exam-zones'); zones.innerHTML = '';
   // visão geral: volta do close de zona para o rosto inteiro
@@ -699,7 +699,7 @@ function openExam() {
     b.onclick = () => { b.classList.add('done'); examZone(cz, z); };
     zones.appendChild(b);
   });
-  // clicar num achado (⚠) registra a discrepância — feedback estilo Papers Please
+  // clicar num achado (▲) registra a discrepância — feedback estilo Papers Please
   $('exam-log').onclick = (e) => {
     const el = e.target.closest && e.target.closest('.anomalia[data-tell]');
     if (!el || el.classList.contains('flagged')) return;
@@ -707,7 +707,7 @@ function openExam() {
     cz.evidence = true; $('btn-detain').disabled = false;
     const tag = document.createElement('div');
     tag.className = 'exam-detected';
-    tag.textContent = '⚠ ' + T('DISCREPÂNCIA DETECTADA — anotada no laudo. Detenção autorizada.');
+    tag.textContent = '▲ ' + T('DISCREPÂNCIA DETECTADA — anotada no laudo. Detenção autorizada.');
     $('exam-log').appendChild(tag); $('exam-log').scrollTop = $('exam-log').scrollHeight;
     try { sfx('ding'); } catch (e2) {}
   };
@@ -724,21 +724,21 @@ function examZone(cz, zone) {
   cz._examLogged[zone.id] = true;
   if (zone.body) { // CORPO: volume oculto + assinatura térmica + biotipo
     let line = cz.phys.concealed
-      ? `<div class="anomalia" data-tell="corpo">⚠ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
+      ? `<div class="anomalia" data-tell="corpo">▲ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
       : `<div class="obs">${T('Nada oculto sob as roupas. Só um corpo com frio.')}</div>`;
     if (cz.sexMismatch) {
       const decl = cz.sexo === 'f' ? T('feminino') : T('masculino');
       const real = cz.features.bodySex === 'f' ? T('feminino') : T('masculino');
-      line += `<div class="anomalia" data-tell="biotipo">⚠ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
+      line += `<div class="anomalia" data-tell="biotipo">▲ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
     }
-    if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">⚠ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
+    if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">▲ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
     log.innerHTML += line; log.scrollTop = log.scrollHeight; return;
   }
   const rum = rumorForDay(S.day);
   zone.tells.forEach(t => {
     const tellDef = TELLS[t];
     const anômalo = cz.phys[t];
-    let line = anômalo ? `<div class="anomalia" data-tell="${t}">⚠ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
+    let line = anômalo ? `<div class="anomalia" data-tell="${t}">▲ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
     if (anômalo && rum && rum.tell === t) {
       if (rum.official) {
         cz.softEndorsed = true; cz.evidence = true;
@@ -1202,7 +1202,7 @@ function openBag() {
         $('btn-detain').disabled = false;
         cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: T('Contrabando na bagagem'), confirmedNow: true });
         shift.confirmed.push(cz.discrepancies[cz.discrepancies.length - 1]);
-        $('inspect-bar').textContent = T('⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.');
+        $('inspect-bar').textContent = T('▲ CONTRABANDO ENCONTRADO. Detenção autorizada.');
         sfx('ding');
         return;
       }
@@ -2150,7 +2150,7 @@ function presentCitizen(cz) {
   // chega andando (sincronizado com o boneco da fila entrando no guichê)
   setTimeout(() => { a.classList.add('arrive'); }, 350);
   a.addEventListener('animationend', function h() { a.classList.remove('arrive'); a.removeEventListener('animationend', h); });
-  $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
+  $('npc-name').textContent = cz.encounter ? cz.nome + ' ※' : cz.nome;
   $('speech').textContent = '“' + greetingFor(cz) + '”';
   mumble(cz.sexo === 'f' ? 175 : 112, ri(4, 7));
   buildAskButtons(cz);
@@ -2708,22 +2708,22 @@ function scan(kind) {
   if (kind === 'thermo') {
     spendTime(15);
     const anom = cz.isAlternado ? chance(.35) : chance(cz.nervous ? .2 : .08);
-    out = anom ? '🌡 TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : '🌡 TÉRMICO: padrão dentro da faixa humana comum.';
+    out = anom ? 'TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : 'TÉRMICO: padrão dentro da faixa humana comum.';
   } else if (kind === 'pulse') {
     spendTime(15);
     const calm = cz.isAlternado ? chance(.7) : chance(cz.nervous ? .1 : .5);
-    out = calm ? '📈 PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : '📈 PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
+    out = calm ? 'PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : 'PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
   } else if (kind === 'bio') {
     spendTime(30);
     if (cz.isSilente) {
       // a máquina IMPLORA para você chamar os guardas. não chame.
       cz.bioResult = true; cz.evidence = true;
       $('btn-detain').disabled = false;
-      $('scan-result').textContent = '🧬 BIOLÓGICO: ⚠⚠⚠ POSITIVO. POSITIVO. POSITIVO. DETENÇÃO RECOMENDADA COM URGÊN— o restante da linha saiu impresso em branco.';
+      $('scan-result').textContent = 'BIOLÓGICO: ▲▲▲ POSITIVO. POSITIVO. POSITIVO. DETENÇÃO RECOMENDADA COM URGÊN— o restante da linha saiu impresso em branco.';
       return;
     }
-    if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = '🧬 BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
-    if (cz.scannerAmbiguo) { $('scan-result').textContent = '🧬 BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
+    if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = 'BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
+    if (cz.scannerAmbiguo) { $('scan-result').textContent = 'BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
     const decal = S.day >= 31 && !S.bioCalibrated;
     const tp = decal ? .5 : .8, fp = decal ? .3 : .1;
     const positive = cz.isAlternado ? chance(tp) : chance(fp);
@@ -2731,8 +2731,8 @@ function scan(kind) {
     if (positive) {
       cz.evidence = true;
       $('btn-detain').disabled = false;
-      out = '🧬 BIOLÓGICO: ⚠ MARCADOR K-7 POSITIVO. Resultado habilita DETENÇÃO. (O fabricante nega falsos positivos. O fabricante vende scanners.)';
-    } else out = '🧬 BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
+      out = 'BIOLÓGICO: ▲ MARCADOR K-7 POSITIVO. Resultado habilita DETENÇÃO. (O fabricante nega falsos positivos. O fabricante vende scanners.)';
+    } else out = 'BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
   }
   $('scan-result').textContent = out;
   } finally {
@@ -2782,7 +2782,7 @@ function evaluatePair(a, b) {
     cz.evidence = true;
     S.ai.det[found.type] = (S.ai.det[found.type] || 0) + 1; // a espécie observa você
     $('btn-detain').disabled = false;
-    $('inspect-bar').textContent = `${T('⚠ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
+    $('inspect-bar').textContent = `${T('▲ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
     a.el.classList.add('flagged'); b.el.classList.add('flagged');
     sfx('ding');
   } else {

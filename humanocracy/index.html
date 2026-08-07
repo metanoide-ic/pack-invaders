@@ -55,7 +55,7 @@
           <div class="title-options" id="title-options" hidden>
             <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
             <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-            <button id="btn-fullscreen" class="btn-title btn-title-sm">⛶ TELA CHEIA (F)</button>
+            <button id="btn-fullscreen" class="btn-title btn-title-sm">TELA CHEIA (F)</button>
             <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
             <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
             <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
@@ -134,8 +134,8 @@
           <span id="processed-count">Atendidos: 0</span>
           <span id="money-hud">₴ 0</span>
         </div>
-        <button id="btn-music" class="btn-small" title="Música ligada/desligada">♪</button>
-        <button id="btn-map" class="btn-small" title="Carta de fronteiras">🗺 MAPA</button>
+        <button id="btn-music" class="btn-small" title="Música ligada/desligada"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5l7-1.2v8.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="12" r="2.1"/><circle cx="11" cy="10.5" r="2.1"/></svg></button>
+        <button id="btn-map" class="btn-small" title="Carta de fronteiras"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4l4-1.8 5 1.8 4-1.8v9.6l-4 1.8-5-1.8-4 1.8z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 2.2v9.6M10.5 4v9.6" stroke="currentColor" stroke-width="1"/></svg> <span class="tlabel">MAPA</span></button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -163,15 +163,15 @@
             </div>
             <div id="booth-vhs"></div>
             <div class="window-stamps" id="window-stamps">
+              <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
               <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
               <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
-              <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
             </div>
           </div>
           <div class="booth-counter">
-            <span class="bc-item bc-doc" title="Documentos">📄</span>
+            <span class="bc-item bc-doc" title="Documentos"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 1.5v3h3M6 8h4M6 10.5h4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
             <span class="bc-item bc-clock" id="booth-clock">08:00</span>
-            <span class="bc-item bc-stamp" title="Carimbo">🖋</span>
+            <span class="bc-item bc-stamp" title="Carimbo"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5h4l-1 5h-2z" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="3" y="8" width="10" height="2.4" rx="1"/><rect x="2.5" y="12.5" width="11" height="1.8" rx=".9"/></svg></span>
           </div>
           <div class="npc-name" id="npc-name">—</div>
           <div class="speech" id="speech"></div>
@@ -205,7 +205,7 @@
       </div>
 
       <div class="radio-bar" id="radio-bar">
-        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto">📻</button>
+        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="6" width="13" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l8-3.2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="10" r=".9"/></svg></button>
         <span id="radio-line">…o rádio do posto aquece as válvulas…</span>
       </div>
       <div class="inspect-bar" id="inspect-bar"></div>
@@ -327,7 +327,7 @@
       <div class="pause-panel">
         <div class="pause-title">— PAUSA —</div>
         <button id="pz-continue">CONTINUAR</button>
-        <button id="pz-achievements">🏆 CONQUISTAS</button>
+        <button id="pz-achievements">CONQUISTAS</button>
         <button id="pz-textsize">☐ TEXTO GRANDE</button>
         <button id="pz-music">MÚSICA: LIGADA</button>
         <button id="pz-sfx">SONS: LIGADOS</button>
@@ -347,7 +347,7 @@
     </div>
 
     <div id="citation" class="citation">
-      <div class="citation-head">⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
+      <div class="citation-head">▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
       <div class="citation-body" id="citation-body"></div>
     </div>
 

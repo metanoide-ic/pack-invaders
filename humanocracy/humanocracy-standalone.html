@@ -383,6 +383,10 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
 .btn-small { font-size:11px; border-radius:3px; padding:6px 12px; }
+/* ícone de linha monocromático (substitui emojis nos botões) */
+.ic { width:13px; height:13px; vertical-align:-2px; fill:currentColor; stroke:currentColor; }
+.ic[viewBox] { stroke-linejoin:round; stroke-linecap:round; }
+.btn-small .ic { width:14px; height:14px; }
 
 .shift-main {
   flex:1; min-height:0; display:grid;
@@ -1276,7 +1280,7 @@ body.text-large .np-body { font-size:15px; }
           <div class="title-options" id="title-options" hidden>
             <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
             <button id="btn-second-reading" class="btn-title btn-title-sm" style="display:none" title="Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.">↻ SEGUNDA LEITURA (mesma campanha)</button>
-            <button id="btn-fullscreen" class="btn-title btn-title-sm">⛶ TELA CHEIA (F)</button>
+            <button id="btn-fullscreen" class="btn-title btn-title-sm">TELA CHEIA (F)</button>
             <button id="btn-archivist" class="btn-title btn-toggle" title="O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.">☐ MODO ARQUIVISTA (sem relógio)</button>
             <button id="btn-textsize" class="btn-title btn-toggle" title="Aumenta o texto dos documentos, diálogos, regulamento e avisos.">☐ TEXTO GRANDE</button>
             <button id="btn-lang" class="btn-title btn-toggle" title="Idioma da interface e dos 8 finais. O grosso do diálogo procedural ainda é só em português.">PT-BR / EN</button>
@@ -1355,8 +1359,8 @@ body.text-large .np-body { font-size:15px; }
           <span id="processed-count">Atendidos: 0</span>
           <span id="money-hud">₴ 0</span>
         </div>
-        <button id="btn-music" class="btn-small" title="Música ligada/desligada">♪</button>
-        <button id="btn-map" class="btn-small" title="Carta de fronteiras">🗺 MAPA</button>
+        <button id="btn-music" class="btn-small" title="Música ligada/desligada"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5l7-1.2v8.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="12" r="2.1"/><circle cx="11" cy="10.5" r="2.1"/></svg></button>
+        <button id="btn-map" class="btn-small" title="Carta de fronteiras"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4l4-1.8 5 1.8 4-1.8v9.6l-4 1.8-5-1.8-4 1.8z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 2.2v9.6M10.5 4v9.6" stroke="currentColor" stroke-width="1"/></svg> <span class="tlabel">MAPA</span></button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -1384,15 +1388,15 @@ body.text-large .np-body { font-size:15px; }
             </div>
             <div id="booth-vhs"></div>
             <div class="window-stamps" id="window-stamps">
+              <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
               <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
               <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
-              <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
             </div>
           </div>
           <div class="booth-counter">
-            <span class="bc-item bc-doc" title="Documentos">📄</span>
+            <span class="bc-item bc-doc" title="Documentos"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 1.5v3h3M6 8h4M6 10.5h4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
             <span class="bc-item bc-clock" id="booth-clock">08:00</span>
-            <span class="bc-item bc-stamp" title="Carimbo">🖋</span>
+            <span class="bc-item bc-stamp" title="Carimbo"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2.5h4l-1 5h-2z" fill="none" stroke="currentColor" stroke-width="1.2"/><rect x="3" y="8" width="10" height="2.4" rx="1"/><rect x="2.5" y="12.5" width="11" height="1.8" rx=".9"/></svg></span>
           </div>
           <div class="npc-name" id="npc-name">—</div>
           <div class="speech" id="speech"></div>
@@ -1426,7 +1430,7 @@ body.text-large .np-body { font-size:15px; }
       </div>
 
       <div class="radio-bar" id="radio-bar">
-        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto">📻</button>
+        <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="6" width="13" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l8-3.2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="10" r=".9"/></svg></button>
         <span id="radio-line">…o rádio do posto aquece as válvulas…</span>
       </div>
       <div class="inspect-bar" id="inspect-bar"></div>
@@ -1548,7 +1552,7 @@ body.text-large .np-body { font-size:15px; }
       <div class="pause-panel">
         <div class="pause-title">— PAUSA —</div>
         <button id="pz-continue">CONTINUAR</button>
-        <button id="pz-achievements">🏆 CONQUISTAS</button>
+        <button id="pz-achievements">CONQUISTAS</button>
         <button id="pz-textsize">☐ TEXTO GRANDE</button>
         <button id="pz-music">MÚSICA: LIGADA</button>
         <button id="pz-sfx">SONS: LIGADOS</button>
@@ -1568,7 +1572,7 @@ body.text-large .np-body { font-size:15px; }
     </div>
 
     <div id="citation" class="citation">
-      <div class="citation-head">⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
+      <div class="citation-head">▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO</div>
       <div class="citation-body" id="citation-body"></div>
     </div>
 
@@ -2457,7 +2461,7 @@ const I18N_EN = {
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SECOND READING (same campaign)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'New campaign, same seed: the same citizens pass through your booth, on the same days. You are the one who is no longer the same.',
-  '⛶ TELA CHEIA (F)': '⛶ FULLSCREEN (F)',
+  'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'MODO ARQUIVISTA (sem relógio)': 'ARCHIVIST MODE (no clock)',
   'TEXTO GRANDE': 'LARGE TEXT',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -2489,11 +2493,11 @@ const I18N_EN = {
   'Revistar bagagem (10 min)': 'Search luggage (10 min)',
   '📜 LINHA DA VIDA': '📜 LIFE TIMELINE',
   'Organizar a vida documentada em cronologia (10 min)': 'Organize the documented life into a timeline (10 min)',
-  '🌡 TÉRMICO': '🌡 THERMAL',
+  'TÉRMICO': 'THERMAL',
   'Scanner Térmico (15 min)': 'Thermal Scanner (15 min)',
-  '📈 PULSAÇÃO': '📈 PULSE',
+  'PULSAÇÃO': 'PULSE',
   'Scanner de Pulsação (15 min)': 'Pulse Scanner (15 min)',
-  '🧬 BIOLÓGICO': '🧬 BIOLOGICAL',
+  'BIOLÓGICO': 'BIOLOGICAL',
   'Detector Biológico (30 min)': 'Biological Detector (30 min)',
   'REGULAMENTO DO DIA': "TODAY'S REGULATIONS",
   'REFERÊNCIA DE PAÍSES': 'COUNTRY REFERENCE',
@@ -2514,6 +2518,7 @@ const I18N_EN = {
   'EXAME FÍSICO APROXIMADO — clique nas regiões': 'CLOSE PHYSICAL EXAM — click on regions',
   'FECHAR': 'CLOSE',
   '🗺 MAPA': '🗺 MAP',
+  'MAPA': 'MAP',
   'Carta de fronteiras': 'Border chart',
   'REVISTA DE BAGAGEM — objetos contam histórias': 'LUGGAGE SEARCH — objects tell stories',
   'No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.':
@@ -2527,11 +2532,11 @@ const I18N_EN = {
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
-  '🏆 CONQUISTAS': '🏆 ACHIEVEMENTS',
+  '★ CONQUISTAS': '★ ACHIEVEMENTS',
   'CONQUISTAS': 'ACHIEVEMENTS',
 
   /* ---- citação / notificação ---- */
-  '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTRY OF SCREENING — NOTICE',
+  '▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '▲ MINISTRY OF SCREENING — NOTICE',
 
   /* ---- regimes / jornal (data.js) ---- */
   'REPÚBLICA DE OSTERIA': 'REPUBLIC OF OSTERIA',
@@ -3362,9 +3367,9 @@ const I18N_EN = {
   'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).':
     'INSPECTION MODE: click on TWO elements to compare them (fields, photo, face, clock, rulebook).',
   '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.': '★ IDENTITY MATCHES WANTED LIST. Detention authorized.',
-  '⚠ DISCREPÂNCIA CONFIRMADA: ': '⚠ DISCREPANCY CONFIRMED: ',
+  '▲ DISCREPÂNCIA CONFIRMADA: ': '▲ DISCREPANCY CONFIRMED: ',
   'Nenhuma discrepância entre estes dois elementos.': 'No discrepancy between these two elements.',
-  '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.': '⚠ CONTRABAND FOUND. Detention authorized.',
+  '▲ CONTRABANDO ENCONTRADO. Detenção autorizada.': '▲ CONTRABAND FOUND. Detention authorized.',
   'Contrabando na bagagem': 'Contraband in luggage',
   'Não há bagagem.': 'No luggage.',
   'Nunca houve.': 'There never was any.',
@@ -3912,7 +3917,7 @@ const I18N_ES = {
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SEGUNDA LECTURA (misma campaña)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'Nueva campaña, misma semilla: los mismos ciudadanos pasan por tu ventanilla, en los mismos días. Tú eres quien ya no es el mismo.',
-  '⛶ TELA CHEIA (F)': '⛶ PANTALLA COMPLETA (F)',
+  'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'MODO ARQUIVISTA (sem relógio)': 'MODO ARCHIVISTA (sin reloj)',
   'TEXTO GRANDE': 'TEXTO GRANDE',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -3944,11 +3949,11 @@ const I18N_ES = {
   'Revistar bagagem (10 min)': 'Revisar equipaje (10 min)',
   '📜 LINHA DA VIDA': '📜 LÍNEA DE VIDA',
   'Organizar a vida documentada em cronologia (10 min)': 'Organizar la vida documentada en una cronología (10 min)',
-  '🌡 TÉRMICO': '🌡 TÉRMICO',
+  'TÉRMICO': 'TÉRMICO',
   'Scanner Térmico (15 min)': 'Escáner Térmico (15 min)',
-  '📈 PULSAÇÃO': '📈 PULSO',
+  'PULSAÇÃO': 'PULSO',
   'Scanner de Pulsação (15 min)': 'Escáner de Pulso (15 min)',
-  '🧬 BIOLÓGICO': '🧬 BIOLÓGICO',
+  'BIOLÓGICO': 'BIOLÓGICO',
   'Detector Biológico (30 min)': 'Detector Biológico (30 min)',
   'REGULAMENTO DO DIA': 'REGLAMENTO DEL DÍA',
   'REFERÊNCIA DE PAÍSES': 'REFERENCIA DE PAÍSES',
@@ -3982,11 +3987,11 @@ const I18N_ES = {
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
-  '🏆 CONQUISTAS': '🏆 LOGROS',
+  '★ CONQUISTAS': '★ LOGROS',
   'CONQUISTAS': 'LOGROS',
 
   /* ---- citação / notificação ---- */
-  '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTERIO DE CONTROL — NOTIFICACIÓN',
+  '▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '▲ MINISTERIO DE CONTROL — NOTIFICACIÓN',
 
   /* ---- regimes / jornal (data.js) ---- */
   'REPÚBLICA DE OSTERIA': 'REPÚBLICA DE OSTERIA',
@@ -4817,9 +4822,9 @@ const I18N_ES = {
   'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).':
     'MODO INSPECCIÓN: haga clic en DOS elementos para compararlos (campos, foto, rostro, reloj, reglamento).',
   '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.': '★ LA IDENTIDAD COINCIDE CON EL BUSCADO. Detención autorizada.',
-  '⚠ DISCREPÂNCIA CONFIRMADA: ': '⚠ DISCREPANCIA CONFIRMADA: ',
+  '▲ DISCREPÂNCIA CONFIRMADA: ': '▲ DISCREPANCIA CONFIRMADA: ',
   'Nenhuma discrepância entre estes dois elementos.': 'Ninguna discrepancia entre estos dos elementos.',
-  '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.': '⚠ CONTRABANDO ENCONTRADO. Detención autorizada.',
+  '▲ CONTRABANDO ENCONTRADO. Detenção autorizada.': '▲ CONTRABANDO ENCONTRADO. Detención autorizada.',
   'Contrabando na bagagem': 'Contrabando en el equipaje',
   'Não há bagagem.': 'No hay equipaje.',
   'Nunca houve.': 'Nunca lo hubo.',
@@ -5351,10 +5356,10 @@ const I18N_STATIC_SELECTORS = [
   '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
   '.endday-formhdr', '.endday-stamp',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
-  '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
-  '.bc-doc', '.bc-stamp', '#desk-hint',
+  '#btn-approve', '#btn-reject', '#btn-detain',
+  '#desk-hint',
   '.btn-tool .tool-name', '.side-cap',
-  '.rulebook .rb-title', '#btn-radio', '#radio-line',
+  '.rulebook .rb-title', '#radio-line',
   '#endday-title', '#btn-gohome', '#btn-restart',
   '.house-help', '#hd-hint',
   '.exam-head span', '#btn-exam-close', '.bag-hint',
@@ -5366,8 +5371,11 @@ const I18N_STATIC_SELECTORS = [
 function applyStaticI18n() {
   I18N_STATIC_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
-      if (el.dataset.pt === undefined) el.dataset.pt = el.textContent;
-      el.textContent = T(el.dataset.pt);
+      // se o elemento tem um rótulo .tlabel, traduz SÓ ele (preserva ícones SVG
+      // irmãos); senão, traduz o textContent inteiro como antes.
+      const tgt = el.querySelector('.tlabel') || el;
+      if (tgt.dataset.pt === undefined) tgt.dataset.pt = tgt.textContent;
+      tgt.textContent = T(tgt.dataset.pt);
       if (el.title) {
         if (el.dataset.ptTitle === undefined) el.dataset.ptTitle = el.title;
         el.title = T(el.dataset.ptTitle);
@@ -6856,9 +6864,14 @@ function paintBust(ctx, f, opts) {
     ctx.fillStyle = 'rgba(200,190,160,.10)'; ctx.fillRect(0, hy + 3, 100, 1.2);            // aresta iluminada da bancada
     ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, hy + 1.5, 100, 2);                    // sombra de contato sob as mãos
     const hand = (hx, s) => {
-      // antebraço descendo do casaco, quase vertical, até a mão
-      ctx.strokeStyle = foreCol; ctx.lineWidth = 9; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx + s * 6, 105); ctx.lineTo(hx, hy - 3); ctx.stroke();
+      // BRAÇO: desce do OMBRO (largo e alto), não do meio do peito. Antebraço
+      // até a mão apoiada. Duas partes com uma leve dobra no cotovelo.
+      ctx.strokeStyle = foreCol; ctx.lineWidth = 8.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(hx - s * 15, 96);           // ombro (bem afastado do centro)
+      ctx.lineTo(hx - s * 5, 111);            // cotovelo
+      ctx.lineTo(hx, hy - 3);                 // pulso, sobre a mão
+      ctx.stroke();
       // dorso da mão pousado na beira
       ctx.fillStyle = skC; ctx.beginPath(); ctx.ellipse(hx, hy, 8, 4.6, 0, 0, 6.29); ctx.fill();
       // dedos curtos curvando sobre a aresta
@@ -8865,7 +8878,7 @@ function unlockAchievement(id) {
   sfx('achieve');
   const el = document.createElement('div');
   el.className = 'achievement-toast';
-  el.innerHTML = `🏆 <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
+  el.innerHTML = `★ <b>${T('CONQUISTA DESBLOQUEADA')}</b><br>${T(ACHIEVEMENTS[id])}`;
   achievementToasts.push(el);
   restackAchievementToasts();
   document.body.appendChild(el);
@@ -8890,7 +8903,7 @@ function showAchievementsModal() {
   const ids = Object.keys(ACHIEVEMENTS);
   const rows = ids.map(id => {
     const unlocked = got.includes(id);
-    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '🏆' : '🔒'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '★' : '☆'}</span>${T(ACHIEVEMENTS[id])}</div>`;
   }).join('');
   $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
   const box = $('modal-actions'); box.innerHTML = '';
@@ -9112,7 +9125,7 @@ function openExam() {
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   // acompanhante Alternado: o horror está no colo, não no rosto que você examina
   if (cz.companion && cz.companion.anom) {
-    $('exam-log').innerHTML += `<div class="anomalia" data-tell="companion">⚠ ${T('O acompanhante não é uma criança. As pupilas são fendas; os olhos não têm fundo; não pisca. O adulto aperta-o mais forte quando você olha.')}</div>`;
+    $('exam-log').innerHTML += `<div class="anomalia" data-tell="companion">▲ ${T('O acompanhante não é uma criança. As pupilas são fendas; os olhos não têm fundo; não pisca. O adulto aperta-o mais forte quando você olha.')}</div>`;
   }
   const zones = $('exam-zones'); zones.innerHTML = '';
   // visão geral: volta do close de zona para o rosto inteiro
@@ -9126,7 +9139,7 @@ function openExam() {
     b.onclick = () => { b.classList.add('done'); examZone(cz, z); };
     zones.appendChild(b);
   });
-  // clicar num achado (⚠) registra a discrepância — feedback estilo Papers Please
+  // clicar num achado (▲) registra a discrepância — feedback estilo Papers Please
   $('exam-log').onclick = (e) => {
     const el = e.target.closest && e.target.closest('.anomalia[data-tell]');
     if (!el || el.classList.contains('flagged')) return;
@@ -9134,7 +9147,7 @@ function openExam() {
     cz.evidence = true; $('btn-detain').disabled = false;
     const tag = document.createElement('div');
     tag.className = 'exam-detected';
-    tag.textContent = '⚠ ' + T('DISCREPÂNCIA DETECTADA — anotada no laudo. Detenção autorizada.');
+    tag.textContent = '▲ ' + T('DISCREPÂNCIA DETECTADA — anotada no laudo. Detenção autorizada.');
     $('exam-log').appendChild(tag); $('exam-log').scrollTop = $('exam-log').scrollHeight;
     try { sfx('ding'); } catch (e2) {}
   };
@@ -9151,21 +9164,21 @@ function examZone(cz, zone) {
   cz._examLogged[zone.id] = true;
   if (zone.body) { // CORPO: volume oculto + assinatura térmica + biotipo
     let line = cz.phys.concealed
-      ? `<div class="anomalia" data-tell="corpo">⚠ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
+      ? `<div class="anomalia" data-tell="corpo">▲ ${T('Volume denso oculto sob o casaco — algo que não consta na declaração. Reviste a bagagem.')}</div>`
       : `<div class="obs">${T('Nada oculto sob as roupas. Só um corpo com frio.')}</div>`;
     if (cz.sexMismatch) {
       const decl = cz.sexo === 'f' ? T('feminino') : T('masculino');
       const real = cz.features.bodySex === 'f' ? T('feminino') : T('masculino');
-      line += `<div class="anomalia" data-tell="biotipo">⚠ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
+      line += `<div class="anomalia" data-tell="biotipo">▲ ${T('Biotipo corporal não confere: ombros, quadril e densidade óssea indicam sexo')} ${real}. ${T('O passaporte declara')} ${decl}.</div>`;
     }
-    if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">⚠ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
+    if (cz.phys.pescoco) line += `<div class="anomalia" data-tell="pescoco">▲ ${T('Assinatura térmica fraca demais. Este corpo está frio para estar vivo.')}</div>`;
     log.innerHTML += line; log.scrollTop = log.scrollHeight; return;
   }
   const rum = rumorForDay(S.day);
   zone.tells.forEach(t => {
     const tellDef = TELLS[t];
     const anômalo = cz.phys[t];
-    let line = anômalo ? `<div class="anomalia" data-tell="${t}">⚠ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
+    let line = anômalo ? `<div class="anomalia" data-tell="${t}">▲ ${T(tellDef.achado)}</div>` : `<div class="obs">${T(tellDef.normal)}</div>`;
     if (anômalo && rum && rum.tell === t) {
       if (rum.official) {
         cz.softEndorsed = true; cz.evidence = true;
@@ -9629,7 +9642,7 @@ function openBag() {
         $('btn-detain').disabled = false;
         cz.discrepancies.push({ type: 'contraband', fids: [item.fid], desc: T('Contrabando na bagagem'), confirmedNow: true });
         shift.confirmed.push(cz.discrepancies[cz.discrepancies.length - 1]);
-        $('inspect-bar').textContent = T('⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.');
+        $('inspect-bar').textContent = T('▲ CONTRABANDO ENCONTRADO. Detenção autorizada.');
         sfx('ding');
         return;
       }
@@ -10577,7 +10590,7 @@ function presentCitizen(cz) {
   // chega andando (sincronizado com o boneco da fila entrando no guichê)
   setTimeout(() => { a.classList.add('arrive'); }, 350);
   a.addEventListener('animationend', function h() { a.classList.remove('arrive'); a.removeEventListener('animationend', h); });
-  $('npc-name').textContent = cz.encounter ? cz.nome + ' ✉' : cz.nome;
+  $('npc-name').textContent = cz.encounter ? cz.nome + ' ※' : cz.nome;
   $('speech').textContent = '“' + greetingFor(cz) + '”';
   mumble(cz.sexo === 'f' ? 175 : 112, ri(4, 7));
   buildAskButtons(cz);
@@ -11135,22 +11148,22 @@ function scan(kind) {
   if (kind === 'thermo') {
     spendTime(15);
     const anom = cz.isAlternado ? chance(.35) : chance(cz.nervous ? .2 : .08);
-    out = anom ? '🌡 TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : '🌡 TÉRMICO: padrão dentro da faixa humana comum.';
+    out = anom ? 'TÉRMICO: assimetria térmica detectada. (Nota: febre, frio e má calibração produzem o mesmo resultado.)' : 'TÉRMICO: padrão dentro da faixa humana comum.';
   } else if (kind === 'pulse') {
     spendTime(15);
     const calm = cz.isAlternado ? chance(.7) : chance(cz.nervous ? .1 : .5);
-    out = calm ? '📈 PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : '📈 PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
+    out = calm ? 'PULSAÇÃO: ritmo extremamente estável. (Pessoas calmas também existem.)' : 'PULSAÇÃO: estresse elevado. (Compatível com medo, trauma, luto, filas.)';
   } else if (kind === 'bio') {
     spendTime(30);
     if (cz.isSilente) {
       // a máquina IMPLORA para você chamar os guardas. não chame.
       cz.bioResult = true; cz.evidence = true;
       $('btn-detain').disabled = false;
-      $('scan-result').textContent = '🧬 BIOLÓGICO: ⚠⚠⚠ POSITIVO. POSITIVO. POSITIVO. DETENÇÃO RECOMENDADA COM URGÊN— o restante da linha saiu impresso em branco.';
+      $('scan-result').textContent = 'BIOLÓGICO: ▲▲▲ POSITIVO. POSITIVO. POSITIVO. DETENÇÃO RECOMENDADA COM URGÊN— o restante da linha saiu impresso em branco.';
       return;
     }
-    if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = '🧬 BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
-    if (cz.scannerAmbiguo) { $('scan-result').textContent = '🧬 BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
+    if (S.day >= 43 && !S.bioCalibrated) { $('scan-result').textContent = 'BIOLÓGICO: SEM ENERGIA / FORA DE SERVIÇO.'; return; }
+    if (cz.scannerAmbiguo) { $('scan-result').textContent = 'BIOLÓGICO: INCONCLUSIVO. Repetição do exame: INCONCLUSIVO.'; return; }
     const decal = S.day >= 31 && !S.bioCalibrated;
     const tp = decal ? .5 : .8, fp = decal ? .3 : .1;
     const positive = cz.isAlternado ? chance(tp) : chance(fp);
@@ -11158,8 +11171,8 @@ function scan(kind) {
     if (positive) {
       cz.evidence = true;
       $('btn-detain').disabled = false;
-      out = '🧬 BIOLÓGICO: ⚠ MARCADOR K-7 POSITIVO. Resultado habilita DETENÇÃO. (O fabricante nega falsos positivos. O fabricante vende scanners.)';
-    } else out = '🧬 BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
+      out = 'BIOLÓGICO: ▲ MARCADOR K-7 POSITIVO. Resultado habilita DETENÇÃO. (O fabricante nega falsos positivos. O fabricante vende scanners.)';
+    } else out = 'BIOLÓGICO: negativo para marcador K-7.' + (decal ? ' (Unidade sem calibração há 12 dias.)' : '');
   }
   $('scan-result').textContent = out;
   } finally {
@@ -11209,7 +11222,7 @@ function evaluatePair(a, b) {
     cz.evidence = true;
     S.ai.det[found.type] = (S.ai.det[found.type] || 0) + 1; // a espécie observa você
     $('btn-detain').disabled = false;
-    $('inspect-bar').textContent = `${T('⚠ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
+    $('inspect-bar').textContent = `${T('▲ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
     a.el.classList.add('flagged'); b.el.classList.add('flagged');
     sfx('ding');
   } else {

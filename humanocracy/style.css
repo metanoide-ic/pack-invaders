@@ -376,6 +376,10 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
 .btn-small { font-size:11px; border-radius:3px; padding:6px 12px; }
+/* ícone de linha monocromático (substitui emojis nos botões) */
+.ic { width:13px; height:13px; vertical-align:-2px; fill:currentColor; stroke:currentColor; }
+.ic[viewBox] { stroke-linejoin:round; stroke-linecap:round; }
+.btn-small .ic { width:14px; height:14px; }
 
 .shift-main {
   flex:1; min-height:0; display:grid;

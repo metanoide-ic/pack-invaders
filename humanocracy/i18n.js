@@ -47,7 +47,7 @@ const I18N_EN = {
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SECOND READING (same campaign)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'New campaign, same seed: the same citizens pass through your booth, on the same days. You are the one who is no longer the same.',
-  '⛶ TELA CHEIA (F)': '⛶ FULLSCREEN (F)',
+  'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'MODO ARQUIVISTA (sem relógio)': 'ARCHIVIST MODE (no clock)',
   'TEXTO GRANDE': 'LARGE TEXT',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -79,11 +79,11 @@ const I18N_EN = {
   'Revistar bagagem (10 min)': 'Search luggage (10 min)',
   '📜 LINHA DA VIDA': '📜 LIFE TIMELINE',
   'Organizar a vida documentada em cronologia (10 min)': 'Organize the documented life into a timeline (10 min)',
-  '🌡 TÉRMICO': '🌡 THERMAL',
+  'TÉRMICO': 'THERMAL',
   'Scanner Térmico (15 min)': 'Thermal Scanner (15 min)',
-  '📈 PULSAÇÃO': '📈 PULSE',
+  'PULSAÇÃO': 'PULSE',
   'Scanner de Pulsação (15 min)': 'Pulse Scanner (15 min)',
-  '🧬 BIOLÓGICO': '🧬 BIOLOGICAL',
+  'BIOLÓGICO': 'BIOLOGICAL',
   'Detector Biológico (30 min)': 'Biological Detector (30 min)',
   'REGULAMENTO DO DIA': "TODAY'S REGULATIONS",
   'REFERÊNCIA DE PAÍSES': 'COUNTRY REFERENCE',
@@ -104,6 +104,7 @@ const I18N_EN = {
   'EXAME FÍSICO APROXIMADO — clique nas regiões': 'CLOSE PHYSICAL EXAM — click on regions',
   'FECHAR': 'CLOSE',
   '🗺 MAPA': '🗺 MAP',
+  'MAPA': 'MAP',
   'Carta de fronteiras': 'Border chart',
   'REVISTA DE BAGAGEM — objetos contam histórias': 'LUGGAGE SEARCH — objects tell stories',
   'No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.':
@@ -117,11 +118,11 @@ const I18N_EN = {
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'SAVE AND RETURN TO TITLE',
   'O posto não pausa por você. Este menu, sim.': "The post doesn't pause for you. This menu does.",
-  '🏆 CONQUISTAS': '🏆 ACHIEVEMENTS',
+  '★ CONQUISTAS': '★ ACHIEVEMENTS',
   'CONQUISTAS': 'ACHIEVEMENTS',
 
   /* ---- citação / notificação ---- */
-  '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTRY OF SCREENING — NOTICE',
+  '▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '▲ MINISTRY OF SCREENING — NOTICE',
 
   /* ---- regimes / jornal (data.js) ---- */
   'REPÚBLICA DE OSTERIA': 'REPUBLIC OF OSTERIA',
@@ -952,9 +953,9 @@ const I18N_EN = {
   'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).':
     'INSPECTION MODE: click on TWO elements to compare them (fields, photo, face, clock, rulebook).',
   '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.': '★ IDENTITY MATCHES WANTED LIST. Detention authorized.',
-  '⚠ DISCREPÂNCIA CONFIRMADA: ': '⚠ DISCREPANCY CONFIRMED: ',
+  '▲ DISCREPÂNCIA CONFIRMADA: ': '▲ DISCREPANCY CONFIRMED: ',
   'Nenhuma discrepância entre estes dois elementos.': 'No discrepancy between these two elements.',
-  '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.': '⚠ CONTRABAND FOUND. Detention authorized.',
+  '▲ CONTRABANDO ENCONTRADO. Detenção autorizada.': '▲ CONTRABAND FOUND. Detention authorized.',
   'Contrabando na bagagem': 'Contraband in luggage',
   'Não há bagagem.': 'No luggage.',
   'Nunca houve.': 'There never was any.',
@@ -1502,7 +1503,7 @@ const I18N_ES = {
   '↻ SEGUNDA LEITURA (mesma campanha)': '↻ SEGUNDA LECTURA (misma campaña)',
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'Nueva campaña, misma semilla: los mismos ciudadanos pasan por tu ventanilla, en los mismos días. Tú eres quien ya no es el mismo.',
-  '⛶ TELA CHEIA (F)': '⛶ PANTALLA COMPLETA (F)',
+  'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'MODO ARQUIVISTA (sem relógio)': 'MODO ARCHIVISTA (sin reloj)',
   'TEXTO GRANDE': 'TEXTO GRANDE',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -1534,11 +1535,11 @@ const I18N_ES = {
   'Revistar bagagem (10 min)': 'Revisar equipaje (10 min)',
   '📜 LINHA DA VIDA': '📜 LÍNEA DE VIDA',
   'Organizar a vida documentada em cronologia (10 min)': 'Organizar la vida documentada en una cronología (10 min)',
-  '🌡 TÉRMICO': '🌡 TÉRMICO',
+  'TÉRMICO': 'TÉRMICO',
   'Scanner Térmico (15 min)': 'Escáner Térmico (15 min)',
-  '📈 PULSAÇÃO': '📈 PULSO',
+  'PULSAÇÃO': 'PULSO',
   'Scanner de Pulsação (15 min)': 'Escáner de Pulso (15 min)',
-  '🧬 BIOLÓGICO': '🧬 BIOLÓGICO',
+  'BIOLÓGICO': 'BIOLÓGICO',
   'Detector Biológico (30 min)': 'Detector Biológico (30 min)',
   'REGULAMENTO DO DIA': 'REGLAMENTO DEL DÍA',
   'REFERÊNCIA DE PAÍSES': 'REFERENCIA DE PAÍSES',
@@ -1572,11 +1573,11 @@ const I18N_ES = {
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
   'SALVAR E VOLTAR AO TÍTULO': 'GUARDAR Y VOLVER AL TÍTULO',
   'O posto não pausa por você. Este menu, sim.': 'El puesto no se detiene por ti. Este menú, sí.',
-  '🏆 CONQUISTAS': '🏆 LOGROS',
+  '★ CONQUISTAS': '★ LOGROS',
   'CONQUISTAS': 'LOGROS',
 
   /* ---- citação / notificação ---- */
-  '⚠ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '⚠ MINISTERIO DE CONTROL — NOTIFICACIÓN',
+  '▲ MINISTÉRIO DE TRIAGEM — NOTIFICAÇÃO': '▲ MINISTERIO DE CONTROL — NOTIFICACIÓN',
 
   /* ---- regimes / jornal (data.js) ---- */
   'REPÚBLICA DE OSTERIA': 'REPÚBLICA DE OSTERIA',
@@ -2407,9 +2408,9 @@ const I18N_ES = {
   'MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).':
     'MODO INSPECCIÓN: haga clic en DOS elementos para compararlos (campos, foto, rostro, reloj, reglamento).',
   '★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.': '★ LA IDENTIDAD COINCIDE CON EL BUSCADO. Detención autorizada.',
-  '⚠ DISCREPÂNCIA CONFIRMADA: ': '⚠ DISCREPANCIA CONFIRMADA: ',
+  '▲ DISCREPÂNCIA CONFIRMADA: ': '▲ DISCREPANCIA CONFIRMADA: ',
   'Nenhuma discrepância entre estes dois elementos.': 'Ninguna discrepancia entre estos dos elementos.',
-  '⚠ CONTRABANDO ENCONTRADO. Detenção autorizada.': '⚠ CONTRABANDO ENCONTRADO. Detención autorizada.',
+  '▲ CONTRABANDO ENCONTRADO. Detenção autorizada.': '▲ CONTRABANDO ENCONTRADO. Detención autorizada.',
   'Contrabando na bagagem': 'Contrabando en el equipaje',
   'Não há bagagem.': 'No hay equipaje.',
   'Nunca houve.': 'Nunca lo hubo.',
@@ -2941,10 +2942,10 @@ const I18N_STATIC_SELECTORS = [
   '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
   '.endday-formhdr', '.endday-stamp',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
-  '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
-  '.bc-doc', '.bc-stamp', '#desk-hint',
+  '#btn-approve', '#btn-reject', '#btn-detain',
+  '#desk-hint',
   '.btn-tool .tool-name', '.side-cap',
-  '.rulebook .rb-title', '#btn-radio', '#radio-line',
+  '.rulebook .rb-title', '#radio-line',
   '#endday-title', '#btn-gohome', '#btn-restart',
   '.house-help', '#hd-hint',
   '.exam-head span', '#btn-exam-close', '.bag-hint',
@@ -2956,8 +2957,11 @@ const I18N_STATIC_SELECTORS = [
 function applyStaticI18n() {
   I18N_STATIC_SELECTORS.forEach(sel => {
     document.querySelectorAll(sel).forEach(el => {
-      if (el.dataset.pt === undefined) el.dataset.pt = el.textContent;
-      el.textContent = T(el.dataset.pt);
+      // se o elemento tem um rótulo .tlabel, traduz SÓ ele (preserva ícones SVG
+      // irmãos); senão, traduz o textContent inteiro como antes.
+      const tgt = el.querySelector('.tlabel') || el;
+      if (tgt.dataset.pt === undefined) tgt.dataset.pt = tgt.textContent;
+      tgt.textContent = T(tgt.dataset.pt);
       if (el.title) {
         if (el.dataset.ptTitle === undefined) el.dataset.ptTitle = el.title;
         el.title = T(el.dataset.ptTitle);

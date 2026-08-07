@@ -1473,9 +1473,14 @@ function paintBust(ctx, f, opts) {
     ctx.fillStyle = 'rgba(200,190,160,.10)'; ctx.fillRect(0, hy + 3, 100, 1.2);            // aresta iluminada da bancada
     ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, hy + 1.5, 100, 2);                    // sombra de contato sob as mãos
     const hand = (hx, s) => {
-      // antebraço descendo do casaco, quase vertical, até a mão
-      ctx.strokeStyle = foreCol; ctx.lineWidth = 9; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx + s * 6, 105); ctx.lineTo(hx, hy - 3); ctx.stroke();
+      // BRAÇO: desce do OMBRO (largo e alto), não do meio do peito. Antebraço
+      // até a mão apoiada. Duas partes com uma leve dobra no cotovelo.
+      ctx.strokeStyle = foreCol; ctx.lineWidth = 8.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(hx - s * 15, 96);           // ombro (bem afastado do centro)
+      ctx.lineTo(hx - s * 5, 111);            // cotovelo
+      ctx.lineTo(hx, hy - 3);                 // pulso, sobre a mão
+      ctx.stroke();
       // dorso da mão pousado na beira
       ctx.fillStyle = skC; ctx.beginPath(); ctx.ellipse(hx, hy, 8, 4.6, 0, 0, 6.29); ctx.fill();
       // dedos curtos curvando sobre a aresta
