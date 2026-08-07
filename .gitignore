@@ -6,3 +6,5 @@ dist/
 Thumbs.db
 test_*.cjs
 test_*.js
+__pycache__/
+*.pyc
