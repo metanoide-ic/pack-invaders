@@ -730,11 +730,23 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .endday-title, .ending-title { font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:26px; letter-spacing:4px; color:var(--accent2); text-align:center; }
 /* relatório de fim de dia: um livro-razão do posto (letterhead dourado) */
 #screen-endday { background: radial-gradient(ellipse at 50% 40%, #14140f 0%, #080705 70%, #020202 100%); }
-#screen-endday .endday-panel { background-color:#12110c; border-color:#2a281e; border-top:2px solid rgba(201,163,74,.4); box-shadow:0 0 0 1px rgba(201,163,74,.12), 0 16px 48px rgba(0,0,0,.66); }
+#screen-endday .endday-panel { position:relative; background-color:#12110c; border-color:#2a281e; border-top:2px solid rgba(201,163,74,.4); box-shadow:0 0 0 1px rgba(201,163,74,.12), 0 16px 48px rgba(0,0,0,.66); gap:8px; }
 #screen-endday.active .endday-panel { animation: ending-rise 1s ease-out backwards; }
-#endday-report { font-size:13px; line-height:1.7; }
-#endday-report .row { display:flex; justify-content:space-between; gap:14px; padding:3px 2px; border-bottom:1px dotted rgba(143,138,122,.3); }
-#endday-report .row span:last-child { color:#d8cdb2; font-family:var(--font-mono); }
+/* cabeçalho de formulário oficial + regra dupla sob o título */
+.endday-formhdr { font-family:var(--font-display); font-size:9.5px; letter-spacing:3px; text-transform:uppercase; color:var(--accent2); opacity:.7; text-align:center; }
+#screen-endday .endday-title { font-size:21px; letter-spacing:3px; padding-bottom:8px; border-bottom:1px solid rgba(201,163,74,.45); box-shadow:0 2px 0 -1px rgba(201,163,74,.18); }
+#endday-report { font-size:13px; line-height:1.75; }
+#endday-report .row { display:flex; justify-content:space-between; gap:14px; padding:4px 2px; border-bottom:1px dotted rgba(143,138,122,.34); }
+#endday-report .row span:first-child { color:#b7ad91; }
+#endday-report .row span:last-child { color:#e6dcc0; font-family:var(--font-mono); font-weight:600; }
+/* carimbo "REGISTRADO" batido no canto do relatório */
+.endday-stamp {
+  position:absolute; right:26px; bottom:96px; transform:rotate(-13deg);
+  border:2.5px solid rgba(176,52,40,.75); color:rgba(176,52,40,.8); border-radius:4px;
+  padding:3px 12px; font-family:var(--font-display); font-weight:700; font-size:17px; letter-spacing:3px;
+  pointer-events:none; box-shadow: inset 0 0 0 1px rgba(176,52,40,.25);
+  animation: stamp-in .5s 1s both;
+}
 .ending-body { font-size:14px; line-height:1.8; }
 .ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
 /* botões de fim de expediente / final: placa gravada sóbria (sem ouro festivo) */
@@ -1423,8 +1435,10 @@ body.text-large .np-body { font-size:15px; }
     <!-- ===== FIM DE DIA ===== -->
     <div id="screen-endday" class="screen">
       <div class="endday-panel">
+        <div class="endday-formhdr">MINISTÉRIO DE TRIAGEM · FOLHA DE PONTO — POSTO Nº 7</div>
         <div class="endday-title" id="endday-title">FIM DO EXPEDIENTE</div>
         <div id="endday-report"></div>
+        <div class="endday-stamp">REGISTRADO</div>
         <button id="btn-gohome" class="btn-big">VOLTAR PARA CASA — 20:30 →</button>
       </div>
     </div>
@@ -2420,6 +2434,8 @@ const I18N_EN = {
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"The truth exists. You just never get full access to it."',
   'INICIAR SERVIÇO': 'BEGIN SERVICE',
   'ESCALA DE SERVIÇO': 'DUTY ROSTER',
+  'MINISTÉRIO DE TRIAGEM · FOLHA DE PONTO — POSTO Nº 7': 'MINISTRY OF TRIAGE · TIME SHEET — POST Nº 7',
+  'REGISTRADO': 'FILED',
   'JOGAR': 'PLAY',
   'RETOMAR': 'RESUME',
   'OPÇÕES': 'OPTIONS',
@@ -3873,6 +3889,8 @@ const I18N_ES = {
   '"A verdade existe. Você só nunca terá acesso completo a ela."': '"La verdad existe. Solo que nunca tendrás acceso completo a ella."',
   'INICIAR SERVIÇO': 'INICIAR SERVICIO',
   'ESCALA DE SERVIÇO': 'ROL DE SERVICIO',
+  'MINISTÉRIO DE TRIAGEM · FOLHA DE PONTO — POSTO Nº 7': 'MINISTERIO DE TRIAJE · HOJA DE ASISTENCIA — PUESTO Nº 7',
+  'REGISTRADO': 'REGISTRADO',
   'JOGAR': 'JUGAR',
   'RETOMAR': 'REANUDAR',
   'OPÇÕES': 'OPCIONES',
@@ -5331,6 +5349,7 @@ const I18N_STATIC_SELECTORS = [
   '.title-sub', '.title-quote', '#btn-new', '#btn-continue', '#btn-second-reading',
   '#btn-fullscreen', '.title-warning', '.title-version',
   '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
+  '.endday-formhdr', '.endday-stamp',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
   '#btn-music', '#btn-approve', '#btn-reject', '#btn-detain',
   '.bc-doc', '.bc-stamp', '#desk-hint',
@@ -9419,12 +9438,15 @@ function makeCitizen(day, opts) {
 function buildBaggage(cz) {
   cz.bag = [];
   cz.bagDone = false;
-  const push = (txt, extra) => cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra));
-  push(pick(BAG_POOLS.comum));
-  if (chance(.6)) push(pick(BAG_POOLS.comum));
+  const used = new Set();
+  const push = (txt, extra) => { if (!txt || used.has(txt)) return; used.add(txt); cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra)); };
+  // sorteio SEM repetição do mesmo item (dois "pães idênticos" parecia bug)
+  const pickNew = (poolArr) => { const opts = (poolArr || []).filter(t => !used.has(t)); return opts.length ? pick(opts) : null; };
+  push(pickNew(BAG_POOLS.comum));
+  if (chance(.6)) push(pickNew(BAG_POOLS.comum));
   const pool = BAG_POOLS[cz.motivo];
-  if (pool && chance(.8)) push(pick(pool));
-  if (chance(.18)) push(pick(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
+  if (pool && chance(.8)) push(pickNew(pool));
+  if (chance(.18)) push(pickNew(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
   if (cz.bagOneway) push(BAG_ONEWAY.txt, { fid: 'bag.oneway', desc: BAG_ONEWAY.desc });
   if ((cz.isForger || cz.isAlternado) && chance(.12) && !cz.encounter) {
     push(pick(BAG_CONTRABAND), { contra: true, desc: 'Isto não deveria estar aqui. Isto não tem explicação boa.' });
@@ -10754,6 +10776,43 @@ function drawDeskProps() {
   };
   clip(W - padW * 2.4, H * 0.24, 0.5);
   clip(W - 44, H * 0.82, -0.3);
+
+  // ---- mais tralha de repartição, pra mesa não ficar vazia ----
+  // PILHA DE FORMULÁRIOS carimbados (canto central, atrás dos documentos vivos)
+  const stX = W * 0.47, stY = H * 0.72;
+  shadow(stX, stY, 128, 90);
+  for (let i = 4; i >= 0; i--) {
+    const ox = i * 1.4, oy = -i * 2.2, tilt = (i - 2) * 0.012;
+    x.save(); x.translate(stX + 64 + ox, stY + 45 + oy); x.rotate(tilt);
+    x.fillStyle = i % 2 ? '#d8cdb0' : '#cfc3a4'; rr(-64, -45, 128, 90, 2); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 0.7; rr(-64, -45, 128, 90, 2); x.stroke();
+    if (i === 0) { // linhas impressas + um carimbo na folha do topo
+      x.strokeStyle = 'rgba(40,32,20,.22)'; x.lineWidth = 0.8;
+      for (let l = 0; l < 6; l++) { x.beginPath(); x.moveTo(-52, -32 + l * 11); x.lineTo(52, -32 + l * 11); x.stroke(); }
+      x.save(); x.rotate(-0.16); x.strokeStyle = 'rgba(140,40,34,.5)'; x.lineWidth = 2; x.strokeRect(8, 8, 40, 20);
+      x.fillStyle = 'rgba(140,40,34,.4)'; x.font = 'bold 9px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('ARQUIVO', 28, 21); x.restore();
+    }
+    x.restore();
+  }
+  // SINETA DE SERVIÇO (latão) — a que você bate pro próximo
+  const belX = W * 0.72, belY = H * 0.5;
+  shadow(belX - 20, belY - 6, 40, 20);
+  const base = x.createLinearGradient(0, belY, 0, belY + 10); base.addColorStop(0, '#8a6a2e'); base.addColorStop(1, '#4a3616');
+  x.fillStyle = base; rr(belX - 20, belY + 2, 40, 8, 3); x.fill();                     // base
+  const dome = x.createRadialGradient(belX - 6, belY - 10, 2, belX, belY, 24);
+  dome.addColorStop(0, '#e6c46a'); dome.addColorStop(0.5, '#b1892f'); dome.addColorStop(1, '#5a4318');
+  x.fillStyle = dome; x.beginPath(); x.ellipse(belX, belY + 2, 20, 15, 0, Math.PI, 2 * Math.PI); x.fill();  // cúpula
+  x.fillStyle = '#c9a545'; x.beginPath(); x.arc(belX, belY - 13, 3.4, 0, 6.29); x.fill();     // botão da sineta
+  x.strokeStyle = 'rgba(255,246,220,.4)'; x.lineWidth = 1.4; x.beginPath(); x.arc(belX - 6, belY - 4, 6, Math.PI * 1.1, Math.PI * 1.6); x.stroke(); // brilho
+  // CINZEIRO com cigarro fumegando (área aberta ao centro, longe da almofada)
+  const asX = W * 0.6, asY = H * 0.44;
+  shadow(asX - 18, asY - 6, 36, 16);
+  x.fillStyle = '#2a2c2e'; x.beginPath(); x.ellipse(asX, asY, 18, 8, 0, 0, 6.29); x.fill();
+  x.fillStyle = '#17181a'; x.beginPath(); x.ellipse(asX, asY, 12, 5, 0, 0, 6.29); x.fill();
+  x.fillStyle = 'rgba(80,80,70,.5)'; x.beginPath(); x.ellipse(asX + 3, asY + 1, 6, 2.4, 0, 0, 6.29); x.fill(); // cinzas
+  x.strokeStyle = '#e8e2d4'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.moveTo(asX + 6, asY - 1); x.lineTo(asX + 22, asY - 5); x.stroke(); // cigarro
+  x.strokeStyle = '#c9552e'; x.lineWidth = 3; x.beginPath(); x.moveTo(asX + 5, asY - 0.7); x.lineTo(asX + 8, asY - 1.4); x.stroke(); // brasa
+  x.strokeStyle = 'rgba(210,210,205,.12)'; x.lineWidth = 2; x.beginPath(); x.moveTo(asX + 7, asY - 2); x.bezierCurveTo(asX + 2, asY - 20, asX + 14, asY - 30, asX + 6, asY - 48); x.stroke(); // fumaça
 }
 
 function layDocs(cz) {

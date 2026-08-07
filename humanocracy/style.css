@@ -723,11 +723,23 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .endday-title, .ending-title { font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:26px; letter-spacing:4px; color:var(--accent2); text-align:center; }
 /* relatório de fim de dia: um livro-razão do posto (letterhead dourado) */
 #screen-endday { background: radial-gradient(ellipse at 50% 40%, #14140f 0%, #080705 70%, #020202 100%); }
-#screen-endday .endday-panel { background-color:#12110c; border-color:#2a281e; border-top:2px solid rgba(201,163,74,.4); box-shadow:0 0 0 1px rgba(201,163,74,.12), 0 16px 48px rgba(0,0,0,.66); }
+#screen-endday .endday-panel { position:relative; background-color:#12110c; border-color:#2a281e; border-top:2px solid rgba(201,163,74,.4); box-shadow:0 0 0 1px rgba(201,163,74,.12), 0 16px 48px rgba(0,0,0,.66); gap:8px; }
 #screen-endday.active .endday-panel { animation: ending-rise 1s ease-out backwards; }
-#endday-report { font-size:13px; line-height:1.7; }
-#endday-report .row { display:flex; justify-content:space-between; gap:14px; padding:3px 2px; border-bottom:1px dotted rgba(143,138,122,.3); }
-#endday-report .row span:last-child { color:#d8cdb2; font-family:var(--font-mono); }
+/* cabeçalho de formulário oficial + regra dupla sob o título */
+.endday-formhdr { font-family:var(--font-display); font-size:9.5px; letter-spacing:3px; text-transform:uppercase; color:var(--accent2); opacity:.7; text-align:center; }
+#screen-endday .endday-title { font-size:21px; letter-spacing:3px; padding-bottom:8px; border-bottom:1px solid rgba(201,163,74,.45); box-shadow:0 2px 0 -1px rgba(201,163,74,.18); }
+#endday-report { font-size:13px; line-height:1.75; }
+#endday-report .row { display:flex; justify-content:space-between; gap:14px; padding:4px 2px; border-bottom:1px dotted rgba(143,138,122,.34); }
+#endday-report .row span:first-child { color:#b7ad91; }
+#endday-report .row span:last-child { color:#e6dcc0; font-family:var(--font-mono); font-weight:600; }
+/* carimbo "REGISTRADO" batido no canto do relatório */
+.endday-stamp {
+  position:absolute; right:26px; bottom:96px; transform:rotate(-13deg);
+  border:2.5px solid rgba(176,52,40,.75); color:rgba(176,52,40,.8); border-radius:4px;
+  padding:3px 12px; font-family:var(--font-display); font-weight:700; font-size:17px; letter-spacing:3px;
+  pointer-events:none; box-shadow: inset 0 0 0 1px rgba(176,52,40,.25);
+  animation: stamp-in .5s 1s both;
+}
 .ending-body { font-size:14px; line-height:1.8; }
 .ending-stats { font-size:12px; color:var(--ink-dim); line-height:1.7; border-top:1px solid var(--ink-dim); padding-top:10px; }
 /* botões de fim de expediente / final: placa gravada sóbria (sem ouro festivo) */

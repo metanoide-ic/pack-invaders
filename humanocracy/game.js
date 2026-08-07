@@ -1011,12 +1011,15 @@ function makeCitizen(day, opts) {
 function buildBaggage(cz) {
   cz.bag = [];
   cz.bagDone = false;
-  const push = (txt, extra) => cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra));
-  push(pick(BAG_POOLS.comum));
-  if (chance(.6)) push(pick(BAG_POOLS.comum));
+  const used = new Set();
+  const push = (txt, extra) => { if (!txt || used.has(txt)) return; used.add(txt); cz.bag.push(Object.assign({ txt, fid: 'bag.' + cz.bag.length }, extra)); };
+  // sorteio SEM repetição do mesmo item (dois "pães idênticos" parecia bug)
+  const pickNew = (poolArr) => { const opts = (poolArr || []).filter(t => !used.has(t)); return opts.length ? pick(opts) : null; };
+  push(pickNew(BAG_POOLS.comum));
+  if (chance(.6)) push(pickNew(BAG_POOLS.comum));
   const pool = BAG_POOLS[cz.motivo];
-  if (pool && chance(.8)) push(pick(pool));
-  if (chance(.18)) push(pick(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
+  if (pool && chance(.8)) push(pickNew(pool));
+  if (chance(.18)) push(pickNew(BAG_HERRINGS)); // pistas falsas: tristeza não é crime
   if (cz.bagOneway) push(BAG_ONEWAY.txt, { fid: 'bag.oneway', desc: BAG_ONEWAY.desc });
   if ((cz.isForger || cz.isAlternado) && chance(.12) && !cz.encounter) {
     push(pick(BAG_CONTRABAND), { contra: true, desc: 'Isto não deveria estar aqui. Isto não tem explicação boa.' });
@@ -2346,6 +2349,43 @@ function drawDeskProps() {
   };
   clip(W - padW * 2.4, H * 0.24, 0.5);
   clip(W - 44, H * 0.82, -0.3);
+
+  // ---- mais tralha de repartição, pra mesa não ficar vazia ----
+  // PILHA DE FORMULÁRIOS carimbados (canto central, atrás dos documentos vivos)
+  const stX = W * 0.47, stY = H * 0.72;
+  shadow(stX, stY, 128, 90);
+  for (let i = 4; i >= 0; i--) {
+    const ox = i * 1.4, oy = -i * 2.2, tilt = (i - 2) * 0.012;
+    x.save(); x.translate(stX + 64 + ox, stY + 45 + oy); x.rotate(tilt);
+    x.fillStyle = i % 2 ? '#d8cdb0' : '#cfc3a4'; rr(-64, -45, 128, 90, 2); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.18)'; x.lineWidth = 0.7; rr(-64, -45, 128, 90, 2); x.stroke();
+    if (i === 0) { // linhas impressas + um carimbo na folha do topo
+      x.strokeStyle = 'rgba(40,32,20,.22)'; x.lineWidth = 0.8;
+      for (let l = 0; l < 6; l++) { x.beginPath(); x.moveTo(-52, -32 + l * 11); x.lineTo(52, -32 + l * 11); x.stroke(); }
+      x.save(); x.rotate(-0.16); x.strokeStyle = 'rgba(140,40,34,.5)'; x.lineWidth = 2; x.strokeRect(8, 8, 40, 20);
+      x.fillStyle = 'rgba(140,40,34,.4)'; x.font = 'bold 9px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('ARQUIVO', 28, 21); x.restore();
+    }
+    x.restore();
+  }
+  // SINETA DE SERVIÇO (latão) — a que você bate pro próximo
+  const belX = W * 0.72, belY = H * 0.5;
+  shadow(belX - 20, belY - 6, 40, 20);
+  const base = x.createLinearGradient(0, belY, 0, belY + 10); base.addColorStop(0, '#8a6a2e'); base.addColorStop(1, '#4a3616');
+  x.fillStyle = base; rr(belX - 20, belY + 2, 40, 8, 3); x.fill();                     // base
+  const dome = x.createRadialGradient(belX - 6, belY - 10, 2, belX, belY, 24);
+  dome.addColorStop(0, '#e6c46a'); dome.addColorStop(0.5, '#b1892f'); dome.addColorStop(1, '#5a4318');
+  x.fillStyle = dome; x.beginPath(); x.ellipse(belX, belY + 2, 20, 15, 0, Math.PI, 2 * Math.PI); x.fill();  // cúpula
+  x.fillStyle = '#c9a545'; x.beginPath(); x.arc(belX, belY - 13, 3.4, 0, 6.29); x.fill();     // botão da sineta
+  x.strokeStyle = 'rgba(255,246,220,.4)'; x.lineWidth = 1.4; x.beginPath(); x.arc(belX - 6, belY - 4, 6, Math.PI * 1.1, Math.PI * 1.6); x.stroke(); // brilho
+  // CINZEIRO com cigarro fumegando (área aberta ao centro, longe da almofada)
+  const asX = W * 0.6, asY = H * 0.44;
+  shadow(asX - 18, asY - 6, 36, 16);
+  x.fillStyle = '#2a2c2e'; x.beginPath(); x.ellipse(asX, asY, 18, 8, 0, 0, 6.29); x.fill();
+  x.fillStyle = '#17181a'; x.beginPath(); x.ellipse(asX, asY, 12, 5, 0, 0, 6.29); x.fill();
+  x.fillStyle = 'rgba(80,80,70,.5)'; x.beginPath(); x.ellipse(asX + 3, asY + 1, 6, 2.4, 0, 0, 6.29); x.fill(); // cinzas
+  x.strokeStyle = '#e8e2d4'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.moveTo(asX + 6, asY - 1); x.lineTo(asX + 22, asY - 5); x.stroke(); // cigarro
+  x.strokeStyle = '#c9552e'; x.lineWidth = 3; x.beginPath(); x.moveTo(asX + 5, asY - 0.7); x.lineTo(asX + 8, asY - 1.4); x.stroke(); // brasa
+  x.strokeStyle = 'rgba(210,210,205,.12)'; x.lineWidth = 2; x.beginPath(); x.moveTo(asX + 7, asY - 2); x.bezierCurveTo(asX + 2, asY - 20, asX + 14, asY - 30, asX + 6, asY - 48); x.stroke(); // fumaça
 }
 
 function layDocs(cz) {
