@@ -3700,13 +3700,20 @@ function drawToolIcon(kind) {
       ring(3, 2, 8, 11, GOLD); hline(5, 9, 5, GOLD); hline(5, 9, 8, GOLD); hline(5, 9, 11, GOLD); p(4, 5, RED); p(4, 8, GOLD); p(4, 11, GOLD); break;
     case 'thermo': // termômetro
       vline(2, 9, 6, GOLD); vline(2, 9, 7, GOLD); fill(4, 8, 3, 3, RED); vline(4, 9, 7, RED); p(9, 4, GOLD); p(9, 6, GOLD); p(9, 8, GOLD); break;
-    case 'pulse': { // ECG
-      const pts = [[1, 7], [3, 7], [4, 5], [5, 9], [6, 3], [7, 11], [8, 6], [9, 7], [12, 7]];
-      for (const [px, py] of pts) p(px, py, RED);
-      hline(1, 4, 7, RED); hline(9, 12, 7, RED); p(4, 6, RED); p(5, 8, RED); p(6, 4, RED); p(6, 10, RED); p(7, 5, RED); break;
+    case 'pulse': { // ECG: linha de base + um QRS nítido
+      hline(1, 4, 8, RED); p(3, 7, RED);                       // base + onda P
+      vline(3, 8, 5, RED);                                     // subida do QRS
+      p(5, 2, RED); p(6, 2, RED);                              // pico
+      vline(2, 12, 6, RED);                                    // queda funda
+      p(7, 12, RED); vline(8, 12, 7, RED);
+      hline(8, 12, 8, RED); p(10, 7, RED);                     // volta + onda T
+      break;
     }
-    case 'bio': // hélice de DNA
-      for (let j = 2; j <= 11; j++) { const o = Math.round(Math.sin((j - 2) / 9 * 6.28) * 3); p(7 + o, j, GOLD); p(7 - o, j, GOLD); if (j % 3 === 0) hline(7 - Math.abs(o), 7 + Math.abs(o), j, GLASS); } break;
+    case 'bio': // hélice de DNA: dois fios cruzando + 3 degraus
+      for (const [sx, j] of [[4, 2], [5, 3], [6, 4], [7, 5], [8, 6], [9, 7], [9, 8], [8, 9], [7, 10], [6, 11], [5, 12]]) p(sx, j, GOLD);
+      for (const [sx, j] of [[9, 2], [8, 3], [7, 4], [6, 5], [5, 6], [4, 7], [4, 8], [5, 9], [6, 10], [7, 11], [8, 12]]) p(sx, j, GOLD);
+      hline(5, 8, 3, GLASS); hline(5, 8, 7, GLASS); hline(5, 8, 11, GLASS);
+      break;
   }
   return cv;
 }
