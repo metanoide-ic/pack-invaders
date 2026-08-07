@@ -12463,6 +12463,61 @@ function famSprite(who) {
     // busto já veio degradado no tamanho certo; segunda fita só sujaria os pixels
   });
 }
+/* vista de COSTAS da família — sprites direcionais: quando você está atrás
+   da pessoa, vê as costas dela (nada de billboard girando o rosto pra te
+   seguir; só o Dario e os realocados ficam SEMPRE de costas, de propósito). */
+function famSpriteBack(who) {
+  const f = FAM_FEATURES[who], coat = FAM_COAT[who];
+  const child = f.idade <= 12;
+  const hairC = (typeof F_HAIR !== 'undefined') ? `rgb(${F_HAIR[f.hair % F_HAIR.length].map(Math.round).join(',')})` : '#141414';
+  const skin = (typeof F_SKIN !== 'undefined') ? `rgb(${F_SKIN[f.skin % F_SKIN.length].b.map(Math.round).join(',')})` : '#8c6b4e';
+  return mk(64, 128, (x) => {
+    const top = child ? 36 : 20;          // criança: mais baixa
+    const shW = child ? 11 : 15;          // meia-largura do ombro
+    if (f.sexo === 'f') {                 // saia longa
+      x.fillStyle = coat;
+      x.beginPath(); x.moveTo(32 - shW - 2, 96); x.lineTo(32 + shW + 2, 96); x.lineTo(32 + shW + 6, 120); x.lineTo(32 - shW - 6, 120); x.closePath(); x.fill();
+      x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(32 - shW - 6, 116, shW * 2 + 12, 4);
+      x.fillStyle = '#1c1914'; x.fillRect(22, 120, 9, 6); x.fillRect(35, 120, 9, 6);
+    } else {
+      x.fillStyle = child ? '#3a4652' : '#26292a';
+      x.fillRect(25, 98, 7, child ? 22 : 26); x.fillRect(33, 98, 7, child ? 22 : 26);
+      x.fillStyle = '#141310'; x.fillRect(23, child ? 120 : 124, 10, 4); x.fillRect(32, child ? 120 : 124, 10, 4);
+    }
+    // casaco de costas: costura central, ombros caídos
+    x.fillStyle = coat;
+    x.beginPath();
+    x.moveTo(32 - shW - 3, 100); x.lineTo(32 - shW - 4, top + 20); x.quadraticCurveTo(32 - shW - 3, top + 8, 32, top + 7);
+    x.quadraticCurveTo(32 + shW + 3, top + 8, 32 + shW + 4, top + 20); x.lineTo(32 + shW + 3, 100); x.closePath(); x.fill();
+    x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1;
+    x.beginPath(); x.moveTo(32, top + 10); x.lineTo(32, 98); x.stroke();
+    x.strokeStyle = 'rgba(200,205,190,.08)'; x.lineWidth = 1.4;
+    x.beginPath(); x.moveTo(32 - shW - 2, top + 22); x.quadraticCurveTo(32 - shW, top + 12, 32, top + 10); x.stroke();
+    // avental amarrado (laço nas costas da Vessa)
+    if (who === 'vessa') {
+      x.strokeStyle = 'rgba(122,106,79,.9)'; x.lineWidth = 2.4;
+      x.beginPath(); x.moveTo(32 - shW - 2, 74); x.lineTo(32 + shW + 2, 74); x.stroke();
+      x.fillStyle = 'rgba(122,106,79,.9)';
+      x.beginPath(); x.moveTo(32, 74); x.lineTo(26, 80); x.lineTo(31, 79); x.closePath(); x.fill();
+      x.beginPath(); x.moveTo(32, 74); x.lineTo(38, 80); x.lineTo(33, 79); x.closePath(); x.fill();
+    }
+    // pescoço + cabeça por trás (só cabelo + uma orelha)
+    x.fillStyle = skin; x.fillRect(28, top + 1, 8, 8);
+    const hr = child ? 11 : 12.5;
+    x.fillStyle = hairC; x.beginPath(); x.ellipse(32, top - 8, hr, hr * 1.12, 0, 0, 6.29); x.fill();
+    for (let i = 0; i < 60; i++) {
+      const t = i / 60, hx = 32 - hr + t * hr * 2, hy = top - 18 + Math.abs(Math.sin(i * 3.7)) * 4;
+      x.strokeStyle = (i % 3) ? 'rgba(0,0,0,.45)' : 'rgba(236,240,246,.12)';
+      x.lineWidth = 0.6;
+      x.beginPath(); x.moveTo(hx, hy); x.quadraticCurveTo(hx + (t - .5) * 3, hy + 9, hx + (t - .5) * 6, hy + (f.sexo === 'f' ? 26 : 17)); x.stroke();
+    }
+    x.fillStyle = skin; x.beginPath(); x.arc(32 - hr - 1, top - 5, 2.2, 0, 6.29); x.fill();
+    // sombra no chão
+    const g = x.createRadialGradient(32, 124, 2, 32, 124, 16);
+    g.addColorStop(0, 'rgba(0,0,0,.5)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    x.fillStyle = g; x.beginPath(); x.ellipse(32, 124, 16, 4, 0, 0, 6.29); x.fill();
+  });
+}
 function buildSprites() {
   if (SPR.mae) return;
   const R = (ctx, x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(x, y, w, h); };
@@ -12484,6 +12539,9 @@ function buildSprites() {
   SPR.mae = famSprite('mae');
   SPR.vessa = famSprite('vessa');
   SPR.tomi = famSprite('tomi');
+  SPR.mae_b = famSpriteBack('mae');
+  SPR.vessa_b = famSpriteBack('vessa');
+  SPR.tomi_b = famSpriteBack('tomi');
   SPR.dario = mk(64, 128, (x) => { // de costas — ele olha para o canto. sempre.
     const f = FAM_FEATURES.dario;
     // pernas
@@ -12814,22 +12872,34 @@ function buildTextures() {
     x.beginPath(); x.moveTo(8, 36); x.lineTo(28, 28); x.stroke();
     vign(x);
   });
-  TEX.door = mk(64, 64, (x) => { // a porta. madeira, almofadas, maçaneta — e o olho mágico
-    base(x, '#3a2c1a');
-    // veios de madeira
-    x.strokeStyle = 'rgba(0,0,0,.14)'; x.lineWidth = 0.6;
-    for (let i = 0; i < 10; i++) { const yy = i * 6 + rnd() * 3; x.beginPath(); x.moveTo(0, yy); x.bezierCurveTo(20, yy + (rnd() - .5) * 4, 44, yy + (rnd() - .5) * 4, 64, yy); x.stroke(); }
-    x.fillStyle = 'rgba(0,0,0,.28)'; [16, 32, 48].forEach(px => x.fillRect(px, 0, 2, 64));
+  TEX.door = mk(64, 64, (x) => { // porta de tamanho REAL numa parede: verga em
+    // cima, batentes dos lados, folha com almofadas — não uma laje ocupando a
+    // célula inteira. (Com o recesso de meio bloco, ganha profundidade.)
+    base(x, '#46423a');                                  // reboco ao redor
+    blot(x, 8, 6, 7, 40, 36, 26, 0.3); grain(x, 0.1);
+    const dx0 = 10, dx1 = 54, dtop = 9;
+    // moldura/batente (madeira escura)
+    x.fillStyle = '#2a2014'; x.fillRect(dx0 - 4, dtop - 5, (dx1 - dx0) + 8, 5);   // verga
+    x.fillRect(dx0 - 4, dtop - 5, 4, 64 - dtop + 5); x.fillRect(dx1, dtop - 5, 4, 64 - dtop + 5); // ombreiras
+    x.fillStyle = 'rgba(236,240,246,.07)'; x.fillRect(dx0 - 4, dtop - 5, (dx1 - dx0) + 8, 1);
+    // folha da porta
+    x.fillStyle = '#3a2c1a'; x.fillRect(dx0, dtop, dx1 - dx0, 64 - dtop);
+    x.strokeStyle = 'rgba(0,0,0,.16)'; x.lineWidth = 0.6;                          // veios
+    for (let i = 0; i < 9; i++) { const yy = dtop + i * 6 + rnd() * 3; x.beginPath(); x.moveTo(dx0, yy); x.bezierCurveTo(24, yy + (rnd() - .5) * 3, 42, yy + (rnd() - .5) * 3, dx1, yy); x.stroke(); }
     // almofadas rebaixadas com chanfro
-    [[8, 8, 48, 20], [8, 34, 48, 22]].forEach(([ax, ay, aw, ah]) => {
+    [[dx0 + 5, dtop + 5, dx1 - dx0 - 10, 17], [dx0 + 5, dtop + 27, dx1 - dx0 - 10, 20]].forEach(([ax, ay, aw, ah]) => {
       x.fillStyle = '#241b0e'; x.fillRect(ax, ay, aw, ah);
       x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 1; x.strokeRect(ax + .5, ay + .5, aw - 1, ah - 1);
       x.strokeStyle = 'rgba(236,240,246,.06)'; x.beginPath(); x.moveTo(ax + 2, ay + ah - 2); x.lineTo(ax + 2, ay + 2); x.lineTo(ax + aw - 2, ay + 2); x.stroke();
     });
-    x.fillStyle = '#8a734d'; x.fillRect(50, 29, 5, 5);
-    x.fillStyle = 'rgba(236,240,246,.3)'; x.fillRect(50, 29, 2, 1);
-    x.fillStyle = '#0a0908'; x.beginPath(); x.arc(32, 22, 2.6, 0, 6.29); x.fill();
-    x.strokeStyle = '#8a734d'; x.lineWidth = 1; x.beginPath(); x.arc(32, 22, 3.6, 0, 6.29); x.stroke();
+    // chapa de proteção na base + maçaneta + olho mágico
+    x.fillStyle = 'rgba(120,110,90,.3)'; x.fillRect(dx0 + 2, 57, dx1 - dx0 - 4, 5);
+    x.fillStyle = '#8a734d'; x.fillRect(dx1 - 9, 33, 4, 4);
+    x.fillStyle = 'rgba(236,240,246,.35)'; x.fillRect(dx1 - 9, 33, 2, 1);
+    x.fillStyle = '#0a0908'; x.beginPath(); x.arc(32, dtop + 12, 2.2, 0, 6.29); x.fill();
+    x.strokeStyle = '#8a734d'; x.lineWidth = 1; x.beginPath(); x.arc(32, dtop + 12, 3.2, 0, 6.29); x.stroke();
+    // sombra do recesso rente aos batentes
+    x.fillStyle = 'rgba(0,0,0,.32)'; x.fillRect(dx0 - 8, 0, 4, 64); x.fillRect(dx1 + 4, 0, 4, 64);
     vign(x);
   });
   TEX.floor = mk(64, 64, (x) => { // assoalho de madeira (usado pelo floor casting)
@@ -12918,6 +12988,38 @@ function buildFaces() {
 
 /* ---------- ENTIDADES ---------- */
 let ENTS = [];
+/* ---------- MÓVEIS COMO CAIXAS 3D DE VERDADE ----------
+   Em vez de billboards que giram seguindo a câmera, os móveis são caixas
+   (AABB) fixas no mundo, renderizadas por coluna no raycaster: lado
+   texturizado com o sprite do móvel + face de topo. Você anda AO REDOR
+   deles. hw/hd = meia-largura em x/y (células); h = altura (fração da
+   parede); sy/sh = recorte vertical útil do sprite; top = cor do tampo. */
+const BOX_DEFS = {
+  sofa:       { hw: .55, hd: .30, h: .34, sy: 8,  sh: 56, top: '#332b1f' },
+  tv:         { hw: .26, hd: .22, h: .44, sy: 2,  sh: 66, top: '#101208' },
+  stove:      { hw: .30, hd: .25, h: .44, sy: 8,  sh: 70, top: '#221f1a' },
+  bedT:       { hw: .55, hd: .42, h: .26, sy: 8,  sh: 48, top: '#333c46' },
+  bedD:       { hw: .55, hd: .42, h: .26, sy: 8,  sh: 48, top: '#2e2b25' },
+  bedQ:       { hw: .62, hd: .46, h: .27, sy: 6,  sh: 54, top: '#3e362e' },
+  clock:      { hw: .13, hd: .11, h: .80, sy: 0,  sh: 84, top: '#1d160d' },
+  nightstand: { hw: .18, hd: .16, h: .30, sy: 4,  sh: 54, top: '#2c1f15' },
+  dresser:    { hw: .30, hd: .18, h: .44, sy: 2,  sh: 70, top: '#2e2116' },
+  chair:      { hw: .18, hd: .18, h: .38, sy: 10, sh: 72, top: '#332a22' },
+  shelf:      { hw: .30, hd: .15, h: .74, sy: 2,  sh: 96, top: '#231a11' },
+  crate:      { hw: .22, hd: .20, h: .26, sy: 6,  sh: 52, top: '#3b3122' },
+  counter:    { hw: .34, hd: .20, h: .36, sy: 4,  sh: 56, top: '#3a362e' },
+  lowtable:   { hw: .26, hd: .20, h: .20, sy: 6,  sh: 38, top: '#2e251b' },
+};
+let BOXES = [];
+function buildBoxes() {
+  BOXES = [];
+  for (const e of ENTS) {
+    const d = e.spr && BOX_DEFS[e.spr];
+    if (!d) continue;
+    BOXES.push({ spr: e.spr, x0: e.x - d.hw, x1: e.x + d.hw, y0: e.y - d.hd, y1: e.y + d.hd,
+      h: d.h, sy: d.sy, sh: d.sh, top: d.top });
+  }
+}
 function buildEnts() {
   const F = S.family;
   ENTS = [
@@ -12983,6 +13085,13 @@ function buildEnts() {
     ...[[4, 2], [10, 2], [16, 2], [22, 2], [4, 10], [10, 10], [16, 10], [6, 6], [13, 6], [20, 6], [28, 6]]
       .map(([lx, ly]) => ({ spr: 'lamp', x: lx, y: ly, sc: .16, lift: .74, glowWarm: true })),
   ].filter(Boolean);
+  // direção pra onde cada um da família olha (sprites direcionais frente/costas)
+  for (const e of ENTS) {
+    if (e.spot === 'tomi') e.dir = Math.PI / 2;                      // olha pra porta do quarto
+    else if (e.spot === 'vessa') e.dir = Math.atan2(-0.4, 1.4);      // olha pro fogão
+    else if (e.spot === 'mae') e.dir = Math.atan2(0.5, -3.2);        // olha pra TV
+  }
+  buildBoxes();
 }
 
 /* ---------- DIÁLOGOS ---------- */
@@ -13418,6 +13527,7 @@ function enterMirror48() {
     { spr: 'lamp', x: 2, y: 5, sc: .16, lift: .74, glowWarm: true },
     { spr: 'lamp', x: 2, y: 9, sc: .16, lift: .74, glowWarm: true },
   ];
+  buildBoxes();
   HOUSE.mode = 'mirror';
   HOUSE.active = true;
   HOUSE.x = 2; HOUSE.y = 11.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
@@ -13531,8 +13641,10 @@ function houseMinute() {
 function tryMove(nx, ny) {
   const r = .22;
   const ok = (x, y) => CUR.map[Math.floor(y)] && CUR.map[Math.floor(y)][Math.floor(x)] === 0;
-  if (ok(nx + r, HOUSE.y) && ok(nx - r, HOUSE.y)) HOUSE.x = nx;
-  if (ok(HOUSE.x, ny + r) && ok(HOUSE.x, ny - r)) HOUSE.y = ny;
+  // móveis-caixa são sólidos: não se atravessa mais a cama/estante
+  const hitBox = (x, y) => { for (const b of BOXES) { if (x > b.x0 - .12 && x < b.x1 + .12 && y > b.y0 - .12 && y < b.y1 + .12) return true; } return false; };
+  if (ok(nx + r, HOUSE.y) && ok(nx - r, HOUSE.y) && !hitBox(nx, HOUSE.y)) HOUSE.x = nx;
+  if (ok(HOUSE.x, ny + r) && ok(HOUSE.x, ny - r) && !hitBox(HOUSE.x, ny)) HOUSE.y = ny;
 }
 function interactTarget() {
   let best = null, bd = 1.6;
@@ -13748,13 +13860,23 @@ function renderHouse() {
     let stepX, stepY, sideX, sideY;
     if (rdx < 0) { stepX = -1; sideX = (HOUSE.x - mapX) * dDx; } else { stepX = 1; sideX = (mapX + 1 - HOUSE.x) * dDx; }
     if (rdy < 0) { stepY = -1; sideY = (HOUSE.y - mapY) * dDy; } else { stepY = 1; sideY = (mapY + 1 - HOUSE.y) * dDy; }
-    let side = 0, tile = 1, guard = 0;
+    let side = 0, tile = 1, guard = 0, doorOff = 0;
     while (guard++ < 64) {
       if (sideX < sideY) { sideX += dDx; mapX += stepX; side = 0; } else { sideY += dDy; mapY += stepY; side = 1; }
       tile = (CUR.map[mapY] && CUR.map[mapY][mapX] !== undefined) ? CUR.map[mapY][mapX] : 1;
+      if (tile === 2) {
+        // PORTA EMBUTIDA: o plano da porta fica meio bloco pra DENTRO da célula
+        // (estilo Wolf3D). Se o raio sai da célula antes do plano, segue e
+        // acerta o batente — a porta ganha profundidade real, não é mais uma
+        // laje chapada ocupando a parede inteira.
+        if (side === 0 ? (sideX - dDx / 2 < sideY) : (sideY - dDy / 2 < sideX)) {
+          doorOff = side === 0 ? dDx / 2 : dDy / 2; break;
+        }
+        continue;
+      }
       if (tile !== 0) break;
     }
-    const raw = side === 0 ? sideX - dDx : sideY - dDy;
+    const raw = (side === 0 ? sideX - dDx : sideY - dDy) + doorOff;
     const dist = Math.max(.01, raw * Math.cos(rayA - HOUSE.ang));
     zbuf[col] = dist;
     const lineH = H / dist;
@@ -13807,10 +13929,72 @@ function renderHouse() {
     ctx.restore();
   }
 
+  // ---- CAIXAS 3D (móveis fixos no mundo) ----
+  // Por coluna: interseção raio×AABB; desenha o lado texturizado na distância
+  // de entrada e o TAMPO entre as projeções de entrada/saída. Fica parado no
+  // mundo — você anda ao redor. boxNear/boxTopY recortam os billboards atrás.
+  const boxNear = new Float32Array(W).fill(1e9);
+  const boxTopY = new Float32Array(W).fill(-1e9);
+  if (BOXES.length) {
+    for (let col = 0; col < W; col++) {
+      const camX = 2 * col / W - 1;
+      const rayA = HOUSE.ang + Math.atan(camX * tanF);
+      const rdx = Math.cos(rayA), rdy = Math.sin(rayA);
+      const corrF = Math.cos(rayA - HOUSE.ang);
+      let hits = null;
+      for (const b of BOXES) {
+        let t0 = -1e9, t1 = 1e9, face = 0;
+        if (Math.abs(rdx) < 1e-9) { if (HOUSE.x < b.x0 || HOUSE.x > b.x1) continue; }
+        else {
+          let ta = (b.x0 - HOUSE.x) / rdx, tb = (b.x1 - HOUSE.x) / rdx;
+          if (ta > tb) { const t = ta; ta = tb; tb = t; }
+          if (ta > t0) { t0 = ta; face = 0; }
+          if (tb < t1) t1 = tb;
+        }
+        if (Math.abs(rdy) < 1e-9) { if (HOUSE.y < b.y0 || HOUSE.y > b.y1) continue; }
+        else {
+          let ta = (b.y0 - HOUSE.y) / rdy, tb = (b.y1 - HOUSE.y) / rdy;
+          if (ta > tb) { const t = ta; ta = tb; tb = t; }
+          if (ta > t0) { t0 = ta; face = 1; }
+          if (tb < t1) t1 = tb;
+        }
+        if (t1 < t0 || t1 < .06 || t0 < .06) continue;             // errou / atrás / dentro
+        if (t0 * corrF >= zbuf[col]) continue;                     // atrás da parede
+        let u = face === 0 ? ((HOUSE.y + rdy * t0) - b.y0) / (b.y1 - b.y0)
+                           : ((HOUSE.x + rdx * t0) - b.x0) / (b.x1 - b.x0);
+        (hits || (hits = [])).push({ b, t0, t1, face, u });
+      }
+      if (!hits) continue;
+      hits.sort((p, q) => q.t0 - p.t0);                            // longe → perto
+      for (const hh of hits) {
+        const b = hh.b, spr = SPR[b.spr];
+        if (!spr) continue;
+        const dN = hh.t0 * corrF, dF = hh.t1 * corrF;
+        const yBot = horizon + (H * .5) / dN;
+        const yTopN = horizon + (H * (.5 - b.h)) / dN;
+        const yTopF = horizon + (H * (.5 - b.h)) / dF;
+        let lum = Math.min(1, 2.05 / (1 + dN * dN * .11)) * (.62 + .38 * Math.cos((col / W - .5) * 2.4)) * dimF * .78;
+        if (hh.face === 1) lum *= .8;
+        lum = Math.max(.12, lum);
+        const sx = Math.min(spr.width - 1, (hh.u * spr.width) | 0);
+        ctx.drawImage(spr, sx, b.sy, 1, b.sh, col, yTopN, 1, Math.max(1, yBot - yTopN));
+        ctx.fillStyle = `rgba(6,4,2,${(1 - lum).toFixed(3)})`;
+        ctx.fillRect(col, yTopN, 1, Math.max(1, yBot - yTopN));
+        if (yTopF < yTopN - .5) {                                  // tampo visível de cima
+          ctx.fillStyle = b.top; ctx.fillRect(col, yTopF, 1, yTopN - yTopF);
+          ctx.fillStyle = `rgba(6,4,2,${(1 - Math.min(1, lum * .9)).toFixed(3)})`;
+          ctx.fillRect(col, yTopF, 1, yTopN - yTopF);
+        }
+        if (dN < boxNear[col]) { boxNear[col] = dN; boxTopY[col] = Math.min(yTopN, yTopF); }
+      }
+    }
+  }
+
   // sprites (longe → perto)
   const vis = [];
   for (const e of ENTS) {
     if (!e.spr) continue;
+    if (BOX_DEFS[e.spr]) continue;                 // móveis agora são caixas 3D, não billboards
     if (e.spr === 'shadow' && HOUSE.fx && HOUSE.fx.shadowGone) continue; // hoje o canto está vazio. isso é pior.
     const m = e.spot ? S.family[e.spot] : null;
     if (m && !m.alive) continue;
@@ -13826,7 +14010,14 @@ function renderHouse() {
   vis.sort((a, b) => b.dist - a.dist);
   for (const v of vis) {
     const { e, dist, rel } = v;
-    const spr = SPR[e.spr];
+    // SPRITE DIRECIONAL: quem tem `dir` mostra frente ou costas conforme o
+    // lado de onde você olha (estilo Doom) — ninguém gira pra te seguir.
+    let sprName = e.spr;
+    if (e.dir != null && SPR[e.spr + '_b']) {
+      const va = Math.atan2(HOUSE.y - e.y, HOUSE.x - e.x);
+      if (Math.cos(va - e.dir) < -0.15) sprName = e.spr + '_b';
+    }
+    const spr = SPR[sprName];
     const corr = dist * Math.cos(rel);
     const sh = (H / corr) * e.sc;
     const sw = sh * (spr.width / spr.height);
@@ -13844,7 +14035,15 @@ function renderHouse() {
       const col = x0 + sx;
       if (col < 0 || col >= W) continue;
       if (corr >= zbuf[col]) continue;
-      ctx.drawImage(spr, sx / sw * spr.width, 0, Math.max(1, spr.width / sw), spr.height, col, top, 1, sh);
+      // atrás de um móvel-caixa: recorta a parte abaixo do tampo (a pessoa
+      // atrás da cama aparece da cintura pra cima, como deve)
+      let dh = sh;
+      if (corr > boxNear[col]) {
+        const cutY = boxTopY[col];
+        if (cutY <= top) continue;
+        dh = Math.min(sh, cutY - top);
+      }
+      ctx.drawImage(spr, sx / sw * spr.width, 0, Math.max(1, spr.width / sw), spr.height * (dh / sh), col, top, 1, dh);
     }
     ctx.globalAlpha = 1;
     ctx.filter = 'none';
