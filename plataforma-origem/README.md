@@ -56,6 +56,14 @@ O `build` gera uma pasta `dist/` estática que pode ser hospedada em qualquer
 serviço (Vercel, Netlify, GitHub Pages, etc.). Como o `base` do Vite é relativo e o
 roteamento usa hash (`/#/`), funciona também em subpastas sem configuração extra.
 
+## Links oficiais
+
+- **Site (online):** https://metanoide-ic.github.io/pack-invaders/
+  — atualizado automaticamente a cada push (workflow "Publicar Plataforma Origem").
+- **Instaladores do app desktop:** https://github.com/metanoide-ic/pack-invaders/releases/tag/instaladores-v1
+  — Windows (.exe), macOS (.dmg) e Linux (.AppImage), gerados pelo workflow
+  "Instaladores do app desktop".
+
 ## Formas de acesso
 
 **1. Site (navegador)** — hospede a pasta `dist/` (Vercel, Netlify, etc.) e
