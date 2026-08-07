@@ -7,3 +7,5 @@ dev-dist
 
 *.tsbuildinfo
 dist-demo
+dist-desktop
+release

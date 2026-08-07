@@ -56,11 +56,30 @@ O `build` gera uma pasta `dist/` estática que pode ser hospedada em qualquer
 serviço (Vercel, Netlify, GitHub Pages, etc.). Como o `base` do Vite é relativo e o
 roteamento usa hash (`/#/`), funciona também em subpastas sem configuração extra.
 
-## Instalar como aplicativo
+## Formas de acesso
 
-Abra a plataforma no navegador (Chrome, Edge ou Safari) e use **"Instalar
-aplicativo"** / **"Adicionar à tela de início"**. O app abre em tela cheia, com
-ícone próprio, e continua funcionando via cache mesmo offline.
+**1. Site (navegador)** — hospede a pasta `dist/` (Vercel, Netlify, etc.) e
+acesse pela URL. Em desenvolvimento, `npm run dev`.
+
+**2. App instalável (PWA)** — abra o site no Chrome/Edge/Safari e use **"Instalar
+aplicativo"** / **"Adicionar à tela de início"**. Abre em janela própria, com
+ícone, e funciona offline via cache. Serve para celular e computador.
+
+**3. App desktop nativo (Electron)** — instalador próprio para Windows/macOS/Linux,
+não depende de hospedagem:
+
+```bash
+npm run desktop        # roda o app desktop em modo local
+npm run desktop:pack   # gera o instalador em release/ (rode no SO alvo)
+```
+
+- `desktop:pack` gera `.exe` (NSIS) no Windows, `.dmg` no macOS e `.AppImage` no
+  Linux. Cada instalador precisa ser gerado no sistema operacional correspondente.
+
+## Postagem automática (Instagram/WhatsApp)
+
+O app dispara os webhooks; a conexão com as contas é a última etapa. Passo a
+passo em **[GUIA-INTEGRACOES.md](./GUIA-INTEGRACOES.md)**.
 
 ## Integrações (publicação real e WhatsApp)
 
