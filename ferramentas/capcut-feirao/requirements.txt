@@ -1,0 +1,8 @@
+# obrigatorio: traz o ffmpeg junto, sem precisar instalar nada a parte
+imageio-ffmpeg>=0.4.9
+
+# opcional: legendas automaticas (transcricao local, offline)
+# faster-whisper>=1.0.0
+
+# opcional: para rodar os testes
+# pytest>=7.0
