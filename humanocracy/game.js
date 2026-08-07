@@ -2173,6 +2173,7 @@ function greetingFor(cz) {
 
 function presentCitizen(cz) {
   resetInstruments();                                       // leituras do anterior somem
+  sfxTool('bell');                                          // a sineta da mesa: próximo!
   $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
   const a = $('npc-actor');
   a.className = 'pickable';
@@ -2421,6 +2422,7 @@ function drawDeskProps() {
 
 function layDocs(cz) {
   clearDesk();
+  sfxTool('paper');                 // os papéis deslizam pela bandeja
   $('desk-hint').style.display = 'none';
   const desk = $('desk');
   // a mesa agora é larga e baixa: espalha os documentos em leque pela base
@@ -2794,6 +2796,19 @@ function sfxTool(k) {
       o.frequency.exponentialRampToValueAtTime(90, t + .05);
       g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .09);
       o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .1);
+    } else if (k === 'bell') {                     // a sineta de latão da mesa (próximo!)
+      [[1180, .07, 0], [1774, .03, 0], [2960, .012, .01]].forEach(([fr, vol, off]) => {
+        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = fr;
+        g.gain.setValueAtTime(vol, t + off); g.gain.exponentialRampToValueAtTime(.0005, t + off + 1.1);
+        o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + 1.2);
+      });
+    } else if (k === 'paper') {                    // papel deslizando na madeira
+      const n = AC.createBuffer(1, AC.sampleRate * .22 | 0, AC.sampleRate), d = n.getChannelData(0);
+      for (let i = 0; i < d.length; i++) { const env = Math.sin(Math.PI * i / d.length); d[i] = (Math.random() * 2 - 1) * env; }
+      const s = AC.createBufferSource(); s.buffer = n;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.setValueAtTime(700, t); f.frequency.linearRampToValueAtTime(1400, t + .18); f.Q.value = .6;
+      const g = AC.createGain(); g.gain.value = .07;
+      s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + .24);
     } else if (k === 'beep') {                     // bip curto do termômetro
       [0, .16].forEach(off => {
         const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square';
@@ -2819,6 +2834,20 @@ function sfxHeartbeat(fast) {                      // o que o estetoscópio ouve
       });
     }
   } catch (e) {}
+}
+function drawInstLens() {         // lupa do exame físico (latão + cabo de madeira)
+  const cv = document.querySelector('#inst-lens canvas'); if (!cv) return;
+  const x = cv.getContext('2d'); x.clearRect(0, 0, 46, 64); x.imageSmoothingEnabled = false;
+  x.save(); x.translate(23, 22); x.rotate(.6);
+  x.strokeStyle = '#3a2c1a'; x.lineWidth = 6; x.lineCap = 'round';           // cabo
+  x.beginPath(); x.moveTo(0, 14); x.lineTo(0, 36); x.stroke();
+  x.strokeStyle = '#5a4326'; x.lineWidth = 2.4; x.beginPath(); x.moveTo(-1, 16); x.lineTo(-1, 34); x.stroke();
+  const g = x.createRadialGradient(-4, -6, 1, 0, 0, 13);                     // lente
+  g.addColorStop(0, 'rgba(190,215,220,.55)'); g.addColorStop(.7, 'rgba(120,150,160,.3)'); g.addColorStop(1, 'rgba(70,95,105,.25)');
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, 12, 0, 6.29); x.fill();
+  x.strokeStyle = '#c9a34a'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, 13, 0, 6.29); x.stroke();  // aro de latão
+  x.strokeStyle = 'rgba(255,246,220,.5)'; x.lineWidth = 1.2; x.beginPath(); x.arc(-4, -5, 5, -2.6, -1.1); x.stroke();
+  x.restore();
 }
 function drawInstThermo(temp) {   // termômetro de mercúrio; a coluna sobe com a leitura
   const cv = document.querySelector('#inst-thermo canvas'); if (!cv) return;
@@ -2874,6 +2903,10 @@ function instReturn(el, home, delay) {
 }
 function setupInstruments() {
   const acts = {
+    'inst-lens': (el, home) => {                   // aproxima a lupa: abre o exame físico
+      el.classList.add('busy');
+      setTimeout(() => { openExam(); instReturn(el, home, 120); }, 280);
+    },
     'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
       el.classList.add('busy');
       setTimeout(() => {
@@ -2907,7 +2940,7 @@ function setupInstruments() {
     const el = $(id); if (!el) return;
     el.addEventListener('pointerdown', (ev) => {
       if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
-      if (shift.citizen.isSilente && id !== 'inst-bio') return;   // com o Silente, só o coletor reage
+      if (shift.citizen.isSilente && id !== 'inst-bio' && id !== 'inst-lens') return;   // com o Silente, só lupa e coletor reagem
       ev.preventDefault();
       el.setPointerCapture(ev.pointerId);
       const r = el.getBoundingClientRect();
@@ -2932,7 +2965,7 @@ function setupInstruments() {
       sfxTool('pickup');
     });
   });
-  drawInstThermo(); drawInstPulse(); drawInstBio();
+  drawInstLens(); drawInstThermo(); drawInstPulse(); drawInstBio();
 }
 function resetInstruments() {   // novo cidadão: leituras antigas somem
   const tt = $('thermo-tag'), bt = $('bio-tag');

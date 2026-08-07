@@ -1126,7 +1126,13 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 }
 
 /* ============ NOITE ============ */
-#screen-night { background:#050505; }
+#screen-night {   /* do lado de dentro da porta, de madrugada: tábuas verticais + um fio de luz do corredor */
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(70,54,32,.16), transparent 58%),
+    repeating-linear-gradient(90deg, rgba(26,20,12,.5) 0 5px, rgba(14,11,7,.5) 5px 10px, rgba(20,16,10,.5) 10px 11px),
+    linear-gradient(180deg, #0a0805, #060504 60%, #030302),
+    #050403;
+}
 #screen-night.active { display:flex; align-items:center; justify-content:center; }
 .night-inner { max-width:560px; width:94vw; text-align:center; display:flex; flex-direction:column; gap:18px; align-items:center; }
 .night-hour { font-family:var(--font-display); font-weight:600; color:#6b6557; letter-spacing:3px; font-size:15px; font-variant-numeric:tabular-nums; }
