@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Palette, Database, LogOut, Check, Download, Upload } from 'lucide-react';
+import { User, Palette, Database, LogOut, Check, Download, Upload, KeyRound } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Avatar, Modal } from '@/components/ui';
 import { useAuth } from '@/lib/authStore';
@@ -13,6 +13,7 @@ const BACKUP_KEYS = ['origem.data', 'origem.auth', 'origem.settings'] as const;
 export default function Settings() {
   const user = useAuth((s) => s.current());
   const updateProfile = useAuth((s) => s.updateProfile);
+  const changePassword = useAuth((s) => s.changePassword);
   const logout = useAuth((s) => s.logout);
   const data = useData();
   const navigate = useNavigate();
@@ -24,6 +25,9 @@ export default function Settings() {
   const [saved, setSaved] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [backupMsg, setBackupMsg] = useState('');
+  const [pwCurrent, setPwCurrent] = useState('');
+  const [pwNext, setPwNext] = useState('');
+  const [pwMsg, setPwMsg] = useState<{ ok: boolean; text: string } | null>(null);
 
   if (!user) return null;
 
@@ -120,6 +124,33 @@ export default function Settings() {
             <div className="mt-6 flex items-center gap-3">
               <Button onClick={save}>{saved ? <><Check size={16} /> Salvo</> : 'Salvar alterações'}</Button>
             </div>
+          </section>
+
+          {/* Senha */}
+          <section className="card p-6">
+            <div className="mb-4 flex items-center gap-2 text-white">
+              <KeyRound size={18} className="text-brand-300" />
+              <h3 className="font-semibold">Alterar senha</h3>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Senha atual">
+                <Input type="password" value={pwCurrent} onChange={(e) => setPwCurrent(e.target.value)} autoComplete="current-password" />
+              </Field>
+              <Field label="Nova senha" hint="Ao menos 6 caracteres.">
+                <Input type="password" value={pwNext} onChange={(e) => setPwNext(e.target.value)} autoComplete="new-password" />
+              </Field>
+            </div>
+            {pwMsg && (
+              <p className={cn('mt-3 rounded-lg px-3.5 py-2.5 text-sm', pwMsg.ok ? 'border border-emerald-500/30 bg-emerald-500/10 text-emerald-200' : 'border border-red-500/30 bg-red-500/10 text-red-300')}>
+                {pwMsg.text}
+              </p>
+            )}
+            <Button className="mt-4" onClick={() => {
+              const res = changePassword(pwCurrent, pwNext);
+              setPwMsg(res.ok ? { ok: true, text: 'Senha alterada. Use a nova no próximo login.' } : { ok: false, text: res.error || 'Não foi possível alterar.' });
+              if (res.ok) { setPwCurrent(''); setPwNext(''); }
+              setTimeout(() => setPwMsg(null), 5000);
+            }}>Alterar senha</Button>
           </section>
 
           {/* Dados */}

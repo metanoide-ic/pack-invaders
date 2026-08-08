@@ -25,6 +25,7 @@ interface AuthState {
   login: (identifier: string, password: string) => { ok: boolean; error?: string };
   logout: () => void;
   updateProfile: (patch: Partial<Pick<Account, 'name' | 'role' | 'color'>>) => void;
+  changePassword: (current: string, next: string) => { ok: boolean; error?: string };
   setPermission: (id: string, patch: Partial<Pick<Account, 'canFinance' | 'admin' | 'role'>>) => void;
   addMember: (input: { name: string; password: string; role?: string; canFinance?: boolean; admin?: boolean }) => { ok: boolean; error?: string };
   removeMember: (id: string) => void;
@@ -92,6 +93,17 @@ export const useAuth = create<AuthState>()(
 
       updateProfile: (patch) =>
         set((s) => ({ accounts: s.accounts.map((a) => (a.id === s.currentId ? { ...a, ...patch } : a)) })),
+
+      changePassword: (current, next) => {
+        const me = get().accounts.find((a) => a.id === get().currentId);
+        if (!me) return { ok: false, error: 'Sessão inválida.' };
+        if (me.passHash !== hash(current)) return { ok: false, error: 'Senha atual incorreta.' };
+        if (next.length < 6) return { ok: false, error: 'A nova senha precisa de ao menos 6 caracteres.' };
+        set((s) => ({
+          accounts: s.accounts.map((a) => (a.id === me.id ? { ...a, passHash: hash(next) } : a)),
+        }));
+        return { ok: true };
+      },
 
       setPermission: (id, patch) =>
         set((s) => ({ accounts: s.accounts.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),

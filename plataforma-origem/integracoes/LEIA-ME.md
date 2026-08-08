@@ -7,6 +7,12 @@ ponte entre a plataforma e o WhatsApp/Instagram reais.
 |---|---|
 | `make-whatsapp-aprovacao.blueprint.json` | Recebe o post da plataforma e envia a mensagem "Segue aqui para aprovação" + copy no grupo do cliente |
 | `make-instagram-publicacao.blueprint.json` | Recebe a aprovação e publica no Instagram (feed ou story) via Graph API |
+| `make-cobranca.blueprint.json` | Recebe a cobrança mensal e envia no WhatsApp pessoal de quem paga (e o pedido de nota fiscal ao contador) |
+
+Observação: a plataforma usa **um único webhook de WhatsApp** para aprovação e
+cobrança. Você pode importar os dois cenários e usar a mesma URL nos dois (o
+campo `tipo` do payload distingue: `aprovacao`, `cobranca`, `nota_fiscal`), ou
+juntar tudo num cenário só com um roteador (Router) filtrando por `tipo`.
 
 ## Como importar (2 minutos cada)
 
@@ -60,6 +66,18 @@ Observações da Graph API:
   de publicação — ou preencha o campo de mídia com um link público.
 - Para o **story**, o blueprint já manda `media_type=STORIES` automaticamente
   quando o destino é story.
+
+## Cobrança com baixa automática (opcional)
+
+O envio da cobrança já sai pela plataforma. Para o pagamento dar baixa sem
+ninguém clicar, use um gateway de cobrança com webhook de retorno:
+
+1. Crie uma conta no **Asaas** ([asaas.com](https://www.asaas.com)) — emite Pix
+   e boleto e avisa quando o cliente paga (funciona também com Cora ou Efí).
+2. No Make, crie um cenário com o webhook de "pagamento recebido" do gateway.
+3. Nesse cenário, registre a baixa: hoje a baixa manual é o botão
+   "Marcar paga" no Financeiro; com o gateway, o fluxo do Make pode enviar a
+   confirmação no WhatsApp da equipe para dar a baixa em segundos.
 
 ## Fechando o ciclo (grupo responde → publica sozinho)
 
