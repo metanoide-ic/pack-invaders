@@ -37,7 +37,7 @@ export default function Landing() {
             Estratégia tem <span className="text-brand-300">Origem</span>.
           </h1>
           <p className="mt-6 max-w-md text-lg leading-relaxed text-white/55">
-            Quadros, posts, vídeos e financeiro no mesmo lugar — com aprovação e
+            Quadros, posts, vídeos e financeiro no mesmo lugar, com aprovação e
             publicação automatizadas. Feita para a rotina da agência.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">

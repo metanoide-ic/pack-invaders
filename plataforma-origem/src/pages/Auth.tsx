@@ -81,7 +81,7 @@ export default function Auth() {
             {mode === 'signup' ? 'Criar conta' : 'Entrar'}
           </h1>
           <p className="mt-1.5 text-sm text-white/50">
-            {mode === 'signup' ? 'É rápido — leva menos de um minuto.' : 'Use seu login e senha da equipe.'}
+            {mode === 'signup' ? 'Leva menos de um minuto.' : 'Use seu login e senha da equipe.'}
           </p>
 
           <form onSubmit={submit} className="mt-7 space-y-4">

@@ -150,7 +150,7 @@ export default function Clients() {
             <Textarea value={form.briefing} onChange={(e) => setForm({ ...form, briefing: e.target.value })} className="min-h-[90px]" placeholder="Ex.: Ótica premium em Volta Redonda, público 30-55, foco em óculos de grife e exames…" />
           </Field>
           <div>
-            <div className="mb-1.5 text-xs font-medium text-white/60">Cadência semanal <span className="text-white/35">(o que entra em cada dia — separe por vírgula)</span></div>
+            <div className="mb-1.5 text-xs font-medium text-white/60">Cadência semanal <span className="text-white/35">(o que entra em cada dia, separado por vírgula)</span></div>
             <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
               {WD.map((d, i) => (
                 <div key={i} className="flex items-center gap-2">

@@ -28,7 +28,7 @@ export default function Team() {
     <div>
       <PageHeader
         title="Equipe"
-        subtitle="Todos trabalham no mesmo workflow — quadros, posts, vídeos e financeiro compartilhados."
+        subtitle="Todos trabalham no mesmo workflow, com quadros, posts, vídeos e financeiro compartilhados."
         action={isAdmin ? <Button onClick={() => setOpen(true)}><UserPlus size={18} /> Adicionar pessoa</Button> : undefined}
       />
 
