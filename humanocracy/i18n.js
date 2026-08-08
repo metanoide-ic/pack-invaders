@@ -48,6 +48,7 @@ const I18N_EN = {
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'New campaign, same seed: the same citizens pass through your booth, on the same days. You are the one who is no longer the same.',
   'TELA CHEIA (F)': 'FULLSCREEN (F)',
+  'CASA EM 3D': 'HOUSE IN 3D',
   'MODO ARQUIVISTA (sem relógio)': 'ARCHIVIST MODE (no clock)',
   'TEXTO GRANDE': 'LARGE TEXT',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -1504,6 +1505,7 @@ const I18N_ES = {
   'Nova campanha, mesma seed: os mesmos cidadãos passam pelo seu guichê, nos mesmos dias. Você é que já não é o mesmo.':
     'Nueva campaña, misma semilla: los mismos ciudadanos pasan por tu ventanilla, en los mismos días. Tú eres quien ya no es el mismo.',
   'TELA CHEIA (F)': 'PANTALLA COMPLETA (F)',
+  'CASA EM 3D': 'CASA EN 3D',
   'MODO ARQUIVISTA (sem relógio)': 'MODO ARCHIVISTA (sin reloj)',
   'TEXTO GRANDE': 'TEXTO GRANDE',
   'O relógio do turno não avança sozinho — só quando você usa ferramentas. Pense com calma; a fila mesmo assim é finita.':
@@ -2940,6 +2942,7 @@ const I18N_STATIC_SELECTORS = [
   '.title-sub', '.title-quote', '#btn-new', '#btn-continue', '#btn-second-reading',
   '#btn-fullscreen', '.title-warning', '.title-version',
   '.ms-banner span', '.ms-banner small', '.ms-badge', '.ms-desc', '#ms-confirm', '#ms-back',
+  '#btn-house3d',
   '.endday-formhdr', '.endday-stamp',
   '.home-title', '#btn-gowork', '#btn-bulletin', '#btn-endshift', '#btn-map', '#btn-map-close',
   '#btn-approve', '#btn-reject', '#btn-detain',

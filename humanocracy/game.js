@@ -441,7 +441,7 @@ function quotaForDay(d) {
 
 /* ---------- CONFIGURAÇÕES (persistem entre partidas, fora do save) ---------- */
 const SETTINGS_KEY = 'humanocracy_settings_v1';
-let SETTINGS = { archivist: false, lang: 'pt', achievements: [], textLarge: false };
+let SETTINGS = { archivist: false, lang: 'pt', achievements: [], textLarge: false, house3d: true };
 function loadSettings() {
   try {
     const j = localStorage.getItem(SETTINGS_KEY);
@@ -3853,6 +3853,13 @@ function renderArchivistBtn() {
   $('btn-archivist').classList.toggle('on', SETTINGS.archivist);
 }
 $('btn-archivist').onclick = () => { SETTINGS.archivist = !SETTINGS.archivist; saveSettings(); renderArchivistBtn(); };
+function renderHouse3dBtn() {
+  const b = $('btn-house3d'); if (!b) return;
+  const on = SETTINGS.house3d !== false;
+  b.textContent = (on ? '☑' : '☐') + ' ' + T('CASA EM 3D');
+  b.classList.toggle('on', on);
+}
+$('btn-house3d').onclick = () => { SETTINGS.house3d = SETTINGS.house3d === false; saveSettings(); renderHouse3dBtn(); };
 $('btn-achievements').onclick = showAchievementsModal;
 $('pz-achievements').onclick = showAchievementsModal;
 function renderTextSizeBtn() {
@@ -4012,6 +4019,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   loadSettings();
   applyStaticI18n();
   renderArchivistBtn();
+  renderHouse3dBtn();
   renderLangBtn();
   renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
@@ -4024,7 +4032,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   // direto na casa em primeira pessoa — pra mostrar a exploração sem jogar um
   // turno inteiro. Esperamos o 'load' porque enterHouse() vive em house.js,
   // carregado depois deste arquivo.
-  if (/^#(casa|house)(3d)?$/i.test(location.hash)) {
+  if (/^#(casa|house)(3d|2d)?$/i.test(location.hash)) {
     window.addEventListener('load', () => {
       try { S = freshState(); setRegimeClass(S.day); enterHouse(); } catch (e) { console.warn('demo casa:', e); }
     });
