@@ -4,6 +4,7 @@ import type {
   AutomationEvent,
   Board,
   Card,
+  Charge,
   Client,
   Column,
   LibraryItem,
@@ -25,6 +26,7 @@ interface DataState {
   videos: VideoProject[];
   library: LibraryItem[];
   events: AutomationEvent[];
+  charges: Charge[];
   seeded: boolean;
 
   loadDemo: () => void;
@@ -87,11 +89,16 @@ interface DataState {
   // Automações
   addEvent: (e: Omit<AutomationEvent, 'id' | 'createdAt'>) => void;
   clearEvents: () => void;
+
+  // Cobranças
+  upsertCharges: (list: Charge[]) => void;
+  updateCharge: (id: string, patch: Partial<Charge>) => void;
+  removeCharge: (id: string) => void;
 }
 
 const empty = {
   clients: [], boards: [], transactions: [], posts: [],
-  videos: [], library: [], events: [],
+  videos: [], library: [], events: [], charges: [],
 };
 
 export const useData = create<DataState>()(
@@ -367,6 +374,19 @@ export const useData = create<DataState>()(
           events: [{ ...e, id: uid('ev'), createdAt: Date.now() }, ...s.events].slice(0, 200),
         })),
       clearEvents: () => set({ events: [] }),
+
+      // ---------- Cobranças ----------
+      upsertCharges: (list) =>
+        set((s) => ({
+          charges: [
+            ...s.charges,
+            ...list.filter((n) => !s.charges.some((c) => c.clientId === n.clientId && c.month === n.month)),
+          ],
+        })),
+      updateCharge: (id, patch) =>
+        set((s) => ({ charges: s.charges.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      removeCharge: (id) =>
+        set((s) => ({ charges: s.charges.filter((c) => c.id !== id) })),
     }),
     { name: 'origem.data' },
   ),

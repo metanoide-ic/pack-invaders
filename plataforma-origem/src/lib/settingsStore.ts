@@ -20,6 +20,14 @@ export interface Settings {
 
   // --- Notificações ---
   notifyEnabled: boolean;
+
+  // --- Cobrança ---
+  /** Chave Pix da agência (vai na mensagem de cobrança). */
+  pixKey: string;
+  /** WhatsApp do contador, para pedidos de nota fiscal. */
+  contadorWhatsapp: string;
+  /** Gera as cobranças do mês automaticamente ao abrir o Financeiro. */
+  autoBilling: boolean;
 }
 
 interface SettingsState extends Settings {
@@ -39,6 +47,9 @@ const defaults: Settings = {
   whatsappGroup: '',
   sendOnApprovalStage: true,
   notifyEnabled: false,
+  pixKey: '',
+  contadorWhatsapp: '',
+  autoBilling: true,
 };
 
 export const useSettings = create<SettingsState>()(

@@ -36,6 +36,30 @@ export interface Client {
   whatsappGroup?: string;
   /** Perfil do Instagram do cliente (para publicação). */
   instagram?: string;
+  /** WhatsApp pessoal do responsável pelo pagamento (cobrança). */
+  billingWhatsapp?: string;
+  /** Forma de cobrança combinada com o cliente. */
+  billingMethod?: BillingMethod;
+  /** Dia do mês do vencimento (1 a 28). */
+  billingDay?: number;
+  createdAt: number;
+}
+
+// -------------------------- Cobrança ----------------------------------
+export type BillingMethod = 'pix' | 'boleto' | 'nf';
+export type ChargeStatus = 'pendente' | 'enviada' | 'paga';
+
+export interface Charge {
+  id: ID;
+  clientId: ID;
+  /** Competência no formato YYYY-MM. */
+  month: string;
+  amount: number;
+  method: BillingMethod;
+  dueDate: string; // ISO
+  status: ChargeStatus;
+  sentAt?: number;
+  paidAt?: number;
   createdAt: number;
 }
 
@@ -207,4 +231,5 @@ export interface WorkspaceData {
   videos: VideoProject[];
   library: LibraryItem[];
   events: AutomationEvent[];
+  charges: Charge[];
 }

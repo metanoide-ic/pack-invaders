@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, MessageCircle, Instagram, Bell, ShieldCheck, Check, Info } from 'lucide-react';
+import { Sparkles, MessageCircle, Instagram, Bell, ShieldCheck, Check, Info, Receipt } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Field, Input, Textarea, Avatar, Badge } from '@/components/ui';
 import { useSettings } from '@/lib/settingsStore';
@@ -121,6 +121,29 @@ export default function Integrations() {
             Publicar automaticamente quando aprovado
           </label>
           <Note>Postar no Instagram exige a Graph API oficial (conta Profissional + Meta). O webhook entrega os dados prontos para seu fluxo publicar — do jeito seguro, sem risco às contas.</Note>
+        </Section>
+
+        {/* Cobrança */}
+        <Section icon={<Receipt size={20} />} title="Cobrança" tint="#34d399"
+          desc="Cobra os clientes no WhatsApp e pede a nota fiscal ao contador.">
+          <div className="grid grid-cols-2 gap-4">
+            <Field label="Chave Pix da agência" hint="Vai na mensagem de cobrança por Pix.">
+              <Input value={s.pixKey} onChange={(e) => s.update({ pixKey: e.target.value })} placeholder="CNPJ, e-mail ou chave aleatória" />
+            </Field>
+            <Field label="WhatsApp do contador" hint="Recebe os pedidos de nota fiscal.">
+              <Input value={s.contadorWhatsapp} onChange={(e) => s.update({ contadorWhatsapp: e.target.value })} placeholder="55249..." inputMode="tel" />
+            </Field>
+          </div>
+          <label className="flex items-center gap-2.5 text-sm text-white/70">
+            <input type="checkbox" checked={s.autoBilling} onChange={(e) => s.update({ autoBilling: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
+            Gerar as cobranças do mês automaticamente ao abrir o Financeiro
+          </label>
+          <Note>
+            O envio usa o mesmo webhook do WhatsApp acima, com o WhatsApp de cobrança
+            definido em cada cliente. Confirmação automática de pagamento exige um
+            gateway (Asaas, Cora, Efí): o webhook de retorno dele pode dar baixa via
+            fluxo no Make. Sem gateway, use o botão "Marcar paga".
+          </Note>
         </Section>
 
         {/* Notificações */}

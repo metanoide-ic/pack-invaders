@@ -8,7 +8,7 @@ function log(channel: EventChannel, title: string, status: EventStatus, detail?:
 }
 
 /** Dispara um webhook (fire-and-forget). Retorna se foi entregue de fato. */
-async function fireWebhook(url: string, payload: unknown): Promise<boolean> {
+export async function fireWebhook(url: string, payload: unknown): Promise<boolean> {
   try {
     await fetch(url, {
       method: 'POST',

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -18,17 +18,44 @@ import {
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Modal, Select, Badge, EmptyState, Stat } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
+import { useSettings } from '@/lib/settingsStore';
 import { useClientMap, monthKey } from '@/lib/hooks';
+import {
+  generateMonthlyCharges, sendCharge, sendAllPending, markChargePaid,
+  isOverdue, currentMonthKey, monthLabel, METHOD_LABEL,
+} from '@/lib/billing';
 import { money, todayISO, cn } from '@/lib/utils';
 import type { TxType, TxStatus } from '@/lib/types';
 
 const CATEGORIES = ['Contrato', 'Projeto', 'Mídia', 'Software', 'Terceiros', 'Equipe', 'Outros'];
 
 export default function Finance() {
-  const { transactions, clients, addTx, updateTx, removeTx } = useData();
+  const { transactions, clients, charges, addTx, updateTx, removeTx, removeCharge } = useData();
+  const autoBilling = useSettings((s) => s.autoBilling);
   const clientMap = useClientMap();
   const [open, setOpen] = useState(false);
   const [filter, setFilter] = useState<'todos' | TxType>('todos');
+  const [billingMsg, setBillingMsg] = useState('');
+
+  // Gera as cobranças do mês automaticamente (idempotente).
+  useEffect(() => {
+    if (autoBilling) generateMonthlyCharges();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const month = currentMonthKey();
+  const monthCharges = useMemo(
+    () =>
+      charges
+        .filter((c) => c.month === month)
+        .sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
+    [charges, month],
+  );
+  const chargeTotals = useMemo(() => {
+    const pagas = monthCharges.filter((c) => c.status === 'paga');
+    const atrasadas = monthCharges.filter(isOverdue);
+    return { pagas: pagas.length, atrasadas: atrasadas.length, total: monthCharges.length };
+  }, [monthCharges]);
 
   const [form, setForm] = useState({
     type: 'receita' as TxType,
@@ -105,6 +132,86 @@ export default function Finance() {
         <Stat label="Despesas (pagas)" value={money(totals.despesa)} valueColor="#f87171" />
         <Stat label="Saldo" value={money(totals.saldo)} dot="#7c5cff" />
         <Stat label="A receber" value={money(totals.pendente)} dot="#f59e0b" />
+      </div>
+
+      {/* Cobranças do mês */}
+      <div className="mt-6 card overflow-hidden">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-4">
+          <div>
+            <h3 className="font-semibold text-white">Cobranças de {monthLabel(month)}</h3>
+            <p className="mt-0.5 text-xs text-white/45">
+              {chargeTotals.total} cobrança(s) · {chargeTotals.pagas} paga(s)
+              {chargeTotals.atrasadas > 0 && <span className="text-red-300"> · {chargeTotals.atrasadas} atrasada(s)</span>}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" onClick={() => {
+              const n = generateMonthlyCharges();
+              setBillingMsg(n ? `${n} cobrança(s) nova(s) gerada(s).` : 'Todas as cobranças do mês já estão geradas.');
+              setTimeout(() => setBillingMsg(''), 4000);
+            }}>Gerar cobranças</Button>
+            <Button size="sm" onClick={async () => {
+              const n = await sendAllPending();
+              setBillingMsg(n ? `${n} cobrança(s) enviada(s) no WhatsApp.` : 'Nenhuma cobrança pendente para enviar.');
+              setTimeout(() => setBillingMsg(''), 4000);
+            }}>Cobrar todos</Button>
+          </div>
+        </div>
+        {billingMsg && <p className="border-b border-line bg-white/[0.02] px-5 py-2.5 text-sm text-white/70">{billingMsg}</p>}
+        {monthCharges.length === 0 ? (
+          <p className="px-5 py-8 text-center text-sm text-white/40">
+            Nenhuma cobrança este mês. Defina o fee mensal dos clientes para gerar automaticamente.
+          </p>
+        ) : (
+          <table className="w-full text-sm">
+            <tbody className="divide-y divide-line">
+              {monthCharges.map((ch) => {
+                const client = clientMap[ch.clientId];
+                const overdue = isOverdue(ch);
+                return (
+                  <tr key={ch.id} className="group">
+                    <td className="px-5 py-3">
+                      <div className="flex items-center gap-2.5">
+                        <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: client?.color ?? '#666' }} />
+                        <span className="font-medium text-white">{client?.name ?? 'Cliente removido'}</span>
+                        {client?.billingWhatsapp && <span className="hidden text-xs text-white/35 sm:inline">{client.billingWhatsapp}</span>}
+                      </div>
+                    </td>
+                    <td className="px-3 py-3 text-xs text-white/60">{METHOD_LABEL[ch.method]}</td>
+                    <td className="px-3 py-3 text-xs text-white/60">
+                      vence {new Date(ch.dueDate + 'T00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' })}
+                    </td>
+                    <td className="px-3 py-3 text-right font-semibold tabular-nums text-white">{money(ch.amount)}</td>
+                    <td className="px-3 py-3">
+                      {ch.status === 'paga'
+                        ? <Badge color="#34d399">Paga</Badge>
+                        : overdue
+                          ? <Badge color="#f87171">Atrasada</Badge>
+                          : ch.status === 'enviada'
+                            ? <Badge color="#60a5fa">Enviada</Badge>
+                            : <Badge>Pendente</Badge>}
+                    </td>
+                    <td className="px-5 py-3">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {ch.status !== 'paga' && (
+                          <>
+                            <Button size="sm" variant="soft" onClick={() => { void sendCharge(ch.id); }}>
+                              {ch.status === 'enviada' ? 'Reenviar' : 'Cobrar'}
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => markChargePaid(ch.id)}>Marcar paga</Button>
+                          </>
+                        )}
+                        <button onClick={() => removeCharge(ch.id)} className="grid h-8 w-8 place-items-center rounded-lg text-white/30 opacity-0 transition hover:text-red-300 group-hover:opacity-100">
+                          <Trash2 size={15} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
       </div>
 
       <div className="mt-6 card p-5">

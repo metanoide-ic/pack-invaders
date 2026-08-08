@@ -159,5 +159,5 @@ export function seedData(): WorkspaceData {
     },
   ];
 
-  return { clients, boards, transactions, posts, videos, library, events: [] };
+  return { clients, boards, transactions, posts, videos, library, events: [], charges: [] };
 }

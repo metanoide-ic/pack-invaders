@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Users, Trash2, Pencil, CalendarRange, MessageCircle, Instagram, AtSign } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
-import { Button, Field, Input, Textarea, Modal, EmptyState } from '@/components/ui';
+import { Button, Field, Input, Textarea, Modal, Select, EmptyState } from '@/components/ui';
 import { PlanModal } from '@/components/PlanModal';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
-import type { Client, WeeklyPlan } from '@/lib/types';
+import type { BillingMethod, Client, WeeklyPlan } from '@/lib/types';
 
 const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
@@ -15,6 +15,7 @@ const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
 const blank = {
   name: '', contact: '', instagram: '', monthlyFee: '', color: AVATAR_COLORS[0],
   briefing: '', city: '', whatsappGroup: '',
+  billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5',
   weekly: {} as WeeklyPlan,
 };
 
@@ -35,6 +36,8 @@ export default function Clients() {
       name: c.name, contact: c.contact ?? '', instagram: c.instagram ?? '',
       monthlyFee: c.monthlyFee?.toString() ?? '', color: c.color,
       briefing: c.briefing ?? '', city: c.city ?? '', whatsappGroup: c.whatsappGroup ?? '',
+      billingWhatsapp: c.billingWhatsapp ?? '', billingMethod: c.billingMethod ?? 'pix',
+      billingDay: (c.billingDay ?? 5).toString(),
       weekly: { ...(c.weeklyPlan ?? {}) },
     });
     setOpen(true);
@@ -59,6 +62,9 @@ export default function Clients() {
       briefing: form.briefing.trim() || undefined,
       city: form.city.trim() || undefined,
       whatsappGroup: form.whatsappGroup.trim() || undefined,
+      billingWhatsapp: form.billingWhatsapp.trim() || undefined,
+      billingMethod: form.billingMethod,
+      billingDay: Math.min(Math.max(parseInt(form.billingDay, 10) || 5, 1), 28),
       weeklyPlan: form.weekly,
     };
     if (editing) updateClient(editing.id, payload);
@@ -126,7 +132,14 @@ export default function Clients() {
                         : <span className="text-xs text-white/30">Sem grupo</span>}
                     </td>
                     {canFinance && (
-                      <td className="px-4 py-3.5 text-xs text-white/70">{c.monthlyFee ? money(c.monthlyFee) : '—'}</td>
+                      <td className="px-4 py-3.5 text-xs">
+                        <span className="text-white/70">{c.monthlyFee ? money(c.monthlyFee) : '—'}</span>
+                        {c.monthlyFee && (
+                          <span className="block text-[11px] text-white/35">
+                            {{ pix: 'Pix', boleto: 'Boleto', nf: 'Nota fiscal' }[c.billingMethod ?? 'pix']} · dia {c.billingDay ?? 5}
+                          </span>
+                        )}
+                      </td>
                     )}
                     <td className="px-4 py-3.5" onClick={(e) => e.stopPropagation()}>
                       <div className="flex items-center justify-end gap-1.5">
@@ -168,7 +181,27 @@ export default function Clients() {
             </Field>
           </div>
           {canFinance && (
-            <Field label="Contato"><Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="E-mail ou telefone" /></Field>
+            <>
+              <Field label="Contato"><Input value={form.contact} onChange={(e) => setForm({ ...form, contact: e.target.value })} placeholder="E-mail ou telefone" /></Field>
+              <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+                <div className="mb-3 text-xs font-medium uppercase tracking-wide text-white/45">Cobrança</div>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Field label="WhatsApp de cobrança" hint="Número de quem paga.">
+                    <Input value={form.billingWhatsapp} onChange={(e) => setForm({ ...form, billingWhatsapp: e.target.value })} placeholder="55249..." inputMode="tel" />
+                  </Field>
+                  <Field label="Forma de pagamento">
+                    <Select value={form.billingMethod} onChange={(e) => setForm({ ...form, billingMethod: e.target.value as BillingMethod })}>
+                      <option value="pix">Pix</option>
+                      <option value="boleto">Boleto</option>
+                      <option value="nf">Nota fiscal</option>
+                    </Select>
+                  </Field>
+                  <Field label="Dia do vencimento">
+                    <Input value={form.billingDay} onChange={(e) => setForm({ ...form, billingDay: e.target.value })} placeholder="5" inputMode="numeric" />
+                  </Field>
+                </div>
+              </div>
+            </>
           )}
           <Field label="Geral do cliente" hint="O que a empresa é, o que precisa ser feito, estilo e tom. A IA usa isso para gerar temas e copies.">
             <Textarea value={form.briefing} onChange={(e) => setForm({ ...form, briefing: e.target.value })} className="min-h-[96px]"
