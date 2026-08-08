@@ -338,7 +338,7 @@ function paintBust(ctx, f, opts) {
       ctx.fillStyle = rgb(darken(utrim, 0.2)); ctx.beginPath(); ctx.arc(60, 106, 3.4, 0, 6.29); ctx.fill();
       ctx.strokeStyle = 'rgba(244,228,150,.7)'; ctx.lineWidth = 0.4; ctx.stroke();
       ctx.fillStyle = 'rgba(246,236,196,.95)';
-      ctx.font = '4.4px serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '4.4px "VT323", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText(f.seal, 60, 106.3);
     }
   } else {
@@ -1472,26 +1472,52 @@ function paintBust(ctx, f, opts) {
     ctx.fillStyle = 'rgba(30,26,20,.9)'; ctx.fillRect(0, hy + 3, 100, 12);
     ctx.fillStyle = 'rgba(200,190,160,.10)'; ctx.fillRect(0, hy + 3, 100, 1.2);            // aresta iluminada da bancada
     ctx.fillStyle = 'rgba(0,0,0,.3)'; ctx.fillRect(0, hy + 1.5, 100, 2);                    // sombra de contato sob as mãos
+    const coatC = opts.coat || (f.coat && !f.uniform ? (Array.isArray(f.coat) ? rgb(f.coat) : f.coat) : 'rgb(45,46,38)');
     const hand = (hx, s) => {
-      // BRAÇO: desce do OMBRO (largo e alto), não do meio do peito. Antebraço
-      // até a mão apoiada. Duas partes com uma leve dobra no cotovelo.
-      ctx.strokeStyle = foreCol; ctx.lineWidth = 8.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      // MANGA DO CASACO: sai do ombro e afunila até o punho — braço VESTIDO,
+      // não um tubo de pele. Com sombra na lateral e punho (cuff) na base.
+      ctx.fillStyle = coatC;
       ctx.beginPath();
-      ctx.moveTo(hx - s * 15, 96);           // ombro (bem afastado do centro)
-      ctx.lineTo(hx - s * 5, 111);            // cotovelo
-      ctx.lineTo(hx, hy - 3);                 // pulso, sobre a mão
-      ctx.stroke();
-      // dorso da mão pousado na beira
-      ctx.fillStyle = skC; ctx.beginPath(); ctx.ellipse(hx, hy, 8, 4.6, 0, 0, 6.29); ctx.fill();
-      // dedos curtos curvando sobre a aresta
-      ctx.strokeStyle = skC; ctx.lineWidth = 2.8; ctx.lineCap = 'round';
-      for (let i = -2; i <= 2; i++) { const fx = hx + i * 2.9; ctx.beginPath(); ctx.moveTo(fx, hy + 0.5); ctx.lineTo(fx, hy + 4.5); ctx.stroke(); }
-      // polegar de lado
-      ctx.beginPath(); ctx.moveTo(hx + s * 7, hy - 1); ctx.lineTo(hx + s * 4.5, hy + 2.5); ctx.stroke();
-      // vincos entre os dedos + realce no dorso
+      ctx.moveTo(hx - s * 17, 93);                                     // ombro
+      ctx.quadraticCurveTo(hx - s * 14, 106, hx - s * 5, hy - 7);      // lado de fora
+      ctx.lineTo(hx + s * 4.6, hy - 7);
+      ctx.quadraticCurveTo(hx - s * 1, 104, hx - s * 9, 92);           // lado de dentro
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.24)';                               // sombra na lateral da manga
+      ctx.beginPath();
+      ctx.moveTo(hx + s * 4.6, hy - 7);
+      ctx.quadraticCurveTo(hx - s * 1, 104, hx - s * 9, 92);
+      ctx.lineTo(hx - s * 6.5, 92);
+      ctx.quadraticCurveTo(hx + s * 1, 104, hx + s * 2, hy - 7);
+      ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(hx - 5.6, hy - 9.4, 11.2, 2.6);  // PUNHO da manga
+      ctx.fillStyle = 'rgba(236,240,246,.08)'; ctx.fillRect(hx - 5.6, hy - 9.4, 11.2, 1);
+      // PULSO de pele entre punho e mão
+      ctx.fillStyle = skC; ctx.fillRect(hx - 4, hy - 7, 8, 4);
+      // DORSO da mão pousado na beira
+      ctx.fillStyle = skC;
+      ctx.beginPath();
+      ctx.moveTo(hx - 7, hy - 3.5); ctx.quadraticCurveTo(hx - 8, hy + 1, hx - 6.5, hy + 1.6);
+      ctx.lineTo(hx + 6.5, hy + 1.6); ctx.quadraticCurveTo(hx + 8, hy + 1, hx + 7, hy - 3.5);
+      ctx.quadraticCurveTo(hx, hy - 5.5, hx - 7, hy - 3.5); ctx.closePath(); ctx.fill();
+      // 4 DEDOS curvando sobre a aresta (afilando pro mindinho)
+      ctx.lineCap = 'round';
+      for (let i = 0; i < 4; i++) {
+        const fx = hx + (i - 1.5) * 3.1 * s;
+        const fw = 2.5 - Math.abs(i - 1.2) * 0.25;                     // indicador mais grosso
+        ctx.strokeStyle = skC; ctx.lineWidth = fw;
+        ctx.beginPath(); ctx.moveTo(fx, hy); ctx.quadraticCurveTo(fx + s * .3, hy + 3.4, fx + s * .6, hy + 5.4 - i * .35); ctx.stroke();
+      }
+      // POLEGAR: pra dentro, mais grosso e curto
+      ctx.strokeStyle = skC; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(hx - s * 6.5, hy - 2); ctx.quadraticCurveTo(hx - s * 8, hy + 1.5, hx - s * 5.5, hy + 3.4); ctx.stroke();
+      // NÓS dos dedos (3 pontinhos de luz) + vincos + sombra sob a mão
+      ctx.fillStyle = rgb(lighten(SK, 0.16), 0.55);
+      for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.arc(hx + (i - 1) * 3.1 * s, hy - 2.4, 0.9, 0, 6.29); ctx.fill(); }
       ctx.strokeStyle = shC; ctx.lineWidth = 0.6;
-      for (let i = -2; i < 2; i++) { const fx = hx + i * 2.9 + 1.45; ctx.beginPath(); ctx.moveTo(fx, hy + 0.8); ctx.lineTo(fx, hy + 4); ctx.stroke(); }
-      ctx.strokeStyle = rgb(lighten(SK, 0.12), 0.5); ctx.lineWidth = 1.4; ctx.beginPath(); ctx.moveTo(hx - 3.5, hy - 2); ctx.lineTo(hx + 3.5, hy - 2); ctx.stroke();
+      for (let i = 0; i < 3; i++) { const fx = hx + (i - 1) * 3.1 * s + s * 1.55; ctx.beginPath(); ctx.moveTo(fx, hy + .4); ctx.lineTo(fx + s * .4, hy + 4); ctx.stroke(); }
+      ctx.strokeStyle = rgb(darken(SH, 0.2), 0.4); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hx - 6, hy + 1.8); ctx.lineTo(hx + 6, hy + 1.8); ctx.stroke();
     };
     hand(30, 1); hand(70, -1);
     ctx.restore();
@@ -2352,7 +2378,7 @@ function paintBodyNude(ctx, f, phys) {
     ctx.fillRect(cx - B.headR * 0.86, headCy - B.headR * 0.5, B.headR * 1.72, B.headR * 0.28);
     ctx.fillStyle = rgb(darken(SH, 0.3), 0.7); ctx.beginPath(); ctx.ellipse(cx - B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.ellipse(cx + B.headR * 0.3, headCy + 1, 1.1, 0.8, 0, 0, 6.29); ctx.fill();
     // aviso clínico
-    ctx.fillStyle = 'rgba(120,255,200,.9)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+    ctx.fillStyle = 'rgba(120,255,200,.9)'; ctx.font = '4px "VT323", monospace'; ctx.textAlign = 'left';
     ctx.fillText('EXAME FISICO', 6, 9); ctx.fillText('IDADE ' + Math.round(B.age) + ' — MENOR', 6, 14);
     ctx.fillStyle = 'rgba(255,220,120,.95)'; ctx.textAlign = 'center';
     ctx.fillText('MENOR DE IDADE', cx, footY + 8); ctx.fillText('EXAME CORPORAL DISPENSADO', cx, footY + 13);
@@ -2510,7 +2536,7 @@ function paintBodyNude(ctx, f, phys) {
   }
 
   // ---- LEITURAS CLÍNICAS ----
-  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px "VT323", monospace'; ctx.textAlign = 'left';
   ctx.fillText('EXAME FISICO', 6, 9);
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 14);
   const biotermo = B.girth > 0.5 ? 'PESADO' : (B.girth > 0.28 ? 'CHEIO' : ['MAGRO', 'MEDIO', 'FORTE'][B.build]);
@@ -2611,7 +2637,7 @@ function paintBodyScan(ctx, f, phys) {
     ctx.beginPath(); ctx.moveTo(cx - B.shoulder, shoulderY + 2); ctx.lineTo(cx + B.shoulder, shoulderY + 2); ctx.stroke();
     ctx.setLineDash([]);
   }
-  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px monospace'; ctx.textAlign = 'left';
+  ctx.fillStyle = 'rgba(120,255,200,.85)'; ctx.font = '4px "VT323", monospace'; ctx.textAlign = 'left';
   ctx.fillText(cold ? 'TERM ..,. C' : 'TERM 36,6 C', 6, 10);
   const biotermo = B.girth > 0.5 ? 'PESADO' : (B.girth > 0.28 ? 'CHEIO' : ['MAGRO', 'MEDIO', 'FORTE'][B.build]);
   const altura = B.height > 0.4 ? ' ALTO' : (B.height < -0.4 ? ' BAIXO' : '');
@@ -2884,8 +2910,17 @@ function stopActorBlink() {
 (function uiTextures() {
   try {
     const doc = document.documentElement;
-    const set = (k, cv) => doc.style.setProperty(k, `url(${cv.toDataURL()})`);
     const mk2 = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+    // PIXELA a textura: reduz e amplia sem suavização — blocos visíveis de
+    // ~3px, casando com a fonte/bustos pixelados (nada de grão fino "liso")
+    const pixelate = (cv, f) => {
+      const s = mk2(Math.max(2, cv.width / f | 0), Math.max(2, cv.height / f | 0));
+      s.getContext('2d').drawImage(cv, 0, 0, s.width, s.height);
+      const o = mk2(cv.width, cv.height), g = o.getContext('2d');
+      g.imageSmoothingEnabled = false; g.drawImage(s, 0, 0, o.width, o.height);
+      return o;
+    };
+    const set = (k, cv, f) => doc.style.setProperty(k, `url(${pixelate(cv, f || 3).toDataURL()})`);
     const r = faceRng(515151);
 
     // papel de repartição: fibras, pontinhos, manchas de caneca

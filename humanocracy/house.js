@@ -341,7 +341,7 @@ function buildSprites() {
     x.fillStyle = '#3a3c33'; x.fillRect(10, 84, 76, 8);   // bandeja
     x.fillStyle = '#c9c2ab'; x.fillRect(38, 86, 20, 4);   // seus documentos, esperando
     x.fillStyle = '#2c2115'; x.fillRect(0, 10, 96, 10);
-    x.fillStyle = '#8a734d'; x.font = 'bold 8px monospace'; x.fillText('POSTO 7', 30, 18);
+    x.fillStyle = '#8a734d'; x.font = 'bold 8px "VT323", monospace'; x.fillText('POSTO 7', 30, 18);
   });
   SPR.lamp = mk(32, 64, (x) => {
     x.fillStyle = '#1d1a15'; x.fillRect(14, 0, 4, 34);

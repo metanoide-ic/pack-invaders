@@ -338,7 +338,7 @@ function drawTitleCrest(lidAmt) {
   // fita/banner embaixo
   x.fillStyle = 'rgba(140,47,36,.85)'; x.beginPath();
   x.moveTo(C - 52 * u, C + 72 * u); x.lineTo(C + 52 * u, C + 72 * u); x.lineTo(C + 44 * u, C + 86 * u); x.lineTo(C - 44 * u, C + 86 * u); x.closePath(); x.fill();
-  x.fillStyle = GOLDL; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold ${11 * u}px "Oswald", sans-serif`;
+  x.fillStyle = GOLDL; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold ${11 * u}px "VT323", "Oswald", monospace`;
   x.fillText('★  M · T · F  ★', C, C + 79 * u);
 }
 const TS = { raf: null, flakes: [], t: 0 };
@@ -1147,7 +1147,7 @@ function drawBagIcon(kind, contra) {
     case 'ticket': {
       x.save(); x.translate(32, 34); x.rotate(-0.1);
       R(-18, -8, 36, 16, '#d8cba0'); x.strokeStyle = INK; x.setLineDash([2, 2]); line(6, -8, 6, 8, INK, 1); x.setLineDash([]);
-      x.fillStyle = INK; x.font = 'bold 6px monospace'; x.fillText('SÓ IDA', -15, 2); x.restore(); break;
+      x.fillStyle = INK; x.font = 'bold 6px "VT323", monospace'; x.fillText('SÓ IDA', -15, 2); x.restore(); break;
     }
     case 'map': {
       x.save(); x.translate(32, 33);
@@ -2561,8 +2561,8 @@ function drawWorldMap() {
     if (banned) { ctx.save(); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.clip(); ctx.strokeStyle = 'rgba(200,60,50,.5)'; ctx.lineWidth = 2; for (let d = -rp * 2; d < rp * 2; d += 6) { ctx.beginPath(); ctx.moveTo(cxp + d, cyp - rp); ctx.lineTo(cxp + d + rp * 2, cyp + rp); ctx.stroke(); } ctx.restore(); }
     // selo + nome
     ctx.fillStyle = '#f0e8d0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `${Math.round(rp * 0.7)}px serif`; ctx.fillText(c.seal, cxp, cyp - rp * 0.12);
-    ctx.font = `bold ${Math.round(rp * 0.32)}px "Oswald", sans-serif`;
+    ctx.font = `${Math.round(rp * 0.7)}px 'VT323', monospace`; ctx.fillText(c.seal, cxp, cyp - rp * 0.12);
+    ctx.font = `bold ${Math.round(rp * 0.32)}px "VT323", "Oswald", monospace`;
     ctx.fillStyle = '#e8ddc4'; ctx.fillText(c.name.toUpperCase(), cxp, cyp + rp * 0.5);
     si++;
   });
@@ -2570,13 +2570,13 @@ function drawWorldMap() {
   const om = MAP_LAYOUT.osteria; const [px7, py7] = P(om.x + om.r + 1.5, om.y);
   ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.arc(px7, py7, 3.5, 0, 6.29); ctx.fill();
   ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px7, py7, 6, 0, 6.29); ctx.stroke();
-  ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "Oswald", sans-serif'; ctx.textAlign = 'left'; ctx.fillText('POSTO 7', px7 + 9, py7);
+  ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", "Oswald", monospace'; ctx.textAlign = 'left'; ctx.fillText('POSTO 7', px7 + 9, py7);
   // rosa dos ventos
   const [rx, ry] = P(93, 92);
   ctx.strokeStyle = 'rgba(200,190,160,.4)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
   ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px serif'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
+  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
   // envelhecimento: manchas de papel, grão, vinheta queimada nas bordas
   const ar = makeRng(4242);
   for (let i = 0; i < 5; i++) { const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 70; const st = ctx.createRadialGradient(sx, sy, sr * 0.3, sx, sy, sr); st.addColorStop(0, 'rgba(90,70,30,0)'); st.addColorStop(1, `rgba(70,52,24,${0.05 + ar() * 0.05})`); ctx.fillStyle = st; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill(); }
@@ -2891,7 +2891,7 @@ function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -â
   x.beginPath(); x.moveTo(15, 14); x.lineTo(15, 58); x.stroke();
   x.fillStyle = '#e2ddcc'; x.beginPath(); x.arc(15, 60, 4, 0, 6.29); x.fill();
   x.fillStyle = '#d8cdb0'; x.fillRect(4, 26, 22, 9);                         // etiqueta
-  x.fillStyle = '#332b1f'; x.font = '8px monospace'; x.textAlign = 'center'; x.fillText('K-7', 15, 33);
+  x.fillStyle = '#332b1f'; x.font = '8px "VT323", monospace'; x.textAlign = 'center'; x.fillText('K-7', 15, 33);
 }
 function instReturn(el, home, delay) {
   el.classList.add('busy');
@@ -3165,10 +3165,10 @@ function drawStamp(kind) {
   roundRectPath(ctx, 6, 6, W - 12, H - 12, 9); ctx.lineWidth = 4.5; ctx.stroke();
   roundRectPath(ctx, 12, 12, W - 24, H - 24, 6); ctx.lineWidth = 1.4; ctx.stroke();
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-  ctx.font = 'bold 12px "Oswald", sans-serif';
+  ctx.font = 'bold 12px "VT323", "Oswald", monospace';
   ctx.fillText('★  ' + T('MINISTÉRIO DE TRIAGEM') + '  ★', W / 2, 25);
-  ctx.font = 'bold 33px "Oswald", sans-serif'; ctx.fillText(label, W / 2, 53);
-  ctx.font = '10px "Oswald", sans-serif';
+  ctx.font = 'bold 33px "VT323", "Oswald", monospace'; ctx.fillText(label, W / 2, 53);
+  ctx.font = '10px "VT323", "Oswald", monospace';
   ctx.fillText(COUNTRIES.osteria.seal + '  POSTO 7 · Nº 77-B', W / 2, 76);
   // ---- tinta irregular ----
   ctx.globalCompositeOperation = 'destination-out';

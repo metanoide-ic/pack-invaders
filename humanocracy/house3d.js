@@ -16,7 +16,7 @@ function gl3Init() {
   const host = $('house-canvas');
   const cv = document.createElement('canvas');
   cv.id = 'house-gl';
-  cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%';
+  cv.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated';
   host.parentElement.insertBefore(cv, host);        // o canvas 2D fica POR CIMA (transparente) só pro input
 
   const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: false });
@@ -69,28 +69,141 @@ function gl3Init() {
   ceil.rotation.x = Math.PI / 2; ceil.position.set(CUR.w / 2, 1, CUR.h / 2);
   scene.add(ceil);
 
-  // ---- MÓVEIS: as mesmas caixas do raycaster, agora malhas com face de topo ----
-  // O tampo ganha textura de verdade: o topo do próprio sprite esticado, com
-  // um tinte da cor do móvel — nada de face chapada.
-  const topTexOf = (spr, tint) => {
-    const c = document.createElement('canvas'); c.width = 32; c.height = 32;
-    const g = c.getContext('2d');
-    g.imageSmoothingEnabled = false;
-    g.drawImage(spr, 0, 0, spr.width, Math.max(2, spr.height * .18), 0, 0, 32, 32);
-    g.globalAlpha = .45; g.fillStyle = tint; g.fillRect(0, 0, 32, 32);       // rebaixa pro tom do móvel
-    g.globalAlpha = .16; g.fillStyle = '#000';                               // sujeira/veio no tampo
-    for (let i = 0; i < 26; i++) g.fillRect(Math.random() * 32 | 0, Math.random() * 32 | 0, 3, 1);
-    return new THREE.MeshLambertMaterial({ map: tex(c) });
-  };
-  for (const b of BOXES) {
-    const spr = SPR[b.spr]; if (!spr) continue;
-    const w = b.x1 - b.x0, d = b.y1 - b.y0;
-    const side = lamMat(spr);
-    const top = topTexOf(spr, b.top);
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w, b.h, d), [side, side, top, top, side, side]);
-    m.position.set((b.x0 + b.x1) / 2, b.h / 2, (b.y0 + b.y1) / 2);
-    scene.add(m);
+  // ---- MÓVEIS COMPOSTOS: cada peça é um conjunto de volumes de verdade ----
+  // (cama = estrado+colchão+travesseiro+cabeceira; sofá = assento+encosto+
+  // braços+almofadas; etc.) Cores chapadas de paleta — nada de sprite esticado
+  // colado na lateral, que ficava horrível.
+  const solid = (c) => { let m = matCache.get('c' + c); if (!m) { m = new THREE.MeshLambertMaterial({ color: new THREE.Color(c) }); matCache.set('c' + c, m); } return m; };
+  const P = (g, w, h, d, x, y, z, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), solid(c)); m.position.set(x, y, z); g.add(m); return m; };
+  const CY = (g, r, h, x, y, z, c, seg) => { const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg || 8), solid(c)); m.position.set(x, y, z); g.add(m); return m; };
+  const LEGS4 = (g, w, d, lh, c, r) => { const ox = w / 2 - (r || .025), oz = d / 2 - (r || .025); for (const [sx, sz] of [[-1, -1], [1, -1], [-1, 1], [1, 1]]) P(g, (r || .025) * 2, lh, (r || .025) * 2, sx * ox, lh / 2, sz * oz, c); };
+  const WOOD = '#4a3423', WOODD = '#33241a', CLOTH = '#c9c2ab';
+  function buildFurn(b) {
+    const w = b.x1 - b.x0, d = b.y1 - b.y0, h = b.h;
+    const g = new THREE.Group();
+    const hs = ((b.y0 + b.y1) / 2) < 6 ? -1 : 1;                 // lado da parede (cabeceiras)
+    switch (b.spr) {
+      case 'bedT': case 'bedD': case 'bedQ': {
+        const mat = b.spr === 'bedT' ? '#54677a' : b.spr === 'bedD' ? '#5b5443' : '#6d5a45';
+        P(g, w, h * .42, d, 0, h * .21, 0, WOOD);                              // estrado
+        P(g, w * .96, h * .34, d * .92, 0, h * .58, 0, mat);                   // colchão
+        P(g, w * .96, h * .1, d * .92, 0, h * .78, hs * d * .1, darken3(mat)); // dobra da colcha
+        P(g, w * .5, h * .22, d * .2, 0, h * .82, hs * d * .32, CLOTH);        // travesseiro
+        P(g, w, h * 1.6, .05, 0, h * .8, hs * (d / 2 - .02), WOODD);           // cabeceira
+        LEGS4(g, w, d, h * .12, WOODD);
+        break;
+      }
+      case 'sofa': {
+        P(g, w, h * .42, d * .82, 0, h * .3, -d * .07, '#4c4030');             // assento
+        P(g, w * .46, h * .14, d * .74, -w * .24, h * .58, -d * .07, '#564936'); // almofadas
+        P(g, w * .46, h * .14, d * .74, w * .24, h * .58, -d * .07, '#514432');
+        P(g, w, h * .95, d * .2, 0, h * .55, d / 2 - d * .1, '#463b2c');       // encosto
+        P(g, w * .1, h * .8, d, -w / 2 + w * .05, h * .45, 0, '#463b2c');      // braços
+        P(g, w * .1, h * .8, d, w / 2 - w * .05, h * .45, 0, '#463b2c');
+        LEGS4(g, w, d, h * .1, WOODD);
+        break;
+      }
+      case 'tv': {
+        P(g, w, h * .68, d, 0, h * .5, 0, '#1a1c16');                          // gabinete
+        P(g, w * .68, h * .44, .02, -w * .05, h * .52, -d / 2 - .005, '#2c3a34'); // tela (pro oeste)
+        CY(g, .014, h * .07, w * .38, h * .5, -d / 2 - .01, '#7a8a80', 6);     // knobs
+        CY(g, .014, h * .07, w * .38, h * .36, -d / 2 - .01, '#5a6a60', 6);
+        P(g, w * .3, h * .16, d * .3, 0, h * .92, 0, '#2a271d');               // antena/base
+        LEGS4(g, w, d, h * .14, WOODD);
+        break;
+      }
+      case 'stove': {
+        P(g, w, h * .9, d, 0, h * .45 + h * .1, 0, '#33302a');                 // corpo esmaltado
+        P(g, w * .56, h * .42, .02, 0, h * .48, d / 2 + .005, '#221f19');      // porta do forno
+        P(g, w * .4, h * .05, .025, 0, h * .58, d / 2 + .012, '#3a352b');      // puxador
+        CY(g, .016, .02, -w * .22, h * .92, d / 2 - .02, '#8a734d', 6);        // botões em cima
+        CY(g, .016, .02, w * .22, h * .92, d / 2 - .02, '#8a734d', 6);
+        P(g, w * .8, .015, d * .8, 0, h + .008, 0, '#1c1a15');                 // chapa
+        CY(g, w * .18, .012, -w * .2, h + .02, -d * .15, '#141210', 10);       // bocas
+        CY(g, w * .18, .012, w * .2, h + .02, d * .15, '#141210', 10);
+        break;
+      }
+      case 'clock': {
+        P(g, w, h, d, 0, h / 2, 0, '#2c2115');                                 // caixa
+        P(g, w * .8, h * .94, d * .5, 0, h / 2, d * .18, '#241b10');           // corpo recuado
+        CY(g, w * .34, .015, 0, h * .82, d / 2, CLOTH, 12);                    // mostrador
+        CY(g, w * .05, .018, 0, h * .82, d / 2 + .005, '#241f16', 6);         // eixo
+        P(g, .02, h * .4, .012, 0, h * .38, d / 2 - .01, '#8a734d');          // pêndulo
+        CY(g, .035, .015, 0, h * .2, d / 2 - .008, '#8a734d', 8);
+        break;
+      }
+      case 'nightstand': {
+        P(g, w, h * .82, d, 0, h * .48, 0, WOOD);
+        P(g, w * .8, h * .3, .015, 0, h * .58, d / 2 + .005, WOODD);           // gaveta
+        CY(g, .012, .015, 0, h * .58, d / 2 + .015, '#c9a34a', 6);            // puxador
+        LEGS4(g, w, d, h * .14, WOODD);
+        break;
+      }
+      case 'dresser': {
+        P(g, w, h * .9, d, 0, h * .5, 0, WOOD);
+        for (let i = 0; i < 3; i++) {
+          P(g, w * .84, h * .2, .015, 0, h * (.28 + i * .26), d / 2 + .005, WOODD);
+          CY(g, .012, .015, 0, h * (.28 + i * .26), d / 2 + .015, '#c9a34a', 6);
+        }
+        LEGS4(g, w, d, h * .08, WOODD);
+        break;
+      }
+      case 'chair': {
+        P(g, w, h * .1, d, 0, h * .5, 0, WOOD);                                // assento
+        P(g, w, h * .55, .04, 0, h * .82, hs * (d / 2 - .02), '#3d3327');      // encosto
+        LEGS4(g, w, d, h * .48, WOODD, .02);
+        break;
+      }
+      case 'shelf': {
+        P(g, .04, h, d, -w / 2 + .02, h / 2, 0, WOOD);                         // laterais
+        P(g, .04, h, d, w / 2 - .02, h / 2, 0, WOOD);
+        P(g, w, .03, d, 0, h - .015, 0, WOOD);                                 // topo
+        const BOOKS = ['#5a2f2a', '#3a3a5a', '#2a4a2a', '#5a4a1f', '#4a4a2f'];
+        for (let s2 = 0; s2 < 3; s2++) {
+          const sy = h * (.22 + s2 * .27);
+          P(g, w - .06, .025, d * .9, 0, sy, 0, WOODD);                        // prateleira
+          let bx = -w / 2 + .07;
+          for (let k = 0; k < 5 && bx < w / 2 - .1; k++) {                     // livros
+            const bw = .035 + ((s2 * 7 + k * 3) % 3) * .012, bh = .1 + ((s2 + k) % 3) * .02;
+            P(g, bw, bh, d * .6, bx + bw / 2, sy + bh / 2 + .012, 0, BOOKS[(s2 * 2 + k) % BOOKS.length]);
+            bx += bw + .012;
+          }
+        }
+        break;
+      }
+      case 'crate': {
+        P(g, w, h, d, 0, h / 2, 0, '#4a3d2b');
+        P(g, w + .015, .02, d + .015, 0, h * .96, 0, '#5c4c36');               // borda do tampo
+        P(g, w + .01, .018, d * .16, 0, h * .5, 0, '#3b3122');                 // ripas
+        P(g, w * .16, .018, d + .01, 0, h * .5, 0, '#3b3122');
+        break;
+      }
+      case 'counter': {
+        P(g, w, h * .86, d, 0, h * .43, 0, '#494439');                         // corpo
+        P(g, w + .03, .03, d + .03, 0, h * .9, 0, '#5a554a');                  // tampo
+        P(g, w * .4, .02, d * .5, -w * .18, h * .93, 0, '#3a362e');            // cuba
+        CY(g, .01, .09, w * .04, h * .97, 0, '#8f9296', 6);                    // torneira
+        P(g, w * .4, h * .3, .015, w * .22, h * .5, d / 2 + .005, '#3a362e');  // portinha
+        break;
+      }
+      case 'lowtable': {
+        P(g, w, .035, d, 0, h * .9, 0, WOOD);                                  // tampo
+        P(g, w * .8, .02, d * .7, 0, h * .38, 0, WOODD);                       // prateleira baixa
+        LEGS4(g, w, d, h * .86, WOODD, .02);
+        break;
+      }
+      default:
+        P(g, w, h, d, 0, h / 2, 0, b.top || '#3a2f22');
+    }
+    g.position.set((b.x0 + b.x1) / 2, 0, (b.y0 + b.y1) / 2);
+    return g;
   }
+  function darken3(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const f2 = (v) => Math.max(0, (v * .72) | 0);
+    return '#' + ((f2(n >> 16) << 16) | (f2((n >> 8) & 255) << 8) | f2(n & 255)).toString(16).padStart(6, '0');
+  }
+  for (const b of BOXES) scene.add(buildFurn(b));
 
   // ---- GENTE e decoração: planos com o sprite, billboard só no eixo Y ----
   const bills = [];
@@ -145,7 +258,10 @@ function renderHouse3() {
     const cv2 = $('house-canvas');
     const c2d = cv2.getContext('2d');
     c2d.clearRect(0, 0, cv2.width, cv2.height);      // o 2D vira só a camada de input
-    const w = cv2.clientWidth || 640, h = cv2.clientHeight || 400;
+    // PIXELADO: renderiza em ~40% e amplia sem suavização — o 3D ganha o
+    // mesmo grão do resto do jogo (nada de render liso "de engine")
+    const RES = .42;
+    const w = Math.max(2, ((cv2.clientWidth || 640) * RES) | 0), h = Math.max(2, ((cv2.clientHeight || 400) * RES) | 0);
     if (GL.cv.width !== w || GL.cv.height !== h) {
       GL.renderer.setSize(w, h, false);
       GL.cam.aspect = w / h; GL.cam.updateProjectionMatrix();
