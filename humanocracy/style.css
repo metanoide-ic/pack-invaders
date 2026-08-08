@@ -112,6 +112,30 @@ button:active:not(:disabled) {
 }
 button:disabled { opacity:.35; cursor:not-allowed; }
 
+/* DESGASTE DE REPARTIÇÃO: nenhuma tecla saiu igual da fábrica. Inclinações
+   minúsculas alternadas + verniz gasto em cantos diferentes por tecla —
+   a assimetria proposital que arte gerada não tem (tudo nela é limpo igual). */
+button { position:relative; overflow:hidden; }
+button::after {
+  content:''; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+  background:
+    radial-gradient(ellipse 26px 7px at 82% 6%, rgba(238,240,230,.075), transparent 70%),
+    radial-gradient(ellipse 20px 6px at 10% 94%, rgba(0,0,0,.24), transparent 70%);
+}
+button:nth-of-type(2n)::after {
+  background:
+    radial-gradient(ellipse 20px 6px at 14% 8%, rgba(238,240,230,.06), transparent 70%),
+    radial-gradient(ellipse 26px 8px at 86% 90%, rgba(0,0,0,.2), transparent 70%);
+}
+button:nth-of-type(3n)::after {
+  background:
+    radial-gradient(ellipse 16px 5px at 48% 4%, rgba(238,240,230,.05), transparent 70%),
+    radial-gradient(ellipse 30px 9px at 70% 96%, rgba(0,0,0,.22), transparent 70%),
+    radial-gradient(circle 3px at 92% 22%, rgba(0,0,0,.3), transparent 80%);
+}
+button:nth-of-type(3n) { transform: rotate(.35deg); }
+button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
+
 /* superfícies com textura procedural (faces.js gera --tex-* em runtime) */
 .tex-panel { background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel); }
 .tex-paper { background-image: linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper); }
@@ -154,7 +178,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .tc-body::before { left:26px; } .tc-body::after { right:26px; }
 
 .tc-letterhead { display:flex; align-items:center; justify-content:center; gap:12px; margin:2px 0 4px; }
-.title-crest { width:60px; height:60px; display:block; flex:none; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.6)); }
+.title-crest { width:60px; height:60px; display:block; flex:none; image-rendering:pixelated; filter: drop-shadow(1px 2px 0 rgba(0,0,0,.6)); }
 .tc-lh-txt { text-align:left; }
 .tc-ministry { font-family:var(--font-display); font-weight:600; color:var(--accent2); letter-spacing:2px; font-size:11.5px; text-transform:uppercase; }
 .tc-republic { font-family:var(--font-display); font-weight:500; color:#a79a76; letter-spacing:4px; font-size:10px; text-transform:uppercase; margin-top:2px; }
@@ -236,7 +260,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   clip-path: polygon(38% 0, 62% 0, 100% 100%, 0 100%); }
 .ms-slot.sel .ms-spot { opacity:1; }
 .ms-figure { position:relative; z-index:1; height:200px; display:flex; align-items:flex-end; justify-content:center; }
-.ms-emblem { width:190px; height:190px; image-rendering:auto; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.5)); }
+.ms-emblem { width:190px; height:190px; image-rendering:pixelated; filter: drop-shadow(2px 4px 0 rgba(0,0,0,.5)); }
 .ms-stamp-sel {
   position:absolute; top:8px; right:14px; transform: rotate(-12deg); opacity:0; transition:opacity .15s;
   border:2px solid rgba(176,52,40,.9); color:rgba(176,52,40,.95); border-radius:3px;
@@ -356,6 +380,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .np-cut {
   float:right; width:132px; height:auto; margin:2px 0 5px 9px;
   border:1px solid #221e16; box-shadow:2px 2px 0 rgba(34,30,22,.15);
+  image-rendering:pixelated;
 }
 .np-cut-cap { font-size:8.5px; text-align:center; color:#655a46; font-style:italic; }
 .np-minor {
@@ -401,7 +426,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
 .home-budget .row { display:flex; justify-content:space-between; }
 .home-shop { display:flex; flex-wrap:wrap; gap:8px; }
 .home-shop button { font-size:12px; }
-.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:auto; }
+.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:pixelated; }
 .btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
 
 /* ============ TURNO ============ */
@@ -486,7 +511,7 @@ button:disabled { opacity:.35; cursor:not-allowed; }
   background:linear-gradient(148deg, rgba(255,255,255,.06) 0%, rgba(255,255,255,.015) 12%, transparent 30%);
   mix-blend-mode:screen;
 }
-#queue-canvas { position:absolute; inset:0; width:100%; height:100%; }
+#queue-canvas { position:absolute; inset:0; width:100%; height:100%; image-rendering:pixelated; }
 #queue-toast {
   display:none; position:absolute; left:50%; top:8px; transform:translateX(-50%);
   z-index:3; max-width:90%; padding:5px 10px; background:#000d; color:#b5ae9c;
@@ -625,7 +650,7 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 .desk-props {
   position:absolute; inset:0; width:100%; height:100%;
-  pointer-events:none; z-index:0; opacity:.92;
+  pointer-events:none; z-index:0; opacity:.92; image-rendering:pixelated;
 }
 .desk-hint {
   position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
@@ -1211,7 +1236,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 /* ============ MAPA / CARTA DE FRONTEIRAS ============ */
 .map-panel { width:min(1000px, 96vw); }
 .map-grid { display:grid; grid-template-columns: 1fr 300px; min-height:0; }
-#map-canvas { width:100%; height:auto; display:block; background:#0c0f0a; cursor:pointer; image-rendering:auto; }
+#map-canvas { width:100%; height:auto; display:block; background:#0c0f0a; cursor:pointer; image-rendering:pixelated; }
 .map-info {
   padding:14px 16px; overflow-y:auto; border-left:1px solid var(--ink-dim);
   background-color:var(--panel);

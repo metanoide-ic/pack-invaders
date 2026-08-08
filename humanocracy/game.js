@@ -278,6 +278,24 @@ function stopMusic() {
 /* ---------- NEVE DO TÍTULO ---------- */
 /* BRASÃO DO MINISTÉRIO — olho que tudo vê, raios, coroa de louros, anel de
    estrelas. O emblema de um Estado de vigilância. Desenhado, não emoji. */
+/* Passe final anti-serrilhado-de-vetor: decima o canvas pronto pra uma grade
+   de pixels única (nearest, sem smoothing) e re-amplia. É o que separa
+   "pixel art" de "vetor borrado" — nada de mixels de resoluções misturadas. */
+function pixelSnap(cv, block) {
+  block = block || 2;
+  const w = Math.max(1, Math.round(cv.width / block)), h = Math.max(1, Math.round(cv.height / block));
+  const t = pixelSnap._t || (pixelSnap._t = document.createElement('canvas'));
+  if (t.width !== w || t.height !== h) { t.width = w; t.height = h; }
+  const tx = t.getContext('2d');
+  tx.imageSmoothingEnabled = false;
+  tx.clearRect(0, 0, w, h);
+  tx.drawImage(cv, 0, 0, w, h);
+  const x = cv.getContext('2d');
+  x.save(); x.setTransform(1, 0, 0, 1, 0, 0); x.imageSmoothingEnabled = false;
+  x.clearRect(0, 0, cv.width, cv.height);
+  x.drawImage(t, 0, 0, w, h, 0, 0, cv.width, cv.height);
+  x.restore();
+}
 function drawTitleCrest(lidAmt) {
   lidAmt = lidAmt || 0;
   const cv = $('title-crest'); if (!cv) return;
@@ -340,6 +358,7 @@ function drawTitleCrest(lidAmt) {
   x.moveTo(C - 52 * u, C + 72 * u); x.lineTo(C + 52 * u, C + 72 * u); x.lineTo(C + 44 * u, C + 86 * u); x.lineTo(C - 44 * u, C + 86 * u); x.closePath(); x.fill();
   x.fillStyle = GOLDL; x.textAlign = 'center'; x.textBaseline = 'middle'; x.font = `bold ${11 * u}px "VT323", "Oswald", monospace`;
   x.fillText('★  M · T · F  ★', C, C + 79 * u);
+  pixelSnap(cv, 5);   // o brasão aparece a 60px: grade de 60 casa 1:1 com o CSS
 }
 const TS = { raf: null, flakes: [], t: 0 };
 function startTitleSnow() {
@@ -408,6 +427,7 @@ function startTitleSnow() {
       if (s.y > cv.height) { s.y = -3; s.x = Math.random() * cv.width; }
       ctx.fillRect(s.x, s.y, s.r, s.r);
     });
+    pixelSnap(cv, 2);
     TS.raf = requestAnimationFrame(loop);
   };
   TS.raf = requestAnimationFrame(loop);
@@ -1930,6 +1950,7 @@ function drawQueue(ctx, w, h) {
   vig.addColorStop(0, 'rgba(0,0,0,0)');
   vig.addColorStop(1, 'rgba(4,5,3,.55)');
   ctx.fillStyle = vig; ctx.fillRect(0, 0, w, h);
+  pixelSnap(ctx.canvas, 2);
 }
 function queueAdvance() {
   // o primeiro da fila caminha até o guichê; os outros avançam; chega gente atrás
@@ -2395,7 +2416,7 @@ function drawDeskProps() {
       x.strokeStyle = 'rgba(40,32,20,.22)'; x.lineWidth = 0.8;
       for (let l = 0; l < 6; l++) { x.beginPath(); x.moveTo(-52, -32 + l * 11); x.lineTo(52, -32 + l * 11); x.stroke(); }
       x.save(); x.rotate(-0.16); x.strokeStyle = 'rgba(140,40,34,.5)'; x.lineWidth = 2; x.strokeRect(8, 8, 40, 20);
-      x.fillStyle = 'rgba(140,40,34,.4)'; x.font = 'bold 9px Oswald, sans-serif'; x.textAlign = 'center'; x.fillText('ARQUIVO', 28, 21); x.restore();
+      x.fillStyle = 'rgba(140,40,34,.4)'; x.font = 'bold 10px "VT323", monospace'; x.textAlign = 'center'; x.fillText('ARQUIVO', 28, 21); x.restore();
     }
     x.restore();
   }
@@ -2418,6 +2439,7 @@ function drawDeskProps() {
   x.strokeStyle = '#e8e2d4'; x.lineWidth = 3; x.lineCap = 'round'; x.beginPath(); x.moveTo(asX + 6, asY - 1); x.lineTo(asX + 22, asY - 5); x.stroke(); // cigarro
   x.strokeStyle = '#c9552e'; x.lineWidth = 3; x.beginPath(); x.moveTo(asX + 5, asY - 0.7); x.lineTo(asX + 8, asY - 1.4); x.stroke(); // brasa
   x.strokeStyle = 'rgba(210,210,205,.12)'; x.lineWidth = 2; x.beginPath(); x.moveTo(asX + 7, asY - 2); x.bezierCurveTo(asX + 2, asY - 20, asX + 14, asY - 30, asX + 6, asY - 48); x.stroke(); // fumaça
+  pixelSnap(cv, 2 * dpr);
 }
 
 function layDocs(cz) {
@@ -2583,6 +2605,7 @@ function drawWorldMap() {
   for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${0.02 + ar() * 0.04})`; ctx.fillRect(ar() * W, ar() * H, 1, 1); }
   const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(18,10,4,.6)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  pixelSnap(cv, 2);
 }
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -3179,6 +3202,7 @@ function drawStamp(kind) {
   const gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, 40); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, gy, 40, 0, 6.29); ctx.fill();
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  pixelSnap(cv, 2);
   return cv;
 }
 function stampDocs(decision) {
@@ -3427,6 +3451,7 @@ function drawNewspaperCut(cv, day) {
   // chão hachurado
   x.lineWidth = 1; for (let y = gy + 2; y < H - 3; y += 3) { x.globalAlpha = 0.25 + rng() * 0.2; x.beginPath(); for (let sx = 3; sx < W - 3; sx += 4) { x.moveTo(sx, y); x.lineTo(sx + 2, y); } x.stroke(); }
   x.globalAlpha = 1;
+  pixelSnap(cv, 2);
 }
 const NP_MOTTOS = { republica: 'ORDEM · SERENIDADE · RIGOR', mehrvolk: 'ORDEM · SEGURANÇA · PUREZA', conselho: 'TRABALHO · UNIDADE · VIGILÂNCIA', colapso: 'ÓRGÃO SEM DONO' };
 function npEsc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
@@ -3608,6 +3633,7 @@ function drawHomeScene() {
     const bg = ctx.createRadialGradient(bulbX, 50, 2, bulbX, 50, warm ? 16 : 12);
     bg.addColorStop(0, glow + (0.14 * fl) + ')'); bg.addColorStop(1, glow + '0)');
     ctx.fillStyle = bg; ctx.beginPath(); ctx.arc(bulbX, 50, 16, 0, 6.29); ctx.fill();
+    pixelSnap(cv, 2);
     _homeAnim = requestAnimationFrame(frame);
   };
   frame();
@@ -3741,6 +3767,7 @@ function drawModeEmblem(cv, mode) {
     x.ellipse(C - rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.ellipse(C + rr, iy, rr, rr * 0.72, 0, 0, 6.29); x.stroke();
     x.restore();
   }
+  pixelSnap(cv, 2);
 }
 function msRender() {
   document.querySelectorAll('#screen-modeselect .ms-slot').forEach((el, i) => el.classList.toggle('sel', i === MS.idx));
@@ -3814,6 +3841,7 @@ function drawTitleMenuEmblem(cv, act) {
     x.fillStyle = GOLD; x.beginPath(); x.arc(0, 0, 6, 0, 6.29); x.fill();
   }
   x.restore();
+  pixelSnap(cv, 2);
 }
 function tmSlots() { return [...document.querySelectorAll('#title-slots .title-slot')].filter(el => el.style.display !== 'none'); }
 function tmRender() { const s = tmSlots(); s.forEach((el, i) => el.classList.toggle('sel', i === TM.idx)); }
