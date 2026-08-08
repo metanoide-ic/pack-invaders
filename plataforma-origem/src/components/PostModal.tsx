@@ -7,7 +7,7 @@ import { useAuth } from '@/lib/authStore';
 import { useSettings } from '@/lib/settingsStore';
 import { STAGE_META, STAGE_ORDER, PLATFORMS } from '@/lib/labels';
 import { generateCopy } from '@/lib/ai';
-import { sendForApproval, onApproved, onRejected, onPostStageChange } from '@/lib/automations';
+import { sendForApproval, onApproved, onRejected, onPostStageChange, markPublishedManual } from '@/lib/automations';
 import { cn } from '@/lib/utils';
 import type { PostPlatform } from '@/lib/types';
 
@@ -100,10 +100,13 @@ export function PostModal({ postId, onClose }: { postId: string; onClose: () => 
             {!rejecting ? (
               <div className="flex flex-wrap gap-2">
                 <Button onClick={() => { void onApproved(postId); }}>
-                  <Check size={16} /> Aprovado → publicar
+                  <Check size={16} /> Aprovado, publicar
                 </Button>
                 <Button variant="outline" onClick={() => setRejecting(true)}>
-                  <X size={16} /> Não gostei → alteração
+                  <X size={16} /> Pediu alteração
+                </Button>
+                <Button variant="outline" onClick={() => markPublishedManual(postId)} title="O cliente não respondeu e a equipe publicou por conta própria">
+                  Publicamos manualmente
                 </Button>
                 <Button variant="ghost" onClick={() => { void sendForApproval(postId); }}>
                   <Send size={15} /> Reenviar ao grupo

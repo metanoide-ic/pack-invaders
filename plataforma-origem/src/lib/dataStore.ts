@@ -37,6 +37,8 @@ interface DataState {
 
   // Quadros
   addBoard: (b: { name: string; description?: string; clientId?: string }) => Board;
+  /** Retorna o quadro do cliente, criando um se ainda não existir. */
+  ensureClientBoard: (clientId: string, name: string) => Board;
   removeBoard: (id: string) => void;
   renameBoard: (id: string, name: string) => void;
   addColumn: (boardId: string, title: string) => void;
@@ -94,7 +96,7 @@ const empty = {
 
 export const useData = create<DataState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...empty,
       seeded: false,
 
@@ -128,6 +130,11 @@ export const useData = create<DataState>()(
         };
         set((s) => ({ boards: [...s.boards, board] }));
         return board;
+      },
+      ensureClientBoard: (clientId, name) => {
+        const existing = get().boards.find((b) => b.clientId === clientId);
+        if (existing) return existing;
+        return get().addBoard({ name, clientId });
       },
       removeBoard: (id) =>
         set((s) => ({ boards: s.boards.filter((b) => b.id !== id) })),

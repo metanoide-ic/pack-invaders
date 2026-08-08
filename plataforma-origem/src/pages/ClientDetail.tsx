@@ -58,6 +58,7 @@ export default function ClientDetail() {
           <div className="min-w-0 flex-1">
             <h1 className="text-2xl font-semibold text-white">{client.name}</h1>
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/50">
+              {client.instagram && <span>@{client.instagram}</span>}
               {client.contact && <span>{client.contact}</span>}
               {client.city && <span className="inline-flex items-center gap-1"><MapPin size={13} /> {client.city}</span>}
               {client.whatsappGroup && <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {client.whatsappGroup}</span>}

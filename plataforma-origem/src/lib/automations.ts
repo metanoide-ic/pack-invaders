@@ -54,6 +54,7 @@ export async function sendForApproval(postId: string): Promise<void> {
     titulo: post.title,
     plataforma: post.platform,
     cliente: client?.name || null,
+    instagram: client?.instagram || null,
     mensagem: message,
     copy,
     mediaUrl: post.mediaUrl || null,
@@ -87,6 +88,7 @@ export async function publishPost(postId: string): Promise<void> {
       postId,
       plataforma: post.platform,
       cliente: client?.name || null,
+      instagram: client?.instagram || null,
       legenda: caption,
       mediaUrl: post.mediaUrl || null,
     };
@@ -115,6 +117,17 @@ export async function onApproved(postId: string): Promise<void> {
     useData.getState().updatePost(postId, { stage: 'agendado' });
     log('sistema', 'Marcado como Agendado (publicação automática desativada).', 'ok', undefined, postId);
   }
+}
+
+/**
+ * Postagem manual: o cliente não respondeu e a equipe publicou por conta
+ * própria. Marca como publicado sem disparar os webhooks.
+ */
+export function markPublishedManual(postId: string): void {
+  const store = useData.getState();
+  store.updatePost(postId, { stage: 'publicado', published: true });
+  log('sistema', 'Marcado como publicado (postagem manual)', 'ok',
+    'A equipe publicou direto no perfil do cliente, sem passar pela automação.', postId);
 }
 
 /**

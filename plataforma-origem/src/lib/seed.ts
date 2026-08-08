@@ -9,10 +9,16 @@ function daysFromNow(n: number): string {
 
 export function seedData(): WorkspaceData {
   const clients: Client[] = [
-    { id: uid('cli'), name: 'Studio Aurora', color: '#ec4899', contact: 'contato@studioaurora.com', monthlyFee: 4800, createdAt: Date.now() },
-    { id: uid('cli'), name: 'Café Matriz', color: '#f59e0b', contact: '@cafematriz', monthlyFee: 2600, createdAt: Date.now() },
-    { id: uid('cli'), name: 'Vértice Imóveis', color: '#06b6d4', contact: 'marketing@vertice.com', monthlyFee: 6900, createdAt: Date.now() },
-    { id: uid('cli'), name: 'Academia Pulse', color: '#10b981', contact: '@pulsefit', monthlyFee: 3200, createdAt: Date.now() },
+    { id: uid('cli'), name: 'Studio Aurora', color: '#ec4899', contact: 'contato@studioaurora.com', instagram: 'studioaurora', monthlyFee: 4800, createdAt: Date.now() },
+    {
+      id: uid('cli'), name: 'Café Matriz', color: '#f59e0b', instagram: 'cafematriz', monthlyFee: 2600,
+      city: 'Volta Redonda', whatsappGroup: 'Café Matriz x Origem',
+      briefing: 'Cafeteria artesanal no centro, com grãos próprios e brunch aos fins de semana. Público 25 a 45 anos. Tom acolhedor e direto, valoriza o preparo e o ambiente.',
+      weeklyPlan: { 1: ['Vídeo'], 3: ['Post'], 5: ['Carrossel'] },
+      createdAt: Date.now(),
+    },
+    { id: uid('cli'), name: 'Vértice Imóveis', color: '#06b6d4', contact: 'marketing@vertice.com', instagram: 'verticeimoveis', monthlyFee: 6900, createdAt: Date.now() },
+    { id: uid('cli'), name: 'Academia Pulse', color: '#10b981', instagram: 'pulsefit', monthlyFee: 3200, createdAt: Date.now() },
   ];
 
   const [aurora, cafe, vertice] = clients;

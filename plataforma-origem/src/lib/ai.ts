@@ -59,6 +59,55 @@ function buildPrompt(post: Post, client?: Client, brandVoice?: string): string {
 }
 
 /**
+ * Melhora os temas do planejamento mensal com a IA configurada.
+ * Recebe os slots (data + formato) e devolve um tema por slot, no mesmo
+ * tamanho e ordem. Sem IA configurada (ou em erro), mantém os temas locais.
+ */
+export async function generatePlanIdeas(
+  client: Client,
+  slots: Array<{ date: string; type: string; holiday?: string; title: string }>,
+): Promise<string[]> {
+  const s = useSettings.getState();
+  const fallback = slots.map((x) => x.title);
+  if (s.aiMode !== 'api' || !s.aiKey || !s.aiEndpoint) return fallback;
+  try {
+    const listado = slots
+      .map((x, i) => `${i + 1}. ${x.date} — formato: ${x.type}${x.holiday ? ` — data comemorativa: ${x.holiday}` : ''}`)
+      .join('\n');
+    const prompt =
+      `Você planeja conteúdo de redes sociais para o cliente "${client.name}" da agência Origem.\n` +
+      (client.briefing ? `Sobre o cliente: ${client.briefing}\n` : '') +
+      (client.city ? `Cidade: ${client.city}.\n` : '') +
+      `Crie um tema curto e específico (até 12 palavras, sem emojis, sem aspas) para cada item:\n${listado}\n` +
+      `Responda somente com uma lista numerada, um tema por linha, na mesma ordem.`;
+    const res = await fetch(s.aiEndpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${s.aiKey}` },
+      body: JSON.stringify({
+        model: s.aiModel,
+        messages: [
+          { role: 'system', content: 'Você é um estrategista de conteúdo sênior. Seja específico e direto.' },
+          { role: 'user', content: prompt },
+        ],
+        temperature: 0.7,
+        max_tokens: 1200,
+      }),
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const text: string = data?.choices?.[0]?.message?.content ?? '';
+    const lines = text
+      .split('\n')
+      .map((l: string) => l.replace(/^\s*\d+[.)-]\s*/, '').trim())
+      .filter(Boolean);
+    if (lines.length < slots.length) throw new Error('resposta incompleta');
+    return slots.map((x, i) => `${x.type}: ${lines[i]}`);
+  } catch {
+    return fallback;
+  }
+}
+
+/**
  * Gera a copy do post. Usa a IA configurada (endpoint compatível com OpenAI)
  * quando disponível; caso contrário, usa o gerador local grátis.
  */

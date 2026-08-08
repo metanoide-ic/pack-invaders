@@ -34,6 +34,8 @@ export interface Client {
   weeklyPlan?: WeeklyPlan;
   /** ID/nome do grupo de WhatsApp deste cliente. */
   whatsappGroup?: string;
+  /** Perfil do Instagram do cliente (para publicação). */
+  instagram?: string;
   createdAt: number;
 }
 
