@@ -5,7 +5,7 @@ const path = require('path');
 const ROOT = path.resolve(__dirname, '..');
 const R = f => fs.readFileSync(path.join(ROOT, f), 'utf8');
 
-const SCRIPTS = ['data.js', 'i18n.js', 'faces.js', 'game.js', 'photochar.js', 'house.js'];
+const SCRIPTS = ['three.min.js', 'data.js', 'i18n.js', 'faces.js', 'game.js', 'photochar.js', 'house.js', 'house3d.js'];
 const css = R('style.css').replace("@import url('data:,');\n", '');
 let body = R('index.html').split('<body>')[1].split('</body>')[0];
 SCRIPTS.forEach(s => { body = body.replace(`<script src="${s}"></script>`, ''); });

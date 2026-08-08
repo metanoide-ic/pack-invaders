@@ -1223,6 +1223,7 @@ function enterMirror48() {
 }
 
 function enterHouse() {
+  HOUSE.gl = window.gl3Wanted ? gl3Wanted() : false;
   setRegimeClass(S.day);
   buildSprites();
   buildTextures();
@@ -1431,6 +1432,7 @@ function houseLoop(ts) {
 }
 
 function renderHouse() {
+  if (HOUSE.gl && window.renderHouse3) { renderHouse3(); return; }   // modo 3D experimental (#casa3d)
   const cv = $('house-canvas');
   if (cv.width !== FP.W) { cv.width = FP.W; cv.height = FP.H; }
   const ctx = cv.getContext('2d');
