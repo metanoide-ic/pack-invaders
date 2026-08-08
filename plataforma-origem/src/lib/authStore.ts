@@ -3,13 +3,14 @@ import { persist } from 'zustand/middleware';
 import type { Account } from './types';
 import { hash, pickColor, uid } from './utils';
 
-/** Contas oficiais da equipe Origem (criadas automaticamente). */
-const TEAM: Array<Omit<Account, 'id' | 'passHash' | 'color' | 'createdAt'> & { password: string }> = [
-  { name: 'Daniel Designer', login: 'Daniel Designer', role: 'Designer', canFinance: false, admin: false, password: 'Criar0001*' },
-  { name: 'Jr Social Media', login: 'Jr Social Media', role: 'Social Media', canFinance: false, admin: false, password: 'Organizar0002*' },
-  { name: 'Angélica Leal', login: 'Angélica Leal', role: 'Direção', canFinance: true, admin: true, password: 'OriginalSempre1*' },
-  { name: 'João Paulo', login: 'João Paulo', role: 'Direção', canFinance: true, admin: true, password: 'OriginalSempre2*' },
-  { name: 'Luiz Paulo SM', login: 'Luiz Paulo SM', role: 'Social Media', canFinance: false, admin: false, password: 'Organizar0003*' },
+/** Contas oficiais da equipe Origem (criadas automaticamente).
+ *  Somente o hash das senhas fica no código — nunca o texto puro. */
+const TEAM: Array<Omit<Account, 'id' | 'color' | 'createdAt'>> = [
+  { name: 'Daniel Designer', login: 'Daniel Designer', role: 'Designer', canFinance: false, admin: false, passHash: 'ce2bcb07' },
+  { name: 'Jr Social Media', login: 'Jr Social Media', role: 'Social Media', canFinance: false, admin: false, passHash: '2dec3f8e' },
+  { name: 'Angélica Leal', login: 'Angélica Leal', role: 'Direção', canFinance: true, admin: true, passHash: '5949d785' },
+  { name: 'João Paulo', login: 'João Paulo', role: 'Direção', canFinance: true, admin: true, passHash: 'f742817a' },
+  { name: 'Luiz Paulo SM', login: 'Luiz Paulo SM', role: 'Social Media', canFinance: false, admin: false, passHash: 'fee4eeb' },
 ];
 
 function norm(s: string) {
@@ -48,7 +49,7 @@ export const useAuth = create<AuthState>()(
             role: t.role,
             canFinance: t.canFinance,
             admin: t.admin,
-            passHash: hash(t.password),
+            passHash: t.passHash,
             color: pickColor(t.login),
             createdAt: Date.now(),
           });
