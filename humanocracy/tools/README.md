@@ -27,3 +27,17 @@ Os parâmetros do filtro estão em `faces.js`:
 ```bash
 node tools/bundle.js   # regera humanocracy-standalone.html (a partir de humanocracy/)
 ```
+
+## QA de fechamento (`tools/qa/`)
+
+Drivers Playwright que JOGAM o jogo de verdade (precisam de `playwright` +
+Chromium; `HUMANOCRACY_URL` aponta pro build, senão usam o standalone local):
+
+- `story_days.js` — joga 4 dias inteiros da HISTÓRIA (decisões, ferramentas,
+  casa, noite), checa transições, save e pageerrors.
+- `infinite_perfect.js` — MODO INFINITO com jogador perfeito (decide pela
+  mesma régua do decide()): 3 turnos, placar subindo, sem finais indevidos.
+- `lang_ending.js` — troca EN/ES no título e força uma tela de FINAL.
+
+Rodar: `node tools/qa/story_days.js` (etc.). Saída esperada: `errs: 0` e
+`PAGEERRORS: []` em todos.
