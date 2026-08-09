@@ -2977,6 +2977,61 @@ function stopActorBlink() {
     }
     set('--tex-panel', m);
 
+    // PAREDE DE CONCRETO do posto: agregado, juntas de forma horizontais,
+    // furos de tirante em grade, manchas de umidade escorrendo e fissuras.
+    // É a parede atrás da qual você trabalha 10 horas por dia.
+    const cc = mk2(220, 220); const cx2 = cc.getContext('2d');
+    cx2.fillStyle = '#31342c'; cx2.fillRect(0, 0, 220, 220);
+    // placas de tom levemente diferentes (concretagens de dias diferentes)
+    for (let i = 0; i < 6; i++) {
+      const px = r() * 220, py = r() * 220, pr = 40 + r() * 80;
+      const pg = cx2.createRadialGradient(px, py, pr * .2, px, py, pr);
+      const tone = r() < .5 ? 'rgba(60,64,54,.16)' : 'rgba(24,26,20,.18)';
+      pg.addColorStop(0, tone); pg.addColorStop(1, 'rgba(0,0,0,0)');
+      cx2.fillStyle = pg; cx2.fillRect(0, 0, 220, 220);
+    }
+    // agregado: milhares de grãos claros e escuros
+    for (let i = 0; i < 1400; i++) {
+      cx2.fillStyle = r() < .55 ? `rgba(0,0,0,${.05 + r() * .09})` : `rgba(196,200,180,${.03 + r() * .05})`;
+      cx2.fillRect(r() * 220, r() * 220, 1, 1);
+    }
+    for (let i = 0; i < 60; i++) {  // pedrisco maior
+      cx2.fillStyle = r() < .5 ? 'rgba(0,0,0,.12)' : 'rgba(180,184,164,.07)';
+      cx2.fillRect(r() * 220, r() * 220, 2, r() < .3 ? 2 : 1);
+    }
+    // juntas de forma (tábuas horizontais da concretagem)
+    for (const jy of [0, 74, 148]) {
+      cx2.fillStyle = 'rgba(0,0,0,.34)'; cx2.fillRect(0, jy + 72, 220, 2);
+      cx2.fillStyle = 'rgba(210,214,196,.06)'; cx2.fillRect(0, jy + 74, 220, 1);
+      for (let i = 0; i < 8; i++) { // farpas da madeira impressas no concreto
+        const fx = r() * 220; cx2.strokeStyle = 'rgba(0,0,0,.08)'; cx2.lineWidth = .6;
+        cx2.beginPath(); cx2.moveTo(fx, jy + 4 + r() * 62); cx2.lineTo(fx + 8 + r() * 22, jy + 4 + r() * 62); cx2.stroke();
+      }
+    }
+    // furos de tirante em grade (com escorrido de ferrugem/umidade)
+    for (const [tx2, ty2] of [[38, 36], [148, 36], [93, 110], [203, 110], [38, 184], [148, 184]]) {
+      cx2.fillStyle = 'rgba(10,11,8,.8)'; cx2.beginPath(); cx2.arc(tx2, ty2, 4.2, 0, 6.29); cx2.fill();
+      cx2.fillStyle = 'rgba(0,0,0,.9)'; cx2.beginPath(); cx2.arc(tx2, ty2 + .6, 2.6, 0, 6.29); cx2.fill();
+      cx2.fillStyle = 'rgba(210,214,196,.08)'; cx2.fillRect(tx2 - 4, ty2 - 5, 8, 1);
+      const dl = 14 + r() * 40;  // escorrido
+      const dg = cx2.createLinearGradient(0, ty2, 0, ty2 + dl);
+      dg.addColorStop(0, 'rgba(46,36,22,.20)'); dg.addColorStop(1, 'rgba(46,36,22,0)');
+      cx2.fillStyle = dg; cx2.fillRect(tx2 - 2.4, ty2 + 3, 4.8, dl);
+    }
+    // fissuras capilares
+    for (let i = 0; i < 5; i++) {
+      let fx = r() * 220, fy = r() * 220;
+      cx2.strokeStyle = 'rgba(8,9,6,.5)'; cx2.lineWidth = .7;
+      cx2.beginPath(); cx2.moveTo(fx, fy);
+      for (let s2 = 0; s2 < 7; s2++) { fx += (r() - .35) * 16; fy += 6 + r() * 12; cx2.lineTo(fx, fy); }
+      cx2.stroke();
+    }
+    // umidade subindo do rodapé (mancha larga na base do tile)
+    const wg = cx2.createLinearGradient(0, 160, 0, 220);
+    wg.addColorStop(0, 'rgba(14,18,14,0)'); wg.addColorStop(1, 'rgba(14,18,14,.30)');
+    cx2.fillStyle = wg; cx2.fillRect(0, 160, 220, 60);
+    set('--tex-concrete', cc);
+
     // a mesa: tábuas de carvalho envernizado, veio profundo, nós, chanfros,
     // parafusos de repartição e as marcas de anos de caneca e caneca de café
     const w = mk2(240, 160); const wx = w.getContext('2d');

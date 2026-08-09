@@ -1901,12 +1901,68 @@ function drawFig(ctx, f, groundY, lampX) {
     ctx.beginPath(); ctx.arc(x + 3.4, top + 3, 2 + Math.sin(Q.t * 3) * 0.4, 0, 6.29); ctx.fill();
   }
 }
+/* CÉU DO TURNO: das 08h às 18h a luz atrás do muro muda de verdade —
+   alvorada fria, meio-dia de chumbo, poente queimado, noite. Nada de
+   fundo preto chapado. Keyframes lerp por minuto do relógio. */
+const SKY_KEYS = [
+  [480,  [40, 46, 62],  [96, 82, 66],  [168, 124, 78]],   // 08h — alvorada fria
+  [570,  [64, 76, 88],  [104, 106, 98], [146, 146, 128]], // 09h30 — manhã
+  [780,  [86, 94, 102], [118, 122, 116], [148, 150, 140]],// 13h — chumbo
+  [930,  [72, 74, 88],  [106, 96, 82],  [162, 118, 64]],  // 15h30 — tarde
+  [1020, [38, 40, 60],  [84, 58, 46],   [148, 76, 38]],   // 17h — poente
+  [1060, [16, 18, 30],  [34, 32, 42],   [70, 52, 44]],    // 17h40 — crepúsculo
+  [1080, [9, 11, 20],   [16, 18, 28],   [30, 32, 44]],    // 18h — noite
+];
+function skyAt(clk) {
+  const t = Math.max(480, Math.min(1080, clk || 480));
+  let a = SKY_KEYS[0], b = SKY_KEYS[SKY_KEYS.length - 1];
+  for (let i = 0; i < SKY_KEYS.length - 1; i++) {
+    if (t >= SKY_KEYS[i][0] && t <= SKY_KEYS[i + 1][0]) { a = SKY_KEYS[i]; b = SKY_KEYS[i + 1]; break; }
+  }
+  const f = (t - a[0]) / Math.max(1, b[0] - a[0]);
+  const mix = (u, v) => u.map((x, i) => Math.round(x + (v[i] - x) * f));
+  return { top: mix(a[1], b[1]), mid: mix(a[2], b[2]), hor: mix(a[3], b[3]), t };
+}
 function drawQueue(ctx, w, h) {
   const groundY = h - 14;
   ctx.clearRect(0, 0, w, h);
-  // céu / muro
-  ctx.fillStyle = '#0b0d0a'; ctx.fillRect(0, 0, w, h);
-  ctx.fillStyle = '#14161178'; ctx.fillRect(0, h * .35, w, h);
+  // céu conforme a hora do expediente
+  const clk = (typeof shift !== 'undefined' && shift.clock) || 480;
+  const sky = skyAt(clk);
+  const rgbS = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
+  const wallY = h * .35;
+  const sg = ctx.createLinearGradient(0, 0, 0, wallY + 8);
+  sg.addColorStop(0, rgbS(sky.top)); sg.addColorStop(.62, rgbS(sky.mid)); sg.addColorStop(1, rgbS(sky.hor));
+  ctx.fillStyle = sg; ctx.fillRect(0, 0, w, wallY + 8);
+  // sol pálido atrás do nublado (nasce a leste, se põe a oeste; some às 17h)
+  const dayF = (sky.t - 480) / 600;
+  if (sky.t < 1035) {
+    const sunX = w * (.12 + dayF * .74), sunY = wallY - Math.sin(Math.PI * Math.min(1, dayF / .92)) * wallY * .78;
+    const fade = sky.t > 990 ? 1 - (sky.t - 990) / 45 : 1;
+    const sunG = ctx.createRadialGradient(sunX, sunY, 2, sunX, sunY, h * .2);
+    sunG.addColorStop(0, `rgba(236,222,180,${.5 * fade})`); sunG.addColorStop(.3, `rgba(220,200,150,${.16 * fade})`); sunG.addColorStop(1, 'rgba(220,200,150,0)');
+    ctx.fillStyle = sunG; ctx.beginPath(); ctx.arc(sunX, sunY, h * .2, 0, 6.29); ctx.fill();
+    ctx.fillStyle = `rgba(240,230,196,${.55 * fade})`; ctx.beginPath(); ctx.arc(sunX, sunY, 5, 0, 6.29); ctx.fill();
+  }
+  // nuvens baixas de inverno: duas faixas que andam devagar
+  ctx.fillStyle = 'rgba(20,22,20,.16)';
+  for (let i = 0; i < 2; i++) {
+    const cy = wallY * (.3 + i * .34), cx0 = ((Q.t * (3 + i * 2)) % (w + 260)) - 130;
+    ctx.beginPath(); ctx.ellipse(cx0, cy, 130, 9 + i * 4, 0, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx0 - 80, cy + 6, 90, 7, 0, 0, 6.29); ctx.fill();
+  }
+  // estrelas surgem no crepúsculo
+  if (sky.t > 1030) {
+    const sf = Math.min(1, (sky.t - 1030) / 40);
+    for (let i = 0; i < 22; i++) {
+      const sx2 = ((i * 397) % w), sy2 = ((i * 211) % (wallY * .8));
+      ctx.fillStyle = `rgba(220,224,230,${(.2 + (i % 3) * .18) * sf})`;
+      ctx.fillRect(sx2, sy2, 1.4, 1.4);
+    }
+  }
+  // muro: base sólida + um respiro da cor do céu (luz ambiente da hora)
+  ctx.fillStyle = '#121410'; ctx.fillRect(0, wallY, w, h - wallY);
+  ctx.fillStyle = `rgba(${sky.hor[0]},${sky.hor[1]},${sky.hor[2]},.08)`; ctx.fillRect(0, wallY, w, h - wallY);
   // arame no alto do muro
   ctx.strokeStyle = '#1e201a'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, h * .35); ctx.lineTo(w, h * .35); ctx.stroke();
@@ -2997,6 +3053,132 @@ function resetInstruments() {   // novo cidadão: leituras antigas somem
   drawInstThermo(); drawInstBio();
 }
 
+/* ---------- GAVETAS DA MESA (ferramentas arrastáveis) ----------
+   Gaveta A (esquerda): MAPA (arraste até a mesa) e LUPA (até docs/vidro).
+   Gaveta B (direita): FICHA DE EXAME e DOSSIÊ (até o cidadão).
+   Ícones pixel desenhados à mão, blocos inteiros, sem antialias. */
+function drawDrawerMapa() {
+  const cv = $('dt-mapa').querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 64, 50);
+  // três painéis dobrados (zigue-zague): o do meio mais fundo
+  const tones = ['#cfc4a2', '#b9ae8c', '#c8bd9a'];
+  for (let i = 0; i < 3; i++) {
+    x.fillStyle = tones[i]; x.fillRect(3 + i * 20, 5 + (i % 2) * 3, 19, 38);
+    x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(3 + i * 20, 5 + (i % 2) * 3, 2, 38);   // vinco
+  }
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(3, 43, 59, 2);                            // sombra da base
+  // países (manchas verdes/ocres) + mar pontilhado
+  x.fillStyle = '#5a6e50'; x.fillRect(8, 12, 9, 7); x.fillRect(28, 22, 10, 8); x.fillRect(48, 10, 8, 6);
+  x.fillStyle = '#6e6440'; x.fillRect(12, 28, 7, 6); x.fillRect(46, 26, 9, 7);
+  x.fillStyle = 'rgba(40,60,70,.5)';
+  for (let i = 0; i < 30; i++) x.fillRect(5 + ((i * 13) % 56), 7 + ((i * 29) % 34), 1, 1);
+  // rota tracejada vermelha atravessando as dobras
+  x.fillStyle = '#a03826';
+  for (let i = 0; i < 9; i++) x.fillRect(7 + i * 6, 34 - i * 2 - (i > 4 ? 4 : 0), 3, 2);
+  x.fillStyle = '#c9a34a'; x.fillRect(56, 33, 4, 4);                                     // o POSTO 7
+  x.fillStyle = 'rgba(255,246,220,.25)'; x.fillRect(3, 5, 59, 1);                        // fio de luz
+}
+function drawDrawerLupa() {
+  const cv = $('dt-lupa').querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
+  // aro de latão (octógono blocado) com vidro
+  x.fillStyle = '#8a734d';
+  x.fillRect(8, 2, 22, 4); x.fillRect(8, 24, 22, 4); x.fillRect(4, 6, 4, 18); x.fillRect(30, 6, 4, 18);
+  x.fillRect(6, 4, 4, 4); x.fillRect(28, 4, 4, 4); x.fillRect(6, 22, 4, 4); x.fillRect(28, 22, 4, 4);
+  x.fillStyle = '#2c3c42'; x.fillRect(8, 6, 22, 18);                                     // vidro fundo
+  x.fillStyle = '#48606a'; x.fillRect(10, 8, 18, 14);
+  x.fillStyle = 'rgba(220,236,240,.55)'; x.fillRect(11, 9, 6, 3); x.fillRect(11, 13, 3, 5); // brilho
+  x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(24, 18, 4, 4);
+  // haste + cabo de madeira em diagonal
+  x.fillStyle = '#5a4a30'; x.fillRect(28, 24, 6, 6);
+  x.fillStyle = '#4a3423'; x.fillRect(31, 29, 7, 7); x.fillRect(34, 35, 7, 8); x.fillRect(36, 42, 7, 9);
+  x.fillStyle = 'rgba(255,240,210,.16)'; x.fillRect(32, 30, 2, 6); x.fillRect(35, 37, 2, 6); // veio
+  x.fillStyle = '#2c2115'; x.fillRect(37, 50, 6, 3);                                     // ponteira
+}
+function drawDrawerExame() {
+  const cv = $('dt-exame').querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
+  x.fillStyle = '#4a3423'; x.fillRect(3, 4, 40, 50);                                     // prancheta
+  x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(3, 52, 40, 2);
+  x.fillStyle = '#d8cdb0'; x.fillRect(7, 10, 32, 40);                                    // ficha
+  x.fillStyle = '#8a8a7a'; x.fillRect(15, 2, 16, 7);                                     // clipe
+  x.fillStyle = '#b9b9a9'; x.fillRect(17, 4, 12, 3);
+  x.fillStyle = 'rgba(40,32,20,.5)';                                                     // linhas do formulário
+  for (let i = 0; i < 5; i++) x.fillRect(10, 22 + i * 5, 26, 1);
+  x.fillStyle = '#963c2c'; x.fillRect(12, 12, 8, 2); x.fillRect(15, 9, 2, 8);            // cruz clínica
+  x.fillStyle = 'rgba(150,60,44,.5)'; x.fillRect(26, 12, 10, 5);                         // carimbo pequeno
+  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(7, 47, 32, 3);                             // sombra do papel
+}
+function drawDrawerLinha() {
+  const cv = $('dt-linha').querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
+  x.fillStyle = '#3a3428'; x.fillRect(3, 6, 40, 46);                                     // pasta
+  x.fillStyle = '#2c2820'; x.fillRect(3, 6, 40, 8);                                      // lombada
+  x.fillStyle = '#c9b98c'; x.fillRect(8, 2, 12, 6);                                      // etiqueta
+  x.fillStyle = 'rgba(40,32,20,.7)'; x.fillRect(10, 4, 8, 1);
+  // tira de fotos 3x saindo da pasta
+  x.fillStyle = '#d8cdb0'; x.fillRect(10, 18, 26, 30);
+  for (let i = 0; i < 3; i++) {
+    x.fillStyle = '#2a2e30'; x.fillRect(13, 21 + i * 9, 8, 7);                            // foto
+    x.fillStyle = '#8c6b4e'; x.fillRect(15, 23 + i * 9, 4, 3);                            // rosto
+    x.fillStyle = 'rgba(40,32,20,.5)'; x.fillRect(24, 23 + i * 9, 10, 1); x.fillRect(24, 26 + i * 9, 7, 1);
+  }
+  // barbante amarrado
+  x.fillStyle = '#8a734d'; x.fillRect(38, 24, 4, 4);
+  x.fillStyle = 'rgba(138,115,77,.8)'; x.fillRect(30, 26, 8, 1); x.fillRect(40, 28, 1, 10);
+}
+function setupDrawers() {
+  // abre/fecha
+  document.querySelectorAll('.drawer').forEach(d => {
+    const front = d.querySelector('.drawer-front');
+    if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
+    d.classList.add('open');   // começam abertas: ferramenta que não se vê não se usa
+  });
+  // rótulos traduzidos
+  document.querySelectorAll('.dtool-slot .dt-name').forEach(el => { el.textContent = T(el.textContent); });
+  document.querySelectorAll('.dtool, .drawer-front').forEach(el => { if (el.title) el.title = T(el.title); });
+  const acts = {
+    'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
+    'dt-lupa': { target: 'both', needsCitizen: false, fn: () => toggleInspect() },
+    'dt-exame': { target: 'stage', needsCitizen: true, fn: () => openExam() },
+    'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
+  };
+  Object.keys(acts).forEach(id => {
+    const el = $(id); if (!el) return;
+    const a = acts[id];
+    el.addEventListener('pointerdown', (ev) => {
+      if (!shift.running || el.classList.contains('busy')) return;
+      if (a.needsCitizen && !shift.citizen) return;
+      ev.preventDefault();
+      el.setPointerCapture(ev.pointerId);
+      const r = el.getBoundingClientRect();
+      const home = { x: r.left, y: r.top };
+      el.classList.add('dragging');
+      el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.zIndex = 400;
+      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px'; };
+      const up = (e) => {
+        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up);
+        el.classList.remove('dragging');
+        const inRect = (elId, pad) => {
+          const t = $(elId); if (!t) return false;
+          const b = t.getBoundingClientRect();
+          return e.clientX > b.left - pad && e.clientX < b.right + pad && e.clientY > b.top - pad && e.clientY < b.bottom + pad;
+        };
+        const hit = a.target === 'desk' ? inRect('desk', 8)
+          : a.target === 'stage' ? inRect('npc-stage', 24)
+          : (inRect('desk', 8) || inRect('npc-stage', 24));
+        if (hit && shift.running && (!a.needsCitizen || shift.citizen)) {
+          el.classList.add('busy');
+          setTimeout(() => { a.fn(); instReturn(el, home, 140); }, 200);
+        } else instReturn(el, home);
+      };
+      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
+      sfxTool('pickup');
+    });
+  });
+  drawDrawerMapa(); drawDrawerLupa(); drawDrawerExame(); drawDrawerLinha();
+}
+
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
 function toggleInspect() {
   shift.inspecting = !shift.inspecting;
@@ -4052,6 +4234,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   renderTextSizeBtn();
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   setupInstruments();
+  setupDrawers();
   initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();

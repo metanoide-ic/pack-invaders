@@ -136,7 +136,8 @@
           <span id="money-hud">₴ 0</span>
         </div>
         <button id="btn-music" class="btn-small" title="Música ligada/desligada"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5l7-1.2v8.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="12" r="2.1"/><circle cx="11" cy="10.5" r="2.1"/></svg></button>
-        <button id="btn-map" class="btn-small" title="Carta de fronteiras"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4l4-1.8 5 1.8 4-1.8v9.6l-4 1.8-5-1.8-4 1.8z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 2.2v9.6M10.5 4v9.6" stroke="currentColor" stroke-width="1"/></svg> <span class="tlabel">MAPA</span></button>
+        <!-- o mapa agora vive na GAVETA A (arraste até a mesa); botão oculto por compat -->
+        <button id="btn-map" class="btn-small legacy-scan" title="Carta de fronteiras"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4l4-1.8 5 1.8 4-1.8v9.6l-4 1.8-5-1.8-4 1.8z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 2.2v9.6M10.5 4v9.6" stroke="currentColor" stroke-width="1"/></svg> <span class="tlabel">MAPA</span></button>
         <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
@@ -148,6 +149,23 @@
           <div class="ask-row" id="ask-row"></div>
           <div class="talk-log" id="talk-log"></div>
           <div class="scan-result" id="scan-result"></div>
+          <!-- GAVETA A: mapa (arraste até a mesa) + lupa (arraste até docs/vidro) -->
+          <div class="drawer" id="drawer-left">
+            <div class="drawer-front" title="Abrir/fechar a gaveta">
+              <span class="dr-plate tlabel">GAVETA A · EXPEDIENTE</span>
+              <span class="dr-handle"></span>
+            </div>
+            <div class="drawer-tray">
+              <div class="dtool-slot">
+                <div class="dtool" id="dt-mapa" title="Carta de fronteiras — arraste até a MESA para abrir"><canvas width="64" height="50"></canvas></div>
+                <span class="dt-name">MAPA</span>
+              </div>
+              <div class="dtool-slot">
+                <div class="dtool" id="dt-lupa" title="Lupa de inspeção — arraste até os documentos ou o vidro"><canvas width="46" height="56"></canvas></div>
+                <span class="dt-name">LUPA</span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Centro topo: guichê / cidadão -->
@@ -182,10 +200,12 @@
         <div class="stage-side stage-right">
           <div class="side-cap">FERRAMENTAS</div>
           <div class="tools">
-            <button id="btn-inspect" class="btn-tool" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
-            <button id="btn-exam" class="btn-tool" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
+            <!-- inspeção/exame/linha viraram FERRAMENTAS DE GAVETA (arrastáveis);
+                 os botões ficam ocultos por compatibilidade (gamepad/QA). -->
+            <button id="btn-inspect" class="btn-tool legacy-scan" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
+            <button id="btn-exam" class="btn-tool legacy-scan" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
             <button id="btn-bag" class="btn-tool" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
-            <button id="btn-lifeline" class="btn-tool" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
+            <button id="btn-lifeline" class="btn-tool legacy-scan" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
             <!-- térmico/pulsação/biológico viraram INSTRUMENTOS FÍSICOS na mesa
                  (arraste até o cidadão); os botões ficam ocultos por compat. -->
             <button id="btn-scan-thermo" class="btn-tool legacy-scan" data-ico="thermo" title="Scanner Térmico (15 min)"><span class="tool-name">TÉRMICO</span></button>
@@ -197,6 +217,23 @@
             <div id="rb-rules"></div>
             <div class="rb-title">REFERÊNCIA DE PAÍSES</div>
             <div id="rb-countries"></div>
+          </div>
+          <!-- GAVETA B: ficha de exame + dossiê da linha da vida (arraste até o cidadão) -->
+          <div class="drawer" id="drawer-right">
+            <div class="drawer-front" title="Abrir/fechar a gaveta">
+              <span class="dr-plate tlabel">GAVETA B · TRIAGEM</span>
+              <span class="dr-handle"></span>
+            </div>
+            <div class="drawer-tray">
+              <div class="dtool-slot">
+                <div class="dtool" id="dt-exame" title="Ficha de exame físico — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
+                <span class="dt-name">EXAME</span>
+              </div>
+              <div class="dtool-slot">
+                <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
+                <span class="dt-name">DOSSIÊ</span>
+              </div>
+            </div>
           </div>
         </div>
 
