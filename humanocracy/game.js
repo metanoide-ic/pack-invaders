@@ -1494,6 +1494,9 @@ function startDay() {
   $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
+  // o comunicado do dia chega em papel, deslizando pela mesa
+  const memo = $('desk-memo');
+  if (memo) { memo.classList.remove('in'); void memo.offsetWidth; memo.classList.add('in'); }
   showBulletin(() => {
     if (S.day >= 48 && !S.infinite) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
@@ -1812,7 +1815,8 @@ function drawFig(ctx, f, groundY, lampX) {
   ctx.fillStyle = '#12120e';
   const legSw = Math.sin(Q.t * 2 + f.phase) * (walking ? 1.6 : 0.4);
   let liftL = 0, liftR = 0;
-  if (!walking && f.idle === 3) { const s = Math.sin(Q.t * rate * 1.6 + f.stampAt); if (s > 0.86) liftR = (s - 0.86) * 26; const s2 = Math.sin(Q.t * rate * 1.6 + f.stampAt + 3.1); if (s2 > 0.9) liftL = (s2 - 0.9) * 24; }
+  const cold = Q.cold || 1;   // no escuro o frio aperta: bate-pé mais rápido e frequente
+  if (!walking && f.idle === 3) { const s = Math.sin(Q.t * rate * 1.6 * cold + f.stampAt); if (s > 0.86 - (cold - 1) * .1) liftR = (s - 0.8) * 22; const s2 = Math.sin(Q.t * rate * 1.6 * cold + f.stampAt + 3.1); if (s2 > 0.9 - (cold - 1) * .1) liftL = (s2 - 0.84) * 20; }
   ctx.fillRect(x - 2.9, groundY - 9 + liftL, 2.4, 9 - liftL);
   ctx.fillRect(x + 0.5 + legSw * 0.1, groundY - 9 + liftR, 2.4, 9 - liftR);
   // casaco (ombros arredondados, gola)
@@ -1895,9 +1899,9 @@ function drawFig(ctx, f, groundY, lampX) {
   }
   // bolsa/sacola de quem espera há horas
   if (f.bag) { ctx.fillStyle = '#241f18'; ctx.fillRect(x + cw - 1.2, groundY - 15, 3.4, 6.5); }
-  // fôlego no frio (mais visível perto da luz)
-  if (Math.sin(Q.t * .9 + f.phase * 3) > .9) {
-    ctx.fillStyle = `rgba(222,222,212,${(0.1 + lum * 0.14).toFixed(2)})`;
+  // fôlego no frio (mais visível perto da luz; mais frequente no escuro gelado)
+  if (Math.sin(Q.t * .9 + f.phase * 3) > (cold > 1 ? .78 : .9)) {
+    ctx.fillStyle = `rgba(222,222,212,${(0.1 + lum * 0.14 + (cold - 1) * 0.05).toFixed(2)})`;
     ctx.beginPath(); ctx.arc(x + 3.4, top + 3, 2 + Math.sin(Q.t * 3) * 0.4, 0, 6.29); ctx.fill();
   }
 }
@@ -1967,22 +1971,34 @@ function drawQueue(ctx, w, h) {
   ctx.strokeStyle = '#1e201a'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(0, h * .35); ctx.lineTo(w, h * .35); ctx.stroke();
   for (let x = 6; x < w; x += 12) { ctx.beginPath(); ctx.moveTo(x, h * .35 - 3); ctx.lineTo(x + 4, h * .35 + 3); ctx.stroke(); }
-  // poste com cone de luz sobre a frente da fila
+  // poste com cone de luz sobre a frente da fila.
+  // O LAMPIÃO OBEDECE À HORA: apagado de dia; aceso na alvorada e do fim da
+  // tarde em diante — e quando acende (16h25) ele tremula até firmar.
   const lampX = w * .68;
   ctx.strokeStyle = '#23251d'; ctx.lineWidth = 3;
   ctx.beginPath(); ctx.moveTo(lampX, groundY); ctx.lineTo(lampX, 8); ctx.lineTo(lampX - 14, 8); ctx.stroke();
-  const flick = .05 + Math.max(0, Math.sin(Q.t * 13) * .012) + (chance(.005) ? -.03 : 0);
-  const grad = ctx.createRadialGradient(lampX - 14, 12, 4, lampX - 14, 12, h * .95);
-  grad.addColorStop(0, `rgba(201,180,120,${.16 + flick})`); grad.addColorStop(1, 'rgba(201,180,120,0)');
-  ctx.fillStyle = grad;
-  ctx.beginPath(); ctx.moveTo(lampX - 14, 10); ctx.lineTo(lampX - 58, groundY); ctx.lineTo(lampX + 34, groundY); ctx.closePath(); ctx.fill();
+  const lampOn = clk < 545 || clk >= 985;
+  const ign = clk >= 985 ? Math.min(1, (clk - 985) / 12) : (clk < 545 ? Math.min(1, (545 - clk) / 12) : 0);
+  Q.cold = (clk < 540 || clk >= 960) ? 1.6 : 1;      // o frio aperta no escuro
+  if (lampOn) {
+    let flick = .05 + Math.max(0, Math.sin(Q.t * 13) * .012) + (chance(.005) ? -.03 : 0);
+    if (ign < 1) flick *= (chance(.3) ? .15 : ign);  // ignição: pisca antes de firmar
+    const grad = ctx.createRadialGradient(lampX - 14, 12, 4, lampX - 14, 12, h * .95);
+    grad.addColorStop(0, `rgba(201,180,120,${(.16 + flick) * ign})`); grad.addColorStop(1, 'rgba(201,180,120,0)');
+    ctx.fillStyle = grad;
+    ctx.beginPath(); ctx.moveTo(lampX - 14, 10); ctx.lineTo(lampX - 58, groundY); ctx.lineTo(lampX + 34, groundY); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = `rgba(240,222,168,${.5 + .4 * ign})`; ctx.fillRect(lampX - 16, 8, 5, 3);   // a luminária acesa
+  } else {
+    ctx.fillStyle = '#1c1e18'; ctx.fillRect(lampX - 16, 8, 5, 3);                              // apagada de dia
+  }
   // chão
   ctx.fillStyle = '#181a14'; ctx.fillRect(0, groundY, w, 14);
   // figuras
-  Q.figs.forEach(f => { f.x += (f.tx - f.x) * .04; drawFig(ctx, f, groundY, lampX); });
+  const litX = lampOn ? lampX : null;   // sem lampião, ninguém pega a luz morna
+  Q.figs.forEach(f => { f.x += (f.tx - f.x) * .04; drawFig(ctx, f, groundY, litX); });
   if (Q.walker) {
     Q.walker.x += Q.walker.spd;
-    drawFig(ctx, Q.walker, groundY, lampX);
+    drawFig(ctx, Q.walker, groundY, litX);
     if (Q.walker.x > w + 12) Q.walker = null;
   }
   // neve
@@ -3127,6 +3143,32 @@ function drawDrawerLinha() {
   x.fillStyle = '#8a734d'; x.fillRect(38, 24, 4, 4);
   x.fillStyle = 'rgba(138,115,77,.8)'; x.fillRect(30, 26, 8, 1); x.fillRect(40, 28, 1, 10);
 }
+function drawDeskMemo() {
+  const memo = $('desk-memo'); if (!memo) return;
+  const cv = memo.querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 92, 66);
+  // envelope pardo por baixo (aberto)
+  x.fillStyle = '#8a795c'; x.fillRect(4, 26, 84, 36);
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(4, 58, 84, 4);
+  x.fillStyle = '#7a6a4e'; x.beginPath(); x.moveTo(4, 26); x.lineTo(46, 44); x.lineTo(88, 26); x.lineTo(88, 30); x.lineTo(46, 48); x.lineTo(4, 30); x.closePath(); x.fill();
+  // a folha do comunicado saindo do envelope
+  x.fillStyle = '#d8cdb0'; x.fillRect(10, 4, 72, 40);
+  x.fillStyle = 'rgba(255,246,220,.35)'; x.fillRect(10, 4, 72, 2);
+  x.fillStyle = 'rgba(40,32,20,.65)'; x.fillRect(16, 10, 44, 3);            // cabeçalho
+  x.fillStyle = 'rgba(40,32,20,.4)';
+  for (let i = 0; i < 4; i++) x.fillRect(16, 17 + i * 5, 60 - (i === 3 ? 22 : 0), 2);
+  // selo de lacre vermelho com estrela
+  x.fillStyle = '#8a2e22'; x.beginPath(); x.arc(72, 12, 8, 0, 6.29); x.fill();
+  x.fillStyle = '#a8402e'; x.beginPath(); x.arc(70, 10, 6, 0, 6.29); x.fill();
+  x.fillStyle = '#e2cf96';
+  x.fillRect(69, 8, 3, 3); x.fillRect(68, 11, 2, 2); x.fillRect(72, 11, 2, 2);
+  x.fillStyle = 'rgba(0,0,0,.3)'; x.beginPath(); x.arc(73, 13, 8, .5, 2.2); x.fill();
+  // carimbo torto "URGENTE" de tinta gasta
+  x.save(); x.translate(30, 34); x.rotate(-.12);
+  x.strokeStyle = 'rgba(140,44,34,.55)'; x.lineWidth = 2; x.strokeRect(-16, -6, 38, 13);
+  x.fillStyle = 'rgba(140,44,34,.5)'; x.font = '10px "VT323", monospace'; x.textAlign = 'center';
+  x.fillText('OFICIAL', 3, 4); x.restore();
+}
 function setupDrawers() {
   // abre/fecha
   document.querySelectorAll('.drawer').forEach(d => {
@@ -3177,6 +3219,13 @@ function setupDrawers() {
     });
   });
   drawDrawerMapa(); drawDrawerLupa(); drawDrawerExame(); drawDrawerLinha();
+  // o comunicado em papel na mesa
+  drawDeskMemo();
+  const memo = $('desk-memo');
+  if (memo) {
+    memo.title = T(memo.title);
+    memo.onclick = () => { sfxTool('paper'); showBulletin(null); };
+  }
 }
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */

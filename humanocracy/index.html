@@ -138,7 +138,8 @@
         <button id="btn-music" class="btn-small" title="Música ligada/desligada"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M6 3.5l7-1.2v8.2" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="4" cy="12" r="2.1"/><circle cx="11" cy="10.5" r="2.1"/></svg></button>
         <!-- o mapa agora vive na GAVETA A (arraste até a mesa); botão oculto por compat -->
         <button id="btn-map" class="btn-small legacy-scan" title="Carta de fronteiras"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.5 4l4-1.8 5 1.8 4-1.8v9.6l-4 1.8-5-1.8-4 1.8z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M5.5 2.2v9.6M10.5 4v9.6" stroke="currentColor" stroke-width="1"/></svg> <span class="tlabel">MAPA</span></button>
-        <button id="btn-bulletin" class="btn-small">COMUNICADO</button>
+        <!-- o comunicado agora é um papel na mesa; botão oculto por compat -->
+        <button id="btn-bulletin" class="btn-small legacy-scan">COMUNICADO</button>
         <button id="btn-endshift" class="btn-small">ENCERRAR TURNO</button>
       </div>
 
@@ -241,6 +242,8 @@
         <div class="desk" id="desk">
           <canvas class="desk-props" id="desk-props"></canvas>
           <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
+          <!-- o comunicado do dia chega em papel: clique para reler -->
+          <div id="desk-memo" title="Comunicado oficial do dia — clique para reler"><canvas width="92" height="66"></canvas></div>
           <!-- INSTRUMENTOS FÍSICOS: arraste até o cidadão no vidro -->
           <div id="instruments">
             <div class="inst-slot" style="width:46px;height:64px">
