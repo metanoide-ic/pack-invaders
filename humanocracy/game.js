@@ -3454,6 +3454,8 @@ function dtToss(el, tray, r, vx, vy) {
 }
 
 /* ---------- CARIMBOS DE PEGAR (estilo Papers Please) ---------- */
+const STAMP_INK = { approve: 6, reject: 6 };
+const STAMP_INK_MAX = 6;
 function drawStampObj(kind) {
   const el = $(kind === 'approve' ? 'st-apv' : 'st-rej'); if (!el) return;
   const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
@@ -3473,18 +3475,22 @@ function drawStampObj(kind) {
   x.fillStyle = '#d8cdb0'; x.fillRect(20, 33, 28, 11);
   x.fillStyle = ink; x.font = '10px "VT323", monospace'; x.textAlign = 'center';
   x.fillText(kind === 'approve' ? 'APROV.' : 'REJEIT.', 34, 42);
-  // base metálica + borracha entintada
+  // base metálica + borracha, mais seca conforme a tinta acaba
+  const lvl = Math.max(0, Math.min(1, (STAMP_INK[kind] || 0) / STAMP_INK_MAX));
   x.fillStyle = '#2c2e26'; x.fillRect(10, 50, 48, 8);
   x.fillStyle = 'rgba(238,240,230,.12)'; x.fillRect(10, 50, 48, 2);
+  x.fillStyle = '#3a3a32'; x.fillRect(8, 58, 52, 14);            // borracha crua (seca)
+  x.globalAlpha = .35 + lvl * .65;
   x.fillStyle = ink; x.fillRect(8, 58, 52, 14);
   x.fillStyle = inkL; x.fillRect(8, 58, 52, 3);
+  x.globalAlpha = 1;
   x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(8, 69, 52, 3);
   // o texto ESPELHADO em relevo na borracha (carimbo lê ao contrário)
   x.save(); x.translate(34, 66); x.scale(-1, 1);
   x.fillStyle = 'rgba(255,255,255,.22)'; x.font = '9px "VT323", monospace';
   x.fillText(kind === 'approve' ? 'APROVADO' : 'REJEITADO', 0, 2); x.restore();
-  // tinta fresca acumulada num canto (assimetria de uso)
-  x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3);
+  // tinta fresca acumulada num canto (assimetria de uso) — só com tinta
+  if (lvl > .5) { x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3); }
   pixelSnap(cv, 2);
 }
 function setupStamps() {
@@ -3500,20 +3506,47 @@ function setupStamps() {
       el.classList.add('dragging');
       el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
       el.style.zIndex = 400; el.style.pointerEvents = 'none';
-      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px'; };
+      const move = (e) => {
+        el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px';
+        const pad = $('inkpad-hit');
+        if (pad) {
+          const pb = pad.getBoundingClientRect();
+          pad.classList.toggle('hot', e.clientX > pb.left && e.clientX < pb.right && e.clientY > pb.top && e.clientY < pb.bottom);
+        }
+      };
       const up = (e) => {
         document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
         el.classList.remove('dragging');
         const under = document.elementFromPoint(e.clientX, e.clientY);
         const doc = under && under.closest ? under.closest('.document') : null;
-        if (doc && shift.citizen && shift.running) {
+        const pad = $('inkpad-hit');
+        let onPad = false;
+        if (pad) {
+          const pb = pad.getBoundingClientRect();
+          onPad = e.clientX > pb.left && e.clientX < pb.right && e.clientY > pb.top && e.clientY < pb.bottom;
+          pad.classList.remove('hot');
+        }
+        if (onPad) {                       // ENTINTAR: aperta na almofada e volta cheio
+          el.classList.add('busy');
+          el.style.transition = 'transform .1s ease-in';
+          el.style.transform = 'translateY(10px) scale(.96)';
+          sfxTool('drop');
+          setTimeout(() => {
+            STAMP_INK[kind] = STAMP_INK_MAX;
+            drawStampObj(kind);
+            el.style.transform = '';
+            instReturn(el, home, 160);
+          }, 150);
+        } else if (doc && shift.citizen && shift.running) {
           // BATE: o carimbo desce, esmaga, deixa a tinta — e a decisão sai
           el.classList.add('busy');
           el.style.transition = 'transform .09s ease-in';
           el.style.transform = 'translateY(12px) scale(.94)';
-          shift.stampTarget = { doc, x: e.clientX, y: e.clientY };
+          shift.stampTarget = { doc, x: e.clientX, y: e.clientY, ink: STAMP_INK[kind] / STAMP_INK_MAX };
+          STAMP_INK[kind] = Math.max(0, STAMP_INK[kind] - 1);
           setTimeout(() => {
             decide(kind);
+            drawStampObj(kind);
             el.style.transform = '';
             instReturn(el, home, 180);
           }, 130);
@@ -3718,6 +3751,7 @@ function roundRectPath(ctx, x, y, w, h, r) {
 }
 /* carimbo de borracha: moldura dupla, selo nacional, rótulo grande e tinta
    IRREGULAR (partes falham, faixas de tinta seca) — parece prensado, não CSS. */
+let STAMP_PRINT_INK = 1;   // 0..1 — quanto de tinta a borracha tinha na batida
 function drawStamp(kind) {
   const W = 176, H = 98, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
@@ -3740,12 +3774,23 @@ function drawStamp(kind) {
   ctx.globalAlpha = 0.5; const gx = Math.random() * W, gy = Math.random() * H;
   const gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, 40); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, gy, 40, 0, 6.29); ctx.fill();
+  // tinta rala: come parte da impressão (só quando o carimbo estava seco)
+  if (STAMP_PRINT_INK < 1) {
+    ctx.globalCompositeOperation = 'destination-out';
+    const holes = Math.round((1 - STAMP_PRINT_INK) * 1400);
+    for (let i = 0; i < holes; i++) {
+      ctx.globalAlpha = .25 + Math.random() * .55;
+      ctx.beginPath(); ctx.arc(Math.random() * W, Math.random() * H, Math.random() * 2.6, 0, 6.29); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   pixelSnap(cv, 2);
   return cv;
 }
 function stampDocs(decision) {
   const t = shift.stampTarget; shift.stampTarget = null;
+  STAMP_PRINT_INK = t && t.ink != null ? t.ink : 1;
   const first = (t && t.doc && t.doc.isConnected) ? t.doc : $('desk').querySelector('.document');
   if (!first) return;
   const st = document.createElement('div');

@@ -691,7 +691,8 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
 /* CARIMBOS DE PEGAR (APV + REJ lado a lado, à esquerda dos instrumentos) */
-.desk-stamps { position:absolute; top:8px; right:118px; z-index:59; display:flex; flex-direction:row; gap:14px; }
+/* os carimbos descansam À ESQUERDA da almofada de tinta pintada na mesa */
+.desk-stamps { position:absolute; top:8px; right:236px; z-index:59; display:flex; flex-direction:row; gap:14px; }
 .desk-stamps .stamp { width:74px; }
 .stamp-obj { cursor:grab; touch-action:none; filter:drop-shadow(3px 5px 0 rgba(0,0,0,.5)); transition:transform .1s; }
 .stamp-obj:hover { transform:translateY(-3px); }
@@ -719,6 +720,13 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 }
 #bell-hit::after { display:none; }
 #bell-hit:active { transform:translateY(2px); box-shadow:none; }
+/* área da almofada de tinta desenhada na mesa (drawDeskProps): sem pintura
+   própria, só o alvo — o brilho aparece quando o carimbo passa por cima */
+#inkpad-hit {
+  position:absolute; right:40px; top:16%; width:min(150px, 16%); aspect-ratio:1 / .56;
+  z-index:57; border-radius:6px; pointer-events:none; transition:box-shadow .12s;
+}
+#inkpad-hit.hot { box-shadow: 0 0 0 2px rgba(232,207,146,.5), 0 0 16px rgba(232,207,146,.35); }
 /* tira de balcão sob a janela: documento, relógio, carimbo */
 .booth-counter {
   display:flex; align-items:center; justify-content:center; gap:22px;
@@ -1205,17 +1213,35 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .pause-note { margin-top:10px; text-align:center; font-size:10px; color:var(--ink-dim); font-style:italic; }
 
 /* Citação */
+/* A ADVERTÊNCIA é um papelucho rosa de multa que o tubo pneumático cospe
+   na mesa: chega torto, com furos de picote na borda e carimbo de recebido. */
 .citation {
-  display:none; position:absolute; left:50%; bottom:40px; transform:translateX(-50%);
-  background-color:#e8d8b0; color:#3a2c1a; width:380px; z-index:60;
-  background-image: linear-gradient(rgba(232,216,176,.86), rgba(232,216,176,.86)), var(--tex-paper);
-  box-shadow:0 8px 20px rgba(0,0,0,.6); border-top:6px solid var(--stamp-red);
-  animation: slideup .3s ease;
+  display:none; position:absolute; left:50%; bottom:40px; width:392px; z-index:60;
+  background-color:#e0c0b4; color:#3a2018;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(140,47,36,.05) 0 13px, transparent 13px 26px),
+    linear-gradient(rgba(224,192,180,.9), rgba(224,192,180,.9)), var(--tex-paper);
+  border:1px solid #5a2a20; border-left:7px solid var(--stamp-red);
+  box-shadow: 8px 10px 0 rgba(0,0,0,.45);
+  transform:translateX(-50%) rotate(-1.2deg);
+  animation: cite-slam .34s cubic-bezier(.2,1.4,.4,1);
+}
+.citation::after {   /* picote da borda inferior (destacável) */
+  content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px;
+  background:repeating-linear-gradient(90deg, transparent 0 4px, rgba(58,32,24,.5) 4px 7px);
 }
 .citation.active { display:block; }
-.citation-head { font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:12px; padding:6px 12px; background:rgba(140,47,36,.15); letter-spacing:1px; }
-.citation-body { font-family:var(--font-doc); padding:10px 12px; font-size:13px; line-height:1.55; }
-@keyframes slideup { from { transform:translate(-50%, 30px); opacity:0; } to { transform:translate(-50%,0); opacity:1; } }
+.citation-head {
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:12px;
+  padding:6px 12px; background:rgba(140,47,36,.28); letter-spacing:1.5px;
+  border-bottom:1px dashed rgba(90,42,32,.5); color:#4a1a12;
+}
+.citation-body { font-family:var(--font-doc); padding:10px 12px 13px; font-size:13px; line-height:1.55; }
+@keyframes cite-slam {
+  0% { transform:translateX(-50%) rotate(-7deg) translateY(40px) scale(1.05); opacity:0; }
+  70% { transform:translateX(-50%) rotate(.6deg) translateY(-3px); opacity:1; }
+  100% { transform:translateX(-50%) rotate(-1.2deg); }
+}
 
 /* Conquista (toast local; mesma condição alimenta o Steamworks quando a
    integração acontecer — steam/README.md) */

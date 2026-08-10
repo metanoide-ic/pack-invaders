@@ -698,7 +698,8 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
 /* CARIMBOS DE PEGAR (APV + REJ lado a lado, à esquerda dos instrumentos) */
-.desk-stamps { position:absolute; top:8px; right:118px; z-index:59; display:flex; flex-direction:row; gap:14px; }
+/* os carimbos descansam À ESQUERDA da almofada de tinta pintada na mesa */
+.desk-stamps { position:absolute; top:8px; right:236px; z-index:59; display:flex; flex-direction:row; gap:14px; }
 .desk-stamps .stamp { width:74px; }
 .stamp-obj { cursor:grab; touch-action:none; filter:drop-shadow(3px 5px 0 rgba(0,0,0,.5)); transition:transform .1s; }
 .stamp-obj:hover { transform:translateY(-3px); }
@@ -726,6 +727,13 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 }
 #bell-hit::after { display:none; }
 #bell-hit:active { transform:translateY(2px); box-shadow:none; }
+/* área da almofada de tinta desenhada na mesa (drawDeskProps): sem pintura
+   própria, só o alvo — o brilho aparece quando o carimbo passa por cima */
+#inkpad-hit {
+  position:absolute; right:40px; top:16%; width:min(150px, 16%); aspect-ratio:1 / .56;
+  z-index:57; border-radius:6px; pointer-events:none; transition:box-shadow .12s;
+}
+#inkpad-hit.hot { box-shadow: 0 0 0 2px rgba(232,207,146,.5), 0 0 16px rgba(232,207,146,.35); }
 /* tira de balcão sob a janela: documento, relógio, carimbo */
 .booth-counter {
   display:flex; align-items:center; justify-content:center; gap:22px;
@@ -1212,17 +1220,35 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 .pause-note { margin-top:10px; text-align:center; font-size:10px; color:var(--ink-dim); font-style:italic; }
 
 /* Citação */
+/* A ADVERTÊNCIA é um papelucho rosa de multa que o tubo pneumático cospe
+   na mesa: chega torto, com furos de picote na borda e carimbo de recebido. */
 .citation {
-  display:none; position:absolute; left:50%; bottom:40px; transform:translateX(-50%);
-  background-color:#e8d8b0; color:#3a2c1a; width:380px; z-index:60;
-  background-image: linear-gradient(rgba(232,216,176,.86), rgba(232,216,176,.86)), var(--tex-paper);
-  box-shadow:0 8px 20px rgba(0,0,0,.6); border-top:6px solid var(--stamp-red);
-  animation: slideup .3s ease;
+  display:none; position:absolute; left:50%; bottom:40px; width:392px; z-index:60;
+  background-color:#e0c0b4; color:#3a2018;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(140,47,36,.05) 0 13px, transparent 13px 26px),
+    linear-gradient(rgba(224,192,180,.9), rgba(224,192,180,.9)), var(--tex-paper);
+  border:1px solid #5a2a20; border-left:7px solid var(--stamp-red);
+  box-shadow: 8px 10px 0 rgba(0,0,0,.45);
+  transform:translateX(-50%) rotate(-1.2deg);
+  animation: cite-slam .34s cubic-bezier(.2,1.4,.4,1);
+}
+.citation::after {   /* picote da borda inferior (destacável) */
+  content:''; position:absolute; left:0; right:0; bottom:-1px; height:3px;
+  background:repeating-linear-gradient(90deg, transparent 0 4px, rgba(58,32,24,.5) 4px 7px);
 }
 .citation.active { display:block; }
-.citation-head { font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:12px; padding:6px 12px; background:rgba(140,47,36,.15); letter-spacing:1px; }
-.citation-body { font-family:var(--font-doc); padding:10px 12px; font-size:13px; line-height:1.55; }
-@keyframes slideup { from { transform:translate(-50%, 30px); opacity:0; } to { transform:translate(-50%,0); opacity:1; } }
+.citation-head {
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:12px;
+  padding:6px 12px; background:rgba(140,47,36,.28); letter-spacing:1.5px;
+  border-bottom:1px dashed rgba(90,42,32,.5); color:#4a1a12;
+}
+.citation-body { font-family:var(--font-doc); padding:10px 12px 13px; font-size:13px; line-height:1.55; }
+@keyframes cite-slam {
+  0% { transform:translateX(-50%) rotate(-7deg) translateY(40px) scale(1.05); opacity:0; }
+  70% { transform:translateX(-50%) rotate(.6deg) translateY(-3px); opacity:1; }
+  100% { transform:translateX(-50%) rotate(-1.2deg); }
+}
 
 /* Conquista (toast local; mesma condição alimenta o Steamworks quando a
    integração acontecer — steam/README.md) */
@@ -1863,6 +1889,8 @@ body.text-large .np-body { font-size:15px; }
           </div>
           <!-- a sineta pintada na mesa é clicável -->
           <button id="bell-hit" title="Sineta do balcão" aria-label="sineta"></button>
+          <!-- almofada de tinta pintada na mesa: arraste o carimbo até aqui p/ entintar -->
+          <div id="inkpad-hit" title="Almofada de tinta — encoste o carimbo para entintar"></div>
         </div>
       </div>
 
@@ -2947,6 +2975,8 @@ const I18N_EN = {
   'Comunicado oficial do dia — clique para reler': "The day's official notice — click to reread",
   'REVISTAR BAGAGEM': 'SEARCH LUGGAGE',
   'Carimbo APROVADO — arraste até um documento e solte': 'APPROVED stamp — drag onto a document and release',
+  'Almofada de tinta — encoste o carimbo para entintar': 'Ink pad — press the stamp here to re-ink',
+  'Sineta do balcão': 'Counter bell',
   'Carimbo REJEITADO — arraste até um documento e solte': 'REJECTED stamp — drag onto a document and release',
   'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Exam loupe — drag onto the citizen (10 min); luggage is searched through it',
   '👁 EXAME FÍSICO': '👁 PHYSICAL EXAM',
@@ -4416,6 +4446,8 @@ const I18N_ES = {
   'Comunicado oficial do dia — clique para reler': 'Comunicado oficial del día — haz clic para releer',
   'REVISTAR BAGAGEM': 'REVISAR EQUIPAJE',
   'Carimbo APROVADO — arraste até um documento e solte': 'Sello APROBADO — arrastra hasta un documento y suelta',
+  'Almofada de tinta — encoste o carimbo para entintar': 'Almohadilla de tinta — apoya el sello aquí para entintar',
+  'Sineta do balcão': 'Timbre del mostrador',
   'Carimbo REJEITADO — arraste até um documento e solte': 'Sello RECHAZADO — arrastra hasta un documento y suelta',
   'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Lupa de examen — arrastra hasta el ciudadano (10 min); el equipaje se revisa con ella',
   '👁 EXAME FÍSICO': '👁 EXAMEN FÍSICO',
@@ -12478,6 +12510,8 @@ function dtToss(el, tray, r, vx, vy) {
 }
 
 /* ---------- CARIMBOS DE PEGAR (estilo Papers Please) ---------- */
+const STAMP_INK = { approve: 6, reject: 6 };
+const STAMP_INK_MAX = 6;
 function drawStampObj(kind) {
   const el = $(kind === 'approve' ? 'st-apv' : 'st-rej'); if (!el) return;
   const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
@@ -12497,18 +12531,22 @@ function drawStampObj(kind) {
   x.fillStyle = '#d8cdb0'; x.fillRect(20, 33, 28, 11);
   x.fillStyle = ink; x.font = '10px "VT323", monospace'; x.textAlign = 'center';
   x.fillText(kind === 'approve' ? 'APROV.' : 'REJEIT.', 34, 42);
-  // base metálica + borracha entintada
+  // base metálica + borracha, mais seca conforme a tinta acaba
+  const lvl = Math.max(0, Math.min(1, (STAMP_INK[kind] || 0) / STAMP_INK_MAX));
   x.fillStyle = '#2c2e26'; x.fillRect(10, 50, 48, 8);
   x.fillStyle = 'rgba(238,240,230,.12)'; x.fillRect(10, 50, 48, 2);
+  x.fillStyle = '#3a3a32'; x.fillRect(8, 58, 52, 14);            // borracha crua (seca)
+  x.globalAlpha = .35 + lvl * .65;
   x.fillStyle = ink; x.fillRect(8, 58, 52, 14);
   x.fillStyle = inkL; x.fillRect(8, 58, 52, 3);
+  x.globalAlpha = 1;
   x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(8, 69, 52, 3);
   // o texto ESPELHADO em relevo na borracha (carimbo lê ao contrário)
   x.save(); x.translate(34, 66); x.scale(-1, 1);
   x.fillStyle = 'rgba(255,255,255,.22)'; x.font = '9px "VT323", monospace';
   x.fillText(kind === 'approve' ? 'APROVADO' : 'REJEITADO', 0, 2); x.restore();
-  // tinta fresca acumulada num canto (assimetria de uso)
-  x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3);
+  // tinta fresca acumulada num canto (assimetria de uso) — só com tinta
+  if (lvl > .5) { x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3); }
   pixelSnap(cv, 2);
 }
 function setupStamps() {
@@ -12524,20 +12562,47 @@ function setupStamps() {
       el.classList.add('dragging');
       el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
       el.style.zIndex = 400; el.style.pointerEvents = 'none';
-      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px'; };
+      const move = (e) => {
+        el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px';
+        const pad = $('inkpad-hit');
+        if (pad) {
+          const pb = pad.getBoundingClientRect();
+          pad.classList.toggle('hot', e.clientX > pb.left && e.clientX < pb.right && e.clientY > pb.top && e.clientY < pb.bottom);
+        }
+      };
       const up = (e) => {
         document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
         el.classList.remove('dragging');
         const under = document.elementFromPoint(e.clientX, e.clientY);
         const doc = under && under.closest ? under.closest('.document') : null;
-        if (doc && shift.citizen && shift.running) {
+        const pad = $('inkpad-hit');
+        let onPad = false;
+        if (pad) {
+          const pb = pad.getBoundingClientRect();
+          onPad = e.clientX > pb.left && e.clientX < pb.right && e.clientY > pb.top && e.clientY < pb.bottom;
+          pad.classList.remove('hot');
+        }
+        if (onPad) {                       // ENTINTAR: aperta na almofada e volta cheio
+          el.classList.add('busy');
+          el.style.transition = 'transform .1s ease-in';
+          el.style.transform = 'translateY(10px) scale(.96)';
+          sfxTool('drop');
+          setTimeout(() => {
+            STAMP_INK[kind] = STAMP_INK_MAX;
+            drawStampObj(kind);
+            el.style.transform = '';
+            instReturn(el, home, 160);
+          }, 150);
+        } else if (doc && shift.citizen && shift.running) {
           // BATE: o carimbo desce, esmaga, deixa a tinta — e a decisão sai
           el.classList.add('busy');
           el.style.transition = 'transform .09s ease-in';
           el.style.transform = 'translateY(12px) scale(.94)';
-          shift.stampTarget = { doc, x: e.clientX, y: e.clientY };
+          shift.stampTarget = { doc, x: e.clientX, y: e.clientY, ink: STAMP_INK[kind] / STAMP_INK_MAX };
+          STAMP_INK[kind] = Math.max(0, STAMP_INK[kind] - 1);
           setTimeout(() => {
             decide(kind);
+            drawStampObj(kind);
             el.style.transform = '';
             instReturn(el, home, 180);
           }, 130);
@@ -12742,6 +12807,7 @@ function roundRectPath(ctx, x, y, w, h, r) {
 }
 /* carimbo de borracha: moldura dupla, selo nacional, rótulo grande e tinta
    IRREGULAR (partes falham, faixas de tinta seca) — parece prensado, não CSS. */
+let STAMP_PRINT_INK = 1;   // 0..1 — quanto de tinta a borracha tinha na batida
 function drawStamp(kind) {
   const W = 176, H = 98, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
   const ctx = cv.getContext('2d');
@@ -12764,12 +12830,23 @@ function drawStamp(kind) {
   ctx.globalAlpha = 0.5; const gx = Math.random() * W, gy = Math.random() * H;
   const gr = ctx.createRadialGradient(gx, gy, 2, gx, gy, 40); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(gx, gy, 40, 0, 6.29); ctx.fill();
+  // tinta rala: come parte da impressão (só quando o carimbo estava seco)
+  if (STAMP_PRINT_INK < 1) {
+    ctx.globalCompositeOperation = 'destination-out';
+    const holes = Math.round((1 - STAMP_PRINT_INK) * 1400);
+    for (let i = 0; i < holes; i++) {
+      ctx.globalAlpha = .25 + Math.random() * .55;
+      ctx.beginPath(); ctx.arc(Math.random() * W, Math.random() * H, Math.random() * 2.6, 0, 6.29); ctx.fill();
+    }
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+  }
   ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   pixelSnap(cv, 2);
   return cv;
 }
 function stampDocs(decision) {
   const t = shift.stampTarget; shift.stampTarget = null;
+  STAMP_PRINT_INK = t && t.ink != null ? t.ink : 1;
   const first = (t && t.doc && t.doc.isConnected) ? t.doc : $('desk').querySelector('.document');
   if (!first) return;
   const st = document.createElement('div');
