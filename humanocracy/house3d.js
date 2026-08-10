@@ -205,117 +205,12 @@ function gl3Init() {
   }
   for (const b of BOXES) scene.add(buildFurn(b));
 
-  // ---- GENTE: figuras 3D DE VERDADE (estilo PSX blocado) ----
-  // Nada de plano girando: cada membro da família é um conjunto de volumes
-  // com orientação fixa no mundo — andar em volta mostra frente, perfil e
-  // costas de verdade. O rosto é um recorte do MESMO sprite procedural.
-  const shadeRgb = (s, f2) => {
-    const m = s.match(/\d+/g).map(Number);
-    return `rgb(${m.slice(0, 3).map(v => Math.max(0, Math.min(255, (v * f2) | 0))).join(',')})`;
-  };
-  // cor FIEL à paleta do sprite: converte pra linear, senão o outputEncoding
-  // sRGB re-clareia o material (castanho vira palha, casaco vira cinza-gelo)
-  const solidL = (c) => {
-    let m = matCache.get('L' + c);
-    if (!m) { m = new THREE.MeshLambertMaterial({ color: new THREE.Color(c).convertSRGBToLinear() }); matCache.set('L' + c, m); }
-    return m;
-  };
-  const PP = (g, w, h, d, x, y, z, c) => { const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), solidL(c)); m.position.set(x, y, z); g.add(m); return m; };
-  const famColors = (who) => {
-    const f = FAM_FEATURES[who];
-    const hairC = (typeof F_HAIR !== 'undefined') ? `rgb(${F_HAIR[f.hair % F_HAIR.length].map(Math.round).join(',')})` : 'rgb(20,20,20)';
-    const skin = (typeof F_SKIN !== 'undefined') ? `rgb(${F_SKIN[f.skin % F_SKIN.length].b.map(Math.round).join(',')})` : 'rgb(140,107,78)';
-    return { f, hairC, skin, coat: FAM_COAT[who] };
-  };
-  const faceCrop = (who, skin) => {                 // recorta o ROSTO do sprite da família
-    const child = FAM_FEATURES[who].idade <= 12;
-    const c2 = document.createElement('canvas'); c2.width = 26; c2.height = 26;
-    const c = c2.getContext('2d'); c.imageSmoothingEnabled = false;
-    c.fillStyle = skin; c.fillRect(0, 0, 26, 26);   // pele por baixo: transparência NÃO vira preto
-    // da testa (abaixo da linha do cabelo) ao queixo — o cabelo 3D é volume próprio
-    if (child) c.drawImage(SPR[who], 17, 28, 30, 28, 0, 0, 26, 26);
-    else c.drawImage(SPR[who], 17, 16, 30, 32, 0, 0, 26, 26);
-    return c2;
-  };
-  function buildPerson(e) {
-    const who = e.spr, { f, hairC, skin, coat } = famColors(who);
-    const child = f.idade <= 12, faceless = who === 'dario';   // o Dario nunca mostra o rosto
-    const H = Math.max(.3, e.sc), W = H * (child ? .42 : .36);
-    const headH = H * (child ? .30 : .24), torsoH = H * (child ? .34 : .38);
-    const legH = H - headH - torsoH;
-    const g = new THREE.Group();
-    const pants = child ? '#3a4652' : '#26282a';
-    if (f.sexo === 'f') {                                       // saia longa até o chão
-      const sk = new THREE.Mesh(new THREE.CylinderGeometry(W * .4, W * .58, legH + torsoH * .3, 8), solidL(coat));
-      sk.position.y = (legH + torsoH * .3) / 2; g.add(sk);
-    } else {
-      PP(g, W * .3, legH, W * .32, -W * .19, legH / 2, 0, pants);
-      PP(g, W * .3, legH, W * .32, W * .19, legH / 2, 0, pants);
-    }
-    PP(g, W * .3, legH * .14, W * .46, -W * .19, legH * .07, W * .04, '#17150f');  // sapatos
-    PP(g, W * .3, legH * .14, W * .46, W * .19, legH * .07, W * .04, '#17150f');
-    PP(g, W, torsoH, W * .56, 0, legH + torsoH / 2, 0, coat);                      // casaco
-    PP(g, W * 1.05, torsoH * .2, W * .6, 0, legH + torsoH * .9, 0, shadeRgb(coat, .78)); // ombros/gola
-    const armC = shadeRgb(coat, .88);
-    PP(g, W * .22, torsoH * .94, W * .26, -(W / 2 + W * .13), legH + torsoH * .5, 0, armC);  // braços
-    PP(g, W * .22, torsoH * .94, W * .26, (W / 2 + W * .13), legH + torsoH * .5, 0, armC);
-    PP(g, W * .18, W * .18, W * .2, -(W / 2 + W * .13), legH + torsoH * .04, 0, skin);       // mãos
-    const handR = PP(g, W * .18, W * .18, W * .2, (W / 2 + W * .13), legH + torsoH * .04, 0, skin);
-    if (who === 'vessa') PP(g, W * .62, torsoH * .8 + legH * .45, .014, 0, legH * .62, W * .3, 'rgb(122,106,79)'); // avental
-    // CABEÇA num subgrupo: rosto, calota e cabelo comprido giram JUNTOS
-    const headW = W * (child ? .74 : .62);
-    const hg = new THREE.BoxGeometry(headW, headH * .82, headW * .88);
-    const skinM = solidL(skin), hairM = solidL(hairC);
-    const frontM = faceless ? solidL(shadeRgb(skin, .42))        // Dario: rosto em sombra, sem feições
-      : new THREE.MeshLambertMaterial({ map: tex(faceCrop(who, skin)) });
-    // cabelo envolve topo, nuca e LATERAIS; o rosto é a tira da frente
-    const headG = new THREE.Group();
-    headG.position.set(0, legH + torsoH + headH * .45, 0);
-    const hm = new THREE.Mesh(hg, [hairM, hairM, hairM, skinM, frontM, hairM]);
-    headG.add(hm);
-    PP(headG, headW * 1.08, headH * .3, headW * .96, 0, headH * .35, -headW * .06, hairC);   // calota
-    if (f.sexo === 'f') PP(headG, headW * .88, headH * .95, headW * .3, 0, -headH * .17, -headW * .52, hairC); // cabelo comprido
-    g.add(headG);
-    g.userData = { who, headG, handR, faceless };
-    const sh = new THREE.Mesh(new THREE.CircleGeometry(W * .7, 10),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .3 }));
-    sh.rotation.x = -Math.PI / 2; sh.position.y = .006; g.add(sh);                // sombra de contato
-    g.position.set(e.x, (e.lift || 0), e.y);
-    const dir = (e.dir != null) ? e.dir : (who === 'dario' ? Math.atan2(-0.8, -1.4) : Math.PI / 2);
-    g.rotation.y = Math.PI / 2 - dir;                                             // orientação REAL no mundo
-    return g;
-  }
-  function buildHooded(e) {                          // os realocados: dois, de pé, virados pra parede
-    const g = new THREE.Group();
-    const H = Math.max(.4, e.sc);
-    [[-.17, 1, '#26292b'], [.15, .94, '#2b2e30']].forEach(([ox, s, cor]) => {
-      const h2 = H * s, W = h2 * .3;
-      PP(g, W * .28, h2 * .3, W * .3, ox - W * .17, h2 * .15, 0, '#1c1e20');       // pernas
-      PP(g, W * .28, h2 * .3, W * .3, ox + W * .17, h2 * .15, 0, '#1c1e20');
-      PP(g, W, h2 * .48, W * .5, ox, h2 * .53, 0, cor);                            // casaco
-      PP(g, W * 1.04, h2 * .12, W * .54, ox, h2 * .74, 0, shadeRgb('rgb(38,41,43)', .8));
-      const hd = new THREE.Mesh(new THREE.BoxGeometry(W * .56, h2 * .17, W * .52), solidL('#141311'));
-      hd.position.set(ox, h2 * .88, 0); g.add(hd);                                // cabeça baixa, escura
-    });
-    const sh = new THREE.Mesh(new THREE.CircleGeometry(H * .3, 10),
-      new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .3 }));
-    sh.rotation.x = -Math.PI / 2; sh.position.y = .006; g.add(sh);
-    g.position.set(e.x, (e.lift || 0), e.y);
-    g.rotation.y = Math.PI / 2 - (-Math.PI / 2);                                  // de frente pra parede norte
-    return g;
-  }
-  const PERSONS = { mae: 1, vessa: 1, tomi: 1, dario: 1 };
-  const people = [];
-
-  // ---- decoração restante: planos com o sprite (retratos/janelas/etc.) ----
+  // ---- GENTE e decoração: planos com o sprite procedural, billboard no eixo Y
+  // (as figuras volumétricas foram removidas: ficavam estranhas de perto; o
+  // sprite pintado pelo mesmo motor dos rostos lê muito melhor) ----
   const bills = [];
   for (const e of ENTS) {
     if (!e.spr || BOX_DEFS[e.spr]) continue;
-    if (PERSONS[e.spr] || e.spr === 'realocados') {
-      const g = (PERSONS[e.spr] ? buildPerson : buildHooded)(e);
-      scene.add(g); people.push({ g, e });
-      continue;
-    }
     const spr = SPR[e.spr]; if (!spr) continue;
     const h = Math.max(.12, e.sc), w = h * (spr.width / spr.height);
     const m = new THREE.Mesh(
@@ -355,7 +250,7 @@ function gl3Init() {
   const tvLight = tvEnt ? new THREE.PointLight(0x6f9cc0, .5, 4.2, 1) : null;
   if (tvLight) { tvLight.position.set(tvEnt.x, .45, tvEnt.y); scene.add(tvLight); }
 
-  GL = { renderer, scene, cam, bills, people, lantern, lamps, tvLight, cv, texCache };
+  GL = { renderer, scene, cam, bills, lantern, lamps, tvLight, cv, texCache };
   return GL;
 }
 
@@ -385,34 +280,6 @@ function renderHouse3() {
     if (GL.tvLight) {
       const tvOn = HOUSE.t > (HOUSE.fx ? HOUSE.fx.tvOff : 0);
       GL.tvLight.intensity = tvOn ? (.34 + Math.random() * .26) * dimmed : 0;
-    }
-    // pessoas 3D: respiração sutil + some quem não está mais vivo
-    for (const pg of GL.people) {
-      const m2 = pg.e.spot ? S.family[pg.e.spot] : null;
-      pg.g.visible = !(m2 && !m2.alive);
-      if (!pg.g.visible) continue;
-      pg.g.scale.y = 1 + Math.sin(HOUSE.t * 1.8 + pg.e.x * 2.1) * .008;
-      const ud = pg.g.userData || {};
-      // a CABEÇA acompanha você quando chega perto — menos a do Dario, nunca
-      if (ud.headG && !ud.faceless) {
-        const dx = HOUSE.x - pg.e.x, dz = HOUSE.y - pg.e.y;
-        let want = 0;
-        if (Math.hypot(dx, dz) < 2.6) {
-          let rel = Math.atan2(dx, dz) - pg.g.rotation.y;
-          while (rel > Math.PI) rel -= Math.PI * 2;
-          while (rel < -Math.PI) rel += Math.PI * 2;
-          // vira até ~40° e só se você não está direto atrás (pescoço não é coruja)
-          want = Math.abs(rel) > 2.2 ? 0 : Math.max(-.7, Math.min(.7, rel));
-        }
-        ud.headYaw = (ud.headYaw || 0) + (want - (ud.headYaw || 0)) * .08;
-        ud.headG.rotation.y = ud.headYaw;
-      }
-      // a Vessa mexe a panela no fogão (a mão direita trabalha)
-      if (ud.who === 'vessa' && ud.handR) {
-        ud.handR.position.x = ud.handR.position.x || 0;
-        ud.handR.position.z = Math.sin(HOUSE.t * 3.4) * .022;
-        ud.handR.position.y = (ud.handY0 || (ud.handY0 = ud.handR.position.y)) + Math.abs(Math.sin(HOUSE.t * 3.4)) * .012;
-      }
     }
     // billboards: giram só no eixo Y + troca frente/costas (direcional)
     for (const b of GL.bills) {
