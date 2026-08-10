@@ -306,7 +306,16 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 #screen-modeselect.active { display:flex; }
 #ms-snow { position:absolute; inset:0; width:100%; height:100%; z-index:0; }
 #screen-modeselect::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none;
-  background: radial-gradient(ellipse at 50% 40%, rgba(8,9,6,.55) 40%, rgba(8,9,6,.8) 100%); }
+  background: radial-gradient(ellipse at 50% 40%, rgba(8,9,6,.5) 42%, rgba(8,9,6,.82) 100%); }
+/* mesma linguagem do cartaz do título: cunha vermelha e meio-tom de impressão */
+#screen-modeselect::before {
+  content:''; position:absolute; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(rgba(0,0,0,.28) .6px, transparent .9px),
+    linear-gradient(196deg, rgba(88,24,18,.5) 0%, rgba(88,24,18,.18) 26%, transparent 44%),
+    linear-gradient(16deg, rgba(88,24,18,.42) 0%, rgba(88,24,18,.14) 24%, transparent 42%);
+  background-size:3px 3px, auto, auto;
+}
 .ms-banner {
   position:relative; z-index:2; text-align:center; margin-bottom:4px;
   padding:8px 40px; background: linear-gradient(180deg,#2a2c21,#1b1c15);
@@ -1589,7 +1598,10 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 /* ============ EXAME FÍSICO ============ */
 .exam-overlay {
   display:none; position:absolute; inset:0; background:rgba(0,0,0,.82);
-  align-items:center; justify-content:center; z-index:45;
+  align-items:center; justify-content:center;
+  /* acima da tralha da mesa (carimbos 59, sineta 58, instrumentos 60) e
+     abaixo da pausa (80) e dos modais (90) — senão o carimbo vaza por cima */
+  z-index:70;
 }
 .exam-overlay.active { display:flex; }
 .exam-panel {
@@ -1616,18 +1628,40 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 }
 .exam-face svg { width:100%; max-width:330px; height:auto; filter: contrast(1.08); }
 .exam-right { display:flex; flex-direction:column; padding:10px; gap:8px; min-height:0; }
-.exam-zones { display:flex; flex-wrap:wrap; gap:6px; }
+/* ABAS DE PRONTUÁRIO: cada região é uma guia de fichário, com a aba
+   recortada em cima e a marca de conferido quando já examinada */
+.exam-zones { display:flex; flex-wrap:wrap; gap:5px; padding-bottom:2px; }
 .exam-zones button {
-  font-size:11px; padding:7px 12px; border-radius:1px; letter-spacing:1px;
-  color:#cabd98; background:#23251b; border:1.5px solid #0b0c07;
-  box-shadow: 2px 2px 0 rgba(0,0,0,.45); transition: transform .05s, background-color .08s, color .08s;
+  position:relative; font-size:11px; padding:8px 13px 7px; border-radius:0; letter-spacing:1.4px;
+  color:#3a3428; background:#b3a683; border:1px solid #241f14; border-bottom:none;
+  background-image:
+    radial-gradient(rgba(0,0,0,.1) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(255,250,235,.5), transparent 44%);
+  background-size:3px 3px, auto;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.45), inset 0 1px 0 rgba(255,250,235,.45);
+  clip-path: polygon(0 5px, 5px 0, calc(100% - 5px) 0, 100% 5px, 100% 100%, 0 100%);
+  text-shadow:none; transition: transform .05s, background-color .08s, color .08s;
 }
-.exam-zones button:hover:not(:disabled) { background:#c9a34a; color:#141207; }
-.exam-zones button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0); }
-.exam-zones button.done { background:#2f5c39; color:#e8f0e0; }
-.exam-zones button.done::after { content:" ✓"; font-weight:bold; }
-.exam-log { flex:1; overflow-y:auto; font-size:12px; line-height:1.7; color:var(--ink); }
-.exam-log .anomalia { color:#d98b7c; }
+.exam-zones button:hover:not(:disabled) { background:#d3c69f; color:#100e08; }
+.exam-zones button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0), inset 0 1px 0 rgba(255,250,235,.45); }
+.exam-zones button.done { background:#7f9678; color:#16200f; }
+.exam-zones button.done::after {   /* visto a caneta, torto */
+  content:'✓'; position:absolute; right:3px; top:0; font-weight:bold; font-size:13px;
+  color:rgba(20,58,24,.75); transform:rotate(-16deg);
+}
+/* o laudo é a folha do prontuário presa sob as abas */
+.exam-log {
+  flex:1; overflow-y:auto; font-size:12px; line-height:22px; color:#2a251b;
+  padding:8px 10px 8px 18px; margin-top:-1px;
+  background-color:#cec2a0;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 21px, rgba(70,60,40,.18) 21px 22px),
+    linear-gradient(90deg, transparent 0 11px, rgba(140,47,36,.3) 11px 12px, transparent 12px),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  background-attachment: local, local, local, local;
+  border:1px solid #241f14; box-shadow: inset 0 3px 8px rgba(0,0,0,.28);
+}
+.exam-log .anomalia { color:#8e2c1e; font-weight:600; }
 /* achado clicável: registra a discrepância (estilo Papers Please) */
 .exam-log .anomalia[data-tell] { cursor:pointer; padding:2px 5px; margin:2px 0; border-left:2px solid transparent; transition:background .12s; }
 .exam-log .anomalia[data-tell]:hover { background:rgba(140,47,36,.18); border-left-color:var(--stamp-red); }
@@ -1636,7 +1670,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .exam-log .anomalia[data-tell].flagged::after { content:' ✓'; color:#d98b7c; }
 .exam-log .anomalia.endossada { text-decoration: underline; cursor:pointer; }
 .exam-log .exam-detected {
-  color:#f0dcc0; background:rgba(140,47,36,.35); border-left:3px solid var(--stamp-red);
+  color:#f0dcc0; background:rgba(120,34,24,.92); border-left:3px solid #4a140c;
   padding:5px 8px; margin:6px 0 2px; font-family:var(--font-display); font-weight:600;
   letter-spacing:.04em; animation: detected-flash .5s ease;
 }
@@ -10667,7 +10701,7 @@ function startDay() {
   // primeiro dia: as gavetas se abrem sozinhas, para o novato ver as ferramentas
   if (S.day === 1 && !S.infinite) {
     setTimeout(() => document.querySelectorAll('.drawer').forEach((d, i) => {
-      setTimeout(() => { d.classList.add('open'); sfxTool('pickup'); }, i * 320);
+      setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, i * 320);
     }), 900);
   }
   // o comunicado do dia chega em papel, deslizando pela mesa
@@ -12223,6 +12257,24 @@ function sfxTool(k) {
         g.gain.setValueAtTime(vol, t + off); g.gain.exponentialRampToValueAtTime(.0005, t + off + 1.1);
         o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + 1.2);
       });
+    } else if (k === 'drawer') {                   // gaveta de madeira correndo no trilho
+      const dur = .38;
+      const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const ph = i / d.length;
+        const env = Math.min(1, ph * 6) * (1 - ph) * (1 - ph);        // arranca e freia
+        d[i] = (Math.random() * 2 - 1) * env * (.7 + Math.sin(ph * 90) * .3);  // trepidação do trilho
+      }
+      const s2 = AC.createBufferSource(); s2.buffer = n;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = .8;
+      f.frequency.setValueAtTime(240, t); f.frequency.linearRampToValueAtTime(560, t + dur);
+      const g = AC.createGain(); g.gain.value = .12;
+      s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + dur + .05);
+      // o baque da gaveta batendo no batente, no fim do curso
+      const o2 = AC.createOscillator(), g2 = AC.createGain(); o2.type = 'sine';
+      o2.frequency.setValueAtTime(120, t + dur * .82); o2.frequency.exponentialRampToValueAtTime(52, t + dur * .82 + .07);
+      g2.gain.setValueAtTime(.11, t + dur * .82); g2.gain.exponentialRampToValueAtTime(.001, t + dur * .82 + .12);
+      o2.connect(g2); g2.connect(AC.destination); o2.start(t + dur * .82); o2.stop(t + dur + .1);
     } else if (k === 'paper') {                    // papel deslizando na madeira
       const n = AC.createBuffer(1, AC.sampleRate * .22 | 0, AC.sampleRate), d = n.getChannelData(0);
       for (let i = 0; i < d.length; i++) { const env = Math.sin(Math.PI * i / d.length); d[i] = (Math.random() * 2 - 1) * env; }
@@ -12483,7 +12535,7 @@ function setupDrawers() {
   // abre/fecha
   document.querySelectorAll('.drawer').forEach(d => {
     const front = d.querySelector('.drawer-front');
-    if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
+    if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool('drawer'); };
     // começam FECHADAS: a coluna é curta e o regulamento precisa do espaço.
     // No dia 1 elas se abrem sozinhas uma vez, para o inspetor novato ver o
     // que tem dentro (startDay cuida disso).

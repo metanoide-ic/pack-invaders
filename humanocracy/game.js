@@ -1522,7 +1522,7 @@ function startDay() {
   // primeiro dia: as gavetas se abrem sozinhas, para o novato ver as ferramentas
   if (S.day === 1 && !S.infinite) {
     setTimeout(() => document.querySelectorAll('.drawer').forEach((d, i) => {
-      setTimeout(() => { d.classList.add('open'); sfxTool('pickup'); }, i * 320);
+      setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, i * 320);
     }), 900);
   }
   // o comunicado do dia chega em papel, deslizando pela mesa
@@ -3078,6 +3078,24 @@ function sfxTool(k) {
         g.gain.setValueAtTime(vol, t + off); g.gain.exponentialRampToValueAtTime(.0005, t + off + 1.1);
         o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + 1.2);
       });
+    } else if (k === 'drawer') {                   // gaveta de madeira correndo no trilho
+      const dur = .38;
+      const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const ph = i / d.length;
+        const env = Math.min(1, ph * 6) * (1 - ph) * (1 - ph);        // arranca e freia
+        d[i] = (Math.random() * 2 - 1) * env * (.7 + Math.sin(ph * 90) * .3);  // trepidação do trilho
+      }
+      const s2 = AC.createBufferSource(); s2.buffer = n;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = .8;
+      f.frequency.setValueAtTime(240, t); f.frequency.linearRampToValueAtTime(560, t + dur);
+      const g = AC.createGain(); g.gain.value = .12;
+      s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + dur + .05);
+      // o baque da gaveta batendo no batente, no fim do curso
+      const o2 = AC.createOscillator(), g2 = AC.createGain(); o2.type = 'sine';
+      o2.frequency.setValueAtTime(120, t + dur * .82); o2.frequency.exponentialRampToValueAtTime(52, t + dur * .82 + .07);
+      g2.gain.setValueAtTime(.11, t + dur * .82); g2.gain.exponentialRampToValueAtTime(.001, t + dur * .82 + .12);
+      o2.connect(g2); g2.connect(AC.destination); o2.start(t + dur * .82); o2.stop(t + dur + .1);
     } else if (k === 'paper') {                    // papel deslizando na madeira
       const n = AC.createBuffer(1, AC.sampleRate * .22 | 0, AC.sampleRate), d = n.getChannelData(0);
       for (let i = 0; i < d.length; i++) { const env = Math.sin(Math.PI * i / d.length); d[i] = (Math.random() * 2 - 1) * env; }
@@ -3338,7 +3356,7 @@ function setupDrawers() {
   // abre/fecha
   document.querySelectorAll('.drawer').forEach(d => {
     const front = d.querySelector('.drawer-front');
-    if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
+    if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool('drawer'); };
     // começam FECHADAS: a coluna é curta e o regulamento precisa do espaço.
     // No dia 1 elas se abrem sozinhas uma vez, para o inspetor novato ver o
     // que tem dentro (startDay cuida disso).
