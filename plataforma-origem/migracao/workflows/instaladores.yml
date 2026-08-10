@@ -48,13 +48,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: instaladores-v1
-          name: 'Plataforma Origem — Instaladores'
+          name: 'Orikay — Instaladores'
           body: |
-            Instaladores do aplicativo desktop da Plataforma Origem.
+            Instaladores do aplicativo desktop da Orikay.
 
-            - Windows: PlataformaOrigem-1.0.0.exe
-            - macOS: PlataformaOrigem-1.0.0.dmg
-            - Linux: PlataformaOrigem-1.0.0.AppImage
+            - Windows: Orikay-1.0.0.exe
+            - macOS: Orikay-1.0.0.dmg
+            - Linux: Orikay-1.0.0.AppImage
 
             Os instaladores não são assinados digitalmente; na primeira execução
             o sistema pode pedir confirmação (Windows: "Mais informações →

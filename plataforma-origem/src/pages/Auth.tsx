@@ -53,7 +53,7 @@ export default function Auth() {
           <Logo />
           <div>
             <div className="mb-5 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-white/40">
-              <span className="h-px w-8 bg-brand-500/70" /> Acesso da equipe
+              <span className="h-px w-8 bg-brand-500/70" /> Orikay, acesso da equipe
             </div>
             <h2 className="font-display text-4xl font-semibold leading-tight text-white">
               A operação da agência,
@@ -65,7 +65,7 @@ export default function Auth() {
               continue de onde parou.
             </p>
           </div>
-          <p className="text-xs tracking-wide text-white/35">Estratégia · Criatividade · Resultados</p>
+          <p className="text-xs tracking-wide text-white/35">Orikay · Origem Comunicação &amp; Marketing</p>
         </div>
       </div>
 

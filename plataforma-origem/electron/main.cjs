@@ -8,7 +8,7 @@ function createWindow() {
     minWidth: 980,
     minHeight: 620,
     backgroundColor: '#0a0a0c',
-    title: 'Plataforma Origem',
+    title: 'Orikay',
     icon: path.join(__dirname, '..', 'build', 'icon.png'),
     autoHideMenuBar: true,
     webPreferences: {

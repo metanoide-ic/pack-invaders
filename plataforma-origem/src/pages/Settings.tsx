@@ -207,7 +207,7 @@ export default function Settings() {
           <section className="card p-6 text-sm text-white/50">
             <h3 className="mb-2 font-semibold text-white">Sobre</h3>
             <p>
-              Plataforma Origem — quadros, checklist de posts e financeiro para a
+              Orikay, a plataforma da Origem: quadros, posts, vídeos e financeiro para a
               rotina da agência.
             </p>
             <p className="mt-3 text-xs text-white/35">Versão 1.0 · Web &amp; App (PWA)</p>

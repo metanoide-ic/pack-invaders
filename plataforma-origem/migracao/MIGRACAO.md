@@ -1,12 +1,12 @@
-# Migração para repositório próprio
+# Migração para o repositório Orikay
 
-A plataforma vai morar em um repositório só dela: `metanoide-ic/plataforma-origem`.
+A plataforma (Orikay) vai morar em um repositório só dela: `metanoide-ic/Orikay`.
 Este kit permite completar a mudança a qualquer momento.
 
 ## Passo 1 — Criar o repositório (só o dono da conta pode)
 
 1. Abra https://github.com/new
-2. Nome: **plataforma-origem**
+2. Nome: **Orikay**
 3. Visibilidade: **Public** (necessário para o site grátis do GitHub Pages)
 4. NÃO marque "Add a README"
 5. Create repository
@@ -21,25 +21,25 @@ Manualmente (de qualquer computador com git + Node):
 ```bash
 git clone -b claude/plataforma-origem-site-app-52kx29 \
   https://github.com/metanoide-ic/pack-invaders.git origem-tmp
-mkdir plataforma-origem-repo
+mkdir orikay-repo
 tar -C origem-tmp/plataforma-origem \
   --exclude=node_modules --exclude=dist --exclude=dist-demo \
   --exclude=dist-desktop --exclude=release --exclude='*.tsbuildinfo' \
-  -cf - . | tar -xf - -C plataforma-origem-repo
-cd plataforma-origem-repo
+  -cf - . | tar -xf - -C orikay-repo
+cd orikay-repo
 mkdir -p .github/workflows
 mv migracao/workflows/*.yml .github/workflows/
 # aponta os links do README para o novo repositório
-sed -i 's|pack-invaders/releases|plataforma-origem/releases|g; s|github.io/pack-invaders|github.io/plataforma-origem|g' README.md
+sed -i 's|pack-invaders/releases|Orikay/releases|g; s|github.io/pack-invaders|github.io/Orikay|g' README.md
 rm -rf migracao
-git init -b main && git add -A && git commit -m "Plataforma Origem — repositório próprio"
-git remote add origin https://github.com/metanoide-ic/plataforma-origem.git
+git init -b main && git add -A && git commit -m "Orikay: plataforma da Origem"
+git remote add origin https://github.com/metanoide-ic/Orikay.git
 git push -u origin main
 ```
 
 Os workflows publicam sozinhos:
-- Site: https://metanoide-ic.github.io/plataforma-origem/
-- Instaladores: https://github.com/metanoide-ic/plataforma-origem/releases/tag/instaladores-v1
+- Site: https://metanoide-ic.github.io/Orikay/
+- Instaladores: https://github.com/metanoide-ic/Orikay/releases/tag/instaladores-v1
 
 ## Passo 3 — Limpar o pack-invaders (depois que o novo estiver no ar)
 

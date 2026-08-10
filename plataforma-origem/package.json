@@ -1,10 +1,10 @@
 {
-  "name": "plataforma-origem",
+  "name": "orikay",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "main": "electron/main.cjs",
-  "description": "Plataforma Origem — quadros, financeiro e checklist de posts para a agência Origem.",
+  "description": "Orikay: gestão de posts, vídeos, quadros e financeiro da agência Origem.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -16,9 +16,9 @@
     "check": "tsc -b --noEmit"
   },
   "build": {
-    "appId": "com.origem.plataforma",
-    "productName": "Plataforma Origem",
-    "artifactName": "PlataformaOrigem-${version}.${ext}",
+    "appId": "com.origem.orikay",
+    "productName": "Orikay",
+    "artifactName": "Orikay-${version}.${ext}",
     "directories": {
       "output": "release",
       "buildResources": "build"

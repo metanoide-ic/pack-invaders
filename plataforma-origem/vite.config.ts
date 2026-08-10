@@ -17,9 +17,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'Plataforma Origem',
-        short_name: 'Origem',
-        description: 'Quadros, financeiro e checklist de posts da agência Origem.',
+        name: 'Orikay',
+        short_name: 'Orikay',
+        description: 'Gestão de posts, vídeos, quadros e financeiro da agência Origem.',
         theme_color: '#0a0a12',
         background_color: '#0a0a12',
         display: 'standalone',

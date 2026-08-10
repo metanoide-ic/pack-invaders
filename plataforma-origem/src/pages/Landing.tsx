@@ -29,7 +29,7 @@ export default function Landing() {
         <div>
           <div className="mb-6 flex items-center gap-2 text-xs font-medium uppercase tracking-[0.2em] text-white/40">
             <span className="h-px w-8 bg-brand-500/70" />
-            Plataforma interna
+            Orikay, a plataforma da Origem
           </div>
           <h1 className="font-display text-[2.6rem] font-semibold leading-[1.02] text-white sm:text-6xl">
             Resultado tem nome.
@@ -60,8 +60,8 @@ export default function Landing() {
             <div className="relative grid place-items-center px-10 py-16">
               <LogoMark className="h-28 w-28" />
               <div className="mt-8 text-center">
-                <div className="font-display text-xl font-semibold tracking-[0.32em] text-white">ORIGEM</div>
-                <div className="mt-2 text-[10px] tracking-[0.3em] text-white/35">COMUNICAÇÃO &amp; MARKETING</div>
+                <div className="font-display text-3xl font-semibold tracking-[0.18em] text-white">ORIKAY</div>
+                <div className="mt-2 text-[10px] tracking-[0.3em] text-white/35">POR ORIGEM COMUNICAÇÃO</div>
               </div>
             </div>
             <div className="grid grid-cols-3 divide-x divide-line border-t border-line text-center">
@@ -114,7 +114,7 @@ export default function Landing() {
       </section>
 
       <footer className="border-t border-line py-8 text-center text-xs tracking-wide text-white/35">
-        Origem · Estratégia · Criatividade · Resultados
+        Orikay · Origem Comunicação &amp; Marketing
       </footer>
     </div>
   );
