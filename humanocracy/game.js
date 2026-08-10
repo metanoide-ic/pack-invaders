@@ -4108,6 +4108,7 @@ function tmAct() { const el = tmSlots()[TM.idx]; if (el) tmDo(el.dataset.act); }
 function initTitleMenu() {
   const cont = document.querySelector('#title-slots .title-slot[data-act="continue"]');
   if (cont && loadSave()) cont.style.display = '';
+  document.querySelectorAll('#title-slots .tp-label').forEach(el => { el.textContent = T(el.textContent); });
   document.querySelectorAll('#title-slots .title-slot').forEach(el => drawTitleMenuEmblem(el.querySelector('.tm-emblem'), el.dataset.act));
   const s = tmSlots(); TM.idx = Math.max(0, s.findIndex(el => el.dataset.act === 'play'));
   tmRender();
@@ -4116,8 +4117,8 @@ function initTitleMenu() {
 document.addEventListener('keydown', (e) => {
   if (!$('screen-title').classList.contains('active')) return;
   if ($('modal-overlay').classList.contains('active')) return;
-  if (e.key === 'ArrowLeft') { e.preventDefault(); tmMove(-1); }
-  else if (e.key === 'ArrowRight') { e.preventDefault(); tmMove(1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); tmMove(-1); }
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); tmMove(1); }
   else if (e.key === 'Enter') { e.preventDefault(); tmAct(); }
 });
 $('btn-continue').onclick = () => { const j = loadSave(); if (j) { S = j; showMorning(); } };

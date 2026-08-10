@@ -9,48 +9,38 @@
 <body>
   <div id="app">
 
-    <!-- ===== TELA DE TÍTULO ===== -->
+    <!-- ===== TELA DE TÍTULO: PÔSTER DE PROPAGANDA (tela cheia) ===== -->
     <div id="screen-title" class="screen active">
       <canvas id="title-snow"></canvas>
-      <div class="title-card">
-        <div class="tc-band"><span>CONFIDENCIAL</span><span class="tc-band-mid">USO INTERNO DO MINISTÉRIO</span><span>Nº 7</span></div>
-        <div class="tc-body">
-          <div class="tc-letterhead">
-            <canvas id="title-crest" class="title-crest" width="300" height="300"></canvas>
-            <div class="tc-lh-txt">
-              <div class="tc-ministry">MINISTÉRIO DE TRIAGEM E FRONTEIRAS</div>
-              <div class="tc-republic">REPÚBLICA DE OSTERIA</div>
-            </div>
+      <div class="tp-wedge"></div>
+      <div class="title-poster">
+        <div class="tp-head">
+          <canvas id="title-crest" class="title-crest" width="300" height="300"></canvas>
+          <div class="tc-lh-txt">
+            <div class="tc-ministry">MINISTÉRIO DE TRIAGEM E FRONTEIRAS</div>
+            <div class="tc-republic">REPÚBLICA DE OSTERIA</div>
           </div>
-          <div class="tc-logo-wrap">
-            <h1 class="title-logo" data-text="HUMANOCRACY">HUMANOCRACY</h1>
-            <div class="tc-rule"></div>
-            <div class="tc-stamp"><span>POSTO Nº 7</span><b>FRONTEIRA LESTE</b></div>
+        </div>
+        <div class="tc-logo-wrap">
+          <h1 class="title-logo" data-text="HUMANOCRACY">HUMANOCRACY</h1>
+          <div class="tp-sub"><span>POSTO Nº 7</span><i>—</i><span>FRONTEIRA LESTE</span><i>—</i><span>48 DIAS</span></div>
+        </div>
+        <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
+        <!-- MENU EM FAIXAS (pôster construtivista: tiras a stencil, carimbo na seleção) -->
+        <div class="tp-menu" id="title-slots">
+          <div class="tp-item title-slot" data-act="continue" tabindex="0" style="display:none">
+            <span class="tp-arrow">▸</span><span class="tp-label">RETOMAR TURNO</span><span class="tp-seal">★</span>
           </div>
-          <div class="title-quote">"A verdade existe. Você só nunca terá acesso completo a ela."</div>
-          <!-- MENU EM PEDESTAIS (estilo Castle Crashers, arte do jogo) -->
-          <div class="ms-slots title-slots" id="title-slots">
-            <div class="ms-slot title-slot" data-act="continue" tabindex="0" style="display:none">
-              <div class="ms-spot"></div>
-              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
-              <div class="ms-plinth"><div class="ms-badge">RETOMAR</div></div>
-            </div>
-            <div class="ms-slot title-slot sel" data-act="play" tabindex="0">
-              <div class="ms-spot"></div>
-              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
-              <div class="ms-plinth"><div class="ms-badge">JOGAR</div></div>
-            </div>
-            <div class="ms-slot title-slot" data-act="achievements" tabindex="0">
-              <div class="ms-spot"></div>
-              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
-              <div class="ms-plinth"><div class="ms-badge">CONQUISTAS</div></div>
-            </div>
-            <div class="ms-slot title-slot" data-act="options" tabindex="0">
-              <div class="ms-spot"></div>
-              <div class="ms-figure"><canvas class="ms-emblem tm-emblem" width="160" height="160"></canvas></div>
-              <div class="ms-plinth"><div class="ms-badge">OPÇÕES</div></div>
-            </div>
+          <div class="tp-item title-slot sel" data-act="play" tabindex="0">
+            <span class="tp-arrow">▸</span><span class="tp-label">INICIAR SERVIÇO</span><span class="tp-seal">★</span>
           </div>
+          <div class="tp-item title-slot" data-act="achievements" tabindex="0">
+            <span class="tp-arrow">▸</span><span class="tp-label">CONQUISTAS</span><span class="tp-seal">★</span>
+          </div>
+          <div class="tp-item title-slot" data-act="options" tabindex="0">
+            <span class="tp-arrow">▸</span><span class="tp-label">OPÇÕES</span><span class="tp-seal">★</span>
+          </div>
+        </div>
           <!-- painel de opções (abre pelo pedestal OPÇÕES); mantém os botões e seus handlers -->
           <div class="title-options" id="title-options" hidden>
             <button id="btn-continue" class="btn-title" style="display:none">RETOMAR TURNO</button>
@@ -68,7 +58,6 @@
             perseguição — com o objetivo de criticá-los. Nada aqui é uma resposta. Nem mesmo isto.
           </div>
           <div class="title-version">FORM. 7-A · v1.0 · 48 DIAS · POSTO DE TRIAGEM Nº 7 — FRONTEIRA LESTE</div>
-        </div>
       </div>
     </div>
 
