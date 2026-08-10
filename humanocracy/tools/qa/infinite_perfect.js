@@ -26,8 +26,8 @@ const DIR = require('os').tmpdir() + '/';
           return 'approve';
         } catch (e) { return 'approve'; }
       });
-      if (want === 'detain') { const det = await p.$('#btn-detain:not([disabled])'); if (det) await det.click(); else await p.click('#btn-reject').catch(() => {}); }
-      else await p.click('#btn-' + want).catch(() => {});
+      if (want === 'detain') { const det = await p.$('#btn-detain:not([disabled])'); if (det) await det.click(); else await p.evaluate(() => { try { decide('reject'); } catch (e) {} }); }
+      else await p.evaluate((w) => { try { decide(w); } catch (e) { window.__qaerr = String(e); } }, want);
       await p.waitForTimeout(1300); await dismissModal();
     }
     await clickText(/ENCERRAR TURNO|END SHIFT/i); await p.waitForTimeout(1100); await dismissModal();

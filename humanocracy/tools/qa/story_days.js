@@ -32,10 +32,11 @@ const DIR = require('os').tmpdir() + '/';
       if (c % 4 === 1) { await p.evaluate(() => { try { openExam(); } catch (e) { window.__qaerr = String(e); } }); await p.waitForTimeout(250); await clickText(/FECHAR|CLOSE/i); }
       if (c % 5 === 2) await p.evaluate(() => { try { scan('pulse'); } catch (e) { window.__qaerr = String(e); } });
       // decide (APV na maioria; REJ às vezes; DET se habilitado de vez em quando)
+      // APV/REJ viraram carimbos arrastáveis; o driver decide direto na API
       const det = await p.$('#btn-detain:not([disabled])');
       if (det && c % 6 === 5) await det.click();
-      else if (c % 3 === 2) await p.click('#btn-reject').catch(() => {});
-      else await p.click('#btn-approve').catch(() => {});
+      else if (c % 3 === 2) await p.evaluate(() => { try { decide('reject'); } catch (e) { window.__qaerr = String(e); } });
+      else await p.evaluate(() => { try { decide('approve'); } catch (e) { window.__qaerr = String(e); } });
       await p.waitForTimeout(1400);
       await dismissModal();
     }

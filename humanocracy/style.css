@@ -568,34 +568,40 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   content:''; position:absolute; top:-4px; width:4px; height:4px; background:#191b16; border-radius:50%;
 }
 .dr-handle::before { left:-3px; } .dr-handle::after { right:-3px; }
+/* O INTERIOR da gaveta: um espaço visto de cima, fundo de madeira crua,
+   paredes internas em sombra — e os objetos ficam SOLTOS lá dentro
+   (dá pra arrastar e até tacar de um lado pro outro). */
 .drawer-tray {
-  display:none; align-items:flex-end; justify-content:space-around; gap:10px;
-  padding:12px 8px 8px;
-  /* INTERIOR DE GAVETA: madeira crua escurecida, laterais em sombra funda */
+  display:none; position:relative; height:118px; overflow:hidden;
   background-color:#241a10;
   background-image:
     radial-gradient(rgba(0,0,0,.3) .6px, transparent .9px),
-    linear-gradient(90deg, rgba(0,0,0,.5), transparent 12%, transparent 88%, rgba(0,0,0,.5)),
-    linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.24) 34%, rgba(0,0,0,.38)),
+    linear-gradient(180deg, rgba(10,6,3,.52), rgba(40,26,14,.12) 34%, rgba(8,5,2,.42)),
     var(--tex-wood);
-  background-size:3px 3px, auto, auto, auto;
+  background-size:3px 3px, auto, auto;
   border:1px solid #000; border-top:none;
-  box-shadow: inset 0 5px 10px rgba(0,0,0,.65), inset 3px 0 6px rgba(0,0,0,.4), inset -3px 0 6px rgba(0,0,0,.4), inset 0 -1px 0 rgba(238,240,230,.05);
-  transform-origin: top;
+  box-shadow:
+    inset 0 12px 14px -6px rgba(0,0,0,.85),
+    inset 10px 0 12px -8px rgba(0,0,0,.8),
+    inset -10px 0 12px -8px rgba(0,0,0,.8),
+    inset 0 -6px 8px -4px rgba(0,0,0,.6);
 }
-.drawer.open .drawer-tray { display:flex; animation: drawer-slide .22s cubic-bezier(.25,1,.4,1); }
+.drawer-tray::before, .drawer-tray::after {  /* paredes internas (perspectiva) */
+  content:''; position:absolute; top:0; bottom:0; width:12px; pointer-events:none; z-index:3;
+  background:linear-gradient(90deg, rgba(74,52,30,.5), transparent);
+}
+.drawer-tray::before { left:0; }
+.drawer-tray::after { right:0; left:auto; transform:scaleX(-1); }
+/* abre DE CIMA PRA BAIXO, girando como gaveta puxada (dobradiça no alto) */
+.drawer.open .drawer-tray { display:block; animation: drawer-slide .26s cubic-bezier(.3,1.15,.5,1); transform-origin:50% 0; }
 .drawer.open .drawer-front { box-shadow: inset 0 1px 0 rgba(238,232,214,.08), inset 0 -1px 0 rgba(0,0,0,.4), 0 1px 0 #0c0d09; }
-@keyframes drawer-slide { from { transform:scaleY(.08); opacity:.3; } }  /* desce de cima pra baixo */
-.dtool-slot { display:flex; flex-direction:column; align-items:center; gap:3px; }
-.dtool { cursor:grab; touch-action:none; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)); }
-.dtool:hover { filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)) brightness(1.15); }
-.dtool.dragging { cursor:grabbing; filter:drop-shadow(4px 7px 2px rgba(0,0,0,.55)); }
+@keyframes drawer-slide { from { transform:perspective(480px) rotateX(-58deg); opacity:.25; } to { transform:perspective(480px) rotateX(0deg); } }
+.drawer-tray .dtool { position:absolute; z-index:2; }
+.dtool { cursor:grab; touch-action:none; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.55)); }
+.dtool:hover { filter:drop-shadow(3px 4px 0 rgba(0,0,0,.55)) brightness(1.15); }
+.dtool.dragging { cursor:grabbing; filter:drop-shadow(6px 9px 2px rgba(0,0,0,.55)); }
 .dtool.busy { pointer-events:none; }
 .dtool canvas { display:block; image-rendering:pixelated; }
-.dt-name {
-  font-family:var(--font-mono); font-size:11.5px; letter-spacing:1.6px; color:#8b8a7a;
-  text-shadow:0 1px 0 rgba(0,0,0,.6);
-}
 .side-cap {
   font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:3px;
   font-size:13px; color:var(--accent2); padding-bottom:5px; margin-bottom:2px;
@@ -678,9 +684,15 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-approve::after { background:var(--stamp-green); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
-/* CARIMBOS FIXOS NA MESA (APV + REJ lado a lado, à esquerda dos instrumentos) */
-.desk-stamps { position:absolute; top:12px; right:118px; z-index:59; display:flex; flex-direction:row; gap:22px; }
+/* CARIMBOS DE PEGAR (APV + REJ lado a lado, à esquerda dos instrumentos) */
+.desk-stamps { position:absolute; top:8px; right:118px; z-index:59; display:flex; flex-direction:row; gap:14px; }
 .desk-stamps .stamp { width:74px; }
+.stamp-obj { cursor:grab; touch-action:none; filter:drop-shadow(3px 5px 0 rgba(0,0,0,.5)); transition:transform .1s; }
+.stamp-obj:hover { transform:translateY(-3px); }
+.stamp-obj.dragging { cursor:grabbing; transform:none; filter:drop-shadow(7px 11px 3px rgba(0,0,0,.5)); }
+.stamp-obj.busy { pointer-events:none; }
+.stamp-obj.hidden { display:none !important; }
+.stamp-obj canvas { display:block; image-rendering:pixelated; }
 /* DET: botão de pânico EMBUTIDO na madeira — vermelho, fundo, discreto */
 .desk-stamps .stamp-detain {
   position:absolute; top:98px; left:28px; width:54px; padding:7px 4px 8px; margin-top:0;

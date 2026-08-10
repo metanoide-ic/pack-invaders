@@ -153,14 +153,8 @@
               <span class="dr-handle"></span>
             </div>
             <div class="drawer-tray">
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-mapa" title="Carta de fronteiras — arraste até a MESA para abrir"><canvas width="64" height="50"></canvas></div>
-                <span class="dt-name">MAPA</span>
-              </div>
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-lupa" title="Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela"><canvas width="46" height="56"></canvas></div>
-                <span class="dt-name">LUPA</span>
-              </div>
+              <div class="dtool" id="dt-mapa" title="Carta de fronteiras — arraste até a MESA para abrir"><canvas width="64" height="50"></canvas></div>
+              <div class="dtool" id="dt-lupa" title="Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela"><canvas width="46" height="56"></canvas></div>
             </div>
           </div>
         </div>
@@ -190,11 +184,11 @@
 
         <!-- Coluna direita: ferramentas + regulamento -->
         <div class="stage-side stage-right">
-          <div class="side-cap">FERRAMENTAS</div>
           <div class="tools">
             <!-- exame/dossiê são FERRAMENTAS DE GAVETA (arrastáveis); a bagagem
-                 se revista pela lupa de exame. Botões ocultos por compat (QA/gamepad). -->
-            <button id="btn-inspect" class="btn-tool" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
+                 se revista pela lupa; a INSPEÇÃO fica sempre ativa (clique em
+                 dois campos para comparar). Botões ocultos por compat. -->
+            <button id="btn-inspect" class="btn-tool legacy-scan" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
             <button id="btn-exam" class="btn-tool legacy-scan" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
             <button id="btn-bag" class="btn-tool legacy-scan" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
             <button id="btn-lifeline" class="btn-tool legacy-scan" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
@@ -217,14 +211,8 @@
               <span class="dr-handle"></span>
             </div>
             <div class="drawer-tray">
-              <div class="dtool-slot">
-                <div class="inst" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
-                <span class="dt-name">TÉRMICO</span>
-              </div>
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
-                <span class="dt-name">DOSSIÊ</span>
-              </div>
+              <div class="dtool" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
+              <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
             </div>
           </div>
         </div>
@@ -245,10 +233,13 @@
               <div class="inst" id="inst-bio" title="Coletor K-7 — arraste até o cidadão; o resultado sai na etiqueta"><canvas width="30" height="72"></canvas><span class="inst-tag" id="bio-tag"></span></div>
             </div>
           </div>
-          <!-- CARIMBOS FIXOS NA MESA + o botão DET embutido, discreto e vermelho -->
+          <!-- CARIMBOS DE VERDADE: pegue e bata no documento (estilo Papers Please).
+               Os botões antigos ficam ocultos por compatibilidade (gamepad/QA). -->
           <div class="window-stamps desk-stamps" id="desk-stamps">
-            <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
-            <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
+            <div class="stamp-obj" id="st-apv" title="Carimbo APROVADO — arraste até um documento e solte"><canvas width="68" height="88"></canvas></div>
+            <div class="stamp-obj" id="st-rej" title="Carimbo REJEITADO — arraste até um documento e solte"><canvas width="68" height="88"></canvas></div>
+            <button id="btn-approve" class="stamp stamp-approve legacy-scan" title="Aprovar">APV</button>
+            <button id="btn-reject" class="stamp stamp-reject legacy-scan" title="Rejeitar">REJ</button>
             <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
           </div>
           <!-- a sineta pintada na mesa é clicável -->

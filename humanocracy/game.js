@@ -1516,6 +1516,7 @@ function startDay() {
   const bioSlot = $('inst-bio-slot'); if (bioSlot) bioSlot.style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
   $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
+  const sr = $('st-rej'); if (sr) sr.classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
   // o comunicado do dia chega em papel, deslizando pela mesa
@@ -2354,6 +2355,7 @@ function greetingFor(cz) {
 
 function presentCitizen(cz) {
   resetInstruments();                                       // leituras do anterior somem
+  autoInspect();                                            // comparar campos: sempre disponível
   sfxTool('bell');                                          // a sineta da mesa: próximo!
   $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
   const a = $('npc-actor');
@@ -3169,22 +3171,15 @@ function instReturn(el, home, delay) {
   setTimeout(() => {
     el.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1)';
     el.style.left = home.x + 'px'; el.style.top = home.y + 'px';
-    setTimeout(() => { el.style.cssText = ''; el.classList.remove('busy'); sfxTool('drop'); }, 520);
+    setTimeout(() => {
+      el.style.cssText = '';
+      if (el.dataset.hx != null) { el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px'; }
+      el.classList.remove('busy'); sfxTool('drop');
+    }, 520);
   }, delay || 0);
 }
 function setupInstruments() {
   const acts = {
-    'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
-      el.classList.add('busy');
-      setTimeout(() => {
-        const res = scan('thermo') || {};
-        sfxTool('beep');
-        drawInstThermo(res.temp);
-        const tag = $('thermo-tag');
-        if (tag && res.temp != null) { tag.textContent = String(res.temp.toFixed(1)).replace('.', ',') + ' °C'; tag.classList.add('on'); }
-        instReturn(el, home, 450);
-      }, 650);
-    },
     'inst-pulse': (el, home) => {                  // encosta e OUVE o coração
       el.classList.add('busy');
       const res = scan('pulse') || {};
@@ -3340,44 +3335,72 @@ function setupDrawers() {
     if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
     d.classList.add('open');   // começam abertas: ferramenta que não se vê não se usa
   });
-  // rótulos traduzidos
-  document.querySelectorAll('.dtool-slot .dt-name').forEach(el => { el.textContent = T(el.textContent); });
-  document.querySelectorAll('.dtool, .drawer-front').forEach(el => { if (el.title) el.title = T(el.title); });
+  document.querySelectorAll('.dtool, .drawer-front, .stamp-obj').forEach(el => { if (el.title) el.title = T(el.title); });
+  // objetos SOLTOS dentro da gaveta: cada um tem posição própria e dá pra
+  // tacar de um lado pro outro (deslizam e quicam nas paredes)
+  const HOMES = { 'dt-mapa': [16, 44], 'dt-lupa': [110, 34], 'inst-thermo': [30, 12], 'dt-linha': [110, 30] };
+  const placeHome = (el) => {
+    const hp = HOMES[el.id] || [12, 12];
+    if (el.dataset.hx == null) { el.dataset.hx = hp[0]; el.dataset.hy = hp[1]; }
+    el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px';
+  };
   const acts = {
     'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
     'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => openExam() },   // a lupa DE EXAME
     'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
+    'inst-thermo': { target: 'stage', needsCitizen: true, raw: (el, home) => {  // leitura na etiqueta
+      el.classList.add('busy');
+      setTimeout(() => {
+        const res = scan('thermo') || {};
+        sfxTool('beep');
+        drawInstThermo(res.temp);
+        const tag = $('thermo-tag');
+        if (tag && res.temp != null) { tag.textContent = String(res.temp.toFixed(1)).replace('.', ',') + ' °C'; tag.classList.add('on'); }
+        dtReturn(el, home, 450);
+      }, 650);
+    } },
   };
   Object.keys(acts).forEach(id => {
     const el = $(id); if (!el) return;
+    placeHome(el);
     const a = acts[id];
     el.addEventListener('pointerdown', (ev) => {
       if (!shift.running || el.classList.contains('busy')) return;
       if (a.needsCitizen && !shift.citizen) return;
+      if (id === 'inst-thermo' && shift.citizen && shift.citizen.isSilente) return;  // com o Silente, só o coletor reage
       ev.preventDefault();
-      el.setPointerCapture(ev.pointerId);
       const r = el.getBoundingClientRect();
+      const tray = el.closest('.drawer-tray');
       const home = { x: r.left, y: r.top };
       el.classList.add('dragging');
       el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.zIndex = 400;
-      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px'; };
+      let vx = 0, vy = 0, lx = ev.clientX, ly = ev.clientY, lt = performance.now();
+      const move = (e) => {
+        const now = performance.now(), dt2 = Math.max(8, now - lt);
+        vx = vx * .6 + ((e.clientX - lx) / dt2 * 16) * .4;
+        vy = vy * .6 + ((e.clientY - ly) / dt2 * 16) * .4;
+        lx = e.clientX; ly = e.clientY; lt = now;
+        el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px';
+      };
       const up = (e) => {
-        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up);
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
         el.classList.remove('dragging');
         const inRect = (elId, pad) => {
           const t = $(elId); if (!t) return false;
           const b = t.getBoundingClientRect();
           return e.clientX > b.left - pad && e.clientX < b.right + pad && e.clientY > b.top - pad && e.clientY < b.bottom + pad;
         };
-        const hit = a.target === 'desk' ? inRect('desk', 8)
-          : a.target === 'stage' ? inRect('npc-stage', 24)
-          : (inRect('desk', 8) || inRect('npc-stage', 24));
+        const hit = a.target === 'desk' ? inRect('desk', 8) : inRect('npc-stage', 24);
+        const trayR = tray ? tray.getBoundingClientRect() : null;
+        const inTray = trayR && e.clientX > trayR.left && e.clientX < trayR.right && e.clientY > trayR.top && e.clientY < trayR.bottom;
         if (hit && shift.running && (!a.needsCitizen || shift.citizen)) {
-          el.classList.add('busy');
-          setTimeout(() => { a.fn(); instReturn(el, home, 140); }, 200);
-        } else instReturn(el, home);
+          if (a.raw) a.raw(el, home);
+          else { el.classList.add('busy'); setTimeout(() => { a.fn(); dtReturn(el, home, 140); }, 200); }
+        } else if (inTray && tray) {
+          dtToss(el, tray, r, vx, vy);              // tacou dentro da gaveta: física
+        } else dtReturn(el, home);
       };
-      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
       sfxTool('pickup');
     });
   });
@@ -3393,8 +3416,127 @@ function setupDrawers() {
   const bell = $('bell-hit');
   if (bell) bell.onclick = () => sfxTool('bell');
 }
+/* devolve o objeto ao lugar DELE na gaveta (posição própria, não slot) */
+function dtReturn(el, home, delay) {
+  el.classList.add('busy');
+  setTimeout(() => {
+    el.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1)';
+    el.style.left = home.x + 'px'; el.style.top = home.y + 'px';
+    setTimeout(() => {
+      el.style.cssText = '';
+      if (el.dataset.hx != null) { el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px'; }
+      el.classList.remove('busy'); sfxTool('drop');
+    }, 520);
+  }, delay || 0);
+}
+/* solto com velocidade: desliza e QUICA nas paredes internas da gaveta */
+function dtToss(el, tray, r, vx, vy) {
+  el.classList.add('busy');
+  const tr = tray.getBoundingClientRect();
+  let x = parseFloat(el.style.left) - tr.left, y = parseFloat(el.style.top) - tr.top;
+  const maxX = Math.max(6, tr.width - r.width - 6), maxY = Math.max(6, tr.height - r.height - 6);
+  const step = () => {
+    x += vx; y += vy; vx *= .9; vy *= .9;
+    if (x < 6) { x = 6; vx = -vx * .55; sfxTool('drop'); }
+    if (x > maxX) { x = maxX; vx = -vx * .55; sfxTool('drop'); }
+    if (y < 6) { y = 6; vy = -vy * .55; }
+    if (y > maxY) { y = maxY; vy = -vy * .55; }
+    el.style.left = (tr.left + x) + 'px'; el.style.top = (tr.top + y) + 'px';
+    if (Math.abs(vx) > .4 || Math.abs(vy) > .4) requestAnimationFrame(step);
+    else {
+      el.dataset.hx = Math.round(x); el.dataset.hy = Math.round(y);
+      el.style.cssText = '';
+      el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px';
+      el.classList.remove('busy');
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- CARIMBOS DE PEGAR (estilo Papers Please) ---------- */
+function drawStampObj(kind) {
+  const el = $(kind === 'approve' ? 'st-apv' : 'st-rej'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 68, 88);
+  const ink = kind === 'approve' ? '#2f5c33' : '#8a2e22';
+  const inkL = kind === 'approve' ? '#3f7a44' : '#a8402e';
+  // cabo torneado
+  x.fillStyle = '#6a4e30'; x.fillRect(26, 2, 16, 10);
+  x.fillStyle = '#7d5d3a'; x.fillRect(28, 4, 6, 6);
+  x.fillStyle = '#4a3423'; x.fillRect(30, 12, 8, 10);
+  x.fillStyle = '#3a2817'; x.fillRect(24, 22, 20, 6);
+  // corpo de madeira chanfrado com etiqueta
+  x.fillStyle = '#5a4326'; x.fillRect(14, 28, 40, 22);
+  x.fillStyle = '#6d5433'; x.fillRect(14, 28, 40, 4);
+  x.fillStyle = '#42311c'; x.fillRect(14, 46, 40, 4);
+  x.fillStyle = 'rgba(255,240,210,.14)'; x.fillRect(16, 30, 3, 18);
+  x.fillStyle = '#d8cdb0'; x.fillRect(20, 33, 28, 11);
+  x.fillStyle = ink; x.font = '10px "VT323", monospace'; x.textAlign = 'center';
+  x.fillText(kind === 'approve' ? 'APROV.' : 'REJEIT.', 34, 42);
+  // base metálica + borracha entintada
+  x.fillStyle = '#2c2e26'; x.fillRect(10, 50, 48, 8);
+  x.fillStyle = 'rgba(238,240,230,.12)'; x.fillRect(10, 50, 48, 2);
+  x.fillStyle = ink; x.fillRect(8, 58, 52, 14);
+  x.fillStyle = inkL; x.fillRect(8, 58, 52, 3);
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(8, 69, 52, 3);
+  // o texto ESPELHADO em relevo na borracha (carimbo lê ao contrário)
+  x.save(); x.translate(34, 66); x.scale(-1, 1);
+  x.fillStyle = 'rgba(255,255,255,.22)'; x.font = '9px "VT323", monospace';
+  x.fillText(kind === 'approve' ? 'APROVADO' : 'REJEITADO', 0, 2); x.restore();
+  // tinta fresca acumulada num canto (assimetria de uso)
+  x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3);
+  pixelSnap(cv, 2);
+}
+function setupStamps() {
+  const defs = { 'st-apv': 'approve', 'st-rej': 'reject' };
+  Object.keys(defs).forEach(id => {
+    const el = $(id); if (!el) return;
+    const kind = defs[id];
+    el.addEventListener('pointerdown', (ev) => {
+      if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
+      ev.preventDefault();
+      const r = el.getBoundingClientRect();
+      const home = { x: r.left, y: r.top };
+      el.classList.add('dragging');
+      el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+      el.style.zIndex = 400; el.style.pointerEvents = 'none';
+      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px'; };
+      const up = (e) => {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        el.classList.remove('dragging');
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        const doc = under && under.closest ? under.closest('.document') : null;
+        if (doc && shift.citizen && shift.running) {
+          // BATE: o carimbo desce, esmaga, deixa a tinta — e a decisão sai
+          el.classList.add('busy');
+          el.style.transition = 'transform .09s ease-in';
+          el.style.transform = 'translateY(12px) scale(.94)';
+          shift.stampTarget = { doc, x: e.clientX, y: e.clientY };
+          setTimeout(() => {
+            decide(kind);
+            el.style.transform = '';
+            instReturn(el, home, 180);
+          }, 130);
+        } else instReturn(el, home);
+      };
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+      sfxTool('pickup');
+    });
+  });
+  drawStampObj('approve'); drawStampObj('reject');
+}
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
+/* inspeção agora fica SEMPRE ativa com cidadão no guichê (o botão sumiu:
+   clique em dois campos e a comparação acontece). toggleInspect segue
+   existindo para gamepad/QA. */
+function autoInspect() {
+  shift.inspecting = true;
+  clearPicks();
+  const ib = $('inspect-bar');
+  if (ib) ib.textContent = (!S.infinite && S.day === 1 && shift.processed < 3)
+    ? T('MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).') : '';
+}
 function toggleInspect() {
   shift.inspecting = !shift.inspecting;
   $('btn-inspect').classList.toggle('active', shift.inspecting);
@@ -3603,12 +3745,19 @@ function drawStamp(kind) {
   return cv;
 }
 function stampDocs(decision) {
-  const first = $('desk').querySelector('.document');
+  const t = shift.stampTarget; shift.stampTarget = null;
+  const first = (t && t.doc && t.doc.isConnected) ? t.doc : $('desk').querySelector('.document');
   if (!first) return;
   const st = document.createElement('div');
   st.className = 'doc-stamped is-canvas';
   try { st.appendChild(drawStamp(decision)); }
   catch (e) { st.classList.add(decision === 'approve' ? 'stamp-ok' : 'stamp-no'); st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO'; }
+  if (t) {   // a tinta cai onde o carimbo desceu
+    const r = first.getBoundingClientRect();
+    st.style.position = 'absolute';
+    st.style.left = Math.round(Math.max(2, Math.min(r.width - 150, t.x - r.left - 88))) + 'px';
+    st.style.top = Math.round(Math.max(2, Math.min(r.height - 70, t.y - r.top - 60))) + 'px';
+  }
   first.appendChild(st);
   // baque tátil: o papel recua sob o carimbo
   first.classList.remove('recoil'); void first.offsetWidth; first.classList.add('recoil');
@@ -4457,6 +4606,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   setupInstruments();
   setupDrawers();
+  setupStamps();
   initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();

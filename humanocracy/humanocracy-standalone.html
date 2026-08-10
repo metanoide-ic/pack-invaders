@@ -575,34 +575,40 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   content:''; position:absolute; top:-4px; width:4px; height:4px; background:#191b16; border-radius:50%;
 }
 .dr-handle::before { left:-3px; } .dr-handle::after { right:-3px; }
+/* O INTERIOR da gaveta: um espaço visto de cima, fundo de madeira crua,
+   paredes internas em sombra — e os objetos ficam SOLTOS lá dentro
+   (dá pra arrastar e até tacar de um lado pro outro). */
 .drawer-tray {
-  display:none; align-items:flex-end; justify-content:space-around; gap:10px;
-  padding:12px 8px 8px;
-  /* INTERIOR DE GAVETA: madeira crua escurecida, laterais em sombra funda */
+  display:none; position:relative; height:118px; overflow:hidden;
   background-color:#241a10;
   background-image:
     radial-gradient(rgba(0,0,0,.3) .6px, transparent .9px),
-    linear-gradient(90deg, rgba(0,0,0,.5), transparent 12%, transparent 88%, rgba(0,0,0,.5)),
-    linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.24) 34%, rgba(0,0,0,.38)),
+    linear-gradient(180deg, rgba(10,6,3,.52), rgba(40,26,14,.12) 34%, rgba(8,5,2,.42)),
     var(--tex-wood);
-  background-size:3px 3px, auto, auto, auto;
+  background-size:3px 3px, auto, auto;
   border:1px solid #000; border-top:none;
-  box-shadow: inset 0 5px 10px rgba(0,0,0,.65), inset 3px 0 6px rgba(0,0,0,.4), inset -3px 0 6px rgba(0,0,0,.4), inset 0 -1px 0 rgba(238,240,230,.05);
-  transform-origin: top;
+  box-shadow:
+    inset 0 12px 14px -6px rgba(0,0,0,.85),
+    inset 10px 0 12px -8px rgba(0,0,0,.8),
+    inset -10px 0 12px -8px rgba(0,0,0,.8),
+    inset 0 -6px 8px -4px rgba(0,0,0,.6);
 }
-.drawer.open .drawer-tray { display:flex; animation: drawer-slide .22s cubic-bezier(.25,1,.4,1); }
+.drawer-tray::before, .drawer-tray::after {  /* paredes internas (perspectiva) */
+  content:''; position:absolute; top:0; bottom:0; width:12px; pointer-events:none; z-index:3;
+  background:linear-gradient(90deg, rgba(74,52,30,.5), transparent);
+}
+.drawer-tray::before { left:0; }
+.drawer-tray::after { right:0; left:auto; transform:scaleX(-1); }
+/* abre DE CIMA PRA BAIXO, girando como gaveta puxada (dobradiça no alto) */
+.drawer.open .drawer-tray { display:block; animation: drawer-slide .26s cubic-bezier(.3,1.15,.5,1); transform-origin:50% 0; }
 .drawer.open .drawer-front { box-shadow: inset 0 1px 0 rgba(238,232,214,.08), inset 0 -1px 0 rgba(0,0,0,.4), 0 1px 0 #0c0d09; }
-@keyframes drawer-slide { from { transform:scaleY(.08); opacity:.3; } }  /* desce de cima pra baixo */
-.dtool-slot { display:flex; flex-direction:column; align-items:center; gap:3px; }
-.dtool { cursor:grab; touch-action:none; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)); }
-.dtool:hover { filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)) brightness(1.15); }
-.dtool.dragging { cursor:grabbing; filter:drop-shadow(4px 7px 2px rgba(0,0,0,.55)); }
+@keyframes drawer-slide { from { transform:perspective(480px) rotateX(-58deg); opacity:.25; } to { transform:perspective(480px) rotateX(0deg); } }
+.drawer-tray .dtool { position:absolute; z-index:2; }
+.dtool { cursor:grab; touch-action:none; filter:drop-shadow(3px 4px 0 rgba(0,0,0,.55)); }
+.dtool:hover { filter:drop-shadow(3px 4px 0 rgba(0,0,0,.55)) brightness(1.15); }
+.dtool.dragging { cursor:grabbing; filter:drop-shadow(6px 9px 2px rgba(0,0,0,.55)); }
 .dtool.busy { pointer-events:none; }
 .dtool canvas { display:block; image-rendering:pixelated; }
-.dt-name {
-  font-family:var(--font-mono); font-size:11.5px; letter-spacing:1.6px; color:#8b8a7a;
-  text-shadow:0 1px 0 rgba(0,0,0,.6);
-}
 .side-cap {
   font-family:var(--font-display); font-weight:600; text-transform:uppercase; letter-spacing:3px;
   font-size:13px; color:var(--accent2); padding-bottom:5px; margin-bottom:2px;
@@ -685,9 +691,15 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-approve::after { background:var(--stamp-green); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
-/* CARIMBOS FIXOS NA MESA (APV + REJ lado a lado, à esquerda dos instrumentos) */
-.desk-stamps { position:absolute; top:12px; right:118px; z-index:59; display:flex; flex-direction:row; gap:22px; }
+/* CARIMBOS DE PEGAR (APV + REJ lado a lado, à esquerda dos instrumentos) */
+.desk-stamps { position:absolute; top:8px; right:118px; z-index:59; display:flex; flex-direction:row; gap:14px; }
 .desk-stamps .stamp { width:74px; }
+.stamp-obj { cursor:grab; touch-action:none; filter:drop-shadow(3px 5px 0 rgba(0,0,0,.5)); transition:transform .1s; }
+.stamp-obj:hover { transform:translateY(-3px); }
+.stamp-obj.dragging { cursor:grabbing; transform:none; filter:drop-shadow(7px 11px 3px rgba(0,0,0,.5)); }
+.stamp-obj.busy { pointer-events:none; }
+.stamp-obj.hidden { display:none !important; }
+.stamp-obj canvas { display:block; image-rendering:pixelated; }
 /* DET: botão de pânico EMBUTIDO na madeira — vermelho, fundo, discreto */
 .desk-stamps .stamp-detain {
   position:absolute; top:98px; left:28px; width:54px; padding:7px 4px 8px; margin-top:0;
@@ -1683,14 +1695,8 @@ body.text-large .np-body { font-size:15px; }
               <span class="dr-handle"></span>
             </div>
             <div class="drawer-tray">
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-mapa" title="Carta de fronteiras — arraste até a MESA para abrir"><canvas width="64" height="50"></canvas></div>
-                <span class="dt-name">MAPA</span>
-              </div>
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-lupa" title="Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela"><canvas width="46" height="56"></canvas></div>
-                <span class="dt-name">LUPA</span>
-              </div>
+              <div class="dtool" id="dt-mapa" title="Carta de fronteiras — arraste até a MESA para abrir"><canvas width="64" height="50"></canvas></div>
+              <div class="dtool" id="dt-lupa" title="Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela"><canvas width="46" height="56"></canvas></div>
             </div>
           </div>
         </div>
@@ -1720,11 +1726,11 @@ body.text-large .np-body { font-size:15px; }
 
         <!-- Coluna direita: ferramentas + regulamento -->
         <div class="stage-side stage-right">
-          <div class="side-cap">FERRAMENTAS</div>
           <div class="tools">
             <!-- exame/dossiê são FERRAMENTAS DE GAVETA (arrastáveis); a bagagem
-                 se revista pela lupa de exame. Botões ocultos por compat (QA/gamepad). -->
-            <button id="btn-inspect" class="btn-tool" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
+                 se revista pela lupa; a INSPEÇÃO fica sempre ativa (clique em
+                 dois campos para comparar). Botões ocultos por compat. -->
+            <button id="btn-inspect" class="btn-tool legacy-scan" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
             <button id="btn-exam" class="btn-tool legacy-scan" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
             <button id="btn-bag" class="btn-tool legacy-scan" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
             <button id="btn-lifeline" class="btn-tool legacy-scan" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
@@ -1747,14 +1753,8 @@ body.text-large .np-body { font-size:15px; }
               <span class="dr-handle"></span>
             </div>
             <div class="drawer-tray">
-              <div class="dtool-slot">
-                <div class="inst" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
-                <span class="dt-name">TÉRMICO</span>
-              </div>
-              <div class="dtool-slot">
-                <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
-                <span class="dt-name">DOSSIÊ</span>
-              </div>
+              <div class="dtool" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
+              <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
             </div>
           </div>
         </div>
@@ -1775,10 +1775,13 @@ body.text-large .np-body { font-size:15px; }
               <div class="inst" id="inst-bio" title="Coletor K-7 — arraste até o cidadão; o resultado sai na etiqueta"><canvas width="30" height="72"></canvas><span class="inst-tag" id="bio-tag"></span></div>
             </div>
           </div>
-          <!-- CARIMBOS FIXOS NA MESA + o botão DET embutido, discreto e vermelho -->
+          <!-- CARIMBOS DE VERDADE: pegue e bata no documento (estilo Papers Please).
+               Os botões antigos ficam ocultos por compatibilidade (gamepad/QA). -->
           <div class="window-stamps desk-stamps" id="desk-stamps">
-            <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
-            <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
+            <div class="stamp-obj" id="st-apv" title="Carimbo APROVADO — arraste até um documento e solte"><canvas width="68" height="88"></canvas></div>
+            <div class="stamp-obj" id="st-rej" title="Carimbo REJEITADO — arraste até um documento e solte"><canvas width="68" height="88"></canvas></div>
+            <button id="btn-approve" class="stamp stamp-approve legacy-scan" title="Aprovar">APV</button>
+            <button id="btn-reject" class="stamp stamp-reject legacy-scan" title="Rejeitar">REJ</button>
             <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
           </div>
           <!-- a sineta pintada na mesa é clicável -->
@@ -10455,6 +10458,7 @@ function startDay() {
   const bioSlot = $('inst-bio-slot'); if (bioSlot) bioSlot.style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
   $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
+  const sr = $('st-rej'); if (sr) sr.classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
   // o comunicado do dia chega em papel, deslizando pela mesa
@@ -11293,6 +11297,7 @@ function greetingFor(cz) {
 
 function presentCitizen(cz) {
   resetInstruments();                                       // leituras do anterior somem
+  autoInspect();                                            // comparar campos: sempre disponível
   sfxTool('bell');                                          // a sineta da mesa: próximo!
   $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
   const a = $('npc-actor');
@@ -12108,22 +12113,15 @@ function instReturn(el, home, delay) {
   setTimeout(() => {
     el.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1)';
     el.style.left = home.x + 'px'; el.style.top = home.y + 'px';
-    setTimeout(() => { el.style.cssText = ''; el.classList.remove('busy'); sfxTool('drop'); }, 520);
+    setTimeout(() => {
+      el.style.cssText = '';
+      if (el.dataset.hx != null) { el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px'; }
+      el.classList.remove('busy'); sfxTool('drop');
+    }, 520);
   }, delay || 0);
 }
 function setupInstruments() {
   const acts = {
-    'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
-      el.classList.add('busy');
-      setTimeout(() => {
-        const res = scan('thermo') || {};
-        sfxTool('beep');
-        drawInstThermo(res.temp);
-        const tag = $('thermo-tag');
-        if (tag && res.temp != null) { tag.textContent = String(res.temp.toFixed(1)).replace('.', ',') + ' °C'; tag.classList.add('on'); }
-        instReturn(el, home, 450);
-      }, 650);
-    },
     'inst-pulse': (el, home) => {                  // encosta e OUVE o coração
       el.classList.add('busy');
       const res = scan('pulse') || {};
@@ -12279,44 +12277,72 @@ function setupDrawers() {
     if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
     d.classList.add('open');   // começam abertas: ferramenta que não se vê não se usa
   });
-  // rótulos traduzidos
-  document.querySelectorAll('.dtool-slot .dt-name').forEach(el => { el.textContent = T(el.textContent); });
-  document.querySelectorAll('.dtool, .drawer-front').forEach(el => { if (el.title) el.title = T(el.title); });
+  document.querySelectorAll('.dtool, .drawer-front, .stamp-obj').forEach(el => { if (el.title) el.title = T(el.title); });
+  // objetos SOLTOS dentro da gaveta: cada um tem posição própria e dá pra
+  // tacar de um lado pro outro (deslizam e quicam nas paredes)
+  const HOMES = { 'dt-mapa': [16, 44], 'dt-lupa': [110, 34], 'inst-thermo': [30, 12], 'dt-linha': [110, 30] };
+  const placeHome = (el) => {
+    const hp = HOMES[el.id] || [12, 12];
+    if (el.dataset.hx == null) { el.dataset.hx = hp[0]; el.dataset.hy = hp[1]; }
+    el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px';
+  };
   const acts = {
     'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
     'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => openExam() },   // a lupa DE EXAME
     'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
+    'inst-thermo': { target: 'stage', needsCitizen: true, raw: (el, home) => {  // leitura na etiqueta
+      el.classList.add('busy');
+      setTimeout(() => {
+        const res = scan('thermo') || {};
+        sfxTool('beep');
+        drawInstThermo(res.temp);
+        const tag = $('thermo-tag');
+        if (tag && res.temp != null) { tag.textContent = String(res.temp.toFixed(1)).replace('.', ',') + ' °C'; tag.classList.add('on'); }
+        dtReturn(el, home, 450);
+      }, 650);
+    } },
   };
   Object.keys(acts).forEach(id => {
     const el = $(id); if (!el) return;
+    placeHome(el);
     const a = acts[id];
     el.addEventListener('pointerdown', (ev) => {
       if (!shift.running || el.classList.contains('busy')) return;
       if (a.needsCitizen && !shift.citizen) return;
+      if (id === 'inst-thermo' && shift.citizen && shift.citizen.isSilente) return;  // com o Silente, só o coletor reage
       ev.preventDefault();
-      el.setPointerCapture(ev.pointerId);
       const r = el.getBoundingClientRect();
+      const tray = el.closest('.drawer-tray');
       const home = { x: r.left, y: r.top };
       el.classList.add('dragging');
       el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px'; el.style.zIndex = 400;
-      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px'; };
+      let vx = 0, vy = 0, lx = ev.clientX, ly = ev.clientY, lt = performance.now();
+      const move = (e) => {
+        const now = performance.now(), dt2 = Math.max(8, now - lt);
+        vx = vx * .6 + ((e.clientX - lx) / dt2 * 16) * .4;
+        vy = vy * .6 + ((e.clientY - ly) / dt2 * 16) * .4;
+        lx = e.clientX; ly = e.clientY; lt = now;
+        el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height / 2) + 'px';
+      };
       const up = (e) => {
-        el.removeEventListener('pointermove', move); el.removeEventListener('pointerup', up);
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
         el.classList.remove('dragging');
         const inRect = (elId, pad) => {
           const t = $(elId); if (!t) return false;
           const b = t.getBoundingClientRect();
           return e.clientX > b.left - pad && e.clientX < b.right + pad && e.clientY > b.top - pad && e.clientY < b.bottom + pad;
         };
-        const hit = a.target === 'desk' ? inRect('desk', 8)
-          : a.target === 'stage' ? inRect('npc-stage', 24)
-          : (inRect('desk', 8) || inRect('npc-stage', 24));
+        const hit = a.target === 'desk' ? inRect('desk', 8) : inRect('npc-stage', 24);
+        const trayR = tray ? tray.getBoundingClientRect() : null;
+        const inTray = trayR && e.clientX > trayR.left && e.clientX < trayR.right && e.clientY > trayR.top && e.clientY < trayR.bottom;
         if (hit && shift.running && (!a.needsCitizen || shift.citizen)) {
-          el.classList.add('busy');
-          setTimeout(() => { a.fn(); instReturn(el, home, 140); }, 200);
-        } else instReturn(el, home);
+          if (a.raw) a.raw(el, home);
+          else { el.classList.add('busy'); setTimeout(() => { a.fn(); dtReturn(el, home, 140); }, 200); }
+        } else if (inTray && tray) {
+          dtToss(el, tray, r, vx, vy);              // tacou dentro da gaveta: física
+        } else dtReturn(el, home);
       };
-      el.addEventListener('pointermove', move); el.addEventListener('pointerup', up);
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
       sfxTool('pickup');
     });
   });
@@ -12332,8 +12358,127 @@ function setupDrawers() {
   const bell = $('bell-hit');
   if (bell) bell.onclick = () => sfxTool('bell');
 }
+/* devolve o objeto ao lugar DELE na gaveta (posição própria, não slot) */
+function dtReturn(el, home, delay) {
+  el.classList.add('busy');
+  setTimeout(() => {
+    el.style.transition = 'left .5s cubic-bezier(.3,1.3,.5,1), top .5s cubic-bezier(.3,1.3,.5,1)';
+    el.style.left = home.x + 'px'; el.style.top = home.y + 'px';
+    setTimeout(() => {
+      el.style.cssText = '';
+      if (el.dataset.hx != null) { el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px'; }
+      el.classList.remove('busy'); sfxTool('drop');
+    }, 520);
+  }, delay || 0);
+}
+/* solto com velocidade: desliza e QUICA nas paredes internas da gaveta */
+function dtToss(el, tray, r, vx, vy) {
+  el.classList.add('busy');
+  const tr = tray.getBoundingClientRect();
+  let x = parseFloat(el.style.left) - tr.left, y = parseFloat(el.style.top) - tr.top;
+  const maxX = Math.max(6, tr.width - r.width - 6), maxY = Math.max(6, tr.height - r.height - 6);
+  const step = () => {
+    x += vx; y += vy; vx *= .9; vy *= .9;
+    if (x < 6) { x = 6; vx = -vx * .55; sfxTool('drop'); }
+    if (x > maxX) { x = maxX; vx = -vx * .55; sfxTool('drop'); }
+    if (y < 6) { y = 6; vy = -vy * .55; }
+    if (y > maxY) { y = maxY; vy = -vy * .55; }
+    el.style.left = (tr.left + x) + 'px'; el.style.top = (tr.top + y) + 'px';
+    if (Math.abs(vx) > .4 || Math.abs(vy) > .4) requestAnimationFrame(step);
+    else {
+      el.dataset.hx = Math.round(x); el.dataset.hy = Math.round(y);
+      el.style.cssText = '';
+      el.style.left = el.dataset.hx + 'px'; el.style.top = el.dataset.hy + 'px';
+      el.classList.remove('busy');
+    }
+  };
+  requestAnimationFrame(step);
+}
+
+/* ---------- CARIMBOS DE PEGAR (estilo Papers Please) ---------- */
+function drawStampObj(kind) {
+  const el = $(kind === 'approve' ? 'st-apv' : 'st-rej'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 68, 88);
+  const ink = kind === 'approve' ? '#2f5c33' : '#8a2e22';
+  const inkL = kind === 'approve' ? '#3f7a44' : '#a8402e';
+  // cabo torneado
+  x.fillStyle = '#6a4e30'; x.fillRect(26, 2, 16, 10);
+  x.fillStyle = '#7d5d3a'; x.fillRect(28, 4, 6, 6);
+  x.fillStyle = '#4a3423'; x.fillRect(30, 12, 8, 10);
+  x.fillStyle = '#3a2817'; x.fillRect(24, 22, 20, 6);
+  // corpo de madeira chanfrado com etiqueta
+  x.fillStyle = '#5a4326'; x.fillRect(14, 28, 40, 22);
+  x.fillStyle = '#6d5433'; x.fillRect(14, 28, 40, 4);
+  x.fillStyle = '#42311c'; x.fillRect(14, 46, 40, 4);
+  x.fillStyle = 'rgba(255,240,210,.14)'; x.fillRect(16, 30, 3, 18);
+  x.fillStyle = '#d8cdb0'; x.fillRect(20, 33, 28, 11);
+  x.fillStyle = ink; x.font = '10px "VT323", monospace'; x.textAlign = 'center';
+  x.fillText(kind === 'approve' ? 'APROV.' : 'REJEIT.', 34, 42);
+  // base metálica + borracha entintada
+  x.fillStyle = '#2c2e26'; x.fillRect(10, 50, 48, 8);
+  x.fillStyle = 'rgba(238,240,230,.12)'; x.fillRect(10, 50, 48, 2);
+  x.fillStyle = ink; x.fillRect(8, 58, 52, 14);
+  x.fillStyle = inkL; x.fillRect(8, 58, 52, 3);
+  x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(8, 69, 52, 3);
+  // o texto ESPELHADO em relevo na borracha (carimbo lê ao contrário)
+  x.save(); x.translate(34, 66); x.scale(-1, 1);
+  x.fillStyle = 'rgba(255,255,255,.22)'; x.font = '9px "VT323", monospace';
+  x.fillText(kind === 'approve' ? 'APROVADO' : 'REJEITADO', 0, 2); x.restore();
+  // tinta fresca acumulada num canto (assimetria de uso)
+  x.fillStyle = inkL; x.fillRect(kind === 'approve' ? 10 : 52, 72, 5, 3);
+  pixelSnap(cv, 2);
+}
+function setupStamps() {
+  const defs = { 'st-apv': 'approve', 'st-rej': 'reject' };
+  Object.keys(defs).forEach(id => {
+    const el = $(id); if (!el) return;
+    const kind = defs[id];
+    el.addEventListener('pointerdown', (ev) => {
+      if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
+      ev.preventDefault();
+      const r = el.getBoundingClientRect();
+      const home = { x: r.left, y: r.top };
+      el.classList.add('dragging');
+      el.style.position = 'fixed'; el.style.left = r.left + 'px'; el.style.top = r.top + 'px';
+      el.style.zIndex = 400; el.style.pointerEvents = 'none';
+      const move = (e) => { el.style.left = (e.clientX - r.width / 2) + 'px'; el.style.top = (e.clientY - r.height * .82) + 'px'; };
+      const up = (e) => {
+        document.removeEventListener('pointermove', move); document.removeEventListener('pointerup', up);
+        el.classList.remove('dragging');
+        const under = document.elementFromPoint(e.clientX, e.clientY);
+        const doc = under && under.closest ? under.closest('.document') : null;
+        if (doc && shift.citizen && shift.running) {
+          // BATE: o carimbo desce, esmaga, deixa a tinta — e a decisão sai
+          el.classList.add('busy');
+          el.style.transition = 'transform .09s ease-in';
+          el.style.transform = 'translateY(12px) scale(.94)';
+          shift.stampTarget = { doc, x: e.clientX, y: e.clientY };
+          setTimeout(() => {
+            decide(kind);
+            el.style.transform = '';
+            instReturn(el, home, 180);
+          }, 130);
+        } else instReturn(el, home);
+      };
+      document.addEventListener('pointermove', move); document.addEventListener('pointerup', up);
+      sfxTool('pickup');
+    });
+  });
+  drawStampObj('approve'); drawStampObj('reject');
+}
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
+/* inspeção agora fica SEMPRE ativa com cidadão no guichê (o botão sumiu:
+   clique em dois campos e a comparação acontece). toggleInspect segue
+   existindo para gamepad/QA. */
+function autoInspect() {
+  shift.inspecting = true;
+  clearPicks();
+  const ib = $('inspect-bar');
+  if (ib) ib.textContent = (!S.infinite && S.day === 1 && shift.processed < 3)
+    ? T('MODO INSPEÇÃO: clique em DOIS elementos para compará-los (campos, foto, rosto, relógio, regulamento).') : '';
+}
 function toggleInspect() {
   shift.inspecting = !shift.inspecting;
   $('btn-inspect').classList.toggle('active', shift.inspecting);
@@ -12542,12 +12687,19 @@ function drawStamp(kind) {
   return cv;
 }
 function stampDocs(decision) {
-  const first = $('desk').querySelector('.document');
+  const t = shift.stampTarget; shift.stampTarget = null;
+  const first = (t && t.doc && t.doc.isConnected) ? t.doc : $('desk').querySelector('.document');
   if (!first) return;
   const st = document.createElement('div');
   st.className = 'doc-stamped is-canvas';
   try { st.appendChild(drawStamp(decision)); }
   catch (e) { st.classList.add(decision === 'approve' ? 'stamp-ok' : 'stamp-no'); st.textContent = decision === 'approve' ? 'APROVADO' : decision === 'reject' ? 'REJEITADO' : 'DETIDO'; }
+  if (t) {   // a tinta cai onde o carimbo desceu
+    const r = first.getBoundingClientRect();
+    st.style.position = 'absolute';
+    st.style.left = Math.round(Math.max(2, Math.min(r.width - 150, t.x - r.left - 88))) + 'px';
+    st.style.top = Math.round(Math.max(2, Math.min(r.height - 70, t.y - r.top - 60))) + 'px';
+  }
   first.appendChild(st);
   // baque tátil: o papel recua sob o carimbo
   first.classList.remove('recoil'); void first.offsetWidth; first.classList.add('recoil');
@@ -13396,6 +13548,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   if (SETTINGS.lastSeed != null) $('btn-second-reading').style.display = '';
   setupInstruments();
   setupDrawers();
+  setupStamps();
   initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();
