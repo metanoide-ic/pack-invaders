@@ -260,19 +260,23 @@ function gl3Init() {
     PP(g, W * .22, torsoH * .94, W * .26, -(W / 2 + W * .13), legH + torsoH * .5, 0, armC);  // braços
     PP(g, W * .22, torsoH * .94, W * .26, (W / 2 + W * .13), legH + torsoH * .5, 0, armC);
     PP(g, W * .18, W * .18, W * .2, -(W / 2 + W * .13), legH + torsoH * .04, 0, skin);       // mãos
-    PP(g, W * .18, W * .18, W * .2, (W / 2 + W * .13), legH + torsoH * .04, 0, skin);
+    const handR = PP(g, W * .18, W * .18, W * .2, (W / 2 + W * .13), legH + torsoH * .04, 0, skin);
     if (who === 'vessa') PP(g, W * .62, torsoH * .8 + legH * .45, .014, 0, legH * .62, W * .3, 'rgb(122,106,79)'); // avental
-    // cabeça: caixa com o rosto na frente (+z) e cabelo no topo/nuca
+    // CABEÇA num subgrupo: rosto, calota e cabelo comprido giram JUNTOS
     const headW = W * (child ? .74 : .62);
     const hg = new THREE.BoxGeometry(headW, headH * .82, headW * .88);
     const skinM = solidL(skin), hairM = solidL(hairC);
     const frontM = faceless ? solidL(shadeRgb(skin, .42))        // Dario: rosto em sombra, sem feições
       : new THREE.MeshLambertMaterial({ map: tex(faceCrop(who, skin)) });
     // cabelo envolve topo, nuca e LATERAIS; o rosto é a tira da frente
+    const headG = new THREE.Group();
+    headG.position.set(0, legH + torsoH + headH * .45, 0);
     const hm = new THREE.Mesh(hg, [hairM, hairM, hairM, skinM, frontM, hairM]);
-    hm.position.y = legH + torsoH + headH * .45; g.add(hm);
-    PP(g, headW * 1.08, headH * .3, headW * .96, 0, legH + torsoH + headH * .8, -headW * .06, hairC); // calota
-    if (f.sexo === 'f') PP(g, headW * .88, headH * .95, headW * .3, 0, legH + torsoH + headH * .28, -headW * .52, hairC); // cabelo comprido
+    headG.add(hm);
+    PP(headG, headW * 1.08, headH * .3, headW * .96, 0, headH * .35, -headW * .06, hairC);   // calota
+    if (f.sexo === 'f') PP(headG, headW * .88, headH * .95, headW * .3, 0, -headH * .17, -headW * .52, hairC); // cabelo comprido
+    g.add(headG);
+    g.userData = { who, headG, handR, faceless };
     const sh = new THREE.Mesh(new THREE.CircleGeometry(W * .7, 10),
       new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .3 }));
     sh.rotation.x = -Math.PI / 2; sh.position.y = .006; g.add(sh);                // sombra de contato
@@ -386,7 +390,29 @@ function renderHouse3() {
     for (const pg of GL.people) {
       const m2 = pg.e.spot ? S.family[pg.e.spot] : null;
       pg.g.visible = !(m2 && !m2.alive);
-      if (pg.g.visible) pg.g.scale.y = 1 + Math.sin(HOUSE.t * 1.8 + pg.e.x * 2.1) * .008;
+      if (!pg.g.visible) continue;
+      pg.g.scale.y = 1 + Math.sin(HOUSE.t * 1.8 + pg.e.x * 2.1) * .008;
+      const ud = pg.g.userData || {};
+      // a CABEÇA acompanha você quando chega perto — menos a do Dario, nunca
+      if (ud.headG && !ud.faceless) {
+        const dx = HOUSE.x - pg.e.x, dz = HOUSE.y - pg.e.y;
+        let want = 0;
+        if (Math.hypot(dx, dz) < 2.6) {
+          let rel = Math.atan2(dx, dz) - pg.g.rotation.y;
+          while (rel > Math.PI) rel -= Math.PI * 2;
+          while (rel < -Math.PI) rel += Math.PI * 2;
+          // vira até ~40° e só se você não está direto atrás (pescoço não é coruja)
+          want = Math.abs(rel) > 2.2 ? 0 : Math.max(-.7, Math.min(.7, rel));
+        }
+        ud.headYaw = (ud.headYaw || 0) + (want - (ud.headYaw || 0)) * .08;
+        ud.headG.rotation.y = ud.headYaw;
+      }
+      // a Vessa mexe a panela no fogão (a mão direita trabalha)
+      if (ud.who === 'vessa' && ud.handR) {
+        ud.handR.position.x = ud.handR.position.x || 0;
+        ud.handR.position.z = Math.sin(HOUSE.t * 3.4) * .022;
+        ud.handR.position.y = (ud.handY0 || (ud.handY0 = ud.handR.position.y)) + Math.abs(Math.sin(HOUSE.t * 3.4)) * .012;
+      }
     }
     // billboards: giram só no eixo Y + troca frente/costas (direcional)
     for (const b of GL.bills) {
