@@ -510,7 +510,13 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .cal-pad i { font-style:normal; font-size:9.5px; opacity:.65; margin-top:1px; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
-.btn-small { font-size:13px; border-radius:3px; padding:6px 12px; }
+/* CHAPA GRAVADA: os botõezinhos do posto ganham canto chanfrado, legenda
+   dourada e um friso de latão que acende no hover (nada de retângulo liso) */
+.btn-small {
+  font-size:13px; border-radius:0; padding:7px 14px; color:#cdc0a0;
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+.btn-small:hover:not(:disabled) { color:#f0e2b8; }
 /* ícone de linha monocromático (substitui emojis nos botões) */
 .ic { width:13px; height:13px; vertical-align:-2px; fill:currentColor; stroke:currentColor; }
 .ic[viewBox] { stroke-linejoin:round; stroke-linecap:round; }
@@ -1090,28 +1096,73 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   lista de conquistas abre por cima do painel de pausa, sem escondê-lo */
 }
 .modal-overlay.active { display:flex; }
+/* O modal é um OFÍCIO do Ministério: faixa de classificação, furos de
+   arquivo, papel timbrado levemente torto e lacre de cera no rodapé. */
 .modal {
-  background-color:var(--paper); color:var(--paper-ink); width:min(560px, 92vw);
+  position:relative; background-color:var(--paper); color:var(--paper-ink); width:min(560px, 92vw);
   background-image: linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
-  max-height:86vh; overflow-y:auto; padding:22px; box-shadow:6px 6px 0 rgba(0,0,0,.5);
+  max-height:86vh; overflow-y:auto; padding:34px 26px 22px;
+  border:1px solid #241f14;
+  box-shadow: 0 0 0 1px rgba(20,16,8,.5), 10px 12px 0 rgba(0,0,0,.5);
+  transform:rotate(-.4deg);
+  animation: modal-drop .26s cubic-bezier(.25,1.2,.45,1);
 }
-.modal-title { font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:2px; font-size:18px; border-bottom:2px solid var(--paper-ink); padding-bottom:8px; margin-bottom:12px; }
-.modal-body { font-size:13px; line-height:1.7; white-space:pre-wrap; }
-.modal-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
+@keyframes modal-drop { from { opacity:0; transform:rotate(-2.4deg) translateY(-18px) scale(.985); } }
+.modal::before {   /* faixa de classificação impressa no alto da folha */
+  content:'MINISTÉRIO DE TRIAGEM E FRONTEIRAS · USO INTERNO · FORM. 7-A';
+  position:absolute; top:0; left:0; right:0; padding:4px 10px; text-align:center;
+  font-family:var(--font-display); font-weight:700; font-size:9.5px; letter-spacing:2.5px;
+  color:#f0e3cf; background:repeating-linear-gradient(45deg,#7a2a20 0 9px,#68231a 9px 18px);
+  border-bottom:1px solid #241f14;
+}
+.modal::after {   /* dois furos de arquivo na margem esquerda */
+  content:''; position:absolute; left:9px; top:56px; width:9px; height:9px; border-radius:50%;
+  background:#100e08; box-shadow:0 108px 0 #100e08, inset 0 1px 2px rgba(0,0,0,.9);
+}
+.modal-title {
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; letter-spacing:2px;
+  font-size:18px; padding:0 0 8px 14px; margin-bottom:12px;
+  border-bottom:3px double var(--paper-ink);
+}
+.modal-body { font-size:13px; line-height:1.7; white-space:pre-wrap; padding-left:14px; }
+.modal-actions { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; padding-left:14px; }
+/* botão de despacho: chapa de tinta com a borda dupla do carimbo */
 .modal-actions button {
   background:#2a2721; color:#e9ddc1; border:1.5px solid #0b0c07;
-  padding:11px 22px; letter-spacing:2px; border-radius:1px;
-  box-shadow: 3px 3px 0 rgba(0,0,0,.4); transition: transform .05s, background-color .08s, color .08s;
+  padding:11px 22px; letter-spacing:2px; border-radius:1px; position:relative;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.4), inset 0 0 0 1px rgba(233,221,193,.14);
+  transition: transform .05s, background-color .08s, color .08s;
 }
 .modal-actions button:hover { background:#7c2b25; color:#fff; }   /* tinta vermelha de carimbo */
 .modal-actions button:active { transform:translate(3px,3px); box-shadow:0 0 0 rgba(0,0,0,0); }
+/* lacre de cera vermelho no pé do ofício */
+.modal-seal {
+  position:absolute; right:22px; bottom:16px; width:44px; height:44px; border-radius:50%;
+  background:radial-gradient(circle at 38% 34%, #a8402e, #7a2118 62%, #58170f);
+  box-shadow: 2px 3px 0 rgba(0,0,0,.4), inset 0 -3px 5px rgba(0,0,0,.35);
+  display:flex; align-items:center; justify-content:center; pointer-events:none;
+  color:#e8cf92; font-size:19px; transform:rotate(-9deg); opacity:.92;
+}
 
-/* Lista de conquistas (dentro de #modal-body) */
-.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:var(--accent2); font-family:var(--font-display); }
-.ach-row { padding:6px 8px; border-bottom:1px solid rgba(0,0,0,.14); display:flex; gap:9px; align-items:center; border-left:2px solid transparent; }
-.ach-row.locked { opacity:.42; }
-.ach-row.unlocked { color:#e8d9a6; border-left-color:var(--accent2); background:rgba(201,163,74,.08); }
-.ach-icon { font-size:15px; width:22px; text-align:center; flex-shrink:0; }
+/* Lista de conquistas (dentro de #modal-body): medalhas em fita */
+.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:#7a2a20; font-family:var(--font-display); }
+.ach-row {
+  padding:7px 9px; margin-bottom:3px; display:flex; gap:10px; align-items:center;
+  border:1px solid rgba(36,31,20,.25); border-left:4px solid rgba(36,31,20,.2);
+  background:rgba(36,31,20,.05);
+}
+.ach-row.locked { opacity:.45; }
+.ach-row.unlocked {
+  color:#2a251b; border-left-color:#8a6a2e; background:rgba(201,163,74,.2);
+  box-shadow: inset 0 1px 0 rgba(255,246,220,.4), 2px 2px 0 rgba(0,0,0,.12);
+}
+.ach-icon {
+  font-size:14px; width:26px; height:26px; flex-shrink:0; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  background:radial-gradient(circle at 36% 32%, #e6cf8f, #a9823c 70%, #6a5320);
+  color:#241b08; box-shadow: inset 0 -2px 3px rgba(0,0,0,.3), 1px 2px 0 rgba(0,0,0,.3);
+}
+.ach-row.locked .ach-icon { background:radial-gradient(circle at 36% 32%, #6a6a60, #3a3a33 70%); color:#8b8a7a; }
 
 /* ============ PAUSA ============ */
 .pause-overlay {
@@ -1119,13 +1170,34 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   align-items:center; justify-content:center; z-index:80;
 }
 .pause-overlay.active { display:flex; }
+/* A pausa é uma PLACA ESMALTADA pendurada no guichê por duas correntes */
 .pause-panel {
-  background-color:var(--panel); border:1px solid var(--ink-dim); padding:26px 34px;
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  box-shadow: 6px 6px 0 rgba(0,0,0,.5);
-  display:flex; flex-direction:column; gap:10px; min-width:320px;
+  position:relative; margin-top:38px;
+  background-color:#232519; border:2px solid #0a0b07; padding:26px 34px 22px;
+  background-image:
+    radial-gradient(rgba(238,232,214,.05) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(238,240,230,.09), transparent 22%, rgba(0,0,0,.32)),
+    linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  background-size:3px 3px, auto, auto, auto;
+  box-shadow: 0 0 0 3px #14150f, 8px 10px 0 rgba(0,0,0,.5), inset 0 0 26px rgba(0,0,0,.45);
+  display:flex; flex-direction:column; gap:10px; min-width:340px;
+  animation: pause-swing .5s cubic-bezier(.3,1.4,.5,1);
 }
-.pause-title { font-family:var(--font-display); font-weight:600; text-transform:uppercase; font-size:18px; text-align:center; letter-spacing:6px; color:var(--accent2); margin-bottom:8px; }
+@keyframes pause-swing { 0% { transform:rotate(-1.6deg) translateY(-14px); } 60% { transform:rotate(.7deg); } 100% { transform:none; } }
+.pause-panel::before, .pause-panel::after {   /* correntes de suspensão */
+  content:''; position:absolute; top:-38px; width:3px; height:40px;
+  width:4px; background:repeating-linear-gradient(180deg, #8a8c78 0 4px, #2a2c20 4px 7px);
+  box-shadow:1px 0 0 rgba(0,0,0,.6), -1px 0 0 rgba(238,240,230,.08);
+}
+.pause-panel::before { left:30px; transform:rotate(4deg); }
+.pause-panel::after { right:30px; transform:rotate(-4deg); }
+.pause-title {
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; font-size:17px;
+  text-align:center; letter-spacing:5px; color:#e2cf92; margin-bottom:10px; padding-bottom:9px;
+  border-bottom:1px solid rgba(201,163,74,.4);
+  text-shadow:0 1px 0 rgba(255,246,220,.14), 0 -1px 1px rgba(0,0,0,.7);
+}
+@media (prefers-reduced-motion: reduce) { .pause-panel { animation:none; } }
 /* botões do menu de pausa: mesma chapa lisa do título */
 .pause-panel button {
   padding:12px 16px; letter-spacing:2px; font-size:13px; border-radius:1px;
@@ -1411,12 +1483,17 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   border:1px solid var(--ink-dim); display:flex; flex-direction:column;
   box-shadow: 6px 6px 0 rgba(0,0,0,.5);
 }
+/* cabeçalho de DOSSIÊ: tarja listrada de repartição + botões de despacho */
 .exam-head {
-  display:flex; justify-content:space-between; align-items:center;
-  padding:8px 12px; background:var(--panel); color:var(--accent2);
-  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
-  letter-spacing:2px; font-size:12px; border-bottom:1px solid var(--ink-dim);
+  display:flex; justify-content:space-between; align-items:center; gap:10px;
+  padding:7px 12px; color:#f0e3cf;
+  background:repeating-linear-gradient(45deg, #3a3c2c 0 10px, #2e3023 10px 20px);
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase;
+  letter-spacing:2px; font-size:12px; border-bottom:2px solid #0a0b07;
+  box-shadow: inset 0 1px 0 rgba(238,240,230,.12), inset 0 -3px 6px rgba(0,0,0,.4);
+  text-shadow:0 -1px 0 rgba(0,0,0,.6);
 }
+.exam-head > span:first-child { flex:1; }
 .exam-grid { display:grid; grid-template-columns: 1fr 1fr; min-height:0; }
 .exam-face {
   background: radial-gradient(circle at 50% 40%, #23251c, #0a0b08 80%);
@@ -1911,7 +1988,7 @@ body.text-large .np-body { font-size:15px; }
     <!-- ===== PAUSA (ESC) ===== -->
     <div id="pause-overlay" class="pause-overlay">
       <div class="pause-panel">
-        <div class="pause-title">— PAUSA —</div>
+        <div class="pause-title">EXPEDIENTE SUSPENSO</div>
         <button id="pz-continue">CONTINUAR</button>
         <button id="pz-achievements">CONQUISTAS</button>
         <button id="pz-textsize">☐ TEXTO GRANDE</button>
@@ -1929,6 +2006,7 @@ body.text-large .np-body { font-size:15px; }
         <div class="modal-title" id="modal-title"></div>
         <div class="modal-body" id="modal-body"></div>
         <div class="modal-actions" id="modal-actions"></div>
+        <div class="modal-seal" aria-hidden="true">★</div>
       </div>
     </div>
 
@@ -2868,6 +2946,8 @@ const I18N_EN = {
   'Dossiê da vida documentada — arraste até o cidadão (10 min)': 'Documented-life dossier — drag onto the citizen (10 min)',
   'Comunicado oficial do dia — clique para reler': "The day's official notice — click to reread",
   'REVISTAR BAGAGEM': 'SEARCH LUGGAGE',
+  'Carimbo APROVADO — arraste até um documento e solte': 'APPROVED stamp — drag onto a document and release',
+  'Carimbo REJEITADO — arraste até um documento e solte': 'REJECTED stamp — drag onto a document and release',
   'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Exam loupe — drag onto the citizen (10 min); luggage is searched through it',
   '👁 EXAME FÍSICO': '👁 PHYSICAL EXAM',
   'Exame Físico aproximado (10 min)': 'Close physical exam (10 min)',
@@ -4335,6 +4415,8 @@ const I18N_ES = {
   'Dossiê da vida documentada — arraste até o cidadão (10 min)': 'Expediente de la vida documentada — arrastra hasta el ciudadano (10 min)',
   'Comunicado oficial do dia — clique para reler': 'Comunicado oficial del día — haz clic para releer',
   'REVISTAR BAGAGEM': 'REVISAR EQUIPAJE',
+  'Carimbo APROVADO — arraste até um documento e solte': 'Sello APROBADO — arrastra hasta un documento y suelta',
+  'Carimbo REJEITADO — arraste até um documento e solte': 'Sello RECHAZADO — arrastra hasta un documento y suelta',
   'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Lupa de examen — arrastra hasta el ciudadano (10 min); el equipaje se revisa con ella',
   '👁 EXAME FÍSICO': '👁 EXAMEN FÍSICO',
   'Exame Físico aproximado (10 min)': 'Examen físico de cerca (10 min)',
