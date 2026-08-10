@@ -3078,6 +3078,26 @@ function sfxTool(k) {
         g.gain.setValueAtTime(vol, t + off); g.gain.exponentialRampToValueAtTime(.0005, t + off + 1.1);
         o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + 1.2);
       });
+    } else if (k === 'shutter') {                  // persiana de aço descendo no trilho
+      const dur = 1.1;
+      const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const ph = i / d.length;
+        const env = Math.min(1, ph * 8) * (ph < .88 ? 1 : Math.max(0, 1 - (ph - .88) * 9));
+        // as lâminas passando pelo trilho: ruído + batidinha periódica
+        const clack = Math.sin(ph * 620) > .93 ? 1.9 : 1;
+        d[i] = (Math.random() * 2 - 1) * env * .8 * clack;
+      }
+      const s2 = AC.createBufferSource(); s2.buffer = n;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = .7;
+      f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(320, t + dur);
+      const g = AC.createGain(); g.gain.value = .1;
+      s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + dur + .05);
+      // o baque final no batente
+      const o2 = AC.createOscillator(), g2 = AC.createGain(); o2.type = 'sine';
+      o2.frequency.setValueAtTime(90, t + dur * .93); o2.frequency.exponentialRampToValueAtTime(38, t + dur * .93 + .13);
+      g2.gain.setValueAtTime(.2, t + dur * .93); g2.gain.exponentialRampToValueAtTime(.001, t + dur * .93 + .3);
+      o2.connect(g2); g2.connect(AC.destination); o2.start(t + dur * .93); o2.stop(t + dur + .4);
     } else if (k === 'drawer') {                   // gaveta de madeira correndo no trilho
       const dur = .38;
       const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
@@ -3929,8 +3949,13 @@ function endShift() {
   }
   $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
   $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
-  showScreen('screen-endday');
-  save();
+  // a persiana desce sobre o guichê antes da folha de ponto aparecer
+  const sh = $('shutter');
+  if (sh) {
+    sh.classList.remove('closing'); void sh.offsetWidth; sh.classList.add('closing');
+    sfxTool('shutter');
+    setTimeout(() => { sh.classList.remove('closing'); showScreen('screen-endday'); save(); }, 1250);
+  } else { showScreen('screen-endday'); save(); }
 }
 function endShiftFlavor() {
   if (S.day >= 43) return 'Você tranca o posto. Não sabe para quem está trancando.';

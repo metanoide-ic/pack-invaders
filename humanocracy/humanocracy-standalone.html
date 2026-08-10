@@ -1105,6 +1105,39 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   font-size:12px; padding:6px 16px; letter-spacing:1px;
 }
 
+/* PERSIANA DE AÇO do guichê: fecha o expediente descendo sobre a tela */
+#shutter {
+  position:absolute; inset:0; z-index:75; pointer-events:none; overflow:hidden;
+  display:none;
+}
+#shutter.closing { display:block; }
+#shutter .sh-slats {
+  position:absolute; left:0; right:0; top:0; height:100%;
+  transform:translateY(-100%);
+  background-color:#3a3d31;
+  background-image:
+    repeating-linear-gradient(180deg,
+      rgba(0,0,0,.62) 0 2px,
+      rgba(96,100,84,.95) 2px 9px,
+      rgba(58,61,49,.95) 9px 17px,
+      rgba(20,22,16,.9) 17px 19px),
+    linear-gradient(90deg, rgba(0,0,0,.5), transparent 12%, transparent 88%, rgba(0,0,0,.5));
+  box-shadow: inset 0 -8px 16px rgba(0,0,0,.6), 0 10px 26px rgba(0,0,0,.8);
+  animation: shutter-down 1.15s cubic-bezier(.55,.02,.75,.6) forwards;
+}
+#shutter .sh-rail {  /* o batente inferior, com a borracha de vedação */
+  position:absolute; left:0; right:0; bottom:0; height:10px;
+  background:linear-gradient(180deg,#14150f,#000);
+  box-shadow: 0 -2px 0 rgba(238,240,230,.06);
+}
+@keyframes shutter-down {
+  0%   { transform:translateY(-100%); }
+  86%  { transform:translateY(0); }
+  92%  { transform:translateY(-9px); }   /* quica no batente */
+  100% { transform:translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) { #shutter .sh-slats { animation-duration:.01s; } }
+
 /* ============ FIM DE DIA / FINAL ============ */
 #screen-endday.active, #screen-ending.active { display:flex; align-items:center; justify-content:center; }
 .endday-panel, .ending-panel {
@@ -1341,14 +1374,25 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 /* Conquista (toast local; mesma condição alimenta o Steamworks quando a
    integração acontecer — steam/README.md) */
 .achievement-toast {
-  position:fixed; top:16px; right:-360px; width:280px; z-index:200;
-  background-color:var(--panel); border:1px solid var(--accent2); border-left:6px solid var(--accent2);
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  box-shadow:0 8px 20px rgba(0,0,0,.6); padding:10px 14px; font-size:12px; line-height:1.5;
-  color:var(--ink); transition: right .4s ease, top .3s ease;
+  position:fixed; top:16px; right:-380px; width:290px; z-index:200;
+  background-color:#22241c; border:1px solid #0a0b07;
+  background-image:
+    radial-gradient(rgba(238,232,214,.05) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(238,240,230,.08), transparent 30%, rgba(0,0,0,.3)),
+    linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  background-size:3px 3px, auto, auto, auto;
+  box-shadow: 0 0 0 2px #14150f, 6px 8px 0 rgba(0,0,0,.5); padding:11px 14px 11px 18px;
+  font-size:12px; line-height:1.5; color:var(--ink);
+  transition: right .4s cubic-bezier(.2,1.2,.4,1), top .3s ease;
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+}
+.achievement-toast::before {   /* fita de condecoração no lado esquerdo */
+  content:''; position:absolute; left:0; top:0; bottom:0; width:9px;
+  background:repeating-linear-gradient(180deg, #7a2a20 0 6px, #c9a34a 6px 12px, #2f5c39 12px 18px);
+  box-shadow: inset -1px 0 0 rgba(0,0,0,.5);
 }
 .achievement-toast.show { right:16px; }
-.achievement-toast b { color:var(--accent2); letter-spacing:1px; font-size:10px; }
+.achievement-toast b { color:#e2cf92; letter-spacing:1.5px; font-size:10px; }
 
 /* Sussurro (paranoia) */
 .whisper {
@@ -1424,8 +1468,12 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 #screen-house.active { display:flex; flex-direction:column; }
 .house-top {
   display:flex; justify-content:space-between; align-items:center;
-  padding:6px 16px; background:#0d0e0a; border-bottom:1px solid #1c1e16;
+  padding:6px 16px; background-color:#0d0e0a; border-bottom:2px solid #000;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.18) 0 1px, transparent 1px 3px),
+    linear-gradient(180deg, rgba(238,240,230,.05), transparent 40%);
   color:#8f8a7a; font-size:12px;
+  box-shadow: inset 0 -6px 10px rgba(0,0,0,.5);
 }
 #house-clock { font-size:18px; color:#c9b46a; letter-spacing:2px; }
 .house-help { font-size:12px; opacity:.7; }
@@ -1434,7 +1482,12 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   position:absolute; inset:0; width:100%; height:100%;
   image-rendering: pixelated; cursor: crosshair;
 }
-#house-room { color:#57523f; font-size:11px; letter-spacing:3px; }
+/* plaquinha esmaltada do cômodo, como as de porta de repartição */
+#house-room {
+  color:#cdbf8e; font-size:11px; letter-spacing:3px; padding:3px 12px;
+  background:linear-gradient(180deg,#2c2e22,#1a1c14);
+  border:1px solid #000; box-shadow: inset 0 1px 0 rgba(238,240,230,.12), 0 2px 0 rgba(0,0,0,.5);
+}
 #house-world {
   position:absolute; top:0; bottom:0; width:2400px;
   transition: transform .12s linear; will-change: transform;
@@ -1513,22 +1566,40 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 #house-prompt.on { display:block; }
 
 /* diálogo */
+/* O diálogo da casa é uma tira de FOTO REVELADA presa por fita: a foto
+   da pessoa à esquerda, o que ela diz escrito ao lado. */
 #house-dialog {
   display:none; position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
-  width:min(680px, 92vw); background:#0d0c09ee; border:1px solid #2e2a1e;
-  padding:14px 18px 10px; z-index:20; gap:14px;
+  width:min(680px, 92vw); background:#0d0c09f2;
+  background-image:
+    radial-gradient(rgba(238,232,214,.035) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(238,240,230,.05), transparent 26%);
+  background-size:3px 3px, auto;
+  border:1px solid #2e2a1e; border-top:2px solid rgba(201,163,74,.35);
+  padding:15px 18px 10px; z-index:20; gap:14px;
+  box-shadow: 0 -2px 0 rgba(0,0,0,.5), 0 14px 30px rgba(0,0,0,.6), inset 0 0 30px rgba(0,0,0,.5);
+  animation: hd-in .2s ease-out;
 }
+@keyframes hd-in { from { opacity:0; transform:translateX(-50%) translateY(10px); } }
 #house-dialog.on { display:flex; }
 #hd-face {
-  width:72px; height:72px; flex:0 0 72px; align-self:flex-start;
-  border:1px solid #2e2a1e; background:#080806; image-rendering:pixelated;
+  position:relative; width:72px; height:72px; flex:0 0 72px; align-self:flex-start;
+  background:#080806; image-rendering:pixelated;
+  /* moldura de foto revelada: margem branca e sombra dura */
+  border:4px solid #d8cdb0; border-bottom-width:12px;
+  box-shadow: 3px 4px 0 rgba(0,0,0,.55);
+  transform:rotate(-1.4deg);
 }
 #hd-face.off { display:none; }
 .hd-right { flex:1; min-width:0; }
 #hd-name { font-family:var(--font-display); font-weight:600; text-transform:uppercase; color:#c9b46a; font-size:13px; letter-spacing:2px; margin-bottom:6px; }
 #hd-text { color:#cfc9b8; font-size:14px; line-height:1.7; min-height:44px; }
 #hd-choices { display:flex; gap:8px; margin-top:8px; flex-wrap:wrap; }
-#hd-choices button { background:#14120d; border-color:#4a463c; font-size:12px; }
+#hd-choices button {
+  background:#14120d; border-color:#4a463c; font-size:12px; border-radius:0;
+  clip-path: polygon(5px 0, 100% 0, 100% calc(100% - 5px), calc(100% - 5px) 100%, 0 100%, 0 5px);
+}
+#hd-choices button:hover:not(:disabled) { background:#3a2c1a; color:#e8d8b0; }
 #hd-hint { text-align:right; font-size:9px; color:#57523f; margin-top:6px; }
 
 #house-fade {
@@ -2040,6 +2111,8 @@ body.text-large .np-body { font-size:15px; }
         </div>
       </div>
 
+      <!-- persiana de aço do guichê: desce no fim do expediente -->
+      <div id="shutter" aria-hidden="true"><div class="sh-slats"></div><div class="sh-rail"></div></div>
       <div class="radio-bar" id="radio-bar">
         <button id="btn-radio" class="btn-small" title="Ligar/desligar o rádio do posto"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><rect x="1.5" y="6" width="13" height="8" rx="1" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="10.5" cy="10" r="2.3" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M4 6l8-3.2" fill="none" stroke="currentColor" stroke-width="1.2"/><circle cx="4.5" cy="10" r=".9"/></svg></button>
         <span id="radio-line">…o rádio do posto aquece as válvulas…</span>
@@ -12280,6 +12353,26 @@ function sfxTool(k) {
         g.gain.setValueAtTime(vol, t + off); g.gain.exponentialRampToValueAtTime(.0005, t + off + 1.1);
         o.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + 1.2);
       });
+    } else if (k === 'shutter') {                  // persiana de aço descendo no trilho
+      const dur = 1.1;
+      const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
+      for (let i = 0; i < d.length; i++) {
+        const ph = i / d.length;
+        const env = Math.min(1, ph * 8) * (ph < .88 ? 1 : Math.max(0, 1 - (ph - .88) * 9));
+        // as lâminas passando pelo trilho: ruído + batidinha periódica
+        const clack = Math.sin(ph * 620) > .93 ? 1.9 : 1;
+        d[i] = (Math.random() * 2 - 1) * env * .8 * clack;
+      }
+      const s2 = AC.createBufferSource(); s2.buffer = n;
+      const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = .7;
+      f.frequency.setValueAtTime(900, t); f.frequency.exponentialRampToValueAtTime(320, t + dur);
+      const g = AC.createGain(); g.gain.value = .1;
+      s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + dur + .05);
+      // o baque final no batente
+      const o2 = AC.createOscillator(), g2 = AC.createGain(); o2.type = 'sine';
+      o2.frequency.setValueAtTime(90, t + dur * .93); o2.frequency.exponentialRampToValueAtTime(38, t + dur * .93 + .13);
+      g2.gain.setValueAtTime(.2, t + dur * .93); g2.gain.exponentialRampToValueAtTime(.001, t + dur * .93 + .3);
+      o2.connect(g2); g2.connect(AC.destination); o2.start(t + dur * .93); o2.stop(t + dur + .4);
     } else if (k === 'drawer') {                   // gaveta de madeira correndo no trilho
       const dur = .38;
       const n = AC.createBuffer(1, AC.sampleRate * dur | 0, AC.sampleRate), d = n.getChannelData(0);
@@ -13131,8 +13224,13 @@ function endShift() {
   }
   $('endday-report').innerHTML = report + `<p style="margin-top:12px;color:var(--ink-dim)">${endShiftFlavor()}</p>`;
   $('endday-title').textContent = `FIM DO EXPEDIENTE — DIA ${S.day}`;
-  showScreen('screen-endday');
-  save();
+  // a persiana desce sobre o guichê antes da folha de ponto aparecer
+  const sh = $('shutter');
+  if (sh) {
+    sh.classList.remove('closing'); void sh.offsetWidth; sh.classList.add('closing');
+    sfxTool('shutter');
+    setTimeout(() => { sh.classList.remove('closing'); showScreen('screen-endday'); save(); }, 1250);
+  } else { showScreen('screen-endday'); save(); }
 }
 function endShiftFlavor() {
   if (S.day >= 43) return 'Você tranca o posto. Não sabe para quem está trancando.';
