@@ -592,11 +592,30 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 #npc-actor.pickable:hover { filter: brightness(1.14) contrast(1.05); }  /* realça sem glow */
 
 /* carimbos no canto da janela do guichê (visão tipo Papers, Please) */
-.window-stamps { position:absolute; top:8px; right:8px; z-index:4; display:flex; flex-direction:column; gap:5px; }
+.window-stamps { position:absolute; top:8px; right:8px; z-index:4; display:flex; flex-direction:column; gap:12px; }
+/* CARIMBOS DE VERDADE: bloco de madeira com cabo em cima e a borracha
+   entintada embaixo — apertar afunda o carimbo (o :active global já desce). */
 .window-stamps .stamp {
-  flex:none; padding:5px 9px; font-size:12px; letter-spacing:1px;
-  background:rgba(10,12,8,.74); box-shadow:0 2px 6px rgba(0,0,0,.5);
+  flex:none; position:relative; width:64px; padding:8px 4px 6px; font-size:12px; letter-spacing:1.5px;
+  overflow:visible; margin-top:8px;
+  background-color:#241a10;
+  background-image:linear-gradient(rgba(20,12,6,.32), rgba(20,12,6,.52)), var(--tex-wood);
+  border:1px solid #0a0b07; border-radius:3px;
+  box-shadow: inset 0 1px 0 rgba(238,232,214,.14), inset 0 -3px 0 rgba(0,0,0,.42), 0 3px 0 #0c0d09, 0 5px 7px rgba(0,0,0,.5);
 }
+.window-stamps .stamp::before {    /* o cabo torneado */
+  content:''; position:absolute; top:-11px; left:50%; width:18px; height:13px; margin-left:-9px;
+  background:linear-gradient(180deg, #6a4e30, #3a2817);
+  border:1px solid #170f08; border-radius:8px 8px 3px 3px;
+  box-shadow:inset 0 1px 0 rgba(255,240,210,.2);
+}
+.window-stamps .stamp::after {     /* a borracha com tinta */
+  content:''; position:absolute; top:auto; left:4px; right:4px; bottom:-4px; height:5px;
+  border-radius:1px; opacity:.85; box-shadow:0 2px 3px rgba(0,0,0,.5);
+}
+.window-stamps .stamp-approve::after { background:var(--stamp-green); }
+.window-stamps .stamp-reject::after { background:var(--stamp-red); }
+.window-stamps .stamp-detain::after { background:var(--accent2); }
 /* tira de balcão sob a janela: documento, relógio, carimbo */
 .booth-counter {
   display:flex; align-items:center; justify-content:center; gap:22px;
@@ -8941,38 +8960,41 @@ function mumble(pitch, syl) {
 }
 
 /* ---------- MÚSICA: "Marcha do Posto Nº 7" (procedural, mas COMPOSTA) ----------
-   No espírito de Papers Please: ostinato grave martelado, percussão de marcha,
-   melodia em frases que retornam. Sequenciador por compasso com lookahead —
-   ritmo cravado, nada de notas soltas ao vento. */
+   CORTEJO, não marcha: dobre grave de sino nos tempos fortes, lamento de
+   notas compridas em Ré menor com a napolitana (Eb) arrepiando a cada volta,
+   percussão surda de préstito e um sino de igreja longe. Sequenciador por
+   compasso com lookahead — ritmo cravado, nada de notas soltas ao vento. */
 const MUSIC = { on: true, playing: false, timer: null };
 const MT = {
-  bpm: 96, root: 73.4162,                       // Ré 2 — tônica da marcha (Ré menor)
-  // 8 compassos: Dm Dm Bb A | Dm Gm A Dm  (semitons sobre a tônica)
-  chords: [[0, 3, 7], [0, 3, 7], [-4, 0, 3], [-5, -1, 2], [0, 3, 7], [5, 8, 12], [-5, -1, 2], [0, 3, 7]],
-  bass: [0, 0, 7, 0, 0, 10, 7, 0],              // ostinato em colcheias (relativo à fundamental)
-  // frases de 2 compassos (16 colcheias; null = pausa), semitons sobre a tônica
+  bpm: 64, root: 73.4162,                       // Ré 2 — tônica do cortejo (Ré menor/frígio)
+  // 8 compassos: Dm Dm Bb A | Dm Eb(napolitana) A Dm — o Eb é o arrepio
+  chords: [[0, 3, 7], [0, 3, 7], [-4, 0, 3], [-5, -1, 2], [0, 3, 7], [1, 5, 8], [-5, -1, 2], [0, 3, 7]],
+  // sino grave: só nos tempos 1 e 3 — dobre fúnebre, nada de ostinato saltitante
+  bass: [0, null, null, null, 7, null, null, null],
+  // frases de 2 compassos (16 colcheias; null = pausa): notas LONGAS, contorno
+  // caindo, muito silêncio — um lamento, não um refrão
   mel: [
-    [24, null, 27, 29, 31, null, 29, 27, 24, null, 22, null, 24, null, null, null],
-    [27, null, 29, 31, 32, null, 31, 29, 27, null, 26, null, 27, null, null, null],
-    [24, null, 27, 29, 31, null, 29, 27, 24, null, 22, null, 24, null, null, null],
-    [22, null, 20, 19, 17, null, 19, 20, 22, null, 26, null, 24, null, null, null],
+    [12, null, null, null, 15, null, null, null, 14, null, null, null, 12, null, null, null],
+    [15, null, null, null, 17, null, null, 15, 14, null, null, null, null, null, null, null],
+    [12, null, null, null, 13, null, null, null, 12, null, null, null, 10, null, null, null],
+    [8, null, null, null, 7, null, null, null, 10, null, null, null, null, null, null, null],
   ],
 };
 const mHz = (s) => MT.root * Math.pow(2, s / 12);
 // humor por regime: quanto pior o Estado, mais lenta, fechada e desafinada
 const M_MOOD = {
-  republica: { det: 3, lp: 1300, tempo: 1 },
-  mehrvolk:  { det: 5, lp: 1150, tempo: 1 },
-  conselho:  { det: 8, lp: 950,  tempo: .95 },
-  colapso:   { det: 14, lp: 780, tempo: .88 },
+  republica: { det: 3, lp: 1100, tempo: 1 },
+  mehrvolk:  { det: 5, lp: 980,  tempo: .96 },
+  conselho:  { det: 8, lp: 860,  tempo: .9 },
+  colapso:   { det: 14, lp: 700, tempo: .8 },
 };
 function mMood() { try { return M_MOOD[regimeOfDay(S.day)] || M_MOOD.republica; } catch (e) { return M_MOOD.republica; } }
-function mv(fr, t, dur, type, vol, lpf, det) {   // uma voz: osc → lowpass → envelope
+function mv(fr, t, dur, type, vol, lpf, det, atk) {   // uma voz: osc → lowpass → envelope
   const o = AC.createOscillator(); o.type = type; o.frequency.value = fr;
   if (det) o.detune.value = det;
   const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lpf;
   const g = AC.createGain();
-  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .015);
+  g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + (atk || .015));
   g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(f); f.connect(g); g.connect(AC.destination);
   o.start(t); o.stop(t + dur + .05);
@@ -8985,14 +9007,16 @@ function mDrum(kind, t, vol) {
     o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .18);
     return;
   }
-  const n = AC.createBuffer(1, 2400, AC.sampleRate), d = n.getChannelData(0);
+  const n = AC.createBuffer(1, kind === 'snare' ? 5200 : 2400, AC.sampleRate), d = n.getChannelData(0);
   for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
   const s = AC.createBufferSource(); s.buffer = n;
-  const f = AC.createBiquadFilter(); f.type = kind === 'hat' ? 'highpass' : 'bandpass';
-  f.frequency.value = kind === 'hat' ? 7000 : 1700; f.Q.value = .9;
-  const g = AC.createGain(); g.gain.setValueAtTime(vol || (kind === 'hat' ? .022 : .09), t);
-  g.gain.exponentialRampToValueAtTime(.001, t + (kind === 'hat' ? .03 : .09));
-  s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + .1);
+  const f = AC.createBiquadFilter();
+  f.type = kind === 'hat' ? 'highpass' : 'bandpass';
+  // 'tick' é o toque de relógio abafado; a caixa é surda, de cortejo
+  f.frequency.value = kind === 'hat' ? 7000 : kind === 'tick' ? 900 : 1200; f.Q.value = kind === 'tick' ? 2.4 : .9;
+  const g = AC.createGain(); g.gain.setValueAtTime(vol || (kind === 'hat' ? .022 : kind === 'tick' ? .04 : .07), t);
+  g.gain.exponentialRampToValueAtTime(.001, t + (kind === 'hat' ? .03 : kind === 'tick' ? .05 : .12));
+  s.connect(f); f.connect(g); g.connect(AC.destination); s.start(t); s.stop(t + .14);
 }
 function musicTick() {  // agenda um compasso à frente (lookahead de ~0.6s)
   if (!MUSIC.on || !MUSIC.playing) return;
@@ -9006,23 +9030,38 @@ function musicTick() {  // agenda um compasso à frente (lookahead de ~0.6s)
     const t0 = MUSIC.next, bar = MUSIC.bar || 0;
     const chord = MT.chords[bar % 8];
     const phrase = MT.mel[(bar >> 1) % 4], off = (bar % 2) * 8;
-    const stabs = (bar % 32) >= 8;                       // adensa após 8 compassos
+    const late = (bar % 32) >= 16;                       // segunda metade: entra o harmônico frio
     for (let i = 0; i < 8; i++) {
       const t = t0 + i * e8;
-      // OSTINATO grave — o coração da marcha
-      mv(mHz(chord[0] + MT.bass[i]), t, e8 * .92, 'sawtooth', .05, 420, 0);
-      // percussão: bumbo 1/3 · caixa 2/4 · chimbal em todas as colcheias
-      if (i === 0 || i === 4) mDrum('kick', t);
-      if (i === 2 || i === 6) mDrum('snare', t);
-      mDrum('hat', t, i % 2 ? .014 : .026);
-      // STABS de acorde no contratempo (metal cansado)
-      if (stabs && (i === 2 || i === 6)) chord.forEach(s2 => mv(mHz(s2 + 12), t, e8 * .5, 'sawtooth', .012, 900, mood.det));
-      // MELODIA — voz dupla levemente desafinada
+      // DOBRE grave — sino de bronze nos tempos 1 e 3, deixado soar
+      const b = MT.bass[i];
+      if (b != null) {
+        mv(mHz(chord[0] + b - 12), t, e8 * 3.6, 'sine', .075, 300, 0);
+        mv(mHz(chord[0] + b - 12), t, e8 * 3.6, 'sawtooth', .02, 260, mood.det);
+      }
+      // percussão de cortejo: bumbo surdo no 1, o tique de relógio no 3,
+      // e um rufo abafado de caixa fechando cada 4º compasso
+      if (i === 0) mDrum('kick', t, .17);
+      if (i === 4) mDrum('tick', t, .038);
+      if ((bar % 4) === 3 && i >= 6) { mDrum('snare', t, .028); mDrum('snare', t + e8 * .5, .018); }
+      // LAMENTO — voz dupla desafinada, notas compridas que se apagam
       const semi = phrase[off + i];
       if (semi != null) {
-        mv(mHz(semi), t, e8 * 1.8, 'square', .026, mood.lp, 0);
-        mv(mHz(semi), t, e8 * 1.8, 'sawtooth', .015, mood.lp, mood.det + 3);
+        mv(mHz(semi), t, e8 * 3.4, 'triangle', .038, mood.lp, 0);
+        mv(mHz(semi), t, e8 * 3.4, 'sawtooth', .013, mood.lp * .8, mood.det + 4);
+        // o harmônico frio: uma quinta acima, quase inaudível, chega tarde
+        if (late) mv(mHz(semi + 7), t + e8 * .5, e8 * 2.6, 'sine', .011, 1400, -mood.det, .3);
       }
+    }
+    // no compasso do Eb (napolitana), um CLUSTER respira por baixo: ré e mi
+    // bemol juntos, ataque lento — a dissonância bate devagar, como mau agouro
+    if ((bar % 8) === 5) {
+      mv(mHz(0), t0, e8 * 8, 'sine', .02, 380, 0, e8 * 3);
+      mv(mHz(1), t0, e8 * 8, 'sine', .017, 380, mood.det, e8 * 3);
+    }
+    // sino de igreja distante a cada 16 compassos (parciais inarmônicas)
+    if (bar % 16 === 0) {
+      [[1, .015], [2.76, .007], [5.4, .003]].forEach(([h, a]) => mv(146.83 * h, t0, 4.2, 'sine', a, 2600, 0, .004));
     }
     MUSIC.next = t0 + 8 * e8;
     MUSIC.bar = bar + 1;
@@ -9040,7 +9079,8 @@ function startMusic() {
     const dg = AC.createGain(); dg.gain.setValueAtTime(0.0001, t); dg.gain.linearRampToValueAtTime(.012, t + 4);
     dlp.connect(dg); dg.connect(AC.destination);
     MUSIC.drone = [];
-    [[36.7, 1], [73.42, .4]].forEach(([fr, a]) => {   // Ré 1 + Ré 2 (afinado com a marcha)
+    // Ré 1 + Ré 2 + um Fá 2 quase inaudível: a terça menor mora no zumbido
+    [[36.7, 1], [73.42, .4], [87.31, .16]].forEach(([fr, a]) => {
       const o = AC.createOscillator(); o.type = 'sine'; o.frequency.value = fr;
       const og = AC.createGain(); og.gain.value = a; o.connect(og); og.connect(dlp);
       o.start(t); MUSIC.drone.push(o);
