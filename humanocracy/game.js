@@ -1519,6 +1519,12 @@ function startDay() {
   const sr = $('st-rej'); if (sr) sr.classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
+  // primeiro dia: as gavetas se abrem sozinhas, para o novato ver as ferramentas
+  if (S.day === 1 && !S.infinite) {
+    setTimeout(() => document.querySelectorAll('.drawer').forEach((d, i) => {
+      setTimeout(() => { d.classList.add('open'); sfxTool('pickup'); }, i * 320);
+    }), 900);
+  }
   // o comunicado do dia chega em papel, deslizando pela mesa
   const memo = $('desk-memo');
   if (memo) { memo.classList.remove('in'); void memo.offsetWidth; memo.classList.add('in'); }
@@ -3333,7 +3339,9 @@ function setupDrawers() {
   document.querySelectorAll('.drawer').forEach(d => {
     const front = d.querySelector('.drawer-front');
     if (front) front.onclick = () => { d.classList.toggle('open'); sfxTool(d.classList.contains('open') ? 'pickup' : 'drop'); };
-    d.classList.add('open');   // começam abertas: ferramenta que não se vê não se usa
+    // começam FECHADAS: a coluna é curta e o regulamento precisa do espaço.
+    // No dia 1 elas se abrem sozinhas uma vez, para o inspetor novato ver o
+    // que tem dentro (startDay cuida disso).
   });
   document.querySelectorAll('.dtool, .drawer-front, .stamp-obj').forEach(el => { if (el.title) el.title = T(el.title); });
   // objetos SOLTOS dentro da gaveta: cada um tem posição própria e dá pra
