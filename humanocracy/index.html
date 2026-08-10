@@ -172,6 +172,12 @@
               </div>
             </div>
             <div id="booth-vhs"></div>
+            <div id="muzzle" aria-hidden="true"></div>
+            <!-- ALERTA: quando alguém saca uma arma ou mostra uma bomba -->
+            <div id="threat" aria-hidden="true">
+              <div class="th-bar"><i></i></div>
+              <div class="th-label">AMEAÇA — ATIRE (clique) OU DETENHA</div>
+            </div>
           </div>
           <div class="booth-counter">
             <span class="bc-item bc-doc" title="Documentos"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 1.5v3h3M6 8h4M6 10.5h4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
@@ -242,6 +248,8 @@
             <button id="btn-reject" class="stamp stamp-reject legacy-scan" title="Rejeitar">REJ</button>
             <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
           </div>
+          <!-- ARMA DE SERVIÇO no coldre, sob o balcão -->
+          <div class="stamp-obj" id="gun-obj" title="Pistola de serviço — clique para sacar"><canvas width="86" height="52"></canvas></div>
           <!-- a sineta pintada na mesa é clicável -->
           <button id="bell-hit" title="Sineta do balcão" aria-label="sineta"></button>
           <!-- almofada de tinta pintada na mesa: arraste o carimbo até aqui p/ entintar -->

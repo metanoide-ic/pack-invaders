@@ -31,7 +31,12 @@ const DIR = require('os').tmpdir() + '/';
       await p.waitForTimeout(1300); await dismissModal();
     }
     await clickText(/ENCERRAR TURNO|END SHIFT/i); await p.waitForTimeout(1100); await dismissModal();
-    const gh = await p.$('#btn-gohome'); if (gh && await gh.isVisible()) await gh.click();
+    // a persiana do guichê desce antes da folha de ponto: espera ela terminar
+    for (let w = 0; w < 12; w++) {
+      const g2 = await p.$('#btn-gohome');
+      if (g2 && await g2.isVisible()) { await g2.click(); break; }
+      await p.waitForTimeout(300);
+    }
     await p.waitForTimeout(1300);
     if (await p.evaluate(() => document.getElementById('screen-house').classList.contains('active')))
       await p.evaluate(() => { try { hClose(); afterNight(); } catch (e) { window.__qaerr = String(e); } });

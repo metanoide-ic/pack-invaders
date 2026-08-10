@@ -17,7 +17,7 @@ const DIR = require('os').tmpdir() + '/';
   await p.evaluate(() => { MS.idx = 0; msConfirm(); }); await p.waitForTimeout(300);
   await clickText(/ASSINAR/i); await p.waitForTimeout(800);
 
-  const DAYS = 4;
+  const DAYS = Number(process.env.QA_DAYS || 4);   // QA_DAYS=15 para varrer a progressão
   for (let day = 1; day <= DAYS; day++) {
     // manhã → trabalho
     for (let i = 0; i < 8; i++) { const go = await p.$('#btn-gowork'); if (go && await go.isVisible()) { await go.click(); break; } await dismissModal(); await p.waitForTimeout(300); }
@@ -43,7 +43,12 @@ const DIR = require('os').tmpdir() + '/';
     // encerra o turno (se ainda rodando) e vai pra casa
     await clickText(/ENCERRAR TURNO|END SHIFT/i); await p.waitForTimeout(1200);
     await dismissModal();
-    const gohome = await p.$('#btn-gohome'); if (gohome && await gohome.isVisible()) await gohome.click();
+    // a persiana do guichê desce antes da folha de ponto: espera ela terminar
+    for (let w = 0; w < 12; w++) {
+      const g2 = await p.$('#btn-gohome');
+      if (g2 && await g2.isVisible()) { await g2.click(); break; }
+      await p.waitForTimeout(300);
+    }
     await p.waitForTimeout(1400);
     // na casa: dorme direto (afterNight) — pode cair numa batida na porta
     const inHouse = await p.evaluate(() => document.getElementById('screen-house').classList.contains('active'));

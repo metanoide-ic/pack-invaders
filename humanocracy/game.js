@@ -554,7 +554,7 @@ function freshState(forceSeed, opts) {
   // dias do Silente também vêm da seed — segunda leitura reencontra ele nos mesmos dias
   const silRng = makeRng(hashSeed(seedBase, 'silente'));
   return {
-    day: 1, money: 30, citTotal: 0,
+    day: 1, money: 30, citTotal: 0, citRisk: 0,
     family: {
       vessa: { nome: 'Vessa (esposa)', alive: true, sick: false, sickDays: 0, hunger: 0 },
       tomi: { nome: 'Tomi (filho, 8 anos)', alive: true, sick: false, sickDays: 0, hunger: 0 },
@@ -638,6 +638,7 @@ let citTimer = null;
 function citation(text) {
   sfx('buzz');
   S.citTotal++;
+  S.citRisk = (S.citRisk || 0) + 1;
   shift.citToday++;
   let fine = 0;
   if (shift.citToday > 2) { fine = 5; S.money = Math.max(-50, S.money - 5); }
@@ -1495,6 +1496,10 @@ function startDay() {
       shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
     }
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
+    // atentado do dia: alguém na metade da fila não veio viajar
+    shift.attackKind = (!S.infinite && ATTACK_DAYS[S.day]) ? ATTACK_DAYS[S.day]
+      : (S.infinite && S.infDay > 0 && S.infDay % 4 === 3) ? (chance(.5) ? 'gun' : 'bomb') : null;
+    shift.attackSlot = shift.attackKind ? ri(3, Math.max(4, shift.queueSize - 2)) : -1;
   });
 
   $('shift-day').textContent = S.infinite
@@ -1555,7 +1560,53 @@ function bulletinText() {
   return t;
 }
 function showBulletin(fn) {
-  modal(`${T('COMUNICADO OFICIAL — DIA')} ${S.day}`, bulletinText(), [{ label: 'ASSINAR CIÊNCIA', fn }]);
+  modal(`${T('COMUNICADO OFICIAL — DIA')} ${S.day}`, '', [{ label: 'ASSINAR CIÊNCIA', fn }]);
+  typeBulletin(bulletinText());
+}
+/* o comunicado sai da teleimpressora do posto: aparece linha a linha, com o
+   tique do tipo batendo no papel — e o botão só acende quando termina.
+   Clicar (ou qualquer tecla) revela tudo de uma vez, para quem já leu. */
+let BULLETIN_T = null;
+function typeBulletin(text) {
+  const body = $('modal-body'), acts = $('modal-actions');
+  if (!body) return;
+  clearInterval(BULLETIN_T);
+  body.textContent = '';
+  body.classList.add('typing');
+  if (acts) acts.style.visibility = 'hidden';
+  const lines = String(text).split('\n');
+  let li = 0, ci = 0, acc = '';
+  const finish = () => {
+    clearInterval(BULLETIN_T); BULLETIN_T = null;
+    body.textContent = text; body.classList.remove('typing');
+    if (acts) acts.style.visibility = '';
+    body.onclick = null; document.removeEventListener('keydown', skip, true);
+  };
+  const skip = (e) => { if (BULLETIN_T) { e.preventDefault(); e.stopPropagation(); finish(); } };
+  body.onclick = finish;
+  document.addEventListener('keydown', skip, true);
+  BULLETIN_T = setInterval(() => {
+    if (li >= lines.length) { finish(); return; }
+    const line = lines[li];
+    // 5 caracteres por tique: o comunicado longo não pode virar espera
+    ci += 5;
+    if (ci >= line.length) { acc += line + '\n'; li++; ci = 0; if (line.trim()) sfxType(); }
+    body.textContent = acc + line.slice(0, ci);
+    body.scrollTop = body.scrollHeight;
+  }, 20);
+}
+function sfxType() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const n = AC.createBuffer(1, 900, AC.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 6);
+    const s2 = AC.createBufferSource(); s2.buffer = n;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 2600; f.Q.value = 1.4;
+    const g = AC.createGain(); g.gain.value = .05;
+    s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + .05);
+  } catch (e) {}
 }
 
 function tickClock() {
@@ -1830,7 +1881,7 @@ function pollShiftGamepad() {
         if (gpA && !shift.gpA) pickTarget(targets[shift.gpFocusIdx].fid, targets[shift.gpFocusIdx].el);
       }
     } else {
-      if (gpA && !shift.gpA) decide('approve');
+      if (gpA && !shift.gpA) stampByKey('approve');
       if (gpB && !shift.gpB) decide('reject');
     }
     if (gpX && !shift.gpX && !$('btn-detain').disabled) decide('detain');
@@ -1865,9 +1916,22 @@ function drawFig(ctx, f, groundY, lampX) {
   if (!walking && f.idle === 1) sway += Math.sin(Q.t * rate * 0.5 + f.phase) * 1.7;
   const x = f.x + sway, top = groundY - f.h + bob, cw = 6.4 * (f.wide || 1);
   const lum = Math.max(0, 1 - Math.abs(x - (lampX != null ? lampX : 9999)) / 130); // proximidade da luz
-  // sombra no chão
-  ctx.fillStyle = 'rgba(0,0,0,.42)';
-  ctx.beginPath(); ctx.ellipse(x, groundY + 1, cw * 1.05, 2, 0, 0, 6.29); ctx.fill();
+  // SOMBRA PROJETADA pelo sol: comprida na alvorada e no poente, curta ao
+  // meio-dia; some quando o sol se põe e o lampião assume o serviço
+  const sunF = Q.sunF == null ? .5 : Q.sunF;         // 0 = nasceu, 1 = vai se pôr
+  const high = Math.sin(Math.PI * Math.min(1, Math.max(0, sunF)));   // 0 no horizonte, 1 a pino
+  const shLen = (1 - high) * 26 + 4;                                 // comprimento da sombra
+  const shDir = sunF < .5 ? 1 : -1;                                  // sol a leste → sombra à direita
+  const shA = (Q.sunUp === false ? .12 : .16 + high * .3);
+  ctx.fillStyle = `rgba(0,0,0,${shA.toFixed(2)})`;
+  ctx.beginPath();
+  ctx.moveTo(x - cw * .8, groundY + 1);
+  ctx.lineTo(x + cw * .8, groundY + 1);
+  ctx.lineTo(x + cw * .4 + shDir * shLen, groundY + 3.5);
+  ctx.lineTo(x - cw * .4 + shDir * shLen, groundY + 3.5);
+  ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(0,0,0,.42)';                                  // contato sob os pés
+  ctx.beginPath(); ctx.ellipse(x, groundY + 1, cw * 1.05, 1.6, 0, 0, 6.29); ctx.fill();
   // pernas (com batida de pé no frio: levanta um pé de vez em quando)
   ctx.fillStyle = '#12120e';
   const legSw = Math.sin(Q.t * 2 + f.phase) * (walking ? 1.6 : 0.4);
@@ -1997,6 +2061,7 @@ function drawQueue(ctx, w, h) {
   ctx.fillStyle = sg; ctx.fillRect(0, 0, w, wallY + 8);
   // sol pálido atrás do nublado (nasce a leste, se põe a oeste; some às 17h)
   const dayF = (sky.t - 480) / 600;
+  Q.sunF = dayF; Q.sunUp = sky.t < 1035;
   if (sky.t < 1035) {
     const sunX = w * (.12 + dayF * .74), sunY = wallY - Math.sin(Math.PI * Math.min(1, dayF / .92)) * wallY * .78;
     const fade = sky.t > 990 ? 1 - (sky.t - 990) / 45 : 1;
@@ -2234,6 +2299,14 @@ function nextCitizen() {
         });
         cz.nervous = true;
       }
+    } else if (shift.attackSlot >= 0 && shift.processed === shift.attackSlot) {
+      // o agressor do dia: papéis em ordem, nada no exame — o que ele traz
+      // não está em documento nenhum
+      const kind = shift.attackKind;
+      shift.attackSlot = -1; shift.attackKind = null;
+      cz = makeCitizen(S.day, { forceValid: true });
+      cz.attacker = kind;
+      cz.nervous = true;
     } else if (shift.wantedName && shift.processed === shift.wantedSlot) {
       cz = makeCitizen(S.day, { nome: shift.wantedName, pais: shift.wantedPais, forceValid: true });
       cz.isWanted = true;
@@ -2362,6 +2435,10 @@ function greetingFor(cz) {
 function presentCitizen(cz) {
   resetInstruments();                                       // leituras do anterior somem
   autoInspect();                                            // comparar campos: sempre disponível
+  // o agressor do dia: entra na fila como qualquer um, e então saca
+  if (cz && cz.attacker) {
+    setTimeout(() => { if (shift.citizen === cz && shift.running && !cz.attackDone) { cz.attackDone = true; threatStart(cz.attacker); } }, 1500);
+  }
   sfxTool('bell');                                          // a sineta da mesa: próximo!
   $('npc-portrait').innerHTML = portraitSVG(cz.features);   // fallback SVG
   const a = $('npc-actor');
@@ -2627,8 +2704,9 @@ function layDocs(cz) {
     el.innerHTML = `<div class="doc-head" style="background:${doc.color}"><span>${T(doc.tipo)}</span><span>${COUNTRIES[cz.pais].prefix}</span></div><div class="doc-body">${docHTML(doc, cz)}</div>`;
     el.style.left = (18 + (i % cols) * 226 + ri(-7, 7)) + 'px';
     el.style.top = (14 + Math.floor(i / cols) * 138 + ri(-5, 5)) + 'px';
-    el.style.zIndex = ++shift.zTop;
-    el.style.animationDelay = (i * 0.1) + 's'; // cartas dadas uma a uma
+    el.style.zIndex = (shift.zTop = 10 + ((shift.zTop - 9) % 38));
+    el.style.animationDelay = (i * 0.13) + 's'; // cartas dadas uma a uma
+    setTimeout(() => sfxTool('paper'), 90 + i * 130);   // cada folha tem o seu deslizar
     makeDraggable(el);
     desk.appendChild(el);
     i++;
@@ -2644,7 +2722,7 @@ function layBribe(cz) {
   el.textContent = `“Um agrado. ${MOEDA} ${cz.bribe}. Ninguém precisa saber.”`;
   el.style.left = ri(40, 300) + 'px';
   el.style.bottom = '20px';
-  el.style.zIndex = ++shift.zTop;
+  el.style.zIndex = (shift.zTop = 10 + ((shift.zTop - 9) % 38));
   el.onclick = () => {
     modal('UM ENVELOPE DISCRETO', `Há ${MOEDA} ${cz.bribe} dentro. A fila observa. Ou não.`, [
       { label: 'ACEITAR', fn: () => { S.money += cz.bribe; S.counters.bribes++; S.counters.bribeMoney += cz.bribe; el.remove(); updateHud(); if (chance(.15)) bumpAuditRisk(1); } },
@@ -2660,7 +2738,7 @@ function makeDraggable(el) {
     if (e.target.classList.contains('v') || e.target.closest('.doc-photo') || e.target.classList.contains('doc-seal')) return;
     dragging = true; el.setPointerCapture(e.pointerId);
     sx = e.clientX; sy = e.clientY; ox = el.offsetLeft; oy = el.offsetTop;
-    el.style.zIndex = ++shift.zTop;
+    el.style.zIndex = (shift.zTop = 10 + ((shift.zTop - 9) % 38));
   });
   el.addEventListener('pointermove', (e) => {
     if (!dragging) return;
@@ -3605,6 +3683,219 @@ function setupStamps() {
   drawStampObj('approve'); drawStampObj('reject');
 }
 
+
+/* ============================================================
+   ATENTADOS NO GUICHÊ — a fronteira também mata
+   Dias marcados trazem alguém que não veio viajar. Um saca a arma
+   (Alternados atiram para matar); outro abre o casaco e mostra o
+   cinturão de explosivos. Você tem segundos para SACAR A PISTOLA e
+   atirar, ou apertar DETENÇÃO e deixar com os guardas. Não fazer
+   nada custa a sua vida — e às vezes a de mais gente.
+   ============================================================ */
+const ATTACK_DAYS = {
+  13: 'gun',    // primeira vez: o regime novo cria seus inimigos
+  19: 'bomb',
+  27: 'bomb',   // o atentado da Estação Central chega ao posto
+  34: 'gun',
+  41: 'gun',
+  45: 'bomb',   // no colapso, ninguém mais está protegendo ninguém
+};
+const THREAT = { on: false, kind: null, t0: 0, dur: 0, raf: null, armed: false, resolved: false };
+
+function threatWindow(kind) { return kind === 'bomb' ? 6200 : 4200; }
+
+/* a pistola de serviço, no coldre sob o balcão */
+function drawGunObj() {
+  const el = $('gun-obj'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
+  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 86, 52);
+  // coldre de couro (a arma descansa dentro dele)
+  x.fillStyle = '#3a2817'; x.fillRect(6, 20, 46, 30);
+  x.fillStyle = '#4a3423'; x.fillRect(6, 20, 46, 5);
+  x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(6, 46, 46, 4);
+  x.strokeStyle = 'rgba(201,163,74,.5)'; x.lineWidth = 1;
+  x.setLineDash([3, 3]); x.strokeRect(9, 24, 40, 22); x.setLineDash([]);
+  // corpo da pistola saindo do coldre
+  x.fillStyle = '#2e3230'; x.fillRect(20, 8, 52, 11);        // ferrolho
+  x.fillStyle = '#3c4240'; x.fillRect(20, 8, 52, 3);
+  x.fillStyle = '#1e2220'; x.fillRect(66, 11, 12, 5);        // cano
+  x.fillStyle = '#2e3230'; x.fillRect(30, 19, 12, 16);       // punho
+  x.fillStyle = '#4a3423'; x.fillRect(31, 21, 10, 13);       // cabo de madeira
+  x.fillStyle = 'rgba(255,240,210,.18)'; x.fillRect(32, 22, 2, 11);
+  x.fillStyle = '#1e2220'; x.fillRect(44, 19, 4, 7);         // guarda-mato
+  x.fillStyle = '#8a8f8c'; x.fillRect(24, 6, 3, 2);          // alça de mira
+  x.fillStyle = 'rgba(238,240,230,.14)'; x.fillRect(20, 8, 52, 1);
+  pixelSnap(cv, 2);
+}
+
+function threatStart(kind) {
+  const cz = shift.citizen; if (!cz || !shift.running) return;
+  THREAT.on = true; THREAT.kind = kind; THREAT.resolved = false;
+  THREAT.t0 = performance.now(); THREAT.dur = threatWindow(kind);
+  const th = $('threat'), lab = th && th.querySelector('.th-label');
+  if (lab) lab.textContent = kind === 'bomb'
+    ? T('EXPLOSIVOS — DETENHA OU ATIRE') : T('ARMA — ATIRE OU DETENHA');
+  if (th) th.classList.add('on');
+  $('screen-shift').classList.add('alarm');
+  $('speech').textContent = kind === 'bomb'
+    ? T('"Vocês carimbam gente. Eu trouxe uma coisa que carimba de volta."')
+    : T('"Você olhou o meu rosto tempo demais."');
+  sfxThreat(kind);
+  const bar = th && th.querySelector('.th-bar i');
+  const step = () => {
+    if (!THREAT.on) return;
+    const f = Math.max(0, 1 - (performance.now() - THREAT.t0) / THREAT.dur);
+    if (bar) bar.style.transform = 'scaleX(' + f.toFixed(3) + ')';
+    if (f <= 0) { threatResolve('late'); return; }
+    THREAT.raf = requestAnimationFrame(step);
+  };
+  THREAT.raf = requestAnimationFrame(step);
+}
+
+function threatEndVisuals() {
+  THREAT.on = false;
+  cancelAnimationFrame(THREAT.raf);
+  const th = $('threat'); if (th) th.classList.remove('on');
+  $('screen-shift').classList.remove('alarm', 'armed');
+  THREAT.armed = false;
+  const g = $('gun-obj'); if (g) g.classList.remove('drawn');
+}
+
+/* como a ameaça termina: você atirou, deteve — ou demorou */
+function threatResolve(how) {
+  if (!THREAT.on || THREAT.resolved) return;
+  THREAT.resolved = true;
+  const kind = THREAT.kind;
+  const cz = shift.citizen;
+  threatEndVisuals();
+  if (how === 'shot' || how === 'detain') {
+    sfx('stamp');
+    const label = how === 'shot' ? T('NEUTRALIZADO NO GUICHÊ') : T('DETIDO ANTES DE AGIR');
+    citationClear();
+    modal(T('OCORRÊNCIA NO POSTO Nº 7'),
+      (kind === 'bomb'
+        ? T('O cinturão estava armado. Os artificieiros levaram quatro horas.\n\n')
+        : T('A arma estava carregada e destravada.\n\n')) +
+      label + '.\n\n' +
+      T('O Ministério registra o ato. O rádio dirá que o posto "reagiu com firmeza". Ninguém dirá o nome da pessoa.'),
+      [{ label: T('ARQUIVAR'), fn: () => {} }]);
+    S.pendingNews.push({ day: S.day + 1, text: how === 'shot'
+      ? T('Um inspetor da fronteira leste abateu um agressor no guichê. O comunicado oficial não informa o nome do morto — nem se ele era mesmo o que dizem que era.')
+      : T('Um agressor foi detido no posto leste antes de agir. A perícia confirma o material. A imprensa não pergunta de onde veio.') });
+    S.money += 20;
+    if (cz) { shift.citizen = null; shift.processed++; }
+    updateHud();
+    setTimeout(nextCitizen, 1500);
+    return;
+  }
+  // demorou: o guichê não protege ninguém
+  if (kind === 'bomb') {
+    sfxBoom();
+    document.body.classList.add('blackout');
+    setTimeout(() => { document.body.classList.remove('blackout'); finishGame('morto'); }, 900);
+  } else {
+    sfxShot(.9);
+    setTimeout(() => finishGame('morto'), 700);
+  }
+}
+function citationClear() { const c = $('citation'); if (c) c.classList.remove('active'); }
+
+/* SACAR e ATIRAR */
+function gunToggle() {
+  if (!shift.running) return;
+  THREAT.armed = !THREAT.armed;
+  $('screen-shift').classList.toggle('armed', THREAT.armed);
+  const g = $('gun-obj'); if (g) g.classList.toggle('drawn', THREAT.armed);
+  sfxTool(THREAT.armed ? 'pickup' : 'drop');
+}
+function gunFire() {
+  if (!THREAT.armed) return;
+  const mz = $('muzzle');
+  if (mz) { mz.classList.remove('fire'); void mz.offsetWidth; mz.classList.add('fire'); }
+  sfxShot(1);
+  if (THREAT.on) { threatResolve('shot'); return; }
+  // atirou em quem não fez nada: isso tem nome, e tem consequência
+  const cz = shift.citizen;
+  threatEndVisuals();
+  if (!cz) return;
+  addAuditRisk(1);
+  citation(T('DISPARO INJUSTIFICADO contra viajante desarmado. O Ministério abriu sindicância.'));
+  S.pendingNews.push({ day: S.day + 1, text: T('Um viajante desarmado foi baleado no posto leste. O Ministério fala em "excesso compreensível". A família pede o corpo há dois dias.') });
+  shift.citizen = null; shift.processed++;
+  updateHud();
+  setTimeout(nextCitizen, 1500);
+}
+function setupGun() {
+  const g = $('gun-obj');
+  if (g) { g.title = T(g.title); g.onclick = (e) => { e.stopPropagation(); gunToggle(); }; }
+  drawGunObj();
+  // com a arma sacada, clicar no guichê é atirar
+  const stage = $('npc-stage');
+  if (stage) stage.addEventListener('click', (e) => { if (THREAT.armed) { e.stopPropagation(); gunFire(); } }, true);
+  const win = document.querySelector('.booth-window');
+  if (win) win.addEventListener('click', (e) => { if (THREAT.armed) { e.stopPropagation(); gunFire(); } }, true);
+}
+
+/* ---- sons do atentado ---- */
+function sfxShot(vol) {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const n = AC.createBuffer(1, AC.sampleRate * .5 | 0, AC.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) { const ph = i / d.length; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - ph, 4); }
+    const s2 = AC.createBufferSource(); s2.buffer = n;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.setValueAtTime(5200, t); f.frequency.exponentialRampToValueAtTime(320, t + .22);
+    const g = AC.createGain(); g.gain.value = .3 * (vol || 1);
+    s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + .5);
+    const o = AC.createOscillator(), og = AC.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(160, t); o.frequency.exponentialRampToValueAtTime(44, t + .16);
+    og.gain.setValueAtTime(.28 * (vol || 1), t); og.gain.exponentialRampToValueAtTime(.001, t + .3);
+    o.connect(og); og.connect(AC.destination); o.start(t); o.stop(t + .32);
+  } catch (e) {}
+}
+function sfxBoom() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const n = AC.createBuffer(1, AC.sampleRate * 1.6 | 0, AC.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) { const ph = i / d.length; d[i] = (Math.random() * 2 - 1) * Math.pow(1 - ph, 2.2); }
+    const s2 = AC.createBufferSource(); s2.buffer = n;
+    const f = AC.createBiquadFilter(); f.type = 'lowpass';
+    f.frequency.setValueAtTime(1800, t); f.frequency.exponentialRampToValueAtTime(90, t + 1.2);
+    const g = AC.createGain(); g.gain.value = .42;
+    s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + 1.6);
+    const o = AC.createOscillator(), og = AC.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(90, t); o.frequency.exponentialRampToValueAtTime(24, t + .8);
+    og.gain.setValueAtTime(.5, t); og.gain.exponentialRampToValueAtTime(.001, t + 1.3);
+    o.connect(og); og.connect(AC.destination); o.start(t); o.stop(t + 1.4);
+  } catch (e) {}
+}
+function sfxThreat(kind) {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    // sirene curta de dois tons: o posto acordou
+    [[0, 620], [.22, 440], [.44, 620], [.66, 440]].forEach(([off, fr]) => {
+      const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square'; o.frequency.value = fr;
+      g.gain.setValueAtTime(.0001, t + off); g.gain.linearRampToValueAtTime(.07, t + off + .03);
+      g.gain.exponentialRampToValueAtTime(.0005, t + off + .21);
+      const f = AC.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400;
+      o.connect(f); f.connect(g); g.connect(AC.destination); o.start(t + off); o.stop(t + off + .24);
+    });
+    if (kind === 'bomb') {   // o tique do detonador
+      for (let i = 0; i < 8; i++) {
+        const o = AC.createOscillator(), g = AC.createGain(); o.type = 'square'; o.frequency.value = 1700;
+        g.gain.setValueAtTime(.05, t + .9 + i * .55); g.gain.exponentialRampToValueAtTime(.0005, t + .9 + i * .55 + .05);
+        o.connect(g); g.connect(AC.destination); o.start(t + .9 + i * .55); o.stop(t + .9 + i * .55 + .06);
+      }
+    }
+  } catch (e) {}
+}
+
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
 /* inspeção agora fica SEMPRE ativa com cidadão no guichê (o botão sumiu:
    clique em dois campos e a comparação acontece). toggleInspect segue
@@ -3670,6 +3961,17 @@ function evaluatePair(a, b) {
 function decide(decision) {
   const cz = shift.citizen;
   if (!cz || !shift.running) return;
+  // com uma arma apontada para você, só a detenção (ou o disparo) resolve
+  if (THREAT.on) {
+    if (decision === 'detain') { threatResolve('detain'); return; }
+    return;   // carimbar não faz um cinturão de explosivos ir embora
+  }
+  // tentar despachar o agressor é o que faz ele sacar: a detenção ainda
+  // funciona (os guardas levam), qualquer carimbo desperta a ameaça
+  if (cz.attacker && !cz.attackDone) {
+    if (decision === 'detain') { cz.attackDone = true; }
+    else { cz.attackDone = true; threatStart(cz.attacker); return; }
+  }
   // modo arquivista: sem o tique passivo, cada decisão cobra o tempo-base
   // de ler e carimbar — o dia ainda avança, só que sem pressa por trás
   if (SETTINGS.archivist) spendTime(24);
@@ -3926,6 +4228,7 @@ function presentMirror() {
 /* ---------- FIM DO TURNO ---------- */
 function endShift() {
   if (!shift.running) return;
+  if (THREAT.on) { THREAT.resolved = true; threatEndVisuals(); }
   shift.running = false;
   clearInterval(shift.tickId);
   clearInterval(radioTimer);
@@ -4024,6 +4327,8 @@ function resolveNight(c) {
 }
 
 function applyNight() {
+  // o Ministério esquece devagar: a ficha do inspetor alivia a cada noite
+  S.citRisk = Math.max(0, (S.citRisk || 0) - 3);
   // aluguel
   S.rent = S.day >= 31 ? 25 : 15;
   S.money -= S.rent;
@@ -4051,8 +4356,13 @@ function applyNight() {
   if (S.flags.remedioProometido) { S.family.tomi.sick = false; S.family.tomi.sickDays = 0; S.flags.remedioProometido = false; S.flags.remedioEntregue = true; }
 }
 
+/* A prisão não pode olhar a campanha inteira: 48 dias de serviço somam
+   advertências mesmo de um inspetor competente, e o jogo acabava no dia 3.
+   O Ministério tem memória CURTA e rancorosa — conta o que você errou nos
+   últimos dias (S.citRisk sobe a cada advertência e cede 2 por noite). É
+   preciso errar MUITO, e por vários dias seguidos, para ser levado. */
 function checkArrest() {
-  if (S.citTotal >= 12 || (S.flags.auditRisk || 0) >= 3) { finishGame('prisao'); return true; }
+  if ((S.citRisk || 0) >= 14 || (S.flags.auditRisk || 0) >= 3) { finishGame('prisao'); return true; }
   return false;
 }
 
@@ -4284,6 +4594,7 @@ function drawHomeScene() {
 /* ---------- FINAIS ---------- */
 function pickEnding(kind) {
   const c = S.counters;
+  if (kind === 'morto') return 'morto';
   if (kind === 'silente') return 'silente';
   if (kind === 'prisao') return 'prisao';
   const famDead = Object.values(S.family).every(m => !m.alive);
@@ -4670,6 +4981,42 @@ function togglePause() {
     if (PAUSE.resumeHouse) houseResume();
   }
 }
+/* ATALHOS DE CARIMBO (acessibilidade): A aprova, R rejeita, D detém.
+   O carimbo desce sozinho sobre o primeiro documento, com a mesma tinta
+   e o mesmo baque de quando você o arrasta com a mão. */
+function stampByKey(kind) {
+  if (!shift.running || !shift.citizen) return;
+  if ($('pause-overlay').classList.contains('active')) return;
+  if ($('modal-overlay').classList.contains('active')) return;
+  const el = $(kind === 'approve' ? 'st-apv' : kind === 'reject' ? 'st-rej' : null);
+  const doc = $('desk').querySelector('.document');
+  if (kind === 'detain') { const b = $('btn-detain'); if (b && !b.disabled) b.click(); return; }
+  if (!el || el.classList.contains('busy') || el.classList.contains('hidden')) return;
+  if (doc) {
+    const r = doc.getBoundingClientRect();
+    shift.stampTarget = { doc, x: r.left + r.width * .5, y: r.top + r.height * .55,
+      ink: STAMP_INK[kind] / STAMP_INK_MAX };
+    STAMP_INK[kind] = Math.max(0, STAMP_INK[kind] - 1);
+    drawStampObj(kind);
+  }
+  el.classList.add('busy');
+  el.style.transition = 'transform .09s ease-in';
+  el.style.transform = 'translateY(10px) scale(.95)';
+  sfxTool('pickup');
+  setTimeout(() => {
+    decide(kind);
+    el.style.transition = 'transform .18s ease-out'; el.style.transform = '';
+    setTimeout(() => { el.style.cssText = ''; el.classList.remove('busy'); }, 220);
+  }, 150);
+}
+document.addEventListener('keydown', (e) => {
+  if (!$('screen-shift').classList.contains('active')) return;
+  if (e.target && /INPUT|TEXTAREA/.test(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if (k === 'a') { e.preventDefault(); stampByKey('approve'); }
+  else if (k === 'r') { e.preventDefault(); stampByKey('reject'); }
+  else if (k === 'd') { e.preventDefault(); stampByKey('detain'); }
+});
 document.addEventListener('keydown', (e) => {
   if (e.key !== 'Escape') return;
   if (achievementsModalOpen) { closeAchievementsModal(); return; } // fecha por cima, não despausa por baixo
@@ -4703,6 +5050,7 @@ $('pz-title').onclick = () => { save(); location.reload(); };
   setupInstruments();
   setupDrawers();
   setupStamps();
+  setupGun();
   initTitleMenu();
   showScreen('screen-title');
   startTitleSnow();

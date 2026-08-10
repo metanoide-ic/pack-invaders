@@ -1098,6 +1098,31 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   font-size:12px; padding:6px 16px; letter-spacing:1px;
 }
 
+/* ===== AMEAÇA no guichê: barra de tempo e aviso piscando ===== */
+#threat { display:none; position:absolute; left:0; right:0; bottom:0; z-index:6; pointer-events:none; }
+#threat.on { display:block; animation: th-flash .5s steps(2) infinite; }
+@keyframes th-flash { 0%,49% { filter:none; } 50%,100% { filter:brightness(1.35); } }
+#threat .th-bar { height:8px; background:#2a0c08; border-top:1px solid #000; }
+#threat .th-bar i { display:block; height:100%; width:100%; background:linear-gradient(90deg,#c9352a,#f0a03a); transform-origin:left; }
+#threat .th-label {
+  font-family:var(--font-display); font-weight:700; font-size:11px; letter-spacing:2px;
+  text-align:center; color:#ffdcd2; background:rgba(120,20,12,.92); padding:3px 6px;
+  text-shadow:0 -1px 0 rgba(0,0,0,.7);
+}
+/* o vidro do guichê pisca em vermelho durante a ameaça */
+#screen-shift.alarm .booth-window { box-shadow: 0 0 0 3px #8a1f14, 0 0 0 6px #14150f, inset 0 0 60px rgba(160,20,10,.5); }
+#screen-shift.alarm { animation: alarm-shake .16s infinite; }
+@keyframes alarm-shake { 0%,100% { transform:none; } 50% { transform:translateX(1.5px); } }
+/* ARMA sacada: a mira substitui o cursor sobre o guichê */
+#screen-shift.armed .booth-window, #screen-shift.armed #npc-stage { cursor:crosshair; }
+#gun-obj { position:absolute; right:24px; bottom:14px; z-index:59; }
+#gun-obj.drawn { filter:drop-shadow(0 0 10px rgba(232,207,146,.5)) drop-shadow(3px 5px 0 rgba(0,0,0,.5)); transform:translateY(-6px) rotate(-6deg); }
+/* clarão do disparo */
+#muzzle { position:absolute; inset:0; z-index:8; pointer-events:none; display:none; background:rgba(255,240,200,.85); }
+#muzzle.fire { display:block; animation: mz .16s steps(3) forwards; }
+@keyframes mz { 0% { opacity:.9; } 100% { opacity:0; } }
+@media (prefers-reduced-motion: reduce) { #screen-shift.alarm, #threat.on { animation:none; } }
+
 /* PERSIANA DE AÇO do guichê: fecha o expediente descendo sobre a tela */
 #shutter {
   position:absolute; inset:0; z-index:75; pointer-events:none; overflow:hidden;
@@ -1247,6 +1272,11 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
   border-bottom:3px double var(--paper-ink);
 }
 .modal-body { font-size:13px; line-height:1.7; white-space:pre-wrap; padding-left:14px; }
+/* o comunicado sendo datilografado: cursor de máquina piscando no fim */
+.modal-body.typing::after {
+  content:'▌'; color:#7a2a20; animation: tw-caret .5s steps(1) infinite;
+}
+@keyframes tw-caret { 0%,49% { opacity:1; } 50%,100% { opacity:0; } }
 .modal-actions { margin-top:18px; display:flex; gap:10px; flex-wrap:wrap; padding-left:14px; }
 /* botão de despacho: chapa de tinta com a borda dupla do carimbo */
 .modal-actions button {
