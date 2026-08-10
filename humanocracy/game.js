@@ -1559,7 +1559,203 @@ function bulletinText() {
     : `${T('\n\n✎ (rabiscado a lápis na margem, por alguém do turno anterior)\n"')}${T(rum.text)}"`;
   return t;
 }
+
+/* ============================================================
+   TRANSMISSÃO OFICIAL — em vez do papel, a cara do regime
+   Em dias de virada o comunicado não chega em envelope: o
+   televisor do posto liga sozinho e um funcionário lê o texto.
+   O locutor é desenhado à mão (pixel), pisca e mexe a boca
+   enquanto as legendas entram.
+   ============================================================ */
+const BROADCASTS = {
+  7:  { reg: 'republica', who: 'PORTA-VOZ DO MINISTÉRIO',
+        lines: ['O chanceler Aldric Voss foi assassinado esta manhã.',
+                'Luto oficial de três dias. Os postos permanecem abertos.',
+                'Inspetor: mantenha o rigor. Não há motivo para alarme.',
+                'Repito: não há motivo para alarme.'] },
+  12: { reg: 'mehrvolk', who: 'COMANDO NACIONAL MEHRVOLK',
+        lines: ['O movimento Mehrvolk assumiu o governo de Osteria.',
+                'A verdade agora tem um só nome.',
+                'Os postos de fronteira passam ao Comando Nacional.',
+                'Inspetor: seu uniforme será substituído hoje.'] },
+  14: { reg: 'mehrvolk', who: 'INSTITUTO DE FENOTIPIA',
+        lines: ['Édito de Pureza número dois entra em vigor.',
+                'Origem núlia ou bahari: certificado de ancestralidade.',
+                'A ciência do Estado é clara. A do inimigo, também é inimiga.',
+                'Cumpra sem exceções.'] },
+  27: { reg: 'mehrvolk', who: 'BOLETIM DE EMERGÊNCIA',
+        lines: ['Explosão na Estação Central de Valgrado.',
+                'Trinta e uma mortes confirmadas até este minuto.',
+                'A fronteira leste está sob atenção máxima.',
+                'Qualquer hesitação será registrada.'] },
+  30: { reg: 'conselho', who: 'CONSELHO POPULAR DE OSTERIA',
+        lines: ['O regime anterior caiu durante a madrugada.',
+                'Os Alternados são uma invenção do capital.',
+                'Documentos antigos exigem selo de revalidação.',
+                'Trabalhador: o posto é seu. Use-o com disciplina.'] },
+  43: { reg: 'colapso', who: '— SEM IDENTIFICAÇÃO —',
+        lines: ['...alguém está transmitindo?',
+                'O Ministério não responde desde ontem.',
+                'Se houver um inspetor ouvindo: aplique o bom senso.',
+                'O que quer que isso signifique agora.'] },
+};
+const TV = { raf: null, t: 0, talk: 0, blink: 0, nextBlink: 2, reg: 'republica' };
+
+/* o locutor: busto em uniforme, desenhado bloco a bloco */
+function drawAnnouncer(x, W, H, reg, talk, blink) {
+  const P = {
+    republica: { bg: ['#1b2a2e', '#0d1416'], coat: '#3a4048', trim: '#8a734d', cap: '#2a2f34', badge: '#c9a34a' },
+    mehrvolk:  { bg: ['#2a1412', '#120807'], coat: '#2e2a26', trim: '#8a2e22', cap: '#1c1a17', badge: '#d8cdb0' },
+    conselho:  { bg: ['#1e2418', '#0b0f0a'], coat: '#4a4a34', trim: '#7a2a20', cap: '#3a3a28', badge: '#c9352a' },
+    colapso:   { bg: ['#161616', '#070707'], coat: '#33332e', trim: '#55524a', cap: '#26261f', badge: '#8b8a7a' },
+  }[reg] || {};
+  x.imageSmoothingEnabled = false;
+  // fundo de estúdio: cortina/parede com vinheta
+  const g = x.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, P.bg[0]); g.addColorStop(1, P.bg[1]);
+  x.fillStyle = g; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 12; i++) {           // pregas da cortina do estúdio
+    x.fillStyle = i % 2 ? 'rgba(0,0,0,.16)' : 'rgba(255,255,255,.02)';
+    x.fillRect(i * (W / 12), 0, W / 24, H);
+  }
+  // brasão desbotado atrás do locutor
+  x.strokeStyle = 'rgba(255,246,220,.07)'; x.lineWidth = 5;
+  x.beginPath(); x.arc(W * .5, H * .34, 52, 0, 6.29); x.stroke();
+  x.beginPath(); x.arc(W * .5, H * .34, 36, 0, 6.29); x.stroke();
+  const cx = W * .5, base = H;
+  // ombros + casaco
+  x.fillStyle = P.coat;
+  x.fillRect(cx - 82, base - 74, 164, 74);
+  x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(cx - 82, base - 74, 164, 5);
+  // gola em V e camisa
+  x.fillStyle = '#c9c2ab';
+  x.beginPath(); x.moveTo(cx - 20, base - 74); x.lineTo(cx + 20, base - 74); x.lineTo(cx, base - 40); x.closePath(); x.fill();
+  x.fillStyle = P.trim;                                   // gravata/faixa
+  x.beginPath(); x.moveTo(cx - 7, base - 58); x.lineTo(cx + 7, base - 58); x.lineTo(cx + 4, base - 12); x.lineTo(cx - 4, base - 12); x.closePath(); x.fill();
+  x.fillStyle = P.badge; x.fillRect(cx - 68, base - 60, 16, 12);   // insígnia no peito
+  x.fillStyle = 'rgba(0,0,0,.4)'; x.fillRect(cx - 66, base - 56, 12, 2);
+  // pescoço e cabeça
+  const hy = base - 74;
+  x.fillStyle = '#b78c66'; x.fillRect(cx - 13, hy - 16, 26, 20);
+  x.fillStyle = 'rgba(0,0,0,.22)'; x.fillRect(cx - 13, hy - 4, 26, 4);
+  x.fillStyle = '#c99a72'; x.fillRect(cx - 30, hy - 74, 60, 62);   // rosto
+  x.fillStyle = 'rgba(0,0,0,.16)'; x.fillRect(cx + 16, hy - 74, 14, 62);   // lado em sombra
+  x.fillStyle = '#b0855f'; x.fillRect(cx - 34, hy - 56, 5, 16); x.fillRect(cx + 29, hy - 56, 5, 16); // orelhas
+  // quepe
+  x.fillStyle = P.cap; x.fillRect(cx - 34, hy - 88, 68, 18);
+  x.fillStyle = '#14150f'; x.fillRect(cx - 38, hy - 72, 76, 7);    // pala
+  x.fillStyle = P.badge; x.fillRect(cx - 6, hy - 85, 12, 9);       // emblema do quepe
+  x.fillStyle = 'rgba(255,255,255,.08)'; x.fillRect(cx - 34, hy - 88, 68, 3);
+  // sobrancelhas e olhos (piscam)
+  x.fillStyle = '#3a2a1c'; x.fillRect(cx - 22, hy - 56, 15, 4); x.fillRect(cx + 7, hy - 56, 15, 4);
+  if (blink) {
+    x.fillStyle = '#8a6448'; x.fillRect(cx - 21, hy - 47, 13, 3); x.fillRect(cx + 8, hy - 47, 13, 3);
+  } else {
+    x.fillStyle = '#e8e2d0'; x.fillRect(cx - 21, hy - 50, 13, 9); x.fillRect(cx + 8, hy - 50, 13, 9);
+    x.fillStyle = '#2c2418'; x.fillRect(cx - 16, hy - 48, 5, 6);  x.fillRect(cx + 12, hy - 48, 5, 6);
+    x.fillStyle = 'rgba(255,255,255,.7)'; x.fillRect(cx - 15, hy - 47, 2, 2); x.fillRect(cx + 13, hy - 47, 2, 2);
+  }
+  // nariz
+  x.fillStyle = '#b0855f'; x.fillRect(cx - 3, hy - 44, 7, 12);
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(cx - 3, hy - 33, 7, 2);
+  // BOCA: abre e fecha conforme fala
+  const mo = Math.max(0, Math.min(1, talk));
+  const mh = 2 + Math.round(mo * 9);
+  x.fillStyle = '#4a2018'; x.fillRect(cx - 11, hy - 26, 22, mh);
+  if (mh > 5) { x.fillStyle = '#e8e2d0'; x.fillRect(cx - 9, hy - 25, 18, 3); }   // dentes
+  x.fillStyle = 'rgba(0,0,0,.2)'; x.fillRect(cx - 11, hy - 26 + mh, 22, 2);
+  // microfone de mesa, na frente
+  x.fillStyle = '#1c1e18'; x.fillRect(cx - 6, base - 30, 12, 30);
+  x.fillStyle = '#2c2e26'; x.fillRect(cx - 14, base - 40, 28, 12);
+  x.fillStyle = 'rgba(0,0,0,.5)';
+  for (let i = 0; i < 4; i++) x.fillRect(cx - 12 + i * 7, base - 38, 3, 8);
+  // grão e sangramento de vídeo
+  for (let i = 0; i < 700; i++) {
+    x.fillStyle = 'rgba(255,255,255,' + (0.015 + Math.random() * 0.05).toFixed(3) + ')';
+    x.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+  }
+}
+
+function showBroadcast(day, fn) {
+  const b = BROADCASTS[day]; if (!b) { return false; }
+  const ov = $('tv-overlay'), cv = $('tv-screen'), sub = $('tv-sub');
+  if (!ov || !cv) return false;
+  const x = cv.getContext('2d');
+  TV.reg = b.reg; TV.t = 0; TV.talk = 0; TV.blink = 0; TV.nextBlink = 1.5;
+  $('tv-band').textContent = T('TRANSMISSÃO OFICIAL') + ' · ' + T(b.who);
+  sub.textContent = '';
+  ov.classList.add('active');
+  sfxTvOn();
+  // legendas entram frase a frase, e a boca acompanha
+  let li = 0, ci = 0, done = false;
+  const lines = b.lines.map(l => T(l));
+  const typer = setInterval(() => {
+    if (li >= lines.length) {
+      done = true; TV.talk = 0; clearInterval(typer);
+      $('tv-off').style.visibility = '';
+      return;
+    }
+    ci += 2;
+    const cur = lines[li];
+    sub.textContent = cur.slice(0, ci);
+    TV.talk = (ci < cur.length) ? (0.35 + Math.random() * 0.65) : 0;
+    if (ci >= cur.length) { li++; ci = 0; setTimeout(() => {}, 0); }
+  }, 42);
+  $('tv-off').style.visibility = 'hidden';
+  const loop = () => {
+    TV.t += 1 / 60;
+    if (TV.t >= TV.nextBlink) { TV.blink = 0.14; TV.nextBlink = TV.t + 2 + Math.random() * 3; }
+    if (TV.blink > 0) TV.blink -= 1 / 60;
+    drawAnnouncer(x, cv.width, cv.height, TV.reg, done ? 0 : TV.talk, TV.blink > 0);
+    TV.raf = requestAnimationFrame(loop);
+  };
+  cancelAnimationFrame(TV.raf); loop();
+  const off = () => {
+    clearInterval(typer); cancelAnimationFrame(TV.raf);
+    sfxTvOff();
+    ov.classList.remove('active');
+    $('tv-off').onclick = null;
+    if (fn) fn();
+  };
+  $('tv-off').textContent = T('DESLIGAR O APARELHO');
+  $('tv-off').onclick = off;
+  // clicar na tela pula as legendas
+  cv.onclick = () => { if (!done) { clearInterval(typer); sub.textContent = lines[lines.length - 1]; done = true; TV.talk = 0; $('tv-off').style.visibility = ''; } };
+  return true;
+}
+function sfxTvOn() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    // estalo do tubo + zumbido de 60 ciclos que some
+    const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine'; o.frequency.value = 15600;
+    g.gain.setValueAtTime(.05, t); g.gain.exponentialRampToValueAtTime(.0005, t + .5);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .55);
+    const h = AC.createOscillator(), hg = AC.createGain(); h.type = 'sawtooth'; h.frequency.value = 60;
+    const hf = AC.createBiquadFilter(); hf.type = 'lowpass'; hf.frequency.value = 220;
+    hg.gain.setValueAtTime(.09, t); hg.gain.exponentialRampToValueAtTime(.004, t + 1.4);
+    h.connect(hf); hf.connect(hg); hg.connect(AC.destination); h.start(t); h.stop(t + 1.5);
+  } catch (e) {}
+}
+function sfxTvOff() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(1800, t); o.frequency.exponentialRampToValueAtTime(60, t + .18);
+    g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .22);
+    o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .25);
+  } catch (e) {}
+}
+
 function showBulletin(fn) {
+  // dias de virada: o aparelho liga sozinho e alguém lê o comunicado na cara
+  if (!S.infinite && BROADCASTS[S.day] && showBroadcast(S.day, () => {
+    modal(`${T('COMUNICADO OFICIAL — DIA')} ${S.day}`, '', [{ label: 'ASSINAR CIÊNCIA', fn }]);
+    typeBulletin(bulletinText());
+  })) return;
   modal(`${T('COMUNICADO OFICIAL — DIA')} ${S.day}`, '', [{ label: 'ASSINAR CIÊNCIA', fn }]);
   typeBulletin(bulletinText());
 }
@@ -2702,11 +2898,21 @@ function layDocs(cz) {
     el.className = 'document';
     el.dataset.doc = doc.id;
     el.innerHTML = `<div class="doc-head" style="background:${doc.color}"><span>${T(doc.tipo)}</span><span>${COUNTRIES[cz.pais].prefix}</span></div><div class="doc-body">${docHTML(doc, cz)}</div>`;
-    el.style.left = (18 + (i % cols) * 226 + ri(-7, 7)) + 'px';
-    el.style.top = (14 + Math.floor(i / cols) * 138 + ri(-5, 5)) + 'px';
+    const dl = 18 + (i % cols) * 226 + ri(-7, 7);
+    const dt = 14 + Math.floor(i / cols) * 138 + ri(-5, 5);
+    el.style.left = dl + 'px';
+    el.style.top = dt + 'px';
     el.style.zIndex = (shift.zTop = 10 + ((shift.zTop - 9) % 38));
-    el.style.animationDelay = (i * 0.13) + 's'; // cartas dadas uma a uma
-    setTimeout(() => sfxTool('paper'), 90 + i * 130);   // cada folha tem o seu deslizar
+    // O PAPEL VEM DA MÃO DELE: sai da abertura do vidro (topo da mesa, no
+    // centro) girando, e ATERRISSA no lugar — cada folha jogada por cima do
+    // balcão, não materializada na madeira.
+    const slotX = (desk.clientWidth || 900) * .5;
+    el.style.setProperty('--fx', Math.round(slotX - dl - 125) + 'px');
+    el.style.setProperty('--fy', Math.round(-dt - 210) + 'px');
+    el.style.setProperty('--fr', (ri(-34, 34)) + 'deg');
+    el.style.setProperty('--fs', (ri(-9, 9) / 10) + 'deg');   // o repouso nunca é reto
+    el.style.animationDelay = (i * 0.16) + 's'; // um de cada vez, sem pressa
+    setTimeout(() => { sfxTool('paper'); sfxTool('drop'); }, 420 + i * 160);   // o baque de cada folha na mesa
     makeDraggable(el);
     desk.appendChild(el);
     i++;

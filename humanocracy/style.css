@@ -845,10 +845,14 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 
 /* documentos: cartas dadas uma a uma; carimbo esmaga */
-.document { animation: deal-in .5s cubic-bezier(.2,.9,.4,1) backwards; }
+/* O documento é JOGADO pela abertura do vidro: entra girando de cima, passa
+   um pouco do ponto e assenta torto, como papel largado com pressa. */
+.document { animation: deal-in .58s cubic-bezier(.25,.9,.35,1) backwards; transform: rotate(var(--fs, 0deg)); }
 @keyframes deal-in {
-  from { transform: translateY(260px) translateX(60px) rotate(14deg); opacity:0; }
-  to   { transform: none; opacity:1; }
+  0%   { transform: translate(var(--fx, 40px), var(--fy, -240px)) rotate(var(--fr, 22deg)) scale(.92); opacity:0; }
+  30%  { opacity:1; }
+  76%  { transform: translate(0, 6px) rotate(calc(var(--fs, 0deg) * 2.2)) scale(1.02); opacity:1; }
+  100% { transform: rotate(var(--fs, 0deg)); opacity:1; }
 }
 .doc-stamped { animation: stamp-slam .34s cubic-bezier(.2,1.9,.35,1) backwards; }
 @keyframes stamp-slam {
@@ -1269,6 +1273,61 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 @keyframes end-flicker { 0%,95%,100% { opacity:1; } 96% { opacity:.55; } 97% { opacity:.9; } 98% { opacity:.45; } 99% { opacity:.85; } }
 @media (prefers-reduced-motion: reduce) { #screen-ending.active .ending-panel, #screen-ending .ending-title { animation:none; } }
+
+/* ============ TELEVISOR: a transmissão oficial ============ */
+#tv-overlay {
+  display:none; position:absolute; inset:0; z-index:92; align-items:center; justify-content:center;
+  background:radial-gradient(ellipse at 50% 45%, rgba(10,12,8,.86), rgba(2,3,2,.96));
+}
+#tv-overlay.active { display:flex; }
+.tv-set { position:relative; display:flex; flex-direction:column; align-items:center; animation: tv-in .3s ease-out; }
+@keyframes tv-in { from { opacity:0; transform:scale(.96); } }
+.tv-cabinet {
+  position:relative; padding:16px 18px 10px; width:min(560px, 92vw);
+  background-color:#3a2c1c;
+  background-image: linear-gradient(rgba(20,12,6,.28), rgba(20,12,6,.5)), var(--tex-wood);
+  border:2px solid #0a0b07; border-radius:8px 8px 4px 4px;
+  box-shadow: inset 0 2px 0 rgba(255,240,210,.14), 10px 14px 0 rgba(0,0,0,.55);
+}
+.tv-screen-wrap {
+  position:relative; overflow:hidden; border-radius:14px/10px;
+  background:#0a0c08; border:3px solid #14150f;
+  box-shadow: inset 0 0 40px rgba(0,0,0,.9), 0 0 0 2px #6a5a3a;
+}
+#tv-screen { display:block; width:100%; height:auto; image-rendering:pixelated; }
+.tv-scan {   /* varredura e curvatura do tubo */
+  position:absolute; inset:0; pointer-events:none;
+  background:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.30) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at 50% 45%, transparent 52%, rgba(0,0,0,.62) 100%),
+    linear-gradient(105deg, rgba(255,255,255,.06) 0 22%, transparent 42%);
+  mix-blend-mode:screen; animation: tv-roll 7s linear infinite;
+}
+@keyframes tv-roll { from { background-position:0 0, 0 0, 0 0; } to { background-position:0 44px, 0 0, 0 0; } }
+.tv-band {
+  position:absolute; top:8px; left:0; right:0; text-align:center;
+  font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:3px;
+  color:#ffe9d6; text-shadow:0 0 6px rgba(200,40,30,.8), 0 1px 0 #000;
+  animation: tv-blink 2.4s steps(1) infinite;
+}
+@keyframes tv-blink { 0%,78% { opacity:1; } 80%,86% { opacity:.25; } 88%,100% { opacity:1; } }
+.tv-sub {
+  position:absolute; left:0; right:0; bottom:8px; padding:0 16px; text-align:center;
+  font-family:var(--font-doc); font-size:15px; line-height:1.5; color:#f2e8d0;
+  text-shadow:1px 1px 0 #000, 0 0 8px rgba(0,0,0,.9); min-height:44px;
+}
+.tv-controls { display:flex; align-items:center; justify-content:space-between; margin-top:9px; }
+.tv-brand { font-family:var(--font-display); font-size:10.5px; letter-spacing:2.5px; color:#e2cf92; opacity:.85; }
+.tv-knobs { display:flex; gap:10px; }
+.tv-knobs i {
+  width:22px; height:22px; border-radius:50%; display:block;
+  background:radial-gradient(circle at 36% 32%, #6a5a3a, #2a2318 70%);
+  border:1px solid #100e08; box-shadow: inset 0 -2px 3px rgba(0,0,0,.6), 1px 2px 0 rgba(0,0,0,.5);
+}
+.tv-legs { display:flex; gap:min(400px, 62vw); }
+.tv-legs i { width:14px; height:20px; background:linear-gradient(180deg,#241a10,#0d0a06); border:1px solid #000; }
+#tv-off { margin-top:16px; width:280px; }
+@media (prefers-reduced-motion: reduce) { .tv-scan, .tv-band, .tv-set { animation:none; } }
 
 /* ============ MODAL ============ */
 .modal-overlay {

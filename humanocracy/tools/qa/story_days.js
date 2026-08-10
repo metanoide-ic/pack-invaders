@@ -8,6 +8,16 @@ const DIR = require('os').tmpdir() + '/';
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e).slice(0, 160)));
   const clickText = async (re) => { const bs = await p.$$('button'); for (const v of bs) { try { if (await v.isVisible() && re.test((await v.textContent()) || '')) { await v.click(); return true; } } catch (e) {} } return false; };
+  // a transmissão oficial (televisor) entra no lugar do papel em dias de virada
+  const dismissTV = async () => {
+    const on = await p.evaluate(() => document.getElementById('tv-overlay') && document.getElementById('tv-overlay').classList.contains('active'));
+    if (!on) return false;
+    await p.evaluate(() => { const c = document.getElementById('tv-screen'); if (c && c.onclick) c.onclick(); });
+    await p.waitForTimeout(250);
+    await p.evaluate(() => { const b2 = document.getElementById('tv-off'); if (b2) b2.click(); });
+    await p.waitForTimeout(400);
+    return true;
+  };
   const dismissModal = async () => { const mb = await p.$('#modal-overlay.active #modal-actions button'); if (mb) { await mb.click(); await p.waitForTimeout(250); return true; } return false; };
 
   await p.goto(U);
@@ -20,11 +30,11 @@ const DIR = require('os').tmpdir() + '/';
   const DAYS = Number(process.env.QA_DAYS || 4);   // QA_DAYS=15 para varrer a progressão
   for (let day = 1; day <= DAYS; day++) {
     // manhã → trabalho
-    for (let i = 0; i < 8; i++) { const go = await p.$('#btn-gowork'); if (go && await go.isVisible()) { await go.click(); break; } await dismissModal(); await p.waitForTimeout(300); }
+    for (let i = 0; i < 8; i++) { const go = await p.$('#btn-gowork'); if (go && await go.isVisible()) { await go.click(); break; } await dismissTV(); await dismissModal(); await p.waitForTimeout(300); }
     await p.waitForTimeout(900); await clickText(/CIÊNCIA|ENTENDIDO/i); await p.waitForTimeout(1500);
     // processa a fila inteira (com ferramentas de vez em quando)
     for (let c = 0; c < 20; c++) {
-      await dismissModal();
+      await dismissTV(); await dismissModal();
       const st = await p.evaluate(() => ({ cz: !!(shift && shift.citizen), running: !!(shift && shift.running), clock: shift && shift.clock }));
       if (!st.running) break;
       if (!st.cz) { await p.waitForTimeout(700); const st2 = await p.evaluate(() => !!(shift && shift.citizen)); if (!st2) break; }
@@ -38,11 +48,11 @@ const DIR = require('os').tmpdir() + '/';
       else if (c % 3 === 2) await p.evaluate(() => { try { decide('reject'); } catch (e) { window.__qaerr = String(e); } });
       else await p.evaluate(() => { try { decide('approve'); } catch (e) { window.__qaerr = String(e); } });
       await p.waitForTimeout(1400);
-      await dismissModal();
+      await dismissTV(); await dismissModal();
     }
     // encerra o turno (se ainda rodando) e vai pra casa
     await clickText(/ENCERRAR TURNO|END SHIFT/i); await p.waitForTimeout(1200);
-    await dismissModal();
+    await dismissTV(); await dismissModal();
     // a persiana do guichê desce antes da folha de ponto: espera ela terminar
     for (let w = 0; w < 12; w++) {
       const g2 = await p.$('#btn-gohome');
@@ -57,7 +67,7 @@ const DIR = require('os').tmpdir() + '/';
     // evento da noite? escolhe a primeira opção
     const night = await p.evaluate(() => document.getElementById('screen-night').classList.contains('active'));
     if (night) { const nb = await p.$('#night-choices button'); if (nb) await nb.click(); await p.waitForTimeout(1400); }
-    await dismissModal();
+    await dismissTV(); await dismissModal();
     const state = await p.evaluate(() => ({ day: S && S.day, money: S && S.money, screen: [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','), qaerr: window.__qaerr || null }));
     console.log(`fim do dia ${day}:`, JSON.stringify(state), 'errs:', errs.length);
     if (state.qaerr) { console.log('QAERR:', state.qaerr); break; }
