@@ -483,7 +483,24 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   display:flex; align-items:center; gap:18px; padding:8px 16px;
   background: var(--panel); border-bottom:2px solid var(--accent);
 }
-.shift-clock { font-family:var(--font-display); font-weight:600; font-size:26px; color:var(--accent2); min-width:84px; font-variant-numeric:tabular-nums; }
+.shift-clock { font-family:var(--font-display); font-weight:600; font-size:24px; color:var(--accent2); font-variant-numeric:tabular-nums; }
+/* relógio de parede + folhinha do Ministério no topo */
+.hdr-time { display:flex; align-items:center; gap:9px; }
+#clock-cv { display:block; filter:drop-shadow(1px 2px 0 rgba(0,0,0,.5)); }
+.cal-pad {
+  position:relative; display:flex; flex-direction:column; align-items:center; line-height:1;
+  background:#e2d8bc; color:#221c12; padding:6px 11px 4px; border:1px solid #0a0b07;
+  box-shadow:0 2px 0 rgba(0,0,0,.5), inset 0 -3px 0 rgba(0,0,0,.1);
+  transform:rotate(-.8deg);
+}
+.cal-pad::before {  /* a fita vermelha do bloco de folhinha */
+  content:''; position:absolute; top:-5px; left:6px; right:6px; height:7px;
+  background:repeating-linear-gradient(45deg, #7a2a20 0 6px, #6a231a 6px 12px);
+  border:1px solid #0a0b07;
+}
+.cal-pad span { font-family:var(--font-display); font-size:10.5px; letter-spacing:2.5px; font-weight:700; color:#7a2a20; margin-top:3px; }
+.cal-pad b { font-family:var(--font-display); font-size:21px; margin-top:1px; }
+.cal-pad i { font-style:normal; font-size:9.5px; opacity:.65; margin-top:1px; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
 .btn-small { font-size:13px; border-radius:3px; padding:6px 12px; }
@@ -554,17 +571,21 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .drawer-tray {
   display:none; align-items:flex-end; justify-content:space-around; gap:10px;
   padding:12px 8px 8px;
-  background-color:#141610;
+  /* INTERIOR DE GAVETA: madeira crua escurecida, laterais em sombra funda */
+  background-color:#241a10;
   background-image:
     radial-gradient(rgba(0,0,0,.3) .6px, transparent .9px),
-    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.15) 30%, rgba(0,0,0,.3));
-  background-size:3px 3px, auto;
+    linear-gradient(90deg, rgba(0,0,0,.5), transparent 12%, transparent 88%, rgba(0,0,0,.5)),
+    linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.24) 34%, rgba(0,0,0,.38)),
+    var(--tex-wood);
+  background-size:3px 3px, auto, auto, auto;
   border:1px solid #000; border-top:none;
-  box-shadow: inset 0 4px 9px rgba(0,0,0,.6), inset 0 -1px 0 rgba(238,240,230,.04);
+  box-shadow: inset 0 5px 10px rgba(0,0,0,.65), inset 3px 0 6px rgba(0,0,0,.4), inset -3px 0 6px rgba(0,0,0,.4), inset 0 -1px 0 rgba(238,240,230,.05);
+  transform-origin: top;
 }
-.drawer.open .drawer-tray { display:flex; animation: drawer-slide .2s ease-out; }
+.drawer.open .drawer-tray { display:flex; animation: drawer-slide .22s cubic-bezier(.25,1,.4,1); }
 .drawer.open .drawer-front { box-shadow: inset 0 1px 0 rgba(238,232,214,.08), inset 0 -1px 0 rgba(0,0,0,.4), 0 1px 0 #0c0d09; }
-@keyframes drawer-slide { from { transform:translateY(-10px); opacity:0; } }
+@keyframes drawer-slide { from { transform:scaleY(.08); opacity:.3; } }  /* desce de cima pra baixo */
 .dtool-slot { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .dtool { cursor:grab; touch-action:none; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)); }
 .dtool:hover { filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)) brightness(1.15); }
@@ -657,6 +678,29 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-approve::after { background:var(--stamp-green); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
+/* CARIMBOS FIXOS NA MESA (APV + REJ lado a lado, à esquerda dos instrumentos) */
+.desk-stamps { position:absolute; top:12px; right:118px; z-index:59; display:flex; flex-direction:row; gap:22px; }
+.desk-stamps .stamp { width:74px; }
+/* DET: botão de pânico EMBUTIDO na madeira — vermelho, fundo, discreto */
+.desk-stamps .stamp-detain {
+  position:absolute; top:98px; left:28px; width:54px; padding:7px 4px 8px; margin-top:0;
+  color:#f0d8d2; font-size:11.5px; letter-spacing:2px;
+  background:#48120c; background-image:radial-gradient(circle at 50% 28%, #7a241a, #48120c 78%);
+  border:2px solid #1c0806; border-radius:5px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.75), inset 0 -1px 0 rgba(255,200,180,.08), 0 0 0 3px #191410, 0 0 0 4px rgba(0,0,0,.65);
+  opacity:.6; text-shadow:0 -1px 0 rgba(0,0,0,.75);
+}
+.desk-stamps .stamp-detain::before, .desk-stamps .stamp-detain::after { display:none; }
+.desk-stamps .stamp-detain:hover:not(:disabled) { opacity:1; background-image:radial-gradient(circle at 50% 28%, #96311f, #5a170e 78%); color:#fff; }
+.desk-stamps .stamp-detain:disabled { opacity:.24; }
+/* a sineta pintada vira botão invisível (o desenho já está na mesa) */
+#bell-hit {
+  position:absolute; left:calc(72% - 34px); top:calc(50% - 30px); width:68px; height:52px;
+  background:none; border:none; box-shadow:none; padding:0; z-index:58; cursor:pointer;
+  overflow:visible;
+}
+#bell-hit::after { display:none; }
+#bell-hit:active { transform:translateY(2px); box-shadow:none; }
 /* tira de balcão sob a janela: documento, relógio, carimbo */
 .booth-counter {
   display:flex; align-items:center; justify-content:center; gap:22px;
@@ -1364,7 +1408,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .exam-log .obs { color:var(--ink-dim); }
 
 /* ============ MAPA / CARTA DE FRONTEIRAS ============ */
-.map-panel { width:min(1000px, 96vw); }
+.map-panel { width:min(1280px, 97vw); }
 .map-grid { display:grid; grid-template-columns: 1fr 300px; min-height:0; }
 #map-canvas { width:100%; height:auto; display:block; background:#0c0f0a; cursor:pointer; image-rendering:pixelated; }
 .map-info {

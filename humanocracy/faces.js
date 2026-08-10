@@ -205,13 +205,13 @@ function paintBust(ctx, f, opts) {
      base depois (o pescoço ENTRA na roupa, não fica atrás dela). */
   ctx.fillStyle = rgb(mix(SK, SH, 0.32));
   ctx.beginPath();
-  ctx.moveTo(cx - 7, 62); ctx.quadraticCurveTo(cx - 8, 80, cx - 8.5, 95);
-  ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 80, cx + 7, 62);
+  ctx.moveTo(cx - 7.5, 55); ctx.quadraticCurveTo(cx - 8, 76, cx - 8.5, 95);
+  ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 76, cx + 7.5, 55);
   ctx.closePath(); ctx.fill();
   // sombra cilíndrica nas laterais (dá volume de tubo) + sombra do queixo no pescoço
   soft(ctx, cx - 5.6, 80, 2.4, 12, rgb(darken(SH, 0.24), 0.36), 2);
   soft(ctx, cx + 5.6, 80, 2.4, 12, rgb(darken(SH, 0.34), 0.4), 2);
-  soft(ctx, cx, 67, 8, 3, 'rgba(0,0,0,.28)', 2.2);
+  soft(ctx, cx, 63, 8, 3, 'rgba(0,0,0,.28)', 2.2);
   soft(ctx, cx, 74, 4.5, 6, rgb(lighten(SK, 0.12), 0.34), 2); // realce central do pescoço (tubo)
 
   /* JUNTA no pescoço: a linha onde a cabeça trocada se prende ao corpo.
@@ -240,21 +240,21 @@ function paintBust(ctx, f, opts) {
     ctx.beginPath();
     if (L.child) {
       ctx.moveTo(20, 122);
-      ctx.lineTo(23, 104);
-      ctx.quadraticCurveTo(26, 96, 38, 94);
-      ctx.quadraticCurveTo(44, 93.2, 46, 94.6);
-      ctx.quadraticCurveTo(50, 96.6, 54, 94.6);
-      ctx.quadraticCurveTo(56, 93.2, 62, 94);
-      ctx.quadraticCurveTo(74, 96, 77, 104);
+      ctx.lineTo(23, 100);
+      ctx.quadraticCurveTo(26, 92, 38, 90);
+      ctx.quadraticCurveTo(44, 89.2, 46, 90.6);
+      ctx.quadraticCurveTo(50, 92.6, 54, 90.6);
+      ctx.quadraticCurveTo(56, 89.2, 62, 90);
+      ctx.quadraticCurveTo(74, 92, 77, 100);
       ctx.lineTo(80, 122); ctx.closePath();
     } else {
       ctx.moveTo(3, 122);
-      ctx.lineTo(7, 100);
-      ctx.quadraticCurveTo(10, 93.5, 26, 91.5);     // ombro esquerdo: largo e alto
-      ctx.quadraticCurveTo(37, 90.5, 43, 92.5);     // sobe até a base do pescoço
-      ctx.quadraticCurveTo(50, 95.2, 57, 92.5);     // DECOTE — a gola abraça o pescoço
-      ctx.quadraticCurveTo(63, 90.5, 74, 91.5);     // base do pescoço → ombro direito
-      ctx.quadraticCurveTo(90, 93.5, 93, 100);      // ombro direito: largo e alto
+      ctx.lineTo(7, 96);
+      ctx.quadraticCurveTo(10, 89.5, 26, 87.5);     // ombro esquerdo: largo e alto
+      ctx.quadraticCurveTo(37, 86.5, 43, 88.5);     // sobe até a base do pescoço
+      ctx.quadraticCurveTo(50, 91.2, 57, 88.5);     // DECOTE — a gola abraça o pescoço
+      ctx.quadraticCurveTo(63, 86.5, 74, 87.5);     // base do pescoço → ombro direito
+      ctx.quadraticCurveTo(90, 89.5, 93, 96);       // ombro direito: largo e alto
       ctx.lineTo(97, 122); ctx.closePath();
     }
   };
@@ -479,14 +479,14 @@ function paintBust(ctx, f, opts) {
   chiar.addColorStop(0.4, 'rgba(0,0,0,0)');
   chiar.addColorStop(0.58, rgb(mix(SH, [150, 70, 40], 0.35), 0.14)); // terminador quente
   chiar.addColorStop(0.74, rgb(darken(SH, 0.08), 0.3));
-  chiar.addColorStop(0.93, rgb(darken(SH, 0.18), 0.56));           // núcleo da sombra (menos fundo)
+  chiar.addColorStop(0.93, rgb(darken(SH, 0.16), 0.46));           // núcleo da sombra (menos fundo)
   chiar.addColorStop(1, rgb(mix(SH, [90, 96, 120], 0.5), 0.32));   // bounce frio na borda
   ctx.fillStyle = chiar; ctx.fillRect(0, 0, 100, 120);
   // FILL LIGHT ambiente: o lado da sombra recebe um respiro de luz (a sala
   // não é um vazio) — nenhum plano cai a preto puro, e peles mais escuras
   // param de sumir no fundo.
   const fillg = ctx.createLinearGradient(cx + L.fw + L.ax, 0, cx - L.fw * 0.1, 0);
-  fillg.addColorStop(0, rgb(lighten(SK, 0.12), 0.18));
+  fillg.addColorStop(0, rgb(lighten(SK, 0.12), 0.26));
   fillg.addColorStop(0.65, 'rgba(0,0,0,0)');
   ctx.fillStyle = fillg; ctx.fillRect(0, 0, 100, 120);
 
@@ -499,8 +499,8 @@ function paintBust(ctx, f, opts) {
   soft(ctx, cx + L.templeW - 2.5 + L.ax, L.browY - 1, 3.4, 5.5, rgb(darken(SH, 0.1), 0.55), 1.4);
 
   // luz principal: lâmpada acima-esquerda, contida (não lava o lado sombrio)
-  const key = ctx.createRadialGradient(cx - 9, 33, 3, cx - 9, 38, 32);
-  key.addColorStop(0, 'rgba(255,244,216,.42)'); key.addColorStop(0.5, 'rgba(255,244,216,.13)');
+  const key = ctx.createRadialGradient(cx - 9, 33, 3, cx - 9, 38, 38);
+  key.addColorStop(0, 'rgba(255,244,216,.54)'); key.addColorStop(0.5, 'rgba(255,244,216,.2)');
   key.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
 
@@ -1390,9 +1390,27 @@ function paintBust(ctx, f, opts) {
       ctx.stroke();
     }
     soft(ctx, cx - 5, 17, 9, 3.4, 'rgba(255,240,214,.14)', 2.2);
-    // nó sob o queixo
+    // CABELO aparecendo sob a abertura do lenço (senão vira touca de natação)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - L.fw + 1, 44); ctx.quadraticCurveTo(cx, 25.5, cx + L.fw - 1, 44);
+    ctx.quadraticCurveTo(cx, 30.5, cx - L.fw + 1, 44); ctx.closePath();
+    ctx.fillStyle = rgb(darken(L.hair, 0.12)); ctx.fill();
+    ctx.strokeStyle = rgb(darken(L.hair, 0.45), 0.6); ctx.lineWidth = 0.5;
+    for (let i = 0; i < 7; i++) {
+      const t = (i + 0.5) / 7, hxp = cx - L.fw + 1 + t * (L.fw * 2 - 2);
+      ctx.beginPath(); ctx.moveTo(hxp, 42 - Math.sin(t * Math.PI) * 13);
+      ctx.quadraticCurveTo(hxp + 1, 40 - Math.sin(t * Math.PI) * 7, hxp, 43 - Math.sin(t * Math.PI) * 3);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // sombra do lenço sobre o cabelo/testa
+    soft(ctx, cx, 27, L.fw * 0.8, 2, 'rgba(10,8,6,.4)', 1.8);
+    // nó sob o queixo, com pontas de tecido
     ctx.fillStyle = 'rgb(82,58,48)';
-    ctx.beginPath(); ctx.ellipse(cx - 3, 82, 3.2, 2.2, 0.5, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx - 3, 80, 3.4, 2.4, 0.5, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 4, 82); ctx.quadraticCurveTo(cx - 9, 86, cx - 7, 90); ctx.lineTo(cx - 4, 88); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 1, 82); ctx.quadraticCurveTo(cx + 2, 87, cx, 90); ctx.lineTo(cx - 2, 88); ctx.closePath(); ctx.fill();
   } else if (f.hat === 3) {
     /* BONÉ MILITAR de pala (peaked cap) — para os uniformizados */
     const uc = f.uniformColor || [58, 66, 48], utrim = f.uniformTrim || [150, 40, 34];

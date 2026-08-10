@@ -334,16 +334,16 @@ function drawTitleCrest(lidAmt) {
   // disco de fundo — tinta chapada (selo impresso), não gradiente lustroso
   x.fillStyle = 'rgba(22,19,12,.92)'; x.beginPath(); x.arc(C, C, 112 * u, 0, 6.29); x.fill();
   // anéis
-  x.strokeStyle = GOLD; x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 110 * u, 0, 6.29); x.stroke();
-  x.lineWidth = 1.2 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
+  x.strokeStyle = GOLD; x.lineWidth = 4.5 * u; x.beginPath(); x.arc(C, C, 109 * u, 0, 6.29); x.stroke();
+  x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
   // estrelas entre os anéis
   const star = (cx, cy, r, rot) => { x.beginPath(); for (let k = 0; k < 5; k++) { const a1 = rot - Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566; x.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r); x.lineTo(cx + Math.cos(a2) * r * 0.45, cy + Math.sin(a2) * r * 0.45); } x.closePath(); x.fill(); };
   x.fillStyle = GOLDL;
-  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; if (Math.abs(Math.sin(a)) < 0.98) star(C + Math.cos(a) * 101 * u, C + Math.sin(a) * 101 * u, 4.4 * u, a); }
+  for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; if (Math.abs(Math.sin(a)) < 0.98) star(C + Math.cos(a) * 101 * u, C + Math.sin(a) * 101 * u, 6 * u, a); }
   // coroa de louros (dois ramos)
   const laurel = (side) => {
     x.save(); x.translate(C, C); x.scale(side, 1);
-    x.strokeStyle = GOLD; x.lineWidth = 2 * u; x.beginPath(); x.arc(0, 4 * u, 74 * u, Math.PI * 0.62, Math.PI * 0.98); x.stroke();
+    x.strokeStyle = GOLD; x.lineWidth = 3.2 * u; x.beginPath(); x.arc(0, 4 * u, 74 * u, Math.PI * 0.62, Math.PI * 0.98); x.stroke();
     for (let i = 0; i < 6; i++) { const a = Math.PI * (0.66 + i * 0.055); const lx = Math.cos(a) * 74 * u, ly = 4 * u + Math.sin(a) * 74 * u; x.save(); x.translate(lx, ly); x.rotate(a + 0.5); x.fillStyle = GOLDL; x.beginPath(); x.ellipse(0, -6 * u, 3 * u, 7 * u, 0, 0, 6.29); x.fill(); x.restore(); }
     x.restore();
   };
@@ -352,7 +352,7 @@ function drawTitleCrest(lidAmt) {
   const ey = C - 2 * u;
   x.fillStyle = '#f2ead2'; x.beginPath();
   x.moveTo(C - 46 * u, ey); x.quadraticCurveTo(C, ey - 34 * u, C + 46 * u, ey); x.quadraticCurveTo(C, ey + 34 * u, C - 46 * u, ey); x.closePath(); x.fill();
-  x.strokeStyle = GOLD; x.lineWidth = 2.2 * u; x.stroke();
+  x.strokeStyle = GOLD; x.lineWidth = 3.6 * u; x.stroke();
   // íris em anéis chapados (gravura), não gradiente liso de IA
   x.fillStyle = '#12222e'; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
   x.fillStyle = '#2e5068'; x.beginPath(); x.arc(C, ey, 16 * u, 0, 6.29); x.fill();
@@ -1500,6 +1500,9 @@ function startDay() {
   $('shift-day').textContent = S.infinite
     ? `${T('MODO INFINITO')} · ${T('Turno')} ${S.infDay + 1} · ✓ ${S.infScore} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`
     : `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
+  // a folhinha do Ministério: dia, mês e ano
+  const fd = fmtDate(worldDate(S.day)).split(' ');
+  if ($('cal-day')) { $('cal-day').textContent = fd[0]; $('cal-mon').textContent = fd[1] || ''; $('cal-yr').textContent = fd[2] || ''; }
   renderRulebook();
   updateHud();
   clearDesk();
@@ -1559,10 +1562,36 @@ function tickClock() {
   updateHud();
 }
 function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updateHud(); }
+/* relógio de parede do posto: baquelite, mostrador creme, ponteiros de verdade */
+function drawWallClock() {
+  const cv = $('clock-cv'); if (!cv) return;
+  const x = cv.getContext('2d'), C = 26;
+  x.clearRect(0, 0, 52, 52);
+  x.fillStyle = '#0c0d09'; x.beginPath(); x.arc(C, C + 1, 25, 0, 6.29); x.fill();   // sombra da caixa
+  x.fillStyle = '#33362a'; x.beginPath(); x.arc(C, C, 24.5, 0, 6.29); x.fill();     // caixa de baquelite
+  x.fillStyle = '#1c1e16'; x.beginPath(); x.arc(C, C, 21.5, 0, 6.29); x.fill();     // aro interno
+  x.fillStyle = '#d8cdb0'; x.beginPath(); x.arc(C, C, 19.5, 0, 6.29); x.fill();     // mostrador
+  x.fillStyle = 'rgba(120,100,60,.14)'; x.beginPath(); x.arc(C + 4, C + 5, 15, 0, 6.29); x.fill(); // mancha de idade
+  x.strokeStyle = '#443c28';
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * 6.283, big = i % 3 === 0;
+    x.lineWidth = big ? 2 : 1;
+    x.beginPath(); x.moveTo(C + Math.cos(a) * (big ? 14.5 : 16.5), C + Math.sin(a) * (big ? 14.5 : 16.5));
+    x.lineTo(C + Math.cos(a) * 18.5, C + Math.sin(a) * 18.5); x.stroke();
+  }
+  const h = shift.clock / 60, m = shift.clock % 60;
+  const ha = ((h % 12) + m / 60) / 12 * 6.283 - Math.PI / 2, ma = m / 60 * 6.283 - Math.PI / 2;
+  x.strokeStyle = '#221c12'; x.lineCap = 'butt';
+  x.lineWidth = 3; x.beginPath(); x.moveTo(C, C); x.lineTo(C + Math.cos(ha) * 9.5, C + Math.sin(ha) * 9.5); x.stroke();
+  x.lineWidth = 2; x.beginPath(); x.moveTo(C, C); x.lineTo(C + Math.cos(ma) * 15, C + Math.sin(ma) * 15); x.stroke();
+  x.fillStyle = '#7a2a20'; x.beginPath(); x.arc(C, C, 2.2, 0, 6.29); x.fill();      // pino central
+  x.fillStyle = 'rgba(255,246,220,.12)'; x.beginPath(); x.arc(C - 7, C - 8, 8, 0, 6.29); x.fill(); // reflexo do vidro
+}
 function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
   const hhmm = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''} · ${fmtDate(worldDate(S.day))}`;
+  $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''}`;
+  drawWallClock();
   const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
   const qStr = q === Infinity ? '∞' : q;
@@ -1985,8 +2014,46 @@ function drawQueue(ctx, w, h) {
       ctx.fillRect(sx2, sy2, 1.4, 1.4);
     }
   }
-  // muro: base sólida + um respiro da cor do céu (luz ambiente da hora)
+  // muro: base sólida + TEXTURA de placas de concreto (cacheada por tamanho)
   ctx.fillStyle = '#121410'; ctx.fillRect(0, wallY, w, h - wallY);
+  const wallH = (h - wallY) | 0;
+  if (!Q.wallCv || Q.wallCv.width !== w || Q.wallCv.height !== wallH) {
+    Q.wallCv = document.createElement('canvas'); Q.wallCv.width = w; Q.wallCv.height = wallH;
+    const wx2 = Q.wallCv.getContext('2d');
+    const wr = makeRng(777);
+    // placas com juntas verticais e cap de concreto no topo
+    for (let px2 = 0; px2 < w; px2 += 84) {
+      wx2.fillStyle = `rgba(${18 + (wr() * 8 | 0)},${20 + (wr() * 8 | 0)},${14 + (wr() * 6 | 0)},.9)`;
+      wx2.fillRect(px2, 0, 84, wallH);
+      wx2.fillStyle = 'rgba(0,0,0,.55)'; wx2.fillRect(px2, 0, 2, wallH);
+      wx2.fillStyle = 'rgba(200,205,190,.05)'; wx2.fillRect(px2 + 2, 0, 1, wallH);
+    }
+    wx2.fillStyle = 'rgba(200,205,190,.1)'; wx2.fillRect(0, 0, w, 2);
+    wx2.fillStyle = 'rgba(0,0,0,.45)'; wx2.fillRect(0, 3, w, 1);
+    // escorridos de umidade descendo das juntas
+    for (let i = 0; i < 26; i++) {
+      const sx2 = wr() * w, sw2 = 6 + wr() * 26, sh2 = 8 + wr() * wallH * .9;
+      const g2 = wx2.createLinearGradient(0, 0, 0, sh2);
+      g2.addColorStop(0, `rgba(0,0,0,${.14 + wr() * .18})`); g2.addColorStop(1, 'rgba(0,0,0,0)');
+      wx2.fillStyle = g2; wx2.fillRect(sx2, 0, sw2, sh2);
+    }
+    // grão de agregado
+    for (let i = 0; i < w * 3; i++) {
+      wx2.fillStyle = wr() < .55 ? `rgba(0,0,0,${.06 + wr() * .08})` : `rgba(196,200,180,${.03 + wr() * .04})`;
+      wx2.fillRect(wr() * w, wr() * wallH, 1, 1);
+    }
+    // um cartaz oficial rasgado, colado torto no muro
+    const pw2 = 34, ph2 = 24, px3 = w * .22 + wr() * w * .3, py3 = 6 + wr() * 10;
+    wx2.save(); wx2.translate(px3, py3); wx2.rotate((wr() - .5) * .1);
+    wx2.fillStyle = '#6a6350'; wx2.fillRect(0, 0, pw2, ph2);           // papel encardido pelo tempo
+    wx2.fillStyle = '#4e1c15'; wx2.fillRect(0, 0, pw2, 5);
+    wx2.fillStyle = 'rgba(40,32,20,.5)';
+    for (let l2 = 0; l2 < 3; l2++) wx2.fillRect(3, 9 + l2 * 4, pw2 - 6 - l2 * 5, 2);
+    wx2.fillStyle = '#121410';       // canto rasgado
+    wx2.beginPath(); wx2.moveTo(pw2, ph2); wx2.lineTo(pw2 - 10, ph2); wx2.lineTo(pw2, ph2 - 8); wx2.closePath(); wx2.fill();
+    wx2.restore();
+  }
+  ctx.drawImage(Q.wallCv, 0, wallY);
   ctx.fillStyle = `rgba(${sky.hor[0]},${sky.hor[1]},${sky.hor[2]},.08)`; ctx.fillRect(0, wallY, w, h - wallY);
   // arame no alto do muro
   ctx.strokeStyle = '#1e201a'; ctx.lineWidth = 1;
@@ -2627,78 +2694,165 @@ function mapBlob(ctx, x, y, r, seed) {
   }
   ctx.closePath();
 }
+/* ---------- MAPA: continente CONTÍGUO — cada país faz fronteira com o
+   vizinho (partição voronoi distorcida por seed), costa de tinta dupla,
+   bandeira única por país e clique célula-a-célula. ---------- */
+let MAPGEO = null;
+function mapGeometry(W, H) {
+  if (MAPGEO && MAPGEO.W === W && MAPGEO.H === H) return MAPGEO;
+  const S = Math.min(W, H) / 100, ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
+  const ids = COUNTRY_IDS.filter(k => MAP_LAYOUT[k]);
+  const seeds = ids.map((k, i) => {
+    const m = MAP_LAYOUT[k];
+    const rr2 = makeRng(i * 131 + 7);
+    return { k, i, x: ox + m.x * S, y: oy + m.y * S, w: m.r * S,
+      p1: rr2() * 6.28, p2: rr2() * 6.28, a1: .12 + rr2() * .08, a2: .06 + rr2() * .06 };
+  });
+  const step = 3, gw = Math.ceil(W / step), gh = Math.ceil(H / step);
+  const own = new Int8Array(gw * gh).fill(-1);
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const px2 = gx * step + 1, py2 = gy * step + 1;
+    let best = -1, bd = 1e9;
+    for (const s2 of seeds) {
+      const dx2 = px2 - s2.x, dy2 = py2 - s2.y;
+      const th = Math.atan2(dy2, dx2);
+      const wob = 1 + s2.a1 * Math.sin(3 * th + s2.p1) + s2.a2 * Math.sin(7 * th + s2.p2);
+      const d = Math.hypot(dx2, dy2) * wob / s2.w;
+      if (d < bd) { bd = d; best = s2.i; }
+    }
+    own[gy * gw + gx] = bd < 1.5 ? best : -1;   // -1 = mar
+  }
+  MAPGEO = { W, H, step, gw, gh, own, seeds, ids, S, ox, oy };
+  return MAPGEO;
+}
+/* bandeira única por país: padrão determinístico + cores do país */
+function drawFlag(ctx, k, cx2, cy2) {
+  const c = COUNTRIES[k];
+  let hsh = 0; for (let i = 0; i < k.length; i++) hsh = (hsh * 31 + k.charCodeAt(i)) >>> 0;
+  const fw = 24, fh = 15, x0 = cx2 - fw / 2, y0 = cy2 - fh / 2;
+  const sec = ['#e2d8bc', '#22201a', '#8a2e22', '#2f5c39', '#c9a34a', '#2e5068'][hsh % 6];
+  ctx.save();
+  ctx.fillStyle = '#5a4a30'; ctx.fillRect(x0 - 4, y0 - 3, 2, fh + 9);   // mastro
+  ctx.fillStyle = c.color; ctx.fillRect(x0, y0, fw, fh);                 // pano
+  const t = hsh % 5;
+  ctx.fillStyle = sec;
+  if (t === 0) ctx.fillRect(x0, y0 + fh / 2, fw, fh / 2);                       // bicolor horizontal
+  else if (t === 1) ctx.fillRect(x0, y0, fw / 3, fh);                            // faixa no mastro
+  else if (t === 2) { ctx.beginPath(); ctx.moveTo(x0, y0 + fh); ctx.lineTo(x0 + fw, y0); ctx.lineTo(x0 + fw, y0 + fh); ctx.closePath(); ctx.fill(); } // diagonal
+  else if (t === 3) { ctx.fillRect(x0 + fw * .38, y0, fw * .2, fh); ctx.fillRect(x0, y0 + fh * .36, fw, fh * .26); } // cruz
+  else { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + fw * .55, y0 + fh / 2); ctx.lineTo(x0, y0 + fh); ctx.closePath(); ctx.fill(); } // cunha
+  ctx.fillStyle = 'rgba(240,232,208,.95)'; ctx.font = '9px "VT323", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(c.seal, x0 + fw * (t === 1 ? .62 : .5), y0 + fh * (t === 0 ? .3 : .5)); // o selo no pano
+  ctx.strokeStyle = 'rgba(10,8,4,.8)'; ctx.lineWidth = 1; ctx.strokeRect(x0 + .5, y0 + .5, fw - 1, fh - 1);
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x0, y0 + fh, fw, 1.5);       // sombra do pano
+  ctx.restore();
+}
 function drawWorldMap() {
   const cv = $('map-canvas'); if (!cv) return;
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
-  const S = Math.min(W, H) / 100; const ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
-  const P = (x, y) => [ox + x * S, oy + y * S];
-  // mar de carta antiga (papel-oceano esverdeado)
+  const G = mapGeometry(W, H);
+  const { step, gw, gh, own, seeds, ids } = G;
+  // mar de carta antiga
   ctx.fillStyle = '#1b2620'; ctx.fillRect(0, 0, W, H);
   const sea = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.62);
   sea.addColorStop(0, '#28362e'); sea.addColorStop(1, '#161f1a');
   ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
-  // linhas de rumo (rosa dos ventos portulana) — cruzam o mar inteiro
-  const [rcx, rcy] = P(50, 50);
+  // linhas de rumo
+  const [rcx, rcy] = [W / 2, H / 2];
   ctx.strokeStyle = 'rgba(200,180,130,.06)'; ctx.lineWidth = 1;
   for (let a = 0; a < 6.28; a += Math.PI / 8) { ctx.beginPath(); ctx.moveTo(rcx, rcy); ctx.lineTo(rcx + Math.cos(a) * W, rcy + Math.sin(a) * W); ctx.stroke(); }
-  // grade de meridianos
-  ctx.strokeStyle = 'rgba(150,170,140,.05)'; ctx.lineWidth = 1;
-  for (let i = 0; i <= 10; i++) { const [x1] = P(i * 10, 0); ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke(); const [, y1] = P(0, i * 10); ctx.beginPath(); ctx.moveTo(0, y1); ctx.lineTo(W, y1); ctx.stroke(); }
-  // países
-  let si = 1;
-  COUNTRY_IDS.forEach(k => {
-    const m = MAP_LAYOUT[k]; if (!m) return;
-    const c = COUNTRIES[k];
-    const [cxp, cyp] = P(m.x, m.y); const rp = m.r * S;
-    const sel = MAP_SEL === k;
-    const seed = si * 97 + 5;
-    // AURÉOLA COSTEIRA: anéis concêntricos gravados em volta da costa (o
-    // traço que faz a carta parecer antiga de verdade)
-    for (let h = 3; h >= 1; h--) { mapBlob(ctx, cxp, cyp, rp * (1 + h * 0.05), seed); ctx.strokeStyle = `rgba(180,168,120,${0.05 + (3 - h) * 0.04})`; ctx.lineWidth = 1; ctx.stroke(); }
-    // sombra da terra no mar
-    ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, seed); ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill(); ctx.restore();
-    // terra: TINTA CHAPADA (carta impressa), não gradiente lustroso. A textura
-    // vem da hachura de relevo e do estipulado por cima — como numa gravura.
-    mapBlob(ctx, cxp, cyp, rp, seed);
-    ctx.fillStyle = sel ? shade(c.color, 24) : shade(c.color, 4);
-    ctx.fill();
-    // relevo: hachura de montanhas/terreno recortada à terra
-    ctx.save(); mapBlob(ctx, cxp, cyp, rp, seed); ctx.clip();
-    ctx.strokeStyle = 'rgba(30,22,12,.14)'; ctx.lineWidth = 0.7;
-    const hr = makeRng(seed ^ 0x3a);
-    for (let i = 0; i < 14; i++) { const hx = cxp + (hr() - 0.5) * rp * 1.4, hy = cyp + (hr() - 0.5) * rp * 1.2, len = 3 + hr() * 5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * 0.7); ctx.moveTo(hx + 1.4, hy); ctx.lineTo(hx + len + 1.4, hy - len * 0.7); ctx.stroke(); }
-    ctx.fillStyle = 'rgba(255,246,214,.05)'; for (let i = 0; i < 40; i++) ctx.fillRect(cxp + (hr() - 0.5) * rp * 1.6, cyp + (hr() - 0.5) * rp * 1.5, 1, 1); // estipulado
-    ctx.restore();
-    // costa: linha de tinta dupla
-    mapBlob(ctx, cxp, cyp, rp, seed); ctx.strokeStyle = sel ? '#e8d8a0' : 'rgba(24,18,10,.7)'; ctx.lineWidth = sel ? 2.5 : 1.4; ctx.stroke();
-    // banido hoje?
-    const banned = countryBannedToday(k);
-    if (banned) { ctx.save(); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.clip(); ctx.strokeStyle = 'rgba(200,60,50,.5)'; ctx.lineWidth = 2; for (let d = -rp * 2; d < rp * 2; d += 6) { ctx.beginPath(); ctx.moveTo(cxp + d, cyp - rp); ctx.lineTo(cxp + d + rp * 2, cyp + rp); ctx.stroke(); } ctx.restore(); }
-    // selo + nome
-    ctx.fillStyle = '#f0e8d0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `${Math.round(rp * 0.7)}px 'VT323', monospace`; ctx.fillText(c.seal, cxp, cyp - rp * 0.12);
-    ctx.font = `bold ${Math.round(rp * 0.32)}px "VT323", "Oswald", monospace`;
-    ctx.fillStyle = '#e8ddc4'; ctx.fillText(c.name.toUpperCase(), cxp, cyp + rp * 0.5);
-    si++;
-  });
-  // marcador do POSTO 7 na borda leste de Osteria
-  const om = MAP_LAYOUT.osteria; const [px7, py7] = P(om.x + om.r + 1.5, om.y);
-  ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.arc(px7, py7, 3.5, 0, 6.29); ctx.fill();
-  ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px7, py7, 6, 0, 6.29); ctx.stroke();
-  ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", "Oswald", monospace'; ctx.textAlign = 'left'; ctx.fillText('POSTO 7', px7 + 9, py7);
+  // TERRA: pinta cada célula com a tinta chapada do dono
+  const cols = ids.map(k => shade(COUNTRIES[k].color, 2));
+  const colsSel = ids.map(k => shade(COUNTRIES[k].color, 26));
+  const selIdx = MAP_SEL ? ids.indexOf(MAP_SEL) : -2;
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const o = own[gy * gw + gx]; if (o < 0) continue;
+    ctx.fillStyle = o === selIdx ? colsSel[o] : cols[o];
+    ctx.fillRect(gx * step, gy * step, step, step);
+  }
+  // sombra da costa no mar (uma passada deslocada)
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
+    const o = own[gy * gw + gx];
+    if (o >= 0 && (own[gy * gw + gx + 1] < 0 || own[(gy + 1) * gw + gx] < 0)) ctx.fillRect(gx * step + 2, gy * step + 3, step, step);
+  }
+  // FRONTEIRAS entre países (tinta) e COSTA (tinta grossa + fio claro)
+  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
+    const o = own[gy * gw + gx], oR = own[gy * gw + gx + 1], oB = own[(gy + 1) * gw + gx];
+    if (o === oR && o === oB) continue;
+    const coast = (o < 0) !== (oR < 0) || (o < 0) !== (oB < 0);
+    if (coast) {
+      ctx.fillStyle = 'rgba(16,12,6,.85)'; ctx.fillRect(gx * step, gy * step, step, step);
+    } else if (o >= 0 && (o !== oR || o !== oB)) {
+      ctx.fillStyle = 'rgba(24,18,10,.6)'; ctx.fillRect(gx * step + 1, gy * step + 1, step - 1, step - 1);
+    }
+  }
+  // relevo: hachuras e estipulado por país (recortado pelo dono das células)
+  const hr = makeRng(4242);
+  for (const s2 of seeds) {
+    for (let i = 0; i < 26; i++) {
+      const hx = s2.x + (hr() - .5) * s2.w * 2.2, hy = s2.y + (hr() - .5) * s2.w * 2;
+      const gi = ((hy / step) | 0) * gw + ((hx / step) | 0);
+      if (own[gi] !== s2.i) continue;
+      if (i % 2) {
+        ctx.strokeStyle = 'rgba(30,22,12,.16)'; ctx.lineWidth = 1;
+        const len = 4 + hr() * 5;
+        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * .7); ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(255,246,214,.06)'; ctx.fillRect(hx, hy, 2, 2);
+      }
+    }
+  }
+  // interdição do dia: hachura vermelha só nas células do país banido
+  for (const s2 of seeds) {
+    if (!countryBannedToday(s2.k)) continue;
+    ctx.fillStyle = 'rgba(200,60,50,.4)';
+    for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+      if (own[gy * gw + gx] !== s2.i) continue;
+      if (((gx + gy) % 5) === 0) ctx.fillRect(gx * step, gy * step, step, step);
+    }
+  }
+  // seleção: contorno dourado nas bordas do país escolhido
+  if (selIdx >= 0) {
+    ctx.fillStyle = 'rgba(232,216,150,.85)';
+    for (let gy = 1; gy < gh - 1; gy++) for (let gx = 1; gx < gw - 1; gx++) {
+      if (own[gy * gw + gx] !== selIdx) continue;
+      if (own[gy * gw + gx + 1] !== selIdx || own[gy * gw + gx - 1] !== selIdx ||
+          own[(gy + 1) * gw + gx] !== selIdx || own[(gy - 1) * gw + gx] !== selIdx) ctx.fillRect(gx * step, gy * step, step, step);
+    }
+  }
+  // NOMES + BANDEIRAS
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const s2 of seeds) {
+    const c = COUNTRIES[s2.k];
+    drawFlag(ctx, s2.k, s2.x, s2.y - 13);
+    ctx.font = 'bold ' + Math.max(11, Math.round(s2.w * .30)) + 'px "VT323", monospace';
+    ctx.fillStyle = 'rgba(14,10,4,.55)'; ctx.fillText(c.name.toUpperCase(), s2.x + 1, s2.y + 14);
+    ctx.fillStyle = '#efe7cd'; ctx.fillText(c.name.toUpperCase(), s2.x, s2.y + 13);
+  }
+  // marcador do POSTO 7 na fronteira leste de Osteria
+  const om = seeds[ids.indexOf('osteria')], km = seeds[ids.indexOf('kranton')];
+  if (om && km) {
+    const px7 = (om.x + km.x) / 2, py7 = (om.y + km.y) / 2;
+    ctx.fillStyle = '#c9a34a'; ctx.fillRect(px7 - 3, py7 - 3, 6, 6);
+    ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.strokeRect(px7 - 6, py7 - 6, 12, 12);
+    ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", monospace'; ctx.textAlign = 'left';
+    ctx.fillText('POSTO 7', px7 + 10, py7 + 1);
+    ctx.textAlign = 'center';
+  }
   // rosa dos ventos
-  const [rx, ry] = P(93, 92);
+  const rx = W - 44, ry = H - 40;
   ctx.strokeStyle = 'rgba(200,190,160,.4)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
   ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
-  // envelhecimento: manchas de papel, grão, vinheta queimada nas bordas
+  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.fillText('N', rx, ry - 16);
+  // envelhecimento: manchas, grão, vinheta
   const ar = makeRng(4242);
   for (let i = 0; i < 5; i++) { const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 70; const st = ctx.createRadialGradient(sx, sy, sr * 0.3, sx, sy, sr); st.addColorStop(0, 'rgba(90,70,30,0)'); st.addColorStop(1, `rgba(70,52,24,${0.05 + ar() * 0.05})`); ctx.fillStyle = st; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill(); }
   for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${0.02 + ar() * 0.04})`; ctx.fillRect(ar() * W, ar() * H, 1, 1); }
   const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(18,10,4,.6)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-  pixelSnap(cv, 2);
 }
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -2737,11 +2891,9 @@ function openMap() {
       const rect = cv.getBoundingClientRect();
       const mx = (e.clientX - rect.left) / rect.width * cv.width;
       const my = (e.clientY - rect.top) / rect.height * cv.height;
-      const S = Math.min(cv.width, cv.height) / 100, ox = (cv.width - 100 * S) / 2, oy = (cv.height - 100 * S) / 2;
-      const lx = (mx - ox) / S, ly = (my - oy) / S;
-      let best = null, bd = 1e9;
-      COUNTRY_IDS.forEach(k => { const m = MAP_LAYOUT[k]; if (!m) return; const d = Math.hypot(lx - m.x, ly - m.y); if (d < m.r && d < bd) { bd = d; best = k; } });
-      if (best) { selectMapCountry(best); try { sfx('click'); } catch (e2) {} }
+      const G = mapGeometry(cv.width, cv.height);
+      const o = G.own[((my / G.step) | 0) * G.gw + ((mx / G.step) | 0)];
+      if (o >= 0) { selectMapCountry(G.ids[o]); try { sfx('click'); } catch (e2) {} }
     });
   }
 }
@@ -2977,6 +3129,7 @@ function drawInstThermo(temp) {   // termômetro de mercúrio; a coluna sobe com
   x.fillRect(11.5, 72 - 64 * frac, 3, 64 * frac + 2);                       // coluna de mercúrio
   x.beginPath(); x.arc(13, 81, 7.5, 0, 6.29); x.fill();                     // bulbo
   x.fillStyle = 'rgba(236,240,246,.35)'; x.fillRect(10.5, 6, 1.4, 64);      // brilho do vidro
+  pixelSnap(cv, 2);
 }
 function drawInstPulse() {        // estetoscópio: campânula + tubo + auriculares
   const cv = document.querySelector('#inst-pulse canvas'); if (!cv) return;
@@ -2990,6 +3143,7 @@ function drawInstPulse() {        // estetoscópio: campânula + tubo + auricula
   x.fillStyle = g; x.beginPath(); x.arc(20, 40, 12, 0, 6.29); x.fill();     // campânula
   x.fillStyle = '#3a362e'; x.beginPath(); x.arc(20, 40, 6.5, 0, 6.29); x.fill();
   x.fillStyle = 'rgba(236,240,246,.4)'; x.beginPath(); x.arc(16, 36, 2, 0, 6.29); x.fill();
+  pixelSnap(cv, 2);
 }
 function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -âmbar)
   const cv = document.querySelector('#inst-bio canvas'); if (!cv) return;
@@ -3008,6 +3162,7 @@ function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -â
   x.fillStyle = '#e2ddcc'; x.beginPath(); x.arc(15, 60, 4, 0, 6.29); x.fill();
   x.fillStyle = '#d8cdb0'; x.fillRect(4, 26, 22, 9);                         // etiqueta
   x.fillStyle = '#332b1f'; x.font = '8px "VT323", monospace'; x.textAlign = 'center'; x.fillText('K-7', 15, 33);
+  pixelSnap(cv, 2);
 }
 function instReturn(el, home, delay) {
   el.classList.add('busy');
@@ -3019,10 +3174,6 @@ function instReturn(el, home, delay) {
 }
 function setupInstruments() {
   const acts = {
-    'inst-lens': (el, home) => {                   // aproxima a lupa: abre o exame físico
-      el.classList.add('busy');
-      setTimeout(() => { openExam(); instReturn(el, home, 120); }, 280);
-    },
     'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
       el.classList.add('busy');
       setTimeout(() => {
@@ -3056,7 +3207,7 @@ function setupInstruments() {
     const el = $(id); if (!el) return;
     el.addEventListener('pointerdown', (ev) => {
       if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
-      if (shift.citizen.isSilente && id !== 'inst-bio' && id !== 'inst-lens') return;   // com o Silente, só lupa e coletor reagem
+      if (shift.citizen.isSilente && id !== 'inst-bio') return;   // com o Silente, só o coletor reage
       ev.preventDefault();
       el.setPointerCapture(ev.pointerId);
       const r = el.getBoundingClientRect();
@@ -3081,7 +3232,7 @@ function setupInstruments() {
       sfxTool('pickup');
     });
   });
-  drawInstLens(); drawInstThermo(); drawInstPulse(); drawInstBio();
+  drawInstThermo(); drawInstPulse(); drawInstBio();
 }
 function resetInstruments() {   // novo cidadão: leituras antigas somem
   const tt = $('thermo-tag'), bt = $('bio-tag');
@@ -3095,7 +3246,8 @@ function resetInstruments() {   // novo cidadão: leituras antigas somem
    Gaveta B (direita): FICHA DE EXAME e DOSSIÊ (até o cidadão).
    Ícones pixel desenhados à mão, blocos inteiros, sem antialias. */
 function drawDrawerMapa() {
-  const cv = $('dt-mapa').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-mapa'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 64, 50);
   // três painéis dobrados (zigue-zague): o do meio mais fundo
   const tones = ['#cfc4a2', '#b9ae8c', '#c8bd9a'];
@@ -3114,9 +3266,11 @@ function drawDrawerMapa() {
   for (let i = 0; i < 9; i++) x.fillRect(7 + i * 6, 34 - i * 2 - (i > 4 ? 4 : 0), 3, 2);
   x.fillStyle = '#c9a34a'; x.fillRect(56, 33, 4, 4);                                     // o POSTO 7
   x.fillStyle = 'rgba(255,246,220,.25)'; x.fillRect(3, 5, 59, 1);                        // fio de luz
+  pixelSnap(cv, 2);
 }
 function drawDrawerLupa() {
-  const cv = $('dt-lupa').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-lupa'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
   // aro de latão (octógono blocado) com vidro
   x.fillStyle = '#8a734d';
@@ -3131,23 +3285,11 @@ function drawDrawerLupa() {
   x.fillStyle = '#4a3423'; x.fillRect(31, 29, 7, 7); x.fillRect(34, 35, 7, 8); x.fillRect(36, 42, 7, 9);
   x.fillStyle = 'rgba(255,240,210,.16)'; x.fillRect(32, 30, 2, 6); x.fillRect(35, 37, 2, 6); // veio
   x.fillStyle = '#2c2115'; x.fillRect(37, 50, 6, 3);                                     // ponteira
-}
-function drawDrawerExame() {
-  const cv = $('dt-exame').querySelector('canvas'); const x = cv.getContext('2d');
-  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
-  x.fillStyle = '#4a3423'; x.fillRect(3, 4, 40, 50);                                     // prancheta
-  x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(3, 52, 40, 2);
-  x.fillStyle = '#d8cdb0'; x.fillRect(7, 10, 32, 40);                                    // ficha
-  x.fillStyle = '#8a8a7a'; x.fillRect(15, 2, 16, 7);                                     // clipe
-  x.fillStyle = '#b9b9a9'; x.fillRect(17, 4, 12, 3);
-  x.fillStyle = 'rgba(40,32,20,.5)';                                                     // linhas do formulário
-  for (let i = 0; i < 5; i++) x.fillRect(10, 22 + i * 5, 26, 1);
-  x.fillStyle = '#963c2c'; x.fillRect(12, 12, 8, 2); x.fillRect(15, 9, 2, 8);            // cruz clínica
-  x.fillStyle = 'rgba(150,60,44,.5)'; x.fillRect(26, 12, 10, 5);                         // carimbo pequeno
-  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(7, 47, 32, 3);                             // sombra do papel
+  pixelSnap(cv, 2);
 }
 function drawDrawerLinha() {
-  const cv = $('dt-linha').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-linha'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
   x.fillStyle = '#3a3428'; x.fillRect(3, 6, 40, 46);                                     // pasta
   x.fillStyle = '#2c2820'; x.fillRect(3, 6, 40, 8);                                      // lombada
@@ -3163,6 +3305,7 @@ function drawDrawerLinha() {
   // barbante amarrado
   x.fillStyle = '#8a734d'; x.fillRect(38, 24, 4, 4);
   x.fillStyle = 'rgba(138,115,77,.8)'; x.fillRect(30, 26, 8, 1); x.fillRect(40, 28, 1, 10);
+  pixelSnap(cv, 2);
 }
 function drawDeskMemo() {
   const memo = $('desk-memo'); if (!memo) return;
@@ -3202,8 +3345,7 @@ function setupDrawers() {
   document.querySelectorAll('.dtool, .drawer-front').forEach(el => { if (el.title) el.title = T(el.title); });
   const acts = {
     'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
-    'dt-lupa': { target: 'both', needsCitizen: false, fn: () => toggleInspect() },
-    'dt-exame': { target: 'stage', needsCitizen: true, fn: () => openExam() },
+    'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => openExam() },   // a lupa DE EXAME
     'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
   };
   Object.keys(acts).forEach(id => {
@@ -3239,7 +3381,7 @@ function setupDrawers() {
       sfxTool('pickup');
     });
   });
-  drawDrawerMapa(); drawDrawerLupa(); drawDrawerExame(); drawDrawerLinha();
+  drawDrawerMapa(); drawDrawerLupa(); drawDrawerLinha();
   // o comunicado em papel na mesa
   drawDeskMemo();
   const memo = $('desk-memo');
@@ -3247,6 +3389,9 @@ function setupDrawers() {
     memo.title = T(memo.title);
     memo.onclick = () => { sfxTool('paper'); showBulletin(null); };
   }
+  // a sineta pintada na mesa toca de verdade
+  const bell = $('bell-hit');
+  if (bell) bell.onclick = () => sfxTool('bell');
 }
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
@@ -4179,6 +4324,12 @@ $('btn-map-close').onclick = () => $('map-overlay').classList.remove('active');
 $('btn-inspect').onclick = toggleInspect;
 $('btn-exam').onclick = openExam;
 $('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
+// a bagagem se revista pela lupa de exame: botão dentro do próprio exame
+if ($('btn-exam-bag')) {
+  $('btn-exam-bag').textContent = T('REVISTAR BAGAGEM');
+  $('btn-exam-bag').title = T('Revistar bagagem (10 min)');
+  $('btn-exam-bag').onclick = () => { $('exam-overlay').classList.remove('active'); openBag(); };
+}
 $('btn-bag').onclick = openBag;
 $('btn-bag-close').onclick = () => $('bag-overlay').classList.remove('active');
 $('btn-lifeline').onclick = openLifeline;

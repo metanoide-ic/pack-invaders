@@ -490,7 +490,24 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   display:flex; align-items:center; gap:18px; padding:8px 16px;
   background: var(--panel); border-bottom:2px solid var(--accent);
 }
-.shift-clock { font-family:var(--font-display); font-weight:600; font-size:26px; color:var(--accent2); min-width:84px; font-variant-numeric:tabular-nums; }
+.shift-clock { font-family:var(--font-display); font-weight:600; font-size:24px; color:var(--accent2); font-variant-numeric:tabular-nums; }
+/* relógio de parede + folhinha do Ministério no topo */
+.hdr-time { display:flex; align-items:center; gap:9px; }
+#clock-cv { display:block; filter:drop-shadow(1px 2px 0 rgba(0,0,0,.5)); }
+.cal-pad {
+  position:relative; display:flex; flex-direction:column; align-items:center; line-height:1;
+  background:#e2d8bc; color:#221c12; padding:6px 11px 4px; border:1px solid #0a0b07;
+  box-shadow:0 2px 0 rgba(0,0,0,.5), inset 0 -3px 0 rgba(0,0,0,.1);
+  transform:rotate(-.8deg);
+}
+.cal-pad::before {  /* a fita vermelha do bloco de folhinha */
+  content:''; position:absolute; top:-5px; left:6px; right:6px; height:7px;
+  background:repeating-linear-gradient(45deg, #7a2a20 0 6px, #6a231a 6px 12px);
+  border:1px solid #0a0b07;
+}
+.cal-pad span { font-family:var(--font-display); font-size:10.5px; letter-spacing:2.5px; font-weight:700; color:#7a2a20; margin-top:3px; }
+.cal-pad b { font-family:var(--font-display); font-size:21px; margin-top:1px; }
+.cal-pad i { font-style:normal; font-size:9.5px; opacity:.65; margin-top:1px; }
 .shift-day { font-family:var(--font-display); font-weight:600; letter-spacing:3px; text-transform:uppercase; }
 .shift-info { display:flex; gap:18px; margin-left:auto; color:var(--ink-dim); font-variant-numeric:tabular-nums; }
 .btn-small { font-size:13px; border-radius:3px; padding:6px 12px; }
@@ -561,17 +578,21 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .drawer-tray {
   display:none; align-items:flex-end; justify-content:space-around; gap:10px;
   padding:12px 8px 8px;
-  background-color:#141610;
+  /* INTERIOR DE GAVETA: madeira crua escurecida, laterais em sombra funda */
+  background-color:#241a10;
   background-image:
     radial-gradient(rgba(0,0,0,.3) .6px, transparent .9px),
-    linear-gradient(180deg, rgba(0,0,0,.55), rgba(0,0,0,.15) 30%, rgba(0,0,0,.3));
-  background-size:3px 3px, auto;
+    linear-gradient(90deg, rgba(0,0,0,.5), transparent 12%, transparent 88%, rgba(0,0,0,.5)),
+    linear-gradient(180deg, rgba(0,0,0,.62), rgba(0,0,0,.24) 34%, rgba(0,0,0,.38)),
+    var(--tex-wood);
+  background-size:3px 3px, auto, auto, auto;
   border:1px solid #000; border-top:none;
-  box-shadow: inset 0 4px 9px rgba(0,0,0,.6), inset 0 -1px 0 rgba(238,240,230,.04);
+  box-shadow: inset 0 5px 10px rgba(0,0,0,.65), inset 3px 0 6px rgba(0,0,0,.4), inset -3px 0 6px rgba(0,0,0,.4), inset 0 -1px 0 rgba(238,240,230,.05);
+  transform-origin: top;
 }
-.drawer.open .drawer-tray { display:flex; animation: drawer-slide .2s ease-out; }
+.drawer.open .drawer-tray { display:flex; animation: drawer-slide .22s cubic-bezier(.25,1,.4,1); }
 .drawer.open .drawer-front { box-shadow: inset 0 1px 0 rgba(238,232,214,.08), inset 0 -1px 0 rgba(0,0,0,.4), 0 1px 0 #0c0d09; }
-@keyframes drawer-slide { from { transform:translateY(-10px); opacity:0; } }
+@keyframes drawer-slide { from { transform:scaleY(.08); opacity:.3; } }  /* desce de cima pra baixo */
 .dtool-slot { display:flex; flex-direction:column; align-items:center; gap:3px; }
 .dtool { cursor:grab; touch-action:none; filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)); }
 .dtool:hover { filter:drop-shadow(2px 3px 0 rgba(0,0,0,.5)) brightness(1.15); }
@@ -664,6 +685,29 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
 .window-stamps .stamp-approve::after { background:var(--stamp-green); }
 .window-stamps .stamp-reject::after { background:var(--stamp-red); }
 .window-stamps .stamp-detain::after { background:var(--accent2); }
+/* CARIMBOS FIXOS NA MESA (APV + REJ lado a lado, à esquerda dos instrumentos) */
+.desk-stamps { position:absolute; top:12px; right:118px; z-index:59; display:flex; flex-direction:row; gap:22px; }
+.desk-stamps .stamp { width:74px; }
+/* DET: botão de pânico EMBUTIDO na madeira — vermelho, fundo, discreto */
+.desk-stamps .stamp-detain {
+  position:absolute; top:98px; left:28px; width:54px; padding:7px 4px 8px; margin-top:0;
+  color:#f0d8d2; font-size:11.5px; letter-spacing:2px;
+  background:#48120c; background-image:radial-gradient(circle at 50% 28%, #7a241a, #48120c 78%);
+  border:2px solid #1c0806; border-radius:5px;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.75), inset 0 -1px 0 rgba(255,200,180,.08), 0 0 0 3px #191410, 0 0 0 4px rgba(0,0,0,.65);
+  opacity:.6; text-shadow:0 -1px 0 rgba(0,0,0,.75);
+}
+.desk-stamps .stamp-detain::before, .desk-stamps .stamp-detain::after { display:none; }
+.desk-stamps .stamp-detain:hover:not(:disabled) { opacity:1; background-image:radial-gradient(circle at 50% 28%, #96311f, #5a170e 78%); color:#fff; }
+.desk-stamps .stamp-detain:disabled { opacity:.24; }
+/* a sineta pintada vira botão invisível (o desenho já está na mesa) */
+#bell-hit {
+  position:absolute; left:calc(72% - 34px); top:calc(50% - 30px); width:68px; height:52px;
+  background:none; border:none; box-shadow:none; padding:0; z-index:58; cursor:pointer;
+  overflow:visible;
+}
+#bell-hit::after { display:none; }
+#bell-hit:active { transform:translateY(2px); box-shadow:none; }
 /* tira de balcão sob a janela: documento, relógio, carimbo */
 .booth-counter {
   display:flex; align-items:center; justify-content:center; gap:22px;
@@ -1371,7 +1415,7 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 .exam-log .obs { color:var(--ink-dim); }
 
 /* ============ MAPA / CARTA DE FRONTEIRAS ============ */
-.map-panel { width:min(1000px, 96vw); }
+.map-panel { width:min(1280px, 97vw); }
 .map-grid { display:grid; grid-template-columns: 1fr 300px; min-height:0; }
 #map-canvas { width:100%; height:auto; display:block; background:#0c0f0a; cursor:pointer; image-rendering:pixelated; }
 .map-info {
@@ -1579,7 +1623,14 @@ body.text-large .np-body { font-size:15px; }
     <!-- ===== TELA DO TURNO ===== -->
     <div id="screen-shift" class="screen">
       <div class="shift-top" id="shift-top">
-        <div class="shift-clock"><span id="clock">08:00</span></div>
+        <!-- relógio de parede do posto + folhinha de calendário -->
+        <div class="hdr-time">
+          <canvas id="clock-cv" width="52" height="52" title="Relógio do posto"></canvas>
+          <div class="shift-clock"><span id="clock">08:00</span></div>
+        </div>
+        <div class="cal-pad" id="cal-pad" title="Folhinha do Ministério">
+          <span id="cal-mon">OUT</span><b id="cal-day">3</b><i id="cal-yr">1957</i>
+        </div>
         <div class="shift-day" id="shift-day">DIA 1</div>
         <div class="shift-info">
           <span id="processed-count">Atendidos: 0</span>
@@ -1612,7 +1663,7 @@ body.text-large .np-body { font-size:15px; }
                 <span class="dt-name">MAPA</span>
               </div>
               <div class="dtool-slot">
-                <div class="dtool" id="dt-lupa" title="Lupa de inspeção — arraste até os documentos ou o vidro"><canvas width="46" height="56"></canvas></div>
+                <div class="dtool" id="dt-lupa" title="Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela"><canvas width="46" height="56"></canvas></div>
                 <span class="dt-name">LUPA</span>
               </div>
             </div>
@@ -1632,11 +1683,6 @@ body.text-large .np-body { font-size:15px; }
               </div>
             </div>
             <div id="booth-vhs"></div>
-            <div class="window-stamps" id="window-stamps">
-              <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
-              <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
-              <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
-            </div>
           </div>
           <div class="booth-counter">
             <span class="bc-item bc-doc" title="Documentos"><svg class="ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 1.5h5l3 3v10H4z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="M9 1.5v3h3M6 8h4M6 10.5h4" fill="none" stroke="currentColor" stroke-width="1"/></svg></span>
@@ -1651,11 +1697,11 @@ body.text-large .np-body { font-size:15px; }
         <div class="stage-side stage-right">
           <div class="side-cap">FERRAMENTAS</div>
           <div class="tools">
-            <!-- inspeção/exame/linha viraram FERRAMENTAS DE GAVETA (arrastáveis);
-                 os botões ficam ocultos por compatibilidade (gamepad/QA). -->
-            <button id="btn-inspect" class="btn-tool legacy-scan" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
+            <!-- exame/dossiê são FERRAMENTAS DE GAVETA (arrastáveis); a bagagem
+                 se revista pela lupa de exame. Botões ocultos por compat (QA/gamepad). -->
+            <button id="btn-inspect" class="btn-tool" data-ico="inspect"><span class="tool-name">INSPEÇÃO</span></button>
             <button id="btn-exam" class="btn-tool legacy-scan" data-ico="exam" title="Exame Físico aproximado (10 min)"><span class="tool-name">EXAME</span></button>
-            <button id="btn-bag" class="btn-tool" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
+            <button id="btn-bag" class="btn-tool legacy-scan" data-ico="bag" title="Revistar bagagem (10 min)"><span class="tool-name">BAGAGEM</span></button>
             <button id="btn-lifeline" class="btn-tool legacy-scan" data-ico="lifeline" title="Organizar a vida documentada em cronologia (10 min)"><span class="tool-name">LINHA DA VIDA</span></button>
             <!-- térmico/pulsação/biológico viraram INSTRUMENTOS FÍSICOS na mesa
                  (arraste até o cidadão); os botões ficam ocultos por compat. -->
@@ -1677,8 +1723,8 @@ body.text-large .np-body { font-size:15px; }
             </div>
             <div class="drawer-tray">
               <div class="dtool-slot">
-                <div class="dtool" id="dt-exame" title="Ficha de exame físico — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
-                <span class="dt-name">EXAME</span>
+                <div class="inst" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
+                <span class="dt-name">TÉRMICO</span>
               </div>
               <div class="dtool-slot">
                 <div class="dtool" id="dt-linha" title="Dossiê da vida documentada — arraste até o cidadão (10 min)"><canvas width="46" height="56"></canvas></div>
@@ -1694,14 +1740,9 @@ body.text-large .np-body { font-size:15px; }
           <div class="desk-hint" id="desk-hint">Aguardando próximo cidadão…</div>
           <!-- o comunicado do dia chega em papel: clique para reler -->
           <div id="desk-memo" title="Comunicado oficial do dia — clique para reler"><canvas width="92" height="66"></canvas></div>
-          <!-- INSTRUMENTOS FÍSICOS: arraste até o cidadão no vidro -->
+          <!-- INSTRUMENTOS FÍSICOS: arraste até o cidadão no vidro
+               (a lupa e o termômetro moram nas GAVETAS) -->
           <div id="instruments">
-            <div class="inst-slot" style="width:46px;height:64px">
-              <div class="inst" id="inst-lens" title="Lupa de exame — arraste até o cidadão"><canvas width="46" height="64"></canvas></div>
-            </div>
-            <div class="inst-slot" style="width:26px;height:92px">
-              <div class="inst" id="inst-thermo" title="Termômetro — arraste até o cidadão"><canvas width="26" height="92"></canvas><span class="inst-tag" id="thermo-tag"></span></div>
-            </div>
             <div class="inst-slot" style="width:54px;height:54px">
               <div class="inst" id="inst-pulse" title="Estetoscópio — arraste até o cidadão e ouça"><canvas width="54" height="54"></canvas></div>
             </div>
@@ -1709,6 +1750,14 @@ body.text-large .np-body { font-size:15px; }
               <div class="inst" id="inst-bio" title="Coletor K-7 — arraste até o cidadão; o resultado sai na etiqueta"><canvas width="30" height="72"></canvas><span class="inst-tag" id="bio-tag"></span></div>
             </div>
           </div>
+          <!-- CARIMBOS FIXOS NA MESA + o botão DET embutido, discreto e vermelho -->
+          <div class="window-stamps desk-stamps" id="desk-stamps">
+            <button id="btn-approve" class="stamp stamp-approve" title="Aprovar">APV</button>
+            <button id="btn-reject" class="stamp stamp-reject" title="Rejeitar">REJ</button>
+            <button id="btn-detain" class="stamp stamp-detain" title="Deter" disabled>DET</button>
+          </div>
+          <!-- a sineta pintada na mesa é clicável -->
+          <button id="bell-hit" title="Sineta do balcão" aria-label="sineta"></button>
         </div>
       </div>
 
@@ -1790,6 +1839,7 @@ body.text-large .np-body { font-size:15px; }
       <div class="exam-panel">
         <div class="exam-head">
           <span>EXAME FÍSICO APROXIMADO — clique nas regiões</span>
+          <button id="btn-exam-bag" class="btn-small" title="Revistar bagagem (10 min)">REVISTAR BAGAGEM</button>
           <button id="btn-exam-close" class="btn-small">FECHAR</button>
         </div>
         <div class="exam-grid">
@@ -2789,6 +2839,8 @@ const I18N_EN = {
   'Ficha de exame físico — arraste até o cidadão (10 min)': 'Physical exam form — drag onto the citizen (10 min)',
   'Dossiê da vida documentada — arraste até o cidadão (10 min)': 'Documented-life dossier — drag onto the citizen (10 min)',
   'Comunicado oficial do dia — clique para reler': "The day's official notice — click to reread",
+  'REVISTAR BAGAGEM': 'SEARCH LUGGAGE',
+  'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Exam loupe — drag onto the citizen (10 min); luggage is searched through it',
   '👁 EXAME FÍSICO': '👁 PHYSICAL EXAM',
   'Exame Físico aproximado (10 min)': 'Close physical exam (10 min)',
   '🧳 BAGAGEM': '🧳 LUGGAGE',
@@ -4254,6 +4306,8 @@ const I18N_ES = {
   'Ficha de exame físico — arraste até o cidadão (10 min)': 'Ficha de examen físico — arrastra hasta el ciudadano (10 min)',
   'Dossiê da vida documentada — arraste até o cidadão (10 min)': 'Expediente de la vida documentada — arrastra hasta el ciudadano (10 min)',
   'Comunicado oficial do dia — clique para reler': 'Comunicado oficial del día — haz clic para releer',
+  'REVISTAR BAGAGEM': 'REVISAR EQUIPAJE',
+  'Lupa de exame — arraste até o cidadão (10 min); a bagagem se revista por ela': 'Lupa de examen — arrastra hasta el ciudadano (10 min); el equipaje se revisa con ella',
   '👁 EXAME FÍSICO': '👁 EXAMEN FÍSICO',
   'Exame Físico aproximado (10 min)': 'Examen físico de cerca (10 min)',
   '🧳 BAGAGEM': '🧳 EQUIPAJE',
@@ -5908,13 +5962,13 @@ function paintBust(ctx, f, opts) {
      base depois (o pescoço ENTRA na roupa, não fica atrás dela). */
   ctx.fillStyle = rgb(mix(SK, SH, 0.32));
   ctx.beginPath();
-  ctx.moveTo(cx - 7, 62); ctx.quadraticCurveTo(cx - 8, 80, cx - 8.5, 95);
-  ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 80, cx + 7, 62);
+  ctx.moveTo(cx - 7.5, 55); ctx.quadraticCurveTo(cx - 8, 76, cx - 8.5, 95);
+  ctx.lineTo(cx + 8.5, 95); ctx.quadraticCurveTo(cx + 8, 76, cx + 7.5, 55);
   ctx.closePath(); ctx.fill();
   // sombra cilíndrica nas laterais (dá volume de tubo) + sombra do queixo no pescoço
   soft(ctx, cx - 5.6, 80, 2.4, 12, rgb(darken(SH, 0.24), 0.36), 2);
   soft(ctx, cx + 5.6, 80, 2.4, 12, rgb(darken(SH, 0.34), 0.4), 2);
-  soft(ctx, cx, 67, 8, 3, 'rgba(0,0,0,.28)', 2.2);
+  soft(ctx, cx, 63, 8, 3, 'rgba(0,0,0,.28)', 2.2);
   soft(ctx, cx, 74, 4.5, 6, rgb(lighten(SK, 0.12), 0.34), 2); // realce central do pescoço (tubo)
 
   /* JUNTA no pescoço: a linha onde a cabeça trocada se prende ao corpo.
@@ -5943,21 +5997,21 @@ function paintBust(ctx, f, opts) {
     ctx.beginPath();
     if (L.child) {
       ctx.moveTo(20, 122);
-      ctx.lineTo(23, 104);
-      ctx.quadraticCurveTo(26, 96, 38, 94);
-      ctx.quadraticCurveTo(44, 93.2, 46, 94.6);
-      ctx.quadraticCurveTo(50, 96.6, 54, 94.6);
-      ctx.quadraticCurveTo(56, 93.2, 62, 94);
-      ctx.quadraticCurveTo(74, 96, 77, 104);
+      ctx.lineTo(23, 100);
+      ctx.quadraticCurveTo(26, 92, 38, 90);
+      ctx.quadraticCurveTo(44, 89.2, 46, 90.6);
+      ctx.quadraticCurveTo(50, 92.6, 54, 90.6);
+      ctx.quadraticCurveTo(56, 89.2, 62, 90);
+      ctx.quadraticCurveTo(74, 92, 77, 100);
       ctx.lineTo(80, 122); ctx.closePath();
     } else {
       ctx.moveTo(3, 122);
-      ctx.lineTo(7, 100);
-      ctx.quadraticCurveTo(10, 93.5, 26, 91.5);     // ombro esquerdo: largo e alto
-      ctx.quadraticCurveTo(37, 90.5, 43, 92.5);     // sobe até a base do pescoço
-      ctx.quadraticCurveTo(50, 95.2, 57, 92.5);     // DECOTE — a gola abraça o pescoço
-      ctx.quadraticCurveTo(63, 90.5, 74, 91.5);     // base do pescoço → ombro direito
-      ctx.quadraticCurveTo(90, 93.5, 93, 100);      // ombro direito: largo e alto
+      ctx.lineTo(7, 96);
+      ctx.quadraticCurveTo(10, 89.5, 26, 87.5);     // ombro esquerdo: largo e alto
+      ctx.quadraticCurveTo(37, 86.5, 43, 88.5);     // sobe até a base do pescoço
+      ctx.quadraticCurveTo(50, 91.2, 57, 88.5);     // DECOTE — a gola abraça o pescoço
+      ctx.quadraticCurveTo(63, 86.5, 74, 87.5);     // base do pescoço → ombro direito
+      ctx.quadraticCurveTo(90, 89.5, 93, 96);       // ombro direito: largo e alto
       ctx.lineTo(97, 122); ctx.closePath();
     }
   };
@@ -6182,14 +6236,14 @@ function paintBust(ctx, f, opts) {
   chiar.addColorStop(0.4, 'rgba(0,0,0,0)');
   chiar.addColorStop(0.58, rgb(mix(SH, [150, 70, 40], 0.35), 0.14)); // terminador quente
   chiar.addColorStop(0.74, rgb(darken(SH, 0.08), 0.3));
-  chiar.addColorStop(0.93, rgb(darken(SH, 0.18), 0.56));           // núcleo da sombra (menos fundo)
+  chiar.addColorStop(0.93, rgb(darken(SH, 0.16), 0.46));           // núcleo da sombra (menos fundo)
   chiar.addColorStop(1, rgb(mix(SH, [90, 96, 120], 0.5), 0.32));   // bounce frio na borda
   ctx.fillStyle = chiar; ctx.fillRect(0, 0, 100, 120);
   // FILL LIGHT ambiente: o lado da sombra recebe um respiro de luz (a sala
   // não é um vazio) — nenhum plano cai a preto puro, e peles mais escuras
   // param de sumir no fundo.
   const fillg = ctx.createLinearGradient(cx + L.fw + L.ax, 0, cx - L.fw * 0.1, 0);
-  fillg.addColorStop(0, rgb(lighten(SK, 0.12), 0.18));
+  fillg.addColorStop(0, rgb(lighten(SK, 0.12), 0.26));
   fillg.addColorStop(0.65, 'rgba(0,0,0,0)');
   ctx.fillStyle = fillg; ctx.fillRect(0, 0, 100, 120);
 
@@ -6202,8 +6256,8 @@ function paintBust(ctx, f, opts) {
   soft(ctx, cx + L.templeW - 2.5 + L.ax, L.browY - 1, 3.4, 5.5, rgb(darken(SH, 0.1), 0.55), 1.4);
 
   // luz principal: lâmpada acima-esquerda, contida (não lava o lado sombrio)
-  const key = ctx.createRadialGradient(cx - 9, 33, 3, cx - 9, 38, 32);
-  key.addColorStop(0, 'rgba(255,244,216,.42)'); key.addColorStop(0.5, 'rgba(255,244,216,.13)');
+  const key = ctx.createRadialGradient(cx - 9, 33, 3, cx - 9, 38, 38);
+  key.addColorStop(0, 'rgba(255,244,216,.54)'); key.addColorStop(0.5, 'rgba(255,244,216,.2)');
   key.addColorStop(1, 'rgba(0,0,0,0)');
   ctx.fillStyle = key; ctx.fillRect(0, 0, 100, 120);
 
@@ -7093,9 +7147,27 @@ function paintBust(ctx, f, opts) {
       ctx.stroke();
     }
     soft(ctx, cx - 5, 17, 9, 3.4, 'rgba(255,240,214,.14)', 2.2);
-    // nó sob o queixo
+    // CABELO aparecendo sob a abertura do lenço (senão vira touca de natação)
+    ctx.save();
+    ctx.beginPath();
+    ctx.moveTo(cx - L.fw + 1, 44); ctx.quadraticCurveTo(cx, 25.5, cx + L.fw - 1, 44);
+    ctx.quadraticCurveTo(cx, 30.5, cx - L.fw + 1, 44); ctx.closePath();
+    ctx.fillStyle = rgb(darken(L.hair, 0.12)); ctx.fill();
+    ctx.strokeStyle = rgb(darken(L.hair, 0.45), 0.6); ctx.lineWidth = 0.5;
+    for (let i = 0; i < 7; i++) {
+      const t = (i + 0.5) / 7, hxp = cx - L.fw + 1 + t * (L.fw * 2 - 2);
+      ctx.beginPath(); ctx.moveTo(hxp, 42 - Math.sin(t * Math.PI) * 13);
+      ctx.quadraticCurveTo(hxp + 1, 40 - Math.sin(t * Math.PI) * 7, hxp, 43 - Math.sin(t * Math.PI) * 3);
+      ctx.stroke();
+    }
+    ctx.restore();
+    // sombra do lenço sobre o cabelo/testa
+    soft(ctx, cx, 27, L.fw * 0.8, 2, 'rgba(10,8,6,.4)', 1.8);
+    // nó sob o queixo, com pontas de tecido
     ctx.fillStyle = 'rgb(82,58,48)';
-    ctx.beginPath(); ctx.ellipse(cx - 3, 82, 3.2, 2.2, 0.5, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(cx - 3, 80, 3.4, 2.4, 0.5, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 4, 82); ctx.quadraticCurveTo(cx - 9, 86, cx - 7, 90); ctx.lineTo(cx - 4, 88); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(cx - 1, 82); ctx.quadraticCurveTo(cx + 2, 87, cx, 90); ctx.lineTo(cx - 2, 88); ctx.closePath(); ctx.fill();
   } else if (f.hat === 3) {
     /* BONÉ MILITAR de pala (peaked cap) — para os uniformizados */
     const uc = f.uniformColor || [58, 66, 48], utrim = f.uniformTrim || [150, 40, 34];
@@ -9176,16 +9248,16 @@ function drawTitleCrest(lidAmt) {
   // disco de fundo — tinta chapada (selo impresso), não gradiente lustroso
   x.fillStyle = 'rgba(22,19,12,.92)'; x.beginPath(); x.arc(C, C, 112 * u, 0, 6.29); x.fill();
   // anéis
-  x.strokeStyle = GOLD; x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 110 * u, 0, 6.29); x.stroke();
-  x.lineWidth = 1.2 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
+  x.strokeStyle = GOLD; x.lineWidth = 4.5 * u; x.beginPath(); x.arc(C, C, 109 * u, 0, 6.29); x.stroke();
+  x.lineWidth = 2.4 * u; x.beginPath(); x.arc(C, C, 92 * u, 0, 6.29); x.stroke();
   // estrelas entre os anéis
   const star = (cx, cy, r, rot) => { x.beginPath(); for (let k = 0; k < 5; k++) { const a1 = rot - Math.PI / 2 + k * 2.513, a2 = a1 + 1.2566; x.lineTo(cx + Math.cos(a1) * r, cy + Math.sin(a1) * r); x.lineTo(cx + Math.cos(a2) * r * 0.45, cy + Math.sin(a2) * r * 0.45); } x.closePath(); x.fill(); };
   x.fillStyle = GOLDL;
-  for (let i = 0; i < 12; i++) { const a = i / 12 * 6.283; if (Math.abs(Math.sin(a)) < 0.98) star(C + Math.cos(a) * 101 * u, C + Math.sin(a) * 101 * u, 4.4 * u, a); }
+  for (let i = 0; i < 8; i++) { const a = i / 8 * 6.283; if (Math.abs(Math.sin(a)) < 0.98) star(C + Math.cos(a) * 101 * u, C + Math.sin(a) * 101 * u, 6 * u, a); }
   // coroa de louros (dois ramos)
   const laurel = (side) => {
     x.save(); x.translate(C, C); x.scale(side, 1);
-    x.strokeStyle = GOLD; x.lineWidth = 2 * u; x.beginPath(); x.arc(0, 4 * u, 74 * u, Math.PI * 0.62, Math.PI * 0.98); x.stroke();
+    x.strokeStyle = GOLD; x.lineWidth = 3.2 * u; x.beginPath(); x.arc(0, 4 * u, 74 * u, Math.PI * 0.62, Math.PI * 0.98); x.stroke();
     for (let i = 0; i < 6; i++) { const a = Math.PI * (0.66 + i * 0.055); const lx = Math.cos(a) * 74 * u, ly = 4 * u + Math.sin(a) * 74 * u; x.save(); x.translate(lx, ly); x.rotate(a + 0.5); x.fillStyle = GOLDL; x.beginPath(); x.ellipse(0, -6 * u, 3 * u, 7 * u, 0, 0, 6.29); x.fill(); x.restore(); }
     x.restore();
   };
@@ -9194,7 +9266,7 @@ function drawTitleCrest(lidAmt) {
   const ey = C - 2 * u;
   x.fillStyle = '#f2ead2'; x.beginPath();
   x.moveTo(C - 46 * u, ey); x.quadraticCurveTo(C, ey - 34 * u, C + 46 * u, ey); x.quadraticCurveTo(C, ey + 34 * u, C - 46 * u, ey); x.closePath(); x.fill();
-  x.strokeStyle = GOLD; x.lineWidth = 2.2 * u; x.stroke();
+  x.strokeStyle = GOLD; x.lineWidth = 3.6 * u; x.stroke();
   // íris em anéis chapados (gravura), não gradiente liso de IA
   x.fillStyle = '#12222e'; x.beginPath(); x.arc(C, ey, 20 * u, 0, 6.29); x.fill();
   x.fillStyle = '#2e5068'; x.beginPath(); x.arc(C, ey, 16 * u, 0, 6.29); x.fill();
@@ -10342,6 +10414,9 @@ function startDay() {
   $('shift-day').textContent = S.infinite
     ? `${T('MODO INFINITO')} · ${T('Turno')} ${S.infDay + 1} · ✓ ${S.infScore} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`
     : `${T('DIA')} ${S.day} — ${T(REGIME_LABEL[regimeOfDay(S.day)])}`;
+  // a folhinha do Ministério: dia, mês e ano
+  const fd = fmtDate(worldDate(S.day)).split(' ');
+  if ($('cal-day')) { $('cal-day').textContent = fd[0]; $('cal-mon').textContent = fd[1] || ''; $('cal-yr').textContent = fd[2] || ''; }
   renderRulebook();
   updateHud();
   clearDesk();
@@ -10401,10 +10476,36 @@ function tickClock() {
   updateHud();
 }
 function spendTime(min) { shift.clock = Math.min(1080, shift.clock + min); updateHud(); }
+/* relógio de parede do posto: baquelite, mostrador creme, ponteiros de verdade */
+function drawWallClock() {
+  const cv = $('clock-cv'); if (!cv) return;
+  const x = cv.getContext('2d'), C = 26;
+  x.clearRect(0, 0, 52, 52);
+  x.fillStyle = '#0c0d09'; x.beginPath(); x.arc(C, C + 1, 25, 0, 6.29); x.fill();   // sombra da caixa
+  x.fillStyle = '#33362a'; x.beginPath(); x.arc(C, C, 24.5, 0, 6.29); x.fill();     // caixa de baquelite
+  x.fillStyle = '#1c1e16'; x.beginPath(); x.arc(C, C, 21.5, 0, 6.29); x.fill();     // aro interno
+  x.fillStyle = '#d8cdb0'; x.beginPath(); x.arc(C, C, 19.5, 0, 6.29); x.fill();     // mostrador
+  x.fillStyle = 'rgba(120,100,60,.14)'; x.beginPath(); x.arc(C + 4, C + 5, 15, 0, 6.29); x.fill(); // mancha de idade
+  x.strokeStyle = '#443c28';
+  for (let i = 0; i < 12; i++) {
+    const a = i / 12 * 6.283, big = i % 3 === 0;
+    x.lineWidth = big ? 2 : 1;
+    x.beginPath(); x.moveTo(C + Math.cos(a) * (big ? 14.5 : 16.5), C + Math.sin(a) * (big ? 14.5 : 16.5));
+    x.lineTo(C + Math.cos(a) * 18.5, C + Math.sin(a) * 18.5); x.stroke();
+  }
+  const h = shift.clock / 60, m = shift.clock % 60;
+  const ha = ((h % 12) + m / 60) / 12 * 6.283 - Math.PI / 2, ma = m / 60 * 6.283 - Math.PI / 2;
+  x.strokeStyle = '#221c12'; x.lineCap = 'butt';
+  x.lineWidth = 3; x.beginPath(); x.moveTo(C, C); x.lineTo(C + Math.cos(ha) * 9.5, C + Math.sin(ha) * 9.5); x.stroke();
+  x.lineWidth = 2; x.beginPath(); x.moveTo(C, C); x.lineTo(C + Math.cos(ma) * 15, C + Math.sin(ma) * 15); x.stroke();
+  x.fillStyle = '#7a2a20'; x.beginPath(); x.arc(C, C, 2.2, 0, 6.29); x.fill();      // pino central
+  x.fillStyle = 'rgba(255,246,220,.12)'; x.beginPath(); x.arc(C - 7, C - 8, 8, 0, 6.29); x.fill(); // reflexo do vidro
+}
 function updateHud() {
   const h = Math.floor(shift.clock / 60), m = shift.clock % 60;
   const hhmm = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-  $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''} · ${fmtDate(worldDate(S.day))}`;
+  $('clock').textContent = `${hhmm}${SETTINGS.archivist ? ' ⏸' : ''}`;
+  drawWallClock();
   const bc = $('booth-clock'); if (bc) bc.textContent = hhmm;
   const q = quotaForDay(S.day);
   const qStr = q === Infinity ? '∞' : q;
@@ -10827,8 +10928,46 @@ function drawQueue(ctx, w, h) {
       ctx.fillRect(sx2, sy2, 1.4, 1.4);
     }
   }
-  // muro: base sólida + um respiro da cor do céu (luz ambiente da hora)
+  // muro: base sólida + TEXTURA de placas de concreto (cacheada por tamanho)
   ctx.fillStyle = '#121410'; ctx.fillRect(0, wallY, w, h - wallY);
+  const wallH = (h - wallY) | 0;
+  if (!Q.wallCv || Q.wallCv.width !== w || Q.wallCv.height !== wallH) {
+    Q.wallCv = document.createElement('canvas'); Q.wallCv.width = w; Q.wallCv.height = wallH;
+    const wx2 = Q.wallCv.getContext('2d');
+    const wr = makeRng(777);
+    // placas com juntas verticais e cap de concreto no topo
+    for (let px2 = 0; px2 < w; px2 += 84) {
+      wx2.fillStyle = `rgba(${18 + (wr() * 8 | 0)},${20 + (wr() * 8 | 0)},${14 + (wr() * 6 | 0)},.9)`;
+      wx2.fillRect(px2, 0, 84, wallH);
+      wx2.fillStyle = 'rgba(0,0,0,.55)'; wx2.fillRect(px2, 0, 2, wallH);
+      wx2.fillStyle = 'rgba(200,205,190,.05)'; wx2.fillRect(px2 + 2, 0, 1, wallH);
+    }
+    wx2.fillStyle = 'rgba(200,205,190,.1)'; wx2.fillRect(0, 0, w, 2);
+    wx2.fillStyle = 'rgba(0,0,0,.45)'; wx2.fillRect(0, 3, w, 1);
+    // escorridos de umidade descendo das juntas
+    for (let i = 0; i < 26; i++) {
+      const sx2 = wr() * w, sw2 = 6 + wr() * 26, sh2 = 8 + wr() * wallH * .9;
+      const g2 = wx2.createLinearGradient(0, 0, 0, sh2);
+      g2.addColorStop(0, `rgba(0,0,0,${.14 + wr() * .18})`); g2.addColorStop(1, 'rgba(0,0,0,0)');
+      wx2.fillStyle = g2; wx2.fillRect(sx2, 0, sw2, sh2);
+    }
+    // grão de agregado
+    for (let i = 0; i < w * 3; i++) {
+      wx2.fillStyle = wr() < .55 ? `rgba(0,0,0,${.06 + wr() * .08})` : `rgba(196,200,180,${.03 + wr() * .04})`;
+      wx2.fillRect(wr() * w, wr() * wallH, 1, 1);
+    }
+    // um cartaz oficial rasgado, colado torto no muro
+    const pw2 = 34, ph2 = 24, px3 = w * .22 + wr() * w * .3, py3 = 6 + wr() * 10;
+    wx2.save(); wx2.translate(px3, py3); wx2.rotate((wr() - .5) * .1);
+    wx2.fillStyle = '#6a6350'; wx2.fillRect(0, 0, pw2, ph2);           // papel encardido pelo tempo
+    wx2.fillStyle = '#4e1c15'; wx2.fillRect(0, 0, pw2, 5);
+    wx2.fillStyle = 'rgba(40,32,20,.5)';
+    for (let l2 = 0; l2 < 3; l2++) wx2.fillRect(3, 9 + l2 * 4, pw2 - 6 - l2 * 5, 2);
+    wx2.fillStyle = '#121410';       // canto rasgado
+    wx2.beginPath(); wx2.moveTo(pw2, ph2); wx2.lineTo(pw2 - 10, ph2); wx2.lineTo(pw2, ph2 - 8); wx2.closePath(); wx2.fill();
+    wx2.restore();
+  }
+  ctx.drawImage(Q.wallCv, 0, wallY);
   ctx.fillStyle = `rgba(${sky.hor[0]},${sky.hor[1]},${sky.hor[2]},.08)`; ctx.fillRect(0, wallY, w, h - wallY);
   // arame no alto do muro
   ctx.strokeStyle = '#1e201a'; ctx.lineWidth = 1;
@@ -11469,78 +11608,165 @@ function mapBlob(ctx, x, y, r, seed) {
   }
   ctx.closePath();
 }
+/* ---------- MAPA: continente CONTÍGUO — cada país faz fronteira com o
+   vizinho (partição voronoi distorcida por seed), costa de tinta dupla,
+   bandeira única por país e clique célula-a-célula. ---------- */
+let MAPGEO = null;
+function mapGeometry(W, H) {
+  if (MAPGEO && MAPGEO.W === W && MAPGEO.H === H) return MAPGEO;
+  const S = Math.min(W, H) / 100, ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
+  const ids = COUNTRY_IDS.filter(k => MAP_LAYOUT[k]);
+  const seeds = ids.map((k, i) => {
+    const m = MAP_LAYOUT[k];
+    const rr2 = makeRng(i * 131 + 7);
+    return { k, i, x: ox + m.x * S, y: oy + m.y * S, w: m.r * S,
+      p1: rr2() * 6.28, p2: rr2() * 6.28, a1: .12 + rr2() * .08, a2: .06 + rr2() * .06 };
+  });
+  const step = 3, gw = Math.ceil(W / step), gh = Math.ceil(H / step);
+  const own = new Int8Array(gw * gh).fill(-1);
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const px2 = gx * step + 1, py2 = gy * step + 1;
+    let best = -1, bd = 1e9;
+    for (const s2 of seeds) {
+      const dx2 = px2 - s2.x, dy2 = py2 - s2.y;
+      const th = Math.atan2(dy2, dx2);
+      const wob = 1 + s2.a1 * Math.sin(3 * th + s2.p1) + s2.a2 * Math.sin(7 * th + s2.p2);
+      const d = Math.hypot(dx2, dy2) * wob / s2.w;
+      if (d < bd) { bd = d; best = s2.i; }
+    }
+    own[gy * gw + gx] = bd < 1.5 ? best : -1;   // -1 = mar
+  }
+  MAPGEO = { W, H, step, gw, gh, own, seeds, ids, S, ox, oy };
+  return MAPGEO;
+}
+/* bandeira única por país: padrão determinístico + cores do país */
+function drawFlag(ctx, k, cx2, cy2) {
+  const c = COUNTRIES[k];
+  let hsh = 0; for (let i = 0; i < k.length; i++) hsh = (hsh * 31 + k.charCodeAt(i)) >>> 0;
+  const fw = 24, fh = 15, x0 = cx2 - fw / 2, y0 = cy2 - fh / 2;
+  const sec = ['#e2d8bc', '#22201a', '#8a2e22', '#2f5c39', '#c9a34a', '#2e5068'][hsh % 6];
+  ctx.save();
+  ctx.fillStyle = '#5a4a30'; ctx.fillRect(x0 - 4, y0 - 3, 2, fh + 9);   // mastro
+  ctx.fillStyle = c.color; ctx.fillRect(x0, y0, fw, fh);                 // pano
+  const t = hsh % 5;
+  ctx.fillStyle = sec;
+  if (t === 0) ctx.fillRect(x0, y0 + fh / 2, fw, fh / 2);                       // bicolor horizontal
+  else if (t === 1) ctx.fillRect(x0, y0, fw / 3, fh);                            // faixa no mastro
+  else if (t === 2) { ctx.beginPath(); ctx.moveTo(x0, y0 + fh); ctx.lineTo(x0 + fw, y0); ctx.lineTo(x0 + fw, y0 + fh); ctx.closePath(); ctx.fill(); } // diagonal
+  else if (t === 3) { ctx.fillRect(x0 + fw * .38, y0, fw * .2, fh); ctx.fillRect(x0, y0 + fh * .36, fw, fh * .26); } // cruz
+  else { ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(x0 + fw * .55, y0 + fh / 2); ctx.lineTo(x0, y0 + fh); ctx.closePath(); ctx.fill(); } // cunha
+  ctx.fillStyle = 'rgba(240,232,208,.95)'; ctx.font = '9px "VT323", monospace';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(c.seal, x0 + fw * (t === 1 ? .62 : .5), y0 + fh * (t === 0 ? .3 : .5)); // o selo no pano
+  ctx.strokeStyle = 'rgba(10,8,4,.8)'; ctx.lineWidth = 1; ctx.strokeRect(x0 + .5, y0 + .5, fw - 1, fh - 1);
+  ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x0, y0 + fh, fw, 1.5);       // sombra do pano
+  ctx.restore();
+}
 function drawWorldMap() {
   const cv = $('map-canvas'); if (!cv) return;
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
-  const S = Math.min(W, H) / 100; const ox = (W - 100 * S) / 2, oy = (H - 100 * S) / 2;
-  const P = (x, y) => [ox + x * S, oy + y * S];
-  // mar de carta antiga (papel-oceano esverdeado)
+  const G = mapGeometry(W, H);
+  const { step, gw, gh, own, seeds, ids } = G;
+  // mar de carta antiga
   ctx.fillStyle = '#1b2620'; ctx.fillRect(0, 0, W, H);
   const sea = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.62);
   sea.addColorStop(0, '#28362e'); sea.addColorStop(1, '#161f1a');
   ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
-  // linhas de rumo (rosa dos ventos portulana) — cruzam o mar inteiro
-  const [rcx, rcy] = P(50, 50);
+  // linhas de rumo
+  const [rcx, rcy] = [W / 2, H / 2];
   ctx.strokeStyle = 'rgba(200,180,130,.06)'; ctx.lineWidth = 1;
   for (let a = 0; a < 6.28; a += Math.PI / 8) { ctx.beginPath(); ctx.moveTo(rcx, rcy); ctx.lineTo(rcx + Math.cos(a) * W, rcy + Math.sin(a) * W); ctx.stroke(); }
-  // grade de meridianos
-  ctx.strokeStyle = 'rgba(150,170,140,.05)'; ctx.lineWidth = 1;
-  for (let i = 0; i <= 10; i++) { const [x1] = P(i * 10, 0); ctx.beginPath(); ctx.moveTo(x1, 0); ctx.lineTo(x1, H); ctx.stroke(); const [, y1] = P(0, i * 10); ctx.beginPath(); ctx.moveTo(0, y1); ctx.lineTo(W, y1); ctx.stroke(); }
-  // países
-  let si = 1;
-  COUNTRY_IDS.forEach(k => {
-    const m = MAP_LAYOUT[k]; if (!m) return;
-    const c = COUNTRIES[k];
-    const [cxp, cyp] = P(m.x, m.y); const rp = m.r * S;
-    const sel = MAP_SEL === k;
-    const seed = si * 97 + 5;
-    // AURÉOLA COSTEIRA: anéis concêntricos gravados em volta da costa (o
-    // traço que faz a carta parecer antiga de verdade)
-    for (let h = 3; h >= 1; h--) { mapBlob(ctx, cxp, cyp, rp * (1 + h * 0.05), seed); ctx.strokeStyle = `rgba(180,168,120,${0.05 + (3 - h) * 0.04})`; ctx.lineWidth = 1; ctx.stroke(); }
-    // sombra da terra no mar
-    ctx.save(); ctx.translate(3, 4); mapBlob(ctx, cxp, cyp, rp, seed); ctx.fillStyle = 'rgba(0,0,0,.4)'; ctx.fill(); ctx.restore();
-    // terra: TINTA CHAPADA (carta impressa), não gradiente lustroso. A textura
-    // vem da hachura de relevo e do estipulado por cima — como numa gravura.
-    mapBlob(ctx, cxp, cyp, rp, seed);
-    ctx.fillStyle = sel ? shade(c.color, 24) : shade(c.color, 4);
-    ctx.fill();
-    // relevo: hachura de montanhas/terreno recortada à terra
-    ctx.save(); mapBlob(ctx, cxp, cyp, rp, seed); ctx.clip();
-    ctx.strokeStyle = 'rgba(30,22,12,.14)'; ctx.lineWidth = 0.7;
-    const hr = makeRng(seed ^ 0x3a);
-    for (let i = 0; i < 14; i++) { const hx = cxp + (hr() - 0.5) * rp * 1.4, hy = cyp + (hr() - 0.5) * rp * 1.2, len = 3 + hr() * 5; ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * 0.7); ctx.moveTo(hx + 1.4, hy); ctx.lineTo(hx + len + 1.4, hy - len * 0.7); ctx.stroke(); }
-    ctx.fillStyle = 'rgba(255,246,214,.05)'; for (let i = 0; i < 40; i++) ctx.fillRect(cxp + (hr() - 0.5) * rp * 1.6, cyp + (hr() - 0.5) * rp * 1.5, 1, 1); // estipulado
-    ctx.restore();
-    // costa: linha de tinta dupla
-    mapBlob(ctx, cxp, cyp, rp, seed); ctx.strokeStyle = sel ? '#e8d8a0' : 'rgba(24,18,10,.7)'; ctx.lineWidth = sel ? 2.5 : 1.4; ctx.stroke();
-    // banido hoje?
-    const banned = countryBannedToday(k);
-    if (banned) { ctx.save(); mapBlob(ctx, cxp, cyp, rp, si * 97 + 5); ctx.clip(); ctx.strokeStyle = 'rgba(200,60,50,.5)'; ctx.lineWidth = 2; for (let d = -rp * 2; d < rp * 2; d += 6) { ctx.beginPath(); ctx.moveTo(cxp + d, cyp - rp); ctx.lineTo(cxp + d + rp * 2, cyp + rp); ctx.stroke(); } ctx.restore(); }
-    // selo + nome
-    ctx.fillStyle = '#f0e8d0'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.font = `${Math.round(rp * 0.7)}px 'VT323', monospace`; ctx.fillText(c.seal, cxp, cyp - rp * 0.12);
-    ctx.font = `bold ${Math.round(rp * 0.32)}px "VT323", "Oswald", monospace`;
-    ctx.fillStyle = '#e8ddc4'; ctx.fillText(c.name.toUpperCase(), cxp, cyp + rp * 0.5);
-    si++;
-  });
-  // marcador do POSTO 7 na borda leste de Osteria
-  const om = MAP_LAYOUT.osteria; const [px7, py7] = P(om.x + om.r + 1.5, om.y);
-  ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.arc(px7, py7, 3.5, 0, 6.29); ctx.fill();
-  ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(px7, py7, 6, 0, 6.29); ctx.stroke();
-  ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", "Oswald", monospace'; ctx.textAlign = 'left'; ctx.fillText('POSTO 7', px7 + 9, py7);
+  // TERRA: pinta cada célula com a tinta chapada do dono
+  const cols = ids.map(k => shade(COUNTRIES[k].color, 2));
+  const colsSel = ids.map(k => shade(COUNTRIES[k].color, 26));
+  const selIdx = MAP_SEL ? ids.indexOf(MAP_SEL) : -2;
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+    const o = own[gy * gw + gx]; if (o < 0) continue;
+    ctx.fillStyle = o === selIdx ? colsSel[o] : cols[o];
+    ctx.fillRect(gx * step, gy * step, step, step);
+  }
+  // sombra da costa no mar (uma passada deslocada)
+  ctx.fillStyle = 'rgba(0,0,0,.28)';
+  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
+    const o = own[gy * gw + gx];
+    if (o >= 0 && (own[gy * gw + gx + 1] < 0 || own[(gy + 1) * gw + gx] < 0)) ctx.fillRect(gx * step + 2, gy * step + 3, step, step);
+  }
+  // FRONTEIRAS entre países (tinta) e COSTA (tinta grossa + fio claro)
+  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
+    const o = own[gy * gw + gx], oR = own[gy * gw + gx + 1], oB = own[(gy + 1) * gw + gx];
+    if (o === oR && o === oB) continue;
+    const coast = (o < 0) !== (oR < 0) || (o < 0) !== (oB < 0);
+    if (coast) {
+      ctx.fillStyle = 'rgba(16,12,6,.85)'; ctx.fillRect(gx * step, gy * step, step, step);
+    } else if (o >= 0 && (o !== oR || o !== oB)) {
+      ctx.fillStyle = 'rgba(24,18,10,.6)'; ctx.fillRect(gx * step + 1, gy * step + 1, step - 1, step - 1);
+    }
+  }
+  // relevo: hachuras e estipulado por país (recortado pelo dono das células)
+  const hr = makeRng(4242);
+  for (const s2 of seeds) {
+    for (let i = 0; i < 26; i++) {
+      const hx = s2.x + (hr() - .5) * s2.w * 2.2, hy = s2.y + (hr() - .5) * s2.w * 2;
+      const gi = ((hy / step) | 0) * gw + ((hx / step) | 0);
+      if (own[gi] !== s2.i) continue;
+      if (i % 2) {
+        ctx.strokeStyle = 'rgba(30,22,12,.16)'; ctx.lineWidth = 1;
+        const len = 4 + hr() * 5;
+        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * .7); ctx.stroke();
+      } else {
+        ctx.fillStyle = 'rgba(255,246,214,.06)'; ctx.fillRect(hx, hy, 2, 2);
+      }
+    }
+  }
+  // interdição do dia: hachura vermelha só nas células do país banido
+  for (const s2 of seeds) {
+    if (!countryBannedToday(s2.k)) continue;
+    ctx.fillStyle = 'rgba(200,60,50,.4)';
+    for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
+      if (own[gy * gw + gx] !== s2.i) continue;
+      if (((gx + gy) % 5) === 0) ctx.fillRect(gx * step, gy * step, step, step);
+    }
+  }
+  // seleção: contorno dourado nas bordas do país escolhido
+  if (selIdx >= 0) {
+    ctx.fillStyle = 'rgba(232,216,150,.85)';
+    for (let gy = 1; gy < gh - 1; gy++) for (let gx = 1; gx < gw - 1; gx++) {
+      if (own[gy * gw + gx] !== selIdx) continue;
+      if (own[gy * gw + gx + 1] !== selIdx || own[gy * gw + gx - 1] !== selIdx ||
+          own[(gy + 1) * gw + gx] !== selIdx || own[(gy - 1) * gw + gx] !== selIdx) ctx.fillRect(gx * step, gy * step, step, step);
+    }
+  }
+  // NOMES + BANDEIRAS
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  for (const s2 of seeds) {
+    const c = COUNTRIES[s2.k];
+    drawFlag(ctx, s2.k, s2.x, s2.y - 13);
+    ctx.font = 'bold ' + Math.max(11, Math.round(s2.w * .30)) + 'px "VT323", monospace';
+    ctx.fillStyle = 'rgba(14,10,4,.55)'; ctx.fillText(c.name.toUpperCase(), s2.x + 1, s2.y + 14);
+    ctx.fillStyle = '#efe7cd'; ctx.fillText(c.name.toUpperCase(), s2.x, s2.y + 13);
+  }
+  // marcador do POSTO 7 na fronteira leste de Osteria
+  const om = seeds[ids.indexOf('osteria')], km = seeds[ids.indexOf('kranton')];
+  if (om && km) {
+    const px7 = (om.x + km.x) / 2, py7 = (om.y + km.y) / 2;
+    ctx.fillStyle = '#c9a34a'; ctx.fillRect(px7 - 3, py7 - 3, 6, 6);
+    ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.strokeRect(px7 - 6, py7 - 6, 12, 12);
+    ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", monospace'; ctx.textAlign = 'left';
+    ctx.fillText('POSTO 7', px7 + 10, py7 + 1);
+    ctx.textAlign = 'center';
+  }
   // rosa dos ventos
-  const [rx, ry] = P(93, 92);
+  const rx = W - 44, ry = H - 40;
   ctx.strokeStyle = 'rgba(200,190,160,.4)'; ctx.lineWidth = 1;
   ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
   ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.textAlign = 'center'; ctx.fillText('N', rx, ry - 16);
-  // envelhecimento: manchas de papel, grão, vinheta queimada nas bordas
+  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.fillText('N', rx, ry - 16);
+  // envelhecimento: manchas, grão, vinheta
   const ar = makeRng(4242);
   for (let i = 0; i < 5; i++) { const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 70; const st = ctx.createRadialGradient(sx, sy, sr * 0.3, sx, sy, sr); st.addColorStop(0, 'rgba(90,70,30,0)'); st.addColorStop(1, `rgba(70,52,24,${0.05 + ar() * 0.05})`); ctx.fillStyle = st; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill(); }
   for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${0.02 + ar() * 0.04})`; ctx.fillRect(ar() * W, ar() * H, 1, 1); }
   const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
   vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(18,10,4,.6)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
-  pixelSnap(cv, 2);
 }
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -11579,11 +11805,9 @@ function openMap() {
       const rect = cv.getBoundingClientRect();
       const mx = (e.clientX - rect.left) / rect.width * cv.width;
       const my = (e.clientY - rect.top) / rect.height * cv.height;
-      const S = Math.min(cv.width, cv.height) / 100, ox = (cv.width - 100 * S) / 2, oy = (cv.height - 100 * S) / 2;
-      const lx = (mx - ox) / S, ly = (my - oy) / S;
-      let best = null, bd = 1e9;
-      COUNTRY_IDS.forEach(k => { const m = MAP_LAYOUT[k]; if (!m) return; const d = Math.hypot(lx - m.x, ly - m.y); if (d < m.r && d < bd) { bd = d; best = k; } });
-      if (best) { selectMapCountry(best); try { sfx('click'); } catch (e2) {} }
+      const G = mapGeometry(cv.width, cv.height);
+      const o = G.own[((my / G.step) | 0) * G.gw + ((mx / G.step) | 0)];
+      if (o >= 0) { selectMapCountry(G.ids[o]); try { sfx('click'); } catch (e2) {} }
     });
   }
 }
@@ -11819,6 +12043,7 @@ function drawInstThermo(temp) {   // termômetro de mercúrio; a coluna sobe com
   x.fillRect(11.5, 72 - 64 * frac, 3, 64 * frac + 2);                       // coluna de mercúrio
   x.beginPath(); x.arc(13, 81, 7.5, 0, 6.29); x.fill();                     // bulbo
   x.fillStyle = 'rgba(236,240,246,.35)'; x.fillRect(10.5, 6, 1.4, 64);      // brilho do vidro
+  pixelSnap(cv, 2);
 }
 function drawInstPulse() {        // estetoscópio: campânula + tubo + auriculares
   const cv = document.querySelector('#inst-pulse canvas'); if (!cv) return;
@@ -11832,6 +12057,7 @@ function drawInstPulse() {        // estetoscópio: campânula + tubo + auricula
   x.fillStyle = g; x.beginPath(); x.arc(20, 40, 12, 0, 6.29); x.fill();     // campânula
   x.fillStyle = '#3a362e'; x.beginPath(); x.arc(20, 40, 6.5, 0, 6.29); x.fill();
   x.fillStyle = 'rgba(236,240,246,.4)'; x.beginPath(); x.arc(16, 36, 2, 0, 6.29); x.fill();
+  pixelSnap(cv, 2);
 }
 function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -âmbar)
   const cv = document.querySelector('#inst-bio canvas'); if (!cv) return;
@@ -11850,6 +12076,7 @@ function drawInstBio(state) {     // frasco coletor K-7 (vazio | +vermelho | -â
   x.fillStyle = '#e2ddcc'; x.beginPath(); x.arc(15, 60, 4, 0, 6.29); x.fill();
   x.fillStyle = '#d8cdb0'; x.fillRect(4, 26, 22, 9);                         // etiqueta
   x.fillStyle = '#332b1f'; x.font = '8px "VT323", monospace'; x.textAlign = 'center'; x.fillText('K-7', 15, 33);
+  pixelSnap(cv, 2);
 }
 function instReturn(el, home, delay) {
   el.classList.add('busy');
@@ -11861,10 +12088,6 @@ function instReturn(el, home, delay) {
 }
 function setupInstruments() {
   const acts = {
-    'inst-lens': (el, home) => {                   // aproxima a lupa: abre o exame físico
-      el.classList.add('busy');
-      setTimeout(() => { openExam(); instReturn(el, home, 120); }, 280);
-    },
     'inst-thermo': (el, home) => {                 // segura no cidadão, apita, volta com a leitura
       el.classList.add('busy');
       setTimeout(() => {
@@ -11898,7 +12121,7 @@ function setupInstruments() {
     const el = $(id); if (!el) return;
     el.addEventListener('pointerdown', (ev) => {
       if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
-      if (shift.citizen.isSilente && id !== 'inst-bio' && id !== 'inst-lens') return;   // com o Silente, só lupa e coletor reagem
+      if (shift.citizen.isSilente && id !== 'inst-bio') return;   // com o Silente, só o coletor reage
       ev.preventDefault();
       el.setPointerCapture(ev.pointerId);
       const r = el.getBoundingClientRect();
@@ -11923,7 +12146,7 @@ function setupInstruments() {
       sfxTool('pickup');
     });
   });
-  drawInstLens(); drawInstThermo(); drawInstPulse(); drawInstBio();
+  drawInstThermo(); drawInstPulse(); drawInstBio();
 }
 function resetInstruments() {   // novo cidadão: leituras antigas somem
   const tt = $('thermo-tag'), bt = $('bio-tag');
@@ -11937,7 +12160,8 @@ function resetInstruments() {   // novo cidadão: leituras antigas somem
    Gaveta B (direita): FICHA DE EXAME e DOSSIÊ (até o cidadão).
    Ícones pixel desenhados à mão, blocos inteiros, sem antialias. */
 function drawDrawerMapa() {
-  const cv = $('dt-mapa').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-mapa'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 64, 50);
   // três painéis dobrados (zigue-zague): o do meio mais fundo
   const tones = ['#cfc4a2', '#b9ae8c', '#c8bd9a'];
@@ -11956,9 +12180,11 @@ function drawDrawerMapa() {
   for (let i = 0; i < 9; i++) x.fillRect(7 + i * 6, 34 - i * 2 - (i > 4 ? 4 : 0), 3, 2);
   x.fillStyle = '#c9a34a'; x.fillRect(56, 33, 4, 4);                                     // o POSTO 7
   x.fillStyle = 'rgba(255,246,220,.25)'; x.fillRect(3, 5, 59, 1);                        // fio de luz
+  pixelSnap(cv, 2);
 }
 function drawDrawerLupa() {
-  const cv = $('dt-lupa').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-lupa'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
   // aro de latão (octógono blocado) com vidro
   x.fillStyle = '#8a734d';
@@ -11973,23 +12199,11 @@ function drawDrawerLupa() {
   x.fillStyle = '#4a3423'; x.fillRect(31, 29, 7, 7); x.fillRect(34, 35, 7, 8); x.fillRect(36, 42, 7, 9);
   x.fillStyle = 'rgba(255,240,210,.16)'; x.fillRect(32, 30, 2, 6); x.fillRect(35, 37, 2, 6); // veio
   x.fillStyle = '#2c2115'; x.fillRect(37, 50, 6, 3);                                     // ponteira
-}
-function drawDrawerExame() {
-  const cv = $('dt-exame').querySelector('canvas'); const x = cv.getContext('2d');
-  x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
-  x.fillStyle = '#4a3423'; x.fillRect(3, 4, 40, 50);                                     // prancheta
-  x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(3, 52, 40, 2);
-  x.fillStyle = '#d8cdb0'; x.fillRect(7, 10, 32, 40);                                    // ficha
-  x.fillStyle = '#8a8a7a'; x.fillRect(15, 2, 16, 7);                                     // clipe
-  x.fillStyle = '#b9b9a9'; x.fillRect(17, 4, 12, 3);
-  x.fillStyle = 'rgba(40,32,20,.5)';                                                     // linhas do formulário
-  for (let i = 0; i < 5; i++) x.fillRect(10, 22 + i * 5, 26, 1);
-  x.fillStyle = '#963c2c'; x.fillRect(12, 12, 8, 2); x.fillRect(15, 9, 2, 8);            // cruz clínica
-  x.fillStyle = 'rgba(150,60,44,.5)'; x.fillRect(26, 12, 10, 5);                         // carimbo pequeno
-  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(7, 47, 32, 3);                             // sombra do papel
+  pixelSnap(cv, 2);
 }
 function drawDrawerLinha() {
-  const cv = $('dt-linha').querySelector('canvas'); const x = cv.getContext('2d');
+  const el = $('dt-linha'); if (!el) return;
+  const cv = el.querySelector('canvas'); const x = cv.getContext('2d');
   x.imageSmoothingEnabled = false; x.clearRect(0, 0, 46, 56);
   x.fillStyle = '#3a3428'; x.fillRect(3, 6, 40, 46);                                     // pasta
   x.fillStyle = '#2c2820'; x.fillRect(3, 6, 40, 8);                                      // lombada
@@ -12005,6 +12219,7 @@ function drawDrawerLinha() {
   // barbante amarrado
   x.fillStyle = '#8a734d'; x.fillRect(38, 24, 4, 4);
   x.fillStyle = 'rgba(138,115,77,.8)'; x.fillRect(30, 26, 8, 1); x.fillRect(40, 28, 1, 10);
+  pixelSnap(cv, 2);
 }
 function drawDeskMemo() {
   const memo = $('desk-memo'); if (!memo) return;
@@ -12044,8 +12259,7 @@ function setupDrawers() {
   document.querySelectorAll('.dtool, .drawer-front').forEach(el => { if (el.title) el.title = T(el.title); });
   const acts = {
     'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
-    'dt-lupa': { target: 'both', needsCitizen: false, fn: () => toggleInspect() },
-    'dt-exame': { target: 'stage', needsCitizen: true, fn: () => openExam() },
+    'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => openExam() },   // a lupa DE EXAME
     'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
   };
   Object.keys(acts).forEach(id => {
@@ -12081,7 +12295,7 @@ function setupDrawers() {
       sfxTool('pickup');
     });
   });
-  drawDrawerMapa(); drawDrawerLupa(); drawDrawerExame(); drawDrawerLinha();
+  drawDrawerMapa(); drawDrawerLupa(); drawDrawerLinha();
   // o comunicado em papel na mesa
   drawDeskMemo();
   const memo = $('desk-memo');
@@ -12089,6 +12303,9 @@ function setupDrawers() {
     memo.title = T(memo.title);
     memo.onclick = () => { sfxTool('paper'); showBulletin(null); };
   }
+  // a sineta pintada na mesa toca de verdade
+  const bell = $('bell-hit');
+  if (bell) bell.onclick = () => sfxTool('bell');
 }
 
 /* ---------- INSPEÇÃO COMPARATIVA ---------- */
@@ -13021,6 +13238,12 @@ $('btn-map-close').onclick = () => $('map-overlay').classList.remove('active');
 $('btn-inspect').onclick = toggleInspect;
 $('btn-exam').onclick = openExam;
 $('btn-exam-close').onclick = () => $('exam-overlay').classList.remove('active');
+// a bagagem se revista pela lupa de exame: botão dentro do próprio exame
+if ($('btn-exam-bag')) {
+  $('btn-exam-bag').textContent = T('REVISTAR BAGAGEM');
+  $('btn-exam-bag').title = T('Revistar bagagem (10 min)');
+  $('btn-exam-bag').onclick = () => { $('exam-overlay').classList.remove('active'); openBag(); };
+}
 $('btn-bag').onclick = openBag;
 $('btn-bag-close').onclick = () => $('bag-overlay').classList.remove('active');
 $('btn-lifeline').onclick = openLifeline;
