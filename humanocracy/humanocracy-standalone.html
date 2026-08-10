@@ -465,13 +465,34 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   pointer-events:none; opacity:.85;
 }
 .np-censor small { display:block; font-size:8px; letter-spacing:1px; font-weight:400; }
+/* O painel da casa é o LIVRO-CAIXA da família: caderno pautado de capa
+   dura, com lombada costurada à esquerda e cabeçalho gravado. */
 .home-panel {
-  background-color: var(--panel); border:1px solid var(--ink-dim);
-  background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
-  padding:18px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;
+  position:relative;
+  background-color:#22241c; border:1px solid #0a0b07;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 25px, rgba(143,138,122,.07) 25px 26px),
+    linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  padding:18px 18px 18px 30px; display:flex; flex-direction:column; gap:12px; overflow-y:auto;
+  box-shadow: inset 0 0 40px rgba(0,0,0,.5), 8px 10px 0 rgba(0,0,0,.4);
 }
-.home-title { font-family:var(--font-display); font-weight:600; text-transform:uppercase; color:var(--accent2); letter-spacing:2px; font-size:13px; border-bottom:1px solid var(--ink-dim); padding-bottom:8px; }
-.fam-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dotted rgba(143,138,122,.3); }
+.home-panel::before {   /* lombada de capa dura com costura */
+  content:''; position:absolute; left:0; top:0; bottom:0; width:16px; z-index:1;
+  background:linear-gradient(90deg, #3a2c1c, #241a10 60%, rgba(0,0,0,.5));
+  box-shadow: inset -2px 0 4px rgba(0,0,0,.6);
+}
+.home-panel::after {    /* pontos da costura da lombada */
+  content:''; position:absolute; left:6px; top:14px; bottom:14px; width:3px; z-index:2;
+  background:repeating-linear-gradient(180deg, rgba(201,163,74,.5) 0 5px, transparent 5px 15px);
+}
+.home-title {
+  font-family:var(--font-display); font-weight:700; text-transform:uppercase; color:#e2cf92;
+  letter-spacing:2.5px; font-size:13px; padding-bottom:8px;
+  border-bottom:3px double rgba(201,163,74,.45);
+  text-shadow:0 1px 0 rgba(255,246,220,.1), 0 -1px 1px rgba(0,0,0,.6);
+}
+.fam-row { display:flex; justify-content:space-between; padding:4px 2px; border-bottom:1px dotted rgba(143,138,122,.34); }
+.fam-row:hover { background:rgba(201,163,74,.06); }
 .fam-status-ok { color:#8fb573; }
 .fam-status-bad { color:#c96a4f; }
 .fam-status-dead { color:#666; text-decoration:line-through; }
@@ -1477,11 +1498,31 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
 #screen-night.active { display:flex; align-items:center; justify-content:center; }
 .night-inner { max-width:560px; width:94vw; text-align:center; display:flex; flex-direction:column; gap:18px; align-items:center; }
 .night-hour { font-family:var(--font-display); font-weight:600; color:#6b6557; letter-spacing:3px; font-size:15px; font-variant-numeric:tabular-nums; }
+/* O olho mágico é uma peça de LATÃO rosqueada na porta: anel serrilhado,
+   corrente de segurança pendurada ao lado e a plaqueta do apartamento. */
 .peephole-ring {
-  width:190px; height:190px; border-radius:50%;
-  background: radial-gradient(circle, #1a1812 60%, #000 72%);
-  box-shadow: 0 0 0 8px #0d0c09, 0 0 60px rgba(0,0,0,.9) inset, 0 0 30px rgba(201,163,74,.06);
+  position:relative; width:190px; height:190px; border-radius:50%;
+  background:
+    radial-gradient(circle, #1a1812 58%, #0a0906 66%, transparent 67%),
+    conic-gradient(#8a6a2e 0 2deg, #5a4318 2deg 4deg);   /* serrilha do aro */
+  box-shadow:
+    0 0 0 4px #3a2c14, 0 0 0 7px #14120c, 0 6px 14px rgba(0,0,0,.7),
+    inset 0 0 60px rgba(0,0,0,.9), inset 0 3px 0 rgba(255,240,200,.12);
   display:flex; align-items:center; justify-content:center;
+}
+.peephole-ring::before {  /* corrente de segurança na porta, à esquerda */
+  content:''; position:absolute; left:-92px; top:34px; width:76px; height:5px;
+  background:repeating-linear-gradient(90deg, #7a7c68 0 5px, #2a2c22 5px 8px);
+  box-shadow:0 1px 0 rgba(0,0,0,.6);
+  transform:rotate(6deg); border-radius:3px;
+}
+.peephole-ring::after {   /* plaqueta de latão com o número do apartamento */
+  content:'14-B'; position:absolute; right:-104px; top:16px;
+  font-family:var(--font-display); font-weight:700; font-size:15px; letter-spacing:3px;
+  color:#241b08; background:linear-gradient(180deg,#c9a34a,#8a6a2e);
+  padding:5px 11px; border:1px solid #241b08;
+  box-shadow: inset 0 1px 0 rgba(255,240,200,.4), 2px 3px 0 rgba(0,0,0,.5);
+  transform:rotate(-2deg);
 }
 .peephole {
   width:150px; height:150px; border-radius:50%; overflow:hidden;
