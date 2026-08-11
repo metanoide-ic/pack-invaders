@@ -73,6 +73,43 @@ contraditórios entre si (Volume 9, tabelas).
 - **Dia 47 — Havel Krantic:** "Nós já conversamos há duas semanas. O senhor usava uma
   caneca azul lascada na borda." Você nunca o viu. A caneca azul está na sua mesa.
 
+## 5.3b Os rostos que voltam — o elenco especial (implementado)
+
+Um posto de fronteira não é um desfile de estranhos: é uma **estrada**, e quem
+vive de estrada passa de novo. Seis personagens têm **aparência própria** (o
+campo `look` sobrescreve o retrato procedural, com semente fixa: o mesmo rosto
+volta idêntico), **dias marcados** e um arco que só se lê ao longo dos quatro
+regimes. Eles ocupam uma **faixa paralela** à dos `ENCOUNTERS` — um dia pode
+ter os dois — e são o principal instrumento da tese do jogo: *o mesmo rosto sob
+quatro governos mostra o que cada governo faz com um rosto.*
+
+| Quem | Dias | Sinal visual | Arco |
+|---|---|---|---|
+| **Nadja Vell**, a mulher da estrada | 12 · 21 · 29 · 37 · 44 | delineador pesado (`kohl`), batom, ruiva, brinco, casaco vinho | trabalha as duas margens; a Lei de Higiene Moral a criminaliza; no d37 a delegacia rapou seu cabelo "por higiene"; no d44 não tem mais papel nenhum e sabe o que há atrás dela |
+| **Anselmo "Ferro" Krast**, o que fala verdade | 16 · 23 · 31 · 38 · 46 | suor na testa, olheiras, feridas de quem se coça, magro | cabo da Guerra dos Doze Dias, viciado no éter que o próprio exército distribuía. **Cada delírio dele é uma verdade do jogo dita antes da hora** — o não-piscar, a mão sem temperatura, o atentado da estação. Ninguém anota. No d46 está sóbrio, e é pior |
+| **Padre Emil Ostrov**, o homem sem prédio | 20 · 28 · 40 | colarinho clerical branco, cabelo branco, óculos, casaco preto | a igreja fecha em três etapas — o sino, o telhado, o nome. No fim ele carrega os livros de batismo, porque são nomes com data e alguém vai precisar |
+| **Sibila Marek**, a voz proibida | 25 · 33 · 42 | chapéu, batom, casaco roxo; depois nada disso | irmã do barbeiro Joss Marek. Três canções entram numa lista; o cartório sugere que ela troque uma letra do nome e ela aceita, porque uma letra pela vida inteira é barato |
+| **Aurel Vantz**, o censor | 17 · 26 · 35 · 43 | uniforme do Ministério, óculos redondos, impecável | o único da fila que já **leu tudo o que você escreveu**. Educado, exato, e ele cita a sua média de segundos por decisão. No d43 atravessa com a permissão vencida — que ele mesmo redigiu |
+| **Ruven Sath, O Contador** | *convocado* | rosto **perfeitamente simétrico**, não pisca, pele fria, chapéu-coco | ver abaixo |
+
+### O Contador — o personagem que o jogador convoca
+
+Não está na agenda de ninguém. Ele aparece quando **dois Alternados atravessam
+o guichê num mesmo turno**: três dias depois, `S.flags.contadorDay` o coloca na
+fila, com prioridade sobre qualquer aparição agendada. Ele não puxa arma nem
+cinturão — **espera**. Aprovar *ou* rejeitar é responder à pergunta dele
+("descuido ou escolha?"), e a conta fecha: final `contador`. Só **DETER**
+resolve. Depois disso o gatilho é rearmado — dois de novo, ele volta.
+
+A caracterização é o único lugar do jogo em que a "cara de IA" é o efeito
+**pretendido**: `f.simetrico` zera toda a assimetria que `faceLayout` distribui
+por todo rosto humano. O jogador sente que algo está errado sem saber dizer o
+quê, porque o que está errado é a **ausência do erro**.
+
+Implementação: `SPECIALS` / `specialsForDay(day)` em `data.js`;
+`specialForToday()` e o despacho em `nextCitizen()`; traços em
+`paintTraits()` (faces.js); QA em `tools/qa/specials.js`.
+
 ## 5.4 O elenco expandido (18 novos, proporcional ao Papers, Please)
 
 Papers, Please tem ~21 personagens fixos (família + equipe + entrantes nomeados) em 31

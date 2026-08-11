@@ -207,11 +207,16 @@ const SCRIPTED_NEWS = {
   12: { h: 'MEHRVOLK ASSUME O GOVERNO DE OSTERIA', b: 'Com apoio de parte do exército e do Parlamento em pânico, o movimento Mehrvolk assumiu o poder na madrugada. Primeiro decreto: "A verdade agora tem um só nome." Jornais de oposição amanheceram fechados. Este jornal foi renomeado por ordem administrativa.', m: ['Novos uniformes distribuídos aos postos.', 'Hino atualizado. Decorar até sexta.'] },
   14: { h: 'ÉDITO DE PUREZA Nº 2 ENTRA EM VIGOR', b: 'Cidadãos de origem núlia e bahari deverão portar Certificado de Ancestralidade. O Instituto Lantraviano de Fenotipia afirma que "certas linhagens apresentam 12% mais incidência de substituição". O estudo não foi revisado por pares. Hospitais registram filas de pessoas tentando provar quem são.', m: ['Denúncias anônimas dobram.', 'Criança de 9 anos denuncia o próprio professor.'] },
   17: { h: 'DEZ DETIDOS EM OPERAÇÃO "SANGUE LIMPO"', b: 'O governo comemora a captura de "dez infiltrados". Documentos vazados sugerem que ao menos sete eram humanos com exames alterados. O Ministério nega. As famílias não foram informadas do paradeiro dos detidos.', m: ['Escolas adotam cartilha "Conheça seu vizinho".', 'Racionamento de carvão.'] },
+  18: { h: 'CARTILHA DE SINAIS FÍSICOS CHEGA ÀS ESCOLAS', b: 'O Instituto de Higiene distribuiu a doze mil salas de aula a cartilha "Olhe as Mãos de Quem Te Abraça". As crianças aprendem sete sinais; o sétimo é "a pessoa demora a responder quando você a chama pelo nome". Pediatras alertam que crianças tímidas passaram a ser levadas a exame. O Ministério responde que "cuidado nunca é excesso".', m: ['Estoque de espelhos esgota em Valgrado.', 'Professora afastada por "não olhar nos olhos da turma".'] },
   21: { h: 'JORNALISTA DESAPARECE APÓS REPORTAGEM', b: 'Vela Odim, autora da série "Os Falsos Positivos", está desaparecida há três dias. O governo afirma que ela "viajou por vontade própria". Colegas afirmam que sua casa foi revirada. A LumenCorp negou comentar os erros do VERITAS-9 citados na reportagem.', m: ['Cartazes novos: "Quem cala, protege."', 'Pão racionado: 1 unidade por família.'] },
+  23: { h: 'FILA DE REVALIDAÇÃO PASSA A NOITE NA CALÇADA', b: 'O prazo do Édito de Pureza vence sexta e os cartórios atendem duzentas pessoas por dia. Uma senhora de setenta e um anos está na fila desde terça para provar que nasceu onde nasceu. "Eu tenho a certidão", ela diz. "Eles querem a certidão da certidão."', m: ['Cobertores vendidos a preço triplo perto do cartório.', 'Dois mortos de frio na fila do bloco 9.'] },
   24: { h: 'CIENTISTAS CONTESTAM A FENOTIPIA — E SÃO PRESOS', b: 'Quatorze pesquisadores assinaram carta afirmando que "nenhuma característica física define um Alternado". Foram detidos por "sabotagem epistemológica". Universidades entram em greve. O governo responde: "A ciência do inimigo também é inimiga."', m: ['Fila do posto leste bate recorde.', 'Inverno chega mais cedo.'] },
   27: { h: 'EXPLOSÃO NA ESTAÇÃO CENTRAL: 31 MORTOS', b: 'Um atentado destruiu a Estação Central de Valgrado. O governo culpa a resistência. A resistência culpa "agentes do próprio regime". Um sobrevivente jura que viu o autor "sorrir com a boca errada". Ninguém sabe o que isso significa. Ninguém pergunta duas vezes.', m: ['Luto oficial de três dias.', 'Trens suspensos.'] },
+  29: { h: 'LEI DE HIGIENE MORAL CRIA O "REGISTRO DE CONDUTA"', b: 'O decreto obriga mulheres solteiras em trânsito de fronteira a portar atestado de conduta compatível, assinado pela delegacia do domicílio. Não há dispositivo equivalente para homens. Um jurista do próprio regime perguntou, em memorando interno, o que exatamente se está medindo. Foi transferido.', m: ['Hotéis da estrada obrigados a manter livro de hóspedes visível.', 'Delegado de Miralta condecorado.'] },
   30: { h: 'GOLPE: CONSELHO POPULAR TOMA O PODER', b: 'Unidades do exército derrubaram o governo Mehrvolk durante a madrugada. O Conselho Popular declara que "os Alternados são uma invenção do capital para disciplinar trabalhadores". Os laboratórios estatais, entretanto, seguem funcionando — agora sob nova bandeira. Todos os documentos antigos exigem revalidação.', m: ['Estátuas derrubadas antes do café.', 'Novo hino. Decorar até sexta.'] },
   33: { h: 'EX-AGENTES DO REGIME VIRAM "ELEMENTOS INDESEJÁVEIS"', b: 'Funcionários do governo anterior tentam deixar o país em massa. O Conselho promete julgamentos populares. Nas filas, ninguém mais sabe qual carimbo é o certo — e o Conselho também não. Um inspetor foi preso por aplicar a lei da semana passada.', m: ['Açúcar desaparece dos mercados.', 'Boato: "Alternados não suportam açúcar." Falso. Talvez.'] },
+  35: { h: 'CONSELHO ANUNCIA O "CADASTRO ÚNICO DO POVO"', b: 'Todos os arquivos dos dois regimes anteriores serão unificados numa só ficha por cidadão. O Conselho garante que "nada do que o regime anterior anotou será usado contra os trabalhadores" — e não explica por que, então, nada foi queimado. As fichas antigas chegaram em caminhões, aos milhares, intactas.', m: ['Papel racionado: cadastro tem prioridade.', 'Arquivo Nacional contrata 400 escreventes.'] },
+  41: { h: 'TRÊS POSTOS DE FRONTEIRA DEIXAM DE RESPONDER', b: 'Os postos 3, 11 e 12 não enviam relatório há quatro dias. O Conselho fala em "dificuldade de comunicação". Um motorista que passou pelo 11 diz que o guichê estava aberto, a luz acesa e o café ainda morno — e nenhum inspetor. A fila do lado de fora continuava organizada, em silêncio, esperando.', m: ['Rádio estatal reduz transmissão para 6h por dia.', 'Combustível racionado nas estradas do leste.'] },
   37: { h: 'O SCANNER OFICIAL ERA DEFEITUOSO, ADMITE MINISTÉRIO', b: 'Após seis dias de triagem obrigatória por detector biológico, o Conselho admite que 40% das unidades estavam descalibradas. Volta a valer a carteira sanitária — a mesma que o decreto anterior chamou de "papel inútil". As pessoas na fila riem. Depois choram.', m: ['LumenCorp transfere sede para Linestan.', 'Apagões programados: 4h por dia.'] },
   39: { h: 'O ÉDITO DE PUREZA NUNCA EXISTIU NO PAPEL', b: 'Um funcionário do arquivo central, fugindo do país, deixou uma pasta para trás: não há registro de votação, sessão ou assinatura para o Édito de Pureza nº 2. O "Instituto Lantraviano de Fenotipia" tinha um único funcionário — o mesmo que redigiu o decreto. Milhares de certificados de ancestralidade foram emitidos, negados e cobrados com base em um estudo que nunca existiu, para uma lei que nunca foi votada. Os postos de fronteira seguem exigindo o documento. Ninguém revogou nada. Ninguém sabe mais quem poderia.', m: ['O funcionário fugitivo não foi encontrado.', 'Cartórios seguem emitindo certificados. Ninguém explica com base em quê.'] },
   40: { h: 'FRONTEIRAS DO NORTE CAÍRAM. NINGUÉM GOVERNA LÁ.', b: 'Refugiados de Kranton e Krestov relatam cidades sem polícia, sem energia e sem notícias. "Não fugimos deles", disse uma mulher, "fugimos de nós mesmos". O Conselho não comenta. O Conselho não é encontrado para comentar.', m: ['Hospitais lotados.', 'A rádio estatal transmite estática entre 14h e 16h.'] },
@@ -462,6 +467,176 @@ const ENCOUNTERS = {
   },
 };
 
+
+/* ============================================================
+   OS ROSTOS QUE VOLTAM — personagens especiais
+   ------------------------------------------------------------
+   Um posto de fronteira não é um desfile de estranhos: é uma
+   estrada, e quem vive de estrada passa de novo. Estes seis têm
+   aparência própria (look sobrescreve o retrato procedural),
+   voltam em dias marcados e mudam junto com o regime — o mesmo
+   rosto sob quatro governos é a melhor forma de mostrar o que
+   cada governo faz com um rosto.
+
+   Eles ocupam uma FAIXA PARALELA à dos ENCOUNTERS: um dia pode
+   ter os dois. `dias` mapeia dia → aparição.
+     valid ......... papéis em ordem
+     forcedDisc .... discrepância obrigatória (ver DISC_TYPES)
+     fala .......... o que ele diz ao chegar ao vidro
+     nota .......... papel que fica com você depois
+     killer ........ se não for detido, você morre
+     req ........... só aparece se a flag existir no estado
+   ============================================================ */
+const SPECIALS = {
+  /* ---- NADJA VELL — a mulher da estrada ----
+     Trabalha as duas margens da fronteira porque a fronteira é onde
+     há dinheiro e caminhão. Cada regime inventa uma palavra nova para
+     ela; nenhum inventa uma para os homens da fila. */
+  nadja: {
+    nome: 'Nadja Vell', pais: 'kranton', sexo: 'f', etnia: 'nulio', profissao: 'costureira',
+    look: {
+      skin: 5, hair: 6, hairStyle: 1, eyes: 3, mouth: 1, brow: 1, faceW: 1,
+      glasses: false, earring: true, hat: 0, beard: 0, idade: 31, rugas: false,
+      build: 0, height: 0.25, girth: 0.05,
+      coat: '#5a2f3a', scarf: '#a86a44', batom: true, kohl: true, fseed: 811324,
+    },
+    dias: {
+      12: { motivo: 'trabalho', valid: true,
+            fala: 'Costureira, está escrito aí. Eu costuro, sim — de madrugada, no quarto dos fundos do Hotel Vlask, e o que eu costuro é a minha própria roupa depois. O senhor quer que eu escreva isso no formulário? Cabe?' },
+      21: { motivo: 'trabalho', valid: true,
+            fala: 'Hoje o guarda do outro lado quis metade. Metade de quê, eu perguntei. Ele riu. É sempre metade de alguma coisa, com vocês. Com o senhor ainda não foi. Anota aí que eu reparei.' },
+      29: { motivo: 'trabalho', valid: false, forcedDisc: 'expired',
+            fala: 'Venceu ontem. Eu sei. Eu ia renovar, mas a Lei de Higiene Moral agora pede atestado de conduta compatível — e quem assina o atestado é o delegado que me para na estrada toda terça. O senhor entende o desenho.',
+            nota: { texto: 'Se um dia precisarem de um quarto sem registro, Hotel Vlask, porta 4. — N.V.', tipo: 'resistencia_contato' } },
+      37: { motivo: 'transito', valid: true,
+            fala: 'Cortaram meu cabelo na delegacia. Disseram que era higiene. Foi só pra eu ser reconhecida na rua, e funciona: hoje ninguém me olha na cara. É quase um descanso. Quase.',
+            look: { hair: 0, hairStyle: 0, batom: false, earring: false, coat: '#33302a', scarf: null } },
+      44: { motivo: 'imigracao', valid: false, forcedDisc: 'wrongSeal',
+            fala: 'Não tenho o papel. Não vou ter. Estão levando as mulheres do Vlask desde quinta e ninguém volta pra contar pra onde. O senhor pode carimbar ou pode não carimbar — mas o senhor sabe o que tem atrás de mim.',
+            look: { hair: 0, hairStyle: 0, batom: false, earring: false, coat: '#33302a', scarf: null, rugas: true } },
+    },
+  },
+
+  /* ---- FERRO — o que fala verdade e ninguém acredita ----
+     Cabo da Guerra dos Doze Dias, dependente do éter de campanha que o
+     próprio exército distribuía. Delira. E acerta. */
+  ferro: {
+    nome: 'Anselmo Krast', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'operário(a)',
+    look: {
+      skin: 0, hair: 4, hairStyle: 2, eyes: 0, mouth: 2, brow: 0, faceW: 0,
+      glasses: false, hat: 0, beard: 2, idade: 44, rugas: true,
+      build: 0, height: -0.15, girth: 0, coat: '#403428', scarf: null,
+      suado: true, olheiras: true, feridas: true, fseed: 20941,
+    },
+    dias: {
+      16: { motivo: 'transito', valid: true,
+            fala: 'Eu vi. Na estação. Um homem com a cara certinha demais e a mão fria — apertou a minha mão e a mão dele não tinha temperatura, entende? NÃO TINHA. Escreve aí. Escreve aí que o Ferro avisou, e a data.' },
+      23: { motivo: 'transito', valid: true,
+            fala: 'Eles não piscam. Todo mundo pisca. Você pisca, eu pisco — eu pisco até demais. Eles não. Anota: p-i-s-c-a-r. Vão te mandar um papel dizendo isso daqui a um mês, e vão dizer que descobriram sozinhos.' },
+      31: { motivo: 'trabalho', valid: false, forcedDisc: 'photoMismatch',
+            fala: 'A foto? Essa foto é de antes. Eu era outro. Não do jeito que eles trocam, não — do jeito normal, do jeito que a gente vira outro sozinho. O senhor também está virando. Já reparou na sua letra ultimamente?' },
+      38: { motivo: 'transito', valid: true,
+            fala: 'Dia 27 eu falei da estação. Falei ANTES. Ninguém escreveu. Agora tem placa de bronze lá com nome de trinta e quatro pessoas e não tem uma linha dizendo que o Ferro falou. Tudo bem. Não é o meu nome que eu queria salvar.' },
+      46: { motivo: 'imigracao', valid: true,
+            fala: 'Acabou o éter. Faz nove dias. E olha que coisa: sóbrio é pior. Sóbrio eu vejo que tudo que eu dizia era verdade e que eu era o único jeito que a verdade tinha de aparecer aqui — bêbado, na boca de um louco, pra ninguém precisar acreditar.',
+            look: { suado: false, feridas: false, olheiras: true } },
+    },
+  },
+
+  /* ---- PADRE OSTROV — o homem sem prédio ----
+     A igreja fecha em três etapas: primeiro tiram o sino, depois o
+     telhado, depois o nome. Ele fica. */
+  ostrov: {
+    nome: 'Emil Ostrov', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'professor(a)',
+    look: {
+      skin: 1, hair: 7, hairStyle: 2, eyes: 4, mouth: 0, brow: 1, faceW: 1,
+      glasses: true, hat: 0, beard: 0, idade: 67, rugas: true,
+      build: 0, height: 0.05, girth: 0.1, coat: '#1c1c20', colarinho: true, fseed: 55127,
+    },
+    dias: {
+      20: { motivo: 'visita', valid: true,
+            fala: 'Vou enterrar um homem em Kranton. A profissão no papel diz professor porque o cartório novo não tem mais a palavra padre na lista. Eu ensino, é verdade. Ensino as pessoas a morrer. Sempre foi uma matéria mal avaliada.' },
+      28: { motivo: 'transito', valid: false, forcedDisc: 'contradiction',
+            fala: 'Escrevi trânsito porque não sabia o que escrever. Tiraram o sino na terça. Um sino de mil e oitocentos quilos, e o caminhão que veio buscar tinha um formulário em duas vias. Eu assinei as duas. Que mais eu ia fazer, inspetor? Recusar o papel?' },
+      40: { motivo: 'imigracao', valid: true,
+            fala: 'Levo os livros de batismo. É a única coisa que sobrou e é a coisa certa: são nomes com data, e vão precisar disso depois — quando alguém perguntar quem existia aqui. Se um dia alguém perguntar. Reze para que alguém pergunte.',
+            look: { rugas: true, girth: 0 } },
+    },
+  },
+
+  /* ---- SIBILA MAREK — a voz que foi proibida antes da pessoa ----
+     Irmã do barbeiro Joss Marek. Cantava nos rádios dos três países. */
+  sibila: {
+    nome: 'Sibila Marek', pais: 'osteria', sexo: 'f', etnia: 'mestico', profissao: 'comerciante',
+    look: {
+      skin: 1, hair: 0, hairStyle: 3, eyes: 0, mouth: 1, brow: 1, faceW: 1,
+      glasses: false, earring: true, hat: 2, beard: 0, idade: 38, rugas: false,
+      build: 1, height: 0.1, girth: 0.15, coat: '#4a2f52', scarf: '#9a7a38',
+      batom: true, fseed: 39018,
+    },
+    dias: {
+      25: { motivo: 'trabalho', valid: true,
+            fala: 'Meu irmão corta cabelo, eu canto. Os dois ofícios são a mesma coisa: a pessoa senta, fecha os olhos e conta tudo. A diferença é que ninguém nunca prendeu um barbeiro por causa do refrão.' },
+      33: { motivo: 'trabalho', valid: false, forcedDisc: 'nameMismatch',
+            fala: 'O nome no papel novo está errado de propósito. Sibila Marek está numa lista de repertório incompatível — três canções, inspetor, e uma delas é sobre chuva. O cartório sugeriu que eu passasse a ser Sibila Marec, com c. Aceitei. Uma letra pela vida inteira é barato.',
+            look: { hat: 0, coat: '#38332e', scarf: null } },
+      42: { motivo: 'imigracao', valid: true,
+            fala: 'Ontem cantei num porão para nove pessoas e um deles chorou de um jeito que me assustou: sem barulho e sem mexer o rosto. Perguntei se estava tudo bem. Ele disse que estava aprendendo a chorar. Foi assim que ele disse, inspetor. Aprendendo.',
+            look: { hat: 0, coat: '#38332e', scarf: null, rugas: true, batom: false } },
+    },
+  },
+
+  /* ---- AUREL VANTZ — o censor ----
+     O único homem da fila que já leu tudo que você escreveu. Educado. */
+  vantz: {
+    nome: 'Aurel Vantz', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'burocrata',
+    look: {
+      skin: 0, hair: 0, hairStyle: 0, eyes: 3, mouth: 0, brow: 0, faceW: 1,
+      glasses: true, hat: 0, beard: 0, idade: 49, rugas: false,
+      build: 1, height: 0, girth: 0.2, uniformSet: 'osteria', fseed: 70233,
+    },
+    dias: {
+      17: { motivo: 'trabalho', valid: true,
+            fala: 'Bom dia. Não precisa se apressar por minha causa — eu, de todos, sei quanto tempo leva fazer isto direito. Trinta e um segundos foi a sua média na semana passada. É um bom número. Bons números chamam atenção, inspetor, nos dois sentidos.' },
+      26: { motivo: 'trabalho', valid: true,
+            fala: 'Reparei que o senhor rejeitou o senhor Almedra e depois hesitou. A hesitação também consta: existe um campo para ela no meu formulário. Não se preocupe — hesitar não é crime. É só um dado.' },
+      35: { motivo: 'trabalho', valid: true,
+            fala: 'Mudei de departamento. Antes eu lia o que o senhor escrevia; agora leio o que escrevem SOBRE o senhor. É um material mais curto e muito menos interessante. Diga: o senhor dorme bem?',
+            look: { uniformSet: 'lantravia' } },
+      43: { motivo: 'imigracao', valid: false, forcedDisc: 'expired',
+            fala: 'Sim. Eu. Com a permissão vencida. Percebe a piada? Eu redigi este formulário. Escrevi a linha que agora me impede de passar, numa terça-feira, com café frio, sem pensar num rosto sequer. Carimbe o que o senhor achar justo, inspetor. Eu venho ensinando o senhor a não achar nada.',
+            look: { uniformSet: null, coat: '#2e2a24', rugas: true } },
+    },
+  },
+
+  /* ---- O CONTADOR — o que vem cobrar ----
+     Não está no roteiro do Ministério nem no de ninguém. Aparece três
+     dias depois de um turno em que DOIS Alternados atravessaram o seu
+     guichê. Vem conferir a conta. Se não for detido, ele a fecha. */
+  contador: {
+    nome: 'Ruven Sath', pais: 'linestan', sexo: 'm', etnia: 'osano', profissao: 'burocrata',
+    req: 'contadorDay', killer: true,
+    look: {
+      skin: 5, hair: 5, hairStyle: 0, eyes: 3, mouth: 0, brow: 0, faceW: 1,
+      glasses: false, hat: 1, beard: 0, idade: 40, rugas: false,
+      build: 1, height: 0.4, girth: 0, coat: '#16181c', scarf: null,
+      simetrico: true, semPiscar: true, peleFria: true, fseed: 100002,
+    },
+    fala: 'Boa tarde. Dois, no dia %DIA%. Eu não venho reclamar — reclamar é coisa de quem espera resposta. Venho só conferir se foi descuido ou se foi escolha. Olhe bem para mim, inspetor. Com calma. Nós temos o tempo que o senhor tiver.',
+    nota: null,
+  },
+};
+const SPECIAL_IDS = Object.keys(SPECIALS);
+/* dia -> [{id, sp, ap}] : quem passa hoje e em que versão */
+function specialsForDay(day) {
+  const out = [];
+  for (const id of SPECIAL_IDS) {
+    const sp = SPECIALS[id];
+    if (sp.dias && sp.dias[day]) out.push({ id, sp, ap: sp.dias[day] });
+  }
+  return out;
+}
+
 /* ---------- EVENTOS DE CASA ---------- */
 const HOME_EVENTS = {
   4:  { texto: 'Seu filho, Tomi, acordou tossindo. Vessa acha que é o frio. Sua mãe acha que é "outra coisa" e não explica o quê.', efeito: null },
@@ -470,18 +645,21 @@ const HOME_EVENTS = {
   13: { texto: 'Distribuíram bandeiras novas no seu bloco. O vizinho que não pendurou a dele recebeu uma visita à noite. Hoje a bandeira dele é a maior do prédio.', efeito: null },
   15: { texto: 'A escola de Dario exigiu o Certificado de Ancestralidade dele — "pendência de linhagem materna". Ele ficou no portão. Vessa passou a manhã no cartório e voltou com um número de protocolo e nenhum papel.', efeito: null },
   17: { texto: 'Sua mãe rasgou o formulário de ancestralidade. "Eu SEI quem eu sou." Vessa colou os pedaços de madrugada, chorando baixinho para ninguém ouvir.', efeito: null },
+  18: { texto: 'Tomi voltou da escola com a cartilha nova e pediu para ver as suas mãos. Olhou com cuidado, contou os calos e disse: "Passou." Depois riu, porque para ele era um jogo. Vessa não riu. Você também não conseguiu.', efeito: null },
   20: { texto: 'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.', efeito: null },
   22: { texto: 'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.', efeito: null },
   24: { texto: 'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.', efeito: null },
   26: { texto: 'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?', efeito: null },
   28: { texto: 'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.', efeito: null },
   30: { texto: 'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."', efeito: null },
+  32: { texto: 'Trocaram o retrato da parede do saguão pela terceira vez em dois meses. O prego é o mesmo, o buraco é o mesmo, só o rosto muda. Sua mãe passou por ele sem olhar e comentou: "Aquele prego já viu mais governo do que eu."', efeito: null },
   33: { texto: 'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.', efeito: null },
   35: { texto: 'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.', efeito: null },
   38: { texto: 'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.', efeito: null },
   40: { texto: 'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.', efeito: null },
   31: { texto: 'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.', efeito: 'aluguel_maior' },
   36: { texto: 'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?', efeito: null },
+  41: { texto: 'Dario chegou tarde e com terra no casaco. Disse que ajudou a carregar caixas na estação. Não há mais trens na estação desde o dia 27. Você não perguntou de novo — e passou a noite calculando há quanto tempo o seu filho aprendeu a mentir para te proteger.', efeito: null },
   42: { texto: 'Tomi perguntou no jantar: "Pai, se trocarem você, eu vou perceber?" Ninguém riu. Ninguém respondeu. O relógio da cozinha nunca fez tanto barulho.', efeito: null },
   45: { texto: 'Vessa fez as malas. "Quando isso acabar, a gente atravessa também. Do outro lado deve ser igual — mas pelo menos é longe." Você concorda. Concordar é mais fácil.', efeito: null },
   46: { texto: 'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.', efeito: null },
@@ -497,6 +675,10 @@ const ENDINGS = {
   morto: {
     t: 'FINAL — O GUICHÊ FICOU ABERTO',
     b: 'Você viu. Deu tempo de ver: a mão entrando no casaco, o metal, o segundo em que ainda dava.\n\nO Ministério registrou o incidente em duas linhas. "Falha de reação do agente." O posto reabriu no dia seguinte, com outro nome na escala — o mesmo formulário, a mesma cadeira, a mesma altura de balcão.\n\nVessa recebeu uma carta padronizada com o seu número de matrícula e um erro de digitação no sobrenome. O rádio disse que a fronteira estava mais segura do que nunca.\n\nNinguém no país soube o seu nome. Do outro lado do vidro, alguém continua carimbando.',
+  },
+  contador: {
+    t: 'FINAL — A CONTA FECHADA',
+    b: 'Ele não levantou a voz e não puxou nada do casaco. Só esperou o carimbo descer, como quem confere um número numa coluna.\n\n"Escolha, então", ele disse. "Obrigado pela franqueza."\n\nNão houve tiro que alguém tenha ouvido. Houve uma linha a menos no livro de ponto e uma caneca de café ainda morna sobre a mesa, que o turno da tarde lavou sem perguntar de quem era.\n\nDois passaram pelo seu guichê num único dia. Ele veio conferir se tinha sido descuido ou escolha — e você respondeu. É a única pergunta que este trabalho faz de verdade, e ela só é feita uma vez.\n\nAmanhã o posto abre no horário. A fila não vai notar.',
   },
   prisao: {
     t: 'FINAL — O FORMULÁRIO 77-B',

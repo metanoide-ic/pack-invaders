@@ -114,3 +114,30 @@ Alternados** constroem perfis do jogador a partir da Memória do Mundo. Manifest
 O desfecho não depende só do que você fez — depende de **quem você se tornou aos olhos
 de cada observador**. Ninguém observa sem ser observado. Essa é a tese do jogo, e todos
 os sistemas convergem para ela.
+
+## 7.8 Arquivo, autosave e a morte que custa um dia
+
+Três camadas de gravação, cada uma com um papel narrativo diferente:
+
+- **Autosave** (`humanocracy_save_v1`) — gravado ao fim de cada expediente. É o
+  `RETOMAR TURNO` do título. Um só, sempre o mais recente.
+- **Instantâneo do dia** (`humanocracy_daysnap_v1`) — tirado no **início** de
+  cada dia, em `startDay()`, antes do primeiro cidadão.
+- **Cadernetas** (`humanocracy_slots_v1`) — **oito** arquivos manuais na máquina
+  do jogador, apresentados como uma prateleira de cadernetas de ponto do
+  Ministério: capa dura, lombada costurada, número gravado, etiqueta
+  datilografada com dia, regime, data do mundo e saldo, e um carimbo
+  ARQUIVADA. A caderneta vazia é uma capa em branco. Abre pelo título
+  (só carregar) e pela pausa (gravar, regravar, abrir, descartar).
+
+**Morrer não encerra a campanha.** O corpo é do inspetor; o posto é do Estado, e
+o Estado reabre no horário. Nos finais de morte — `morto` (atentado),
+`contador` (a conta fechada) e `silente` (você olhou) — a tela de encerramento
+ganha o botão **REABRIR O DIA N — 08:00**, que restaura o instantâneo da manhã.
+O jogador perde o expediente, não os 48 dias.
+
+Os finais de **escolha** continuam sendo finais: prisão, resistência, silêncio,
+funcionário, dúvida, família. Aqueles ele escolheu, e o jogo não os desfaz.
+
+Implementação: `snapDay()`, `reopenDay()`, `slotsRead/slotWrite/slotLoad/slotClear`,
+`openSlots(modo)` e `renderSlots()` em `game.js`; QA em `tools/qa/saves.js`.

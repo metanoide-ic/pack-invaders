@@ -34,6 +34,9 @@
           <div class="tp-item title-slot sel" data-act="play" tabindex="0">
             <span class="tp-arrow">▸</span><span class="tp-label">INICIAR SERVIÇO</span><span class="tp-seal">★</span>
           </div>
+          <div class="tp-item title-slot" data-act="slots" tabindex="0">
+            <span class="tp-arrow">▸</span><span class="tp-label">CADERNETAS</span><span class="tp-seal">★</span>
+          </div>
           <div class="tp-item title-slot" data-act="achievements" tabindex="0">
             <span class="tp-arrow">▸</span><span class="tp-label">CONQUISTAS</span><span class="tp-seal">★</span>
           </div>
@@ -298,6 +301,7 @@
         <div class="ending-title" id="ending-title"></div>
         <div class="ending-body" id="ending-body"></div>
         <div class="ending-stats" id="ending-stats"></div>
+        <button id="btn-reopen" class="btn-big" style="display:none">REABRIR O DIA</button>
         <button id="btn-restart" class="btn-big">COMEÇAR DE NOVO</button>
       </div>
     </div>
@@ -396,10 +400,25 @@
     </div>
 
     <!-- ===== PAUSA (ESC) ===== -->
+    <!-- ===== CADERNETAS DE SERVIÇO (8 arquivos do jogador) ===== -->
+    <div id="slots-overlay" class="exam-overlay">
+      <div class="exam-panel slots-panel">
+        <div class="exam-head">
+          <span id="slots-head">ARQUIVO DE CADERNETAS — POSTO Nº 7</span>
+          <button id="btn-slots-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="slots-body">
+          <div class="slots-note" id="slots-note"></div>
+          <div class="slots-grid" id="slots-grid"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="pause-overlay" class="pause-overlay">
       <div class="pause-panel">
         <div class="pause-title">EXPEDIENTE SUSPENSO</div>
         <button id="pz-continue">CONTINUAR</button>
+        <button id="pz-slots">CADERNETAS — SALVAR / CARREGAR</button>
         <button id="pz-achievements">CONQUISTAS</button>
         <button id="pz-textsize">☐ TEXTO GRANDE</button>
         <button id="pz-music">MÚSICA: LIGADA</button>

@@ -113,15 +113,20 @@ function faceLayout(f) {
   const jawSquare = fem ? 0.28 : (child ? 0.2 : 0.62) + (f.faceW * 0.06); // dureza do canto
   const chinW = jw * (fem ? 0.5 : child ? 0.55 : 0.62) + girth * 1.1; // meia-largura do queixo (papada alarga)
   const crownW = fw * (fem ? 0.62 : 0.66);         // largura do topo do crânio
-  const ax = (r() - 0.5) * 1.6;                                    // assimetria global
-  const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
+  const ax = f.simetrico ? 0 : (r() - 0.5) * 1.6;                  // assimetria global
+  const tilt = f.simetrico ? 0 : (r() - 0.5) * 0.07;               // ninguém posa reto de verdade
   // ASSIMETRIA POR TRAÇO: rosto perfeitamente espelhado é a maior "cara de
   // IA". Todo rosto real tem um olho um tico mais alto, uma sobrancelha que
   // sobe mais, um canto de boca que puxa. Pequeno mas SEMPRE presente.
-  const asymEye = (r() - 0.5) * 1.5;         // olho direito sobe/desce
-  const asymEyeH = 1 + (r() - 0.5) * 0.16;   // e um pouco maior/menor
-  const asymBrow = (r() - 0.5) * 2.0;         // sobrancelha direita mais alta/baixa
-  const asymMouth = (r() - 0.5) * 1.4;        // canto direito da boca puxa
+  let asymEye = (r() - 0.5) * 1.5;         // olho direito sobe/desce
+  let asymEyeH = 1 + (r() - 0.5) * 0.16;   // e um pouco maior/menor
+  let asymBrow = (r() - 0.5) * 2.0;         // sobrancelha direita mais alta/baixa
+  let asymMouth = (r() - 0.5) * 1.4;        // canto direito da boca puxa
+  /* f.simetrico: o rosto espelhado com exatidão. É a única situação em que a
+     "cara de IA" é o efeito PRETENDIDO — quem olha sente que algo está
+     errado sem conseguir dizer o quê, porque o que está errado é a ausência
+     do erro. Só O Contador tem isto. */
+  if (f.simetrico) { asymEye = 0; asymEyeH = 1; asymBrow = 0; asymMouth = 0; }
   // fator uncanny: distribuído por TODO MUNDO (humano ou não — nunca
   // existe "cara de Alternado garantida"; o mundo inteiro sai errado
   // na fita). ~12% dos rostos carregam um detalhe fora do lugar.
@@ -593,7 +598,7 @@ function paintBust(ctx, f, opts) {
   const my = L.mouthY, mw = L.mouthW;
   const droop = f.mouth === 1 ? 1.2 : f.mouth === 2 ? -0.4 : 0.5;
   const lipFull = L.lip || 0;
-  const lipTone = mix(SH, [130, 66, 56], L.fem ? 0.6 : 0.3);
+  const lipTone = f.batom ? [168, 40, 46] : mix(SH, [130, 66, 56], L.fem ? 0.6 : 0.3);
   // filtro do lábio (sulco acima)
   soft(ctx, cx, my - 3.2, 1.2, 1.8, rgb(SH, 0.35), 1);
   const op = opts.mouthOpen || 0;
@@ -1540,9 +1545,90 @@ function paintBust(ctx, f, opts) {
     hand(30, 1); hand(70, -1);
     ctx.restore();
   }
+  // TRAÇOS DE PERSONAGEM: o que distingue quem volta sempre
+  paintTraits(ctx, f, L, SK, SH);
   // ACOMPANHANTE: bebê de colo ou criança agarrada ao lado — na altura do
   // peito, por cima do busto (não tomba com a cabeça). Famílias na fronteira.
   if (opts.companion) paintCompanion(ctx, opts.companion);
+}
+
+/* ---------- TRAÇOS DOS ROSTOS QUE VOLTAM ----------
+   Camada fina por cima do busto pronto: maquiagem, olheiras, suor, feridas,
+   colarinho clerical. Cada uma é um sinal que o jogador aprende a ler de
+   longe — na fila, no vidro, antes mesmo do nome aparecer. Tudo desenhado
+   com as mesmas ferramentas do resto do rosto (sem sprite, sem asset). */
+function paintTraits(ctx, f, L, SK, SH) {
+  if (!f) return;
+  const cx = 50, ey = L.eyeY, dx = L.eyeDX;
+  if (f.kohl) {                       // delineador pesado: o traço que sobra no fim da noite
+    ctx.strokeStyle = 'rgba(22,16,14,.72)'; ctx.lineWidth = 1.05; ctx.lineCap = 'round';
+    for (const sgn of [-1, 1]) {
+      const ex = cx + sgn * dx, eyy = ey + (sgn > 0 ? L.asymEye : 0);
+      ctx.beginPath();
+      ctx.moveTo(ex - L.eyeW * 0.95, eyy + 0.3);
+      ctx.quadraticCurveTo(ex, eyy - L.eyeH - 0.9, ex + sgn * L.eyeW * 1.02, eyy - 0.4);
+      ctx.stroke();
+      ctx.beginPath();                // o rabinho puxado pra fora
+      ctx.moveTo(ex + sgn * L.eyeW * 0.98, eyy - 0.4);
+      ctx.lineTo(ex + sgn * (L.eyeW + 2.4), eyy - 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(22,16,14,.34)'; ctx.lineWidth = 0.7;
+      ctx.beginPath();                // e o borrado por baixo
+      ctx.moveTo(ex - L.eyeW * 0.7, eyy + L.eyeH + 1.1);
+      ctx.quadraticCurveTo(ex, eyy + L.eyeH + 1.7, ex + L.eyeW * 0.7, eyy + L.eyeH + 1);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(22,16,14,.72)'; ctx.lineWidth = 1.05;
+    }
+  }
+  if (f.olheiras) {                   // quem não dorme carrega isso debaixo dos olhos
+    for (const sgn of [-1, 1]) {
+      const ex = cx + sgn * dx, eyy = ey + (sgn > 0 ? L.asymEye : 0);
+      soft(ctx, ex, eyy + L.eyeH + 2.4, L.eyeW * 0.95, 2.2, rgb(mix(darken(SH, 0.34), [70, 52, 84], 0.4), 0.4), 2.2);
+      ctx.strokeStyle = rgb(darken(SH, 0.4), 0.34); ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(ex - L.eyeW * 0.8, eyy + L.eyeH + 3.4);
+      ctx.quadraticCurveTo(ex, eyy + L.eyeH + 4.3, ex + L.eyeW * 0.8, eyy + L.eyeH + 3.2);
+      ctx.stroke();
+    }
+  }
+  if (f.suado) {                      // brilho de suor na testa e na têmpora
+    const g = L.r ? L.r : Math.random;
+    soft(ctx, cx - 3, L.browY - 6, 7, 2.6, 'rgba(255,250,238,.30)', 2.4);
+    soft(ctx, cx + 6, L.browY - 3.5, 3.4, 2, 'rgba(255,250,238,.24)', 2);
+    soft(ctx, cx - L.templeW * 0.72, ey + 1, 2.2, 3, 'rgba(255,250,238,.20)', 2);
+    ctx.fillStyle = 'rgba(255,252,244,.5)';
+    for (let i = 0; i < 5; i++) {
+      const px = cx - 9 + i * 4.4, py = L.browY - 8 + (i % 2) * 3;
+      ctx.beginPath(); ctx.ellipse(px, py, 0.55, 0.75, 0, 0, 6.29); ctx.fill();
+    }
+  }
+  if (f.feridas) {                    // feridas de quem se coça: canto da boca, maçã, queixo
+    const pts = [[cx - L.fw * 0.62, L.cheekY + 2.5, 1.5], [cx + L.fw * 0.5, L.cheekY + 6, 1.1],
+                 [cx + L.mouthW + 1.6, L.mouthY - 1, 0.9], [cx - 3, L.chinY - 3, 1.2]];
+    for (const [px, py, rr] of pts) {
+      ctx.fillStyle = 'rgba(112,44,36,.62)';
+      ctx.beginPath(); ctx.ellipse(px, py, rr, rr * 0.78, 0.4, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(58,26,22,.7)';
+      ctx.beginPath(); ctx.ellipse(px + 0.2, py + 0.2, rr * 0.55, rr * 0.4, 0.4, 0, 6.29); ctx.fill();
+      soft(ctx, px, py, rr * 2, rr * 1.6, 'rgba(150,60,48,.22)', 1.6);
+    }
+  }
+  if (f.peleFria) {                   // frio de estar sem sangue: só a borda azula
+    soft(ctx, cx, ey + 8, L.fw * 0.95, 16, 'rgba(96,132,168,.13)', 6);
+    soft(ctx, cx, L.chinY - 2, L.chinW * 1.4, 4, 'rgba(96,132,168,.16)', 3);
+  }
+  if (f.colarinho) {                  // o colarinho branco que sobrou da igreja
+    ctx.fillStyle = '#e6e2d6';
+    ctx.beginPath();
+    ctx.moveTo(cx - 9.5, 93); ctx.quadraticCurveTo(cx, 99, cx + 9.5, 93);
+    ctx.lineTo(cx + 8, 89.5); ctx.quadraticCurveTo(cx, 95, cx - 8, 89.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.22)';
+    ctx.beginPath();
+    ctx.moveTo(cx - 9.5, 93); ctx.quadraticCurveTo(cx, 99, cx + 9.5, 93);
+    ctx.lineTo(cx + 9.2, 94.4); ctx.quadraticCurveTo(cx, 100.2, cx - 9.2, 94.4);
+    ctx.closePath(); ctx.fill();
+  }
 }
 function mwSafe(L) { return Math.max(6, L.mouthW * 0.9); }
 /* acompanhante no guichê (bebê no colo / criança ao lado do adulto) */
@@ -2838,11 +2924,13 @@ function startActorBlink(cz, cv) {
   const open = renderActorFrame(cz, false);
   blitActor(cv, open);
   const a = (cz && cz.anom) || {};
-  const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar);
+  const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar)
+    || (cz && cz.features && cz.features.semPiscar);   // O Contador não pisca. Nunca.
   // MOVIMENTO VIVO (transform barato, sem re-render): respiração e leve balanço
   // dão vida; o nervoso treme; o não-humano fica parado DEMAIS e dá um espasmo
   // errado de vez em quando — dá pra desconfiar ali, sem exame.
-  const still = !!(a.deadStare || a.clearlyNonHuman) || (cz && cz.isSilente);
+  const still = !!(a.deadStare || a.clearlyNonHuman) || (cz && cz.isSilente)
+    || !!(cz && cz.features && cz.features.semPiscar);
   const breatheAmp = still ? 0 : 1;
   const tremor = (cz && cz.nervous && !still) ? 1 : 0;
   const t0 = performance.now();

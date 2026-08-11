@@ -2194,6 +2194,87 @@ body.text-large .ending-body { font-size:17px; }
 body.text-large #endday-report { font-size:16px; }
 body.text-large .np-body { font-size:15px; }
 
+/* ============ CADERNETAS DE SERVIÇO (arquivo de 8 saves) ============
+   O jogo não tem "slot 3 vazio": tem uma prateleira de cadernetas de ponto
+   do Ministério, com etiqueta datilografada, número gravado na capa e um
+   carimbo de arquivamento em cima. A vazia é uma capa em branco à espera. */
+.slots-panel { width:min(920px, 96vw); }
+.slots-body {
+  padding:16px 18px 20px; overflow-y:auto;
+  background-color:#2b2d24;
+  background-image:
+    linear-gradient(180deg, rgba(0,0,0,.5), rgba(0,0,0,0) 44px),
+    linear-gradient(rgba(30,32,24,.5), rgba(16,18,12,.6)), var(--tex-panel);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.7), inset 0 14px 26px rgba(0,0,0,.45);
+}
+.slots-note {
+  font-family:var(--font-mono); font-size:12.5px; line-height:1.6; color:#a99a76;
+  margin-bottom:14px; padding-left:2px;
+}
+.slots-note b { color:#d8cdb0; }
+.slots-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(206px,1fr)); gap:14px; }
+/* a capa: cartão duro, canto com desgaste, lombada costurada à esquerda */
+.slot-card {
+  position:relative; text-align:left; padding:12px 12px 10px 20px; min-height:150px;
+  display:flex; flex-direction:column; gap:5px; cursor:pointer;
+  background-color:#8a7c58;
+  background-image:
+    radial-gradient(rgba(0,0,0,.10) .6px, transparent .9px),
+    linear-gradient(90deg, rgba(58,44,28,.95) 0 9px, rgba(0,0,0,.42) 9px 12px, transparent 12px),
+    linear-gradient(180deg, rgba(255,250,235,.22), transparent 40%, rgba(0,0,0,.20)),
+    var(--tex-paper);
+  background-size:3px 3px, auto, auto, auto;
+  border:1px solid #241f14; border-radius:1px;
+  box-shadow: 3px 4px 0 rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,250,235,.10);
+  transition:transform .07s ease, filter .1s;
+}
+.slot-card:hover { transform:translate(-2px,-2px); box-shadow:5px 6px 0 rgba(0,0,0,.5); filter:brightness(1.07); }
+.slot-card::after {           /* costura da lombada */
+  content:''; position:absolute; left:5px; top:10px; bottom:10px; width:0;
+  border-left:1px dashed rgba(232,224,198,.4);
+}
+.slot-num {
+  position:absolute; right:9px; top:8px; font-family:var(--font-display); font-weight:700;
+  font-size:22px; letter-spacing:1px; color:rgba(40,32,18,.34);
+}
+.slot-cap {
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
+  letter-spacing:2px; font-size:10px; color:#6a5c38;
+  border-bottom:1px solid rgba(70,60,40,.45); padding-bottom:4px;
+}
+.slot-day { font-family:var(--font-display); font-weight:700; font-size:17px; letter-spacing:1px; color:#241f14; }
+.slot-line { font-family:var(--font-mono); font-size:12px; line-height:1.45; color:#3b3428; }
+.slot-line span { color:#6a604a; }
+.slot-ts { margin-top:auto; font-family:var(--font-mono); font-size:11px; color:#6a604a; }
+/* caderneta em branco: capa crua, sem etiqueta preenchida */
+.slot-card.empty {
+  background-color:#5f5a48; color:#b8ae90;
+  background-image:
+    radial-gradient(rgba(0,0,0,.10) .6px, transparent .9px),
+    linear-gradient(90deg, rgba(44,38,24,.9) 0 9px, rgba(0,0,0,.4) 9px 12px, transparent 12px),
+    linear-gradient(180deg, rgba(255,250,235,.10), transparent 45%, rgba(0,0,0,.24)),
+    var(--tex-panel);
+}
+.slot-card.empty .slot-day, .slot-card.empty .slot-line { color:#a99a76; font-style:italic; }
+.slot-card.empty .slot-cap { color:#8a7f60; border-color:rgba(180,170,140,.24); }
+/* a caderneta do turno em curso, marcada com fita */
+.slot-card.atual { box-shadow:3px 4px 0 rgba(0,0,0,.5), inset 0 0 0 2px rgba(201,163,74,.7); }
+.slot-stamp {
+  position:absolute; right:7px; top:33px; transform:rotate(-11deg);
+  font-family:var(--font-display); font-weight:700; font-size:11px; letter-spacing:2px;
+  color:rgba(152,38,28,.8); border:2px solid rgba(152,38,28,.7); border-radius:3px;
+  padding:1px 6px; pointer-events:none;
+}
+.slot-acts { display:flex; gap:6px; margin-top:6px; }
+.slot-acts button {
+  flex:1; font-size:10.5px; padding:5px 4px; letter-spacing:1px; border-radius:0;
+  color:#d3c9a6; background:#23251b; border:1px solid #0b0c07;
+  box-shadow:2px 2px 0 rgba(0,0,0,.5); text-shadow:none;
+}
+.slot-acts button:hover:not(:disabled) { background:#c9a34a; color:#141207; }
+.slot-acts button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0); }
+.slot-acts button.danger:hover:not(:disabled) { background:#8e2c1e; color:#f0e3cf; }
+
 </style>
 </head>
 <body>
@@ -2223,6 +2304,9 @@ body.text-large .np-body { font-size:15px; }
           </div>
           <div class="tp-item title-slot sel" data-act="play" tabindex="0">
             <span class="tp-arrow">▸</span><span class="tp-label">INICIAR SERVIÇO</span><span class="tp-seal">★</span>
+          </div>
+          <div class="tp-item title-slot" data-act="slots" tabindex="0">
+            <span class="tp-arrow">▸</span><span class="tp-label">CADERNETAS</span><span class="tp-seal">★</span>
           </div>
           <div class="tp-item title-slot" data-act="achievements" tabindex="0">
             <span class="tp-arrow">▸</span><span class="tp-label">CONQUISTAS</span><span class="tp-seal">★</span>
@@ -2488,6 +2572,7 @@ body.text-large .np-body { font-size:15px; }
         <div class="ending-title" id="ending-title"></div>
         <div class="ending-body" id="ending-body"></div>
         <div class="ending-stats" id="ending-stats"></div>
+        <button id="btn-reopen" class="btn-big" style="display:none">REABRIR O DIA</button>
         <button id="btn-restart" class="btn-big">COMEÇAR DE NOVO</button>
       </div>
     </div>
@@ -2586,10 +2671,25 @@ body.text-large .np-body { font-size:15px; }
     </div>
 
     <!-- ===== PAUSA (ESC) ===== -->
+    <!-- ===== CADERNETAS DE SERVIÇO (8 arquivos do jogador) ===== -->
+    <div id="slots-overlay" class="exam-overlay">
+      <div class="exam-panel slots-panel">
+        <div class="exam-head">
+          <span id="slots-head">ARQUIVO DE CADERNETAS — POSTO Nº 7</span>
+          <button id="btn-slots-close" class="btn-small">FECHAR</button>
+        </div>
+        <div class="slots-body">
+          <div class="slots-note" id="slots-note"></div>
+          <div class="slots-grid" id="slots-grid"></div>
+        </div>
+      </div>
+    </div>
+
     <div id="pause-overlay" class="pause-overlay">
       <div class="pause-panel">
         <div class="pause-title">EXPEDIENTE SUSPENSO</div>
         <button id="pz-continue">CONTINUAR</button>
+        <button id="pz-slots">CADERNETAS — SALVAR / CARREGAR</button>
         <button id="pz-achievements">CONQUISTAS</button>
         <button id="pz-textsize">☐ TEXTO GRANDE</button>
         <button id="pz-music">MÚSICA: LIGADA</button>
@@ -2865,11 +2965,16 @@ const SCRIPTED_NEWS = {
   12: { h: 'MEHRVOLK ASSUME O GOVERNO DE OSTERIA', b: 'Com apoio de parte do exército e do Parlamento em pânico, o movimento Mehrvolk assumiu o poder na madrugada. Primeiro decreto: "A verdade agora tem um só nome." Jornais de oposição amanheceram fechados. Este jornal foi renomeado por ordem administrativa.', m: ['Novos uniformes distribuídos aos postos.', 'Hino atualizado. Decorar até sexta.'] },
   14: { h: 'ÉDITO DE PUREZA Nº 2 ENTRA EM VIGOR', b: 'Cidadãos de origem núlia e bahari deverão portar Certificado de Ancestralidade. O Instituto Lantraviano de Fenotipia afirma que "certas linhagens apresentam 12% mais incidência de substituição". O estudo não foi revisado por pares. Hospitais registram filas de pessoas tentando provar quem são.', m: ['Denúncias anônimas dobram.', 'Criança de 9 anos denuncia o próprio professor.'] },
   17: { h: 'DEZ DETIDOS EM OPERAÇÃO "SANGUE LIMPO"', b: 'O governo comemora a captura de "dez infiltrados". Documentos vazados sugerem que ao menos sete eram humanos com exames alterados. O Ministério nega. As famílias não foram informadas do paradeiro dos detidos.', m: ['Escolas adotam cartilha "Conheça seu vizinho".', 'Racionamento de carvão.'] },
+  18: { h: 'CARTILHA DE SINAIS FÍSICOS CHEGA ÀS ESCOLAS', b: 'O Instituto de Higiene distribuiu a doze mil salas de aula a cartilha "Olhe as Mãos de Quem Te Abraça". As crianças aprendem sete sinais; o sétimo é "a pessoa demora a responder quando você a chama pelo nome". Pediatras alertam que crianças tímidas passaram a ser levadas a exame. O Ministério responde que "cuidado nunca é excesso".', m: ['Estoque de espelhos esgota em Valgrado.', 'Professora afastada por "não olhar nos olhos da turma".'] },
   21: { h: 'JORNALISTA DESAPARECE APÓS REPORTAGEM', b: 'Vela Odim, autora da série "Os Falsos Positivos", está desaparecida há três dias. O governo afirma que ela "viajou por vontade própria". Colegas afirmam que sua casa foi revirada. A LumenCorp negou comentar os erros do VERITAS-9 citados na reportagem.', m: ['Cartazes novos: "Quem cala, protege."', 'Pão racionado: 1 unidade por família.'] },
+  23: { h: 'FILA DE REVALIDAÇÃO PASSA A NOITE NA CALÇADA', b: 'O prazo do Édito de Pureza vence sexta e os cartórios atendem duzentas pessoas por dia. Uma senhora de setenta e um anos está na fila desde terça para provar que nasceu onde nasceu. "Eu tenho a certidão", ela diz. "Eles querem a certidão da certidão."', m: ['Cobertores vendidos a preço triplo perto do cartório.', 'Dois mortos de frio na fila do bloco 9.'] },
   24: { h: 'CIENTISTAS CONTESTAM A FENOTIPIA — E SÃO PRESOS', b: 'Quatorze pesquisadores assinaram carta afirmando que "nenhuma característica física define um Alternado". Foram detidos por "sabotagem epistemológica". Universidades entram em greve. O governo responde: "A ciência do inimigo também é inimiga."', m: ['Fila do posto leste bate recorde.', 'Inverno chega mais cedo.'] },
   27: { h: 'EXPLOSÃO NA ESTAÇÃO CENTRAL: 31 MORTOS', b: 'Um atentado destruiu a Estação Central de Valgrado. O governo culpa a resistência. A resistência culpa "agentes do próprio regime". Um sobrevivente jura que viu o autor "sorrir com a boca errada". Ninguém sabe o que isso significa. Ninguém pergunta duas vezes.', m: ['Luto oficial de três dias.', 'Trens suspensos.'] },
+  29: { h: 'LEI DE HIGIENE MORAL CRIA O "REGISTRO DE CONDUTA"', b: 'O decreto obriga mulheres solteiras em trânsito de fronteira a portar atestado de conduta compatível, assinado pela delegacia do domicílio. Não há dispositivo equivalente para homens. Um jurista do próprio regime perguntou, em memorando interno, o que exatamente se está medindo. Foi transferido.', m: ['Hotéis da estrada obrigados a manter livro de hóspedes visível.', 'Delegado de Miralta condecorado.'] },
   30: { h: 'GOLPE: CONSELHO POPULAR TOMA O PODER', b: 'Unidades do exército derrubaram o governo Mehrvolk durante a madrugada. O Conselho Popular declara que "os Alternados são uma invenção do capital para disciplinar trabalhadores". Os laboratórios estatais, entretanto, seguem funcionando — agora sob nova bandeira. Todos os documentos antigos exigem revalidação.', m: ['Estátuas derrubadas antes do café.', 'Novo hino. Decorar até sexta.'] },
   33: { h: 'EX-AGENTES DO REGIME VIRAM "ELEMENTOS INDESEJÁVEIS"', b: 'Funcionários do governo anterior tentam deixar o país em massa. O Conselho promete julgamentos populares. Nas filas, ninguém mais sabe qual carimbo é o certo — e o Conselho também não. Um inspetor foi preso por aplicar a lei da semana passada.', m: ['Açúcar desaparece dos mercados.', 'Boato: "Alternados não suportam açúcar." Falso. Talvez.'] },
+  35: { h: 'CONSELHO ANUNCIA O "CADASTRO ÚNICO DO POVO"', b: 'Todos os arquivos dos dois regimes anteriores serão unificados numa só ficha por cidadão. O Conselho garante que "nada do que o regime anterior anotou será usado contra os trabalhadores" — e não explica por que, então, nada foi queimado. As fichas antigas chegaram em caminhões, aos milhares, intactas.', m: ['Papel racionado: cadastro tem prioridade.', 'Arquivo Nacional contrata 400 escreventes.'] },
+  41: { h: 'TRÊS POSTOS DE FRONTEIRA DEIXAM DE RESPONDER', b: 'Os postos 3, 11 e 12 não enviam relatório há quatro dias. O Conselho fala em "dificuldade de comunicação". Um motorista que passou pelo 11 diz que o guichê estava aberto, a luz acesa e o café ainda morno — e nenhum inspetor. A fila do lado de fora continuava organizada, em silêncio, esperando.', m: ['Rádio estatal reduz transmissão para 6h por dia.', 'Combustível racionado nas estradas do leste.'] },
   37: { h: 'O SCANNER OFICIAL ERA DEFEITUOSO, ADMITE MINISTÉRIO', b: 'Após seis dias de triagem obrigatória por detector biológico, o Conselho admite que 40% das unidades estavam descalibradas. Volta a valer a carteira sanitária — a mesma que o decreto anterior chamou de "papel inútil". As pessoas na fila riem. Depois choram.', m: ['LumenCorp transfere sede para Linestan.', 'Apagões programados: 4h por dia.'] },
   39: { h: 'O ÉDITO DE PUREZA NUNCA EXISTIU NO PAPEL', b: 'Um funcionário do arquivo central, fugindo do país, deixou uma pasta para trás: não há registro de votação, sessão ou assinatura para o Édito de Pureza nº 2. O "Instituto Lantraviano de Fenotipia" tinha um único funcionário — o mesmo que redigiu o decreto. Milhares de certificados de ancestralidade foram emitidos, negados e cobrados com base em um estudo que nunca existiu, para uma lei que nunca foi votada. Os postos de fronteira seguem exigindo o documento. Ninguém revogou nada. Ninguém sabe mais quem poderia.', m: ['O funcionário fugitivo não foi encontrado.', 'Cartórios seguem emitindo certificados. Ninguém explica com base em quê.'] },
   40: { h: 'FRONTEIRAS DO NORTE CAÍRAM. NINGUÉM GOVERNA LÁ.', b: 'Refugiados de Kranton e Krestov relatam cidades sem polícia, sem energia e sem notícias. "Não fugimos deles", disse uma mulher, "fugimos de nós mesmos". O Conselho não comenta. O Conselho não é encontrado para comentar.', m: ['Hospitais lotados.', 'A rádio estatal transmite estática entre 14h e 16h.'] },
@@ -3120,6 +3225,176 @@ const ENCOUNTERS = {
   },
 };
 
+
+/* ============================================================
+   OS ROSTOS QUE VOLTAM — personagens especiais
+   ------------------------------------------------------------
+   Um posto de fronteira não é um desfile de estranhos: é uma
+   estrada, e quem vive de estrada passa de novo. Estes seis têm
+   aparência própria (look sobrescreve o retrato procedural),
+   voltam em dias marcados e mudam junto com o regime — o mesmo
+   rosto sob quatro governos é a melhor forma de mostrar o que
+   cada governo faz com um rosto.
+
+   Eles ocupam uma FAIXA PARALELA à dos ENCOUNTERS: um dia pode
+   ter os dois. `dias` mapeia dia → aparição.
+     valid ......... papéis em ordem
+     forcedDisc .... discrepância obrigatória (ver DISC_TYPES)
+     fala .......... o que ele diz ao chegar ao vidro
+     nota .......... papel que fica com você depois
+     killer ........ se não for detido, você morre
+     req ........... só aparece se a flag existir no estado
+   ============================================================ */
+const SPECIALS = {
+  /* ---- NADJA VELL — a mulher da estrada ----
+     Trabalha as duas margens da fronteira porque a fronteira é onde
+     há dinheiro e caminhão. Cada regime inventa uma palavra nova para
+     ela; nenhum inventa uma para os homens da fila. */
+  nadja: {
+    nome: 'Nadja Vell', pais: 'kranton', sexo: 'f', etnia: 'nulio', profissao: 'costureira',
+    look: {
+      skin: 5, hair: 6, hairStyle: 1, eyes: 3, mouth: 1, brow: 1, faceW: 1,
+      glasses: false, earring: true, hat: 0, beard: 0, idade: 31, rugas: false,
+      build: 0, height: 0.25, girth: 0.05,
+      coat: '#5a2f3a', scarf: '#a86a44', batom: true, kohl: true, fseed: 811324,
+    },
+    dias: {
+      12: { motivo: 'trabalho', valid: true,
+            fala: 'Costureira, está escrito aí. Eu costuro, sim — de madrugada, no quarto dos fundos do Hotel Vlask, e o que eu costuro é a minha própria roupa depois. O senhor quer que eu escreva isso no formulário? Cabe?' },
+      21: { motivo: 'trabalho', valid: true,
+            fala: 'Hoje o guarda do outro lado quis metade. Metade de quê, eu perguntei. Ele riu. É sempre metade de alguma coisa, com vocês. Com o senhor ainda não foi. Anota aí que eu reparei.' },
+      29: { motivo: 'trabalho', valid: false, forcedDisc: 'expired',
+            fala: 'Venceu ontem. Eu sei. Eu ia renovar, mas a Lei de Higiene Moral agora pede atestado de conduta compatível — e quem assina o atestado é o delegado que me para na estrada toda terça. O senhor entende o desenho.',
+            nota: { texto: 'Se um dia precisarem de um quarto sem registro, Hotel Vlask, porta 4. — N.V.', tipo: 'resistencia_contato' } },
+      37: { motivo: 'transito', valid: true,
+            fala: 'Cortaram meu cabelo na delegacia. Disseram que era higiene. Foi só pra eu ser reconhecida na rua, e funciona: hoje ninguém me olha na cara. É quase um descanso. Quase.',
+            look: { hair: 0, hairStyle: 0, batom: false, earring: false, coat: '#33302a', scarf: null } },
+      44: { motivo: 'imigracao', valid: false, forcedDisc: 'wrongSeal',
+            fala: 'Não tenho o papel. Não vou ter. Estão levando as mulheres do Vlask desde quinta e ninguém volta pra contar pra onde. O senhor pode carimbar ou pode não carimbar — mas o senhor sabe o que tem atrás de mim.',
+            look: { hair: 0, hairStyle: 0, batom: false, earring: false, coat: '#33302a', scarf: null, rugas: true } },
+    },
+  },
+
+  /* ---- FERRO — o que fala verdade e ninguém acredita ----
+     Cabo da Guerra dos Doze Dias, dependente do éter de campanha que o
+     próprio exército distribuía. Delira. E acerta. */
+  ferro: {
+    nome: 'Anselmo Krast', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'operário(a)',
+    look: {
+      skin: 0, hair: 4, hairStyle: 2, eyes: 0, mouth: 2, brow: 0, faceW: 0,
+      glasses: false, hat: 0, beard: 2, idade: 44, rugas: true,
+      build: 0, height: -0.15, girth: 0, coat: '#403428', scarf: null,
+      suado: true, olheiras: true, feridas: true, fseed: 20941,
+    },
+    dias: {
+      16: { motivo: 'transito', valid: true,
+            fala: 'Eu vi. Na estação. Um homem com a cara certinha demais e a mão fria — apertou a minha mão e a mão dele não tinha temperatura, entende? NÃO TINHA. Escreve aí. Escreve aí que o Ferro avisou, e a data.' },
+      23: { motivo: 'transito', valid: true,
+            fala: 'Eles não piscam. Todo mundo pisca. Você pisca, eu pisco — eu pisco até demais. Eles não. Anota: p-i-s-c-a-r. Vão te mandar um papel dizendo isso daqui a um mês, e vão dizer que descobriram sozinhos.' },
+      31: { motivo: 'trabalho', valid: false, forcedDisc: 'photoMismatch',
+            fala: 'A foto? Essa foto é de antes. Eu era outro. Não do jeito que eles trocam, não — do jeito normal, do jeito que a gente vira outro sozinho. O senhor também está virando. Já reparou na sua letra ultimamente?' },
+      38: { motivo: 'transito', valid: true,
+            fala: 'Dia 27 eu falei da estação. Falei ANTES. Ninguém escreveu. Agora tem placa de bronze lá com nome de trinta e quatro pessoas e não tem uma linha dizendo que o Ferro falou. Tudo bem. Não é o meu nome que eu queria salvar.' },
+      46: { motivo: 'imigracao', valid: true,
+            fala: 'Acabou o éter. Faz nove dias. E olha que coisa: sóbrio é pior. Sóbrio eu vejo que tudo que eu dizia era verdade e que eu era o único jeito que a verdade tinha de aparecer aqui — bêbado, na boca de um louco, pra ninguém precisar acreditar.',
+            look: { suado: false, feridas: false, olheiras: true } },
+    },
+  },
+
+  /* ---- PADRE OSTROV — o homem sem prédio ----
+     A igreja fecha em três etapas: primeiro tiram o sino, depois o
+     telhado, depois o nome. Ele fica. */
+  ostrov: {
+    nome: 'Emil Ostrov', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'professor(a)',
+    look: {
+      skin: 1, hair: 7, hairStyle: 2, eyes: 4, mouth: 0, brow: 1, faceW: 1,
+      glasses: true, hat: 0, beard: 0, idade: 67, rugas: true,
+      build: 0, height: 0.05, girth: 0.1, coat: '#1c1c20', colarinho: true, fseed: 55127,
+    },
+    dias: {
+      20: { motivo: 'visita', valid: true,
+            fala: 'Vou enterrar um homem em Kranton. A profissão no papel diz professor porque o cartório novo não tem mais a palavra padre na lista. Eu ensino, é verdade. Ensino as pessoas a morrer. Sempre foi uma matéria mal avaliada.' },
+      28: { motivo: 'transito', valid: false, forcedDisc: 'contradiction',
+            fala: 'Escrevi trânsito porque não sabia o que escrever. Tiraram o sino na terça. Um sino de mil e oitocentos quilos, e o caminhão que veio buscar tinha um formulário em duas vias. Eu assinei as duas. Que mais eu ia fazer, inspetor? Recusar o papel?' },
+      40: { motivo: 'imigracao', valid: true,
+            fala: 'Levo os livros de batismo. É a única coisa que sobrou e é a coisa certa: são nomes com data, e vão precisar disso depois — quando alguém perguntar quem existia aqui. Se um dia alguém perguntar. Reze para que alguém pergunte.',
+            look: { rugas: true, girth: 0 } },
+    },
+  },
+
+  /* ---- SIBILA MAREK — a voz que foi proibida antes da pessoa ----
+     Irmã do barbeiro Joss Marek. Cantava nos rádios dos três países. */
+  sibila: {
+    nome: 'Sibila Marek', pais: 'osteria', sexo: 'f', etnia: 'mestico', profissao: 'comerciante',
+    look: {
+      skin: 1, hair: 0, hairStyle: 3, eyes: 0, mouth: 1, brow: 1, faceW: 1,
+      glasses: false, earring: true, hat: 2, beard: 0, idade: 38, rugas: false,
+      build: 1, height: 0.1, girth: 0.15, coat: '#4a2f52', scarf: '#9a7a38',
+      batom: true, fseed: 39018,
+    },
+    dias: {
+      25: { motivo: 'trabalho', valid: true,
+            fala: 'Meu irmão corta cabelo, eu canto. Os dois ofícios são a mesma coisa: a pessoa senta, fecha os olhos e conta tudo. A diferença é que ninguém nunca prendeu um barbeiro por causa do refrão.' },
+      33: { motivo: 'trabalho', valid: false, forcedDisc: 'nameMismatch',
+            fala: 'O nome no papel novo está errado de propósito. Sibila Marek está numa lista de repertório incompatível — três canções, inspetor, e uma delas é sobre chuva. O cartório sugeriu que eu passasse a ser Sibila Marec, com c. Aceitei. Uma letra pela vida inteira é barato.',
+            look: { hat: 0, coat: '#38332e', scarf: null } },
+      42: { motivo: 'imigracao', valid: true,
+            fala: 'Ontem cantei num porão para nove pessoas e um deles chorou de um jeito que me assustou: sem barulho e sem mexer o rosto. Perguntei se estava tudo bem. Ele disse que estava aprendendo a chorar. Foi assim que ele disse, inspetor. Aprendendo.',
+            look: { hat: 0, coat: '#38332e', scarf: null, rugas: true, batom: false } },
+    },
+  },
+
+  /* ---- AUREL VANTZ — o censor ----
+     O único homem da fila que já leu tudo que você escreveu. Educado. */
+  vantz: {
+    nome: 'Aurel Vantz', pais: 'osteria', sexo: 'm', etnia: 'osano', profissao: 'burocrata',
+    look: {
+      skin: 0, hair: 0, hairStyle: 0, eyes: 3, mouth: 0, brow: 0, faceW: 1,
+      glasses: true, hat: 0, beard: 0, idade: 49, rugas: false,
+      build: 1, height: 0, girth: 0.2, uniformSet: 'osteria', fseed: 70233,
+    },
+    dias: {
+      17: { motivo: 'trabalho', valid: true,
+            fala: 'Bom dia. Não precisa se apressar por minha causa — eu, de todos, sei quanto tempo leva fazer isto direito. Trinta e um segundos foi a sua média na semana passada. É um bom número. Bons números chamam atenção, inspetor, nos dois sentidos.' },
+      26: { motivo: 'trabalho', valid: true,
+            fala: 'Reparei que o senhor rejeitou o senhor Almedra e depois hesitou. A hesitação também consta: existe um campo para ela no meu formulário. Não se preocupe — hesitar não é crime. É só um dado.' },
+      35: { motivo: 'trabalho', valid: true,
+            fala: 'Mudei de departamento. Antes eu lia o que o senhor escrevia; agora leio o que escrevem SOBRE o senhor. É um material mais curto e muito menos interessante. Diga: o senhor dorme bem?',
+            look: { uniformSet: 'lantravia' } },
+      43: { motivo: 'imigracao', valid: false, forcedDisc: 'expired',
+            fala: 'Sim. Eu. Com a permissão vencida. Percebe a piada? Eu redigi este formulário. Escrevi a linha que agora me impede de passar, numa terça-feira, com café frio, sem pensar num rosto sequer. Carimbe o que o senhor achar justo, inspetor. Eu venho ensinando o senhor a não achar nada.',
+            look: { uniformSet: null, coat: '#2e2a24', rugas: true } },
+    },
+  },
+
+  /* ---- O CONTADOR — o que vem cobrar ----
+     Não está no roteiro do Ministério nem no de ninguém. Aparece três
+     dias depois de um turno em que DOIS Alternados atravessaram o seu
+     guichê. Vem conferir a conta. Se não for detido, ele a fecha. */
+  contador: {
+    nome: 'Ruven Sath', pais: 'linestan', sexo: 'm', etnia: 'osano', profissao: 'burocrata',
+    req: 'contadorDay', killer: true,
+    look: {
+      skin: 5, hair: 5, hairStyle: 0, eyes: 3, mouth: 0, brow: 0, faceW: 1,
+      glasses: false, hat: 1, beard: 0, idade: 40, rugas: false,
+      build: 1, height: 0.4, girth: 0, coat: '#16181c', scarf: null,
+      simetrico: true, semPiscar: true, peleFria: true, fseed: 100002,
+    },
+    fala: 'Boa tarde. Dois, no dia %DIA%. Eu não venho reclamar — reclamar é coisa de quem espera resposta. Venho só conferir se foi descuido ou se foi escolha. Olhe bem para mim, inspetor. Com calma. Nós temos o tempo que o senhor tiver.',
+    nota: null,
+  },
+};
+const SPECIAL_IDS = Object.keys(SPECIALS);
+/* dia -> [{id, sp, ap}] : quem passa hoje e em que versão */
+function specialsForDay(day) {
+  const out = [];
+  for (const id of SPECIAL_IDS) {
+    const sp = SPECIALS[id];
+    if (sp.dias && sp.dias[day]) out.push({ id, sp, ap: sp.dias[day] });
+  }
+  return out;
+}
+
 /* ---------- EVENTOS DE CASA ---------- */
 const HOME_EVENTS = {
   4:  { texto: 'Seu filho, Tomi, acordou tossindo. Vessa acha que é o frio. Sua mãe acha que é "outra coisa" e não explica o quê.', efeito: null },
@@ -3128,18 +3403,21 @@ const HOME_EVENTS = {
   13: { texto: 'Distribuíram bandeiras novas no seu bloco. O vizinho que não pendurou a dele recebeu uma visita à noite. Hoje a bandeira dele é a maior do prédio.', efeito: null },
   15: { texto: 'A escola de Dario exigiu o Certificado de Ancestralidade dele — "pendência de linhagem materna". Ele ficou no portão. Vessa passou a manhã no cartório e voltou com um número de protocolo e nenhum papel.', efeito: null },
   17: { texto: 'Sua mãe rasgou o formulário de ancestralidade. "Eu SEI quem eu sou." Vessa colou os pedaços de madrugada, chorando baixinho para ninguém ouvir.', efeito: null },
+  18: { texto: 'Tomi voltou da escola com a cartilha nova e pediu para ver as suas mãos. Olhou com cuidado, contou os calos e disse: "Passou." Depois riu, porque para ele era um jogo. Vessa não riu. Você também não conseguiu.', efeito: null },
   20: { texto: 'Tomi desenhou a família na escola. A professora elogiou — mas perguntou por que ele desenhou "papai com dois rostos". Ele não soube explicar. Você também não.', efeito: null },
   22: { texto: 'Colaram um cartaz novo na escada: "DENUNCIE. É um ato de amor." Dario perguntou o que era pra denunciar. Vessa mandou ele parar de fazer perguntas na escada.', efeito: null },
   24: { texto: 'Tomi trouxe da escola um "Caderno de Vigilância Familiar": cada aluno anota o que os pais dizem em casa. As páginas já vêm numeradas. Vessa preencheu a primeira com elogios ao regime, letra caprichada — e queimou o resto no fogão.', efeito: null },
   26: { texto: 'Um homem parou na frente do prédio e olhou para a sua janela por vinte minutos. Vessa anotou a hora: 21h13. Quando você olhou, não havia ninguém. Nunca houve?', efeito: null },
   28: { texto: 'O rádio pediu que cada família recitasse o novo juramento antes de dormir. Sua mãe move os lábios sem som. "Deus me ouve melhor assim", ela diz. Você finge não notar que ela não fala nada.', efeito: null },
   30: { texto: 'Da noite pro dia, as bandeiras mudaram: o Conselho Popular agora governa. Sua mãe olhou pela janela e disse só: "A terceira que eu vejo. Ou a quarta. Já perdi a conta de quantos governos me prometeram o mesmo silêncio."', efeito: null },
+  32: { texto: 'Trocaram o retrato da parede do saguão pela terceira vez em dois meses. O prego é o mesmo, o buraco é o mesmo, só o rosto muda. Sua mãe passou por ele sem olhar e comentou: "Aquele prego já viu mais governo do que eu."', efeito: null },
   33: { texto: 'Trocaram o nome da sua rua: agora é Avenida da Unidade. As cartas antigas voltam carimbadas "endereço inexistente" — como se a casa onde você dorme nunca tivesse existido.', efeito: null },
   35: { texto: 'A família realocada tem uma menina. Ela nunca chora, nunca corre, nunca faz barulho. Hoje ela sorriu pro Tomi no corredor. Ele voltou pálido, não quis dizer por quê, e dormiu de luz acesa.', efeito: null },
   38: { texto: 'A família realocada bateu na sua porta pela primeira vez. O homem sorriu e ofereceu pão morno. Ninguém nunca os viu comprando nada. Vessa agradeceu e trancou a porta com as duas voltas.', efeito: null },
   40: { texto: 'Chegou um envelope sem remetente. Dentro, uma foto sua no guichê — tirada de um ângulo que não existe do lado de fora. No verso, a lápis: "Estamos satisfeitos com o seu trabalho." Ninguém assina um elogio assim.', efeito: null },
   31: { texto: 'O Conselho requisitou metade do seu apartamento para "uma família de trabalhadores realocados". Eles são educados. Eles são silenciosos. Eles cozinham sem cheiro.', efeito: 'aluguel_maior' },
   36: { texto: 'Sua mãe sumiu por seis horas. Voltou calma. Calma DEMAIS, diz Vessa. "Fui só andar", diz ela. Ela odeia andar. Sempre odiou. Não é?', efeito: null },
+  41: { texto: 'Dario chegou tarde e com terra no casaco. Disse que ajudou a carregar caixas na estação. Não há mais trens na estação desde o dia 27. Você não perguntou de novo — e passou a noite calculando há quanto tempo o seu filho aprendeu a mentir para te proteger.', efeito: null },
   42: { texto: 'Tomi perguntou no jantar: "Pai, se trocarem você, eu vou perceber?" Ninguém riu. Ninguém respondeu. O relógio da cozinha nunca fez tanto barulho.', efeito: null },
   45: { texto: 'Vessa fez as malas. "Quando isso acabar, a gente atravessa também. Do outro lado deve ser igual — mas pelo menos é longe." Você concorda. Concordar é mais fácil.', efeito: null },
   46: { texto: 'Não veio jornal, não veio rádio, não veio ordem. Tomi dormiu na sua cama esta noite — "só hoje". Você ficou acordado ouvindo a respiração dele, contando, com medo de que uma batida viesse errada.', efeito: null },
@@ -3155,6 +3433,10 @@ const ENDINGS = {
   morto: {
     t: 'FINAL — O GUICHÊ FICOU ABERTO',
     b: 'Você viu. Deu tempo de ver: a mão entrando no casaco, o metal, o segundo em que ainda dava.\n\nO Ministério registrou o incidente em duas linhas. "Falha de reação do agente." O posto reabriu no dia seguinte, com outro nome na escala — o mesmo formulário, a mesma cadeira, a mesma altura de balcão.\n\nVessa recebeu uma carta padronizada com o seu número de matrícula e um erro de digitação no sobrenome. O rádio disse que a fronteira estava mais segura do que nunca.\n\nNinguém no país soube o seu nome. Do outro lado do vidro, alguém continua carimbando.',
+  },
+  contador: {
+    t: 'FINAL — A CONTA FECHADA',
+    b: 'Ele não levantou a voz e não puxou nada do casaco. Só esperou o carimbo descer, como quem confere um número numa coluna.\n\n"Escolha, então", ele disse. "Obrigado pela franqueza."\n\nNão houve tiro que alguém tenha ouvido. Houve uma linha a menos no livro de ponto e uma caneca de café ainda morna sobre a mesa, que o turno da tarde lavou sem perguntar de quem era.\n\nDois passaram pelo seu guichê num único dia. Ele veio conferir se tinha sido descuido ou escolha — e você respondeu. É a única pergunta que este trabalho faz de verdade, e ela só é feita uma vez.\n\nAmanhã o posto abre no horário. A fila não vai notar.',
   },
   prisao: {
     t: 'FINAL — O FORMULÁRIO 77-B',
@@ -5021,6 +5303,47 @@ const I18N_EN = {
   'DOC.': 'DOC.',
   'DATA': 'DATE',
   'POSTO': 'POST',
+  /* ---- arquivo de cadernetas (8 saves) + morte que reabre o dia ---- */
+  'ARQUIVO DE CADERNETAS — POSTO Nº 7': 'NOTEBOOK ARCHIVE — POST Nº 7',
+  'CADERNETAS': 'NOTEBOOKS',
+  'CADERNETAS — SALVAR / CARREGAR': 'NOTEBOOKS — SAVE / LOAD',
+  'CADERNETA DE SERVIÇO': 'SERVICE NOTEBOOK',
+  '— em branco —': '— blank —',
+  'Capa sem etiqueta. Nenhum expediente consta.': 'Unlabelled cover. No shift on record.',
+  'ARQUIVADA': 'FILED',
+  'GRAVAR': 'RECORD',
+  'REGRAVAR': 'OVERWRITE',
+  'ABRIR': 'OPEN',
+  'VOLTAR': 'BACK',
+  'DESCARTAR': 'DESTROY',
+  'Descartar': 'Destroy',
+  'REGIME': 'REGIME',
+  'TURNO': 'SHIFT',
+  'gravada em ': 'recorded ',
+  'O expediente em curso é o <b>DIA</b> ': 'The shift under way is <b>DAY</b> ',
+  '. Grave numa caderneta livre — ou por cima de uma velha, que é como o Ministério faz.':
+    '. Record it in a free notebook — or over an old one, which is how the Ministry does it.',
+  'Oito cadernetas cabem nesta prateleira. O turno também se grava sozinho todo fim de expediente, e a morte devolve o inspetor à manhã do mesmo dia.':
+    'Eight notebooks fit on this shelf. The shift also records itself at the end of every day, and death returns the inspector to the morning of the same day.',
+  'REGRAVAR A CADERNETA ': 'OVERWRITE NOTEBOOK ',
+  'ABRIR A CADERNETA ': 'OPEN NOTEBOOK ',
+  'DESCARTAR A CADERNETA ': 'DESTROY NOTEBOOK ',
+  'O expediente arquivado nesta caderneta será substituído pelo atual. Não há segunda via.':
+    'The shift filed in this notebook will be replaced by the current one. There is no second copy.',
+  'O expediente em curso é abandonado e o inspetor volta à manhã registrada nesta caderneta.':
+    'The shift under way is abandoned and the inspector returns to the morning recorded in this notebook.',
+  'A caderneta é destruída. O que estava escrito nela deixa de ter existido — é assim que este país arquiva.':
+    'The notebook is destroyed. What was written in it stops having existed — that is how this country files things.',
+  'DEIXAR COMO ESTÁ': 'LEAVE IT',
+  'ARQUIVO CHEIO': 'ARCHIVE FULL',
+  'Não há espaço no arquivo desta máquina para mais uma caderneta. Descarte uma antiga e tente de novo.':
+    'There is no room in this machine\'s archive for another notebook. Destroy an old one and try again.',
+  'ENTENDIDO': 'UNDERSTOOD',
+  'REABRIR O DIA': 'REOPEN THE DAY',
+  '08:00': '08:00',
+  '"Escolha, então. Obrigado pela franqueza."': '"Choose, then. Thank you for your candour."',
+  'FINAL — A CONTA FECHADA': 'ENDING — THE ACCOUNT SETTLED',
+  'A Conta Fechada': 'The Account Settled',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -6560,6 +6883,47 @@ const I18N_ES = {
   'DOC.': 'DOC.',
   'DATA': 'FECHA',
   'POSTO': 'PUESTO',
+  /* ---- archivo de libretas (8 guardados) + muerte que reabre el día ---- */
+  'ARQUIVO DE CADERNETAS — POSTO Nº 7': 'ARCHIVO DE LIBRETAS — PUESTO Nº 7',
+  'CADERNETAS': 'LIBRETAS',
+  'CADERNETAS — SALVAR / CARREGAR': 'LIBRETAS — GUARDAR / CARGAR',
+  'CADERNETA DE SERVIÇO': 'LIBRETA DE SERVICIO',
+  '— em branco —': '— en blanco —',
+  'Capa sem etiqueta. Nenhum expediente consta.': 'Tapa sin etiqueta. Ninguna jornada consta.',
+  'ARQUIVADA': 'ARCHIVADA',
+  'GRAVAR': 'GUARDAR',
+  'REGRAVAR': 'SOBRESCRIBIR',
+  'ABRIR': 'ABRIR',
+  'VOLTAR': 'VOLVER',
+  'DESCARTAR': 'DESTRUIR',
+  'Descartar': 'Destruir',
+  'REGIME': 'RÉGIMEN',
+  'TURNO': 'TURNO',
+  'gravada em ': 'guardada el ',
+  'O expediente em curso é o <b>DIA</b> ': 'La jornada en curso es el <b>DÍA</b> ',
+  '. Grave numa caderneta livre — ou por cima de uma velha, que é como o Ministério faz.':
+    '. Guárdela en una libreta libre — o encima de una vieja, que es como lo hace el Ministerio.',
+  'Oito cadernetas cabem nesta prateleira. O turno também se grava sozinho todo fim de expediente, e a morte devolve o inspetor à manhã do mesmo dia.':
+    'Ocho libretas caben en este estante. El turno también se guarda solo al final de cada jornada, y la muerte devuelve al inspector a la mañana del mismo día.',
+  'REGRAVAR A CADERNETA ': 'SOBRESCRIBIR LA LIBRETA ',
+  'ABRIR A CADERNETA ': 'ABRIR LA LIBRETA ',
+  'DESCARTAR A CADERNETA ': 'DESTRUIR LA LIBRETA ',
+  'O expediente arquivado nesta caderneta será substituído pelo atual. Não há segunda via.':
+    'La jornada archivada en esta libreta será sustituida por la actual. No hay segunda copia.',
+  'O expediente em curso é abandonado e o inspetor volta à manhã registrada nesta caderneta.':
+    'La jornada en curso se abandona y el inspector vuelve a la mañana registrada en esta libreta.',
+  'A caderneta é destruída. O que estava escrito nela deixa de ter existido — é assim que este país arquiva.':
+    'La libreta se destruye. Lo que estaba escrito en ella deja de haber existido — así archiva este país.',
+  'DEIXAR COMO ESTÁ': 'DEJARLA ASÍ',
+  'ARQUIVO CHEIO': 'ARCHIVO LLENO',
+  'Não há espaço no arquivo desta máquina para mais uma caderneta. Descarte uma antiga e tente de novo.':
+    'No hay espacio en el archivo de esta máquina para otra libreta. Destruya una vieja e inténtelo de nuevo.',
+  'ENTENDIDO': 'ENTENDIDO',
+  'REABRIR O DIA': 'REABRIR EL DÍA',
+  '08:00': '08:00',
+  '"Escolha, então. Obrigado pela franqueza."': '"Elija, entonces. Gracias por la franqueza."',
+  'FINAL — A CONTA FECHADA': 'FINAL — LA CUENTA CERRADA',
+  'A Conta Fechada': 'La Cuenta Cerrada',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
@@ -6771,15 +7135,20 @@ function faceLayout(f) {
   const jawSquare = fem ? 0.28 : (child ? 0.2 : 0.62) + (f.faceW * 0.06); // dureza do canto
   const chinW = jw * (fem ? 0.5 : child ? 0.55 : 0.62) + girth * 1.1; // meia-largura do queixo (papada alarga)
   const crownW = fw * (fem ? 0.62 : 0.66);         // largura do topo do crânio
-  const ax = (r() - 0.5) * 1.6;                                    // assimetria global
-  const tilt = (r() - 0.5) * 0.07;                                 // ninguém posa reto de verdade
+  const ax = f.simetrico ? 0 : (r() - 0.5) * 1.6;                  // assimetria global
+  const tilt = f.simetrico ? 0 : (r() - 0.5) * 0.07;               // ninguém posa reto de verdade
   // ASSIMETRIA POR TRAÇO: rosto perfeitamente espelhado é a maior "cara de
   // IA". Todo rosto real tem um olho um tico mais alto, uma sobrancelha que
   // sobe mais, um canto de boca que puxa. Pequeno mas SEMPRE presente.
-  const asymEye = (r() - 0.5) * 1.5;         // olho direito sobe/desce
-  const asymEyeH = 1 + (r() - 0.5) * 0.16;   // e um pouco maior/menor
-  const asymBrow = (r() - 0.5) * 2.0;         // sobrancelha direita mais alta/baixa
-  const asymMouth = (r() - 0.5) * 1.4;        // canto direito da boca puxa
+  let asymEye = (r() - 0.5) * 1.5;         // olho direito sobe/desce
+  let asymEyeH = 1 + (r() - 0.5) * 0.16;   // e um pouco maior/menor
+  let asymBrow = (r() - 0.5) * 2.0;         // sobrancelha direita mais alta/baixa
+  let asymMouth = (r() - 0.5) * 1.4;        // canto direito da boca puxa
+  /* f.simetrico: o rosto espelhado com exatidão. É a única situação em que a
+     "cara de IA" é o efeito PRETENDIDO — quem olha sente que algo está
+     errado sem conseguir dizer o quê, porque o que está errado é a ausência
+     do erro. Só O Contador tem isto. */
+  if (f.simetrico) { asymEye = 0; asymEyeH = 1; asymBrow = 0; asymMouth = 0; }
   // fator uncanny: distribuído por TODO MUNDO (humano ou não — nunca
   // existe "cara de Alternado garantida"; o mundo inteiro sai errado
   // na fita). ~12% dos rostos carregam um detalhe fora do lugar.
@@ -7251,7 +7620,7 @@ function paintBust(ctx, f, opts) {
   const my = L.mouthY, mw = L.mouthW;
   const droop = f.mouth === 1 ? 1.2 : f.mouth === 2 ? -0.4 : 0.5;
   const lipFull = L.lip || 0;
-  const lipTone = mix(SH, [130, 66, 56], L.fem ? 0.6 : 0.3);
+  const lipTone = f.batom ? [168, 40, 46] : mix(SH, [130, 66, 56], L.fem ? 0.6 : 0.3);
   // filtro do lábio (sulco acima)
   soft(ctx, cx, my - 3.2, 1.2, 1.8, rgb(SH, 0.35), 1);
   const op = opts.mouthOpen || 0;
@@ -8198,9 +8567,90 @@ function paintBust(ctx, f, opts) {
     hand(30, 1); hand(70, -1);
     ctx.restore();
   }
+  // TRAÇOS DE PERSONAGEM: o que distingue quem volta sempre
+  paintTraits(ctx, f, L, SK, SH);
   // ACOMPANHANTE: bebê de colo ou criança agarrada ao lado — na altura do
   // peito, por cima do busto (não tomba com a cabeça). Famílias na fronteira.
   if (opts.companion) paintCompanion(ctx, opts.companion);
+}
+
+/* ---------- TRAÇOS DOS ROSTOS QUE VOLTAM ----------
+   Camada fina por cima do busto pronto: maquiagem, olheiras, suor, feridas,
+   colarinho clerical. Cada uma é um sinal que o jogador aprende a ler de
+   longe — na fila, no vidro, antes mesmo do nome aparecer. Tudo desenhado
+   com as mesmas ferramentas do resto do rosto (sem sprite, sem asset). */
+function paintTraits(ctx, f, L, SK, SH) {
+  if (!f) return;
+  const cx = 50, ey = L.eyeY, dx = L.eyeDX;
+  if (f.kohl) {                       // delineador pesado: o traço que sobra no fim da noite
+    ctx.strokeStyle = 'rgba(22,16,14,.72)'; ctx.lineWidth = 1.05; ctx.lineCap = 'round';
+    for (const sgn of [-1, 1]) {
+      const ex = cx + sgn * dx, eyy = ey + (sgn > 0 ? L.asymEye : 0);
+      ctx.beginPath();
+      ctx.moveTo(ex - L.eyeW * 0.95, eyy + 0.3);
+      ctx.quadraticCurveTo(ex, eyy - L.eyeH - 0.9, ex + sgn * L.eyeW * 1.02, eyy - 0.4);
+      ctx.stroke();
+      ctx.beginPath();                // o rabinho puxado pra fora
+      ctx.moveTo(ex + sgn * L.eyeW * 0.98, eyy - 0.4);
+      ctx.lineTo(ex + sgn * (L.eyeW + 2.4), eyy - 2);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(22,16,14,.34)'; ctx.lineWidth = 0.7;
+      ctx.beginPath();                // e o borrado por baixo
+      ctx.moveTo(ex - L.eyeW * 0.7, eyy + L.eyeH + 1.1);
+      ctx.quadraticCurveTo(ex, eyy + L.eyeH + 1.7, ex + L.eyeW * 0.7, eyy + L.eyeH + 1);
+      ctx.stroke();
+      ctx.strokeStyle = 'rgba(22,16,14,.72)'; ctx.lineWidth = 1.05;
+    }
+  }
+  if (f.olheiras) {                   // quem não dorme carrega isso debaixo dos olhos
+    for (const sgn of [-1, 1]) {
+      const ex = cx + sgn * dx, eyy = ey + (sgn > 0 ? L.asymEye : 0);
+      soft(ctx, ex, eyy + L.eyeH + 2.4, L.eyeW * 0.95, 2.2, rgb(mix(darken(SH, 0.34), [70, 52, 84], 0.4), 0.4), 2.2);
+      ctx.strokeStyle = rgb(darken(SH, 0.4), 0.34); ctx.lineWidth = 0.5;
+      ctx.beginPath();
+      ctx.moveTo(ex - L.eyeW * 0.8, eyy + L.eyeH + 3.4);
+      ctx.quadraticCurveTo(ex, eyy + L.eyeH + 4.3, ex + L.eyeW * 0.8, eyy + L.eyeH + 3.2);
+      ctx.stroke();
+    }
+  }
+  if (f.suado) {                      // brilho de suor na testa e na têmpora
+    const g = L.r ? L.r : Math.random;
+    soft(ctx, cx - 3, L.browY - 6, 7, 2.6, 'rgba(255,250,238,.30)', 2.4);
+    soft(ctx, cx + 6, L.browY - 3.5, 3.4, 2, 'rgba(255,250,238,.24)', 2);
+    soft(ctx, cx - L.templeW * 0.72, ey + 1, 2.2, 3, 'rgba(255,250,238,.20)', 2);
+    ctx.fillStyle = 'rgba(255,252,244,.5)';
+    for (let i = 0; i < 5; i++) {
+      const px = cx - 9 + i * 4.4, py = L.browY - 8 + (i % 2) * 3;
+      ctx.beginPath(); ctx.ellipse(px, py, 0.55, 0.75, 0, 0, 6.29); ctx.fill();
+    }
+  }
+  if (f.feridas) {                    // feridas de quem se coça: canto da boca, maçã, queixo
+    const pts = [[cx - L.fw * 0.62, L.cheekY + 2.5, 1.5], [cx + L.fw * 0.5, L.cheekY + 6, 1.1],
+                 [cx + L.mouthW + 1.6, L.mouthY - 1, 0.9], [cx - 3, L.chinY - 3, 1.2]];
+    for (const [px, py, rr] of pts) {
+      ctx.fillStyle = 'rgba(112,44,36,.62)';
+      ctx.beginPath(); ctx.ellipse(px, py, rr, rr * 0.78, 0.4, 0, 6.29); ctx.fill();
+      ctx.fillStyle = 'rgba(58,26,22,.7)';
+      ctx.beginPath(); ctx.ellipse(px + 0.2, py + 0.2, rr * 0.55, rr * 0.4, 0.4, 0, 6.29); ctx.fill();
+      soft(ctx, px, py, rr * 2, rr * 1.6, 'rgba(150,60,48,.22)', 1.6);
+    }
+  }
+  if (f.peleFria) {                   // frio de estar sem sangue: só a borda azula
+    soft(ctx, cx, ey + 8, L.fw * 0.95, 16, 'rgba(96,132,168,.13)', 6);
+    soft(ctx, cx, L.chinY - 2, L.chinW * 1.4, 4, 'rgba(96,132,168,.16)', 3);
+  }
+  if (f.colarinho) {                  // o colarinho branco que sobrou da igreja
+    ctx.fillStyle = '#e6e2d6';
+    ctx.beginPath();
+    ctx.moveTo(cx - 9.5, 93); ctx.quadraticCurveTo(cx, 99, cx + 9.5, 93);
+    ctx.lineTo(cx + 8, 89.5); ctx.quadraticCurveTo(cx, 95, cx - 8, 89.5);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(0,0,0,.22)';
+    ctx.beginPath();
+    ctx.moveTo(cx - 9.5, 93); ctx.quadraticCurveTo(cx, 99, cx + 9.5, 93);
+    ctx.lineTo(cx + 9.2, 94.4); ctx.quadraticCurveTo(cx, 100.2, cx - 9.2, 94.4);
+    ctx.closePath(); ctx.fill();
+  }
 }
 function mwSafe(L) { return Math.max(6, L.mouthW * 0.9); }
 /* acompanhante no guichê (bebê no colo / criança ao lado do adulto) */
@@ -9496,11 +9946,13 @@ function startActorBlink(cz, cv) {
   const open = renderActorFrame(cz, false);
   blitActor(cv, open);
   const a = (cz && cz.anom) || {};
-  const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar);
+  const noBlink = (cz && cz.isSilente) || (cz && cz.phys && cz.phys.piscar)
+    || (cz && cz.features && cz.features.semPiscar);   // O Contador não pisca. Nunca.
   // MOVIMENTO VIVO (transform barato, sem re-render): respiração e leve balanço
   // dão vida; o nervoso treme; o não-humano fica parado DEMAIS e dá um espasmo
   // errado de vez em quando — dá pra desconfiar ali, sem exame.
-  const still = !!(a.deadStare || a.clearlyNonHuman) || (cz && cz.isSilente);
+  const still = !!(a.deadStare || a.clearlyNonHuman) || (cz && cz.isSilente)
+    || !!(cz && cz.features && cz.features.semPiscar);
   const breatheAmp = still ? 0 : 1;
   const tremor = (cz && cz.nervous && !still) ? 1 : 0;
   const t0 = performance.now();
@@ -10407,6 +10859,173 @@ function loadSave() {
   } catch (e) { return null; }
 }
 
+
+/* ============================================================
+   ARQUIVO DE CADERNETAS — 8 saves na máquina do jogador
+   ------------------------------------------------------------
+   Três camadas, cada uma com um papel diferente:
+     · AUTOSAVE (SAVE_KEY) — gravado ao fim de cada expediente. É o
+       "RETOMAR TURNO" do título. Uma só, sempre a mais recente.
+     · INSTANTÂNEO DO DIA (DAYSNAP_KEY) — tirado no INÍCIO de cada
+       dia, antes do primeiro cidadão. É o que devolve o jogador à
+       manhã quando ele morre: a morte custa o dia, não a campanha.
+     · CADERNETAS (SLOTS_KEY) — 8 arquivos manuais, gravados quando
+       o jogador quiser, com dia, regime, saldo e data de gravação
+       na etiqueta. Ele decide o que guardar; o Ministério não.
+   ============================================================ */
+const DAYSNAP_KEY = 'humanocracy_daysnap_v1';
+const SLOTS_KEY = 'humanocracy_slots_v1';
+const SLOT_MAX = 8;
+
+function cloneState(st) { try { return JSON.parse(JSON.stringify(st)); } catch (e) { return null; } }
+
+/* --- instantâneo do início do dia (a rede de segurança da morte) --- */
+function snapDay() {
+  if (!S || S.infinite) return;
+  try { localStorage.setItem(DAYSNAP_KEY, JSON.stringify({ day: S.day, ts: Date.now(), state: S })); } catch (e) {}
+}
+function loadDaySnap() {
+  try { const j = localStorage.getItem(DAYSNAP_KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; }
+}
+/* morrer devolve o inspetor à manhã do MESMO dia, com tudo como estava */
+function reopenDay() {
+  const snap = loadDaySnap();
+  if (!snap || !snap.state) { location.reload(); return; }
+  stopActorBlink && stopActorBlink();
+  clearInterval(shift.tickId); clearInterval(radioTimer);
+  stopAmbience();
+  THREAT.on = false; THREAT.resolved = true;
+  threatEndVisuals();
+  document.body.classList.remove('blackout', 'silente-present');
+  S = snap.state;
+  save();
+  startDay();
+}
+
+/* --- as 8 cadernetas --- */
+function slotsRead() {
+  let a = null;
+  try { a = JSON.parse(localStorage.getItem(SLOTS_KEY) || 'null'); } catch (e) { a = null; }
+  if (!Array.isArray(a)) a = [];
+  a.length = SLOT_MAX;
+  for (let i = 0; i < SLOT_MAX; i++) if (a[i] === undefined) a[i] = null;
+  return a;
+}
+function slotsWrite(a) {
+  try { localStorage.setItem(SLOTS_KEY, JSON.stringify(a)); return true; }
+  catch (e) { modal(T('ARQUIVO CHEIO'), T('Não há espaço no arquivo desta máquina para mais uma caderneta. Descarte uma antiga e tente de novo.'), [{ label: T('ENTENDIDO'), fn: () => {} }]); return false; }
+}
+function slotWrite(i) {
+  if (!S) return;
+  const a = slotsRead();
+  a[i] = {
+    day: S.day, money: S.money, regime: regimeOfDay(S.day),
+    modo: S.infinite ? 'infinito' : 'historia', infDay: S.infDay || 0,
+    data: fmtDate(worldDate(S.day)), ts: Date.now(), state: cloneState(S),
+  };
+  if (slotsWrite(a)) { sfx('stamp'); renderSlots(); }
+}
+function slotLoad(i) {
+  const a = slotsRead(), sl = a[i];
+  if (!sl || !sl.state) return;
+  S = sl.state;
+  save();
+  $('slots-overlay').classList.remove('active');
+  $('pause-overlay').classList.remove('active');
+  PAUSE.open = false; PAUSE.resumeShift = false; PAUSE.resumeHouse = false;
+  sfx('stamp');
+  showMorning();
+}
+function slotClear(i) {
+  const a = slotsRead(); a[i] = null; slotsWrite(a); sfx('ticket'); renderSlots();
+}
+
+let SLOTS_MODE = 'title';        // 'title' só carrega; 'jogo' também grava
+function openSlots(mode) {
+  SLOTS_MODE = mode || 'title';
+  renderSlots();
+  $('slots-overlay').classList.add('active');
+}
+function renderSlots() {
+  const grid = $('slots-grid'); if (!grid) return;
+  const a = slotsRead();
+  const podeGravar = SLOTS_MODE === 'jogo' && !!S;
+  const note = $('slots-note');
+  if (note) note.innerHTML = podeGravar
+    ? T('O expediente em curso é o <b>DIA</b> ') + (S ? S.day : '—')
+      + T('. Grave numa caderneta livre — ou por cima de uma velha, que é como o Ministério faz.')
+    : T('Oito cadernetas cabem nesta prateleira. O turno também se grava sozinho todo fim de expediente, e a morte devolve o inspetor à manhã do mesmo dia.');
+  grid.innerHTML = '';
+  for (let i = 0; i < SLOT_MAX; i++) {
+    const sl = a[i];
+    const card = document.createElement('div');
+    card.className = 'slot-card' + (sl ? '' : ' empty');
+    const num = document.createElement('div'); num.className = 'slot-num'; num.textContent = String(i + 1).padStart(2, '0');
+    card.appendChild(num);
+    const cap = document.createElement('div'); cap.className = 'slot-cap'; cap.textContent = T('CADERNETA DE SERVIÇO');
+    card.appendChild(cap);
+    if (sl) {
+      const d = document.createElement('div'); d.className = 'slot-day';
+      d.textContent = sl.modo === 'infinito' ? `${T('TURNO')} ${(sl.infDay || 0) + 1}` : `${T('DIA')} ${sl.day}`;
+      card.appendChild(d);
+      const l1 = document.createElement('div'); l1.className = 'slot-line';
+      l1.innerHTML = `<span>${T('REGIME')}:</span> ${T(REGIME_LABEL[sl.regime] || '—')}`;
+      card.appendChild(l1);
+      const l2 = document.createElement('div'); l2.className = 'slot-line';
+      l2.innerHTML = `<span>${T('DATA')}:</span> ${sl.data || '—'} &nbsp; <span>${MOEDA}</span> ${sl.money}`;
+      card.appendChild(l2);
+      const ts = document.createElement('div'); ts.className = 'slot-ts';
+      ts.textContent = T('gravada em ') + new Date(sl.ts).toLocaleString();
+      card.appendChild(ts);
+      const st = document.createElement('div'); st.className = 'slot-stamp'; st.textContent = T('ARQUIVADA');
+      card.appendChild(st);
+    } else {
+      const d = document.createElement('div'); d.className = 'slot-day'; d.textContent = T('— em branco —');
+      card.appendChild(d);
+      const l1 = document.createElement('div'); l1.className = 'slot-line';
+      l1.textContent = T('Capa sem etiqueta. Nenhum expediente consta.');
+      card.appendChild(l1);
+      const ts = document.createElement('div'); ts.className = 'slot-ts'; ts.textContent = ' ';
+      card.appendChild(ts);
+    }
+    const acts = document.createElement('div'); acts.className = 'slot-acts';
+    if (podeGravar) {
+      const b = document.createElement('button');
+      b.textContent = sl ? T('REGRAVAR') : T('GRAVAR');
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if (sl) modal(T('REGRAVAR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('O expediente arquivado nesta caderneta será substituído pelo atual. Não há segunda via.'),
+          [{ label: T('REGRAVAR'), fn: () => slotWrite(i) }, { label: T('DEIXAR COMO ESTÁ'), fn: () => {} }]);
+        else slotWrite(i);
+      };
+      acts.appendChild(b);
+    }
+    if (sl) {
+      const b2 = document.createElement('button');
+      b2.textContent = T('ABRIR');
+      b2.onclick = (e) => {
+        e.stopPropagation();
+        modal(T('ABRIR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('O expediente em curso é abandonado e o inspetor volta à manhã registrada nesta caderneta.'),
+          [{ label: T('ABRIR'), fn: () => slotLoad(i) }, { label: T('VOLTAR'), fn: () => {} }]);
+      };
+      acts.appendChild(b2);
+      const b3 = document.createElement('button');
+      b3.textContent = '✕'; b3.className = 'danger'; b3.title = T('Descartar');
+      b3.onclick = (e) => {
+        e.stopPropagation();
+        modal(T('DESCARTAR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('A caderneta é destruída. O que estava escrito nela deixa de ter existido — é assim que este país arquiva.'),
+          [{ label: T('DESCARTAR'), fn: () => slotClear(i) }, { label: T('VOLTAR'), fn: () => {} }]);
+      };
+      acts.appendChild(b3);
+    }
+    card.appendChild(acts);
+    grid.appendChild(card);
+  }
+}
+
 /* ---------- DATAS DO MUNDO ---------- */
 const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 function worldDate(day) { // dia 1 = 3 OUT 1957
@@ -10770,6 +11389,22 @@ function weightedPick(weights) {
   return Object.keys(weights)[0];
 }
 
+/* Quem, dos rostos que voltam, atravessa hoje. `req` são personagens que só
+   existem se o jogador os tiver convocado com o que fez (O Contador). */
+function specialForToday() {
+  if (S.infinite) return null;
+  /* quem foi CONVOCADO pelo próprio jogador tem prioridade sobre a agenda:
+     O Contador não divide o dia com ninguém. */
+  for (const id of SPECIAL_IDS) {
+    const sp = SPECIALS[id];
+    if (!sp.req || sp.dias) continue;
+    if (S.flags[sp.req] === S.day) return { id, sp, ap: {} };
+  }
+  const lista = specialsForDay(S.day);
+  if (lista.length) return lista[0];
+  return null;
+}
+
 function makeCitizen(day, opts) {
   opts = opts || {};
   const pais = opts.pais || (chance(.3) ? 'osteria' : pick(COUNTRY_IDS));
@@ -10798,6 +11433,20 @@ function makeCitizen(day, opts) {
       features.coat = pick(COAT_COLORS);
       if (!features.hat && chance(.4)) features.scarf = pick(SCARF_COLORS);
     }
+  }
+
+  /* LOOK dos personagens especiais: sobrescreve o retrato procedural depois
+     de gerado, para que o mesmo rosto volte igual em todos os dias — e mude
+     só no que o roteiro mudar (cabelo raspado na delegacia, batom que sumiu). */
+  if (opts.look) {
+    const lk = Object.assign({}, opts.look);
+    if (lk.uniformSet) {
+      const us = UNIFORM_STYLES[lk.uniformSet] || UNIFORM_STYLES._default;
+      features.uniform = true; features.uniformColor = us.color;
+      features.uniformTrim = us.trim; features.seal = (COUNTRIES[lk.uniformSet] || c).seal;
+      delete lk.uniformSet;
+    } else if ('uniformSet' in lk) { features.uniform = false; delete lk.uniformSet; }
+    for (const k in lk) { if (lk[k] === null) delete features[k]; else features[k] = lk[k]; }
   }
 
   const cz = {
@@ -11327,6 +11976,8 @@ function startDay() {
   shift.clock = 480; shift.processed = 0; shift.citToday = 0;
   shift.citizen = null; shift.picks = []; shift.confirmed = [];
   shift.encounterDone = false; shift.whispered = false;
+  shift.specialDone = false; shift.specialSlot = -1; shift.special = null;
+  shift.altInToday = 0;                       // Alternados que ENTRARAM hoje
   shift.wantedName = null;
   shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
   shift.stats = { a: 0, r: 0, d: 0 };
@@ -11340,6 +11991,14 @@ function startDay() {
       shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
     }
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
+    /* OS ROSTOS QUE VOLTAM: no máximo um por turno, num lugar da fila que não
+       é o mesmo do encontro roteirizado — o dia pode ter os dois. */
+    const cand = specialForToday();
+    if (cand) {
+      shift.special = cand;
+      shift.specialSlot = ri(2, Math.max(3, shift.queueSize - 2));
+      if (shift.specialSlot === shift.silenteSlot) shift.specialSlot++;
+    }
     // atentado do dia: alguém na metade da fila não veio viajar
     shift.attackKind = (!S.infinite && ATTACK_DAYS[S.day]) ? ATTACK_DAYS[S.day]
       : (S.infinite && S.infDay > 0 && S.infDay % 4 === 3) ? (chance(.5) ? 'gun' : 'bomb') : null;
@@ -11361,6 +12020,7 @@ function startDay() {
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
+  snapDay();          // a manhã fica guardada: morrer custa o dia, não a campanha
   // o que chega hoje só aparece na mesa depois do ofício assinado
   PENDING_TOOLS = new Set(S.infinite ? [] : Object.keys(TOOL_UNLOCK).filter(k => TOOL_UNLOCK[k].day === S.day));
   applyToolUnlocks();
@@ -12400,6 +13060,25 @@ function nextCitizen() {
         briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
       });
       if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+    } else if (shift.special && !shift.specialDone && shift.processed >= shift.specialSlot) {
+      shift.specialDone = true;
+      const { sp, ap, id } = shift.special;
+      const look = Object.assign({}, sp.look, ap.look || {});
+      const encLike = {
+        id: 'sp_' + id + '_' + S.day, especial: id, nome: sp.nome,
+        fala: (ap.fala || sp.fala || '').replace('%DIA%', String(S.flags.contadorFonte || S.day)),
+        nota: ap.nota || sp.nota || null, killer: !!sp.killer, valid: !!ap.valid,
+      };
+      cz = makeCitizen(S.day, {
+        nome: sp.nome, pais: sp.pais, sexo: sp.sexo, etnia: sp.etnia,
+        profissao: sp.profissao, motivo: ap.motivo || 'transito', look,
+        forceValid: ap.valid, forcedDisc: ap.forcedDisc, forcedMissing: ap.forcedMissing,
+        encounter: encLike,
+      });
+      cz.especial = id;
+      if (ap.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+      if (sp.killer) { cz.isAlternado = true; cz.matador = true; }
+      if (sp.req) S.flags[sp.req] = 0;   // convocado; pode ser chamado de novo depois
     } else if (shift.silenteSlot >= 0 && shift.processed === shift.silenteSlot) {
       shift.silenteSlot = -1;
       cz = makeSilente();
@@ -14114,6 +14793,23 @@ function decide(decision) {
     if (decision === 'detain') { threatResolve('detain'); return; }
     return;   // carimbar não faz um cinturão de explosivos ir embora
   }
+  /* O CONTADOR: não puxa arma nem cinturão. Espera. Carimbar — aprovar OU
+     rejeitar — é dizer a ele que foi escolha, e aí a conta fecha. Só a
+     detenção (ou o disparo) resolve. */
+  if (cz.matador && decision !== 'detain') {
+    shift.running = false;
+    clearInterval(shift.tickId);
+    $('speech').textContent = T('"Escolha, então. Obrigado pela franqueza."');
+    document.body.classList.add('silente-present');
+    sfxThreat('gun');
+    setTimeout(() => {
+      document.body.classList.remove('silente-present');
+      document.body.classList.add('blackout');
+      sfxShot(.9);
+      setTimeout(() => { document.body.classList.remove('blackout'); finishGame('contador'); }, 800);
+    }, 1400);
+    return;
+  }
   // tentar despachar o agressor é o que faz ele sacar: a detenção ainda
   // funciona (os guardas levam), qualquer carimbo desperta a ameaça
   if (cz.attacker && !cz.attackDone) {
@@ -14210,7 +14906,18 @@ function decide(decision) {
   // contadores e consequências invisíveis
   if (decision === 'approve') {
     S.counters.approved++;
-    if (cz.isAlternado) { S.counters.alternadosIn++; scheduleEcho(cz); }
+    if (cz.isAlternado) {
+      S.counters.alternadosIn++; scheduleEcho(cz);
+      /* DOIS num só turno é o que chama O Contador. Ele não vem por castigo:
+         vem conferir a conta, três dias depois, e a conta fecha de um jeito
+         ou de outro. Só marca uma vez — ele não é uma multa recorrente. */
+      shift.altInToday = (shift.altInToday || 0) + 1;
+      if (shift.altInToday >= 2 && !S.flags.contadorDay && !S.flags.contadorFeito) {
+        S.flags.contadorDay = Math.min(47, S.day + 3);
+        S.flags.contadorFonte = S.day;
+        S.pendingNews.push({ day: S.day + 1, text: T('Duas entradas de ontem não constam em nenhum registro de chegada do outro lado. O posto de origem responde que ninguém saiu. Os dois carimbos existem. As duas pessoas, não.') });
+      }
+    }
     if (cz.encounter) encounterOutcome(cz.encounter, 'approve');
   } else if (decision === 'reject') {
     S.counters.rejected++;
@@ -14941,6 +15648,7 @@ function drawHomeScene() {
 function pickEnding(kind) {
   const c = S.counters;
   if (kind === 'morto') return 'morto';
+  if (kind === 'contador') return 'contador';
   if (kind === 'silente') return 'silente';
   if (kind === 'prisao') return 'prisao';
   const famDead = Object.values(S.family).every(m => !m.alive);
@@ -14970,6 +15678,20 @@ function finishGame(kind) {
   if (S.day >= 48 && c.bribes === 0) unlockAchievement('ACH_LIMPO');
   $('ending-title').textContent = T(e.t);
   $('ending-body').textContent = T(e.b);
+  /* MORRER NÃO ENCERRA A CAMPANHA. O corpo é do inspetor; o posto é do
+     Estado, e o Estado reabre no horário. O jogador volta à manhã do MESMO
+     dia — perde o expediente, não os 48. (Prisão e os finais de escolha
+     continuam sendo finais: aqueles ele escolheu.) */
+  const MORTES = { morto: 1, contador: 1, silente: 1 };
+  const snap = MORTES[key] ? loadDaySnap() : null;
+  const rb = $('btn-reopen');
+  if (rb) {
+    if (snap && snap.state && !S.infinite) {
+      rb.style.display = '';
+      rb.textContent = `${T('REABRIR O DIA')} ${snap.day} — ${T('08:00')}`;
+      rb.onclick = () => reopenDay();
+    } else { rb.style.display = 'none'; rb.onclick = null; }
+  }
   const lang = SETTINGS.lang;
   const aliveWord = lang === 'en' ? 'alive' : lang === 'es' ? 'vivo(a)' : 'viva(o)';
   const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? aliveWord : '—'}`).join(' · ');
@@ -15148,6 +15870,7 @@ function tmMove(d) { const n = tmSlots().length; if (!n) return; TM.idx = (TM.id
 function tmDo(act) {
   if (act === 'play') { sfx('stamp'); showModeSelect(); }
   else if (act === 'continue') { const j = loadSave(); if (j) { S = j; showMorning(); } }
+  else if (act === 'slots') { openSlots('title'); }
   else if (act === 'achievements') { showAchievementsModal(); }
   else if (act === 'options') { const p = $('title-options'); if (p) { p.hidden = !p.hidden; sfx('ticket'); } }
 }
@@ -15190,6 +15913,8 @@ function renderHouse3dBtn() {
 $('btn-house3d').onclick = () => { SETTINGS.house3d = SETTINGS.house3d === false; saveSettings(); renderHouse3dBtn(); };
 $('btn-achievements').onclick = showAchievementsModal;
 $('pz-achievements').onclick = showAchievementsModal;
+$('pz-slots').onclick = () => openSlots('jogo');
+$('btn-slots-close').onclick = () => $('slots-overlay').classList.remove('active');
 function renderTextSizeBtn() {
   const label = (SETTINGS.textLarge ? '☑' : '☐') + ' ' + T('TEXTO GRANDE');
   $('btn-textsize').textContent = label;

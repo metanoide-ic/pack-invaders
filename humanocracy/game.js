@@ -592,6 +592,173 @@ function loadSave() {
   } catch (e) { return null; }
 }
 
+
+/* ============================================================
+   ARQUIVO DE CADERNETAS — 8 saves na máquina do jogador
+   ------------------------------------------------------------
+   Três camadas, cada uma com um papel diferente:
+     · AUTOSAVE (SAVE_KEY) — gravado ao fim de cada expediente. É o
+       "RETOMAR TURNO" do título. Uma só, sempre a mais recente.
+     · INSTANTÂNEO DO DIA (DAYSNAP_KEY) — tirado no INÍCIO de cada
+       dia, antes do primeiro cidadão. É o que devolve o jogador à
+       manhã quando ele morre: a morte custa o dia, não a campanha.
+     · CADERNETAS (SLOTS_KEY) — 8 arquivos manuais, gravados quando
+       o jogador quiser, com dia, regime, saldo e data de gravação
+       na etiqueta. Ele decide o que guardar; o Ministério não.
+   ============================================================ */
+const DAYSNAP_KEY = 'humanocracy_daysnap_v1';
+const SLOTS_KEY = 'humanocracy_slots_v1';
+const SLOT_MAX = 8;
+
+function cloneState(st) { try { return JSON.parse(JSON.stringify(st)); } catch (e) { return null; } }
+
+/* --- instantâneo do início do dia (a rede de segurança da morte) --- */
+function snapDay() {
+  if (!S || S.infinite) return;
+  try { localStorage.setItem(DAYSNAP_KEY, JSON.stringify({ day: S.day, ts: Date.now(), state: S })); } catch (e) {}
+}
+function loadDaySnap() {
+  try { const j = localStorage.getItem(DAYSNAP_KEY); return j ? JSON.parse(j) : null; } catch (e) { return null; }
+}
+/* morrer devolve o inspetor à manhã do MESMO dia, com tudo como estava */
+function reopenDay() {
+  const snap = loadDaySnap();
+  if (!snap || !snap.state) { location.reload(); return; }
+  stopActorBlink && stopActorBlink();
+  clearInterval(shift.tickId); clearInterval(radioTimer);
+  stopAmbience();
+  THREAT.on = false; THREAT.resolved = true;
+  threatEndVisuals();
+  document.body.classList.remove('blackout', 'silente-present');
+  S = snap.state;
+  save();
+  startDay();
+}
+
+/* --- as 8 cadernetas --- */
+function slotsRead() {
+  let a = null;
+  try { a = JSON.parse(localStorage.getItem(SLOTS_KEY) || 'null'); } catch (e) { a = null; }
+  if (!Array.isArray(a)) a = [];
+  a.length = SLOT_MAX;
+  for (let i = 0; i < SLOT_MAX; i++) if (a[i] === undefined) a[i] = null;
+  return a;
+}
+function slotsWrite(a) {
+  try { localStorage.setItem(SLOTS_KEY, JSON.stringify(a)); return true; }
+  catch (e) { modal(T('ARQUIVO CHEIO'), T('Não há espaço no arquivo desta máquina para mais uma caderneta. Descarte uma antiga e tente de novo.'), [{ label: T('ENTENDIDO'), fn: () => {} }]); return false; }
+}
+function slotWrite(i) {
+  if (!S) return;
+  const a = slotsRead();
+  a[i] = {
+    day: S.day, money: S.money, regime: regimeOfDay(S.day),
+    modo: S.infinite ? 'infinito' : 'historia', infDay: S.infDay || 0,
+    data: fmtDate(worldDate(S.day)), ts: Date.now(), state: cloneState(S),
+  };
+  if (slotsWrite(a)) { sfx('stamp'); renderSlots(); }
+}
+function slotLoad(i) {
+  const a = slotsRead(), sl = a[i];
+  if (!sl || !sl.state) return;
+  S = sl.state;
+  save();
+  $('slots-overlay').classList.remove('active');
+  $('pause-overlay').classList.remove('active');
+  PAUSE.open = false; PAUSE.resumeShift = false; PAUSE.resumeHouse = false;
+  sfx('stamp');
+  showMorning();
+}
+function slotClear(i) {
+  const a = slotsRead(); a[i] = null; slotsWrite(a); sfx('ticket'); renderSlots();
+}
+
+let SLOTS_MODE = 'title';        // 'title' só carrega; 'jogo' também grava
+function openSlots(mode) {
+  SLOTS_MODE = mode || 'title';
+  renderSlots();
+  $('slots-overlay').classList.add('active');
+}
+function renderSlots() {
+  const grid = $('slots-grid'); if (!grid) return;
+  const a = slotsRead();
+  const podeGravar = SLOTS_MODE === 'jogo' && !!S;
+  const note = $('slots-note');
+  if (note) note.innerHTML = podeGravar
+    ? T('O expediente em curso é o <b>DIA</b> ') + (S ? S.day : '—')
+      + T('. Grave numa caderneta livre — ou por cima de uma velha, que é como o Ministério faz.')
+    : T('Oito cadernetas cabem nesta prateleira. O turno também se grava sozinho todo fim de expediente, e a morte devolve o inspetor à manhã do mesmo dia.');
+  grid.innerHTML = '';
+  for (let i = 0; i < SLOT_MAX; i++) {
+    const sl = a[i];
+    const card = document.createElement('div');
+    card.className = 'slot-card' + (sl ? '' : ' empty');
+    const num = document.createElement('div'); num.className = 'slot-num'; num.textContent = String(i + 1).padStart(2, '0');
+    card.appendChild(num);
+    const cap = document.createElement('div'); cap.className = 'slot-cap'; cap.textContent = T('CADERNETA DE SERVIÇO');
+    card.appendChild(cap);
+    if (sl) {
+      const d = document.createElement('div'); d.className = 'slot-day';
+      d.textContent = sl.modo === 'infinito' ? `${T('TURNO')} ${(sl.infDay || 0) + 1}` : `${T('DIA')} ${sl.day}`;
+      card.appendChild(d);
+      const l1 = document.createElement('div'); l1.className = 'slot-line';
+      l1.innerHTML = `<span>${T('REGIME')}:</span> ${T(REGIME_LABEL[sl.regime] || '—')}`;
+      card.appendChild(l1);
+      const l2 = document.createElement('div'); l2.className = 'slot-line';
+      l2.innerHTML = `<span>${T('DATA')}:</span> ${sl.data || '—'} &nbsp; <span>${MOEDA}</span> ${sl.money}`;
+      card.appendChild(l2);
+      const ts = document.createElement('div'); ts.className = 'slot-ts';
+      ts.textContent = T('gravada em ') + new Date(sl.ts).toLocaleString();
+      card.appendChild(ts);
+      const st = document.createElement('div'); st.className = 'slot-stamp'; st.textContent = T('ARQUIVADA');
+      card.appendChild(st);
+    } else {
+      const d = document.createElement('div'); d.className = 'slot-day'; d.textContent = T('— em branco —');
+      card.appendChild(d);
+      const l1 = document.createElement('div'); l1.className = 'slot-line';
+      l1.textContent = T('Capa sem etiqueta. Nenhum expediente consta.');
+      card.appendChild(l1);
+      const ts = document.createElement('div'); ts.className = 'slot-ts'; ts.textContent = ' ';
+      card.appendChild(ts);
+    }
+    const acts = document.createElement('div'); acts.className = 'slot-acts';
+    if (podeGravar) {
+      const b = document.createElement('button');
+      b.textContent = sl ? T('REGRAVAR') : T('GRAVAR');
+      b.onclick = (e) => {
+        e.stopPropagation();
+        if (sl) modal(T('REGRAVAR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('O expediente arquivado nesta caderneta será substituído pelo atual. Não há segunda via.'),
+          [{ label: T('REGRAVAR'), fn: () => slotWrite(i) }, { label: T('DEIXAR COMO ESTÁ'), fn: () => {} }]);
+        else slotWrite(i);
+      };
+      acts.appendChild(b);
+    }
+    if (sl) {
+      const b2 = document.createElement('button');
+      b2.textContent = T('ABRIR');
+      b2.onclick = (e) => {
+        e.stopPropagation();
+        modal(T('ABRIR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('O expediente em curso é abandonado e o inspetor volta à manhã registrada nesta caderneta.'),
+          [{ label: T('ABRIR'), fn: () => slotLoad(i) }, { label: T('VOLTAR'), fn: () => {} }]);
+      };
+      acts.appendChild(b2);
+      const b3 = document.createElement('button');
+      b3.textContent = '✕'; b3.className = 'danger'; b3.title = T('Descartar');
+      b3.onclick = (e) => {
+        e.stopPropagation();
+        modal(T('DESCARTAR A CADERNETA ') + String(i + 1).padStart(2, '0'),
+          T('A caderneta é destruída. O que estava escrito nela deixa de ter existido — é assim que este país arquiva.'),
+          [{ label: T('DESCARTAR'), fn: () => slotClear(i) }, { label: T('VOLTAR'), fn: () => {} }]);
+      };
+      acts.appendChild(b3);
+    }
+    card.appendChild(acts);
+    grid.appendChild(card);
+  }
+}
+
 /* ---------- DATAS DO MUNDO ---------- */
 const MONTHS = ['JAN', 'FEV', 'MAR', 'ABR', 'MAI', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ'];
 function worldDate(day) { // dia 1 = 3 OUT 1957
@@ -955,6 +1122,22 @@ function weightedPick(weights) {
   return Object.keys(weights)[0];
 }
 
+/* Quem, dos rostos que voltam, atravessa hoje. `req` são personagens que só
+   existem se o jogador os tiver convocado com o que fez (O Contador). */
+function specialForToday() {
+  if (S.infinite) return null;
+  /* quem foi CONVOCADO pelo próprio jogador tem prioridade sobre a agenda:
+     O Contador não divide o dia com ninguém. */
+  for (const id of SPECIAL_IDS) {
+    const sp = SPECIALS[id];
+    if (!sp.req || sp.dias) continue;
+    if (S.flags[sp.req] === S.day) return { id, sp, ap: {} };
+  }
+  const lista = specialsForDay(S.day);
+  if (lista.length) return lista[0];
+  return null;
+}
+
 function makeCitizen(day, opts) {
   opts = opts || {};
   const pais = opts.pais || (chance(.3) ? 'osteria' : pick(COUNTRY_IDS));
@@ -983,6 +1166,20 @@ function makeCitizen(day, opts) {
       features.coat = pick(COAT_COLORS);
       if (!features.hat && chance(.4)) features.scarf = pick(SCARF_COLORS);
     }
+  }
+
+  /* LOOK dos personagens especiais: sobrescreve o retrato procedural depois
+     de gerado, para que o mesmo rosto volte igual em todos os dias — e mude
+     só no que o roteiro mudar (cabelo raspado na delegacia, batom que sumiu). */
+  if (opts.look) {
+    const lk = Object.assign({}, opts.look);
+    if (lk.uniformSet) {
+      const us = UNIFORM_STYLES[lk.uniformSet] || UNIFORM_STYLES._default;
+      features.uniform = true; features.uniformColor = us.color;
+      features.uniformTrim = us.trim; features.seal = (COUNTRIES[lk.uniformSet] || c).seal;
+      delete lk.uniformSet;
+    } else if ('uniformSet' in lk) { features.uniform = false; delete lk.uniformSet; }
+    for (const k in lk) { if (lk[k] === null) delete features[k]; else features[k] = lk[k]; }
   }
 
   const cz = {
@@ -1512,6 +1709,8 @@ function startDay() {
   shift.clock = 480; shift.processed = 0; shift.citToday = 0;
   shift.citizen = null; shift.picks = []; shift.confirmed = [];
   shift.encounterDone = false; shift.whispered = false;
+  shift.specialDone = false; shift.specialSlot = -1; shift.special = null;
+  shift.altInToday = 0;                       // Alternados que ENTRARAM hoje
   shift.wantedName = null;
   shift.approvedToday = 0; shift.quotaRejects = 0; shift.returnDone = false;
   shift.stats = { a: 0, r: 0, d: 0 };
@@ -1525,6 +1724,14 @@ function startDay() {
       shift.wantedSlot = ri(2, Math.max(3, shift.queueSize - 3));
     }
     shift.silenteSlot = (S.silenteDays || []).includes(S.day) ? ri(2, Math.max(3, shift.queueSize - 2)) : -1;
+    /* OS ROSTOS QUE VOLTAM: no máximo um por turno, num lugar da fila que não
+       é o mesmo do encontro roteirizado — o dia pode ter os dois. */
+    const cand = specialForToday();
+    if (cand) {
+      shift.special = cand;
+      shift.specialSlot = ri(2, Math.max(3, shift.queueSize - 2));
+      if (shift.specialSlot === shift.silenteSlot) shift.specialSlot++;
+    }
     // atentado do dia: alguém na metade da fila não veio viajar
     shift.attackKind = (!S.infinite && ATTACK_DAYS[S.day]) ? ATTACK_DAYS[S.day]
       : (S.infinite && S.infDay > 0 && S.infDay % 4 === 3) ? (chance(.5) ? 'gun' : 'bomb') : null;
@@ -1546,6 +1753,7 @@ function startDay() {
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
+  snapDay();          // a manhã fica guardada: morrer custa o dia, não a campanha
   // o que chega hoje só aparece na mesa depois do ofício assinado
   PENDING_TOOLS = new Set(S.infinite ? [] : Object.keys(TOOL_UNLOCK).filter(k => TOOL_UNLOCK[k].day === S.day));
   applyToolUnlocks();
@@ -2585,6 +2793,25 @@ function nextCitizen() {
         briberia: enc.briberia, scannerAmbiguo: enc.scannerAmbiguo, encounter: enc,
       });
       if (enc.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+    } else if (shift.special && !shift.specialDone && shift.processed >= shift.specialSlot) {
+      shift.specialDone = true;
+      const { sp, ap, id } = shift.special;
+      const look = Object.assign({}, sp.look, ap.look || {});
+      const encLike = {
+        id: 'sp_' + id + '_' + S.day, especial: id, nome: sp.nome,
+        fala: (ap.fala || sp.fala || '').replace('%DIA%', String(S.flags.contadorFonte || S.day)),
+        nota: ap.nota || sp.nota || null, killer: !!sp.killer, valid: !!ap.valid,
+      };
+      cz = makeCitizen(S.day, {
+        nome: sp.nome, pais: sp.pais, sexo: sp.sexo, etnia: sp.etnia,
+        profissao: sp.profissao, motivo: ap.motivo || 'transito', look,
+        forceValid: ap.valid, forcedDisc: ap.forcedDisc, forcedMissing: ap.forcedMissing,
+        encounter: encLike,
+      });
+      cz.especial = id;
+      if (ap.valid) { cz.isAlternado = false; cz.isForger = false; cz.discrepancies = []; }
+      if (sp.killer) { cz.isAlternado = true; cz.matador = true; }
+      if (sp.req) S.flags[sp.req] = 0;   // convocado; pode ser chamado de novo depois
     } else if (shift.silenteSlot >= 0 && shift.processed === shift.silenteSlot) {
       shift.silenteSlot = -1;
       cz = makeSilente();
@@ -4299,6 +4526,23 @@ function decide(decision) {
     if (decision === 'detain') { threatResolve('detain'); return; }
     return;   // carimbar não faz um cinturão de explosivos ir embora
   }
+  /* O CONTADOR: não puxa arma nem cinturão. Espera. Carimbar — aprovar OU
+     rejeitar — é dizer a ele que foi escolha, e aí a conta fecha. Só a
+     detenção (ou o disparo) resolve. */
+  if (cz.matador && decision !== 'detain') {
+    shift.running = false;
+    clearInterval(shift.tickId);
+    $('speech').textContent = T('"Escolha, então. Obrigado pela franqueza."');
+    document.body.classList.add('silente-present');
+    sfxThreat('gun');
+    setTimeout(() => {
+      document.body.classList.remove('silente-present');
+      document.body.classList.add('blackout');
+      sfxShot(.9);
+      setTimeout(() => { document.body.classList.remove('blackout'); finishGame('contador'); }, 800);
+    }, 1400);
+    return;
+  }
   // tentar despachar o agressor é o que faz ele sacar: a detenção ainda
   // funciona (os guardas levam), qualquer carimbo desperta a ameaça
   if (cz.attacker && !cz.attackDone) {
@@ -4395,7 +4639,18 @@ function decide(decision) {
   // contadores e consequências invisíveis
   if (decision === 'approve') {
     S.counters.approved++;
-    if (cz.isAlternado) { S.counters.alternadosIn++; scheduleEcho(cz); }
+    if (cz.isAlternado) {
+      S.counters.alternadosIn++; scheduleEcho(cz);
+      /* DOIS num só turno é o que chama O Contador. Ele não vem por castigo:
+         vem conferir a conta, três dias depois, e a conta fecha de um jeito
+         ou de outro. Só marca uma vez — ele não é uma multa recorrente. */
+      shift.altInToday = (shift.altInToday || 0) + 1;
+      if (shift.altInToday >= 2 && !S.flags.contadorDay && !S.flags.contadorFeito) {
+        S.flags.contadorDay = Math.min(47, S.day + 3);
+        S.flags.contadorFonte = S.day;
+        S.pendingNews.push({ day: S.day + 1, text: T('Duas entradas de ontem não constam em nenhum registro de chegada do outro lado. O posto de origem responde que ninguém saiu. Os dois carimbos existem. As duas pessoas, não.') });
+      }
+    }
     if (cz.encounter) encounterOutcome(cz.encounter, 'approve');
   } else if (decision === 'reject') {
     S.counters.rejected++;
@@ -5126,6 +5381,7 @@ function drawHomeScene() {
 function pickEnding(kind) {
   const c = S.counters;
   if (kind === 'morto') return 'morto';
+  if (kind === 'contador') return 'contador';
   if (kind === 'silente') return 'silente';
   if (kind === 'prisao') return 'prisao';
   const famDead = Object.values(S.family).every(m => !m.alive);
@@ -5155,6 +5411,20 @@ function finishGame(kind) {
   if (S.day >= 48 && c.bribes === 0) unlockAchievement('ACH_LIMPO');
   $('ending-title').textContent = T(e.t);
   $('ending-body').textContent = T(e.b);
+  /* MORRER NÃO ENCERRA A CAMPANHA. O corpo é do inspetor; o posto é do
+     Estado, e o Estado reabre no horário. O jogador volta à manhã do MESMO
+     dia — perde o expediente, não os 48. (Prisão e os finais de escolha
+     continuam sendo finais: aqueles ele escolheu.) */
+  const MORTES = { morto: 1, contador: 1, silente: 1 };
+  const snap = MORTES[key] ? loadDaySnap() : null;
+  const rb = $('btn-reopen');
+  if (rb) {
+    if (snap && snap.state && !S.infinite) {
+      rb.style.display = '';
+      rb.textContent = `${T('REABRIR O DIA')} ${snap.day} — ${T('08:00')}`;
+      rb.onclick = () => reopenDay();
+    } else { rb.style.display = 'none'; rb.onclick = null; }
+  }
   const lang = SETTINGS.lang;
   const aliveWord = lang === 'en' ? 'alive' : lang === 'es' ? 'vivo(a)' : 'viva(o)';
   const fam = Object.values(S.family).map(m => `${m.nome.split(' ')[0].replace(',', '')}: ${m.alive ? aliveWord : '—'}`).join(' · ');
@@ -5333,6 +5603,7 @@ function tmMove(d) { const n = tmSlots().length; if (!n) return; TM.idx = (TM.id
 function tmDo(act) {
   if (act === 'play') { sfx('stamp'); showModeSelect(); }
   else if (act === 'continue') { const j = loadSave(); if (j) { S = j; showMorning(); } }
+  else if (act === 'slots') { openSlots('title'); }
   else if (act === 'achievements') { showAchievementsModal(); }
   else if (act === 'options') { const p = $('title-options'); if (p) { p.hidden = !p.hidden; sfx('ticket'); } }
 }
@@ -5375,6 +5646,8 @@ function renderHouse3dBtn() {
 $('btn-house3d').onclick = () => { SETTINGS.house3d = SETTINGS.house3d === false; saveSettings(); renderHouse3dBtn(); };
 $('btn-achievements').onclick = showAchievementsModal;
 $('pz-achievements').onclick = showAchievementsModal;
+$('pz-slots').onclick = () => openSlots('jogo');
+$('btn-slots-close').onclick = () => $('slots-overlay').classList.remove('active');
 function renderTextSizeBtn() {
   const label = (SETTINGS.textLarge ? '☑' : '☐') + ' ' + T('TEXTO GRANDE');
   $('btn-textsize').textContent = label;
