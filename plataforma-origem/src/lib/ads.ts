@@ -17,6 +17,8 @@ export interface SyncResult {
   ok: boolean;
   atualizadas: number;
   erro?: string;
+  /** Plataformas que falharam sem impedir as demais de sincronizar. */
+  avisos?: string[];
 }
 
 /**
@@ -31,9 +33,13 @@ export async function syncCampaignMetrics(): Promise<SyncResult> {
     return { ok: false, atualizadas: 0, erro: 'Informe o endereço do Conector Orikay em Integrações.' };
   }
 
-  const comId = store.campaigns.filter((c) => c.externalId && c.platform === 'Meta');
+  const comId = store.campaigns.filter((c) => c.externalId);
   if (comId.length === 0) {
-    return { ok: false, atualizadas: 0, erro: 'Nenhuma campanha da Meta com ID preenchido para sincronizar.' };
+    return {
+      ok: false,
+      atualizadas: 0,
+      erro: 'Nenhuma campanha com o ID preenchido. Abra a campanha e informe o ID que ela tem na plataforma de anúncios.',
+    };
   }
 
   try {
@@ -42,7 +48,7 @@ export async function syncCampaignMetrics(): Promise<SyncResult> {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         tipo: 'metricas',
-        campanhas: comId.map((c) => ({ id: c.id, externalId: c.externalId })),
+        campanhas: comId.map((c) => ({ id: c.id, externalId: c.externalId, plataforma: c.platform })),
       }),
     });
     const data = await res.json();
@@ -65,13 +71,14 @@ export async function syncCampaignMetrics(): Promise<SyncResult> {
       atualizadas++;
     }
 
+    const avisos: string[] = data.avisos ?? [];
     store.addEvent({
       channel: 'sistema',
       title: 'Métricas de tráfego atualizadas',
-      status: 'ok',
-      detail: `${atualizadas} campanha(s) sincronizada(s) com a Meta.`,
+      status: avisos.length ? 'erro' : 'ok',
+      detail: `${atualizadas} campanha(s) sincronizada(s).` + (avisos.length ? ` Sem retorno de: ${avisos.join('; ')}` : ''),
     });
-    return { ok: true, atualizadas };
+    return { ok: true, atualizadas, avisos };
   } catch (e) {
     const erro = (e as Error).message;
     store.addEvent({ channel: 'sistema', title: 'Falha ao sincronizar métricas', status: 'erro', detail: erro });

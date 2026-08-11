@@ -31,6 +31,14 @@ const CONFIG_PADRAO = {
   igToken: '',
   adAccountId: '',
   adsToken: '',
+  googleDevToken: '',
+  googleClientId: '',
+  googleClientSecret: '',
+  googleRefreshToken: '',
+  googleCustomerId: '',
+  googleLoginCustomerId: '',
+  tiktokToken: '',
+  tiktokAdvertiserId: '',
   entradaToken: '',
 };
 
@@ -128,48 +136,172 @@ async function publicarInstagram(destino, legenda, mediaUrl) {
 
 /* ------------------------- Tráfego pago (Meta Ads) -------------------- */
 
+// Endereços das APIs. Variáveis de ambiente só existem para poder testar
+// o conector sem bater nas plataformas de verdade.
+const API_META = process.env.API_META || 'https://graph.facebook.com/v21.0';
+const API_GOOGLE = process.env.API_GOOGLE || 'https://googleads.googleapis.com/v18';
+const API_GOOGLE_OAUTH = process.env.API_GOOGLE_OAUTH || 'https://oauth2.googleapis.com/token';
+const API_TIKTOK = process.env.API_TIKTOK || 'https://business-api.tiktok.com/open_api/v1.3';
+
+const zero = (id) => ({ id, spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 });
+
+/** Uma campanha na Meta. */
+async function metricasMeta(c) {
+  const token = config.adsToken || config.igToken;
+  if (!token) throw new Error('token de anúncios da Meta não configurado');
+
+  const url = new URL(`${API_META}/${c.externalId}/insights`);
+  url.searchParams.set('access_token', token);
+  url.searchParams.set('fields', 'spend,impressions,reach,clicks,actions');
+  url.searchParams.set('date_preset', 'maximum');
+
+  const res = await fetch(url);
+  const json = await res.json();
+  if (!res.ok) throw new Error(`Meta: ${JSON.stringify(json).slice(0, 180)}`);
+
+  const linha = json.data?.[0];
+  if (!linha) return zero(c.id);
+
+  // "Resultados" varia com o objetivo: pega a ação mais relevante disponível.
+  const acoes = linha.actions || [];
+  const prioridade = ['purchase', 'lead', 'onsite_conversion.messaging_conversation_started_7d', 'link_click'];
+  let results = 0;
+  for (const tipo of prioridade) {
+    const achou = acoes.find((a) => a.action_type === tipo);
+    if (achou) { results = Number(achou.value) || 0; break; }
+  }
+
+  return {
+    id: c.id,
+    spend: Number(linha.spend) || 0,
+    impressions: Number(linha.impressions) || 0,
+    reach: Number(linha.reach) || 0,
+    clicks: Number(linha.clicks) || 0,
+    results,
+  };
+}
+
+/** O Google devolve token de acesso curto a partir do refresh token. */
+let googleToken = { valor: '', validoAte: 0 };
+async function tokenGoogle() {
+  if (googleToken.valor && Date.now() < googleToken.validoAte) return googleToken.valor;
+  const { googleClientId, googleClientSecret, googleRefreshToken } = config;
+  if (!googleClientId || !googleClientSecret || !googleRefreshToken) {
+    throw new Error('Google Ads não configurado (cliente, segredo e refresh token)');
+  }
+  const res = await fetch(API_GOOGLE_OAUTH, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: googleClientId,
+      client_secret: googleClientSecret,
+      refresh_token: googleRefreshToken,
+      grant_type: 'refresh_token',
+    }),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.access_token) throw new Error(`Google (login): ${JSON.stringify(json).slice(0, 180)}`);
+  googleToken = { valor: json.access_token, validoAte: Date.now() + (Number(json.expires_in) || 3000) * 900 };
+  return googleToken.valor;
+}
+
+/** Uma campanha no Google Ads. */
+async function metricasGoogle(c) {
+  const cliente = String(config.googleCustomerId || '').replace(/\D/g, '');
+  if (!cliente) throw new Error('ID da conta do Google Ads não configurado');
+  const token = await tokenGoogle();
+
+  const consulta =
+    'SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions ' +
+    'FROM campaign WHERE campaign.id = ' + String(c.externalId).replace(/\D/g, '');
+
+  const res = await fetch(`${API_GOOGLE}/customers/${cliente}/googleAds:search`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      'developer-token': config.googleDevToken || '',
+      ...(config.googleLoginCustomerId
+        ? { 'login-customer-id': String(config.googleLoginCustomerId).replace(/\D/g, '') }
+        : {}),
+    },
+    body: JSON.stringify({ query: consulta }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(`Google: ${JSON.stringify(json).slice(0, 180)}`);
+
+  const m = json.results?.[0]?.metrics;
+  if (!m) return zero(c.id);
+  return {
+    id: c.id,
+    spend: (Number(m.costMicros) || 0) / 1e6, // o Google devolve em micros
+    impressions: Number(m.impressions) || 0,
+    reach: 0, // o Google Ads não expõe alcance como a Meta
+    clicks: Number(m.clicks) || 0,
+    results: Math.round(Number(m.conversions) || 0),
+  };
+}
+
+/** Uma campanha no TikTok Ads. */
+async function metricasTiktok(c) {
+  const { tiktokToken, tiktokAdvertiserId } = config;
+  if (!tiktokToken || !tiktokAdvertiserId) throw new Error('TikTok Ads não configurado');
+
+  const url = new URL(`${API_TIKTOK}/report/integrated/get/`);
+  url.searchParams.set('advertiser_id', tiktokAdvertiserId);
+  url.searchParams.set('report_type', 'BASIC');
+  url.searchParams.set('data_level', 'AUCTION_CAMPAIGN');
+  url.searchParams.set('dimensions', JSON.stringify(['campaign_id']));
+  url.searchParams.set('metrics', JSON.stringify(['spend', 'impressions', 'reach', 'clicks', 'conversion']));
+  url.searchParams.set('filters', JSON.stringify([
+    { field_name: 'campaign_ids', filter_type: 'IN', filter_value: JSON.stringify([String(c.externalId)]) },
+  ]));
+  url.searchParams.set('lifetime', 'true');
+
+  const res = await fetch(url, { headers: { 'Access-Token': tiktokToken } });
+  const json = await res.json();
+  if (!res.ok || (json.code && json.code !== 0)) {
+    throw new Error(`TikTok: ${(json.message || JSON.stringify(json)).slice(0, 180)}`);
+  }
+
+  const m = json.data?.list?.[0]?.metrics;
+  if (!m) return zero(c.id);
+  return {
+    id: c.id,
+    spend: Number(m.spend) || 0,
+    impressions: Number(m.impressions) || 0,
+    reach: Number(m.reach) || 0,
+    clicks: Number(m.clicks) || 0,
+    results: Number(m.conversion) || 0,
+  };
+}
+
 /**
- * Busca os números das campanhas na Meta. Devolve um item por campanha,
- * com os nomes de campo que a plataforma espera.
+ * Busca os números de cada campanha na plataforma dela. Uma plataforma
+ * desconfigurada não derruba as outras: vira aviso, e o resto sincroniza.
  */
 async function buscarMetricas(campanhas) {
-  const token = config.adsToken || config.igToken;
-  if (!token) throw new Error('token de anúncios não configurado no conector');
-
   const saida = [];
+  const avisos = [];
+  const jaAvisou = new Set();
+
   for (const c of campanhas) {
     if (!c.externalId) continue;
-    const url = new URL(`https://graph.facebook.com/v21.0/${c.externalId}/insights`);
-    url.searchParams.set('access_token', token);
-    url.searchParams.set('fields', 'spend,impressions,reach,clicks,actions');
-    url.searchParams.set('date_preset', 'maximum');
-
-    const res = await fetch(url);
-    const json = await res.json();
-    if (!res.ok) throw new Error(`Graph API: ${JSON.stringify(json).slice(0, 180)}`);
-
-    const linha = json.data?.[0];
-    if (!linha) { saida.push({ id: c.id, spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 }); continue; }
-
-    // "Resultados" varia com o objetivo: pega a ação mais relevante disponível.
-    const acoes = linha.actions || [];
-    const prioridade = ['purchase', 'lead', 'onsite_conversion.messaging_conversation_started_7d', 'link_click'];
-    let results = 0;
-    for (const tipo of prioridade) {
-      const achou = acoes.find((a) => a.action_type === tipo);
-      if (achou) { results = Number(achou.value) || 0; break; }
+    const plataforma = c.plataforma || 'Meta';
+    try {
+      if (plataforma === 'Google') saida.push(await metricasGoogle(c));
+      else if (plataforma === 'TikTok') saida.push(await metricasTiktok(c));
+      else saida.push(await metricasMeta(c));
+    } catch (e) {
+      if (!jaAvisou.has(plataforma)) {
+        jaAvisou.add(plataforma);
+        avisos.push(`${plataforma}: ${e.message}`);
+      }
     }
-
-    saida.push({
-      id: c.id,
-      spend: Number(linha.spend) || 0,
-      impressions: Number(linha.impressions) || 0,
-      reach: Number(linha.reach) || 0,
-      clicks: Number(linha.clicks) || 0,
-      results,
-    });
   }
-  return saida;
+
+  if (saida.length === 0 && avisos.length > 0) throw new Error(avisos.join(' | '));
+  return { metricas: saida, avisos };
 }
 
 /* --------------------- Respostas do grupo (entrada) ------------------- */
@@ -284,9 +416,9 @@ async function processar(evento) {
   }
 
   if (tipo === 'metricas') {
-    const metricas = await buscarMetricas(evento.campanhas || []);
-    registrar('metricas', `${metricas.length} campanha(s) consultada(s) na Meta`);
-    return { metricas };
+    const { metricas, avisos } = await buscarMetricas(evento.campanhas || []);
+    registrar('metricas', `${metricas.length} campanha(s) consultada(s)` + (avisos.length ? ` (${avisos.join('; ')})` : ''), avisos.length === 0);
+    return { metricas, avisos };
   }
 
   if (tipo === 'publicar') {
@@ -379,6 +511,8 @@ const servidor = createServer(async (req, res) => {
       instagram: Boolean(config.igUserId && config.igToken),
       ads: Boolean(config.adsToken || config.igToken),
       aguardando: [...aguardando.values()].reduce((n, f) => n + f.length, 0),
+      google: Boolean(config.googleCustomerId && config.googleRefreshToken && config.googleDevToken),
+      tiktok: Boolean(config.tiktokToken && config.tiktokAdvertiserId),
     }));
   }
 
@@ -497,6 +631,34 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   </div>
 
   <div class="card">
+    <h2><span class="dot" id="dg"></span> Tráfego pago (Google Ads)</h2>
+    <div class="row">
+      <div><label>ID da conta</label><input id="googleCustomerId" placeholder="123-456-7890"></div>
+      <div><label>Developer token</label><input id="googleDevToken"></div>
+    </div>
+    <div class="row">
+      <div><label>Client ID</label><input id="googleClientId"></div>
+      <div><label>Client secret</label><input id="googleClientSecret"></div>
+    </div>
+    <div class="row">
+      <div><label>Refresh token</label><input id="googleRefreshToken"></div>
+      <div><label>Conta gerenciadora (MCC), se houver</label><input id="googleLoginCustomerId"></div>
+    </div>
+    <p class="hint">O developer token sai do Google Ads API Center; os outros três vêm de um
+      projeto no Google Cloud com a API do Google Ads liberada. É mais trabalhoso que a Meta,
+      mas é feito uma vez só.</p>
+  </div>
+
+  <div class="card">
+    <h2><span class="dot" id="dt"></span> Tráfego pago (TikTok Ads)</h2>
+    <div class="row">
+      <div><label>ID do anunciante</label><input id="tiktokAdvertiserId"></div>
+      <div><label>Token de acesso</label><input id="tiktokToken"></div>
+    </div>
+    <p class="hint">Gerados no TikTok for Business, em Ferramentas para desenvolvedores.</p>
+  </div>
+
+  <div class="card">
     <h2><span class="dot" id="de"></span> Respostas do grupo</h2>
     <p class="hint" style="margin:0 0 10px">Quando o cliente responder no grupo, o post é aprovado
       ou volta para Alteração sozinho. Para isso o provedor de WhatsApp precisa alcançar este
@@ -518,7 +680,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   </div>
 </div>
 <script>
-  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken'];
+  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken','googleCustomerId','googleDevToken','googleClientId','googleClientSecret','googleRefreshToken','googleLoginCustomerId','tiktokAdvertiserId','tiktokToken'];
   document.getElementById('url').textContent = location.origin + '/webhook';
   document.getElementById('provedor').onchange = trocar;
   function trocar(){
@@ -534,6 +696,8 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     document.getElementById('di').className = 'dot' + (r.instagram ? ' on' : '');
     document.getElementById('da').className = 'dot' + (r.ads ? ' on' : '');
     document.getElementById('de').className = 'dot' + (r.aguardando ? ' on' : '');
+    document.getElementById('dg').className = 'dot' + (r.google ? ' on' : '');
+    document.getElementById('dt').className = 'dot' + (r.tiktok ? ' on' : '');
     document.getElementById('entrada').textContent =
       location.origin + '/entrada?token=' + r.config.entradaToken;
     const h = document.getElementById('hist');

@@ -81,9 +81,19 @@ permissão `ads_read`):
 - **Token de acesso** — pode ser o mesmo token do Instagram, desde que o app
   tenha `ads_read`.
 
-Na plataforma, cada campanha precisa ter o **ID na Meta** preenchido (o número
-da campanha no Gerenciador). Só as campanhas da Meta com esse ID são
-sincronizadas; as de Google e TikTok continuam com os números digitados à mão.
+Na plataforma, cada campanha precisa ter o **ID** preenchido (o número da
+campanha no gerenciador da plataforma dela). Campanha sem ID fica com os
+números digitados à mão.
+
+**Google Ads** e **TikTok Ads** também podem ser sincronizados, cada um no seu
+card da tela do conector. O Google é o mais trabalhoso: além do ID da conta,
+pede um *developer token* (Google Ads, API Center) e um Client ID, Client
+secret e refresh token de um projeto no Google Cloud com a API do Google Ads
+liberada. O TikTok pede só o ID do anunciante e um token, gerados no TikTok for
+Business.
+
+Não é preciso configurar as três. Se só a Meta estiver ligada, as campanhas da
+Meta sincronizam normalmente e a plataforma avisa quais ficaram sem retorno.
 
 ## Perguntas comuns
 

@@ -30,10 +30,12 @@ lugar, três ferramentas do dia a dia da equipe:
   tarefas, posts e vídeos; página de cada cliente com posts, tarefas, vídeos e
   financeiro consolidados. Cadastro de clientes com briefing e cadência semanal.
 - **Tráfego pago** — campanhas por cliente (Meta, Google, TikTok) com objetivo,
-  verba diária ou total, situação e período. Traz os números reais da Meta pelo
-  Conector (investido, impressões, alcance, cliques e resultados) e calcula CTR,
-  CPC, CPM e custo por resultado. Um clique lança o investimento como despesa de
-  Mídia no caixa (só para quem tem acesso ao Financeiro).
+  verba diária ou total, situação e período. O Conector traz os números reais de
+  cada plataforma (investido, impressões, alcance, cliques e resultados) e a
+  tabela calcula CTR, CPC, CPM e custo por resultado. Plataforma não configurada
+  não atrapalha as outras: sincroniza o que dá e avisa o resto. Um clique lança o
+  investimento como despesa de Mídia no caixa (só para quem tem acesso ao
+  Financeiro).
 - **Financeiro** — receitas, despesas, saldo e "a receber", com gráfico de
   evolução e visão por cliente. **Acesso restrito** a contas com permissão especial
   (o Painel e os cards de clientes também ocultam valores para quem não tem acesso).
@@ -98,15 +100,19 @@ passo em **[GUIA-INTEGRACOES.md](./GUIA-INTEGRACOES.md)**.
 
 ## Integrações (publicação real e WhatsApp)
 
-O app é **plugável por webhooks**, a forma correta e segura de automatizar:
+Publicar no Instagram e enviar ou ler WhatsApp exigem as APIs oficiais. Um site
+sozinho não pode "logar e postar": isso viola os termos da Meta e arrisca as
+contas. Quem faz esse trabalho é o **Conector Orikay**, em `conector/`.
 
-- **Publicar no Instagram (feed/story)** e **enviar/ler WhatsApp** exigem as APIs
-  oficiais (Instagram Graph API + WhatsApp Business API). Um site sozinho não pode
-  "logar e postar" — isso viola os termos da Meta e arrisca as contas.
-- Em **Integrações**, configure as URLs de webhook (Make.com, n8n, ou seu backend).
-  O app **dispara os eventos de verdade** (gerar copy → enviar ao grupo → publicar).
-  Enquanto o webhook não estiver configurado, tudo é **simulado e registrado** no
-  log de Automações, para você ver o fluxo funcionando.
+- O Conector é um programa local sem dependências (`node conector.mjs`). Ele
+  envia no WhatsApp, publica no Instagram, recebe as respostas dos grupos e traz
+  os números das campanhas. A configuração é por uma tela própria, sem editar
+  arquivo. Instruções em **[conector/LEIA-ME.md](./conector/LEIA-ME.md)**.
+- Em **Integrações**, cole o endereço do Conector. Enquanto ele não estiver
+  ligado, tudo é **simulado e registrado** no log de Automações, para a equipe
+  ver o fluxo funcionando sem risco.
+- Quem preferir usar Make.com ou n8n pode apontar os mesmos campos para lá: o
+  formato dos eventos é o mesmo.
 - A **IA** é opcional: por padrão usa um gerador local grátis; para output mais
   inteligente, informe um endpoint compatível com OpenAI + chave (Groq/OpenRouter
   têm camada gratuita).

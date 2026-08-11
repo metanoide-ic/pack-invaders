@@ -84,7 +84,11 @@ export default function Traffic() {
   async function sincronizar() {
     setSyncing(true);
     const r = await syncCampaignMetrics();
-    setMsg(r.ok ? `${r.atualizadas} campanha(s) atualizada(s) com os números da Meta.` : (r.erro ?? 'Não foi possível sincronizar.'));
+    if (!r.ok) setMsg(r.erro ?? 'Não foi possível sincronizar.');
+    else setMsg(
+      `${r.atualizadas} campanha(s) atualizada(s).` +
+      (r.avisos?.length ? ` Sem retorno de ${r.avisos.join('; ')}.` : ''),
+    );
     setSyncing(false);
     setTimeout(() => setMsg(''), 7000);
   }
@@ -237,7 +241,7 @@ export default function Traffic() {
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Início"><Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></Field>
             <Field label="Fim"><Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></Field>
-            <Field label="ID na Meta" hint="Para puxar os números.">
+            <Field label={`ID na ${form.platform}`} hint="Para puxar os números.">
               <Input value={form.externalId} onChange={(e) => setForm({ ...form, externalId: e.target.value })} placeholder="1203..." />
             </Field>
           </div>
