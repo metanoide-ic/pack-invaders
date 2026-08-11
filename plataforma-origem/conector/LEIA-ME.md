@@ -95,6 +95,28 @@ Business.
 Não é preciso configurar as três. Se só a Meta estiver ligada, as campanhas da
 Meta sincronizam normalmente e a plataforma avisa quais ficaram sem retorno.
 
+### Cobrança automática (Asaas)
+Sem isto, a cobrança sai como mensagem simples e a baixa é feita à mão no botão
+"Marcar paga". Com isto ligado, a mensagem já vai com link de pagamento e Pix
+copia e cola, e a baixa acontece sozinha assim que o cliente paga: a cobrança
+vira "paga" e a receita entra no caixa.
+
+Crie a conta em https://www.asaas.com e pegue o token da API em
+Configurações > Integrações. Deixe o ambiente em **Produção** para valer de
+verdade, ou **Sandbox** para testar sem dinheiro real.
+
+Depois, no Asaas, em Integrações > Webhooks, cadastre o endereço de entrada de
+pagamento que aparece na tela do conector, com os eventos de **pagamento
+recebido** e **pagamento confirmado**. Vale a mesma regra do túnel: troque
+`localhost:8787` pelo endereço público.
+
+Cada cliente precisa do **CPF ou CNPJ** cadastrado na plataforma, na aba
+Clientes, junto com o WhatsApp de cobrança. Sem o documento o gateway não
+consegue emitir, e a plataforma envia a mensagem simples avisando no log.
+
+Nota fiscal continua como antes: o pedido vai para o contador no WhatsApp, e a
+baixa é manual.
+
 ## Perguntas comuns
 
 **Preciso deixar aberto?** Sim, enquanto quiser que as ações saiam

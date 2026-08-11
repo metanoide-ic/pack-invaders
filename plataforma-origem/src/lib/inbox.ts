@@ -2,14 +2,26 @@ import { useEffect } from 'react';
 import { useData } from './dataStore';
 import { useSettings } from './settingsStore';
 import { onApproved, onRejected } from './automations';
+import { markChargePaid } from './billing';
 
-/** Decisão que o conector entendeu a partir de uma mensagem no grupo. */
-interface Decision {
+/** Resposta do grupo sobre um post. */
+interface PostDecision {
+  tipo?: 'post';
   postId: string;
   decisao: 'aprovado' | 'alteracao';
   texto: string;
   quando: number;
 }
+
+/** Aviso do gateway de que uma cobrança foi paga. */
+interface PaymentDecision {
+  tipo: 'pagamento';
+  chargeId: string;
+  valor: number;
+  quando: number;
+}
+
+type Decision = PostDecision | PaymentDecision;
 
 /** Endereço base do conector, a partir do endereço do webhook. */
 export function connectorBase(url: string): string {
@@ -38,11 +50,19 @@ export async function pullDecisions(): Promise<number> {
     return 0; // conector fechado: silencioso de propósito, isso roda em laço
   }
 
-  const posts = useData.getState().posts;
+  const store = useData.getState();
   let aplicadas = 0;
 
   for (const d of lista) {
-    if (!posts.some((p) => p.id === d.postId)) continue;
+    if (d.tipo === 'pagamento') {
+      const cobranca = store.charges.find((c) => c.id === d.chargeId);
+      if (!cobranca || cobranca.status === 'paga') continue;
+      markChargePaid(d.chargeId);
+      aplicadas++;
+      continue;
+    }
+
+    if (!store.posts.some((p) => p.id === d.postId)) continue;
     if (d.decisao === 'aprovado') await onApproved(d.postId);
     else onRejected(d.postId, d.texto || 'O cliente pediu alteração no grupo.');
     aplicadas++;

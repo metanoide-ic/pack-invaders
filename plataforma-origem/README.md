@@ -36,6 +36,11 @@ lugar, três ferramentas do dia a dia da equipe:
   não atrapalha as outras: sincroniza o que dá e avisa o resto. Um clique lança o
   investimento como despesa de Mídia no caixa (só para quem tem acesso ao
   Financeiro).
+- **Cobrança** — gera as cobranças do mês a partir do fee de cada cliente e
+  envia no WhatsApp de quem paga. Com o gateway ligado, a mensagem já vai com
+  link de pagamento e Pix copia e cola, e a baixa é automática quando o cliente
+  paga: a cobrança fecha e a receita entra no caixa. Nota fiscal dispara o
+  pedido de emissão para o contador.
 - **Financeiro** — receitas, despesas, saldo e "a receber", com gráfico de
   evolução e visão por cliente. **Acesso restrito** a contas com permissão especial
   (o Painel e os cards de clientes também ocultam valores para quem não tem acesso).

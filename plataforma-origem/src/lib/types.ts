@@ -42,6 +42,8 @@ export interface Client {
   billingMethod?: BillingMethod;
   /** Dia do mês do vencimento (1 a 28). */
   billingDay?: number;
+  /** CPF ou CNPJ, exigido pelo gateway para emitir Pix e boleto. */
+  document?: string;
   createdAt: number;
 }
 
@@ -60,6 +62,10 @@ export interface Charge {
   status: ChargeStatus;
   sentAt?: number;
   paidAt?: number;
+  /** Identificador da cobrança no gateway, quando emitida por ele. */
+  gatewayId?: string;
+  /** Link da fatura (Pix e boleto) gerado pelo gateway. */
+  gatewayUrl?: string;
   createdAt: number;
 }
 

@@ -90,8 +90,10 @@ export async function sendCharge(chargeId: string): Promise<void> {
   const message = chargeMessage(ch, settings.pixKey);
   const payload = {
     tipo: 'cobranca',
+    chargeId: ch.id,
     numero: client.billingWhatsapp || null,
     cliente: client.name,
+    documento: client.document || null,
     valor: ch.amount,
     metodo: ch.method,
     vencimento: ch.dueDate,
@@ -100,7 +102,35 @@ export async function sendCharge(chargeId: string): Promise<void> {
     mensagem: message,
   };
 
-  if (settings.whatsappWebhook) {
+  // Com o Conector, dá para ler a resposta e guardar o link da fatura que o
+  // gateway emitiu. Um webhook comum é de mão única, então só dispara.
+  if (settings.connectorUrl) {
+    let ok = false;
+    let detalhe = '';
+    try {
+      const res = await fetch(settings.connectorUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      ok = Boolean(data?.ok);
+      detalhe = data?.erro ?? '';
+      if (ok && data.gatewayId) {
+        store.updateCharge(chargeId, { gatewayId: data.gatewayId, gatewayUrl: data.gatewayUrl ?? undefined });
+      }
+    } catch (e) {
+      detalhe = (e as Error).message;
+    }
+    store.addEvent({
+      channel: 'whatsapp',
+      title: `Cobrança enviada: ${client.name} (${money(ch.amount)})`,
+      status: ok ? 'ok' : 'erro',
+      detail: ok
+        ? `Enviada para ${client.billingWhatsapp || 'o contato de cobrança'} por ${METHOD_LABEL[ch.method]}.`
+        : `Não foi enviada: ${detalhe || 'o Conector não respondeu.'}`,
+    });
+  } else if (settings.whatsappWebhook) {
     const ok = await fireWebhook(settings.whatsappWebhook, payload);
     store.addEvent({
       channel: 'whatsapp',

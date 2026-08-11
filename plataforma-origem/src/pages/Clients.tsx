@@ -15,7 +15,7 @@ const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
 const blank = {
   name: '', contact: '', instagram: '', monthlyFee: '', color: AVATAR_COLORS[0],
   briefing: '', city: '', whatsappGroup: '',
-  billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5',
+  billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5', document: '',
   weekly: {} as WeeklyPlan,
 };
 
@@ -37,7 +37,7 @@ export default function Clients() {
       monthlyFee: c.monthlyFee?.toString() ?? '', color: c.color,
       briefing: c.briefing ?? '', city: c.city ?? '', whatsappGroup: c.whatsappGroup ?? '',
       billingWhatsapp: c.billingWhatsapp ?? '', billingMethod: c.billingMethod ?? 'pix',
-      billingDay: (c.billingDay ?? 5).toString(),
+      billingDay: (c.billingDay ?? 5).toString(), document: c.document ?? '',
       weekly: { ...(c.weeklyPlan ?? {}) },
     });
     setOpen(true);
@@ -65,6 +65,7 @@ export default function Clients() {
       billingWhatsapp: form.billingWhatsapp.trim() || undefined,
       billingMethod: form.billingMethod,
       billingDay: Math.min(Math.max(parseInt(form.billingDay, 10) || 5, 1), 28),
+      document: form.document.trim() || undefined,
       weeklyPlan: form.weekly,
     };
     if (editing) updateClient(editing.id, payload);
@@ -198,6 +199,9 @@ export default function Clients() {
                   </Field>
                   <Field label="Dia do vencimento">
                     <Input value={form.billingDay} onChange={(e) => setForm({ ...form, billingDay: e.target.value })} placeholder="5" inputMode="numeric" />
+                  </Field>
+                  <Field label="CPF ou CNPJ" hint="Necessário para o gateway emitir Pix e boleto.">
+                    <Input value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" />
                   </Field>
                 </div>
               </div>

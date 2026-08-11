@@ -39,6 +39,8 @@ const CONFIG_PADRAO = {
   googleLoginCustomerId: '',
   tiktokToken: '',
   tiktokAdvertiserId: '',
+  asaasToken: '',
+  asaasAmbiente: 'producao', // 'producao' | 'sandbox'
   entradaToken: '',
 };
 
@@ -304,6 +306,80 @@ async function buscarMetricas(campanhas) {
   return { metricas: saida, avisos };
 }
 
+/* ----------------------- Cobrança (gateway Asaas) --------------------- */
+
+const API_ASAAS = process.env.API_ASAAS || '';
+
+function baseAsaas() {
+  if (API_ASAAS) return API_ASAAS;
+  return config.asaasAmbiente === 'sandbox'
+    ? 'https://api-sandbox.asaas.com/v3'
+    : 'https://api.asaas.com/v3';
+}
+
+async function asaas(caminho, opcoes = {}) {
+  if (!config.asaasToken) throw new Error('gateway de cobrança não configurado');
+  const res = await fetch(baseAsaas() + caminho, {
+    ...opcoes,
+    headers: { 'Content-Type': 'application/json', access_token: config.asaasToken, ...(opcoes.headers || {}) },
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const detalhe = json.errors?.[0]?.description || JSON.stringify(json).slice(0, 160);
+    throw new Error(`Asaas: ${detalhe}`);
+  }
+  return json;
+}
+
+/** Acha o cliente no gateway pelo documento, ou cria. */
+async function clienteAsaas({ nome, documento, telefone }) {
+  const doc = String(documento || '').replace(/\D/g, '');
+  if (!doc) throw new Error('cliente sem CPF/CNPJ cadastrado');
+
+  const busca = await asaas(`/customers?cpfCnpj=${doc}`);
+  if (busca.data?.[0]?.id) return busca.data[0].id;
+
+  const novo = await asaas('/customers', {
+    method: 'POST',
+    body: JSON.stringify({ name: nome, cpfCnpj: doc, mobilePhone: telefone || undefined }),
+  });
+  return novo.id;
+}
+
+/**
+ * Emite a cobrança no gateway e devolve o link da fatura e o Pix copia e cola.
+ * O chargeId da plataforma vai como referência externa: é por ele que o aviso
+ * de pagamento é ligado de volta à cobrança certa.
+ */
+async function emitirCobranca(evento) {
+  const tipo = evento.metodo === 'boleto' ? 'BOLETO' : 'PIX';
+  const customer = await clienteAsaas({
+    nome: evento.cliente,
+    documento: evento.documento,
+    telefone: evento.numero,
+  });
+
+  const pagamento = await asaas('/payments', {
+    method: 'POST',
+    body: JSON.stringify({
+      customer,
+      billingType: tipo,
+      value: evento.valor,
+      dueDate: evento.vencimento,
+      externalReference: evento.chargeId,
+      description: `Servicos de marketing - ${evento.competencia}`,
+    }),
+  });
+
+  let pix = null;
+  if (tipo === 'PIX') {
+    const qr = await asaas(`/payments/${pagamento.id}/pixQrCode`).catch(() => null);
+    pix = qr?.payload || null;
+  }
+
+  return { gatewayId: pagamento.id, link: pagamento.invoiceUrl || pagamento.bankSlipUrl || null, pix };
+}
+
 /* --------------------- Respostas do grupo (entrada) ------------------- */
 
 /**
@@ -313,7 +389,10 @@ async function buscarMetricas(campanhas) {
  */
 const aguardando = new Map(); // grupo -> [{ postId, titulo, cliente, quando }]
 
-/** Decisões já entendidas, esperando a plataforma buscar. */
+/**
+ * Fila do que já foi entendido e ainda não foi buscado pela plataforma:
+ * respostas de post (tipo "post") e pagamentos confirmados (tipo "pagamento").
+ */
 let decisoes = [];
 
 function normalizar(texto) {
@@ -378,6 +457,7 @@ function receberMensagem(corpo) {
   if (fila.length === 0) aguardando.delete(msg.grupo);
 
   decisoes.push({
+    tipo: 'post',
     postId: alvo.postId,
     decisao,
     texto: String(msg.texto).slice(0, 500),
@@ -385,6 +465,25 @@ function receberMensagem(corpo) {
   });
   registrar('resposta', `${alvo.titulo}: grupo respondeu "${decisao}"`);
   return decisao;
+}
+
+/** Eventos do gateway que significam dinheiro na conta. */
+const PAGOU = new Set(['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED']);
+
+function receberPagamento(corpo) {
+  if (!PAGOU.has(corpo.event)) return null;
+  const p = corpo.payment || {};
+  const chargeId = p.externalReference;
+  if (!chargeId) return null;
+
+  decisoes.push({
+    tipo: 'pagamento',
+    chargeId,
+    valor: Number(p.value) || 0,
+    quando: Date.now(),
+  });
+  registrar('pagamento', `pagamento confirmado (${p.value ?? '?'}) para a cobrança ${chargeId}`);
+  return 'pago';
 }
 
 /* ------------------------- Roteamento dos eventos --------------------- */
@@ -404,9 +503,24 @@ async function processar(evento) {
   }
 
   if (tipo === 'cobranca') {
-    await enviarWhatsapp(evento.numero, evento.mensagem);
+    // Com o gateway ligado, a cobrança é emitida de verdade e o link entra na
+    // mensagem. Sem ele, segue a mensagem simples (Pix na mão).
+    let emissao = null;
+    if (config.asaasToken && evento.metodo !== 'nf') {
+      try {
+        emissao = await emitirCobranca(evento);
+      } catch (e) {
+        registrar('cobranca', `não emitiu no gateway (${e.message}), enviando mensagem simples`, false);
+      }
+    }
+
+    let mensagem = evento.mensagem;
+    if (emissao?.link) mensagem += `\n\nPague por aqui: ${emissao.link}`;
+    if (emissao?.pix) mensagem += `\n\nPix copia e cola:\n${emissao.pix}`;
+
+    await enviarWhatsapp(evento.numero, mensagem);
     registrar('cobranca', `cobrança de ${evento.cliente} enviada (${evento.metodo})`);
-    return;
+    return emissao ? { gatewayId: emissao.gatewayId, gatewayUrl: emissao.link } : undefined;
   }
 
   if (tipo === 'nota_fiscal') {
@@ -485,6 +599,22 @@ const servidor = createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: true, decisao }));
   }
 
+  // Recebe os avisos de pagamento, vindos do gateway.
+  if (url.pathname === '/entrada-pagamento' && req.method === 'POST') {
+    if (url.searchParams.get('token') !== config.entradaToken) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: false, erro: 'token inválido' }));
+    }
+    let resultado = null;
+    try {
+      resultado = receberPagamento(await corpo(req));
+    } catch (e) {
+      registrar('pagamento', e.message, false);
+    }
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, resultado }));
+  }
+
   // A plataforma busca aqui as respostas já entendidas.
   if (url.pathname === '/decisoes') {
     const pendentes = decisoes;
@@ -513,6 +643,7 @@ const servidor = createServer(async (req, res) => {
       aguardando: [...aguardando.values()].reduce((n, f) => n + f.length, 0),
       google: Boolean(config.googleCustomerId && config.googleRefreshToken && config.googleDevToken),
       tiktok: Boolean(config.tiktokToken && config.tiktokAdvertiserId),
+      gateway: Boolean(config.asaasToken),
     }));
   }
 
@@ -672,6 +803,21 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
       <br>Ele mostra um endereço https terminado em <b>trycloudflare.com</b>; use esse no lugar de localhost:8787.</p>
   </div>
 
+  <div class="card">
+    <h2><span class="dot" id="dp"></span> Cobrança automática (Asaas)</h2>
+    <div class="row">
+      <div><label>Token da API</label><input id="asaasToken"></div>
+      <div><label>Ambiente</label><select id="asaasAmbiente"><option value="producao">Produção</option><option value="sandbox">Sandbox (teste)</option></select></div>
+    </div>
+    <p class="hint">Com isto ligado, a cobrança sai com link de pagamento e Pix copia e cola,
+      e a baixa acontece sozinha quando o cliente paga. O cliente precisa ter CPF ou CNPJ
+      cadastrado na plataforma.</p>
+    <div class="end" id="entradaPagamento"></div>
+    <p class="hint">Cole esse endereço no Asaas, em Integrações &gt; Webhooks, com os eventos
+      de <b>pagamento recebido</b> e <b>pagamento confirmado</b>. Vale a mesma regra do túnel:
+      troque <b>localhost:8787</b> pelo endereço público.</p>
+  </div>
+
   <button onclick="salvar()">Salvar configuração</button>
 
   <div class="card">
@@ -680,7 +826,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   </div>
 </div>
 <script>
-  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken','googleCustomerId','googleDevToken','googleClientId','googleClientSecret','googleRefreshToken','googleLoginCustomerId','tiktokAdvertiserId','tiktokToken'];
+  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken','googleCustomerId','googleDevToken','googleClientId','googleClientSecret','googleRefreshToken','googleLoginCustomerId','tiktokAdvertiserId','tiktokToken','asaasToken','asaasAmbiente'];
   document.getElementById('url').textContent = location.origin + '/webhook';
   document.getElementById('provedor').onchange = trocar;
   function trocar(){
@@ -698,6 +844,9 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     document.getElementById('de').className = 'dot' + (r.aguardando ? ' on' : '');
     document.getElementById('dg').className = 'dot' + (r.google ? ' on' : '');
     document.getElementById('dt').className = 'dot' + (r.tiktok ? ' on' : '');
+    document.getElementById('dp').className = 'dot' + (r.gateway ? ' on' : '');
+    document.getElementById('entradaPagamento').textContent =
+      location.origin + '/entrada-pagamento?token=' + r.config.entradaToken;
     document.getElementById('entrada').textContent =
       location.origin + '/entrada?token=' + r.config.entradaToken;
     const h = document.getElementById('hist');
