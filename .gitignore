@@ -9,3 +9,6 @@ test_*.js
 __pycache__/
 *.pyc
 .pytest_cache/
+
+# chave de API que alguma skill possa criar localmente
+.claude/skills/**/.env
