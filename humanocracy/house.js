@@ -56,10 +56,14 @@ const ROOMS = [
   { x0: 1, y0: 5, x1: 24, y1: 7, nome: 'CORREDOR', tint: [72, 68, 58] },
 ];
 /* Mapa do Dia 48: a pista da fila, sem fila, até o seu próprio guichê */
+/* DIA 48 — O CORREDOR: estreito, comprido e escuro. No fim dele, a porta do
+   banheiro. Não há fila, não há guichê: há o caminho até um espelho. */
 const MAP48 = [];
+const M48W = 5, M48H = 26;
 (function buildMap48() {
-  for (let y = 0; y < 14; y++) MAP48.push(new Array(5).fill(1));
-  for (let y = 1; y <= 12; y++) for (let x = 1; x <= 3; x++) MAP48[y][x] = 0;
+  for (let y = 0; y < M48H; y++) MAP48.push(new Array(M48W).fill(1));
+  for (let y = 2; y <= M48H - 3; y++) for (let x = 1; x <= 3; x++) MAP48[y][x] = 0;
+  MAP48[1][2] = 2;                       // a PORTA DO BANHEIRO, no fim do corredor
 })();
 /* cena atual: a casa por padrão; o espelho no dia 48 */
 const CUR = { map: MAP, w: MAPW, h: MAPH, rooms: ROOMS };
@@ -349,6 +353,29 @@ function buildSprites() {
     const g = x.createRadialGradient(16, 46, 2, 16, 46, 12);
     g.addColorStop(0, '#e8d8a0'); g.addColorStop(1, '#6a5a30');
     x.fillStyle = g; x.beginPath(); x.arc(16, 46, 9, 0, 6.29); x.fill();
+  });
+  SPR.door48 = mk(96, 128, (x) => {           // a porta do banheiro, entreaberta
+    x.fillStyle = '#2a2118'; x.fillRect(6, 4, 84, 124);          // batente
+    x.fillStyle = '#3a2c1c'; x.fillRect(12, 8, 62, 118);         // folha da porta
+    x.fillStyle = 'rgba(255,240,210,.08)'; x.fillRect(12, 8, 62, 2);
+    x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(12, 8, 3, 118);
+    // almofadas da folha
+    x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = 2;
+    x.strokeRect(20, 18, 46, 40); x.strokeRect(20, 68, 46, 46);
+    x.strokeStyle = 'rgba(255,240,210,.07)'; x.lineWidth = 1;
+    x.strokeRect(22, 20, 42, 36); x.strokeRect(22, 70, 42, 42);
+    // maçaneta
+    x.fillStyle = '#8a734d'; x.beginPath(); x.arc(66, 66, 4.5, 0, 6.29); x.fill();
+    x.fillStyle = 'rgba(255,246,220,.35)'; x.fillRect(64, 63, 2, 2);
+    // A FRESTA: a porta está entreaberta e a luz de dentro pisca
+    const g = x.createLinearGradient(74, 0, 90, 0);
+    g.addColorStop(0, 'rgba(226,232,236,.85)'); g.addColorStop(1, 'rgba(180,196,206,.25)');
+    x.fillStyle = g; x.fillRect(74, 10, 14, 114);
+    x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(74, 10, 4, 114);
+    // plaquinha
+    x.fillStyle = '#c9b98a'; x.fillRect(30, 26, 26, 10);
+    x.fillStyle = '#2a2118'; x.font = '9px "VT323", monospace'; x.textAlign = 'center';
+    x.fillText('W.C.', 43, 34);
   });
   SPR.shadow = mk(96, 128, (x) => {
     const g = x.createRadialGradient(48, 70, 6, 48, 70, 60);
@@ -1072,6 +1099,12 @@ function talkTo(id) {
   hSay(nome, lines, null, id);
 }
 function interactWith(id) {
+  if (id === 'banheiro') {
+    housePause();
+    if (window.playMirrorCutscene) playMirrorCutscene(() => { showScreen('screen-shift'); presentMirror(); });
+    else { showScreen('screen-shift'); presentMirror(); }
+    return;
+  }
   if (id === 'guiche') {
     housePause();
     showScreen('screen-shift');
@@ -1195,17 +1228,21 @@ function enterMirror48() {
   clearInterval(radioTimer);
   cancelAnimationFrame(Q.raf);
   buildSprites(); buildTextures(); buildFaces();
-  CUR.map = MAP48; CUR.w = 5; CUR.h = 14;
-  CUR.rooms = [{ x0: 1, y0: 1, x1: 3, y1: 12, nome: 'A PISTA DA FILA — VAZIA', tint: [62, 61, 56] }];
+  CUR.map = MAP48; CUR.w = M48W; CUR.h = M48H;
+  CUR.rooms = [{ x0: 1, y0: 2, x1: 3, y1: M48H - 3, nome: 'CORREDOR', tint: [46, 46, 42] }];
+  // o corredor tem quatro lâmpadas; as do fundo estão queimadas (o escuro
+  // aumenta conforme você anda para a porta)
   ENTS = [
-    { spr: 'booth', spot: 'guiche', x: 2, y: 1.55, sc: .8 },
-    { spr: 'lamp', x: 2, y: 5, sc: .16, lift: .74, glowWarm: true },
-    { spr: 'lamp', x: 2, y: 9, sc: .16, lift: .74, glowWarm: true },
+    { spr: 'door48', spot: 'banheiro', x: 2, y: 2.16, sc: .82 },
+    { spr: 'lamp', x: 2, y: 21, sc: .16, lift: .74, glowWarm: true },
+    { spr: 'lamp', x: 2, y: 16, sc: .16, lift: .74, glowWarm: true },
+    { spr: 'lamp', x: 2, y: 11, sc: .16, lift: .74 },
+    { spr: 'lamp', x: 2, y: 6, sc: .16, lift: .74 },
   ];
   buildBoxes();
   HOUSE.mode = 'mirror';
   HOUSE.active = true;
-  HOUSE.x = 2; HOUSE.y = 11.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
+  HOUSE.x = 2; HOUSE.y = M48H - 3.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
   HOUSE.lastTs = 0; HOUSE.t = 0; HOUSE.knock = null; HOUSE.spoke = {};
   HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: false, count: 9 };
   $('house-clock').textContent = '—:—';
@@ -1216,9 +1253,9 @@ function enterMirror48() {
   cancelAnimationFrame(HOUSE.raf);
   HOUSE.raf = requestAnimationFrame(houseLoop);
   setTimeout(() => hSay('DIA 48', [
-    'Não há fila. Não há guardas. Há um vento que parou no meio do caminho, como quem esqueceu o que ia dizer.',
-    'Você está do lado de fora do seu próprio posto. Do lado de quem espera. Quarenta e oito dias e você nunca tinha visto o muro deste ângulo — os risquinhos contando dias que alguém raspou na pedra.',
-    'Caminhe até o guichê. Há documentos na bandeja. São os seus.',
+    'Você acorda em pé, andando. Não é o posto. É um corredor — o seu, o do bloco 14, e ao mesmo tempo não é: comprido demais, e as portas dos vizinhos sumiram do caminho.',
+    'As lâmpadas do fundo estão queimadas. No fim de tudo há uma porta entreaberta: o banheiro. A luz de lá pisca sozinha.',
+    'Ande até o fim do corredor e abra a porta.',
   ]), 800);
 }
 
@@ -1417,7 +1454,8 @@ function houseLoop(ts) {
   const prompt = $('house-prompt');
   if (tgt) {
     prompt.classList.add('on');
-    prompt.textContent = tgt.spot === 'guiche' ? T('E — Deslizar seus documentos pela bandeja')
+    prompt.textContent = tgt.spot === 'banheiro' ? T('E — Abrir a porta do banheiro')
+      : tgt.spot === 'guiche' ? T('E — Deslizar seus documentos pela bandeja')
       : tgt.spot === 'door'
       ? T(HOUSE.knock && HOUSE.knock.active ? 'E — ATENDER A PORTA' : 'E — Olhar pelo olho mágico')
       : tgt.spot === 'bed' ? T('E — Dormir')

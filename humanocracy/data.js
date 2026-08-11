@@ -540,6 +540,8 @@ const ACHIEVEMENTS = {
   ACH_QUENTE: 'O Travesseiro',
   ACH_CINCO: 'A Conta Fecha',
   ACH_AMIGO: 'O Amigo Nunca Erra',
+  ACH_REFLEXO: 'O Vidro Não Devolve',
+  ACH_SANGUE_FRIO: 'Sangue Frio no Guichê',
 };
 
 /* ============================================================

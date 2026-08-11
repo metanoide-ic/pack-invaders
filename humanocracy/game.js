@@ -3989,6 +3989,8 @@ function threatResolve(how) {
       ? T('Um inspetor da fronteira leste abateu um agressor no guichê. O comunicado oficial não informa o nome do morto — nem se ele era mesmo o que dizem que era.')
       : T('Um agressor foi detido no posto leste antes de agir. A perícia confirma o material. A imprensa não pergunta de onde veio.') });
     S.money += 20;
+    S.counters.attacksStopped = (S.counters.attacksStopped || 0) + 1;
+    unlockAchievement('ACH_SANGUE_FRIO');
     if (cz) { shift.citizen = null; shift.processed++; }
     updateHud();
     setTimeout(nextCitizen, 1500);
@@ -4416,6 +4418,204 @@ function encounterOutcome(enc, decision) {
 }
 
 /* ---------- DIA 48: O ESPELHO ---------- */
+
+/* ============================================================
+   CUTSCENE DO ESPELHO — o fim do corredor
+   A porta abre, o banheiro acende sozinho, a câmera avança até o
+   espelho e o reflexo aparece: você. Ele atrasa. Pisca depois de
+   você. E quando termina, é ele quem desliza os documentos.
+   ============================================================ */
+const CUT = { raf: null, t: 0, phase: 0, skip: false, done: null };
+function cutFace() {
+  // o rosto do inspetor: sempre o mesmo homem, os mesmos 48 dias no rosto
+  const f = { skin: 1, hair: 1, hairStyle: 0, eyes: 3, mouth: 1, beard: 1, glasses: false,
+    brow: 1, faceW: 1, sexo: 'm', hat: 0, earring: false, idade: 43, rugas: true,
+    etnia: 'osano', fseed: 770048 };
+  if (!CUT.faceCv && typeof renderPortraitCanvas === 'function') {
+    CUT.faceCv = renderPortraitCanvas(f, { w: 100, h: 120, paintScale: 3,
+      post: { levels: 6, ditherAmp: .14, grain: 3, aberr: 0, scan: .08, sat: .42, contrast: 1.2 } });
+  }
+  return CUT.faceCv;
+}
+/* o banheiro, desenhado bloco a bloco: azulejo, pia, tubo fluorescente */
+function drawBathroom(x, W, H, push, lit, flick) {
+  x.imageSmoothingEnabled = false;
+  x.fillStyle = '#07080a'; x.fillRect(0, 0, W, H);
+  const L = lit * flick;
+  const cx = W / 2, hor = H * .52;
+  // parede de azulejo em perspectiva (a sala se aproxima com push)
+  const k = .55 + push * .85;
+  const wallW = W * k, wallH = H * k;
+  const x0 = cx - wallW / 2, y0 = hor - wallH * .52;
+  const tile = Math.max(6, Math.round(15 * k));
+  for (let ty = 0; ty < wallH; ty += tile) {
+    for (let tx = 0; tx < wallW; tx += tile) {
+      const shade = .74 + ((tx / tile + ty / tile) % 2) * .12;
+      const v = Math.max(0, 1 - Math.hypot((x0 + tx - cx) / (wallW * .7), (y0 + ty - hor) / (wallH * .7)));
+      const c = Math.round(104 * shade * L * (.28 + v * .72));
+      x.fillStyle = 'rgb(' + c + ',' + Math.round(c * 1.03) + ',' + Math.round(c * .96) + ')';
+      x.fillRect(x0 + tx, y0 + ty, tile - 1, tile - 1);
+    }
+  }
+  // piso
+  x.fillStyle = 'rgb(' + Math.round(26 * L) + ',' + Math.round(28 * L) + ',' + Math.round(26 * L) + ')';
+  x.fillRect(0, y0 + wallH, W, H - (y0 + wallH));
+  // tubo fluorescente no alto, piscando
+  const tw = wallW * .5;
+  x.fillStyle = 'rgba(232,240,244,' + (.16 + .8 * L) + ')';
+  x.fillRect(cx - tw / 2, y0 + 6 * k, tw, 5 * k);
+  const gl = x.createRadialGradient(cx, y0 + 8 * k, 4, cx, y0 + 8 * k, wallW * .6);
+  gl.addColorStop(0, 'rgba(210,226,232,' + (.22 * L) + ')'); gl.addColorStop(1, 'rgba(210,226,232,0)');
+  x.fillStyle = gl; x.fillRect(0, 0, W, H);
+  // pia
+  const sinkW = wallW * .34, sinkY = y0 + wallH * .80;
+  x.fillStyle = 'rgb(' + Math.round(176 * L) + ',' + Math.round(180 * L) + ',' + Math.round(172 * L) + ')';
+  x.fillRect(cx - sinkW / 2, sinkY, sinkW, 12 * k);
+  x.fillStyle = 'rgb(' + Math.round(120 * L) + ',' + Math.round(124 * L) + ',' + Math.round(118 * L) + ')';
+  x.fillRect(cx - sinkW * .18, sinkY + 12 * k, sinkW * .36, 16 * k);
+  x.fillStyle = 'rgb(' + Math.round(150 * L) + ',' + Math.round(140 * L) + ',' + Math.round(96 * L) + ')';
+  x.fillRect(cx - 2 * k, sinkY - 8 * k, 4 * k, 8 * k);           // torneira
+  // ESPELHO: moldura e vidro
+  const mw = wallW * .40, mh = wallH * .40, my = y0 + wallH * .24;
+  x.fillStyle = 'rgb(' + Math.round(60 * L) + ',' + Math.round(58 * L) + ',' + Math.round(52 * L) + ')';
+  x.fillRect(cx - mw / 2 - 4 * k, my - 4 * k, mw + 8 * k, mh + 8 * k);
+  x.fillStyle = 'rgb(' + Math.round(20 * L + 8) + ',' + Math.round(23 * L + 8) + ',' + Math.round(24 * L + 8) + ')';
+  x.fillRect(cx - mw / 2, my, mw, mh);
+  return { cx, my, mw, mh, k, L };
+}
+function playMirrorCutscene(done) {
+  const ov = $('cut-overlay'), cv = $('cut-canvas'), cap = $('cut-cap');
+  if (!ov || !cv) { if (done) done(); return; }
+  const x = cv.getContext('2d'), W = cv.width, H = cv.height;
+  CUT.t = 0; CUT.skip = false; CUT.done = done;
+  ov.classList.add('active');
+  cutFace();
+  sfxDoorOpen();
+  const LINES = [
+    [0.4, 'A maçaneta está fria como tudo aqui.'],
+    [3.2, 'A luz acende sozinha. Fluorescente velha: pisca duas vezes antes de decidir ficar.'],
+    [7.0, 'Há um espelho acima da pia. Você evitou espelhos a semana inteira e não tinha percebido.'],
+    [11.0, 'Você levanta os olhos.'],
+    [14.5, 'O reflexo levanta os olhos. Um instante depois de você.'],
+    [18.5, 'Ele pisca quando você já tinha parado de piscar.'],
+    [22.0, 'E então ele desliza alguma coisa pela borda da pia. Documentos. Os seus.'],
+  ];
+  const finish = () => {
+    cancelAnimationFrame(CUT.raf);
+    ov.classList.remove('active');
+    cap.textContent = '';
+    $('cut-skip').onclick = null;
+    if (CUT.done) { const d = CUT.done; CUT.done = null; d(); }
+  };
+  $('cut-skip').textContent = T('PULAR');
+  $('cut-skip').onclick = finish;
+  let lastFlickSfx = 0;
+  const loop = () => {
+    CUT.t += 1 / 60;
+    const t = CUT.t;
+    // legenda da vez
+    let line = '';
+    for (const [at, txt] of LINES) if (t >= at) line = txt;
+    cap.textContent = T(line);
+    // a porta abrindo (0-2.2s): fenda de luz que cresce
+    if (t < 2.2) {
+      const f = t / 2.2;
+      x.fillStyle = '#000'; x.fillRect(0, 0, W, H);
+      const wgap = Math.pow(f, 1.7) * W;
+      const g = x.createLinearGradient(W / 2 - wgap / 2, 0, W / 2 + wgap / 2, 0);
+      g.addColorStop(0, 'rgba(210,226,232,0)'); g.addColorStop(.5, 'rgba(226,236,240,' + (.5 * f) + ')');
+      g.addColorStop(1, 'rgba(210,226,232,0)');
+      x.fillStyle = g; x.fillRect(W / 2 - wgap / 2, 0, wgap, H);
+      CUT.raf = requestAnimationFrame(loop); return;
+    }
+    // acende (2.2-4.5s): duas piscadas antes de firmar
+    const lt = t - 2.2;
+    let lit = 0, flick = 1;
+    if (lt < 2.3) {
+      lit = lt < .35 ? 0 : (lt < .5 ? 1 : (lt < .75 ? .05 : (lt < .95 ? 1 : (lt < 1.15 ? .1 : Math.min(1, (lt - 1.15) / .7)))));
+      if ((lt > .35 && lt < .5) || (lt > .95 && lt < 1.15)) {
+        if (t - lastFlickSfx > .3) { lastFlickSfx = t; sfxFluor(); }
+      }
+    } else lit = 1;
+    flick = .88 + Math.sin(t * 33) * .04 + (Math.random() < .03 ? -.22 : 0);
+    // avanço da câmera até o espelho
+    const push = Math.min(1, Math.max(0, (t - 4.2) / 7.5));
+    const M = drawBathroom(x, W, H, push * push, lit, flick);
+    // o REFLEXO aparece no espelho a partir de ~9s, e chega atrasado
+    if (t > 9 && M) {
+      const face = cutFace();
+      if (face) {
+        // cabe pela ALTURA e fica recortado no vidro: nada de cabeça saindo
+        // da moldura como adesivo colado por cima
+        const fh = M.mh * 1.06, fw = fh * (100 / 120);
+        const fx = M.cx - fw / 2, fy = M.my + M.mh - fh + M.mh * .06;
+        const app = Math.min(1, (t - 9) / 2.4);
+        x.save();
+        x.beginPath(); x.rect(M.cx - M.mw / 2, M.my, M.mw, M.mh); x.clip();
+        x.globalAlpha = app * (.72 + .28 * M.L);
+        // o reflexo atrasa: oscila fora de fase com a sua respiração
+        const lag = Math.sin((t - .45) * 1.1) * 1.6;
+        x.translate(0, lag);
+        x.drawImage(face, fx, fy, fw, fh);
+        // e pisca sozinho, sempre um instante depois
+        const blinkPhase = (t - 13.2) % 5.5;
+        if (t > 13.2 && blinkPhase > 0 && blinkPhase < .16) {
+          x.fillStyle = 'rgba(16,14,12,.85)';
+          x.fillRect(fx + fw * .18, fy + fh * .33, fw * .64, fh * .07);
+        }
+        x.restore();
+        // vidro: reflexo especular e sujeira
+        x.fillStyle = 'rgba(226,236,240,' + (.05 * M.L) + ')';
+        x.beginPath(); x.moveTo(M.cx - M.mw / 2, M.my + M.mh); x.lineTo(M.cx - M.mw / 6, M.my);
+        x.lineTo(M.cx + M.mw / 8, M.my); x.lineTo(M.cx - M.mw / 3, M.my + M.mh); x.closePath(); x.fill();
+      }
+    }
+    // grão de filme + vinheta
+    for (let i = 0; i < 300; i++) {
+      x.fillStyle = 'rgba(255,255,255,' + (0.012 + Math.random() * 0.03).toFixed(3) + ')';
+      x.fillRect(Math.random() * W, Math.random() * H, 1, 1);
+    }
+    const vg = x.createRadialGradient(W / 2, H * .46, H * .12, W / 2, H * .5, W * .55);
+    vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,.94)');
+    x.fillStyle = vg; x.fillRect(0, 0, W, H);
+    if (t > 26.5) { try { unlockAchievement('ACH_REFLEXO'); } catch (e) {} finish(); return; }
+    CUT.raf = requestAnimationFrame(loop);
+  };
+  cancelAnimationFrame(CUT.raf); loop();
+}
+function sfxDoorOpen() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    // dobradiça: rangido descendente + o baque da folha na parede
+    const o = AC.createOscillator(), g = AC.createGain(); o.type = 'sawtooth';
+    o.frequency.setValueAtTime(420, t); o.frequency.exponentialRampToValueAtTime(160, t + 1.1);
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 900; f.Q.value = 7;
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.05, t + .2);
+    g.gain.exponentialRampToValueAtTime(.0006, t + 1.3);
+    o.connect(f); f.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 1.4);
+  } catch (e) {}
+}
+function sfxFluor() {
+  if (!SFX_ON) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const t = AC.currentTime;
+    const n = AC.createBuffer(1, AC.sampleRate * .12 | 0, AC.sampleRate), d = n.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 3);
+    const s2 = AC.createBufferSource(); s2.buffer = n;
+    const f = AC.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 3200; f.Q.value = 2;
+    const g = AC.createGain(); g.gain.value = .09;
+    s2.connect(f); f.connect(g); g.connect(AC.destination); s2.start(t); s2.stop(t + .14);
+    const h = AC.createOscillator(), hg = AC.createGain(); h.type = 'sawtooth'; h.frequency.value = 120;
+    const hf = AC.createBiquadFilter(); hf.type = 'lowpass'; hf.frequency.value = 400;
+    hg.gain.setValueAtTime(.05, t); hg.gain.exponentialRampToValueAtTime(.002, t + .9);
+    h.connect(hf); hf.connect(hg); hg.connect(AC.destination); h.start(t); h.stop(t + 1);
+  } catch (e) {}
+}
+window.playMirrorCutscene = playMirrorCutscene;
+
 function presentMirror() {
   shift.running = false;
   clearInterval(shift.tickId);
