@@ -1269,9 +1269,23 @@ function openBag() {
   if (!cz.bagDone) { spendTime(10); cz.bagDone = true; }
   const box = $('bag-items'); box.innerHTML = '';
   const empty = cz.bag.length === 1 && /Não há bagagem|Nunca houve/.test(cz.bag[0].txt || '');
-  cz.bag.forEach(item => {
+  // o auto de revista é datilografado na hora, como a ficha do exame
+  const hint = document.querySelector('#bag-overlay .bag-hint');
+  if (hint) {
+    const nDoc = (cz.docs && cz.docs.pass && cz.docs.pass.numero) || '—';
+    hint.innerHTML =
+      `<b>${T('AUTO DE REVISTA DE BAGAGEM')}<i>${T('form. 12-B')}</i></b>` +
+      `<span>${T('NOME')}: ${cz.nome}</span>` +
+      `<span>${T('DOC.')}: ${nDoc}</span>` +
+      `<span>${T('VOLUMES')}: ${empty ? 0 : cz.bag.length}</span>` +
+      `<span>${T('DATA')}: ${fmtDate(worldDate(S.day))}</span>` +
+      `<em>${T('No modo INSPEÇÃO, um objeto pode ser comparado com um campo de documento.')}</em>`;
+  }
+  cz.bag.forEach((item, i) => {
     const el = document.createElement('div');
     el.className = 'bag-item' + (item.contra ? ' contra' : '');
+    // nada cai na mala perfeitamente reto: inclinação estável por posição
+    el.style.setProperty('--r', (((i * 37 + 11) % 9) - 4) + 'deg');
     el.dataset.fid = item.fid;
     if (!empty) {
       const ico = drawBagIcon(bagKind(item.txt || '', item.contra), item.contra);

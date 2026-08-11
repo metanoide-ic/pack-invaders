@@ -1517,6 +1517,9 @@ const I18N_EN = {
     'Sign the receipt. The equipment is now logged to your post — and to your responsibility.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nothing accompanies this circular but the circular itself. Sign the acknowledgement.',
+  'AUTO DE REVISTA DE BAGAGEM': 'RECORD OF LUGGAGE SEARCH',
+  'form. 12-B': 'form 12-B',
+  'VOLUMES': 'ITEMS',
   'FICHA DE EXAME FÍSICO': 'PHYSICAL EXAMINATION RECORD',
   'form. 9-C': 'form 9-C',
   'DOC.': 'DOC.',
@@ -3053,6 +3056,9 @@ const I18N_ES = {
     'Firme el recibo. El material queda asentado en su puesto — y en su responsabilidad.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nada acompaña a esta circular salvo ella misma. Firme el enterado.',
+  'AUTO DE REVISTA DE BAGAGEM': 'ACTA DE REGISTRO DE EQUIPAJE',
+  'form. 12-B': 'form. 12-B',
+  'VOLUMES': 'BULTOS',
   'FICHA DE EXAME FÍSICO': 'FICHA DE EXAMEN FÍSICO',
   'form. 9-C': 'form. 9-C',
   'DOC.': 'DOC.',
