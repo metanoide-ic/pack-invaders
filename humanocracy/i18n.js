@@ -1507,6 +1507,55 @@ const I18N_EN = {
   'O Travesseiro': 'The Pillow',
   'A Conta Fecha': 'The Count Adds Up',
   'O Amigo Nunca Erra': 'The Friend Is Never Wrong',
+
+  /* ---- remessas do Ministério (o posto se equipa com o tempo) ---- */
+  '— nada declarado ainda —': '— nothing declared yet —',
+  'REMESSA DO MINISTÉRIO — ': 'MINISTRY SHIPMENT — ',
+  'ASSINAR O RECIBO': 'SIGN THE RECEIPT',
+  'DAR-SE POR CIENTE': 'ACKNOWLEDGE RECEIPT',
+  'Assine o recibo. O material passa a constar do seu posto — e da sua responsabilidade.':
+    'Sign the receipt. The equipment is now logged to your post — and to your responsibility.',
+  'Nada acompanha esta circular além dela mesma. Assine o ciente.':
+    'Nothing accompanies this circular but the circular itself. Sign the acknowledgement.',
+  'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
+  'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
+    'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
+  'CARTA DE FRONTEIRAS': 'BORDER CHART',
+  'Uma carta dobrada das nações vizinhas, com selos e cidades. Guarde na gaveta A. Arraste até a mesa para abrir.':
+    'A folded chart of the neighbouring nations, with seals and cities. Keep it in drawer A. Drag it onto the desk to open it.',
+  'LUPA DE EXAME': 'EXAMINATION LOUPE',
+  'Lente de aumento, aro de latão. Arraste até o cidadão para examinar de perto — rosto, mãos, pescoço, pele.':
+    'Magnifying lens, brass rim. Drag it onto the citizen to look closely — face, hands, neck, skin.',
+  'TERMÔMETRO CLÍNICO': 'CLINICAL THERMOMETER',
+  'Após o anúncio do VERITAS-9, o Ministério manda o que tem: um termômetro de mercúrio. "Temperatura fora da faixa humana é indício." Da faixa humana segundo quem, o ofício não diz.':
+    'After the VERITAS-9 announcement, the Ministry sends what it has: a mercury thermometer. "A temperature outside the human range is an indication." Human range according to whom, the order does not say.',
+  'AUTORIZAÇÃO DE REVISTA': 'SEARCH AUTHORISATION',
+  'Luto oficial, segurança reforçada: o inspetor passa a poder abrir a bagagem. A revista fica dentro do exame — a lupa serve para as duas coisas.':
+    'Official mourning, tightened security: the inspector may now open luggage. The search sits inside the examination — the loupe serves for both.',
+  'DOSSIÊ DA VIDA DOCUMENTADA': 'DOSSIER OF THE DOCUMENTED LIFE',
+  'Uma pasta com a cronologia de cada viajante, montada pelos arquivos. As lacunas — os anos sem papel — aparecem em vermelho. Uma lacuna não prova nada. É só o que mais assusta.':
+    'A folder with each traveller\'s chronology, assembled by the archives. The gaps — the years without paper — show up in red. A gap proves nothing. It is only the thing that frightens most.',
+  'COLETOR BIOLÓGICO K-7': 'BIOLOGICAL COLLECTOR K-7',
+  'Chegou o detector. Frasco, swab e uma etiqueta que diz POSITIVO ou negativo. O manual promete 99,2%. O manual não diz de quê.':
+    'The detector has arrived. Vial, swab and a label that reads POSITIVE or negative. The manual promises 99.2%. The manual does not say of what.',
+  'ESTETOSCÓPIO': 'STETHOSCOPE',
+  'Encoste no peito e ouça. Um coração calmo demais diante de um inspetor é uma anomalia — ou uma pessoa que já não tem medo de nada.':
+    'Press it to the chest and listen. A heart too calm in front of an inspector is an anomaly — or a person who has run out of things to fear.',
+  'PISTOLA DE SERVIÇO': 'SERVICE PISTOL',
+  'O Comando Nacional arma os postos de fronteira. Fica no coldre, sob o balcão. Espera-se que o senhor nunca precise. Espera-se.':
+    'National Command is arming the border posts. It stays in the holster, under the counter. It is expected that you will never need it. It is expected.',
+  'CIRCULAR TÉCNICA 11 — ANÁLISE DE MÃOS': 'TECHNICAL CIRCULAR 11 — ANALYSIS OF HANDS',
+  'O Instituto de Higiene informa: calo, unha e dorso registram a vida de um trabalhador. Quem declara ofício e tem a mão limpa demais declara mal. A partir de hoje as MÃOS constam do exame.':
+    'The Institute of Hygiene reports: callus, nail and knuckle record a labourer\'s life. Whoever declares a trade and has hands too clean declares falsely. From today the HANDS form part of the examination.',
+  'CIRCULAR TÉCNICA 14 — TABELA CROMÁTICA': 'TECHNICAL CIRCULAR 14 — CHROMATIC TABLE',
+  'Anexa segue a tabela oficial de tonalidades admissíveis da pele humana. Fora da tabela, registre anomalia. A tabela foi feita por três homens numa sala sem janela. A PELE passa a constar do exame.':
+    'Enclosed is the official table of admissible tones of human skin. Outside the table, record an anomaly. The table was made by three men in a room with no window. The SKIN now forms part of the examination.',
+  'CIRCULAR TÉCNICA 19 — REGIÃO CERVICAL': 'TECHNICAL CIRCULAR 19 — CERVICAL REGION',
+  'Relatos de campo descrevem marcas, suturas e ausência de pulsação visível na região do PESCOÇO. O Ministério não confirma os relatos. O Ministério apenas manda olhar.':
+    'Field reports describe marks, sutures and no visible pulse in the region of the NECK. The Ministry does not confirm the reports. The Ministry merely orders you to look.',
+  'ORDEM MEHRVOLK 3 — EXAME CORPORAL': 'MEHRVOLK ORDER 3 — BODILY EXAMINATION',
+  'O Comando Nacional autoriza o exame do CORPO INTEIRO de qualquer requerente, sem consentimento e sem testemunha. Quem nada esconde nada teme. Assine e cumpra.':
+    'National Command authorises examination of the ENTIRE BODY of any applicant, without consent and without witness. Whoever hides nothing fears nothing. Sign and comply.',
 };
 
 const I18N_ES = {
@@ -2989,6 +3038,55 @@ const I18N_ES = {
   'O Travesseiro': 'La Almohada',
   'A Conta Fecha': 'La Cuenta Cierra',
   'O Amigo Nunca Erra': 'El Amigo Nunca Se Equivoca',
+
+  /* ---- remesas del Ministerio (el puesto se equipa con el tiempo) ---- */
+  '— nada declarado ainda —': '— nada declarado aún —',
+  'REMESSA DO MINISTÉRIO — ': 'REMESA DEL MINISTERIO — ',
+  'ASSINAR O RECIBO': 'FIRMAR EL RECIBO',
+  'DAR-SE POR CIENTE': 'DARSE POR ENTERADO',
+  'Assine o recibo. O material passa a constar do seu posto — e da sua responsabilidade.':
+    'Firme el recibo. El material queda asentado en su puesto — y en su responsabilidad.',
+  'Nada acompanha esta circular além dela mesma. Assine o ciente.':
+    'Nada acompaña a esta circular salvo ella misma. Firme el enterado.',
+  'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
+  'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
+    'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
+  'CARTA DE FRONTEIRAS': 'CARTA DE FRONTERAS',
+  'Uma carta dobrada das nações vizinhas, com selos e cidades. Guarde na gaveta A. Arraste até a mesa para abrir.':
+    'Una carta plegada de las naciones vecinas, con sellos y ciudades. Guárdela en el cajón A. Arrástrela hasta la mesa para abrirla.',
+  'LUPA DE EXAME': 'LUPA DE EXAMEN',
+  'Lente de aumento, aro de latão. Arraste até o cidadão para examinar de perto — rosto, mãos, pescoço, pele.':
+    'Lente de aumento, aro de latón. Arrástrela hasta el ciudadano para examinar de cerca — rostro, manos, cuello, piel.',
+  'TERMÔMETRO CLÍNICO': 'TERMÓMETRO CLÍNICO',
+  'Após o anúncio do VERITAS-9, o Ministério manda o que tem: um termômetro de mercúrio. "Temperatura fora da faixa humana é indício." Da faixa humana segundo quem, o ofício não diz.':
+    'Tras el anuncio del VERITAS-9, el Ministerio manda lo que tiene: un termómetro de mercurio. "Temperatura fuera del rango humano es indicio." De qué rango humano y según quién, el oficio no lo dice.',
+  'AUTORIZAÇÃO DE REVISTA': 'AUTORIZACIÓN DE REGISTRO',
+  'Luto oficial, segurança reforçada: o inspetor passa a poder abrir a bagagem. A revista fica dentro do exame — a lupa serve para as duas coisas.':
+    'Luto oficial, seguridad reforzada: el inspector ya puede abrir el equipaje. El registro está dentro del examen — la lupa sirve para las dos cosas.',
+  'DOSSIÊ DA VIDA DOCUMENTADA': 'DOSIER DE LA VIDA DOCUMENTADA',
+  'Uma pasta com a cronologia de cada viajante, montada pelos arquivos. As lacunas — os anos sem papel — aparecem em vermelho. Uma lacuna não prova nada. É só o que mais assusta.':
+    'Una carpeta con la cronología de cada viajero, armada por los archivos. Los vacíos — los años sin papel — salen en rojo. Un vacío no prueba nada. Es solo lo que más asusta.',
+  'COLETOR BIOLÓGICO K-7': 'COLECTOR BIOLÓGICO K-7',
+  'Chegou o detector. Frasco, swab e uma etiqueta que diz POSITIVO ou negativo. O manual promete 99,2%. O manual não diz de quê.':
+    'Llegó el detector. Frasco, hisopo y una etiqueta que dice POSITIVO o negativo. El manual promete 99,2%. El manual no dice de qué.',
+  'ESTETOSCÓPIO': 'ESTETOSCOPIO',
+  'Encoste no peito e ouça. Um coração calmo demais diante de um inspetor é uma anomalia — ou uma pessoa que já não tem medo de nada.':
+    'Apóyelo en el pecho y escuche. Un corazón demasiado calmo ante un inspector es una anomalía — o una persona que ya no le teme a nada.',
+  'PISTOLA DE SERVIÇO': 'PISTOLA DE SERVICIO',
+  'O Comando Nacional arma os postos de fronteira. Fica no coldre, sob o balcão. Espera-se que o senhor nunca precise. Espera-se.':
+    'El Comando Nacional arma los puestos de frontera. Queda en la funda, bajo el mostrador. Se espera que usted nunca la necesite. Se espera.',
+  'CIRCULAR TÉCNICA 11 — ANÁLISE DE MÃOS': 'CIRCULAR TÉCNICA 11 — ANÁLISIS DE MANOS',
+  'O Instituto de Higiene informa: calo, unha e dorso registram a vida de um trabalhador. Quem declara ofício e tem a mão limpa demais declara mal. A partir de hoje as MÃOS constam do exame.':
+    'El Instituto de Higiene informa: callo, uña y dorso registran la vida de un trabajador. Quien declara un oficio y tiene la mano demasiado limpia declara mal. Desde hoy las MANOS constan en el examen.',
+  'CIRCULAR TÉCNICA 14 — TABELA CROMÁTICA': 'CIRCULAR TÉCNICA 14 — TABLA CROMÁTICA',
+  'Anexa segue a tabela oficial de tonalidades admissíveis da pele humana. Fora da tabela, registre anomalia. A tabela foi feita por três homens numa sala sem janela. A PELE passa a constar do exame.':
+    'Se adjunta la tabla oficial de tonalidades admisibles de la piel humana. Fuera de la tabla, registre anomalía. La tabla la hicieron tres hombres en un cuarto sin ventana. La PIEL pasa a constar en el examen.',
+  'CIRCULAR TÉCNICA 19 — REGIÃO CERVICAL': 'CIRCULAR TÉCNICA 19 — REGIÓN CERVICAL',
+  'Relatos de campo descrevem marcas, suturas e ausência de pulsação visível na região do PESCOÇO. O Ministério não confirma os relatos. O Ministério apenas manda olhar.':
+    'Informes de campo describen marcas, suturas y ausencia de pulso visible en la región del CUELLO. El Ministerio no confirma los informes. El Ministerio solo manda mirar.',
+  'ORDEM MEHRVOLK 3 — EXAME CORPORAL': 'ORDEN MEHRVOLK 3 — EXAMEN CORPORAL',
+  'O Comando Nacional autoriza o exame do CORPO INTEIRO de qualquer requerente, sem consentimento e sem testemunha. Quem nada esconde nada teme. Assine e cumpra.':
+    'El Comando Nacional autoriza el examen del CUERPO ENTERO de cualquier solicitante, sin consentimiento y sin testigo. Quien nada esconde nada teme. Firme y cumpla.',
 };
 
 const I18N_TABLES = { en: I18N_EN, es: I18N_ES };

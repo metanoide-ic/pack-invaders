@@ -739,13 +739,16 @@ function mutateFeatures(f) { // para foto divergente
    markup SVG (um <image> com dataURL) pros mesmos containers de sempre. */
 
 /* ---------- EXAME FÍSICO: UI ---------- */
+/* As regiões do exame também CHEGAM. No começo o inspetor só sabe olhar nos
+   olhos e mandar abrir a boca — o resto vem por circular técnica, sempre com
+   um nome respeitável e um parágrafo de ciência inventada. (un: id em TOOL_UNLOCK) */
 const EXAM_ZONES = [
   { id: 'olhos', label: 'OLHOS', tells: ['olhos', 'piscar'] },
   { id: 'boca', label: 'BOCA', tells: ['dentes'] },
-  { id: 'pele', label: 'PELE', tells: ['pele'] },
-  { id: 'maos', label: 'MÃOS', tells: ['maos'] },
-  { id: 'pescoco', label: 'PESCOÇO', tells: ['pescoco'] },
-  { id: 'corpo', label: 'CORPO', body: true },
+  { id: 'pele', label: 'PELE', tells: ['pele'], un: 'ex_pele' },
+  { id: 'maos', label: 'MÃOS', tells: ['maos'], un: 'ex_maos' },
+  { id: 'pescoco', label: 'PESCOÇO', tells: ['pescoco'], un: 'ex_pescoco' },
+  { id: 'corpo', label: 'CORPO', body: true, un: 'ex_corpo' },
 ];
 function openExam() {
   const cz = shift.citizen;
@@ -764,7 +767,7 @@ function openExam() {
   bg.textContent = T('GERAL'); bg.className = 'zone-general';
   bg.onclick = () => { $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys); };
   zones.appendChild(bg);
-  EXAM_ZONES.forEach(z => {
+  EXAM_ZONES.filter(z => toolReady(z.un)).forEach(z => {
     const b = document.createElement('button');
     b.textContent = T(z.label);
     b.onclick = () => { b.classList.add('done'); examZone(cz, z); };
@@ -1517,23 +1520,20 @@ function startDay() {
   $('ask-row').innerHTML = '';
   $('scan-result').textContent = '';
   $('npc-portrait').innerHTML = ''; if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
-  $('btn-scan-bio').style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
-  const bioSlot = $('inst-bio-slot'); if (bioSlot) bioSlot.style.display = (S.day >= 10 || S.infinite) ? '' : 'none';
+  // o que chega hoje só aparece na mesa depois do ofício assinado
+  PENDING_TOOLS = new Set(S.infinite ? [] : Object.keys(TOOL_UNLOCK).filter(k => TOOL_UNLOCK[k].day === S.day));
+  applyToolUnlocks();
   $('btn-reject').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   $('btn-detain').classList.toggle('hidden', S.day >= 47 && !S.infinite);
   const sr = $('st-rej'); if (sr) sr.classList.toggle('hidden', S.day >= 47 && !S.infinite);
   showScreen('screen-shift');
   requestAnimationFrame(drawDeskProps); // enfeites da mesa (após o layout existir)
-  // primeiro dia: as gavetas se abrem sozinhas, para o novato ver as ferramentas
-  if (S.day === 1 && !S.infinite) {
-    setTimeout(() => document.querySelectorAll('.drawer').forEach((d, i) => {
-      setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, i * 320);
-    }), 900);
-  }
+  // as gavetas só se abrem sozinhas quando já existe algo dentro (a primeira
+  // remessa chega no dia 2); no dia 1 a mesa tem o essencial e nada mais
   // o comunicado do dia chega em papel, deslizando pela mesa
   const memo = $('desk-memo');
   if (memo) { memo.classList.remove('in'); void memo.offsetWidth; memo.classList.add('in'); }
-  showBulletin(() => {
+  showBulletin(() => announceNewTools(() => {
     if (S.day >= 48 && !S.infinite) { enterMirror48(); return; } // o último dia não tem fila. tem você.
     shift.running = true;
     clearInterval(shift.tickId);
@@ -1542,7 +1542,7 @@ function startDay() {
     startRadio();
     initQueueCanvas();
     nextCitizen();
-  });
+  }));
 }
 
 function bulletinText() {
@@ -1748,6 +1748,105 @@ function sfxTvOff() {
     g.gain.setValueAtTime(.12, t); g.gain.exponentialRampToValueAtTime(.001, t + .22);
     o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + .25);
   } catch (e) {}
+}
+
+
+/* ============================================================
+   O POSTO SE EQUIPA COM O TEMPO
+   No dia 1 há o que sempre houve numa fronteira: documentos, um
+   carimbo e perguntas. Todo o resto CHEGA — em remessa, com ofício,
+   pelo mesmo Ministério que amanhã vai dizer que aquilo nunca serviu
+   para nada. Ensinar por adição é o que faz cada ferramenta pesar.
+   ============================================================ */
+const TOOL_UNLOCK = {
+  mapa:   { day: 2,  nome: 'CARTA DE FRONTEIRAS',
+            texto: 'Uma carta dobrada das nações vizinhas, com selos e cidades. Guarde na gaveta A. Arraste até a mesa para abrir.' },
+  lupa:   { day: 3,  nome: 'LUPA DE EXAME',
+            texto: 'Lente de aumento, aro de latão. Arraste até o cidadão para examinar de perto — rosto, mãos, pescoço, pele.' },
+  thermo: { day: 5,  nome: 'TERMÔMETRO CLÍNICO',
+            texto: 'Após o anúncio do VERITAS-9, o Ministério manda o que tem: um termômetro de mercúrio. "Temperatura fora da faixa humana é indício." Da faixa humana segundo quem, o ofício não diz.' },
+  bag:    { day: 7,  nome: 'AUTORIZAÇÃO DE REVISTA',
+            texto: 'Luto oficial, segurança reforçada: o inspetor passa a poder abrir a bagagem. A revista fica dentro do exame — a lupa serve para as duas coisas.' },
+  dossie: { day: 9,  nome: 'DOSSIÊ DA VIDA DOCUMENTADA',
+            texto: 'Uma pasta com a cronologia de cada viajante, montada pelos arquivos. As lacunas — os anos sem papel — aparecem em vermelho. Uma lacuna não prova nada. É só o que mais assusta.' },
+  bio:    { day: 10, nome: 'COLETOR BIOLÓGICO K-7',
+            texto: 'Chegou o detector. Frasco, swab e uma etiqueta que diz POSITIVO ou negativo. O manual promete 99,2%. O manual não diz de quê.' },
+  pulse:  { day: 11, nome: 'ESTETOSCÓPIO',
+            texto: 'Encoste no peito e ouça. Um coração calmo demais diante de um inspetor é uma anomalia — ou uma pessoa que já não tem medo de nada.' },
+  gun:    { day: 12, nome: 'PISTOLA DE SERVIÇO',
+            texto: 'O Comando Nacional arma os postos de fronteira. Fica no coldre, sob o balcão. Espera-se que o senhor nunca precise. Espera-se.' },
+  /* circulares: não chega objeto nenhum, chega PERMISSÃO de olhar mais fundo */
+  detain:     { day: 4,  nome: 'ORDEM DE DETENÇÃO',
+                texto: 'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.' },
+  ex_maos:    { day: 6,  circular: true, nome: 'CIRCULAR TÉCNICA 11 — ANÁLISE DE MÃOS',
+                texto: 'O Instituto de Higiene informa: calo, unha e dorso registram a vida de um trabalhador. Quem declara ofício e tem a mão limpa demais declara mal. A partir de hoje as MÃOS constam do exame.' },
+  ex_pele:    { day: 8,  circular: true, nome: 'CIRCULAR TÉCNICA 14 — TABELA CROMÁTICA',
+                texto: 'Anexa segue a tabela oficial de tonalidades admissíveis da pele humana. Fora da tabela, registre anomalia. A tabela foi feita por três homens numa sala sem janela. A PELE passa a constar do exame.' },
+  ex_pescoco: { day: 14, circular: true, nome: 'CIRCULAR TÉCNICA 19 — REGIÃO CERVICAL',
+                texto: 'Relatos de campo descrevem marcas, suturas e ausência de pulsação visível na região do PESCOÇO. O Ministério não confirma os relatos. O Ministério apenas manda olhar.' },
+  ex_corpo:   { day: 15, circular: true, nome: 'ORDEM MEHRVOLK 3 — EXAME CORPORAL',
+                texto: 'O Comando Nacional autoriza o exame do CORPO INTEIRO de qualquer requerente, sem consentimento e sem testemunha. Quem nada esconde nada teme. Assine e cumpra.' },
+};
+/* o que chegou HOJE fica fora do tampo até o ofício ser assinado */
+let PENDING_TOOLS = new Set();
+function toolReady(id) {
+  if (S.infinite) return true;
+  const u = TOOL_UNLOCK[id];
+  return !u || S.day >= u.day;
+}
+function toolShown(id) { return toolReady(id) && !PENDING_TOOLS.has(id); }
+/* mostra/esconde cada ferramenta conforme o dia */
+function applyToolUnlocks() {
+  const show = (sel, on) => { const el = typeof sel === 'string' ? $(sel) : sel; if (el) el.style.display = on ? '' : 'none'; };
+  const toolReady = toolShown;   // dentro do layout vale o que já foi entregue
+  show('dt-mapa', toolReady('mapa'));
+  show('btn-map', false);                                  // o mapa é objeto de gaveta
+  show('dt-lupa', toolReady('lupa'));
+  show('inst-thermo', toolReady('thermo'));
+  show('dt-linha', toolReady('dossie'));
+  const pulse = $('inst-pulse');
+  if (pulse) show(pulse.closest('.inst-slot') || pulse, toolReady('pulse'));
+  show('inst-bio-slot', toolReady('bio'));
+  show('btn-scan-bio', false);
+  show('gun-obj', toolReady('gun'));
+  show('btn-detain', toolReady('detain'));   // o DET só ganha fio no dia 4
+  // o tampo não mostra suporte vazio: some com a bandeja de instrumentos
+  show('instruments', toolReady('pulse') || toolReady('bio'));
+  const bagBtn = $('btn-exam-bag'); if (bagBtn) bagBtn.style.display = toolReady('bag') ? '' : 'none';
+  // gaveta sem nada dentro não abre — nem aparece
+  const dA = $('drawer-left'), dB = $('drawer-right');
+  const anyA = toolReady('mapa') || toolReady('lupa');
+  const anyB = toolReady('thermo') || toolReady('dossie');
+  if (dA) { dA.style.display = anyA ? '' : 'none'; if (!anyA) dA.classList.remove('open'); }
+  if (dB) { dB.style.display = anyB ? '' : 'none'; if (!anyB) dB.classList.remove('open'); }
+}
+/* a remessa do dia: ofício + o objeto novo, com a gaveta abrindo sozinha */
+function announceNewTools(after) {
+  if (S.infinite) { PENDING_TOOLS.clear(); if (after) after(); return; }
+  const chegou = Object.keys(TOOL_UNLOCK).filter(k => TOOL_UNLOCK[k].day === S.day);
+  if (!chegou.length) { if (after) after(); return; }
+  let i = 0;
+  const next = () => {
+    if (i >= chegou.length) { PENDING_TOOLS.clear(); applyToolUnlocks(); if (after) after(); return; }
+    const id = chegou[i++], u = TOOL_UNLOCK[id];
+    sfxTool('paper');
+    modal((u.circular ? '' : T('REMESSA DO MINISTÉRIO — ')) + T(u.nome),
+      T(u.texto) + '\n\n' + (u.circular
+        ? T('Nada acompanha esta circular além dela mesma. Assine o ciente.')
+        : T('Assine o recibo. O material passa a constar do seu posto — e da sua responsabilidade.')),
+      [{ label: u.circular ? T('DAR-SE POR CIENTE') : T('ASSINAR O RECIBO'), fn: () => {
+        PENDING_TOOLS.delete(id); applyToolUnlocks();
+        if (!u.circular) {
+          // a gaveta onde o material foi guardado abre sozinha para o inspetor conferir
+          document.querySelectorAll('.drawer').forEach((d, k2) => {
+            if (d.style.display === 'none') return;
+            setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, k2 * 260);
+          });
+        }
+        setTimeout(next, u.circular ? 240 : 500);
+      } }]);
+  };
+  next();
 }
 
 function showBulletin(fn) {
@@ -2080,7 +2179,7 @@ function pollShiftGamepad() {
       if (gpA && !shift.gpA) stampByKey('approve');
       if (gpB && !shift.gpB) decide('reject');
     }
-    if (gpX && !shift.gpX && !$('btn-detain').disabled) decide('detain');
+    if (gpX && !shift.gpX && !$('btn-detain').disabled && toolReady('detain')) decide('detain');
   }
   shift.gpA = gpA; shift.gpB = gpB; shift.gpX = gpX; shift.gpY = gpY; shift.gpStart = gpStart; shift.gpL = gpL; shift.gpR = gpR;
 }
@@ -3676,8 +3775,8 @@ function setupDrawers() {
   };
   const acts = {
     'dt-mapa': { target: 'desk', needsCitizen: false, fn: () => openMap() },
-    'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => openExam() },   // a lupa DE EXAME
-    'dt-linha': { target: 'stage', needsCitizen: true, fn: () => openLifeline() },
+    'dt-lupa': { target: 'stage', needsCitizen: true, fn: () => { if (toolReady('lupa')) openExam(); } },   // a lupa DE EXAME
+    'dt-linha': { target: 'stage', needsCitizen: true, fn: () => { if (toolReady('dossie')) openLifeline(); } },
     'inst-thermo': { target: 'stage', needsCitizen: true, raw: (el, home) => {  // leitura na etiqueta
       el.classList.add('busy');
       setTimeout(() => {
@@ -5282,6 +5381,8 @@ $('btn-gohome').onclick = goHome;
 $('btn-endshift').onclick = () => { if (shift.running) endShift(); };
 $('btn-bulletin').onclick = () => showBulletin(null);
 $('btn-map').onclick = openMap;
+// o caderno de anotações não fica em branco de cara feia: fica em branco DIZENDO
+if ($('talk-log')) $('talk-log').dataset.empty = T('— nada declarado ainda —');
 $('btn-map-close').onclick = () => $('map-overlay').classList.remove('active');
 $('btn-inspect').onclick = toggleInspect;
 $('btn-exam').onclick = openExam;
@@ -5396,7 +5497,7 @@ function stampByKey(kind) {
   if ($('modal-overlay').classList.contains('active')) return;
   const el = $(kind === 'approve' ? 'st-apv' : kind === 'reject' ? 'st-rej' : null);
   const doc = $('desk').querySelector('.document');
-  if (kind === 'detain') { const b = $('btn-detain'); if (b && !b.disabled) b.click(); return; }
+  if (kind === 'detain') { const b = $('btn-detain'); if (b && !b.disabled && toolReady('detain')) b.click(); return; }
   if (!el || el.classList.contains('busy') || el.classList.contains('hidden')) return;
   if (doc) {
     const r = doc.getBoundingClientRect();

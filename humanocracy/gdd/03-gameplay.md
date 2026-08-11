@@ -113,6 +113,43 @@ nome do hospital? qual comandante?) — cada resposta abrindo novas perguntas.
 - Mentiras humanas têm cem motivos (vergonha, medo, amor, política) — nem toda mentira é
   criminosa, e o jogo diferencia internamente a mentira do crime.
 
+## 3.5b O posto se equipa com o tempo (remessas do Ministério)
+
+No **Dia 1** a mesa tem só o que uma fronteira sempre teve: **documentos, dois
+carimbos e perguntas**. Não há gaveta, não há lupa, não há termômetro — e o botão
+DET não tem fio. O jogo não abre um armário de brinquedos: ele **entrega uma
+ferramenta por vez**, sempre com ofício, sempre com assinatura de recibo, sempre
+com um parágrafo de ciência inventada por trás.
+
+O efeito é duplo. Mecanicamente, cada dia introduz exatamente uma coisa nova, e o
+jogador aprende sem tutorial. Dramaticamente, **o aparato cresce na frente dele** —
+e cada assinatura é uma cumplicidade a mais. O inspetor nunca escolheu vigiar o
+pescoço das pessoas; ele só assinou a Circular Técnica 19.
+
+| Dia | Chega | Tipo | Nota |
+|---|---|---|---|
+| 2 | Carta de Fronteiras (mapa) | remessa | abre a Gaveta A |
+| 3 | Lupa de Exame | remessa | o exame físico existe a partir daqui (olhos e boca) |
+| 4 | Ordem de Detenção | remessa | o botão DET ganha fio — véspera do 1º procurado (dia 5) |
+| 5 | Termômetro Clínico | remessa | abre a Gaveta B; ligado ao anúncio do VERITAS-9 |
+| 6 | Circular Técnica 11 — Análise de Mãos | circular | zona MÃOS no exame |
+| 7 | Autorização de Revista | remessa | bagagem, dentro da lupa; dia do luto oficial |
+| 8 | Circular Técnica 14 — Tabela Cromática | circular | zona PELE |
+| 9 | Dossiê da Vida Documentada | remessa | linha do tempo com lacunas em vermelho |
+| 10 | Coletor Biológico K-7 | remessa | a única "evidência formal" |
+| 11 | Estetoscópio | remessa | pulsação |
+| 12 | Pistola de Serviço | remessa | véspera do 1º atentado (dia 13) |
+| 14 | Circular Técnica 19 — Região Cervical | circular | zona PESCOÇO |
+| 15 | Ordem Mehrvolk 3 — Exame Corporal | circular | zona CORPO, sem consentimento nem testemunha |
+
+**Remessa** traz objeto (a gaveta correspondente abre sozinha para o inspetor
+conferir o material). **Circular** não traz nada além de si mesma — só a
+permissão de olhar mais fundo. No Modo Infinito tudo já está sobre a mesa.
+
+Implementação: `TOOL_UNLOCK` / `toolReady(id)` / `applyToolUnlocks()` /
+`announceNewTools()` em `game.js`; `EXAM_ZONES[].un` liga cada região do exame à
+sua circular. `tools/qa/unlocks.js` fotografa o tampo dia a dia.
+
 ## 3.6 Scanners — ferramentas que mentem um pouco
 
 | Scanner | Custo | O que diz | Como falha |

@@ -18,7 +18,15 @@ const DIR = require('os').tmpdir() + '/';
     await p.waitForTimeout(400);
     return true;
   };
-  const dismissModal = async () => { const mb = await p.$('#modal-overlay.active #modal-actions button'); if (mb) { await mb.click(); await p.waitForTimeout(250); return true; } return false; };
+  const dismissModal = async () => {   // a manhã pode trazer VÁRIOS ofícios (remessas do Ministério)
+    let any = false;
+    for (let i = 0; i < 6; i++) {
+      const mb = await p.$('#modal-overlay.active #modal-actions button');
+      if (!mb) break;
+      await mb.click(); await p.waitForTimeout(320); any = true;
+    }
+    return any;
+  };
 
   await p.goto(U);
   await p.waitForSelector('#screen-title.active'); await p.waitForTimeout(400);

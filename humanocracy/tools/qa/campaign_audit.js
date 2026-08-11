@@ -42,6 +42,11 @@ const U = process.env.HUMANOCRACY_URL || 'file://' + require('path').resolve(__d
     return out;
   });
 
+  // o posto se equipa com o tempo: em que dia cada ferramenta/permissão chega
+  const remessas = await p.evaluate(() => Object.keys(TOOL_UNLOCK)
+    .sort((a, b) => TOOL_UNLOCK[a].day - TOOL_UNLOCK[b].day)
+    .map(k => `d${TOOL_UNLOCK[k].day}:${k}`).join(' '));
+  console.log('REMESSAS:', remessas);
   console.log('REGIMES (dias por fase):', JSON.stringify(rep.regimes));
   console.log('COBERTURA:', JSON.stringify(rep.counts));
   const marcos = [1, 7, 12, 14, 27, 30, 33, 37, 41, 43, 47, 48];
