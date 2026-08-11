@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import dataclass, field, asdict
 
 ARQUIVO_PADRAO = "template_feirao.json"
@@ -76,10 +77,29 @@ def carrega(caminho: str | None = None) -> dict:
         return json.load(fh)
 
 
+def _preenche(modelo: str, dados: dict) -> str:
+    """Troca {campo} pelos dados; some com o que ficou sem valor.
+
+    Sem isso um campo nao preenchido aparecia literalmente na tela como
+    "{loja}" — pior do que nao aparecer nada.
+    """
+    saida = modelo
+    for chave, valor in (dados or {}).items():
+        saida = saida.replace("{" + str(chave) + "}", str(valor))
+    saida = re.sub(r"\{[^{}]*\}", "", saida)
+    # limpa separadores que ficaram orfaos (" · ", " - ") nas pontas
+    saida = re.sub(r"\s*[·|\-–]\s*(?=$|[·|\-–])", "", saida)
+    return re.sub(r"\s{2,}", " ", saida).strip(" ·|-–\n")
+
+
 def monta_plano(template: dict, midias: list[str],
                 ofertas: list[dict] | None = None,
-                nome: str = "Feirao") -> PlanoDeEdicao:
-    """Encaixa as midias e as ofertas na estrutura do template."""
+                nome: str = "Feirao",
+                dados: dict | None = None) -> PlanoDeEdicao:
+    """Encaixa as midias e as ofertas na estrutura do template.
+
+    `dados` preenche os campos entre chaves do template (loja, telefone...).
+    """
     plano = PlanoDeEdicao(nome=nome,
                           largura=int(template.get("largura", 1080)),
                           altura=int(template.get("altura", 1920)),
@@ -90,8 +110,9 @@ def monta_plano(template: dict, midias: list[str],
         plano.blocos.append(Bloco(
             nome="abertura", tipo="titulo",
             duracao=float(abertura.get("duracao", 2.5)),
-            textos={"titulo": abertura.get("titulo", ""),
-                    "subtitulo": abertura.get("subtitulo", "")}))
+            textos={"titulo": _preenche(abertura.get("titulo", ""), dados),
+                    "subtitulo": _preenche(abertura.get("subtitulo", ""),
+                                           dados)}))
 
     conf_oferta = template.get("oferta") or {}
     modelo = conf_oferta.get("modelo_de_texto", "{carro}\n{preco}")
@@ -114,6 +135,6 @@ def monta_plano(template: dict, midias: list[str],
         plano.blocos.append(Bloco(
             nome="encerramento", tipo="encerramento",
             duracao=float(fim.get("duracao", 3.0)),
-            textos={"titulo": fim.get("titulo", ""),
-                    "subtitulo": fim.get("subtitulo", "")}))
+            textos={"titulo": _preenche(fim.get("titulo", ""), dados),
+                    "subtitulo": _preenche(fim.get("subtitulo", ""), dados)}))
     return plano

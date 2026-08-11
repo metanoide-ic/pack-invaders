@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import animacoes
+from . import animacoes, estilos
 
 # ------------------------------------------------------ vocabulario fechado
 
@@ -21,6 +21,10 @@ from . import animacoes
 # implementado, o Claude nao consegue pedir. Contrato e implementacao nao
 # podem divergir.
 ANIMACOES = animacoes.DISPONIVEIS
+
+# idem para os estilos de legenda: quem manda e o que existe em estilos.py
+LEGENDAS = estilos.DISPONIVEIS
+POSICOES_LEGENDA = estilos.POSICOES
 
 CORES = {
     "quente_vibrante": "Satura e esquenta. Padrao para feirao — chama atencao "
@@ -42,7 +46,7 @@ ESTILOS_TEXTO = {
     "sutil": "Fino e discreto. Para credito, endereco, telefone.",
 }
 
-TIPOS = ["cortar", "legendas_fonte", "animacao", "cor", "texto"]
+TIPOS = ["cortar", "legendas", "animacao", "cor", "texto"]
 
 
 # --------------------------------------------------------------- validacao
@@ -109,9 +113,13 @@ def valida_acao(bruta: dict, duracao: float) -> Acao:
             raise PlanoInvalido(f"corte comeca depois do fim do video: {ini}")
         dados["fim"] = min(fim, duracao)
 
-    elif tipo == "legendas_fonte":
-        if not dados.get("fonte"):
-            raise PlanoInvalido("falta 'fonte'")
+    elif tipo == "legendas":
+        if dados.get("estilo") not in LEGENDAS:
+            raise PlanoInvalido(f"estilo de legenda desconhecido: "
+                                f"{dados.get('estilo')!r}")
+        if dados.get("posicao", "padrao") not in POSICOES_LEGENDA:
+            raise PlanoInvalido(f"posicao de legenda desconhecida: "
+                                f"{dados.get('posicao')!r}")
 
     elif tipo == "animacao":
         nome = dados.get("nome")
@@ -216,15 +224,17 @@ def esquema_json() -> dict:
                      "motivo": motivo},
                     ["tipo", "inicio", "fim", "motivo"]),
 
-                obj({"tipo": {"const": "legendas_fonte"},
-                     "fonte": {"type": "string"},
-                     "tamanho": {"type": "integer",
-                                 "description": "Corpo da letra; 64 e um bom "
-                                                "padrao para celular."},
-                     "cor": {"type": "string",
-                             "description": "Hex, ex: #FFD700"},
+                obj({"tipo": {"const": "legendas"},
+                     "estilo": {"type": "string", "enum": sorted(LEGENDAS),
+                                "description": "Visual da legenda queimada "
+                                               "no video."},
+                     "posicao": {"type": "string",
+                                 "enum": sorted(POSICOES_LEGENDA),
+                                 "description": "Onde a legenda fica. Olhe os "
+                                                "quadros: se o rodape ja tem "
+                                                "faixa ou texto, use 'alta'."},
                      "motivo": motivo},
-                    ["tipo", "fonte", "tamanho", "cor", "motivo"]),
+                    ["tipo", "estilo", "posicao", "motivo"]),
 
                 obj({"tipo": {"const": "animacao"},
                      "nome": {"type": "string", "enum": sorted(ANIMACOES)},

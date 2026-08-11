@@ -1,11 +1,11 @@
 # obrigatorios
-pillow>=10.0          # desenha as animacoes e o texto
-imageio-ffmpeg>=0.4.9 # traz o ffmpeg junto, sem instalar nada a parte
+pillow>=10.0          # desenha animacoes, cartoes e faixas
+imageio-ffmpeg>=0.4.9 # traz o ffmpeg (com libass) junto, sem instalar a parte
 
 # opcional: edicao por IA (voce escreve o pedido em portugues)
 # anthropic>=0.40
 
-# opcional: legendas automaticas (transcricao local, offline)
+# opcional: legendas — transcricao local e offline, com tempo por palavra
 # faster-whisper>=1.0.0
 
 # opcional: para rodar os testes

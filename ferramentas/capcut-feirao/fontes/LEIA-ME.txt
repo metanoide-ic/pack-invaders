@@ -1,0 +1,8 @@
+Fontes embutidas no app para o visual ficar igual em qualquer computador.
+
+Todas sao SIL Open Font License 1.1 (arquivos *-OFL.txt nesta pasta), que
+permite uso comercial e redistribuicao junto do programa.
+
+  Outfit-Bold        legendas virais e textos de impacto
+  BigShoulders-Bold  condensada, para carimbo e placa
+  EricaOne-Regular   pesada, para palavra unica na tela

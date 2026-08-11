@@ -62,31 +62,51 @@ No CapCut: **Legendas → Importar legendas** e escolha o `.srt`.
 
 No Passo 3, escreva o que quer como falaria com um editor:
 
-> corta os silêncios, deixa a cor puxada pro quente, e quando ele falar
-> RASGANDO PREÇO mostra a palavra PREÇO num papel sendo rasgado
+> corta os silêncios, poe legenda viral amarela, deixa a cor puxada pro quente,
+> e quando ele falar RASGANDO PREÇO mostra a palavra PREÇO num papel sendo
+> rasgado
 
-O app transcreve a fala com tempo, olha alguns quadros do vídeo, e o Claude
-devolve um **plano de edição** — uma lista de ações com o segundo exato de cada
-uma e o motivo. O app aplica o que consegue sozinho e escreve um roteiro com o
-resto.
+O app transcreve a fala **com o tempo de cada palavra**, olha alguns quadros do
+vídeo, e o Claude devolve um **plano de edição** — uma lista de ações com o
+segundo exato de cada uma e o motivo.
 
 Sai na pasta `Feirao`:
 
-- `<nome>_previa.mp4` — cortes e tratamento de cor já aplicados
+- `<nome>_legendado.mp4` — vídeo pronto: cortes, cor e legendas já queimadas
 - `<nome>_anim1_*.mp4` — cada animação, em fundo verde para você chavear
 - `<nome>_roteiro.txt` — em que segundo entra cada camada, e o que ficou de fora
+
+### Legendas virais
+
+As legendas são **queimadas no vídeo**, não exportadas como `.srt`. A diferença
+importa: `.srt` não carrega estilo nenhum, então o CapCut aplica o dele e nunca
+fica igual ao que você pediu. Queimando, o que sai é exatamente o visual
+escolhido — e a palavra que está sendo falada acende e cresce, que é o efeito
+das legendas de Reels.
+
+| Estilo | Quando usar |
+|---|---|
+| `viral_amarelo` | Oferta e anúncio. O mais comum de Reels e TikTok. |
+| `viral_verde` | Igual, mas acende em verde limão. Combina com desconto. |
+| `caixa_preta` | Faixa preta sólida. Depoimento, explicação, fundo bagunçado. |
+| `uma_palavra` | Uma palavra gigante por vez. Prende muito, cansa em vídeo longo. |
+
+O Claude escolhe também **onde** a legenda fica (`padrao`, `alta`, `centro`) —
+ele vê os quadros, então se o rodapé já tem faixa de preço ele sobe a legenda
+sozinho.
+
+> Precisa do `faster-whisper` instalado: sem o tempo de cada palavra não existe
+> legenda viral. O app avisa em vez de entregar algo torto.
 
 ### Por que o modelo não pode inventar efeito
 
 O Claude não escreve efeito nenhum: ele **escolhe de uma lista fechada** que o
-app sabe executar (`feirao/acoes.py`). Essa lista é montada a partir das
-animações que existem de verdade em `feirao/animacoes.py` — então é impossível
-o modelo pedir algo que o executor não saiba fazer. Se ele pedir um tempo fora
-do vídeo ou um corte invertido, aquela ação é descartada com aviso e o resto do
-plano continua valendo.
+app sabe executar (`feirao/acoes.py`). Essa lista é montada a partir do que
+existe de verdade em `animacoes.py` e `estilos.py` — é impossível ele pedir
+algo que o executor não saiba fazer. Se pedir um tempo fora do vídeo ou um
+corte invertido, aquela ação é descartada com aviso e o resto continua valendo.
 
-Para ensinar um efeito novo: escreva a função em `animacoes.py`, registre em
-`REGISTRO`, pronto — o Claude passa a poder usá-la no mesmo instante.
+Para ensinar um efeito novo: escreva a função, registre, pronto.
 
 ### Animações que existem hoje
 
@@ -97,21 +117,33 @@ Para ensinar um efeito novo: escreva a função em `animacoes.py`, registre em
 | `confete` | Explosão de confete |
 | `zoom_impacto` | Anel de choque para dar ênfase |
 
+## Criar um vídeo do zero
+
+No Passo 4: escolha as fotos dos carros e escreva uma oferta por linha, no
+formato `carro | preço | condição`. O app monta abertura, uma cena por oferta
+(com aproximação lenta na foto, para não ficar parado) e encerramento com a
+marca da loja.
+
+O vídeo sai **sem som**, para você colocar música ou narração. E dá para jogar
+o resultado no Passo 3 e pedir legendas e animações em cima dele — foi assim
+que a demonstração foi feita.
+
+A estrutura fica em `template_feirao.json`, na pasta `Feirao`. Edite no bloco
+de notas: durações, textos de abertura e encerramento, formato do texto das
+ofertas. Campos entre chaves que você não preencher simplesmente somem da tela.
+
 ## O que já funciona e o que ainda não
 
 | Recurso | Estado |
 |---|---|
-| Cortar silêncios | Funciona |
-| Legendas em `.srt` | Funciona |
-| Pedido em português vira plano de edição | Funciona |
-| Cortes e cor aplicados automaticamente | Funciona |
+| Criar vídeo do zero com fotos e ofertas | Funciona |
+| Legendas virais queimadas, palavra a palavra | Funciona |
+| Tratamento de cor (4 presets, com intensidade) | Funciona |
 | Animações geradas com o texto da fala | Funciona |
+| Cortar silêncios | Funciona |
+| Pedido em português vira plano de edição | Funciona |
 | Montar tudo sozinho no CapCut | **Falta o Passo 1** |
 | Texto atrás da pessoa | Manual (o roteiro explica o passo a passo) |
-
-Os dois últimos são os que faltam. Montar no CapCut depende do relatório do
-Passo 1. Texto atrás da pessoa precisa de recorte quadro a quadro — hoje o
-roteiro te diz como fazer em três cliques no próprio CapCut.
 
 ## Ajustar o template
 
@@ -149,8 +181,12 @@ feirao/template.py    estrutura do vídeo de feirão
 feirao/acoes.py       o vocabulário fechado + validação do plano
 feirao/cerebro.py     pedido em português -> plano (Claude)
 feirao/animacoes.py   as animações, desenhadas por código
+feirao/estilos.py     legendas virais (.ass queimado com libass)
+feirao/montagem.py    cria vídeo do zero a partir de fotos e ofertas
+feirao/fontes.py      as fontes embutidas (pasta fontes/, licença OFL)
 feirao/executor.py    aplica o plano; nada aqui é decidido por modelo
-testes/               testes do núcleo (63, sem chamar a API)
+fontes/               fontes embutidas, para o visual ser igual em qualquer PC
+testes/               testes do núcleo (99, sem chamar a API)
 ```
 
 A interface só chama o núcleo — a lógica toda está em `feirao/` e é testada

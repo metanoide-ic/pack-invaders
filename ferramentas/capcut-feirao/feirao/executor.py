@@ -16,7 +16,7 @@ from __future__ import annotations
 import os
 import subprocess
 
-from . import acoes, animacoes, media
+from . import acoes, animacoes, estilos, legendas, media
 
 # preset -> (filtro ffmpeg no talo, descricao para o roteiro)
 FILTROS_COR = {
@@ -80,8 +80,13 @@ def _mapa_de_tempo(trechos: list):
 
 
 def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
-           progresso=None) -> dict:
-    """Executa o plano. Devolve o que foi gerado e o roteiro de montagem."""
+           progresso=None, falas: list | None = None) -> dict:
+    """Executa o plano. Devolve o que foi gerado e o roteiro de montagem.
+
+    `falas` e a transcricao com tempo por palavra — sem ela as legendas
+    estilizadas nao tem como ser geradas.
+    """
+    falas = falas or []
     def log(msg):
         if progresso:
             progresso(msg)
@@ -90,7 +95,7 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
     info = media.sonda(entrada)
     nome = os.path.splitext(os.path.basename(entrada))[0]
     resultado = {"previa": None, "camadas": [], "roteiro": [],
-                 "avisos": list(plano.avisos)}
+                 "legendas": None, "avisos": list(plano.avisos)}
 
     # ---- 1. cortes e cor: viram um MP4 de previa ------------------------
     cortes = plano.por_tipo("cortar")
@@ -132,15 +137,44 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
             resultado["roteiro"].append(
                 f"CORTES: {len(cortes)} trecho(s), {removido}s a menos")
 
-    # ---- 2. legendas ----------------------------------------------------
-    for a in plano.por_tipo("legendas_fonte"):
-        d = a.dados
-        detalhe = f"fonte {d['fonte']}"
-        if d.get("tamanho"):
-            detalhe += f", corpo {d['tamanho']}"
-        if d.get("cor"):
-            detalhe += f", cor {d['cor']}"
-        resultado["roteiro"].append(f"LEGENDAS: {detalhe} — {a.motivo}")
+    # ---- 2. legendas queimadas -----------------------------------------
+    # depois do corte e da cor de proposito: a legenda entra por cima do
+    # video ja na duracao final, senao ela desalinha da fala
+    acoes_leg = plano.por_tipo("legendas")
+    if acoes_leg:
+        a = acoes_leg[0]
+        if len(acoes_leg) > 1:
+            resultado["avisos"].append(
+                "mais de um estilo de legenda pedido; apliquei o primeiro")
+        estilo = a.dados["estilo"]
+        if not falas:
+            resultado["avisos"].append(
+                f"legenda '{estilo}' pedida mas nao ha transcricao; "
+                f"instale o faster-whisper para usar")
+        elif not estilos.tem_tempo_por_palavra(falas):
+            resultado["avisos"].append(
+                f"legenda '{estilo}' precisa do tempo de cada palavra e a "
+                f"transcricao veio sem; refaca com por_palavra=True")
+        else:
+            base = resultado["previa"] or entrada
+            info_base = media.sonda(base)
+            falas_ajustadas = (legendas.desloca(falas, trechos)
+                               if cortes else falas)
+            arq_ass = os.path.join(pasta_saida, f"{nome}_legendas.ass")
+            posicao = a.dados.get("posicao", "padrao")
+            estilos.salva_ass(falas_ajustadas, estilo, arq_ass,
+                              info_base.largura, info_base.altura, posicao)
+            saida_leg = os.path.join(pasta_saida, f"{nome}_legendado.mp4")
+            log(f"queimando legendas '{estilo}'...")
+            try:
+                estilos.queima(base, arq_ass, saida_leg)
+                resultado["previa"] = saida_leg
+                resultado["legendas"] = arq_ass
+                resultado["roteiro"].append(
+                    f"LEGENDAS: estilo {estilo} ({posicao}), ja queimadas "
+                    f"no video — {a.motivo}")
+            except Exception as erro:
+                resultado["avisos"].append(f"falhou ao queimar legendas: {erro}")
 
     # ---- 3. animacoes: cada uma vira um arquivo ------------------------
     for i, a in enumerate(plano.por_tipo("animacao"), start=1):

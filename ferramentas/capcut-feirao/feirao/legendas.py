@@ -10,7 +10,7 @@ faster-whisper. Sem ele instalado, o resto do app continua funcionando.
 from __future__ import annotations
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 MODELOS = ["tiny", "base", "small", "medium", "large-v3"]
 MODELO_PADRAO = "small"          # equilibrio entre velocidade e acerto
@@ -18,10 +18,23 @@ MAX_CARACTERES = 42              # por linha, para caber na tela do celular
 
 
 @dataclass
+class Palavra:
+    """Uma palavra com o instante exato em que foi dita.
+
+    E o dado que faz a legenda viral existir: sem ele nao da para destacar a
+    palavra que esta sendo falada.
+    """
+    inicio: float
+    fim: float
+    texto: str
+
+
+@dataclass
 class Fala:
     inicio: float
     fim: float
     texto: str
+    palavras: list = field(default_factory=list)
 
 
 def disponivel() -> bool:
@@ -33,8 +46,13 @@ def disponivel() -> bool:
 
 
 def transcreve(caminho: str, modelo: str = MODELO_PADRAO,
-               idioma: str = "pt", progresso=None) -> list[Fala]:
-    """Transcreve o audio do video e devolve as falas com tempo."""
+               idioma: str = "pt", progresso=None,
+               por_palavra: bool = True) -> list[Fala]:
+    """Transcreve o audio e devolve as falas com tempo.
+
+    `por_palavra` traz tambem o tempo de cada palavra — custa pouco a mais e e
+    obrigatorio para as legendas estilizadas.
+    """
     try:
         from faster_whisper import WhisperModel
     except ImportError as erro:
@@ -51,15 +69,21 @@ def transcreve(caminho: str, modelo: str = MODELO_PADRAO,
         progresso("ouvindo o audio...")
     segmentos, _ = motor.transcribe(caminho, language=idioma,
                                     vad_filter=True,
-                                    word_timestamps=False)
+                                    word_timestamps=por_palavra)
 
     falas = []
     for seg in segmentos:
         texto = (seg.text or "").strip()
-        if texto:
-            falas.append(Fala(float(seg.start), float(seg.end), texto))
-            if progresso and len(falas) % 10 == 0:
-                progresso(f"{len(falas)} falas transcritas...")
+        if not texto:
+            continue
+        palavras = []
+        for p in (getattr(seg, "words", None) or []):
+            limpo = (p.word or "").strip()
+            if limpo:
+                palavras.append(Palavra(float(p.start), float(p.end), limpo))
+        falas.append(Fala(float(seg.start), float(seg.end), texto, palavras))
+        if progresso and len(falas) % 10 == 0:
+            progresso(f"{len(falas)} falas transcritas...")
     return falas
 
 
@@ -128,8 +152,14 @@ def desloca(falas: list[Fala], trechos: list[tuple[float, float]]) -> list[Fala]
                 novo_ini = max(fala.inicio, ini) - ini + decorrido
                 novo_fim = min(fala.fim, fim) - ini + decorrido
                 if novo_fim - novo_ini > 0.05:
+                    deslocamento = decorrido - ini
+                    palavras = [
+                        Palavra(round(pl.inicio + deslocamento, 3),
+                                round(pl.fim + deslocamento, 3), pl.texto)
+                        for pl in fala.palavras
+                        if ini <= pl.inicio < fim]
                     novas.append(Fala(round(novo_ini, 3), round(novo_fim, 3),
-                                      fala.texto))
+                                      fala.texto, palavras))
                 break
             decorrido += fim - ini
     return novas

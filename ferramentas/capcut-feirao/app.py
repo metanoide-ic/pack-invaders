@@ -18,7 +18,7 @@ from tkinter import filedialog, messagebox, ttk
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from feirao import (capcut, cerebro, executor, inspetor,  # noqa: E402
-                    legendas, media, template)
+                    legendas, media, montagem, template)
 
 PASTA_SAIDA = os.path.join(os.path.expanduser("~"), "Desktop", "Feirao")
 
@@ -99,6 +99,27 @@ class App(tk.Tk):
         self.btn_editar.pack(side="left")
         self.lbl_ia = ttk.Label(linha, foreground="#777", text="")
         self.lbl_ia.pack(side="left", padx=10)
+
+        p4 = ttk.LabelFrame(self, text="Passo 4 — Criar um vídeo do zero")
+        p4.pack(fill="x", **pad)
+        ttk.Label(p4, wraplength=700, justify="left", text=(
+            "Escolha as fotos dos carros e preencha uma oferta por linha, "
+            "no formato:  carro | preço | condição")).pack(
+                anchor="w", padx=8, pady=(6, 2))
+        linha = ttk.Frame(p4)
+        linha.pack(fill="x", padx=8, pady=(0, 4))
+        ttk.Button(linha, text="Escolher fotos...",
+                   command=self.escolher_fotos).pack(side="left")
+        self.lbl_fotos = ttk.Label(linha, foreground="#555", text="nenhuma")
+        self.lbl_fotos.pack(side="left", padx=10)
+        self.ofertas = tk.Text(p4, height=4, wrap="none",
+                               font=("Consolas", 9))
+        self.ofertas.pack(fill="x", padx=8, pady=(0, 6))
+        self.ofertas.insert("1.0",
+                            "ONIX 1.0 | R$ 59.990 | ENTRADA + 48X\n"
+                            "HB20 SENSE | R$ 62.990 | 0KM 2024")
+        ttk.Button(p4, text="Montar vídeo",
+                   command=self.montar).pack(anchor="w", padx=8, pady=(0, 8))
 
         p3 = ttk.LabelFrame(self, text="Andamento")
         p3.pack(fill="both", expand=True, **pad)
@@ -268,6 +289,58 @@ class App(tk.Tk):
         self.fila.put(("barra", 100))
         self.escreve("\nPronto.")
 
+    # ---------------------------------------------------- criar do zero
+
+    def escolher_fotos(self):
+        caminhos = filedialog.askopenfilenames(
+            title="Escolha as fotos e clipes, na ordem que devem aparecer",
+            filetypes=[("Fotos e vídeos",
+                        "*.jpg *.jpeg *.png *.webp *.mp4 *.mov"),
+                       ("Todos", "*.*")])
+        if caminhos:
+            self.fotos = list(caminhos)
+            self.lbl_fotos.configure(text=f"{len(self.fotos)} arquivo(s)")
+
+    def _le_ofertas(self) -> list:
+        """Uma oferta por linha: carro | preço | condição."""
+        saida = []
+        for linha in self.ofertas.get("1.0", "end").splitlines():
+            if not linha.strip():
+                continue
+            partes = [p.strip() for p in linha.split("|")]
+            saida.append({"carro": partes[0] if partes else "",
+                          "preco": partes[1] if len(partes) > 1 else "",
+                          "condicao": partes[2] if len(partes) > 2 else ""})
+        return saida
+
+    def montar(self):
+        if not getattr(self, "fotos", None):
+            messagebox.showinfo("Faltam as fotos",
+                                "Escolha pelo menos uma foto ou clipe.")
+            return
+        self._em_thread(self._montar)
+
+    def _montar(self):
+        os.makedirs(PASTA_SAIDA, exist_ok=True)
+        ofertas = self._le_ofertas()
+        self.escreve(f"\nMontando com {len(self.fotos)} mídia(s) e "
+                     f"{len(ofertas)} oferta(s)...")
+        if len(ofertas) < len(self.fotos):
+            self.escreve(f"  ({len(self.fotos) - len(ofertas)} mídia(s) vão "
+                         f"aparecer sem texto)")
+
+        self.fila.put(("barra", 20))
+        conf = template.carrega(os.path.join(PASTA_SAIDA,
+                                             template.ARQUIVO_PADRAO))
+        saida = os.path.join(PASTA_SAIDA, "feirao_montado.mp4")
+        r = montagem.monta(self.fotos, saida, ofertas=ofertas, conf=conf,
+                           progresso=self.escreve)
+        self.fila.put(("barra", 100))
+        self.escreve(f"\n  {r['video']}  ({r['duracao']}s, "
+                     f"{len(r['blocos'])} blocos)")
+        self.escreve("\nDica: dá para jogar esse vídeo no Passo 3 e pedir "
+                     "legendas e animações em cima dele.")
+
     # ------------------------------------------------------- edicao por IA
 
     def editar_ia(self):
@@ -318,7 +391,7 @@ class App(tk.Tk):
         self.fila.put(("barra", 60))
         self.escreve("\nAplicando...")
         r = executor.aplica(plano, entrada, PASTA_SAIDA,
-                            progresso=self.escreve)
+                            progresso=self.escreve, falas=falas)
 
         # a transcricao ja existe; vira .srt acompanhando os cortes do plano
         if falas:

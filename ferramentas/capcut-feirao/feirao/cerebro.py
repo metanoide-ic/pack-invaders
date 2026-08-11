@@ -44,6 +44,10 @@ para conferir seu trabalho.
 - Corte silencio e tropeço, nao conteudo. Na duvida, mantenha.
 - Texto atras da pessoa e caro de produzir: use so quando o texto for o \
 assunto do momento, no maximo uma ou duas vezes no video.
+- Legenda: se o video tem fala, quase sempre vale queimar legenda — a maioria \
+assiste sem som. Escolha o estilo pelo tom: viral_amarelo para oferta e \
+anuncio, caixa_preta para depoimento e explicacao, uma_palavra so em corte \
+curto e muito acelerado. Peca uma vez so; o estilo vale para o video inteiro.
 
 Escreva resumo, motivos e avisos em portugues do Brasil, direto, sem enrolacao.\
 """
