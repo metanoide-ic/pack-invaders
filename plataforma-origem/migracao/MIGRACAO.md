@@ -1,51 +1,81 @@
 # Migração para o repositório Orikay
 
-A plataforma (Orikay) vai morar em um repositório só dela: `metanoide-ic/Orikay`.
-Este kit permite completar a mudança a qualquer momento.
+A plataforma vai morar em um repositório só dela: `metanoide-ic/Orikay`.
+O repositório já existe; falta enviar o código.
 
-## Passo 1 — Criar o repositório (só o dono da conta pode)
+## Caminho A — deixar o Claude fazer
 
-1. Abra https://github.com/new
-2. Nome: **Orikay**
-3. Visibilidade: **Public** (necessário para o site grátis do GitHub Pages)
-4. NÃO marque "Add a README"
-5. Create repository
+A sessão do Claude só enxerga os repositórios liberados para ela, e hoje só o
+`pack-invaders` está na lista. Para liberar, adicione `metanoide-ic/Orikay` às
+**fontes (sources)** da sessão ou do ambiente, em https://claude.ai/code —
+no ambiente usado por esta sessão, ou aprovando o pedido quando ele aparecer.
 
-## Passo 2 — Enviar o código
+Feito isso, é só dizer "pode migrar": o envio, a conferência do site e a
+limpeza do pack-invaders acontecem em seguida.
 
-Se a sessão do Claude ainda estiver ativa, basta dizer "criei o repositório" —
-o envio, a verificação do site e a limpeza do pack-invaders são automáticos.
+## Caminho B — rodar você mesmo (5 minutos)
 
-Manualmente (de qualquer computador com git + Node):
+De qualquer computador com git e Node instalados:
 
 ```bash
 git clone -b claude/plataforma-origem-site-app-52kx29 \
   https://github.com/metanoide-ic/pack-invaders.git origem-tmp
-mkdir orikay-repo
-tar -C origem-tmp/plataforma-origem \
+
+mkdir orikay && tar -C origem-tmp/plataforma-origem \
   --exclude=node_modules --exclude=dist --exclude=dist-demo \
   --exclude=dist-desktop --exclude=release --exclude='*.tsbuildinfo' \
-  -cf - . | tar -xf - -C orikay-repo
-cd orikay-repo
+  --exclude=migracao -cf - . | tar -xf - -C orikay
+
+cd orikay
 mkdir -p .github/workflows
-mv migracao/workflows/*.yml .github/workflows/
+cp ../origem-tmp/plataforma-origem/migracao/workflows/*.yml .github/workflows/
+
 # aponta os links do README para o novo repositório
-sed -i 's|pack-invaders/releases|Orikay/releases|g; s|github.io/pack-invaders|github.io/Orikay|g' README.md
-rm -rf migracao
-git init -b main && git add -A && git commit -m "Orikay: plataforma da Origem"
+sed -i 's|github.io/pack-invaders/|github.io/Orikay/|g; s|metanoide-ic/pack-invaders/releases|metanoide-ic/Orikay/releases|g' README.md
+
+git init -b main
+git add -A
+git commit -m "Orikay: plataforma completa da Origem"
 git remote add origin https://github.com/metanoide-ic/Orikay.git
 git push -u origin main
 ```
 
-Os workflows publicam sozinhos:
+No macOS, troque `sed -i` por `sed -i ''`.
+
+Depois do push, os dois workflows rodam sozinhos e em poucos minutos:
+
 - Site: https://metanoide-ic.github.io/Orikay/
-- Instaladores: https://github.com/metanoide-ic/Orikay/releases/tag/instaladores-v1
+  (se der 404, abra Settings → Pages e confirme a origem no branch `gh-pages`)
+- Instaladores Windows, macOS e Linux:
+  https://github.com/metanoide-ic/Orikay/releases/tag/instaladores-v1
 
-## Passo 3 — Limpar o pack-invaders (depois que o novo estiver no ar)
+## Passo final — limpar o pack-invaders
 
-- Apagar o branch `gh-pages` do pack-invaders (o site antigo sai do ar):
-  `git push origin :gh-pages`
-- Apagar a tag/release `instaladores-v1` do pack-invaders:
-  `git push origin :refs/tags/instaladores-v1` e excluir a release na aba Releases.
-- Remover a pasta `plataforma-origem/` e os workflows `deploy-platform.yml` e
-  `desktop-installers.yml` do branch de trabalho.
+Só depois de confirmar que o site novo está no ar:
+
+```bash
+cd origem-tmp
+git push origin :gh-pages                    # tira o site antigo do ar
+git push origin :refs/tags/instaladores-v1   # tira os instaladores antigos
+git rm -r plataforma-origem \
+  .github/workflows/deploy-platform.yml \
+  .github/workflows/desktop-installers.yml
+git commit -m "Move a plataforma para o repositório Orikay"
+git push
+```
+
+A release antiga precisa ser excluída à mão na aba **Releases** do
+pack-invaders, porque apagar a tag não remove a release.
+
+## O que vai junto
+
+Todo o conteúdo de `plataforma-origem/`, incluindo:
+
+- `src/` — a plataforma inteira (quadros, posts, vídeos, biblioteca, clientes,
+  planejamento, cobrança, financeiro, tráfego pago).
+- `conector/` — o Conector Orikay, o programa local que executa WhatsApp,
+  Instagram e a busca dos números das campanhas.
+- `electron/`, `build/` — o aplicativo desktop e os ícones dos instaladores.
+- `README.md`, `GUIA-INTEGRACOES.md`, `conector/LEIA-ME.md` — a documentação.
+
+Fica de fora só a pasta `migracao/` (este guia) e as pastas geradas por build.
