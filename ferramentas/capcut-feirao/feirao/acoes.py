@@ -13,7 +13,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import animacoes, estilos
+from . import animacoes, efeitos as _efeitos, estilos, movimento
 
 # ------------------------------------------------------ vocabulario fechado
 
@@ -25,6 +25,8 @@ ANIMACOES = animacoes.DISPONIVEIS
 # idem para os estilos de legenda: quem manda e o que existe em estilos.py
 LEGENDAS = estilos.DISPONIVEIS
 POSICOES_LEGENDA = estilos.POSICOES
+MOVIMENTOS = movimento.DISPONIVEIS      # keyframes de camera
+EFEITOS = _efeitos.DISPONIVEIS
 
 CORES = {
     "quente_vibrante": "Satura e esquenta. Padrao para feirao — chama atencao "
@@ -46,7 +48,8 @@ ESTILOS_TEXTO = {
     "sutil": "Fino e discreto. Para credito, endereco, telefone.",
 }
 
-TIPOS = ["cortar", "legendas", "animacao", "cor", "texto"]
+TIPOS = ["cortar", "legendas", "animacao", "cor", "texto",
+         "movimento", "efeito"]
 
 
 # --------------------------------------------------------------- validacao
@@ -131,6 +134,27 @@ def valida_acao(bruta: dict, duracao: float) -> Acao:
         dados["duracao"] = _num(dados, "duracao", obrigatorio=False) or 1.5
         if nome in ("rasgar_papel", "carimbo") and not dados.get("texto"):
             raise PlanoInvalido(f"'{nome}' precisa de 'texto'")
+
+    elif tipo == "movimento":
+        if dados.get("nome") not in MOVIMENTOS:
+            raise PlanoInvalido(f"movimento desconhecido: "
+                                f"{dados.get('nome')!r}")
+        ini = _num(dados, "inicio")
+        if ini >= duracao:
+            raise PlanoInvalido(f"movimento depois do fim do video: {ini}")
+        dados["duracao"] = _num(dados, "duracao", obrigatorio=False) or 1.5
+        dados["intensidade"] = _num(dados, "intensidade",
+                                    obrigatorio=False) or 1.0
+
+    elif tipo == "efeito":
+        if dados.get("nome") not in EFEITOS:
+            raise PlanoInvalido(f"efeito desconhecido: {dados.get('nome')!r}")
+        ini = _num(dados, "inicio")
+        if ini >= duracao:
+            raise PlanoInvalido(f"efeito depois do fim do video: {ini}")
+        dados["duracao"] = _num(dados, "duracao", obrigatorio=False) or 0.5
+        dados["intensidade"] = _num(dados, "intensidade",
+                                    obrigatorio=False) or 1.0
 
     elif tipo == "cor":
         if dados.get("preset") not in CORES:
@@ -247,6 +271,28 @@ def esquema_json() -> dict:
                                               "texto (confete, zoom)."},
                      "motivo": motivo},
                     ["tipo", "nome", "inicio", "duracao", "texto", "motivo"]),
+
+                obj({"tipo": {"const": "movimento"},
+                     "nome": {"type": "string", "enum": sorted(MOVIMENTOS)},
+                     "inicio": {"type": "number"},
+                     "duracao": {"type": "number"},
+                     "intensidade": {"type": "number",
+                                     "description": "0.3 discreto, 1.0 "
+                                                    "normal, 1.5 exagerado."},
+                     "motivo": motivo},
+                    ["tipo", "nome", "inicio", "duracao", "intensidade",
+                     "motivo"]),
+
+                obj({"tipo": {"const": "efeito"},
+                     "nome": {"type": "string", "enum": sorted(EFEITOS)},
+                     "inicio": {"type": "number"},
+                     "duracao": {"type": "number"},
+                     "intensidade": {"type": "number",
+                                     "description": "0.3 discreto, 1.0 "
+                                                    "normal, 1.5 exagerado."},
+                     "motivo": motivo},
+                    ["tipo", "nome", "inicio", "duracao", "intensidade",
+                     "motivo"]),
 
                 obj({"tipo": {"const": "cor"},
                      "preset": {"type": "string", "enum": sorted(CORES)},

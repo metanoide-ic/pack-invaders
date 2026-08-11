@@ -48,6 +48,21 @@ assunto do momento, no maximo uma ou duas vezes no video.
 assiste sem som. Escolha o estilo pelo tom: viral_amarelo para oferta e \
 anuncio, caixa_preta para depoimento e explicacao, uma_palavra so em corte \
 curto e muito acelerado. Peca uma vez so; o estilo vale para o video inteiro.
+- Antes de pedir legenda, olhe os quadros: se o video JA e feito de cartoes de \
+texto grande, nao queime legenda em cima — o cartao ja e a mensagem, e as duas \
+camadas se atropelam. Legenda serve para fala sobre imagem, nao sobre texto.
+- Ao escolher a posicao da legenda, olhe onde ja tem coisa escrita: rodape \
+ocupado pede 'alta', centro ocupado pede 'padrao'. Nunca ponha legenda onde \
+ja existe texto.
+- Movimento de camera (keyframes) e o que tira a cara de slide parado. Foto ou \
+plano fixo por mais de 2s pede zoom_in ou um pan. Tremor e pulso sao pontuais: \
+0.3 a 0.8 segundos, na batida ou no impacto — esticados viram enjoo.
+- Efeito e tempero, nao prato principal. flash e glitch marcam viradas e duram \
+menos de meio segundo. vinheta, grao e preto_e_branco valem por trechos \
+maiores, quando mudam o clima de proposito. Nao empilhe tres efeitos no mesmo \
+segundo; escolha o que conta a historia.
+- Movimento e efeito se somam bem: tremor + flash no mesmo instante e o \
+impacto classico. Ja glitch + estrobo juntos viram poluicao.
 
 Escreva resumo, motivos e avisos em portugues do Brasil, direto, sem enrolacao.\
 """

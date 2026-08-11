@@ -17,8 +17,8 @@ from tkinter import filedialog, messagebox, ttk
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from feirao import (capcut, cerebro, executor, inspetor,  # noqa: E402
-                    legendas, media, montagem, template)
+from feirao import (capcut, cerebro, curadoria, executor,  # noqa: E402
+                    inspetor, legendas, media, montagem, template)
 
 PASTA_SAIDA = os.path.join(os.path.expanduser("~"), "Desktop", "Feirao")
 
@@ -110,6 +110,8 @@ class App(tk.Tk):
         linha.pack(fill="x", padx=8, pady=(0, 4))
         ttk.Button(linha, text="Escolher fotos...",
                    command=self.escolher_fotos).pack(side="left")
+        ttk.Button(linha, text="Usar uma pasta (a IA escolhe)",
+                   command=self.escolher_pasta).pack(side="left", padx=6)
         self.lbl_fotos = ttk.Label(linha, foreground="#555", text="nenhuma")
         self.lbl_fotos.pack(side="left", padx=10)
         self.ofertas = tk.Text(p4, height=4, wrap="none",
@@ -300,6 +302,44 @@ class App(tk.Tk):
         if caminhos:
             self.fotos = list(caminhos)
             self.lbl_fotos.configure(text=f"{len(self.fotos)} arquivo(s)")
+
+    def escolher_pasta(self):
+        pasta = filedialog.askdirectory(title="Pasta com as fotos dos carros")
+        if pasta:
+            self.pasta = pasta
+            self.lbl_fotos.configure(text=os.path.basename(pasta) + " (pasta)")
+            self._em_thread(self._curar)
+
+    def _curar(self):
+        """Descarta o que nao presta e deixa a IA escolher o resto."""
+        fotos = curadoria.lista_pasta(self.pasta)
+        self.escreve(f"\n{len(fotos)} imagem(ns) na pasta.")
+        if not fotos:
+            return
+
+        if not cerebro.disponivel():
+            ok, ruins = curadoria.triagem(fotos)
+            self.escreve("Sem chave de API: fiz so a triagem básica.")
+            for r in ruins:
+                self.escreve(f"  fora: {os.path.basename(r['arquivo'])} "
+                             f"— {r['motivo']}")
+            self.fotos = [m["arquivo"] for m in ok]
+        else:
+            pedido = self.pedido.get("1.0", "end").strip()
+            r = curadoria.escolhe(fotos, pedido, progresso=self.escreve)
+            self.escreve(f"\n{r['resumo']}\n")
+            for e in r["escolhidas"]:
+                marca = " [ABRE O VÍDEO]" if e["destaque"] else ""
+                self.escreve(f"  usa: {os.path.basename(e['arquivo'])}"
+                             f"{marca} — {e['motivo']}")
+            for x in r["recusadas"]:
+                self.escreve(f"  fora: {os.path.basename(x['arquivo'])} "
+                             f"— {x['motivo']}")
+            self.fotos = [e["arquivo"] for e in r["escolhidas"]]
+
+        self.lbl_fotos.configure(text=f"{len(self.fotos)} escolhida(s)")
+        self.escreve(f"\n{len(self.fotos)} foto(s) prontas. Clique em "
+                     f"'Montar vídeo'.")
 
     def _le_ofertas(self) -> list:
         """Uma oferta por linha: carro | preço | condição."""

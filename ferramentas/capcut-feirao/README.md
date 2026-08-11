@@ -108,6 +108,37 @@ corte invertido, aquela ação é descartada com aviso e o resto continua valend
 
 Para ensinar um efeito novo: escreva a função, registre, pronto.
 
+### Movimento de câmera (keyframes)
+
+O que o CapCut chama de keyframe: a imagem se move entre um começo e um fim.
+É o que tira a cara de slide parado.
+
+| Nome | O que faz |
+|---|---|
+| `zoom_in` / `zoom_out` | Aproxima ou afasta devagar |
+| `pan_direita` / `pan_esquerda` | Varre a imagem na horizontal |
+| `pan_cima` / `pan_baixo` | Varre na vertical |
+| `tremor` | Tremida de câmera na mão. Curto: 0,3 a 0,8s |
+| `pulso` | Batida rítmica de zoom, para acompanhar música |
+
+Cada um aceita `intensidade` (0,3 discreto a 1,5 exagerado).
+
+### Efeitos
+
+| Nome | O que faz |
+|---|---|
+| `flash` | Clarão branco na virada. Muito curto |
+| `glitch` | Separa as cores, como sinal falhando |
+| `estrobo` | Pisca o brilho, tipo luz de balada |
+| `vinheta` | Escurece as bordas, fecha o olho no centro |
+| `grao` | Granulado de filme |
+| `desfoque` | Desfoca um trecho |
+| `preto_e_branco` | Tira a cor |
+| `saturar` | Estoura a cor quando o produto aparece |
+
+Movimento e efeito rodam num passe só de renderização — cada reencode a mais
+custaria qualidade.
+
 ### Animações que existem hoje
 
 | Nome | O que é |
@@ -119,10 +150,40 @@ Para ensinar um efeito novo: escreva a função, registre, pronto.
 
 ## Criar um vídeo do zero
 
+### A partir de uma pasta — a IA escolhe as fotos
+
+Clique em *"Usar uma pasta (a IA escolhe)"*. O app:
+
+1. Descarta na hora o que é inequívoco: resolução baixa, foto escura demais,
+   estourada de luz. Isso não gasta API.
+2. Manda o resto para o Claude, que **olha cada foto** e devolve quais entram,
+   em que ordem, e o motivo de cada recusa — repetida, só aparece a roda, contra
+   a luz, não mostra o carro.
+3. Marca a melhor de todas para abrir o vídeo.
+
+Nenhuma foto some sem explicação: o que o modelo esquecer de citar aparece
+como "não foi escolhida".
+
+> **Desfoque não é recusado automaticamente**, de propósito. A medida que dá
+> para fazer sem IA confunde "borrada" com "pouco detalhe" — uma foto nítida
+> de carro contra céu limpo marca quase igual a uma tremida. Então a medida vai
+> como aviso junto da imagem e quem decide é o Claude, que enxerga a foto.
+
+### Escolhendo as fotos na mão
+
 No Passo 4: escolha as fotos dos carros e escreva uma oferta por linha, no
 formato `carro | preço | condição`. O app monta abertura, uma cena por oferta
 (com aproximação lenta na foto, para não ficar parado) e encerramento com a
 marca da loja.
+
+### Vídeo só com texto e animações
+
+Sem foto nenhuma: cartões de texto em sequência, com fundo em degradê
+(`escuro`, `gradiente_quente`, `gradiente_frio`, `preto`), keyframes e
+animações por cima. Serve para recado, gancho e chamada.
+
+Nesse caso **não peça legenda queimada** — o cartão já é o texto, e as duas
+camadas se atropelam. O app orienta o Claude sobre isso.
 
 O vídeo sai **sem som**, para você colocar música ou narração. E dá para jogar
 o resultado no Passo 3 e pedir legendas e animações em cima dele — foi assim
@@ -137,6 +198,10 @@ ofertas. Campos entre chaves que você não preencher simplesmente somem da tela
 | Recurso | Estado |
 |---|---|
 | Criar vídeo do zero com fotos e ofertas | Funciona |
+| Criar vídeo só com texto e animações | Funciona |
+| Pasta de fotos: a IA escolhe e descarta as inúteis | Funciona |
+| Keyframes de câmera (zoom, pan, tremor, pulso) | Funciona |
+| Efeitos (flash, glitch, estrobo, vinheta, grão...) | Funciona |
 | Legendas virais queimadas, palavra a palavra | Funciona |
 | Tratamento de cor (4 presets, com intensidade) | Funciona |
 | Animações geradas com o texto da fala | Funciona |
@@ -182,11 +247,14 @@ feirao/acoes.py       o vocabulário fechado + validação do plano
 feirao/cerebro.py     pedido em português -> plano (Claude)
 feirao/animacoes.py   as animações, desenhadas por código
 feirao/estilos.py     legendas virais (.ass queimado com libass)
+feirao/movimento.py   keyframes de câmera (expressões dentro do zoompan)
+feirao/efeitos.py     efeitos com recorte no tempo
+feirao/curadoria.py   pasta de fotos -> a IA escolhe quais entram
 feirao/montagem.py    cria vídeo do zero a partir de fotos e ofertas
 feirao/fontes.py      as fontes embutidas (pasta fontes/, licença OFL)
 feirao/executor.py    aplica o plano; nada aqui é decidido por modelo
 fontes/               fontes embutidas, para o visual ser igual em qualquer PC
-testes/               testes do núcleo (99, sem chamar a API)
+testes/               testes do núcleo (136, sem chamar a API)
 ```
 
 A interface só chama o núcleo — a lógica toda está em `feirao/` e é testada

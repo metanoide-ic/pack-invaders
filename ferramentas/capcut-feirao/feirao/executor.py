@@ -16,7 +16,8 @@ from __future__ import annotations
 import os
 import subprocess
 
-from . import acoes, animacoes, estilos, legendas, media
+from . import (acoes, animacoes, efeitos as mod_efeitos, estilos,
+               legendas, media, movimento)
 
 # preset -> (filtro ffmpeg no talo, descricao para o roteiro)
 FILTROS_COR = {
@@ -137,7 +138,43 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
             resultado["roteiro"].append(
                 f"CORTES: {len(cortes)} trecho(s), {removido}s a menos")
 
-    # ---- 2. legendas queimadas -----------------------------------------
+    # ---- 2. movimento de camera + efeitos, num passe so ----------------
+    # juntos de proposito: sao os dois cadeias de -vf, e cada reencode a mais
+    # custa qualidade. Os tempos passam pelo mapa de cortes antes.
+    movs, efs = [], []
+    for a in plano.por_tipo("movimento"):
+        quando = converte(a.dados["inicio"])
+        if quando is None:
+            resultado["avisos"].append(
+                f"movimento '{a.dados['nome']}' caiu num trecho cortado")
+            continue
+        movs.append(dict(a.dados, inicio=quando))
+        resultado["roteiro"].append(
+            f"{quando:6.2f}s  MOVIMENTO {a.dados['nome']} "
+            f"({a.dados['duracao']:.1f}s) — {a.motivo}")
+    for a in plano.por_tipo("efeito"):
+        quando = converte(a.dados["inicio"])
+        if quando is None:
+            resultado["avisos"].append(
+                f"efeito '{a.dados['nome']}' caiu num trecho cortado")
+            continue
+        efs.append(dict(a.dados, inicio=quando))
+        resultado["roteiro"].append(
+            f"{quando:6.2f}s  EFEITO {a.dados['nome']} "
+            f"({a.dados['duracao']:.1f}s) — {a.motivo}")
+
+    if movs or efs:
+        base = resultado["previa"] or entrada
+        saida_mv = os.path.join(pasta_saida, f"{nome}_movimento.mp4")
+        log(f"aplicando {len(movs)} movimento(s) e {len(efs)} efeito(s)...")
+        try:
+            _movimento_e_efeitos(base, saida_mv, movs, efs)
+            resultado["previa"] = saida_mv
+        except Exception as erro:
+            resultado["avisos"].append(
+                f"falhou ao aplicar movimento/efeito: {erro}")
+
+    # ---- 3. legendas queimadas -----------------------------------------
     # depois do corte e da cor de proposito: a legenda entra por cima do
     # video ja na duracao final, senao ela desalinha da fala
     acoes_leg = plano.por_tipo("legendas")
@@ -176,7 +213,7 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
             except Exception as erro:
                 resultado["avisos"].append(f"falhou ao queimar legendas: {erro}")
 
-    # ---- 3. animacoes: cada uma vira um arquivo ------------------------
+    # ---- 4. animacoes: cada uma vira um arquivo ------------------------
     for i, a in enumerate(plano.por_tipo("animacao"), start=1):
         d = a.dados
         quando = converte(d["inicio"])
@@ -203,7 +240,7 @@ def aplica(plano: acoes.Plano, entrada: str, pasta_saida: str,
             f"          arquivo: {os.path.basename(arq)} "
             f"(fundo verde: chaveie no CapCut)")
 
-    # ---- 4. textos ------------------------------------------------------
+    # ---- 5. textos ------------------------------------------------------
     for a in plano.por_tipo("texto"):
         d = a.dados
         quando = converte(d["inicio"])
@@ -259,6 +296,31 @@ def _grava_roteiro(caminho: str, plano: acoes.Plano, resultado: dict) -> None:
         linhas += [f"  - {a}" for a in resultado["avisos"]]
     with open(caminho, "w", encoding="utf-8") as fh:
         fh.write("\n".join(linhas) + "\n")
+
+
+def _movimento_e_efeitos(entrada: str, saida: str, movs: list,
+                         efs: list) -> str:
+    """Uma passada de -vf com o movimento de camera e os efeitos juntos."""
+    info = media.sonda(entrada)
+    fps = int(round(info.fps)) or 30
+    partes = []
+    if movs:
+        partes.append(movimento.filtro(movs, info.largura, info.altura, fps))
+    if efs:
+        partes.append(mod_efeitos.cadeia(efs))
+
+    cmd = [media.ffmpeg(), "-y", "-hide_banner", "-i", entrada,
+           "-vf", ",".join(partes),
+           "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+           "-pix_fmt", "yuv420p"]
+    cmd += ["-c:a", "copy"] if info.tem_audio else ["-an"]
+    cmd += [saida]
+
+    r = subprocess.run(cmd, capture_output=True, text=True,
+                       encoding="utf-8", errors="replace")
+    if r.returncode != 0:
+        raise RuntimeError(r.stderr[-1500:])
+    return saida
 
 
 def _renderiza(entrada: str, saida: str, trechos: list, filtro: str | None,

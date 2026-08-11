@@ -55,12 +55,21 @@ def cartao(titulo: str, subtitulo: str, largura: int, altura: int,
               halo.filter(ImageFilter.GaussianBlur(largura // 8)))
 
     tam = int(altura * 0.085)
+    largura_max = int(largura * 0.86)
+    texto = (titulo or "").upper()
     f = fontes.carrega("impacto", tam)
-    linhas = _quebra(d, (titulo or "").upper(), f, int(largura * 0.86))
-    while len(linhas) > 3 and tam > 20:
-        tam = int(tam * 0.88)
+    linhas = _quebra(d, texto, f, largura_max)
+
+    def _mais_larga(ls, fonte):
+        return max((fonte.getbbox(l)[2] for l in ls), default=0)
+
+    # encolhe por excesso de linhas E por palavra que nao cabe na largura:
+    # so contar linhas deixava "FINANCIAMENTO" vazar pela lateral, porque a
+    # quebra nunca parte uma palavra no meio
+    while tam > 20 and (len(linhas) > 3 or _mais_larga(linhas, f) > largura_max):
+        tam = int(tam * 0.9)
         f = fontes.carrega("impacto", tam)
-        linhas = _quebra(d, (titulo or "").upper(), f, int(largura * 0.86))
+        linhas = _quebra(d, texto, f, largura_max)
 
     alt_linha = int(tam * 1.16)
     y = altura / 2 - (len(linhas) * alt_linha) / 2
@@ -113,6 +122,45 @@ def faixa_oferta(texto: str, largura: int, altura: int) -> Image.Image:
         d.text((largura / 2 - (bb[2] + bb[0]) / 2, y), linha, font=f,
                fill=cor + (255,))
         y += alt_linha
+    return img
+
+
+FUNDOS = {
+    "escuro": ((14, 18, 28), (38, 48, 70)),
+    "gradiente_quente": ((46, 16, 10), (140, 62, 18)),
+    "gradiente_frio": ((8, 20, 38), (18, 64, 104)),
+    "preto": ((0, 0, 0), (16, 16, 16)),
+}
+
+
+def fundo_liso(nome: str, largura: int, altura: int) -> Image.Image:
+    """Fundo com degrade suave — chapado demais fica amador."""
+    base, alto = FUNDOS.get(nome, FUNDOS["escuro"])
+    img = Image.new("RGB", (largura, altura), base)
+    d = ImageDraw.Draw(img)
+    # degrade vertical desenhado em faixas e depois suavizado
+    faixas = 64
+    for i in range(faixas):
+        p = i / (faixas - 1)
+        cor = tuple(int(base[c] + (alto[c] - base[c]) * (1 - p) ** 1.6)
+                    for c in range(3))
+        y0 = int(altura * i / faixas)
+        d.rectangle([0, y0, largura, int(altura * (i + 1) / faixas)], fill=cor)
+    return img.filter(ImageFilter.GaussianBlur(largura // 26))
+
+
+def cena_de_texto(titulo: str, subtitulo: str, fundo: str,
+                  largura: int, altura: int) -> Image.Image:
+    """Uma cena so de texto, sem foto — a base do video de recado."""
+    img = fundo_liso(fundo, largura, altura)
+    texto = cartao(titulo, subtitulo, largura, altura)
+    # reaproveita o cartao, mas so a tinta dele: o fundo e o degrade
+    mascara = Image.new("L", (largura, altura), 0)
+    fundo_cartao = Image.new("RGB", (largura, altura), FUNDO)
+    from PIL import ImageChops
+    dif = ImageChops.difference(texto, fundo_cartao).convert("L")
+    mascara.paste(dif.point(lambda v: 255 if v > 10 else 0), (0, 0))
+    img.paste(texto, (0, 0), mascara)
     return img
 
 
@@ -218,6 +266,49 @@ def _emenda(clipes: list, saida: str) -> str:
 
 
 # ------------------------------------------------------------- montagem
+
+
+def monta_so_texto(cenas: list, saida: str, fundo: str = "escuro",
+                   largura: int = 1080, altura: int = 1920, fps: int = 30,
+                   progresso=None) -> dict:
+    """Video sem foto nenhuma: so cartoes de texto em sequencia.
+
+    `cenas` sao dicionarios com titulo, subtitulo e duracao. As animacoes
+    entram depois, como camada, pelo executor.
+    """
+    if not cenas:
+        raise ValueError("nenhuma cena de texto")
+
+    temp = tempfile.mkdtemp(prefix="feirao_txt_")
+    clipes = []
+    try:
+        for i, c in enumerate(cenas):
+            destino = os.path.join(temp, f"{i:03d}.mp4")
+            if progresso:
+                progresso(f"  cena {i + 1}/{len(cenas)}")
+            img = cena_de_texto(str(c.get("titulo", "")),
+                                str(c.get("subtitulo", "")),
+                                str(c.get("fundo", fundo)), largura, altura)
+            _clipe_de_imagem(img, destino,
+                             max(0.4, float(c.get("duracao", 2.5))), fps)
+            clipes.append(destino)
+        if progresso:
+            progresso("  emendando...")
+        os.makedirs(os.path.dirname(os.path.abspath(saida)), exist_ok=True)
+        _emenda(clipes, saida)
+    finally:
+        for c in clipes:
+            try:
+                os.unlink(c)
+            except OSError:
+                pass
+        try:
+            os.rmdir(temp)
+        except OSError:
+            pass
+
+    total = round(sum(max(0.4, float(c.get("duracao", 2.5))) for c in cenas), 3)
+    return {"video": saida, "duracao": total, "cenas": len(cenas)}
 
 
 def monta(midias: list, saida: str, ofertas: list | None = None,
