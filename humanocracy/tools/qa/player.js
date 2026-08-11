@@ -102,7 +102,10 @@ const DIAS = Number(process.env.QA_DAYS || 8);
       await limpaTela();
       const st = await p.evaluate(() => ({ run: !!(shift && shift.running), cz: !!(shift && shift.citizen), th: typeof THREAT !== 'undefined' && THREAT.on }));
       if (!st.run) break;
-      if (st.th) { await clique('#btn-detain', 1200); await limpaTela(); continue; }
+      if (st.th) {   // a janela da ameaça é curta: sem ida e volta, reage já
+        await p.evaluate(() => { const d = document.getElementById('btn-detain'); if (d) { d.disabled = false; d.click(); } });
+        await p.waitForTimeout(1300); await limpaTela(); continue;
+      }
       if (!st.cz) { await p.waitForTimeout(700); continue; }
       const quer = await p.evaluate(() => {
         try {
@@ -122,12 +125,27 @@ const DIAS = Number(process.env.QA_DAYS || 8);
     }
 
     await limpaTela();
+    // morreu no meio do expediente? é o que um jogador faria: reabrir o dia
+    if (await p.evaluate(() => document.getElementById('screen-ending').classList.contains('active'))) {
+      const rb = await p.$('#btn-reopen');
+      const podeReabrir = rb && await rb.isVisible();
+      const fim = await p.evaluate(() => (document.getElementById('ending-title') || {}).textContent);
+      console.log(`   \u21b3 d${dia}: MORREU (${fim}); ${podeReabrir ? 'reabrindo o dia' : 'SEM botão de reabrir'}`);
+      if (!podeReabrir) { problemas.push(`d${dia}: morreu e o final não ofereceu REABRIR O DIA`); break; }
+      await rb.click(); await p.waitForTimeout(1600); await limpaTela();
+      dia--; continue;                       // o mesmo dia recomeça
+    }
     await clique('#btn-endshift', 1200);
-    await p.waitForTimeout(1400);
+    await p.waitForTimeout(1700);
     await limpaTela();
     let casa = false;
-    for (let i = 0; i < 14 && !casa; i++) { casa = await clique('#btn-gohome', 700); await limpaTela(); }
-    if (!casa) { problemas.push(`d${dia}: não achei VOLTAR PARA CASA`); break; }
+    for (let i = 0; i < 18 && !casa; i++) { casa = await clique('#btn-gohome', 700); await limpaTela(); }
+    if (!casa) {
+      const onde = await p.evaluate(() => [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','));
+      problemas.push(`d${dia}: não achei VOLTAR PARA CASA (tela=${onde})`);
+      await p.screenshot({ path: path.join(OUT, `player-FALHA-d${dia}.png`) });
+      break;
+    }
     await p.waitForTimeout(1500);
     // dorme (a casa tem cama; o driver usa o botão de dormir se existir)
     for (let i = 0; i < 10; i++) {

@@ -1593,9 +1593,21 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 
 /* Lista de conquistas (dentro de #modal-body): medalhas em fita */
-.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:#7a2a20; font-family:var(--font-display); }
+.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:#7a2a20; font-family:var(--font-display); font-size:12px; }
+/* a lista rola dentro da folha e "vira a página" no fim, em vez de ser
+   cortada em seco pela borda do ofício */
+.ach-list { max-height:min(52vh, 420px); overflow-y:auto; padding-right:4px; position:relative; }
+.ach-list::after {
+  content:''; display:block; position:sticky; bottom:-2px; height:22px; z-index:2;
+  margin:-22px -4px 0 0; pointer-events:none;
+  background:linear-gradient(rgba(216,205,176,0), rgba(214,203,174,.98));
+}
+.ach-txt { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.ach-txt b { font-family:var(--font-display); font-weight:700; font-size:13px; letter-spacing:1px; }
+.ach-txt i { font-style:normal; font-family:var(--font-mono); font-size:11.5px; line-height:1.45; color:#6a604a; }
+.ach-row.locked .ach-txt i { color:#8a8069; letter-spacing:-.5px; }
 .ach-row {
-  padding:7px 9px; margin-bottom:3px; display:flex; gap:10px; align-items:center;
+  padding:7px 9px; margin-bottom:4px; display:flex; gap:10px; align-items:flex-start;
   border:1px solid rgba(36,31,20,.25); border-left:4px solid rgba(36,31,20,.2);
   background:rgba(36,31,20,.05);
 }
@@ -3643,6 +3655,9 @@ const ENDINGS = {
 /* ---------- CONQUISTAS (protótipo web: toast local em unlockAchievement(),
    game.js; mesmos IDs e condições de steam/README.md, pra quando a integração
    Steamworks acontecer) ---------- */
+/* Cada conquista tem NOME e um verso que só aparece quando ela é obtida —
+   até lá o texto vem tarjado, como tudo neste país. (O nome continua sendo
+   uma string simples em ACHIEVEMENTS para não quebrar nada que já o use.) */
 const ACHIEVEMENTS = {
   ACH_DIA1: 'Primeiro Carimbo',
   ACH_MEDALHA: 'Servidor Exemplar',
@@ -3658,6 +3673,22 @@ const ACHIEVEMENTS = {
   ACH_AMIGO: 'O Amigo Nunca Erra',
   ACH_REFLEXO: 'O Vidro Não Devolve',
   ACH_SANGUE_FRIO: 'Sangue Frio no Guichê',
+};
+const ACH_DESC = {
+  ACH_DIA1: 'Você fechou o primeiro expediente. Nada disso parecia grave ainda.',
+  ACH_MEDALHA: 'Chegou ao fim com o cadastro limpo e sem um suborno. O Ministério gosta do senhor. Pense nisso.',
+  ACH_ROTA: 'Atravessou a fronteira sem um papel sequer, depois de 48 dias exigindo todos.',
+  ACH_SILENCIO: 'Seis atravessaram. A cidade ficou em paz. Ninguém mais grita à noite.',
+  ACH_ESPELHO: 'Chegou ao dia 48 e abriu a porta do banheiro.',
+  ACH_SILENTE: 'Sobreviveu duas vezes ao que entra sem constar do livro. Carimbe qualquer coisa. E deixe ir.',
+  ACH_OLHOU: 'Você olhou de perto. Ele também.',
+  ACH_FAMILIA: 'Os quatro chegaram vivos ao dia 48. Vessa, Tomi, Dario e sua mãe.',
+  ACH_LIMPO: '48 dias sem aceitar um único envelope por baixo do vidro.',
+  ACH_QUENTE: 'Ninguém dormiu com frio nesta casa.',
+  ACH_CINCO: 'O Contador veio conferir a conta e voltou algemado.',
+  ACH_AMIGO: 'O amigo do Tomi avisou. O amigo do Tomi acertou. O amigo do Tomi não existe.',
+  ACH_REFLEXO: 'Olhou no espelho e reconheceu o que estava lá.',
+  ACH_SANGUE_FRIO: 'Deteve ou abateu um agressor no guichê antes que ele agisse.',
 };
 
 /* ============================================================
@@ -5556,6 +5587,7 @@ const I18N_EN = {
     'Chart surveyed in 1949 by the Geographic Institute of Osteria. The borders have changed three times since; the chart has not.',
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Click a country to see its cities, peoples, seal and border status.',
+  'REGISTRADAS': 'ON RECORD',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -7172,6 +7204,7 @@ const I18N_ES = {
     'Carta levantada en 1949 por el Instituto Geográfico de Osteria. Las fronteras cambiaron tres veces desde entonces; la carta, no.',
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Haga clic en un país para ver ciudades, pueblos, sello y estado de la frontera.',
+  'REGISTRADAS': 'REGISTRADAS',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
@@ -11046,11 +11079,18 @@ function showAchievementsModal() {
   $('modal-title').textContent = T('CONQUISTAS');
   const got = SETTINGS.achievements || [];
   const ids = Object.keys(ACHIEVEMENTS);
+  const tarja = (txt) => txt.replace(/[^\s]/g, '■');   // o que ainda não se sabe vem tarjado
   const rows = ids.map(id => {
     const unlocked = got.includes(id);
-    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '★' : '☆'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+    const desc = T((typeof ACH_DESC !== 'undefined' && ACH_DESC[id]) || '');
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}">` +
+      `<span class="ach-icon">${unlocked ? '★' : '☆'}</span>` +
+      `<span class="ach-txt"><b>${T(ACHIEVEMENTS[id])}</b>` +
+      `<i>${unlocked ? desc : tarja(desc)}</i></span></div>`;
   }).join('');
-  $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
+  $('modal-body').innerHTML =
+    `<div class="ach-count">${got.length} / ${ids.length} ${T('REGISTRADAS')}</div>` +
+    `<div class="ach-list">${rows}</div>`;
   const box = $('modal-actions'); box.innerHTML = '';
   const b = document.createElement('button');
   b.textContent = T('FECHAR');

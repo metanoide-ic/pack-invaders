@@ -709,6 +709,9 @@ const ENDINGS = {
 /* ---------- CONQUISTAS (protótipo web: toast local em unlockAchievement(),
    game.js; mesmos IDs e condições de steam/README.md, pra quando a integração
    Steamworks acontecer) ---------- */
+/* Cada conquista tem NOME e um verso que só aparece quando ela é obtida —
+   até lá o texto vem tarjado, como tudo neste país. (O nome continua sendo
+   uma string simples em ACHIEVEMENTS para não quebrar nada que já o use.) */
 const ACHIEVEMENTS = {
   ACH_DIA1: 'Primeiro Carimbo',
   ACH_MEDALHA: 'Servidor Exemplar',
@@ -724,6 +727,22 @@ const ACHIEVEMENTS = {
   ACH_AMIGO: 'O Amigo Nunca Erra',
   ACH_REFLEXO: 'O Vidro Não Devolve',
   ACH_SANGUE_FRIO: 'Sangue Frio no Guichê',
+};
+const ACH_DESC = {
+  ACH_DIA1: 'Você fechou o primeiro expediente. Nada disso parecia grave ainda.',
+  ACH_MEDALHA: 'Chegou ao fim com o cadastro limpo e sem um suborno. O Ministério gosta do senhor. Pense nisso.',
+  ACH_ROTA: 'Atravessou a fronteira sem um papel sequer, depois de 48 dias exigindo todos.',
+  ACH_SILENCIO: 'Seis atravessaram. A cidade ficou em paz. Ninguém mais grita à noite.',
+  ACH_ESPELHO: 'Chegou ao dia 48 e abriu a porta do banheiro.',
+  ACH_SILENTE: 'Sobreviveu duas vezes ao que entra sem constar do livro. Carimbe qualquer coisa. E deixe ir.',
+  ACH_OLHOU: 'Você olhou de perto. Ele também.',
+  ACH_FAMILIA: 'Os quatro chegaram vivos ao dia 48. Vessa, Tomi, Dario e sua mãe.',
+  ACH_LIMPO: '48 dias sem aceitar um único envelope por baixo do vidro.',
+  ACH_QUENTE: 'Ninguém dormiu com frio nesta casa.',
+  ACH_CINCO: 'O Contador veio conferir a conta e voltou algemado.',
+  ACH_AMIGO: 'O amigo do Tomi avisou. O amigo do Tomi acertou. O amigo do Tomi não existe.',
+  ACH_REFLEXO: 'Olhou no espelho e reconheceu o que estava lá.',
+  ACH_SANGUE_FRIO: 'Deteve ou abateu um agressor no guichê antes que ele agisse.',
 };
 
 /* ============================================================

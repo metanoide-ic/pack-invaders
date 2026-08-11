@@ -531,11 +531,18 @@ function showAchievementsModal() {
   $('modal-title').textContent = T('CONQUISTAS');
   const got = SETTINGS.achievements || [];
   const ids = Object.keys(ACHIEVEMENTS);
+  const tarja = (txt) => txt.replace(/[^\s]/g, '■');   // o que ainda não se sabe vem tarjado
   const rows = ids.map(id => {
     const unlocked = got.includes(id);
-    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}"><span class="ach-icon">${unlocked ? '★' : '☆'}</span>${T(ACHIEVEMENTS[id])}</div>`;
+    const desc = T((typeof ACH_DESC !== 'undefined' && ACH_DESC[id]) || '');
+    return `<div class="ach-row ${unlocked ? 'unlocked' : 'locked'}">` +
+      `<span class="ach-icon">${unlocked ? '★' : '☆'}</span>` +
+      `<span class="ach-txt"><b>${T(ACHIEVEMENTS[id])}</b>` +
+      `<i>${unlocked ? desc : tarja(desc)}</i></span></div>`;
   }).join('');
-  $('modal-body').innerHTML = `<div class="ach-count">${got.length} / ${ids.length}</div>${rows}`;
+  $('modal-body').innerHTML =
+    `<div class="ach-count">${got.length} / ${ids.length} ${T('REGISTRADAS')}</div>` +
+    `<div class="ach-list">${rows}</div>`;
   const box = $('modal-actions'); box.innerHTML = '';
   const b = document.createElement('button');
   b.textContent = T('FECHAR');

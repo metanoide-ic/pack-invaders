@@ -1586,9 +1586,21 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 
 /* Lista de conquistas (dentro de #modal-body): medalhas em fita */
-.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:#7a2a20; font-family:var(--font-display); }
+.ach-count { font-weight:bold; letter-spacing:2px; margin-bottom:12px; color:#7a2a20; font-family:var(--font-display); font-size:12px; }
+/* a lista rola dentro da folha e "vira a página" no fim, em vez de ser
+   cortada em seco pela borda do ofício */
+.ach-list { max-height:min(52vh, 420px); overflow-y:auto; padding-right:4px; position:relative; }
+.ach-list::after {
+  content:''; display:block; position:sticky; bottom:-2px; height:22px; z-index:2;
+  margin:-22px -4px 0 0; pointer-events:none;
+  background:linear-gradient(rgba(216,205,176,0), rgba(214,203,174,.98));
+}
+.ach-txt { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.ach-txt b { font-family:var(--font-display); font-weight:700; font-size:13px; letter-spacing:1px; }
+.ach-txt i { font-style:normal; font-family:var(--font-mono); font-size:11.5px; line-height:1.45; color:#6a604a; }
+.ach-row.locked .ach-txt i { color:#8a8069; letter-spacing:-.5px; }
 .ach-row {
-  padding:7px 9px; margin-bottom:3px; display:flex; gap:10px; align-items:center;
+  padding:7px 9px; margin-bottom:4px; display:flex; gap:10px; align-items:flex-start;
   border:1px solid rgba(36,31,20,.25); border-left:4px solid rgba(36,31,20,.2);
   background:rgba(36,31,20,.05);
 }
