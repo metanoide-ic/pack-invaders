@@ -247,8 +247,29 @@ export interface CampaignMetrics {
   clicks: number;
   /** Conversões, leads ou mensagens, conforme o objetivo. */
   results: number;
+  /** Média de vezes que a mesma pessoa viu o anúncio. Base da fadiga. */
+  frequency?: number;
+  /** Valor de conversão, quando a plataforma devolve (base do ROAS). */
+  revenue?: number;
   updatedAt?: number;
 }
+
+/** Um dia de números, para enxergar tendência e ritmo de gasto. */
+export interface CampaignDay {
+  date: string; // YYYY-MM-DD
+  spend: number;
+  impressions: number;
+  clicks: number;
+  results: number;
+  revenue?: number;
+  frequency?: number;
+}
+
+/**
+ * Etapa do funil. Muda o que é aceitável: em prospecção a mesma pessoa ver o
+ * anúncio 3 vezes já cansa, em remarketing 5 ainda é normal.
+ */
+export type CampaignFunnel = 'topo' | 'meio' | 'fundo';
 
 export interface Campaign {
   id: ID;
@@ -265,6 +286,16 @@ export interface Campaign {
   externalId?: string;
   notes?: string;
   metrics: CampaignMetrics;
+  /** Etapa do funil, usada nos limites de frequência. */
+  funnel?: CampaignFunnel;
+  /** Quanto se aceita pagar por resultado. Base de quase todo diagnóstico. */
+  targetCpa?: number;
+  /** Retorno esperado sobre o investimento (só faz sentido em vendas). */
+  targetRoas?: number;
+  /** Endereço de destino do anúncio, para montar as UTMs. */
+  landingUrl?: string;
+  /** Últimos dias de números, do mais antigo para o mais recente. */
+  history?: CampaignDay[];
   /** Marca que o investimento já virou despesa no caixa. */
   postedToFinance?: boolean;
   createdAt: number;

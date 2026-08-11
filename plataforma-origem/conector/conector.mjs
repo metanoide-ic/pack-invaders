@@ -152,25 +152,59 @@ async function metricasMeta(c) {
   const token = config.adsToken || config.igToken;
   if (!token) throw new Error('token de anúncios da Meta não configurado');
 
-  const url = new URL(`${API_META}/${c.externalId}/insights`);
-  url.searchParams.set('access_token', token);
-  url.searchParams.set('fields', 'spend,impressions,reach,clicks,actions');
-  url.searchParams.set('date_preset', 'maximum');
+  // "Resultados" varia com o objetivo: pega a ação mais relevante disponível.
+  const PRIORIDADE = ['purchase', 'lead', 'onsite_conversion.messaging_conversation_started_7d', 'link_click'];
+  const contarAcoes = (lista) => {
+    for (const tipo of PRIORIDADE) {
+      const achou = (lista || []).find((a) => a.action_type === tipo);
+      if (achou) return Number(achou.value) || 0;
+    }
+    return 0;
+  };
+  const somarValores = (lista) => {
+    const achou = (lista || []).find((a) => a.action_type === 'purchase' || a.action_type === 'omni_purchase');
+    return achou ? Number(achou.value) || 0 : 0;
+  };
 
-  const res = await fetch(url);
+  const campos = 'spend,impressions,reach,clicks,frequency,actions,action_values';
+
+  // Totais do período inteiro.
+  const geral = new URL(`${API_META}/${c.externalId}/insights`);
+  geral.searchParams.set('access_token', token);
+  geral.searchParams.set('fields', campos);
+  geral.searchParams.set('date_preset', 'maximum');
+
+  const res = await fetch(geral);
   const json = await res.json();
   if (!res.ok) throw new Error(`Meta: ${JSON.stringify(json).slice(0, 180)}`);
 
   const linha = json.data?.[0];
   if (!linha) return zero(c.id);
 
-  // "Resultados" varia com o objetivo: pega a ação mais relevante disponível.
-  const acoes = linha.actions || [];
-  const prioridade = ['purchase', 'lead', 'onsite_conversion.messaging_conversation_started_7d', 'link_click'];
-  let results = 0;
-  for (const tipo of prioridade) {
-    const achou = acoes.find((a) => a.action_type === tipo);
-    if (achou) { results = Number(achou.value) || 0; break; }
+  // Dia a dia dos últimos 30, para enxergar tendência e fadiga. Se falhar,
+  // os totais já valem: histórico é melhoria, não requisito.
+  let history = [];
+  try {
+    const diario = new URL(`${API_META}/${c.externalId}/insights`);
+    diario.searchParams.set('access_token', token);
+    diario.searchParams.set('fields', campos);
+    diario.searchParams.set('date_preset', 'last_30d');
+    diario.searchParams.set('time_increment', '1');
+    const rd = await fetch(diario);
+    const jd = await rd.json();
+    if (rd.ok) {
+      history = (jd.data || []).map((l) => ({
+        date: l.date_start,
+        spend: Number(l.spend) || 0,
+        impressions: Number(l.impressions) || 0,
+        clicks: Number(l.clicks) || 0,
+        results: contarAcoes(l.actions),
+        revenue: somarValores(l.action_values),
+        frequency: Number(l.frequency) || 0,
+      }));
+    }
+  } catch {
+    history = [];
   }
 
   return {
@@ -179,7 +213,10 @@ async function metricasMeta(c) {
     impressions: Number(linha.impressions) || 0,
     reach: Number(linha.reach) || 0,
     clicks: Number(linha.clicks) || 0,
-    results,
+    results: contarAcoes(linha.actions),
+    revenue: somarValores(linha.action_values),
+    frequency: Number(linha.frequency) || 0,
+    history,
   };
 }
 
@@ -214,8 +251,8 @@ async function metricasGoogle(c) {
   const token = await tokenGoogle();
 
   const consulta =
-    'SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions ' +
-    'FROM campaign WHERE campaign.id = ' + String(c.externalId).replace(/\D/g, '');
+    'SELECT metrics.cost_micros, metrics.impressions, metrics.clicks, metrics.conversions, ' +
+    'metrics.conversions_value FROM campaign WHERE campaign.id = ' + String(c.externalId).replace(/\D/g, '');
 
   const res = await fetch(`${API_GOOGLE}/customers/${cliente}/googleAds:search`, {
     method: 'POST',
@@ -241,6 +278,7 @@ async function metricasGoogle(c) {
     reach: 0, // o Google Ads não expõe alcance como a Meta
     clicks: Number(m.clicks) || 0,
     results: Math.round(Number(m.conversions) || 0),
+    revenue: Number(m.conversionsValue) || 0,
   };
 }
 
@@ -254,7 +292,7 @@ async function metricasTiktok(c) {
   url.searchParams.set('report_type', 'BASIC');
   url.searchParams.set('data_level', 'AUCTION_CAMPAIGN');
   url.searchParams.set('dimensions', JSON.stringify(['campaign_id']));
-  url.searchParams.set('metrics', JSON.stringify(['spend', 'impressions', 'reach', 'clicks', 'conversion']));
+  url.searchParams.set('metrics', JSON.stringify(['spend', 'impressions', 'reach', 'clicks', 'conversion', 'frequency', 'total_purchase_value']));
   url.searchParams.set('filters', JSON.stringify([
     { field_name: 'campaign_ids', filter_type: 'IN', filter_value: JSON.stringify([String(c.externalId)]) },
   ]));
@@ -275,6 +313,8 @@ async function metricasTiktok(c) {
     reach: Number(m.reach) || 0,
     clicks: Number(m.clicks) || 0,
     results: Number(m.conversion) || 0,
+    revenue: Number(m.total_purchase_value) || 0,
+    frequency: Number(m.frequency) || 0,
   };
 }
 

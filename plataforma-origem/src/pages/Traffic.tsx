@@ -6,8 +6,14 @@ import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { useClientMap } from '@/lib/hooks';
 import { derived, syncCampaignMetrics, postSpendToFinance } from '@/lib/ads';
+import { CampaignDoctor, CampaignFindings, SeverityDot } from '@/components/CampaignDoctor';
+import { diagnosticar, severidadeGeral } from '@/lib/adsDoctor';
+import {
+  FUNNEL_LABEL, OBJETIVO_COM_ROAS, PLATFORM_RULES,
+  buildUtm, playbook, verbaMinimaRecomendada,
+} from '@/lib/adsPlaybook';
 import { money, cn, todayISO } from '@/lib/utils';
-import type { AdPlatform, Campaign, CampaignObjective, CampaignStatus } from '@/lib/types';
+import type { AdPlatform, Campaign, CampaignFunnel, CampaignObjective, CampaignStatus } from '@/lib/types';
 
 const PLATFORMS: AdPlatform[] = ['Meta', 'Google', 'TikTok'];
 const OBJECTIVES: CampaignObjective[] = ['Reconhecimento', 'Tráfego', 'Engajamento', 'Mensagens', 'Leads', 'Vendas'];
@@ -22,6 +28,7 @@ const blank = {
   name: '', clientId: '', platform: 'Meta' as AdPlatform, objective: 'Vendas' as CampaignObjective,
   status: 'ativa' as CampaignStatus, dailyBudget: '', totalBudget: '',
   startDate: todayISO(), endDate: '', externalId: '', notes: '',
+  funnel: 'topo' as CampaignFunnel, targetCpa: '', targetRoas: '', landingUrl: '',
 };
 
 const num = (v: string) => (v ? parseFloat(v.replace(',', '.')) : undefined);
@@ -64,6 +71,8 @@ export default function Traffic() {
       name: c.name, clientId: c.clientId ?? '', platform: c.platform, objective: c.objective,
       status: c.status, dailyBudget: c.dailyBudget?.toString() ?? '', totalBudget: c.totalBudget?.toString() ?? '',
       startDate: c.startDate ?? '', endDate: c.endDate ?? '', externalId: c.externalId ?? '', notes: c.notes ?? '',
+      funnel: c.funnel ?? 'topo', targetCpa: c.targetCpa?.toString() ?? '',
+      targetRoas: c.targetRoas?.toString() ?? '', landingUrl: c.landingUrl ?? '',
     });
     setOpen(true);
   }
@@ -75,11 +84,27 @@ export default function Traffic() {
       dailyBudget: num(form.dailyBudget), totalBudget: num(form.totalBudget),
       startDate: form.startDate || undefined, endDate: form.endDate || undefined,
       externalId: form.externalId.trim() || undefined, notes: form.notes.trim() || undefined,
+      funnel: form.funnel, targetCpa: num(form.targetCpa), targetRoas: num(form.targetRoas),
+      landingUrl: form.landingUrl.trim() || undefined,
     };
     if (editing) updateCampaign(editing.id, payload);
     else addCampaign(payload);
     setOpen(false);
   }
+
+  const guia = useMemo(() => playbook(form.platform, form.objective), [form.platform, form.objective]);
+  const utm = useMemo(
+    () => buildUtm({ landingUrl: form.landingUrl, platform: form.platform, name: form.name, objective: form.objective }),
+    [form.landingUrl, form.platform, form.name, form.objective],
+  );
+  const dicaVerba = useMemo(() => {
+    const alvo = num(form.targetCpa);
+    const minimo = verbaMinimaRecomendada(form.platform, alvo);
+    const r = PLATFORM_RULES[form.platform];
+    return alvo
+      ? `Com esta meta, a verba precisa ser de ${money(minimo)} por dia para juntar ${r.eventosAprendizado} resultados na semana e sair do aprendizado.`
+      : `Sem meta não dá para dizer se a campanha está cara. O ${form.platform} pede pelo menos ${money(r.verbaMinimaDia)} por dia.`;
+  }, [form.targetCpa, form.platform]);
 
   async function sincronizar() {
     setSyncing(true);
@@ -140,10 +165,15 @@ export default function Traffic() {
             <Stat label="Impressões" value={int(totals.impressions)} dot="#7c5cff" hint={totals.cpm ? `CPM ${money(totals.cpm)}` : undefined} />
           </div>
 
-          <div className="card mt-4 overflow-x-auto">
+          <div className="mt-4">
+            <CampaignDoctor campaigns={visible} clients={clientMap} />
+          </div>
+
+          <div className="card overflow-x-auto">
             <table className="w-full min-w-[900px] text-sm">
               <thead>
                 <tr className="border-b border-line text-left text-[11px] uppercase tracking-wider text-white/40">
+                  <th className="w-8 px-4 py-3 font-medium"><span className="sr-only">Situação</span></th>
                   <th className="px-4 py-3 font-medium">Campanha</th>
                   <th className="px-3 py-3 font-medium">Verba</th>
                   <th className="px-3 py-3 text-right font-medium">Investido</th>
@@ -157,8 +187,14 @@ export default function Traffic() {
                 {visible.map((c) => {
                   const d = derived(c.metrics);
                   const client = c.clientId ? clientMap[c.clientId] : undefined;
+                  const achados = diagnosticar(c);
+                  const pior = severidadeGeral(achados);
+                  const resumo = achados.find((a) => a.severidade === pior);
                   return (
                     <tr key={c.id} className="group">
+                      <td className="px-4 py-3.5">
+                        <SeverityDot sev={pior} title={resumo ? resumo.titulo : 'Sem apontamentos'} />
+                      </td>
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-white">{c.name}</span>
@@ -245,6 +281,57 @@ export default function Traffic() {
               <Input value={form.externalId} onChange={(e) => setForm({ ...form, externalId: e.target.value })} placeholder="1203..." />
             </Field>
           </div>
+          <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+            <div className="mb-3 text-xs font-medium uppercase tracking-wide text-white/45">Metas e funil</div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Custo por resultado aceitável" hint={dicaVerba}>
+                <Input value={form.targetCpa} onChange={(e) => setForm({ ...form, targetCpa: e.target.value })} placeholder="0,00" inputMode="decimal" />
+              </Field>
+              {OBJETIVO_COM_ROAS.includes(form.objective) && (
+                <Field label="Retorno esperado" hint="Quantos reais de venda para cada real investido.">
+                  <Input value={form.targetRoas} onChange={(e) => setForm({ ...form, targetRoas: e.target.value })} placeholder="3" inputMode="decimal" />
+                </Field>
+              )}
+              <Field label="Etapa do funil" hint="Define o limite de frequência.">
+                <Select value={form.funnel} onChange={(e) => setForm({ ...form, funnel: e.target.value as CampaignFunnel })}>
+                  {(Object.keys(FUNNEL_LABEL) as CampaignFunnel[]).map((f) => (
+                    <option key={f} value={f}>{FUNNEL_LABEL[f]}</option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          </div>
+
+          <Field label="Página de destino" hint={utm ? 'Link com UTMs pronto abaixo.' : 'Para gerar as UTMs e medir de onde vem cada venda.'}>
+            <Input value={form.landingUrl} onChange={(e) => setForm({ ...form, landingUrl: e.target.value })} placeholder="https://cliente.com.br/promocao" />
+          </Field>
+          {utm && (
+            <div className="rounded-xl border border-line bg-white/[0.02] p-3">
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-white/50">Link com UTMs</span>
+                <button type="button" onClick={() => navigator.clipboard?.writeText(utm)}
+                  className="text-xs text-brand-300 transition hover:text-brand-200">Copiar</button>
+              </div>
+              <p className="break-all font-mono text-xs text-white/60">{utm}</p>
+            </div>
+          )}
+
+          <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+            <div className="mb-2.5 text-xs font-medium uppercase tracking-wide text-white/45">
+              Como montar: {form.objective} no {form.platform}
+            </div>
+            <dl className="space-y-2.5 text-sm">
+              {([['Estrutura', guia.estrutura], ['Criativos', guia.criativos], ['Público', guia.publico], ['Medição', guia.medicao]] as const).map(([t, v]) => (
+                <div key={t}>
+                  <dt className="text-xs font-medium text-white/55">{t}</dt>
+                  <dd className="text-white/45">{v}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+
+          {editing && <CampaignFindings campaign={editing} />}
+
           <Field label="Observações">
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Público, criativos, testes em andamento." />
           </Field>

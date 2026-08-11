@@ -1,4 +1,4 @@
-import type { Board, Campaign, Card, Client, LibraryItem, Post, Transaction, VideoProject, WorkspaceData } from './types';
+import type { Board, Campaign, CampaignDay, Card, Client, LibraryItem, Post, Transaction, VideoProject, WorkspaceData } from './types';
 import { uid } from './utils';
 
 function daysFromNow(n: number): string {
@@ -159,18 +159,31 @@ export function seedData(): WorkspaceData {
     },
   ];
 
+  // Dias sintéticos para o diagnóstico ter tendência com que trabalhar.
+  const serie = (n: number, f: (i: number) => Omit<CampaignDay, 'date'>): CampaignDay[] =>
+    Array.from({ length: n }, (_, i) => ({ date: daysFromNow(-(n - i)), ...f(i) }));
+
   const campaigns: Campaign[] = [
     {
       id: uid('cmp'), name: 'Vendas — lançamentos Vértice', clientId: vertice.id, platform: 'Meta',
       objective: 'Leads', status: 'ativa', dailyBudget: 60, startDate: daysFromNow(-12),
+      funnel: 'topo', targetCpa: 12,
+      landingUrl: 'https://verticeimoveis.com.br/lancamentos',
       notes: 'Público de 25 a 55 anos na região, criativos de tour do apartamento.',
-      metrics: { spend: 720, impressions: 148320, reach: 61240, clicks: 3140, results: 87, updatedAt: Date.now() },
+      metrics: { spend: 720, impressions: 148320, reach: 61240, clicks: 3140, results: 87, frequency: 2.4, updatedAt: Date.now() },
+      history: serie(12, () => ({ spend: 60, impressions: 12360, clicks: 262, results: 7 })),
       createdAt: Date.now(),
     },
     {
+      // Criativo cansado: frequência alta e cliques caindo nos últimos dias.
       id: uid('cmp'), name: 'Movimento de loja — Café Matriz', clientId: cafe.id, platform: 'Meta',
-      objective: 'Mensagens', status: 'ativa', dailyBudget: 25, startDate: daysFromNow(-6),
-      metrics: { spend: 150, impressions: 41870, reach: 22910, clicks: 964, results: 41, updatedAt: Date.now() },
+      objective: 'Mensagens', status: 'ativa', dailyBudget: 25, startDate: daysFromNow(-24),
+      funnel: 'topo', targetCpa: 4,
+      metrics: { spend: 600, impressions: 141870, reach: 32910, clicks: 1964, results: 141, frequency: 4.3, updatedAt: Date.now() },
+      history: [
+        ...serie(9, () => ({ spend: 25, impressions: 5800, clicks: 105, results: 7 })),
+        ...serie(3, () => ({ spend: 25, impressions: 5800, clicks: 52, results: 3 })),
+      ],
       createdAt: Date.now(),
     },
     {

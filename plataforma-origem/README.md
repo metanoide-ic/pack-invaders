@@ -30,12 +30,20 @@ lugar, três ferramentas do dia a dia da equipe:
   tarefas, posts e vídeos; página de cada cliente com posts, tarefas, vídeos e
   financeiro consolidados. Cadastro de clientes com briefing e cadência semanal.
 - **Tráfego pago** — campanhas por cliente (Meta, Google, TikTok) com objetivo,
-  verba diária ou total, situação e período. O Conector traz os números reais de
-  cada plataforma (investido, impressões, alcance, cliques e resultados) e a
-  tabela calcula CTR, CPC, CPM e custo por resultado. Plataforma não configurada
-  não atrapalha as outras: sincroniza o que dá e avisa o resto. Um clique lança o
-  investimento como despesa de Mídia no caixa (só para quem tem acesso ao
-  Financeiro).
+  meta de custo por resultado, retorno esperado, etapa do funil, verba e período.
+  O Conector traz os números reais de cada plataforma, inclusive o dia a dia, e a
+  tabela calcula CTR, CPC, CPM, ROAS e custo por resultado. Plataforma não
+  configurada não atrapalha as outras: sincroniza o que dá e avisa o resto. Um
+  clique lança o investimento como despesa de Mídia no caixa (só para quem tem
+  acesso ao Financeiro).
+- **Diagnóstico de campanha** — a plataforma lê os números e diz o que fazer:
+  verba que não permite sair do aprendizado, criativo cansando o público, queda
+  de CTR antes da frequência estourar, custo acima da meta, dinheiro saindo sem
+  resultado, anúncio que converte no clique mas não na página, verba adiantada ou
+  parada, e quando a campanha está pronta para escalar (e em quanto). Cada
+  campanha traz também o guia de como montar, por objetivo e plataforma, e o
+  gerador de UTMs. Enquanto a campanha está aprendendo, a plataforma manda não
+  mexer, que é o erro mais caro do tráfego pago.
 - **Cobrança** — gera as cobranças do mês a partir do fee de cada cliente e
   envia no WhatsApp de quem paga. Com o gateway ligado, a mensagem já vai com
   link de pagamento e Pix copia e cola, e a baixa é automática quando o cliente

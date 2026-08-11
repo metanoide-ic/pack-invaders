@@ -65,8 +65,13 @@ export async function syncCampaignMetrics(): Promise<SyncResult> {
           reach: Number(item.reach) || 0,
           clicks: Number(item.clicks) || 0,
           results: Number(item.results) || 0,
+          frequency: Number(item.frequency) || undefined,
+          revenue: Number(item.revenue) || undefined,
           updatedAt: Date.now(),
         },
+        // Histórico só é sobrescrito quando vem: plataforma que não devolve
+        // o dia a dia não pode apagar o que já foi guardado.
+        ...(Array.isArray(item.history) && item.history.length ? { history: item.history } : {}),
       });
       atualizadas++;
     }
