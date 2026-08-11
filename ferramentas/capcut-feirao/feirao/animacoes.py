@@ -21,6 +21,9 @@ from PIL import Image, ImageChops, ImageDraw, ImageFilter, ImageFont
 from . import media
 
 VERDE = (0, 177, 64)
+# o mesmo verde no formato que o colorkey do ffmpeg entende, para o executor
+# conseguir chavear sozinho sem ninguem repetir o numero na mao
+VERDE_HEX = "0x%02X%02X%02X" % VERDE
 FPS = 30
 
 FONT_DIR = "/mnt/skills/examples/canvas-design/canvas-fonts"

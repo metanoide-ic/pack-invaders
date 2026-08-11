@@ -1,12 +1,17 @@
 # obrigatorios
-pillow>=10.0          # desenha animacoes, cartoes e faixas
-imageio-ffmpeg>=0.4.9 # traz o ffmpeg (com libass) junto, sem instalar a parte
+pillow>=10.0          # desenha animacoes, cartoes, textos e faixas
+imageio-ffmpeg>=0.4.9 # traz o ffmpeg (com libass e xfade) junto
 
 # opcional: edicao por IA (voce escreve o pedido em portugues)
 # anthropic>=0.40
 
 # opcional: legendas — transcricao local e offline, com tempo por palavra
 # faster-whisper>=1.0.0
+
+# opcional: texto ATRAS da pessoa — recorta a pessoa sozinho, quadro a quadro.
+# Sao ~50 MB de biblioteca e 5 MB de modelo, baixados na primeira vez.
+# rembg>=2.0.50
+# onnxruntime>=1.16
 
 # opcional: para rodar os testes
 # pytest>=7.0

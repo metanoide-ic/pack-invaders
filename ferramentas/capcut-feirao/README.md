@@ -32,6 +32,15 @@ A transcrição roda na sua máquina, offline — nenhum vídeo seu sobe para a
 internet. A primeira execução baixa o modelo (algumas centenas de MB) e
 depois fica salvo.
 
+Para ativar o **texto atrás da pessoa** (o app recorta a pessoa sozinho):
+
+```
+pip install rembg onnxruntime
+```
+
+São ~50 MB de biblioteca e 5 MB de modelo, baixados na primeira vez. Sem isso
+o app continua funcionando: o texto fica na frente e ele avisa.
+
 ## Como usar
 
 Tudo o que o app produz vai para a pasta **`Feirao`** na sua Área de Trabalho.
@@ -70,11 +79,20 @@ O app transcreve a fala **com o tempo de cada palavra**, olha alguns quadros do
 vídeo, e o Claude devolve um **plano de edição** — uma lista de ações com o
 segundo exato de cada uma e o motivo.
 
-Sai na pasta `Feirao`:
+Sai na pasta `Feirao` um vídeo **pronto**, com tudo o que foi pedido já dentro
+dele: cortes, velocidade, transições, cor, movimento de câmera, efeitos,
+textos, legendas queimadas, animações e áudio. O nome do arquivo final depende
+do último passo aplicado (`_com_audio.mp4`, `_animado.mp4`, `_legendado.mp4`…)
+e o roteiro sempre diz qual é.
 
-- `<nome>_legendado.mp4` — vídeo pronto: cortes, cor e legendas já queimadas
-- `<nome>_anim1_*.mp4` — cada animação, em fundo verde para você chavear
-- `<nome>_roteiro.txt` — em que segundo entra cada camada, e o que ficou de fora
+Junto vêm:
+
+- `<nome>_anim1_*.mp4` — cada animação também **em separado**, em fundo verde,
+  caso você queira refazer aquele momento na mão no CapCut
+- `<nome>_legendas.ass` — o estilo da legenda, se quiser reaproveitar
+- `<nome>.srt` — a transcrição já ajustada à linha do tempo final
+- `<nome>_roteiro.txt` — em que segundo entra cada coisa, o motivo de cada
+  escolha, e o que **não** deu para fazer
 
 ### Legendas virais
 
@@ -102,9 +120,11 @@ sozinho.
 
 O Claude não escreve efeito nenhum: ele **escolhe de uma lista fechada** que o
 app sabe executar (`feirao/acoes.py`). Essa lista é montada a partir do que
-existe de verdade em `animacoes.py` e `estilos.py` — é impossível ele pedir
-algo que o executor não saiba fazer. Se pedir um tempo fora do vídeo ou um
-corte invertido, aquela ação é descartada com aviso e o resto continua valendo.
+existe de verdade em `animacoes.py`, `estilos.py`, `movimento.py`,
+`efeitos.py`, `transicoes.py` e `audio.py` — é impossível ele pedir algo que o
+executor não saiba fazer, e há teste garantindo que contrato e implementação
+não se separem. Se pedir um tempo fora do vídeo ou um corte invertido, aquela
+ação é descartada com aviso e o resto continua valendo.
 
 Para ensinar um efeito novo: escreva a função, registre, pronto.
 
@@ -139,6 +159,80 @@ Cada um aceita `intensidade` (0,3 discreto a 1,5 exagerado).
 Movimento e efeito rodam num passe só de renderização — cada reencode a mais
 custaria qualidade.
 
+### Velocidade
+
+Câmera lenta e acelerado, de 0,25x a 4x. Segure em lenta o ponto alto (o preço
+aparecendo, a reação do cliente) e acelere o caminho (andar até o carro, abrir
+o capô).
+
+O ponto delicado: **câmera lenta faz o vídeo ficar mais longo**. Um efeito que
+você marcou no segundo 12 continua em cima da mesma fala depois disso — quem
+faz essa conta é `feirao/tempo.py`, que trata corte, velocidade e transição
+como uma linha do tempo só. É o mesmo lugar que reposiciona a legenda: uma
+palavra falada dentro de um trecho em câmera lenta fica na tela pelo dobro do
+tempo, como tem de ser.
+
+### Transições
+
+| Nome | O que faz |
+|---|---|
+| `fade` | Dissolve um no outro. Neutra, serve quase sempre |
+| `fade_preto` / `fade_branco` | Passa pelo preto ou pelo branco. Marca virada |
+| `deslizar_esquerda` / `deslizar_cima` | O próximo empurra o atual |
+| `zoom` | Entra crescendo. Boa para revelar oferta |
+| `circulo` | Abre em círculo do centro |
+| `pixelado` | Quebra em blocos e remonta |
+| `cortina` | Varre a tela de um lado ao outro |
+
+Não existe "corte seco" na lista de propósito: a ausência de transição **já é**
+o corte seco. Uma transição pedida perto de um corte gruda naquele corte; longe
+de qualquer corte, ela parte o vídeo ali mesmo e cruza as duas metades — que é
+o que o CapCut faz ao soltar uma transição no meio de um clipe.
+
+Transição **come tempo** dos dois lados: o vídeo encurta pela duração dela. Se
+os dois trechos vizinhos forem curtos demais para se cruzar, o app deixa de
+fora e escreve o motivo no roteiro em vez de entregar um vídeo estranho.
+
+### Áudio
+
+Três coisas:
+
+- **Trilha.** Escolha uma música no Passo 3. Ela entra por baixo com fade de
+  entrada e de saída, e se repete sozinha quando é mais curta que o vídeo.
+- **Abaixar na fala.** A música cai ~11 dB sozinha enquanto alguém fala e volta
+  depois (`sidechaincompress` — o truque de rádio, que no CapCut se faz na mão
+  keyframe por keyframe). Ligado por padrão quando o vídeo tem fala.
+- **Efeitos sonoros.** Sintetizados na hora pelo próprio ffmpeg — não há
+  arquivo para baixar nem licença para conferir.
+
+| Som | Quando usar |
+|---|---|
+| `whoosh` | Corte rápido, virada de câmera, entrada de texto |
+| `impacto` | Batida grave. O momento em que a oferta aparece |
+| `pop` | Texto que surge, selo que bate |
+| `sino` | Confirma, aprova, fecha negócio |
+| `moeda` | Preço, desconto, condição de pagamento |
+| `clique` | Ritmo de corte rápido, item de lista |
+| `subida` | Tensão que cresce. Vai **antes** do ponto alto |
+
+A passada de áudio é a última e copia a imagem sem recomprimir — colocar música
+não custa qualidade nenhuma de vídeo.
+
+### Texto na tela, e atrás da pessoa
+
+Texto é diferente de legenda: legenda acompanha a fala inteira, texto é uma
+frase curta que você coloca de propósito (preço, condição, nome da loja). Três
+estilos (`impacto`, `oferta`, `sutil`) e cinco posições, com fade curto de
+entrada e saída.
+
+Com `rembg` instalado, o Claude pode pedir `atras_da_pessoa`: o app recorta a
+pessoa quadro a quadro e monta as três camadas — vídeo, texto, pessoa por cima.
+É o efeito que faz o vídeo parecer editado por gente.
+
+Custa cerca de meio segundo de CPU por quadro, então é limitado a 5 segundos
+por trecho e o app avisa antes de começar. Sem a biblioteca, o texto fica na
+frente e isso aparece nos avisos — nunca sai calado.
+
 ### Animações que existem hoje
 
 | Nome | O que é |
@@ -147,6 +241,10 @@ custaria qualidade.
 | `carimbo` | Carimbo caindo e batendo na tela |
 | `confete` | Explosão de confete |
 | `zoom_impacto` | Anel de choque para dar ênfase |
+
+Elas são desenhadas em fundo verde e o app **chaveia o verde sozinho**, então
+já saem dentro do vídeo final. O arquivo em fundo verde continua na pasta: se
+você quiser mexer naquele momento no CapCut, ele está lá.
 
 ## Criar um vídeo do zero
 
@@ -185,9 +283,10 @@ animações por cima. Serve para recado, gancho e chamada.
 Nesse caso **não peça legenda queimada** — o cartão já é o texto, e as duas
 camadas se atropelam. O app orienta o Claude sobre isso.
 
-O vídeo sai **sem som**, para você colocar música ou narração. E dá para jogar
-o resultado no Passo 3 e pedir legendas e animações em cima dele — foi assim
-que a demonstração foi feita.
+As cenas entram uma na outra com dissolve. O vídeo nasce sem som; se você tiver
+escolhido uma música no Passo 3, ela é colocada no fim da montagem — como não
+há fala para atrapalhar, entra em volume cheio. E dá para jogar o resultado no
+Passo 3 e pedir legendas e animações em cima dele.
 
 A estrutura fica em `template_feirao.json`, na pasta `Feirao`. Edite no bloco
 de notas: durações, textos de abertura e encerramento, formato do texto das
@@ -202,13 +301,17 @@ ofertas. Campos entre chaves que você não preencher simplesmente somem da tela
 | Pasta de fotos: a IA escolhe e descarta as inúteis | Funciona |
 | Keyframes de câmera (zoom, pan, tremor, pulso) | Funciona |
 | Efeitos (flash, glitch, estrobo, vinheta, grão...) | Funciona |
+| Velocidade: câmera lenta e acelerado | Funciona |
+| Transições entre trechos e entre cenas | Funciona |
+| Trilha, abaixar na fala, efeitos sonoros | Funciona |
+| Texto na tela (3 estilos, 5 posições) | Funciona |
+| Texto **atrás da pessoa**, recorte automático | Funciona (pede `rembg`) |
 | Legendas virais queimadas, palavra a palavra | Funciona |
 | Tratamento de cor (4 presets, com intensidade) | Funciona |
-| Animações geradas com o texto da fala | Funciona |
+| Animações geradas com o texto da fala, já chaveadas no vídeo | Funciona |
 | Cortar silêncios | Funciona |
 | Pedido em português vira plano de edição | Funciona |
 | Montar tudo sozinho no CapCut | **Falta o Passo 1** |
-| Texto atrás da pessoa | Manual (o roteiro explica o passo a passo) |
 
 ## Ajustar o template
 
@@ -245,8 +348,13 @@ feirao/inspetor.py    radiografa o formato da sua versão
 feirao/template.py    estrutura do vídeo de feirão
 feirao/acoes.py       o vocabulário fechado + validação do plano
 feirao/cerebro.py     pedido em português -> plano (Claude)
+feirao/tempo.py       corte + velocidade + transição numa linha do tempo só
+feirao/transicoes.py  as transições (nome em português -> xfade do ffmpeg)
 feirao/animacoes.py   as animações, desenhadas por código
 feirao/estilos.py     legendas virais (.ass queimado com libass)
+feirao/textos.py      texto na tela, na frente ou atrás da pessoa
+feirao/recorte.py     recorta a pessoa quadro a quadro (rembg)
+feirao/audio.py       trilha, abaixar na fala, efeitos sonoros sintetizados
 feirao/movimento.py   keyframes de câmera (expressões dentro do zoompan)
 feirao/efeitos.py     efeitos com recorte no tempo
 feirao/curadoria.py   pasta de fotos -> a IA escolhe quais entram
@@ -254,8 +362,14 @@ feirao/montagem.py    cria vídeo do zero a partir de fotos e ofertas
 feirao/fontes.py      as fontes embutidas (pasta fontes/, licença OFL)
 feirao/executor.py    aplica o plano; nada aqui é decidido por modelo
 fontes/               fontes embutidas, para o visual ser igual em qualquer PC
-testes/               testes do núcleo (136, sem chamar a API)
+testes/               testes do núcleo (186, sem chamar a API)
 ```
+
+A ordem em que o executor aplica as coisas não é arbitrária: linha do tempo e
+cor primeiro (é o que define a duração final), depois movimento e efeitos,
+depois textos, depois legendas — legenda tem de ficar por cima de tudo e nunca
+ser recortada junto com a pessoa — e áudio por último, porque essa passada
+copia a imagem sem recomprimir.
 
 A interface só chama o núcleo — a lógica toda está em `feirao/` e é testada
 sem precisar de CapCut, de Windows ou de tela:

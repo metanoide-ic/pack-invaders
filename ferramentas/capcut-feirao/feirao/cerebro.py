@@ -63,6 +63,28 @@ maiores, quando mudam o clima de proposito. Nao empilhe tres efeitos no mesmo \
 segundo; escolha o que conta a historia.
 - Movimento e efeito se somam bem: tremor + flash no mesmo instante e o \
 impacto classico. Ja glitch + estrobo juntos viram poluicao.
+- Velocidade: acelere o que e caminho (andar ate o carro, abrir o capo) e \
+segure em camera lenta o que e o ponto alto (o preco aparecendo, a reacao do \
+cliente). Camera lenta ALONGA o video — 2s a 0.5x viram 4s. Nao passe de dois \
+ou tres trechos.
+- Transicao custa tempo: ela encurta o video pela propria duracao. Use nas \
+viradas de assunto, nao em todo corte — corte seco e o padrao de video curto, \
+e transicao em tudo deixa lento. Uma transicao pedida perto de um corte gruda \
+naquele corte; longe de qualquer corte, ela parte o video ali mesmo.
+- Efeito sonoro e o que mais engana o ouvido de "isso foi editado por \
+profissional": um whoosh no corte, um impacto quando a oferta entra, moeda no \
+preco. Um por momento forte, nunca dois no mesmo segundo. 'subida' vai ANTES \
+do ponto alto, terminando nele.
+- Trilha: peca a acao 'audio' quando fizer sentido ter musica. Se o video tem \
+fala, deixe abaixar_na_fala em true e volume_trilha entre 0.15 e 0.3 — musica \
+alta por cima de fala perde cliente. Se o audio original nao serve (vento, \
+barulho de rua, silencio), abaixe volume_original.
+- Texto na tela e diferente de legenda: legenda acompanha a fala inteira, \
+texto e uma frase curta que voce coloca de proposito (preco, condicao, nome \
+da loja). Nao repita com a legenda o que ja esta no texto.
+- 'atras_da_pessoa' e caro de produzir e limitado a poucos segundos: use so \
+quando o texto for o assunto do momento e houver mesmo uma pessoa em quadro, \
+no maximo uma ou duas vezes no video.
 
 Escreva resumo, motivos e avisos em portugues do Brasil, direto, sem enrolacao.\
 """
@@ -135,15 +157,42 @@ def _bloco_transcricao(falas: list) -> str:
 # ------------------------------------------------------------ planejamento
 
 
+def _bloco_recursos(info: media.InfoMidia, trilha: str | None) -> str:
+    """O que existe nesta rodada — o modelo nao pode pedir o que nao ha."""
+    linhas = []
+    if not info.tem_audio:
+        linhas.append("Este video NAO tem faixa de audio.")
+    if trilha:
+        linhas.append(f"Ha uma musica de fundo escolhida: "
+                      f"{os.path.basename(trilha)}. Voce pode usar a acao "
+                      f"'audio' para colocar e dosar ela.")
+    else:
+        linhas.append("NAO ha musica de fundo escolhida. A acao 'audio' so "
+                      "serve para mexer no volume do audio original; nao "
+                      "prometa trilha.")
+    if not _tem_recorte():
+        linhas.append("O recorte automatico de pessoa nao esta instalado: "
+                      "'atras_da_pessoa' vai acabar na frente da pessoa. "
+                      "Evite, ou avise.")
+    return "\n".join(linhas)
+
+
+def _tem_recorte() -> bool:
+    from . import recorte
+    return recorte.disponivel()
+
+
 def monta_plano(pedido: str, info: media.InfoMidia, falas: list,
-                quadros: list | None = None, progresso=None) -> acoes.Plano:
+                quadros: list | None = None, progresso=None,
+                trilha: str | None = None) -> acoes.Plano:
     """Manda pedido + video para o Claude e devolve o plano ja validado."""
     cliente = _cliente()
 
     conteudo = [{
         "type": "text",
         "text": (f"VIDEO: {info.duracao:.1f}s, {info.largura}x{info.altura}, "
-                 f"{info.fps:.0f}fps\n\n"
+                 f"{info.fps:.0f}fps\n"
+                 f"{_bloco_recursos(info, trilha)}\n\n"
                  f"FALA COM TEMPO:\n{_bloco_transcricao(falas)}\n\n"
                  f"PEDIDO DO DONO:\n{pedido.strip()}")}]
 
@@ -190,7 +239,8 @@ def monta_plano(pedido: str, info: media.InfoMidia, falas: list,
 
 
 def entende_e_planeja(caminho: str, pedido: str, falas: list,
-                      olhar: bool = True, progresso=None) -> acoes.Plano:
+                      olhar: bool = True, progresso=None,
+                      trilha: str | None = None) -> acoes.Plano:
     """Caminho completo: sonda o video, olha alguns quadros, planeja."""
     info = media.sonda(caminho)
     quadros = []
@@ -200,4 +250,5 @@ def entende_e_planeja(caminho: str, pedido: str, falas: list,
         quadros = amostra_quadros(caminho, info.duracao)
         if progresso:
             progresso(f"  {len(quadros)} quadro(s) analisado(s)")
-    return monta_plano(pedido, info, falas, quadros, progresso=progresso)
+    return monta_plano(pedido, info, falas, quadros, progresso=progresso,
+                       trilha=trilha)

@@ -17,7 +17,7 @@ import tempfile
 
 from PIL import Image, ImageDraw, ImageFilter
 
-from . import fontes, media, template
+from . import fontes, media, template, transicoes
 
 FUNDO = (14, 18, 28)
 OURO = (255, 205, 60)
@@ -249,8 +249,12 @@ def _roda(cmd: list) -> None:
         raise RuntimeError(r.stderr[-1500:])
 
 
-def _emenda(clipes: list, saida: str) -> str:
-    """Junta os clipes ja normalizados."""
+def _emenda(clipes: list, saida: str, transicao: str | None = None,
+            duracao: float = 0.4) -> str:
+    """Junta os clipes ja normalizados, com ou sem transicao entre eles."""
+    if transicao and len(clipes) > 1 and transicoes.existe(transicao):
+        return _emenda_com_transicao(clipes, saida, transicao, duracao)
+
     with tempfile.NamedTemporaryFile("w", suffix=".txt", delete=False,
                                      encoding="utf-8") as fh:
         lista = fh.name
@@ -265,12 +269,46 @@ def _emenda(clipes: list, saida: str) -> str:
     return saida
 
 
+def _emenda_com_transicao(clipes: list, saida: str, transicao: str,
+                          duracao: float) -> str:
+    """Cada clipe cruza com o seguinte em vez de trocar seco.
+
+    A transicao COME tempo dos dois lados, entao ela e limitada a um terco do
+    clipe mais curto: sem isso um cartao de 0.6s sumiria dentro do proprio
+    fade.
+    """
+    duracoes = [media.sonda(c).duracao for c in clipes]
+    dur = min(transicoes.limita(duracao), max(0.1, min(duracoes) / 3))
+    nome = transicoes.xfade(transicao)
+
+    entradas, partes = [], []
+    for c in clipes:
+        entradas += ["-i", c]
+
+    atual_v, atual_a, acumulado = "[0:v]", "[0:a]", duracoes[0]
+    for i in range(1, len(clipes)):
+        offset = acumulado - dur
+        partes.append(f"{atual_v}[{i}:v]xfade=transition={nome}"
+                      f":duration={dur:.3f}:offset={offset:.3f}[xv{i}]")
+        partes.append(f"{atual_a}[{i}:a]"
+                      f"acrossfade=d={dur:.3f}:c1=tri:c2=tri[xa{i}]")
+        atual_v, atual_a = f"[xv{i}]", f"[xa{i}]"
+        acumulado += duracoes[i] - dur
+
+    _roda([media.ffmpeg(), "-y", "-hide_banner"] + entradas
+          + ["-filter_complex", ";".join(partes),
+             "-map", atual_v, "-map", atual_a,
+             "-c:v", "libx264", "-preset", "medium", "-crf", "18",
+             "-pix_fmt", "yuv420p", "-c:a", "aac", "-b:a", "128k", saida])
+    return saida
+
+
 # ------------------------------------------------------------- montagem
 
 
 def monta_so_texto(cenas: list, saida: str, fundo: str = "escuro",
                    largura: int = 1080, altura: int = 1920, fps: int = 30,
-                   progresso=None) -> dict:
+                   progresso=None, transicao: str | None = "fade") -> dict:
     """Video sem foto nenhuma: so cartoes de texto em sequencia.
 
     `cenas` sao dicionarios com titulo, subtitulo e duracao. As animacoes
@@ -295,7 +333,7 @@ def monta_so_texto(cenas: list, saida: str, fundo: str = "escuro",
         if progresso:
             progresso("  emendando...")
         os.makedirs(os.path.dirname(os.path.abspath(saida)), exist_ok=True)
-        _emenda(clipes, saida)
+        _emenda(clipes, saida, transicao)
     finally:
         for c in clipes:
             try:
@@ -307,13 +345,13 @@ def monta_so_texto(cenas: list, saida: str, fundo: str = "escuro",
         except OSError:
             pass
 
-    total = round(sum(max(0.4, float(c.get("duracao", 2.5))) for c in cenas), 3)
-    return {"video": saida, "duracao": total, "cenas": len(cenas)}
+    return {"video": saida, "duracao": media.sonda(saida).duracao,
+            "cenas": len(cenas)}
 
 
 def monta(midias: list, saida: str, ofertas: list | None = None,
           conf: dict | None = None, nome: str = "Feirao",
-          progresso=None) -> dict:
+          progresso=None, transicao: str | None = "fade") -> dict:
     """Monta o video completo. Devolve o caminho e o plano usado."""
     if not midias:
         raise ValueError("nenhuma foto ou clipe para montar")
@@ -348,7 +386,7 @@ def monta(midias: list, saida: str, ofertas: list | None = None,
         if progresso:
             progresso("  emendando...")
         os.makedirs(os.path.dirname(os.path.abspath(saida)), exist_ok=True)
-        _emenda(clipes, saida)
+        _emenda(clipes, saida, transicao)
     finally:
         for c in clipes:
             try:
@@ -361,5 +399,5 @@ def monta(midias: list, saida: str, ofertas: list | None = None,
             pass
 
     return {"video": saida, "plano": plano,
-            "duracao": plano.duracao_total(),
+            "duracao": media.sonda(saida).duracao,
             "blocos": [b.nome for b in plano.blocos]}

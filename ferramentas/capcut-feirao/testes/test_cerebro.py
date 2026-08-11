@@ -132,21 +132,38 @@ def test_corte_no_inicio():
     assert executor.trechos_apos_cortes(10.0, cortes) == [(3.0, 10.0)]
 
 
+def _linha(duracao, cortes=(), velocidades=(), transicoes=()):
+    from feirao import tempo
+    return tempo.LinhaDoTempo.de(duracao, cortes, velocidades, transicoes)
+
+
 def test_animacao_anda_junto_com_o_corte():
     # removemos 5s-8s; o que estava em 12s tem de virar 9s
-    converte = executor._mapa_de_tempo([(0.0, 5.0), (8.0, 20.0)])
-    assert converte(12.0) == 9.0
-    assert converte(2.0) == 2.0
+    linha = _linha(20.0, cortes=[(5.0, 8.0)])
+    assert linha.converte(12.0) == 9.0
+    assert linha.converte(2.0) == 2.0
 
 
 def test_efeito_dentro_do_trecho_cortado_some():
-    converte = executor._mapa_de_tempo([(0.0, 5.0), (8.0, 20.0)])
-    assert converte(6.5) is None
+    assert _linha(20.0, cortes=[(5.0, 8.0)]).converte(6.5) is None
 
 
 def test_sem_corte_o_tempo_nao_muda():
-    converte = executor._mapa_de_tempo([(0.0, 30.0)])
-    assert converte(17.3) == 17.3
+    assert _linha(30.0).converte(17.3) == 17.3
+
+
+def test_linha_do_plano_junta_corte_velocidade_e_transicao():
+    plano = acoes.valida_plano({"resumo": "t", "acoes": [
+        {"tipo": "cortar", "inicio": 2.0, "fim": 4.0, "motivo": "x"},
+        {"tipo": "velocidade", "inicio": 6.0, "fim": 8.0, "fator": 0.5,
+         "motivo": "x"},
+        {"tipo": "transicao", "nome": "fade", "inicio": 2.0, "duracao": 0.5,
+         "motivo": "x"},
+    ]}, 20.0)
+    linha = executor.linha_do_plano(plano, 20.0)
+    # 20 - 2 de corte + 2 de camera lenta - 0.5 de transicao
+    assert linha.duracao_saida() == 19.5
+    assert linha.tem_velocidade() and linha.tem_transicao()
 
 
 # ------------------------------------------------------------ filtro de cor
@@ -248,8 +265,8 @@ def test_cortes_totais_nao_derrubam(tmp_path):
     chamadas = {}
     original = executor._renderiza
 
-    def falso(entrada, saida, trechos, filtro, tem_audio=True):
-        chamadas["trechos"] = trechos
+    def falso(entrada, saida, linha, filtro, tem_audio=True, fps=None):
+        chamadas["trechos"] = linha.pares_de_corte()
         open(saida, "w").close()
 
     executor._renderiza = falso
@@ -280,7 +297,8 @@ def test_renderiza_video_sem_audio(tmp_path):
 
     executor.subprocess.run = falso
     try:
-        executor._renderiza("in.mp4", "out.mp4", [(0.0, 5.0)], None,
+        executor._renderiza("in.mp4", "out.mp4",
+                            _linha(10.0, cortes=[(5.0, 6.0)]), None,
                             tem_audio=False)
     finally:
         executor.subprocess.run = original
@@ -290,8 +308,9 @@ def test_renderiza_video_sem_audio(tmp_path):
 
 
 def test_renderiza_sem_trechos_levanta():
+    from feirao import tempo
     try:
-        executor._renderiza("in.mp4", "out.mp4", [], None)
+        executor._renderiza("in.mp4", "out.mp4", tempo.LinhaDoTempo([]), None)
         assert False, "deveria ter levantado"
     except ValueError:
         pass

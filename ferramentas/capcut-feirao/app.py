@@ -17,7 +17,7 @@ from tkinter import filedialog, messagebox, ttk
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from feirao import (capcut, cerebro, curadoria, executor,  # noqa: E402
+from feirao import (audio, capcut, cerebro, curadoria, executor,  # noqa: E402
                     inspetor, legendas, media, montagem, template)
 
 PASTA_SAIDA = os.path.join(os.path.expanduser("~"), "Desktop", "Feirao")
@@ -92,6 +92,16 @@ class App(tk.Tk):
         )).pack(anchor="w", padx=8, pady=(6, 2))
         self.pedido = tk.Text(p2b, height=4, wrap="word")
         self.pedido.pack(fill="x", padx=8, pady=(0, 6))
+        linha_trilha = ttk.Frame(p2b)
+        linha_trilha.pack(fill="x", padx=8, pady=(0, 4))
+        ttk.Button(linha_trilha, text="Música de fundo (opcional)...",
+                   command=self.escolher_trilha).pack(side="left")
+        self.trilha = tk.StringVar(value="")
+        self.lbl_trilha = ttk.Label(linha_trilha, foreground="#555",
+                                    text="nenhuma")
+        self.lbl_trilha.pack(side="left", padx=10)
+        ttk.Button(linha_trilha, text="tirar",
+                   command=self.tirar_trilha).pack(side="left")
         linha = ttk.Frame(p2b)
         linha.pack(fill="x", padx=8, pady=(0, 8))
         self.btn_editar = ttk.Button(linha, text="Editar com IA",
@@ -183,6 +193,20 @@ class App(tk.Tk):
         threading.Thread(target=embrulho, daemon=True).start()
 
     # ------------------------------------------------------------ acoes
+
+    def escolher_trilha(self):
+        caminho = filedialog.askopenfilename(
+            title="Música de fundo",
+            filetypes=[("Áudio", "*.mp3 *.m4a *.wav *.aac *.ogg *.flac"),
+                       ("Todos", "*.*")])
+        if not caminho:
+            return
+        self.trilha.set(caminho)
+        self.lbl_trilha.config(text=os.path.basename(caminho))
+
+    def tirar_trilha(self):
+        self.trilha.set("")
+        self.lbl_trilha.config(text="nenhuma")
 
     def inspecionar(self):
         self._em_thread(self._inspecionar)
@@ -375,6 +399,22 @@ class App(tk.Tk):
         saida = os.path.join(PASTA_SAIDA, "feirao_montado.mp4")
         r = montagem.monta(self.fotos, saida, ofertas=ofertas, conf=conf,
                            progresso=self.escreve)
+
+        # o vídeo montado nasce com trilha silenciosa; se você escolheu uma
+        # música no Passo 3, ela entra aqui mesmo — sem fala, pode vir alta
+        trilha = self.trilha.get().strip()
+        if trilha:
+            self.fila.put(("barra", 80))
+            self.escreve(f"  colocando {os.path.basename(trilha)}...")
+            com_musica = os.path.join(PASTA_SAIDA, "feirao_montado_musica.mp4")
+            try:
+                audio.aplica(r["video"], com_musica, r["duracao"],
+                             tem_audio=True, trilha=trilha, volume_trilha=0.7,
+                             abaixar_na_fala=False, volume_original=0.0)
+                r["video"] = com_musica
+            except Exception as erro:
+                self.escreve(f"  (!) não consegui colocar a música: {erro}")
+
         self.fila.put(("barra", 100))
         self.escreve(f"\n  {r['video']}  ({r['duracao']}s, "
                      f"{len(r['blocos'])} blocos)")
@@ -418,9 +458,14 @@ class App(tk.Tk):
             self.escreve("  sem faster-whisper: vou planejar só pela imagem, "
                          "sem saber o que foi dito")
 
+        trilha = self.trilha.get().strip() or None
+        if trilha:
+            self.escreve(f"  trilha: {os.path.basename(trilha)}")
+
         self.fila.put(("barra", 35))
         plano = cerebro.entende_e_planeja(entrada, pedido, falas,
-                                          progresso=self.escreve)
+                                          progresso=self.escreve,
+                                          trilha=trilha)
 
         self.escreve(f"\nPLANO: {plano.resumo}")
         for a in plano.acoes:
@@ -431,27 +476,27 @@ class App(tk.Tk):
         self.fila.put(("barra", 60))
         self.escreve("\nAplicando...")
         r = executor.aplica(plano, entrada, PASTA_SAIDA,
-                            progresso=self.escreve, falas=falas)
+                            progresso=self.escreve, falas=falas,
+                            trilha=trilha)
 
-        # a transcricao ja existe; vira .srt acompanhando os cortes do plano
+        # a transcricao ja existe; vira .srt seguindo a mesma linha do tempo
+        # que o video (corte, velocidade e transicao juntos)
         if falas:
             nome = os.path.splitext(os.path.basename(entrada))[0]
-            cortes = plano.por_tipo("cortar")
-            if cortes:
-                dur = media.sonda(entrada).duracao
-                trechos = executor.trechos_apos_cortes(dur, cortes)
-                finais = legendas.desloca(falas, trechos)
-            else:
-                finais = falas
+            dur = media.sonda(entrada).duracao
+            linha = executor.linha_do_plano(plano, dur)
+            finais = legendas.remapeia(falas, linha) if linha.mexeu() else falas
             srt = os.path.join(PASTA_SAIDA, f"{nome}.srt")
             legendas.salva_srt(finais, srt)
             self.escreve(f"  legendas: {srt}")
 
         self.escreve("")
         if r["previa"]:
-            self.escreve(f"  prévia: {r['previa']}")
+            self.escreve(f"  vídeo editado: {r['previa']}")
         for c in r["camadas"]:
             self.escreve(f"  camada: {c}")
+        for aviso in r["avisos"]:
+            self.escreve(f"  (!) {aviso}")
         self.escreve(f"  roteiro: {r['arquivo_roteiro']}")
         self.escreve("\nAbra o roteiro: ele diz em que segundo entra cada "
                      "camada no CapCut.")

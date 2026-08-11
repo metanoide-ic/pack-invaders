@@ -13,7 +13,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from . import animacoes, efeitos as _efeitos, estilos, movimento
+from . import (animacoes, audio as _audio, efeitos as _efeitos, estilos,
+               movimento, tempo, transicoes as _transicoes)
 
 # ------------------------------------------------------ vocabulario fechado
 
@@ -27,6 +28,8 @@ LEGENDAS = estilos.DISPONIVEIS
 POSICOES_LEGENDA = estilos.POSICOES
 MOVIMENTOS = movimento.DISPONIVEIS      # keyframes de camera
 EFEITOS = _efeitos.DISPONIVEIS
+TRANSICOES = _transicoes.DISPONIVEIS    # como um trecho vira o proximo
+SONS = _audio.DISPONIVEIS               # efeitos sonoros sintetizados
 
 CORES = {
     "quente_vibrante": "Satura e esquenta. Padrao para feirao — chama atencao "
@@ -48,8 +51,8 @@ ESTILOS_TEXTO = {
     "sutil": "Fino e discreto. Para credito, endereco, telefone.",
 }
 
-TIPOS = ["cortar", "legendas", "animacao", "cor", "texto",
-         "movimento", "efeito"]
+TIPOS = ["cortar", "velocidade", "transicao", "legendas", "animacao", "cor",
+         "texto", "movimento", "efeito", "som", "audio"]
 
 
 # --------------------------------------------------------------- validacao
@@ -115,6 +118,52 @@ def valida_acao(bruta: dict, duracao: float) -> Acao:
         if ini >= duracao:
             raise PlanoInvalido(f"corte comeca depois do fim do video: {ini}")
         dados["fim"] = min(fim, duracao)
+
+    elif tipo == "velocidade":
+        ini, fim = _num(dados, "inicio"), _num(dados, "fim")
+        if fim <= ini:
+            raise PlanoInvalido(f"trecho invertido: {ini} -> {fim}")
+        if ini >= duracao:
+            raise PlanoInvalido(f"velocidade comeca depois do fim: {ini}")
+        fator = _num(dados, "fator", minimo=tempo.VELOCIDADE_MIN)
+        if fator > tempo.VELOCIDADE_MAX:
+            raise PlanoInvalido(f"fator fora da faixa: {fator}")
+        if 0.97 < fator < 1.03:
+            raise PlanoInvalido(f"fator {fator} nao muda nada")
+        dados["fim"] = min(fim, duracao)
+        dados["fator"] = fator
+
+    elif tipo == "transicao":
+        if dados.get("nome") not in TRANSICOES:
+            raise PlanoInvalido(f"transicao desconhecida: "
+                                f"{dados.get('nome')!r}")
+        ini = _num(dados, "inicio")
+        if ini >= duracao:
+            raise PlanoInvalido(f"transicao depois do fim do video: {ini}")
+        dados["duracao"] = _transicoes.limita(
+            dados.get("duracao", _transicoes.DURACAO_PADRAO))
+
+    elif tipo == "som":
+        if dados.get("nome") not in SONS:
+            raise PlanoInvalido(f"som desconhecido: {dados.get('nome')!r}")
+        ini = _num(dados, "inicio")
+        if ini >= duracao:
+            raise PlanoInvalido(f"som depois do fim do video: {ini}")
+        dados["volume"] = min(1.5, _num(dados, "volume",
+                                        obrigatorio=False) or 0.8)
+
+    elif tipo == "audio":
+        for chave, teto, padrao in (("volume_original", 2.0, 1.0),
+                                    ("volume_trilha", 1.0,
+                                     _audio.VOLUME_TRILHA_PADRAO)):
+            if chave in dados:
+                valor = _num(dados, chave)
+                if valor > teto:
+                    raise PlanoInvalido(f"'{chave}' fora da faixa: {valor}")
+                dados[chave] = valor
+            else:
+                dados[chave] = padrao
+        dados["abaixar_na_fala"] = bool(dados.get("abaixar_na_fala", True))
 
     elif tipo == "legendas":
         if dados.get("estilo") not in LEGENDAS:
@@ -247,6 +296,62 @@ def esquema_json() -> dict:
                      "fim": {"type": "number"},
                      "motivo": motivo},
                     ["tipo", "inicio", "fim", "motivo"]),
+
+                obj({"tipo": {"const": "velocidade"},
+                     "inicio": {"type": "number"},
+                     "fim": {"type": "number"},
+                     "fator": {"type": "number",
+                               "description": "Menor que 1 e camera lenta "
+                                              "(0.5 = metade da velocidade), "
+                                              "maior que 1 e acelerado "
+                                              "(2 = o dobro). Faixa de 0.25 "
+                                              "a 4."},
+                     "motivo": motivo},
+                    ["tipo", "inicio", "fim", "fator", "motivo"]),
+
+                obj({"tipo": {"const": "transicao"},
+                     "nome": {"type": "string", "enum": sorted(TRANSICOES)},
+                     "inicio": {"type": "number",
+                                "description": "O segundo da virada. Se voce "
+                                               "cortou um trecho, use o "
+                                               "segundo em que o corte "
+                                               "comeca."},
+                     "duracao": {"type": "number",
+                                 "description": "0.1 a 2 segundos. A "
+                                                "transicao ENCURTA o video "
+                                                "nesse tanto."},
+                     "motivo": motivo},
+                    ["tipo", "nome", "inicio", "duracao", "motivo"]),
+
+                obj({"tipo": {"const": "som"},
+                     "nome": {"type": "string", "enum": sorted(SONS)},
+                     "inicio": {"type": "number",
+                                "description": "Quando o som toca. Para "
+                                               "'subida', marque o comeco da "
+                                               "tensao, nao o estouro."},
+                     "volume": {"type": "number",
+                                "description": "0.3 discreto, 0.8 normal, "
+                                               "1.2 alto."},
+                     "motivo": motivo},
+                    ["tipo", "nome", "inicio", "volume", "motivo"]),
+
+                obj({"tipo": {"const": "audio"},
+                     "volume_original": {
+                         "type": "number",
+                         "description": "Volume do audio que ja existe no "
+                                        "video. 1.0 mantem, 0.0 muda."},
+                     "volume_trilha": {
+                         "type": "number",
+                         "description": "Volume da musica de fundo, 0 a 1. "
+                                        "Sob fala, 0.15 a 0.3."},
+                     "abaixar_na_fala": {
+                         "type": "boolean",
+                         "description": "A musica abaixa sozinha enquanto "
+                                        "alguem fala. Deixe true quando o "
+                                        "video tem fala."},
+                     "motivo": motivo},
+                    ["tipo", "volume_original", "volume_trilha",
+                     "abaixar_na_fala", "motivo"]),
 
                 obj({"tipo": {"const": "legendas"},
                      "estilo": {"type": "string", "enum": sorted(LEGENDAS),

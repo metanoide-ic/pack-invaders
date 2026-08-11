@@ -135,6 +135,46 @@ def salva_srt(falas: list[Fala], destino: str,
     return destino
 
 
+def remapeia(falas: list[Fala], linha) -> list[Fala]:
+    """Reposiciona as legendas segundo a linha do tempo inteira.
+
+    Diferente de `desloca`, aqui entra tambem velocidade e transicao: uma fala
+    em camera lenta dura mais na saida, e quem sabe converter isso e o
+    `tempo.LinhaDoTempo`. Palavra que caiu num corte simplesmente some.
+    """
+    if linha is None or not linha.trechos:
+        return falas
+
+    novas = []
+    for fala in falas:
+        palavras = []
+        for p in fala.palavras:
+            ini = linha.converte(p.inicio)
+            if ini is None:
+                continue
+            fim = linha.converte(max(p.inicio, p.fim - 0.001))
+            if fim is None or fim <= ini:
+                fim = ini + linha.converte_duracao(
+                    p.inicio, max(0.05, p.fim - p.inicio))
+            palavras.append(Palavra(round(ini, 3), round(fim, 3), p.texto))
+
+        if palavras:
+            novas.append(Fala(palavras[0].inicio, palavras[-1].fim,
+                              fala.texto, palavras))
+            continue
+
+        # fala sem tempo por palavra: converte so as duas pontas
+        ini = linha.converte(fala.inicio)
+        if ini is None:
+            continue
+        fim = linha.converte(max(fala.inicio, fala.fim - 0.001))
+        if fim is None or fim - ini < 0.05:
+            fim = ini + linha.converte_duracao(
+                fala.inicio, max(0.2, fala.fim - fala.inicio))
+        novas.append(Fala(round(ini, 3), round(fim, 3), fala.texto, []))
+    return novas
+
+
 def desloca(falas: list[Fala], trechos: list[tuple[float, float]]) -> list[Fala]:
     """Reposiciona as legendas depois de um corte de silencios.
 
