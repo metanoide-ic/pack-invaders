@@ -1912,6 +1912,28 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   color:rgba(20,58,24,.75); transform:rotate(-16deg);
 }
 /* o laudo é a folha do prontuário presa sob as abas */
+/* cabeçalho datilografado da ficha: mesmo papel do registro, mas com o
+   carbono mais forte e um filete duplo separando os dados da observação */
+.exam-form {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 16px;
+  font-family:var(--font-mono); font-size:12.5px; line-height:19px; color:#2a251b;
+  padding:7px 10px 6px 18px; margin-top:6px;
+  background-color:#d3c7a4;
+  background-image:
+    linear-gradient(180deg, rgba(255,250,235,.35), transparent 60%),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; border-bottom:none;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.16);
+}
+.exam-form b {
+  display:flex; align-items:baseline; justify-content:space-between; gap:12px;
+  font-family:var(--font-display); font-weight:600; letter-spacing:2px;
+  font-size:12px; text-transform:uppercase; color:#1d1a12; width:100%;
+  border-bottom:3px double rgba(70,60,40,.5); padding-bottom:3px; margin-bottom:2px;
+}
+.exam-form i { font-style:normal; font-family:var(--font-mono); font-weight:400;
+  font-size:11.5px; letter-spacing:.06em; color:#6a604a; text-transform:none; }
+.exam-form span { white-space:nowrap; color:#3b3428; }
 .exam-log {
   flex:1; overflow-y:auto; font-size:14px; line-height:22px; color:#2a251b;
   padding:8px 10px 8px 18px; margin-top:-1px;
@@ -2402,6 +2424,8 @@ body.text-large .np-body { font-size:15px; }
           <div class="exam-face"><svg id="exam-face-svg" viewBox="0 0 200 240"></svg></div>
           <div class="exam-right">
             <div class="exam-zones" id="exam-zones"></div>
+            <!-- cabeçalho datilografado da ficha: o exame é papel, não interface -->
+            <div class="exam-form" id="exam-form"></div>
             <div class="exam-log" id="exam-log"></div>
           </div>
         </div>
@@ -4864,6 +4888,11 @@ const I18N_EN = {
     'Sign the receipt. The equipment is now logged to your post — and to your responsibility.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nothing accompanies this circular but the circular itself. Sign the acknowledgement.',
+  'FICHA DE EXAME FÍSICO': 'PHYSICAL EXAMINATION RECORD',
+  'form. 9-C': 'form 9-C',
+  'DOC.': 'DOC.',
+  'DATA': 'DATE',
+  'POSTO': 'POST',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -6395,6 +6424,11 @@ const I18N_ES = {
     'Firme el recibo. El material queda asentado en su puesto — y en su responsabilidad.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nada acompaña a esta circular salvo ella misma. Firme el enterado.',
+  'FICHA DE EXAME FÍSICO': 'FICHA DE EXAMEN FÍSICO',
+  'form. 9-C': 'form. 9-C',
+  'DOC.': 'DOC.',
+  'DATA': 'FECHA',
+  'POSTO': 'PUESTO',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
@@ -10406,6 +10440,18 @@ function openExam() {
   if (cz.isSilente) { silenteGameOver(); return; } // você olhou de perto. ele também.
   if (!cz.examDone) { spendTime(10); cz.examDone = true; }
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
+  // a ficha é datilografada na hora, com o número do formulário do dia
+  const ef = $('exam-form');
+  if (ef) {
+    const nDoc = (cz.docs && cz.docs.pass && cz.docs.pass.numero) || '—';
+    ef.innerHTML =
+      `<b>${T('FICHA DE EXAME FÍSICO')}<i>${T('form. 9-C')}</i></b>` +
+      `<span>${T('NOME')}: ${cz.nome}</span>` +
+      `<span>${T('DOC.')}: ${nDoc}</span>` +
+      `<span>${T('PAÍS')}: ${COUNTRIES[cz.pais] ? T(COUNTRIES[cz.pais].name) : '—'}</span>` +
+      `<span>${T('DATA')}: ${fmtDate(worldDate(S.day))}</span>` +
+      `<span>${T('POSTO')}: Nº 7</span>`;
+  }
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   // acompanhante Alternado: o horror está no colo, não no rosto que você examina
   if (cz.companion && cz.companion.anom) {

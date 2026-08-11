@@ -1517,6 +1517,11 @@ const I18N_EN = {
     'Sign the receipt. The equipment is now logged to your post — and to your responsibility.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nothing accompanies this circular but the circular itself. Sign the acknowledgement.',
+  'FICHA DE EXAME FÍSICO': 'PHYSICAL EXAMINATION RECORD',
+  'form. 9-C': 'form 9-C',
+  'DOC.': 'DOC.',
+  'DATA': 'DATE',
+  'POSTO': 'POST',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -3048,6 +3053,11 @@ const I18N_ES = {
     'Firme el recibo. El material queda asentado en su puesto — y en su responsabilidad.',
   'Nada acompanha esta circular além dela mesma. Assine o ciente.':
     'Nada acompaña a esta circular salvo ella misma. Firme el enterado.',
+  'FICHA DE EXAME FÍSICO': 'FICHA DE EXAMEN FÍSICO',
+  'form. 9-C': 'form. 9-C',
+  'DOC.': 'DOC.',
+  'DATA': 'FECHA',
+  'POSTO': 'PUESTO',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',

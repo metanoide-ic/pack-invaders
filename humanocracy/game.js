@@ -756,6 +756,18 @@ function openExam() {
   if (cz.isSilente) { silenteGameOver(); return; } // você olhou de perto. ele também.
   if (!cz.examDone) { spendTime(10); cz.examDone = true; }
   $('exam-face-svg').innerHTML = examSVG(cz.features, cz.phys);
+  // a ficha é datilografada na hora, com o número do formulário do dia
+  const ef = $('exam-form');
+  if (ef) {
+    const nDoc = (cz.docs && cz.docs.pass && cz.docs.pass.numero) || '—';
+    ef.innerHTML =
+      `<b>${T('FICHA DE EXAME FÍSICO')}<i>${T('form. 9-C')}</i></b>` +
+      `<span>${T('NOME')}: ${cz.nome}</span>` +
+      `<span>${T('DOC.')}: ${nDoc}</span>` +
+      `<span>${T('PAÍS')}: ${COUNTRIES[cz.pais] ? T(COUNTRIES[cz.pais].name) : '—'}</span>` +
+      `<span>${T('DATA')}: ${fmtDate(worldDate(S.day))}</span>` +
+      `<span>${T('POSTO')}: Nº 7</span>`;
+  }
   $('exam-log').innerHTML = `<span class="obs">${T('A pessoa se aproxima do vidro. Perto demais. Examine cada região.')}</span>`;
   // acompanhante Alternado: o horror está no colo, não no rosto que você examina
   if (cz.companion && cz.companion.anom) {
