@@ -45,6 +45,30 @@ Detalhe importante: o Instagram só aceita imagem que esteja numa **URL
 pública**. Imagem colada direto na plataforma não serve para a publicação
 automática — use um link (Drive público, site, storage) no campo de mídia.
 
+### Respostas do grupo (aprovação automática)
+Com isto ligado, quando o cliente responde no grupo o post se resolve sozinho:
+"pode postar" publica, "muda a cor do fundo" manda para Alteração com o pedido
+já registrado embaixo do post. Conversa comum do grupo não mexe em nada, e
+mensagens enviadas pela própria agência são ignoradas.
+
+O provedor de WhatsApp precisa conseguir alcançar o seu computador, e para isso
+o endereço `localhost` não serve. Abra outra janela do terminal e rode:
+
+```
+npx cloudflared tunnel --url http://localhost:8787
+```
+
+Ele devolve um endereço `https://algo.trycloudflare.com`. Na tela do conector,
+copie o endereço de entrada e troque `localhost:8787` por esse endereço. Cole o
+resultado no campo de webhook do painel do provedor, no evento de **mensagem
+recebida** (na Z-API, "Ao receber"; na Evolution, `MESSAGES_UPSERT`).
+
+O endereço de entrada já vem com um token secreto. Sem ele, qualquer pessoa que
+descobrisse o endereço conseguiria aprovar posts, então não divulgue esse link.
+
+Enquanto isso não estiver ligado, a plataforma continua funcionando: a equipe
+usa os botões de aprovar e pedir alteração dentro do post.
+
 ### Tráfego pago
 Serve para o botão **Sincronizar números** da aba Tráfego trazer investimento,
 impressões, alcance, cliques e resultados direto da Meta, sem digitar nada.

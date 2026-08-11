@@ -16,8 +16,10 @@ lugar, três ferramentas do dia a dia da equipe:
 - **Biblioteca de Postagens** — modelos/legendas reutilizáveis; use como novo
   post em um clique.
 - **Automações** — ao mover um post para _Aprovação_, a plataforma gera a copy e
-  envia ao grupo do WhatsApp ("Segue aqui para aprovação"). Aprovou → publica no
-  feed e no story. Não gostou → volta para _Alteração_. Tudo fica no log.
+  envia ao grupo daquele cliente no WhatsApp ("Segue aqui para aprovação"). Com o
+  Conector recebendo as respostas, o próprio grupo resolve o post: "pode postar"
+  publica no feed e no story, um pedido de mudança manda para _Alteração_ com o
+  texto do cliente registrado. Tudo fica no log.
 - **Notificações** — avisa (no app e via notificação do navegador/PWA) quando um
   post precisa ir hoje e ainda não foi.
 - **IA** — gerador de copy grátis/ilimitado por template, ou conecte uma IA

@@ -104,9 +104,10 @@ export default function Integrations() {
             )}
           </div>
           <Note>
-            A leitura das mensagens dos grupos exige o webhook <b>de entrada</b> do WhatsApp Business apontando para seu
-            fluxo (Make/n8n), que devolve a decisão (aprovado/alteração) para a plataforma. O app já dispara e reage — é só
-            plugar. Enquanto não conectar, use os botões de aprovar/reprovar no post.
+            Para a plataforma <b>ler</b> as respostas do grupo e aprovar sozinha, aponte o webhook de
+            mensagens recebidas do seu provedor para o endereço de entrada que aparece na tela do
+            Conector. Enquanto isso não estiver ligado, use os botões de aprovar e pedir alteração
+            dentro do post.
           </Note>
         </Section>
 

@@ -31,6 +31,7 @@ const CONFIG_PADRAO = {
   igToken: '',
   adAccountId: '',
   adsToken: '',
+  entradaToken: '',
 };
 
 function lerConfig() {
@@ -47,6 +48,13 @@ function gravarConfig(cfg) {
 }
 
 let config = lerConfig();
+
+// Segredo do endereço de entrada: sem ele, qualquer um que descobrisse o
+// endereço público conseguiria aprovar posts.
+if (!config.entradaToken) {
+  config.entradaToken = Math.random().toString(36).slice(2) + Math.random().toString(36).slice(2);
+  gravarConfig(config);
+}
 
 /** Últimos eventos processados, mostrados na tela do conector. */
 const historico = [];
@@ -164,6 +172,89 @@ async function buscarMetricas(campanhas) {
   return saida;
 }
 
+/* --------------------- Respostas do grupo (entrada) ------------------- */
+
+/**
+ * Posts esperando resposta, por grupo. Ao enviar um post para aprovação a
+ * plataforma avisa o conector, e é assim que ele sabe a qual post uma
+ * mensagem do grupo se refere.
+ */
+const aguardando = new Map(); // grupo -> [{ postId, titulo, cliente, quando }]
+
+/** Decisões já entendidas, esperando a plataforma buscar. */
+let decisoes = [];
+
+function normalizar(texto) {
+  return String(texto || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+}
+
+const PEDE_ALTERACAO = /\b(alter|ajust|mud|troc|corrig|arrum|refaz|refac|reface|revis)/;
+const NAO_GOSTOU = /\b(nao gostei|nao curti|nao ficou|nao era|nao e isso|reprov)/;
+const APROVA = /\b(aprovad|aprovo|aprova|pode postar|pode subir|pode publicar|pode ir|liberad|libera|perfeito|ficou otimo|ficou top|ficou show|amei|gostei|ta otimo|ta bom|show de bola|isso mesmo)/;
+
+/**
+ * Classifica a mensagem do grupo. O pedido de alteração vem primeiro de
+ * propósito: "gostei, mas muda a cor" é alteração, não aprovação.
+ */
+function interpretar(texto) {
+  const t = normalizar(texto);
+  if (!t.trim()) return null;
+  if (PEDE_ALTERACAO.test(t) || NAO_GOSTOU.test(t)) return 'alteracao';
+  if (APROVA.test(t)) return 'aprovado';
+  return null; // conversa comum do grupo: não mexe em nada
+}
+
+/** Tira do payload do provedor o grupo, o texto e se a mensagem é nossa. */
+function lerMensagem(corpo) {
+  // Z-API
+  if (corpo.phone || corpo.chatId) {
+    return {
+      grupo: corpo.chatId || corpo.phone,
+      texto: corpo.text?.message ?? corpo.message ?? corpo.body ?? '',
+      minha: Boolean(corpo.fromMe),
+    };
+  }
+  // Evolution API
+  const d = corpo.data ?? corpo;
+  const chave = d.key ?? {};
+  if (chave.remoteJid) {
+    const m = d.message ?? {};
+    return {
+      grupo: chave.remoteJid,
+      texto: m.conversation ?? m.extendedTextMessage?.text ?? '',
+      minha: Boolean(chave.fromMe),
+    };
+  }
+  return null;
+}
+
+function receberMensagem(corpo) {
+  const msg = lerMensagem(corpo);
+  if (!msg || msg.minha) return null;
+
+  const fila = aguardando.get(msg.grupo) || [];
+  if (fila.length === 0) return null; // nada esperando resposta nesse grupo
+
+  const decisao = interpretar(msg.texto);
+  if (!decisao) return null;
+
+  const alvo = fila[fila.length - 1]; // o post mais recente enviado ao grupo
+  fila.pop();
+  if (fila.length === 0) aguardando.delete(msg.grupo);
+
+  decisoes.push({
+    postId: alvo.postId,
+    decisao,
+    texto: String(msg.texto).slice(0, 500),
+    quando: Date.now(),
+  });
+  registrar('resposta', `${alvo.titulo}: grupo respondeu "${decisao}"`);
+  return decisao;
+}
+
 /* ------------------------- Roteamento dos eventos --------------------- */
 
 async function processar(evento) {
@@ -171,6 +262,11 @@ async function processar(evento) {
 
   if (tipo === 'aprovacao') {
     await enviarWhatsapp(evento.grupo, evento.mensagem);
+    if (evento.postId) {
+      const fila = aguardando.get(evento.grupo) || [];
+      fila.push({ postId: evento.postId, titulo: evento.titulo, cliente: evento.cliente, quando: Date.now() });
+      aguardando.set(evento.grupo, fila);
+    }
     registrar('aprovacao', `"${evento.titulo}" enviado ao grupo de ${evento.cliente || 'cliente'}`);
     return;
   }
@@ -240,6 +336,31 @@ const servidor = createServer(async (req, res) => {
     }
   }
 
+  // Recebe as mensagens do grupo, vindas do provedor de WhatsApp.
+  if (url.pathname === '/entrada' && req.method === 'POST') {
+    if (url.searchParams.get('token') !== config.entradaToken) {
+      res.writeHead(403, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ ok: false, erro: 'token inválido' }));
+    }
+    let decisao = null;
+    try {
+      decisao = receberMensagem(await corpo(req));
+    } catch (e) {
+      registrar('resposta', e.message, false);
+    }
+    // Sempre 200: provedor que recebe erro fica reenviando a mesma mensagem.
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, decisao }));
+  }
+
+  // A plataforma busca aqui as respostas já entendidas.
+  if (url.pathname === '/decisoes') {
+    const pendentes = decisoes;
+    decisoes = [];
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, decisoes: pendentes }));
+  }
+
   // Salva a configuração pela tela.
   if (url.pathname === '/config' && req.method === 'POST') {
     config = { ...config, ...(await corpo(req)) };
@@ -257,6 +378,7 @@ const servidor = createServer(async (req, res) => {
       whatsapp: whatsappConfigurado(),
       instagram: Boolean(config.igUserId && config.igToken),
       ads: Boolean(config.adsToken || config.igToken),
+      aguardando: [...aguardando.values()].reduce((n, f) => n + f.length, 0),
     }));
   }
 
@@ -374,6 +496,20 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
       para a aba Tráfego. O token precisa da permissão <b>ads_read</b>.</p>
   </div>
 
+  <div class="card">
+    <h2><span class="dot" id="de"></span> Respostas do grupo</h2>
+    <p class="hint" style="margin:0 0 10px">Quando o cliente responder no grupo, o post é aprovado
+      ou volta para Alteração sozinho. Para isso o provedor de WhatsApp precisa alcançar este
+      computador, o que exige um endereço público.</p>
+    <div class="end" id="entrada"></div>
+    <p class="hint">Cole esse endereço no campo de <b>webhook</b> do painel da Z-API
+      (evento "ao receber mensagem") ou da Evolution API, trocando
+      <b>localhost:8787</b> pelo endereço público do seu túnel.</p>
+    <p class="hint">Túnel grátis, em outra janela do terminal:
+      <br><code>npx cloudflared tunnel --url http://localhost:8787</code>
+      <br>Ele mostra um endereço https terminado em <b>trycloudflare.com</b>; use esse no lugar de localhost:8787.</p>
+  </div>
+
   <button onclick="salvar()">Salvar configuração</button>
 
   <div class="card">
@@ -397,6 +533,9 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     document.getElementById('dw').className = 'dot' + (r.whatsapp ? ' on' : '');
     document.getElementById('di').className = 'dot' + (r.instagram ? ' on' : '');
     document.getElementById('da').className = 'dot' + (r.ads ? ' on' : '');
+    document.getElementById('de').className = 'dot' + (r.aguardando ? ' on' : '');
+    document.getElementById('entrada').textContent =
+      location.origin + '/entrada?token=' + r.config.entradaToken;
     const h = document.getElementById('hist');
     if (r.historico.length) {
       h.innerHTML = r.historico.map(e =>

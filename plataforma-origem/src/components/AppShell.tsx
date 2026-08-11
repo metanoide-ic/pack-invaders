@@ -10,6 +10,7 @@ import { Avatar } from './ui';
 import { useAuth } from '@/lib/authStore';
 import { useSettings } from '@/lib/settingsStore';
 import { usePendingPosts, fireDueNotifications } from '@/lib/notifications';
+import { useApprovalInbox } from '@/lib/inbox';
 import { cn } from '@/lib/utils';
 
 interface NavDef { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; }
@@ -128,6 +129,7 @@ function UserCard() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
+  useApprovalInbox();
   return (
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-ink-900/60 p-4 backdrop-blur-xl lg:flex">

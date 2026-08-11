@@ -49,7 +49,9 @@ export async function sendForApproval(postId: string): Promise<void> {
 
   const payload = {
     tipo: 'aprovacao',
-    grupo: s.whatsappGroup || null,
+    // O grupo do cliente manda; o grupo geral é só reserva para quem
+    // ainda não cadastrou o grupo próprio.
+    grupo: client?.whatsappGroup || s.whatsappGroup || null,
     postId,
     titulo: post.title,
     plataforma: post.platform,
