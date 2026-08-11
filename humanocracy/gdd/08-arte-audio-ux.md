@@ -152,3 +152,39 @@ está no papel, no carimbo, na tipografia — e no que degrada quando o Estado d
 - Falas curtas na fila; monólogos apenas nos recorrentes;
 - **Proibido:** exposição de lore em diálogo, vilões explicando planos, qualquer NPC
   que saiba a verdade inteira.
+
+## 8.x A revisão profissional — o que foi refeito e por quê
+
+Uma passada de auditoria completa, com um driver que joga **só pela interface
+visível** (`tools/qa/player.js`: clica no menu, no IR TRABALHAR, nos carimbos,
+na cama — nenhuma função interna é chamada para avançar). Vinte dias corridos
+sem um problema, sem erro de página e sem erro de console.
+
+**O móvel não some.** A progressão de ferramentas escondia as GAVETAS junto com
+o material — e móvel que desaparece lê-se como bug, porque é. As gavetas são
+parte da mesa: ficam vazias, com o cartão "SEM MATERIAL — aguardando remessa do
+Ministério". O botão DET idem: existe desde o dia 1, morto, e apertá-lo
+responde *"o botão não tem fio"*. A autoridade existe antes da permissão.
+
+**Dificuldade justa nos primeiros dias.** `discPoolForDay()` libera os tipos de
+fraude conforme as ferramentas chegam. Pedir ao jogador que ache divergência de
+foto antes de ele ter lupa não é dificuldade, é emboscada.
+
+**Com um cano na cara, DET funciona.** `threatStart()` acorda o botão de
+detenção (antes ele podia estar desabilitado por falta de prova, e a instrução
+na tela mentia). E a primeira ameaça da campanha vem com 70% mais janela — ela
+é a que ensina a mecânica.
+
+**Três telas deixaram de ser interface e viraram objeto:**
+
+| Antes | Agora |
+|---|---|
+| Painel do apartamento: caixa escura, lista chapada, dois botões genéricos | CADERNO DA CASA — folha pautada, estado anotado na margem (fome sublinhada a lápis, DOENTE carimbado torto, falecido riscado), contas em livro-razão, compras como CAUTELAS DE RACIONAMENTO destacáveis |
+| Mapa: manchas de cor lisa com frestas pretas de mar e um quarto de tela vazio | Carta gravada de 1957 — hachura de buril em ângulo próprio por país, litoral em três linhas paralelas, graticulado, limites em traço-ponto, rosa dos ventos, escala, dobras, e LEGENDA no painel |
+| Conquistas: catorze nomes soltos transbordando a folha | Registro com verso **tarjado** até ser obtido: ■■■■ ■■ ■■■■■ |
+
+**A casa se lê.** Névoa 0.13→0.105, ambiente 55%→72% mais quente, reboco do
+teto #17130d→#2a2318 (era preto demais e o terço superior da tela virava um
+vazio), pé-direito 1.00→0.92 e olho 0.52→0.58: corredor de apartamento, não de
+galpão. Vinheta de lanterna e scanline por cima do 3D.
+
