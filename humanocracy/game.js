@@ -4295,7 +4295,14 @@ const ATTACK_DAYS = {
 };
 const THREAT = { on: false, kind: null, t0: 0, dur: 0, raf: null, armed: false, resolved: false };
 
-function threatWindow(kind) { return kind === 'bomb' ? 6200 : 4200; }
+function threatWindow(kind) {
+  /* A primeira ameaça da campanha é a que ENSINA a mecânica; morrer nela é
+     didático uma vez e injusto sempre. Ela vem com quase o dobro de janela;
+     da segunda em diante, a fronteira não perdoa mais. */
+  const primeira = !S.infinite && !(S.counters.attacksSeen > 0);
+  const base = kind === 'bomb' ? 6200 : 4200;
+  return primeira ? Math.round(base * 1.7) : base;
+}
 
 /* a pistola de serviço, no coldre sob o balcão */
 function drawGunObj() {
@@ -4324,11 +4331,18 @@ function drawGunObj() {
 function threatStart(kind) {
   const cz = shift.citizen; if (!cz || !shift.running) return;
   THREAT.on = true; THREAT.kind = kind; THREAT.resolved = false;
-  THREAT.t0 = performance.now(); THREAT.dur = threatWindow(kind);
+  THREAT.t0 = performance.now(); THREAT.dur = threatWindow(kind);   // lê attacksSeen ANTES de somar
+  S.counters.attacksSeen = (S.counters.attacksSeen || 0) + 1;
   const th = $('threat'), lab = th && th.querySelector('.th-label');
   if (lab) lab.textContent = kind === 'bomb'
     ? T('EXPLOSIVOS — DETENHA OU ATIRE') : T('ARMA — ATIRE OU DETENHA');
   if (th) th.classList.add('on');
+  /* Com um cano apontado para o seu rosto, o botão de detenção TEM de estar
+     vivo: o aviso diz "detenha ou atire", e antes disto ele podia estar
+     desabilitado por falta de prova registrada — o jogador lia a instrução,
+     clicava, e nada acontecia. */
+  const bd = $('btn-detain');
+  if (bd) { bd.disabled = false; bd.classList.remove('sem-fio'); }
   $('screen-shift').classList.add('alarm');
   $('speech').textContent = kind === 'bomb'
     ? T('"Vocês carimbam gente. Eu trouxe uma coisa que carimba de volta."')
