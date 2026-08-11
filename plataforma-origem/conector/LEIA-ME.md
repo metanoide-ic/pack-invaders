@@ -51,22 +51,24 @@ Com isto ligado, quando o cliente responde no grupo o post se resolve sozinho:
 já registrado embaixo do post. Conversa comum do grupo não mexe em nada, e
 mensagens enviadas pela própria agência são ignoradas.
 
-O provedor de WhatsApp precisa conseguir alcançar o seu computador, e para isso
-o endereço `localhost` não serve. Abra outra janela do terminal e rode:
+**Não precisa configurar nada para isso.** O conector abre sozinho um túnel do
+Cloudflare ao iniciar, descobre o endereço público e registra os webhooks na
+Z-API, na Evolution e no Asaas. Quando o endereço do túnel muda (o gratuito
+muda a cada reinício), ele registra o novo automaticamente. O mesmo acontece ao
+salvar uma credencial nova.
 
-```
-npx cloudflared tunnel --url http://localhost:8787
-```
-
-Ele devolve um endereço `https://algo.trycloudflare.com`. Na tela do conector,
-copie o endereço de entrada e troque `localhost:8787` por esse endereço. Cole o
-resultado no campo de webhook do painel do provedor, no evento de **mensagem
-recebida** (na Z-API, "Ao receber"; na Evolution, `MESSAGES_UPSERT`).
-
-O endereço de entrada já vem com um token secreto. Sem ele, qualquer pessoa que
+O endereço de entrada leva um token secreto. Sem ele, qualquer pessoa que
 descobrisse o endereço conseguiria aprovar posts, então não divulgue esse link.
 
-Enquanto isso não estiver ligado, a plataforma continua funcionando: a equipe
+Se o túnel não abrir (sem internet, ou o `npx` bloqueado), a tela mostra o erro
+e os endereços para colar à mão nos painéis dos serviços. E quem já tem um
+endereço público próprio pode informá-lo e pular o túnel:
+
+```
+TUNEL_URL=https://seu-endereco.com node conector.mjs
+```
+
+Enquanto isso não estiver funcionando, a plataforma continua rodando: a equipe
 usa os botões de aprovar e pedir alteração dentro do post.
 
 ### Tráfego pago
@@ -110,10 +112,9 @@ Crie a conta em https://www.asaas.com e pegue o token da API em
 Configurações > Integrações. Deixe o ambiente em **Produção** para valer de
 verdade, ou **Sandbox** para testar sem dinheiro real.
 
-Depois, no Asaas, em Integrações > Webhooks, cadastre o endereço de entrada de
-pagamento que aparece na tela do conector, com os eventos de **pagamento
-recebido** e **pagamento confirmado**. Vale a mesma regra do túnel: troque
-`localhost:8787` pelo endereço público.
+O webhook de pagamento é registrado sozinho no Asaas assim que o túnel abre,
+com os eventos de pagamento recebido e confirmado. Não precisa mexer no painel
+deles.
 
 Cada cliente precisa do **CPF ou CNPJ** cadastrado na plataforma, na aba
 Clientes, junto com o WhatsApp de cobrança. Sem o documento o gateway não
@@ -131,10 +132,10 @@ automaticamente. Fechou, a plataforma volta a registrar como simulado.
 rodando. Para a equipe inteira, rode num computador que fique ligado (ou num
 servidor) e troque `localhost` pelo endereço dessa máquina na rede.
 
-**E a resposta do cliente no grupo?** O conector envia; a leitura automática
-das respostas exige um endereço público (o provedor precisa alcançar o seu
-computador). Enquanto isso, use os botões do post: Aprovado, Pediu alteração
-ou Publicamos manualmente.
+**E a resposta do cliente no grupo?** Funciona sozinha, desde que o túnel esteja
+aberto (a tela mostra o endereço no ar). Se o túnel cair, o conector reabre e
+registra de novo. Enquanto estiver fora, use os botões do post: Aprovado, Pediu
+alteração ou Publicamos manualmente.
 
 **Onde ficam os tokens?** No arquivo `conector.config.json`, dentro desta
 pasta, no seu computador. Não sobem para lugar nenhum.

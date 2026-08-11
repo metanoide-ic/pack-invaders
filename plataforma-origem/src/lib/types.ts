@@ -14,6 +14,12 @@ export interface Account {
   canFinance: boolean;
   /** Pode gerenciar contas e permissões. */
   admin: boolean;
+  /**
+   * Senha provisória: o acesso fica travado até a pessoa definir a dela.
+   * As senhas de fábrica passaram pelo histórico do Git, então não podem
+   * continuar valendo depois do primeiro acesso.
+   */
+  mustChangePassword?: boolean;
   createdAt: number;
 }
 

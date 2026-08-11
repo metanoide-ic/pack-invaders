@@ -140,6 +140,9 @@ contas. Quem faz esse trabalho é o **Conector Orikay**, em `conector/`.
 
 As contas oficiais são criadas automaticamente no primeiro acesso (login = nome):
 Daniel Designer, Jr Social Media, Angélica Leal, João Paulo e Luiz Paulo SM.
+As senhas de fábrica valem **apenas para o primeiro acesso**: a plataforma trava
+em uma tela de definição de senha e não abre nenhuma outra até a pessoa escolher
+a sua. Depois disso a senha antiga deixa de funcionar.
 O **Financeiro** é visível apenas para contas com permissão especial (por padrão,
 Angélica Leal e João Paulo). Um admin ajusta as permissões em
 **Integrações → Permissões**.

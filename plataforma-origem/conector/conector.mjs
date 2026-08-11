@@ -11,6 +11,7 @@
  */
 
 import { createServer } from 'node:http';
+import { spawn } from 'node:child_process';
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
@@ -42,6 +43,8 @@ const CONFIG_PADRAO = {
   asaasToken: '',
   asaasAmbiente: 'producao', // 'producao' | 'sandbox'
   entradaToken: '',
+  /** Liga o túnel sozinho ao abrir o conector. */
+  tunelAutomatico: true,
 };
 
 function lerConfig() {
@@ -88,7 +91,7 @@ async function enviarWhatsapp(numero, mensagem) {
   if (!whatsappConfigurado()) throw new Error('WhatsApp não configurado no conector');
 
   if (config.provedor === 'zapi') {
-    const url = `https://api.z-api.io/instances/${config.zapiInstancia}/token/${config.zapiToken}/send-text`;
+    const url = `${API_ZAPI}/instances/${config.zapiInstancia}/token/${config.zapiToken}/send-text`;
     const headers = { 'Content-Type': 'application/json' };
     if (config.zapiClientToken) headers['Client-Token'] = config.zapiClientToken;
     const res = await fetch(url, {
@@ -144,6 +147,7 @@ const API_META = process.env.API_META || 'https://graph.facebook.com/v21.0';
 const API_GOOGLE = process.env.API_GOOGLE || 'https://googleads.googleapis.com/v18';
 const API_GOOGLE_OAUTH = process.env.API_GOOGLE_OAUTH || 'https://oauth2.googleapis.com/token';
 const API_TIKTOK = process.env.API_TIKTOK || 'https://business-api.tiktok.com/open_api/v1.3';
+const API_ZAPI = process.env.API_ZAPI || 'https://api.z-api.io';
 
 const zero = (id) => ({ id, spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 });
 
@@ -579,6 +583,139 @@ function receberPagamento(corpo) {
   return 'pago';
 }
 
+/* ----------------- Túnel e registro automático de webhooks ------------ */
+
+/**
+ * O provedor de WhatsApp e o gateway precisam alcançar este computador, e
+ * `localhost` não serve. O conector sobe um túnel do Cloudflare sozinho,
+ * descobre o endereço público e registra os webhooks nos serviços.
+ *
+ * Assim ninguém precisa copiar endereço para painel nenhum, e quando o
+ * túnel troca de endereço (o gratuito troca a cada reinício) o registro é
+ * refeito automaticamente.
+ */
+/**
+ * Endereço público fixo. Quem já tem um túnel próprio (Cloudflare pago,
+ * ngrok com domínio, ou o conector num servidor) informa aqui e o conector
+ * nem tenta subir o túnel gratuito, que troca de endereço a cada reinício.
+ */
+const TUNEL_FIXO = process.env.TUNEL_URL || '';
+
+let tunel = TUNEL_FIXO
+  ? { url: TUNEL_FIXO.replace(/\/$/, ''), estado: 'aberto', erro: '', processo: null }
+  : { url: '', estado: 'parado', erro: '', processo: null };
+
+function abrirTunel() {
+  if (TUNEL_FIXO) {
+    tunel = { url: TUNEL_FIXO.replace(/\/$/, ''), estado: 'aberto', erro: '', processo: null };
+    void registrarWebhooks();
+    return;
+  }
+  if (tunel.processo) return;
+  tunel = { url: '', estado: 'abrindo', erro: '', processo: null };
+
+  const proc = spawn('npx', ['-y', 'cloudflared', 'tunnel', '--url', `http://localhost:${PORT}`], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+  tunel.processo = proc;
+
+  const procurarUrl = (texto) => {
+    const achou = String(texto).match(/https:\/\/[a-z0-9-]+\.trycloudflare\.com/i);
+    if (achou && !tunel.url) {
+      tunel.url = achou[0];
+      tunel.estado = 'aberto';
+      registrar('tunel', `endereço público: ${tunel.url}`);
+      void registrarWebhooks();
+    }
+  };
+  proc.stdout.on('data', procurarUrl);
+  proc.stderr.on('data', procurarUrl);
+
+  proc.on('error', (e) => {
+    tunel = { url: '', estado: 'erro', erro: e.message, processo: null };
+    registrar('tunel', `não foi possível abrir o túnel: ${e.message}`, false);
+  });
+  proc.on('exit', (code) => {
+    const caiu = tunel.estado === 'aberto';
+    tunel = { url: '', estado: code === 0 ? 'parado' : 'erro', erro: '', processo: null };
+    if (caiu) {
+      registrar('tunel', 'o túnel caiu, reabrindo', false);
+      setTimeout(abrirTunel, 5000);
+    }
+  });
+}
+
+function fecharTunel() {
+  if (TUNEL_FIXO) return;
+  if (tunel.processo) tunel.processo.kill();
+  tunel = { url: '', estado: 'parado', erro: '', processo: null };
+}
+
+/** Registra os endereços de entrada nos serviços que sabem receber webhook. */
+async function registrarWebhooks() {
+  if (!tunel.url) return { ok: false, erro: 'o túnel ainda não está aberto' };
+  const entrada = `${tunel.url}/entrada?token=${config.entradaToken}`;
+  const pagamento = `${tunel.url}/entrada-pagamento?token=${config.entradaToken}`;
+  const feitos = [];
+  const falhas = [];
+
+  // WhatsApp
+  try {
+    if (config.provedor === 'zapi' && config.zapiInstancia && config.zapiToken) {
+      const headers = { 'Content-Type': 'application/json' };
+      if (config.zapiClientToken) headers['Client-Token'] = config.zapiClientToken;
+      const r = await fetch(
+        `${API_ZAPI}/instances/${config.zapiInstancia}/token/${config.zapiToken}/update-webhook-received`,
+        { method: 'PUT', headers, body: JSON.stringify({ value: entrada }) },
+      );
+      if (!r.ok) throw new Error(`respondeu ${r.status}`);
+      feitos.push('Z-API');
+    } else if (config.provedor === 'evolution' && config.evolutionUrl && config.evolutionInstancia) {
+      const base = config.evolutionUrl.replace(/\/$/, '');
+      const r = await fetch(`${base}/webhook/set/${config.evolutionInstancia}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', apikey: config.evolutionApiKey },
+        body: JSON.stringify({ webhook: { enabled: true, url: entrada, events: ['MESSAGES_UPSERT'] } }),
+      });
+      if (!r.ok) throw new Error(`respondeu ${r.status}`);
+      feitos.push('Evolution');
+    }
+  } catch (e) {
+    falhas.push(`WhatsApp: ${e.message}`);
+  }
+
+  // Gateway de cobrança
+  if (config.asaasToken) {
+    try {
+      await asaas('/webhooks', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: 'Orikay',
+          url: pagamento,
+          enabled: true,
+          interrupted: false,
+          sendType: 'SEQUENTIALLY',
+          events: ['PAYMENT_RECEIVED', 'PAYMENT_CONFIRMED'],
+        }),
+      });
+      feitos.push('Asaas');
+    } catch (e) {
+      // O Asaas recusa webhook repetido; isso não é falha de verdade.
+      if (/already|existe|duplicad/i.test(e.message)) feitos.push('Asaas (já estava registrado)');
+      else falhas.push(`Asaas: ${e.message}`);
+    }
+  }
+
+  registrar(
+    'webhooks',
+    feitos.length ? `registrados em ${feitos.join(', ')}` : 'nenhum serviço configurado para registrar',
+    falhas.length === 0,
+  );
+  for (const f of falhas) registrar('webhooks', f, false);
+  return { ok: falhas.length === 0, feitos, falhas };
+}
+
 /* ------------------------- Roteamento dos eventos --------------------- */
 
 async function processar(evento) {
@@ -716,11 +853,26 @@ const servidor = createServer(async (req, res) => {
     return res.end(JSON.stringify({ ok: true, decisoes: pendentes }));
   }
 
+  // Liga, desliga e registra o túnel pela tela.
+  if (url.pathname === '/tunel' && req.method === 'POST') {
+    const { acao } = await corpo(req);
+    if (acao === 'parar') fecharTunel();
+    else if (acao === 'registrar') {
+      const r = await registrarWebhooks();
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify(r));
+    } else abrirTunel();
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: true, tunel: { url: tunel.url, estado: tunel.estado } }));
+  }
+
   // Salva a configuração pela tela.
   if (url.pathname === '/config' && req.method === 'POST') {
     config = { ...config, ...(await corpo(req)) };
     gravarConfig(config);
     registrar('config', 'configuração salva');
+    // Credencial nova com túnel no ar: registra os webhooks de novo.
+    if (tunel.url) void registrarWebhooks();
     res.writeHead(200, { 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ ok: true }));
   }
@@ -737,6 +889,7 @@ const servidor = createServer(async (req, res) => {
       google: Boolean(config.googleCustomerId && config.googleRefreshToken && config.googleDevToken),
       tiktok: Boolean(config.tiktokToken && config.tiktokAdvertiserId),
       gateway: Boolean(config.asaasToken),
+      tunel: { url: tunel.url, estado: tunel.estado, erro: tunel.erro },
     }));
   }
 
@@ -765,7 +918,12 @@ servidor.listen(PORT, () => {
   console.log('');
   console.log('  Deixe esta janela aberta enquanto usar a plataforma.');
   console.log('');
+  if (config.tunelAutomatico) abrirTunel();
 });
+
+for (const sinal of ['SIGINT', 'SIGTERM']) {
+  process.on(sinal, () => { fecharTunel(); process.exit(0); });
+}
 
 /* --------------------------- Tela de configuração --------------------- */
 
@@ -883,17 +1041,19 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   </div>
 
   <div class="card">
-    <h2><span class="dot" id="de"></span> Respostas do grupo</h2>
-    <p class="hint" style="margin:0 0 10px">Quando o cliente responder no grupo, o post é aprovado
-      ou volta para Alteração sozinho. Para isso o provedor de WhatsApp precisa alcançar este
-      computador, o que exige um endereço público.</p>
+    <h2><span class="dot" id="de"></span> Endereço público (automático)</h2>
+    <p class="hint" style="margin:0 0 10px">Para o WhatsApp avisar das respostas do grupo e o
+      gateway avisar dos pagamentos, os dois precisam alcançar este computador. O conector abre
+      um túnel sozinho e registra os endereços nos serviços. Você não precisa copiar nada.</p>
+    <div class="end" id="tunelUrl">abrindo o túnel...</div>
+    <p class="hint" id="tunelInfo"></p>
+    <button class="sec" onclick="tunel('abrir')">Reabrir túnel</button>
+    <button class="sec" onclick="tunel('registrar')">Registrar webhooks agora</button>
+    <p class="hint">Se o túnel não abrir, dá para fazer à mão: rode
+      <code>npx cloudflared tunnel --url http://localhost:8787</code> em outra janela e cole os
+      endereços abaixo nos painéis dos serviços.</p>
     <div class="end" id="entrada"></div>
-    <p class="hint">Cole esse endereço no campo de <b>webhook</b> do painel da Z-API
-      (evento "ao receber mensagem") ou da Evolution API, trocando
-      <b>localhost:8787</b> pelo endereço público do seu túnel.</p>
-    <p class="hint">Túnel grátis, em outra janela do terminal:
-      <br><code>npx cloudflared tunnel --url http://localhost:8787</code>
-      <br>Ele mostra um endereço https terminado em <b>trycloudflare.com</b>; use esse no lugar de localhost:8787.</p>
+    <div class="end" id="entradaPagamento"></div>
   </div>
 
   <div class="card">
@@ -905,10 +1065,8 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     <p class="hint">Com isto ligado, a cobrança sai com link de pagamento e Pix copia e cola,
       e a baixa acontece sozinha quando o cliente paga. O cliente precisa ter CPF ou CNPJ
       cadastrado na plataforma.</p>
-    <div class="end" id="entradaPagamento"></div>
-    <p class="hint">Cole esse endereço no Asaas, em Integrações &gt; Webhooks, com os eventos
-      de <b>pagamento recebido</b> e <b>pagamento confirmado</b>. Vale a mesma regra do túnel:
-      troque <b>localhost:8787</b> pelo endereço público.</p>
+    <p class="hint">O endereço de aviso de pagamento é registrado sozinho no Asaas assim que
+      o túnel abre.</p>
   </div>
 
   <button onclick="salvar()">Salvar configuração</button>
@@ -938,10 +1096,15 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     document.getElementById('dg').className = 'dot' + (r.google ? ' on' : '');
     document.getElementById('dt').className = 'dot' + (r.tiktok ? ' on' : '');
     document.getElementById('dp').className = 'dot' + (r.gateway ? ' on' : '');
-    document.getElementById('entradaPagamento').textContent =
-      location.origin + '/entrada-pagamento?token=' + r.config.entradaToken;
-    document.getElementById('entrada').textContent =
-      location.origin + '/entrada?token=' + r.config.entradaToken;
+    const base = r.tunel && r.tunel.url ? r.tunel.url : location.origin;
+    document.getElementById('entrada').textContent = base + '/entrada?token=' + r.config.entradaToken;
+    document.getElementById('entradaPagamento').textContent = base + '/entrada-pagamento?token=' + r.config.entradaToken;
+    const t = r.tunel || {};
+    const rotulo = { aberto: t.url, abrindo: 'abrindo o túnel...', parado: 'túnel desligado', erro: 'não foi possível abrir o túnel' };
+    document.getElementById('tunelUrl').textContent = rotulo[t.estado] || 'túnel desligado';
+    document.getElementById('tunelInfo').textContent = t.estado === 'aberto'
+      ? 'Endereço no ar. Os webhooks já foram registrados nos serviços configurados.'
+      : (t.erro || 'O endereço muda a cada reinício, e o conector registra o novo sozinho.');
     const h = document.getElementById('hist');
     if (r.historico.length) {
       h.innerHTML = r.historico.map(e =>
@@ -954,6 +1117,13 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     const dados = {};
     campos.forEach(c => dados[c] = document.getElementById(c).value.trim());
     await fetch('/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) });
+    carregar();
+  }
+  async function tunel(acao){
+    const r = await (await fetch('/tunel', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ acao }) })).json();
+    if (acao === 'registrar') {
+      alert(r.ok ? ('Registrado em: ' + (r.feitos || []).join(', ')) : ('Falhou: ' + (r.falhas || [r.erro]).join(' | ')));
+    }
     carregar();
   }
   async function testar(){

@@ -3,8 +3,14 @@ import { persist } from 'zustand/middleware';
 import type { Account } from './types';
 import { hash, pickColor, uid } from './utils';
 
-/** Contas oficiais da equipe Origem (criadas automaticamente).
- *  Somente o hash das senhas fica no código — nunca o texto puro. */
+/**
+ * Contas oficiais da equipe Origem, criadas automaticamente.
+ *
+ * Só o hash das senhas fica no código, nunca o texto puro. Ainda assim,
+ * essas senhas foram combinadas por fora e passaram pelo histórico do
+ * projeto, então servem apenas para o primeiro acesso: a plataforma obriga
+ * cada um a definir a sua antes de liberar qualquer tela.
+ */
 const TEAM: Array<Omit<Account, 'id' | 'color' | 'createdAt'>> = [
   { name: 'Daniel Designer', login: 'Daniel Designer', role: 'Designer', canFinance: false, admin: false, passHash: 'ce2bcb07' },
   { name: 'Jr Social Media', login: 'Jr Social Media', role: 'Social Media', canFinance: false, admin: false, passHash: '2dec3f8e' },
@@ -26,6 +32,8 @@ interface AuthState {
   logout: () => void;
   updateProfile: (patch: Partial<Pick<Account, 'name' | 'role' | 'color'>>) => void;
   changePassword: (current: string, next: string) => { ok: boolean; error?: string };
+  /** Define a senha definitiva de quem ainda está com a provisória. */
+  setInitialPassword: (next: string) => { ok: boolean; error?: string };
   setPermission: (id: string, patch: Partial<Pick<Account, 'canFinance' | 'admin' | 'role'>>) => void;
   addMember: (input: { name: string; password: string; role?: string; canFinance?: boolean; admin?: boolean }) => { ok: boolean; error?: string };
   removeMember: (id: string) => void;
@@ -51,6 +59,7 @@ export const useAuth = create<AuthState>()(
             canFinance: t.canFinance,
             admin: t.admin,
             passHash: t.passHash,
+            mustChangePassword: true,
             color: pickColor(t.login),
             createdAt: Date.now(),
           });
@@ -100,7 +109,22 @@ export const useAuth = create<AuthState>()(
         if (me.passHash !== hash(current)) return { ok: false, error: 'Senha atual incorreta.' };
         if (next.length < 6) return { ok: false, error: 'A nova senha precisa de ao menos 6 caracteres.' };
         set((s) => ({
-          accounts: s.accounts.map((a) => (a.id === me.id ? { ...a, passHash: hash(next) } : a)),
+          accounts: s.accounts.map((a) =>
+            a.id === me.id ? { ...a, passHash: hash(next), mustChangePassword: false } : a),
+        }));
+        return { ok: true };
+      },
+
+      setInitialPassword: (next) => {
+        const me = get().accounts.find((a) => a.id === get().currentId);
+        if (!me) return { ok: false, error: 'Sessão inválida.' };
+        if (next.length < 6) return { ok: false, error: 'A nova senha precisa de ao menos 6 caracteres.' };
+        if (me.passHash === hash(next)) {
+          return { ok: false, error: 'Escolha uma senha diferente da provisória.' };
+        }
+        set((s) => ({
+          accounts: s.accounts.map((a) =>
+            a.id === me.id ? { ...a, passHash: hash(next), mustChangePassword: false } : a),
         }));
         return { ok: true };
       },

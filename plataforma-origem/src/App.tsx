@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import { Lock } from 'lucide-react';
 import { useAuth } from '@/lib/authStore';
 import { AppShell } from '@/components/AppShell';
+import { FirstPassword } from '@/components/FirstPassword';
 import Landing from '@/pages/Landing';
 import Auth from '@/pages/Auth';
 import Dashboard from '@/pages/Dashboard';
@@ -21,8 +22,11 @@ import Settings from '@/pages/Settings';
 
 function Protected({ children }: { children: React.ReactNode }) {
   const currentId = useAuth((s) => s.currentId);
+  const precisaTrocar = useAuth((s) => s.current()?.mustChangePassword);
   const location = useLocation();
   if (!currentId) return <Navigate to="/entrar" replace state={{ from: location }} />;
+  // Senha provisória não abre nenhuma tela: troca primeiro.
+  if (precisaTrocar) return <FirstPassword />;
   return <AppShell>{children}</AppShell>;
 }
 
