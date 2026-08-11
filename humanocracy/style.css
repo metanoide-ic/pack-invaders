@@ -524,19 +524,108 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   border-bottom:3px double rgba(201,163,74,.45);
   text-shadow:0 1px 0 rgba(255,246,220,.1), 0 -1px 1px rgba(0,0,0,.6);
 }
-.fam-row { display:flex; justify-content:space-between; padding:4px 2px; border-bottom:1px dotted rgba(143,138,122,.34); }
-.fam-row:hover { background:rgba(201,163,74,.06); }
-.fam-status-ok { color:#8fb573; }
-.fam-status-bad { color:#c96a4f; }
-.fam-status-dead { color:#666; text-decoration:line-through; }
-#home-events { font-size:12px; line-height:1.6; color:var(--ink); }
-#home-events .ev { margin-bottom:8px; padding:8px; background:var(--panel2); border-left:3px solid var(--accent2); }
-.home-budget { font-size:13px; }
-.home-budget .row { display:flex; justify-content:space-between; }
-.home-shop { display:flex; flex-wrap:wrap; gap:8px; }
-.home-shop button { font-size:12px; }
-.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:pixelated; }
+/* ---- CADERNO DA CASA: a folha pautada onde se anota quem comeu ---- */
+.hp-sheet {
+  padding:12px 14px 14px; color:#2a251b;
+  background-color:#cfc4a3;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 25px, rgba(70,60,40,.16) 25px 26px),
+    linear-gradient(90deg, transparent 0 15px, rgba(140,47,36,.28) 15px 16px, transparent 16px),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; box-shadow:3px 4px 0 rgba(0,0,0,.45), inset 0 2px 8px rgba(0,0,0,.14);
+}
+.hp-cap {
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
+  letter-spacing:2px; font-size:10.5px; color:#6a5c38;
+  border-bottom:1px solid rgba(70,60,40,.4); padding:0 0 3px 12px; margin:2px 0 6px;
+}
+.hp-sheet .hp-cap + .hp-cap, .hp-sheet #family-status + .hp-cap { margin-top:14px; }
+.hp-cap-out { color:#a99a76; border-color:rgba(143,138,122,.3); padding-left:2px; margin-top:4px; }
+.fam-row {
+  display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  padding:2px 2px 2px 12px; line-height:25px; font-size:14px;
+}
+.fam-nome { color:#241f14; }
+.fam-nome i { font-style:normal; color:#7a6f52; font-size:12px; margin-left:6px; }
+/* o estado escrito na margem, cada um com sua tinta */
+.fam-status-ok    { color:#4a5a3c; font-family:var(--font-mono); font-size:13px; }
+.fam-status-fome  { color:#8e4a1e; font-family:var(--font-mono); font-size:13px; text-decoration:underline wavy rgba(142,74,30,.5); }
+.fam-status-bad   { color:#8e2c1e; font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:1px;
+  border:1.5px solid rgba(142,44,30,.6); border-radius:2px; padding:0 5px; transform:rotate(-2deg); display:inline-block; }
+.fam-status-dead  { color:#6a604a; text-decoration:line-through 2px rgba(142,44,30,.8); font-style:italic; }
+#home-events { font-size:13px; line-height:1.65; color:var(--ink); }
+#home-events .ev {
+  margin-top:10px; padding:10px 12px; color:#2a251b;
+  background-color:#c8bd9c;
+  background-image:linear-gradient(180deg, rgba(255,250,235,.3), transparent 40%),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; border-left:4px solid #8e2c1e;
+  box-shadow:2px 3px 0 rgba(0,0,0,.4);
+}
+.home-budget { font-size:13.5px; font-family:var(--font-mono); }
+.home-budget .row {
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  padding:1px 2px 1px 12px; line-height:25px; color:#3b3428;
+}
+.home-budget .row span:last-child { color:#241f14; }
+.home-budget .row.total {
+  border-top:3px double rgba(70,60,40,.5); margin-top:2px; font-weight:600;
+}
+/* ---- CAUTELAS DE RACIONAMENTO: talões destacáveis ---- */
+.home-shop { display:flex; flex-wrap:wrap; gap:10px; }
+.home-shop .cautela {
+  flex:1 1 190px; position:relative; text-align:left; padding:8px 10px 8px 14px;
+  display:flex; flex-direction:column; gap:1px; border-radius:0; text-shadow:none;
+  color:#2a251b; background-color:#d9c98f;
+  background-image:
+    radial-gradient(rgba(0,0,0,.08) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(255,250,235,.45), transparent 45%, rgba(0,0,0,.12)),
+    var(--tex-paper);
+  background-size:3px 3px, auto, auto;
+  border:1px solid #241f14; box-shadow:3px 4px 0 rgba(0,0,0,.45);
+  /* picote da borda esquerda */
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.home-shop .cautela::before {
+  content:''; position:absolute; left:5px; top:5px; bottom:5px; width:0;
+  border-left:2px dotted rgba(70,60,40,.55);
+}
+.home-shop .cautela i { font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:#6a5c38; }
+.home-shop .cautela b { font-family:var(--font-display); font-weight:700; font-size:12.5px; letter-spacing:1px; text-transform:uppercase; color:#241f14; }
+.home-shop .cautela u { text-decoration:none; font-family:var(--font-mono); font-size:13px; color:#8e2c1e; }
+.home-shop .cautela:hover:not(:disabled) { background-color:#e8d9a4; transform:translate(-1px,-2px); box-shadow:4px 6px 0 rgba(0,0,0,.45); }
+.home-shop .cautela:active:not(:disabled) { transform:translate(3px,4px); box-shadow:0 0 0 rgba(0,0,0,0); }
+.home-shop .cautela.usada { filter:grayscale(.5) brightness(.82); cursor:default; }
+.home-shop .cautela.usada::after {
+  content:'DESTACADA'; position:absolute; right:8px; top:50%; transform:translateY(-50%) rotate(-9deg);
+  font-family:var(--font-display); font-weight:700; font-size:11px; letter-spacing:2px;
+  color:rgba(152,38,28,.8); border:2px solid rgba(152,38,28,.7); border-radius:3px; padding:1px 5px;
+}
+.home-shop .cautela.semsaldo { animation:cautela-nao .4s; }
+@keyframes cautela-nao { 0%,100% { transform:none; } 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
+/* ---- a janela do apartamento, com peitoril ---- */
+.hp-window {
+  position:relative; margin:14px 0 4px; padding:8px 8px 12px;
+  background-color:#2a2c22;
+  background-image:linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,.1) 30%, rgba(0,0,0,.45)), var(--tex-wood);
+  border:1px solid #0a0b07;
+  box-shadow:inset 0 0 0 1px rgba(146,118,70,.22), 3px 4px 0 rgba(0,0,0,.45);
+}
+.hp-window::after {           /* peitoril */
+  content:''; position:absolute; left:-4px; right:-4px; bottom:0; height:7px;
+  background:linear-gradient(180deg, #4a3a22, #241a10);
+  border:1px solid #0a0b07; box-shadow:0 3px 0 rgba(0,0,0,.4);
+}
+.home-scene { width:100%; height:auto; display:block; image-rendering:pixelated;
+  border:1px solid rgba(0,0,0,.7); box-shadow:inset 0 0 22px rgba(0,0,0,.6); }
 .btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
+/* IR AO TRABALHO nunca fica fora da vista: cola no rodapé do painel, com o
+   degradê que mostra que a folha continua atrás dele */
+.home-panel #btn-gowork {
+  position:sticky; bottom:-18px; z-index:3; margin-top:16px;
+  box-shadow:0 -14px 18px -8px rgba(20,22,16,.95), inset 0 1px 0 rgba(238,240,230,.14),
+    inset 0 -2px 0 rgba(0,0,0,.38), 0 3px 0 #0c0d09;
+}
 
 /* ============ TURNO ============ */
 #screen-shift.active { display:flex; flex-direction:column; }
@@ -1124,10 +1213,15 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 .btn-tool.active .tool-ico { opacity:1; filter:none; }
 .scan-result {
-  font-size:13px; min-height:34px; padding:6px; line-height:1.4;
+  font-size:13px; padding:7px 9px; line-height:1.45;
+  color:#e2d7bb;
   background-color:var(--panel2);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  border:1px solid #0a0b07; border-left:3px solid var(--accent2);
+  box-shadow:2px 3px 0 rgba(0,0,0,.45);
 }
+/* sem leitura nenhuma não sobra um bloco vazio pendurado na parede */
+.scan-result:empty { display:none; }
 .rulebook {
   /* As ferramentas ficam fixas no topo da coluna; o regulamento ocupa o
      espaço restante e ROLA dentro de si (flex:1 + min-height:0 + overflow —
@@ -1693,8 +1787,28 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   color:#8f8a7a; font-size:12px;
   box-shadow: inset 0 -6px 10px rgba(0,0,0,.5);
 }
-#house-clock { font-size:18px; color:#c9b46a; letter-spacing:2px; }
-.house-help { font-size:12px; opacity:.7; }
+/* o relógio da casa é o mesmo mostrador do posto: dígito gravado em placa */
+#house-clock {
+  font-size:18px; color:#c9b46a; letter-spacing:3px; padding:2px 10px;
+  background:linear-gradient(180deg, #16180f, #0b0c07);
+  border:1px solid #000; box-shadow:inset 0 1px 0 rgba(238,240,230,.10), inset 0 -2px 4px rgba(0,0,0,.6);
+  text-shadow:0 0 6px rgba(201,180,106,.35);
+}
+/* os comandos ficam numa etiqueta colada, não em texto solto */
+.house-help {
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; color:#4b4636;
+  padding:3px 10px; background-color:#b8ae90;
+  background-image:linear-gradient(180deg, rgba(255,250,235,.35), transparent 55%), var(--tex-paper);
+  border:1px solid #0a0b07; box-shadow:2px 2px 0 rgba(0,0,0,.5);
+  transform:rotate(-.5deg); opacity:.92;
+}
+/* uma vinheta de lanterna por cima do 3D — a casa nunca é um retângulo chapado */
+#house-viewport::after {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:3;
+  background:
+    radial-gradient(ellipse at 50% 52%, transparent 34%, rgba(0,0,0,.30) 74%, rgba(0,0,0,.62) 100%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px);
+}
 #house-viewport { flex:1; position:relative; overflow:hidden; }
 #house-canvas {
   position:absolute; inset:0; width:100%; height:100%;
@@ -2267,3 +2381,28 @@ body.text-large .np-body { font-size:15px; }
 .slot-acts button:hover:not(:disabled) { background:#c9a34a; color:#141207; }
 .slot-acts button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0); }
 .slot-acts button.danger:hover:not(:disabled) { background:#8e2c1e; color:#f0e3cf; }
+
+/* ---- gaveta vazia: o móvel continua lá, o material é que não chegou ---- */
+.drawer.vazia .drawer-front { filter:saturate(.55) brightness(.82); }
+.drawer.vazia .dr-plate { color:#8a7f60; }
+.dr-vazia {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-1.4deg);
+  width:min(74%, 190px); padding:9px 10px 8px; text-align:center; pointer-events:none; z-index:2;
+  background-color:#cec2a0;
+  background-image:
+    linear-gradient(180deg, rgba(255,250,235,.4), transparent 50%),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; box-shadow:2px 3px 0 rgba(0,0,0,.5);
+}
+.dr-vazia b {
+  display:block; font-family:var(--font-display); font-weight:700; font-size:11px;
+  letter-spacing:2.5px; color:#3b3428; border-bottom:1px solid rgba(70,60,40,.45);
+  padding-bottom:3px; margin-bottom:3px;
+}
+.dr-vazia span { font-family:var(--font-mono); font-size:11px; line-height:1.35; color:#6a604a; }
+/* o DET sem fio: o botão existe, a permissão não */
+.stamp-detain.sem-fio {
+  filter:grayscale(.85) brightness(.5); cursor:not-allowed;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 1px 0 rgba(0,0,0,.5);
+}
+.stamp-detain.sem-fio:hover { filter:grayscale(.8) brightness(.58); }

@@ -170,7 +170,7 @@ propaganda — ou algo pior. A partir daqui o jogador desconfia dos documentos, 
 governos, dos cidadãos **e da própria memória**. É o momento em que o thriller político
 vira horror.
 
-## 5.4 A família — e a casa explorável (implementada)
+## 5.5 A família — e a casa explorável (implementada)
 
 Vessa (esposa, arquivista), Tomi (8 anos), **Dario (15 anos, filho do primeiro casamento
 do protagonista, mestiço)** e sua mãe, Odila. Não são uma tela de despesas: têm rotina,
@@ -231,7 +231,7 @@ Sistemas de sobrevivência:
   **O jogo nunca responde.** (Internamente há resposta — Estado Verdadeiro — mas nenhum
   canal do jogo a exibe. Nem o relatório final.)
 
-## 5.5 O protagonista também muda
+## 5.6 O protagonista também muda
 
 O inspetor não é uma câmera: tem nome (que o jogador nunca digita — os outros o chamam
 de "inspetor"), história, e **envelhece visivelmente**: olheiras, postura, cansaço

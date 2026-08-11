@@ -531,19 +531,108 @@ button:nth-of-type(4n+1) { transform: rotate(-.3deg); }
   border-bottom:3px double rgba(201,163,74,.45);
   text-shadow:0 1px 0 rgba(255,246,220,.1), 0 -1px 1px rgba(0,0,0,.6);
 }
-.fam-row { display:flex; justify-content:space-between; padding:4px 2px; border-bottom:1px dotted rgba(143,138,122,.34); }
-.fam-row:hover { background:rgba(201,163,74,.06); }
-.fam-status-ok { color:#8fb573; }
-.fam-status-bad { color:#c96a4f; }
-.fam-status-dead { color:#666; text-decoration:line-through; }
-#home-events { font-size:12px; line-height:1.6; color:var(--ink); }
-#home-events .ev { margin-bottom:8px; padding:8px; background:var(--panel2); border-left:3px solid var(--accent2); }
-.home-budget { font-size:13px; }
-.home-budget .row { display:flex; justify-content:space-between; }
-.home-shop { display:flex; flex-wrap:wrap; gap:8px; }
-.home-shop button { font-size:12px; }
-.home-scene { width:100%; height:auto; display:block; margin:16px 0; border:1px solid rgba(120,96,58,.3); box-shadow:0 4px 14px rgba(0,0,0,.5); image-rendering:pixelated; }
+/* ---- CADERNO DA CASA: a folha pautada onde se anota quem comeu ---- */
+.hp-sheet {
+  padding:12px 14px 14px; color:#2a251b;
+  background-color:#cfc4a3;
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 25px, rgba(70,60,40,.16) 25px 26px),
+    linear-gradient(90deg, transparent 0 15px, rgba(140,47,36,.28) 15px 16px, transparent 16px),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; box-shadow:3px 4px 0 rgba(0,0,0,.45), inset 0 2px 8px rgba(0,0,0,.14);
+}
+.hp-cap {
+  font-family:var(--font-display); font-weight:600; text-transform:uppercase;
+  letter-spacing:2px; font-size:10.5px; color:#6a5c38;
+  border-bottom:1px solid rgba(70,60,40,.4); padding:0 0 3px 12px; margin:2px 0 6px;
+}
+.hp-sheet .hp-cap + .hp-cap, .hp-sheet #family-status + .hp-cap { margin-top:14px; }
+.hp-cap-out { color:#a99a76; border-color:rgba(143,138,122,.3); padding-left:2px; margin-top:4px; }
+.fam-row {
+  display:flex; justify-content:space-between; align-items:baseline; gap:10px;
+  padding:2px 2px 2px 12px; line-height:25px; font-size:14px;
+}
+.fam-nome { color:#241f14; }
+.fam-nome i { font-style:normal; color:#7a6f52; font-size:12px; margin-left:6px; }
+/* o estado escrito na margem, cada um com sua tinta */
+.fam-status-ok    { color:#4a5a3c; font-family:var(--font-mono); font-size:13px; }
+.fam-status-fome  { color:#8e4a1e; font-family:var(--font-mono); font-size:13px; text-decoration:underline wavy rgba(142,74,30,.5); }
+.fam-status-bad   { color:#8e2c1e; font-family:var(--font-display); font-weight:700; font-size:12px; letter-spacing:1px;
+  border:1.5px solid rgba(142,44,30,.6); border-radius:2px; padding:0 5px; transform:rotate(-2deg); display:inline-block; }
+.fam-status-dead  { color:#6a604a; text-decoration:line-through 2px rgba(142,44,30,.8); font-style:italic; }
+#home-events { font-size:13px; line-height:1.65; color:var(--ink); }
+#home-events .ev {
+  margin-top:10px; padding:10px 12px; color:#2a251b;
+  background-color:#c8bd9c;
+  background-image:linear-gradient(180deg, rgba(255,250,235,.3), transparent 40%),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; border-left:4px solid #8e2c1e;
+  box-shadow:2px 3px 0 rgba(0,0,0,.4);
+}
+.home-budget { font-size:13.5px; font-family:var(--font-mono); }
+.home-budget .row {
+  display:flex; justify-content:space-between; align-items:baseline; gap:8px;
+  padding:1px 2px 1px 12px; line-height:25px; color:#3b3428;
+}
+.home-budget .row span:last-child { color:#241f14; }
+.home-budget .row.total {
+  border-top:3px double rgba(70,60,40,.5); margin-top:2px; font-weight:600;
+}
+/* ---- CAUTELAS DE RACIONAMENTO: talões destacáveis ---- */
+.home-shop { display:flex; flex-wrap:wrap; gap:10px; }
+.home-shop .cautela {
+  flex:1 1 190px; position:relative; text-align:left; padding:8px 10px 8px 14px;
+  display:flex; flex-direction:column; gap:1px; border-radius:0; text-shadow:none;
+  color:#2a251b; background-color:#d9c98f;
+  background-image:
+    radial-gradient(rgba(0,0,0,.08) .6px, transparent .9px),
+    linear-gradient(180deg, rgba(255,250,235,.45), transparent 45%, rgba(0,0,0,.12)),
+    var(--tex-paper);
+  background-size:3px 3px, auto, auto;
+  border:1px solid #241f14; box-shadow:3px 4px 0 rgba(0,0,0,.45);
+  /* picote da borda esquerda */
+  clip-path:polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+.home-shop .cautela::before {
+  content:''; position:absolute; left:5px; top:5px; bottom:5px; width:0;
+  border-left:2px dotted rgba(70,60,40,.55);
+}
+.home-shop .cautela i { font-style:normal; font-family:var(--font-mono); font-size:10px; letter-spacing:1px; color:#6a5c38; }
+.home-shop .cautela b { font-family:var(--font-display); font-weight:700; font-size:12.5px; letter-spacing:1px; text-transform:uppercase; color:#241f14; }
+.home-shop .cautela u { text-decoration:none; font-family:var(--font-mono); font-size:13px; color:#8e2c1e; }
+.home-shop .cautela:hover:not(:disabled) { background-color:#e8d9a4; transform:translate(-1px,-2px); box-shadow:4px 6px 0 rgba(0,0,0,.45); }
+.home-shop .cautela:active:not(:disabled) { transform:translate(3px,4px); box-shadow:0 0 0 rgba(0,0,0,0); }
+.home-shop .cautela.usada { filter:grayscale(.5) brightness(.82); cursor:default; }
+.home-shop .cautela.usada::after {
+  content:'DESTACADA'; position:absolute; right:8px; top:50%; transform:translateY(-50%) rotate(-9deg);
+  font-family:var(--font-display); font-weight:700; font-size:11px; letter-spacing:2px;
+  color:rgba(152,38,28,.8); border:2px solid rgba(152,38,28,.7); border-radius:3px; padding:1px 5px;
+}
+.home-shop .cautela.semsaldo { animation:cautela-nao .4s; }
+@keyframes cautela-nao { 0%,100% { transform:none; } 25% { transform:translateX(-5px); } 75% { transform:translateX(5px); } }
+/* ---- a janela do apartamento, com peitoril ---- */
+.hp-window {
+  position:relative; margin:14px 0 4px; padding:8px 8px 12px;
+  background-color:#2a2c22;
+  background-image:linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,.1) 30%, rgba(0,0,0,.45)), var(--tex-wood);
+  border:1px solid #0a0b07;
+  box-shadow:inset 0 0 0 1px rgba(146,118,70,.22), 3px 4px 0 rgba(0,0,0,.45);
+}
+.hp-window::after {           /* peitoril */
+  content:''; position:absolute; left:-4px; right:-4px; bottom:0; height:7px;
+  background:linear-gradient(180deg, #4a3a22, #241a10);
+  border:1px solid #0a0b07; box-shadow:0 3px 0 rgba(0,0,0,.4);
+}
+.home-scene { width:100%; height:auto; display:block; image-rendering:pixelated;
+  border:1px solid rgba(0,0,0,.7); box-shadow:inset 0 0 22px rgba(0,0,0,.6); }
 .btn-big { padding:14px; font-size:16px; letter-spacing:2px; margin-top:auto; }
+/* IR AO TRABALHO nunca fica fora da vista: cola no rodapé do painel, com o
+   degradê que mostra que a folha continua atrás dele */
+.home-panel #btn-gowork {
+  position:sticky; bottom:-18px; z-index:3; margin-top:16px;
+  box-shadow:0 -14px 18px -8px rgba(20,22,16,.95), inset 0 1px 0 rgba(238,240,230,.14),
+    inset 0 -2px 0 rgba(0,0,0,.38), 0 3px 0 #0c0d09;
+}
 
 /* ============ TURNO ============ */
 #screen-shift.active { display:flex; flex-direction:column; }
@@ -1131,10 +1220,15 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
 }
 .btn-tool.active .tool-ico { opacity:1; filter:none; }
 .scan-result {
-  font-size:13px; min-height:34px; padding:6px; line-height:1.4;
+  font-size:13px; padding:7px 9px; line-height:1.45;
+  color:#e2d7bb;
   background-color:var(--panel2);
   background-image: linear-gradient(var(--panel-wash), var(--panel-wash)), var(--tex-panel);
+  border:1px solid #0a0b07; border-left:3px solid var(--accent2);
+  box-shadow:2px 3px 0 rgba(0,0,0,.45);
 }
+/* sem leitura nenhuma não sobra um bloco vazio pendurado na parede */
+.scan-result:empty { display:none; }
 .rulebook {
   /* As ferramentas ficam fixas no topo da coluna; o regulamento ocupa o
      espaço restante e ROLA dentro de si (flex:1 + min-height:0 + overflow —
@@ -1700,8 +1794,28 @@ body.silente-present #vignette { background: radial-gradient(ellipse at 50% 45%,
   color:#8f8a7a; font-size:12px;
   box-shadow: inset 0 -6px 10px rgba(0,0,0,.5);
 }
-#house-clock { font-size:18px; color:#c9b46a; letter-spacing:2px; }
-.house-help { font-size:12px; opacity:.7; }
+/* o relógio da casa é o mesmo mostrador do posto: dígito gravado em placa */
+#house-clock {
+  font-size:18px; color:#c9b46a; letter-spacing:3px; padding:2px 10px;
+  background:linear-gradient(180deg, #16180f, #0b0c07);
+  border:1px solid #000; box-shadow:inset 0 1px 0 rgba(238,240,230,.10), inset 0 -2px 4px rgba(0,0,0,.6);
+  text-shadow:0 0 6px rgba(201,180,106,.35);
+}
+/* os comandos ficam numa etiqueta colada, não em texto solto */
+.house-help {
+  font-family:var(--font-mono); font-size:11px; letter-spacing:.04em; color:#4b4636;
+  padding:3px 10px; background-color:#b8ae90;
+  background-image:linear-gradient(180deg, rgba(255,250,235,.35), transparent 55%), var(--tex-paper);
+  border:1px solid #0a0b07; box-shadow:2px 2px 0 rgba(0,0,0,.5);
+  transform:rotate(-.5deg); opacity:.92;
+}
+/* uma vinheta de lanterna por cima do 3D — a casa nunca é um retângulo chapado */
+#house-viewport::after {
+  content:''; position:absolute; inset:0; pointer-events:none; z-index:3;
+  background:
+    radial-gradient(ellipse at 50% 52%, transparent 34%, rgba(0,0,0,.30) 74%, rgba(0,0,0,.62) 100%),
+    repeating-linear-gradient(0deg, rgba(0,0,0,.13) 0 1px, transparent 1px 3px);
+}
 #house-viewport { flex:1; position:relative; overflow:hidden; }
 #house-canvas {
   position:absolute; inset:0; width:100%; height:100%;
@@ -2275,6 +2389,31 @@ body.text-large .np-body { font-size:15px; }
 .slot-acts button:active:not(:disabled) { transform:translate(2px,2px); box-shadow:0 0 0 rgba(0,0,0,0); }
 .slot-acts button.danger:hover:not(:disabled) { background:#8e2c1e; color:#f0e3cf; }
 
+/* ---- gaveta vazia: o móvel continua lá, o material é que não chegou ---- */
+.drawer.vazia .drawer-front { filter:saturate(.55) brightness(.82); }
+.drawer.vazia .dr-plate { color:#8a7f60; }
+.dr-vazia {
+  position:absolute; left:50%; top:50%; transform:translate(-50%,-50%) rotate(-1.4deg);
+  width:min(74%, 190px); padding:9px 10px 8px; text-align:center; pointer-events:none; z-index:2;
+  background-color:#cec2a0;
+  background-image:
+    linear-gradient(180deg, rgba(255,250,235,.4), transparent 50%),
+    linear-gradient(var(--paper-wash), var(--paper-wash)), var(--tex-paper);
+  border:1px solid #241f14; box-shadow:2px 3px 0 rgba(0,0,0,.5);
+}
+.dr-vazia b {
+  display:block; font-family:var(--font-display); font-weight:700; font-size:11px;
+  letter-spacing:2.5px; color:#3b3428; border-bottom:1px solid rgba(70,60,40,.45);
+  padding-bottom:3px; margin-bottom:3px;
+}
+.dr-vazia span { font-family:var(--font-mono); font-size:11px; line-height:1.35; color:#6a604a; }
+/* o DET sem fio: o botão existe, a permissão não */
+.stamp-detain.sem-fio {
+  filter:grayscale(.85) brightness(.5); cursor:not-allowed;
+  box-shadow:inset 0 2px 4px rgba(0,0,0,.6), 0 1px 0 rgba(0,0,0,.5);
+}
+.stamp-detain.sem-fio:hover { filter:grayscale(.8) brightness(.58); }
+
 </style>
 </head>
 <body>
@@ -2394,11 +2533,17 @@ body.text-large .np-body { font-size:15px; }
         </div>
         <div class="home-panel">
           <div class="home-title">SEU APARTAMENTO — BLOCO 14, VALGRADO</div>
-          <div id="family-status"></div>
+          <!-- CADERNO DA CASA: a folha pautada onde Vessa anota quem come o quê -->
+          <div class="hp-sheet">
+            <div class="hp-cap">MORADORES DO APARTAMENTO</div>
+            <div id="family-status"></div>
+            <div class="hp-cap">CONTAS DO DIA</div>
+            <div class="home-budget" id="home-budget"></div>
+          </div>
           <div id="home-events"></div>
-          <div class="home-budget" id="home-budget"></div>
+          <div class="hp-cap hp-cap-out">CAUTELAS DE RACIONAMENTO</div>
           <div class="home-shop" id="home-shop"></div>
-          <canvas id="home-scene" class="home-scene" width="620" height="240"></canvas>
+          <div class="hp-window"><canvas id="home-scene" class="home-scene" width="620" height="240"></canvas></div>
           <button id="btn-gowork" class="btn-big">IR AO TRABALHO →</button>
         </div>
       </div>
@@ -5344,6 +5489,27 @@ const I18N_EN = {
   '"Escolha, então. Obrigado pela franqueza."': '"Choose, then. Thank you for your candour."',
   'FINAL — A CONTA FECHADA': 'ENDING — THE ACCOUNT SETTLED',
   'A Conta Fechada': 'The Account Settled',
+  /* ---- caderno da casa / cautelas ---- */
+  'MORADORES DO APARTAMENTO': 'RESIDENTS OF THE APARTMENT',
+  'CONTAS DO DIA': "TODAY'S ACCOUNTS",
+  'CAUTELAS DE RACIONAMENTO': 'RATION COUPONS',
+  'CAUTELA': 'COUPON',
+  'Saldo em caixa': 'Cash on hand',
+  'Aluguel (descontado à noite)': 'Rent (deducted at night)',
+  'Sobra depois da noite': 'Left after tonight',
+  'Comida para a família': 'Food for the family',
+  'Carvão para o fogão': 'Coal for the stove',
+  'Remédio para': 'Medicine for',
+  'Calibração do detector (sem recibo)': 'Detector calibration (no receipt)',
+  'bem': 'well',
+  'com fome': 'hungry',
+  'DOENTE': 'ILL',
+  'falecido(a)': 'deceased',
+  'esposa': 'wife',
+  'SEM MATERIAL': 'NO MATERIAL',
+  'Aguardando remessa do Ministério.': 'Awaiting shipment from the Ministry.',
+  'O botão não tem fio. A ordem de detenção ainda não chegou ao posto.':
+    'The button has no wire. The detention order has not reached the post yet.',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -6924,6 +7090,27 @@ const I18N_ES = {
   '"Escolha, então. Obrigado pela franqueza."': '"Elija, entonces. Gracias por la franqueza."',
   'FINAL — A CONTA FECHADA': 'FINAL — LA CUENTA CERRADA',
   'A Conta Fechada': 'La Cuenta Cerrada',
+  /* ---- cuaderno de la casa / cautelas ---- */
+  'MORADORES DO APARTAMENTO': 'RESIDENTES DEL APARTAMENTO',
+  'CONTAS DO DIA': 'CUENTAS DEL DÍA',
+  'CAUTELAS DE RACIONAMENTO': 'CUPONES DE RACIONAMIENTO',
+  'CAUTELA': 'CUPÓN',
+  'Saldo em caixa': 'Saldo en caja',
+  'Aluguel (descontado à noite)': 'Alquiler (descontado de noche)',
+  'Sobra depois da noite': 'Queda tras la noche',
+  'Comida para a família': 'Comida para la familia',
+  'Carvão para o fogão': 'Carbón para la estufa',
+  'Remédio para': 'Medicina para',
+  'Calibração do detector (sem recibo)': 'Calibración del detector (sin recibo)',
+  'bem': 'bien',
+  'com fome': 'con hambre',
+  'DOENTE': 'ENFERMO',
+  'falecido(a)': 'fallecido(a)',
+  'esposa': 'esposa',
+  'SEM MATERIAL': 'SIN MATERIAL',
+  'Aguardando remessa do Ministério.': 'A la espera de remesa del Ministerio.',
+  'O botão não tem fio. A ordem de detenção ainda não chegou ao posto.':
+    'El botón no tiene cable. La orden de detención aún no llegó al puesto.',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
@@ -11369,6 +11556,18 @@ function openLifeline() {
 
 /* ---------- GERAÇÃO DE CIDADÃOS ---------- */
 const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction', 'luggage'];
+/* Que TIPO de fraude o mundo produz em cada altura da campanha. Nos primeiros
+   dias só o que se vê a olho nu com o que está sobre a mesa: data vencida,
+   nome trocado, número que não bate. Foto divergente exige olhar de perto
+   (lupa, dia 3); contradição exige interrogatório fechado; bagagem exige
+   autorização de revista (dia 7). Pedir ao jogador que ache o que ele ainda
+   não tem como achar é a definição de dificuldade injusta. */
+function discPoolForDay(day) {
+  if (day <= 2) return ['expired', 'nameMismatch', 'numberMismatch'];
+  if (day <= 4) return ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch'];
+  if (day <= 6) return ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction'];
+  return DISC_TYPES;
+}
 
 function fullName(pais, sexo) {
   const c = COUNTRIES[pais];
@@ -11465,9 +11664,15 @@ function makeCitizen(day, opts) {
   if (opts.forceValid || opts.encounter) { if (opts.forcedDisc) cz.isForger = true; }
   else if (opts.forcedDisc) { cz.isForger = true; }
   else {
-    const pAlt = Math.min(.10 + day * .004, .3);
+    /* RAMPA DOS PRIMEIROS DIAS. O dia 1 ensina: ler, comparar, carimbar. Um
+       único papel vencido é toda a dificuldade que ele precisa ter — punir o
+       jogador por uma divergência sutil antes de ele ter lupa, mapa ou
+       dossiê não é dificuldade, é emboscada. A partir do dia 3 a fronteira
+       volta a ser o que é. */
+    const pAlt = day <= 2 ? 0 : Math.min(.10 + day * .004, .3);
+    const pFraude = day === 1 ? .14 : day === 2 ? .18 : .22;
     if (chance(pAlt)) cz.isAlternado = true;
-    else if (chance(.22)) cz.isForger = true;
+    else if (chance(pFraude)) cz.isForger = true;
   }
   if (day >= 20 && day <= 26 && pais === 'taranstan' && chance(.5)) cz.refugee = true;
 
@@ -11481,7 +11686,7 @@ function makeCitizen(day, opts) {
     if (day >= 46) pPerfect = .95;
     if (!chance(pPerfect)) applyDisc(cz, weightedPick(w), day);
   } else if (cz.isForger) {
-    applyDisc(cz, pick(DISC_TYPES), day);
+    applyDisc(cz, pick(discPoolForDay(day)), day);
   }
   if (opts.forcedMissing) delete cz.docs[opts.forcedMissing];
 
@@ -12310,16 +12515,34 @@ function applyToolUnlocks() {
   show('inst-bio-slot', toolReady('bio'));
   show('btn-scan-bio', false);
   show('gun-obj', toolReady('gun'));
-  show('btn-detain', toolReady('detain'));   // o DET só ganha fio no dia 4
   // o tampo não mostra suporte vazio: some com a bandeja de instrumentos
   show('instruments', toolReady('pulse') || toolReady('bio'));
   const bagBtn = $('btn-exam-bag'); if (bagBtn) bagBtn.style.display = toolReady('bag') ? '' : 'none';
-  // gaveta sem nada dentro não abre — nem aparece
-  const dA = $('drawer-left'), dB = $('drawer-right');
-  const anyA = toolReady('mapa') || toolReady('lupa');
-  const anyB = toolReady('thermo') || toolReady('dossie');
-  if (dA) { dA.style.display = anyA ? '' : 'none'; if (!anyA) dA.classList.remove('open'); }
-  if (dB) { dB.style.display = anyB ? '' : 'none'; if (!anyB) dB.classList.remove('open'); }
+  /* O DET é PARTE DA MESA — ele não some, ele não tem fio. Um botão vermelho
+     morto sob a borda do balcão diz mais sobre este emprego do que um botão
+     ausente: a autoridade existe antes de a permissão chegar. */
+  const det = $('btn-detain');
+  if (det) { det.style.display = ''; det.classList.toggle('sem-fio', !toolReady('detain')); }
+  /* AS GAVETAS TAMBÉM SÃO A MESA. Nunca somem: ficam VAZIAS, com o cartão do
+     almoxarifado dentro, e o jogador entende que aquilo vai ser preenchido.
+     (Móvel que desaparece lê-se como bug — e era, para quem jogou.) */
+  const encheGaveta = (id, tem) => {
+    const d = $(id); if (!d) return;
+    d.style.display = '';
+    d.classList.toggle('vazia', !tem);
+    const tray = d.querySelector('.drawer-tray'); if (!tray) return;
+    let vaz = tray.querySelector('.dr-vazia');
+    if (!tem) {
+      if (!vaz) {
+        vaz = document.createElement('div'); vaz.className = 'dr-vazia';
+        tray.appendChild(vaz);
+      }
+      vaz.innerHTML = `<b>${T('SEM MATERIAL')}</b><span>${T('Aguardando remessa do Ministério.')}</span>`;
+      vaz.style.display = '';
+    } else if (vaz) { vaz.style.display = 'none'; }
+  };
+  encheGaveta('drawer-left', toolReady('mapa') || toolReady('lupa'));
+  encheGaveta('drawer-right', toolReady('thermo') || toolReady('dossie'));
 }
 /* a remessa do dia: ofício + o objeto novo, com a gaveta abrindo sozinha */
 function announceNewTools(after) {
@@ -12339,8 +12562,7 @@ function announceNewTools(after) {
         PENDING_TOOLS.delete(id); applyToolUnlocks();
         if (!u.circular) {
           // a gaveta onde o material foi guardado abre sozinha para o inspetor conferir
-          document.querySelectorAll('.drawer').forEach((d, k2) => {
-            if (d.style.display === 'none') return;
+          document.querySelectorAll('.drawer:not(.vazia)').forEach((d, k2) => {
             setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, k2 * 260);
           });
         }
@@ -13110,7 +13332,7 @@ function nextCitizen() {
         cz = makeCitizen(S.day, {
           nome: rec.nome, pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia,
           features: rec.features, returning: rec,
-          forceValid: valid, forcedDisc: valid ? null : pick(DISC_TYPES.filter(t => t !== 'luggage')),
+          forceValid: valid, forcedDisc: valid ? null : pick(discPoolForDay(S.day).filter(t => t !== 'luggage')),
         });
         cz.nervous = true;
       }
@@ -15505,9 +15727,13 @@ function renderHome() {
   let html = '';
   for (const k in S.family) {
     const m = S.family[k];
-    const cls = !m.alive ? 'fam-status-dead' : m.sick ? 'fam-status-bad' : 'fam-status-ok';
-    const st = !m.alive ? 'falecido(a)' : m.sick ? `DOENTE (${m.sickDays}d)` : m.hunger > 0 ? 'com fome' : 'bem';
-    html += `<div class="fam-row"><span>${m.nome}</span><span class="${cls}">${st}</span></div>`;
+    const cls = !m.alive ? 'fam-status-dead' : m.sick ? 'fam-status-bad' : m.hunger > 0 ? 'fam-status-fome' : 'fam-status-ok';
+    const st = !m.alive ? T('falecido(a)') : m.sick ? `${T('DOENTE')} (${m.sickDays}d)` : m.hunger > 0 ? T('com fome') : T('bem');
+    // o nome vem com o parêntese do parentesco: a folha separa os dois
+    const mm = /^(.*?)\s*\((.*)\)\s*$/.exec(m.nome);
+    const nome = mm ? mm[1] : m.nome, rel = mm ? mm[2] : '';
+    html += `<div class="fam-row"><span class="fam-nome">${nome}${rel ? `<i>${T(rel)}</i>` : ''}</span>` +
+            `<span class="${cls}">${st}</span></div>`;
   }
   $('family-status').innerHTML = html;
 
@@ -15520,30 +15746,41 @@ function renderHome() {
   $('home-events').innerHTML = evHtml;
 
   // orçamento
+  const aluguel = S.day >= 31 ? 25 : 15;
   $('home-budget').innerHTML =
-    `<div class="row"><span>Saldo</span><span>${MOEDA} ${S.money}</span></div>` +
-    `<div class="row"><span>Aluguel (descontado à noite)</span><span>${MOEDA} ${S.day >= 31 ? 25 : 15}</span></div>`;
+    `<div class="row"><span>${T('Saldo em caixa')}</span><span>${MOEDA} ${S.money}</span></div>` +
+    `<div class="row"><span>${T('Aluguel (descontado à noite)')}</span><span>− ${MOEDA} ${aluguel}</span></div>` +
+    `<div class="row total"><span>${T('Sobra depois da noite')}</span><span>${MOEDA} ${S.money - aluguel}</span></div>`;
 
   // loja
   const shop = $('home-shop'); shop.innerHTML = '';
-  const buyBtn = (key, label, cost) => {
+  /* as compras da manhã são CAUTELAS DE RACIONAMENTO: talões destacáveis,
+     com número de série e o valor impresso. Gastas, ficam carimbadas. */
+  const buyBtn = (key, label, cost, serie) => {
     const b = document.createElement('button');
-    b.textContent = `${label} — ${MOEDA} ${cost}`;
+    b.className = 'cautela';
+    const usada = !!morningPurchases[key];
+    b.innerHTML = `<i>${T('CAUTELA')} Nº ${serie == null ? '—' : serie}</i><b>${T(label)}</b><u>${MOEDA} ${cost}</u>`;
+    if (usada) { b.classList.add('usada'); b.disabled = true; }
     b.onclick = () => {
       if (morningPurchases[key]) return;
-      if (S.money < cost) { b.textContent = 'SEM SALDO'; setTimeout(() => b.textContent = `${label} — ${MOEDA} ${cost}`, 900); return; }
-      S.money -= cost; morningPurchases[key] = true; b.disabled = true; renderHome();
+      if (S.money < cost) {
+        b.classList.add('semsaldo');
+        setTimeout(() => b.classList.remove('semsaldo'), 900);
+        return;
+      }
+      S.money -= cost; morningPurchases[key] = true; sfxTool('paper'); renderHome();
     };
     shop.appendChild(b);
   };
-  buyBtn('comida', 'Comida p/ família', COSTS.comida);
-  buyBtn('aquecimento', 'Aquecimento', COSTS.aquecimento);
+  buyBtn('comida', 'Comida para a família', COSTS.comida, 4);
+  buyBtn('aquecimento', 'Carvão para o fogão', COSTS.aquecimento, 9);
   for (const k in S.family) {
     const m = S.family[k];
-    if (m.alive && m.sick) buyBtn('remedio_' + k, `Remédio (${m.nome.split(' ')[0]})`, COSTS.remedio);
+    if (m.alive && m.sick) buyBtn('remedio_' + k, `${T('Remédio para')} ${m.nome.split(' ')[0].replace(',', '')}`, COSTS.remedio, 17);
   }
   // calibração do mercador (dia 38+)
-  if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (mercado negro)', 40);
+  if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (sem recibo)', 40, '—');
   if (morningPurchases.calib) S.bioCalibrated = true;
 
   drawHomeScene();
@@ -15972,7 +16209,15 @@ $('btn-scan-pulse').onclick = () => scan('pulse');
 $('btn-scan-bio').onclick = () => scan('bio');
 $('btn-approve').onclick = () => decide('approve');
 $('btn-reject').onclick = () => decide('reject');
-$('btn-detain').onclick = () => decide('detain');
+$('btn-detain').onclick = () => {
+  if (!toolReady('detain')) {   // apertar um botão morto também é informação
+    sfx('buzz');
+    const ib = $('inspect-bar');
+    if (ib) { ib.textContent = T('O botão não tem fio. A ordem de detenção ainda não chegou ao posto.'); setTimeout(() => { if (ib.textContent.startsWith(T('O botão não tem fio'))) ib.textContent = ''; }, 2600); }
+    return;
+  }
+  decide('detain');
+};
 $('btn-restart').onclick = () => { location.reload(); };
 
 /* ícones de instrumento das ferramentas (desenhados, não emoji feio) */
@@ -16810,11 +17055,14 @@ function buildTextures() {
     }
     grain(x, 0.06);
   });
-  TEX.ceil = mk(64, 64, (x) => { // reboco escuro do teto (usado pelo ceiling casting)
-    base(x, '#17130d');
+  TEX.ceil = mk(64, 64, (x) => { // reboco do teto (usado pelo ceiling casting e pelo 3D)
+    /* Era #17130d: preto demais. Um teto que não reflete NADA vira um vazio
+       no terço superior da tela e a casa parece um galpão. Reboco velho é
+       escuro, mas continua sendo reboco — pega a luz da lâmpada. */
+    base(x, '#2a2318');
     x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 2;                 // frisos/vigas fracas
     for (const gy of [0, 32]) { x.beginPath(); x.moveTo(0, gy); x.lineTo(64, gy); x.stroke(); }
-    x.fillStyle = 'rgba(236,240,246,.03)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
+    x.fillStyle = 'rgba(236,240,246,.07)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
     for (let i = 0; i < 4; i++) { x.fillStyle = `rgba(30,24,16,${.2 + rnd() * .2})`; x.fillRect(rnd() * 56, rnd() * 60, 6 + rnd() * 12, 2 + rnd() * 3); } // manchas de umidade
     crack(x, 22, 10, 8, 1.2); crack(x, 44, 40, 6, 0.5);
     grain(x, 0.05);
@@ -18086,7 +18334,11 @@ function gl3Init() {
   renderer.setPixelRatio(1);
   renderer.outputEncoding = THREE.sRGBEncoding;
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x060504, 0.13);    // a escuridão da casa come o fundo
+  /* A casa é escura de propósito, mas escuro não é o mesmo que ILEGÍVEL: com
+     0.13 de névoa e 55% de ambiente o corredor virava um túnel preto onde o
+     chão ocupava meia tela e nada mais se lia. A dose certa deixa a planta
+     visível e continua engolindo o fundo. */
+  scene.fog = new THREE.FogExp2(0x070605, 0.105);   // a escuridão da casa come o fundo
   scene.background = new THREE.Color(0x060504);
   const cam = new THREE.PerspectiveCamera(66, 1, .05, 60);
 
@@ -18129,7 +18381,7 @@ function gl3Init() {
   scene.add(floor);
   const ctx2 = tex(TEX.ceil); ctx2.wrapS = ctx2.wrapT = THREE.RepeatWrapping; ctx2.repeat.set(CUR.w, CUR.h);
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(CUR.w, CUR.h), new THREE.MeshLambertMaterial({ map: ctx2 }));
-  ceil.rotation.x = Math.PI / 2; ceil.position.set(CUR.w / 2, 1, CUR.h / 2);
+  ceil.rotation.x = Math.PI / 2; ceil.position.set(CUR.w / 2, .92, CUR.h / 2);   // pé-direito baixo de bloco popular
   scene.add(ceil);
 
   // ---- MÓVEIS COMPOSTOS: cada peça é um conjunto de volumes de verdade ----
@@ -18288,12 +18540,12 @@ function gl3Init() {
   // ---- LUZ: ambiente fraca + lâmpadas quentes + a lanterna do inspetor ----
   // Decaimento físico (decay 2) estoura o que está perto; usamos decay 1 com
   // alcance curto: a luz cai rápido mas não queima a parede em que encostamos.
-  scene.add(new THREE.AmbientLight(0x3a3426, .55));
+  scene.add(new THREE.AmbientLight(0x453d2c, .72));   // ambiente quente de lâmpada fraca
   const lamps = [];
   for (const e of ENTS) {
     if (!e.glowWarm || lamps.length >= 12) continue;
     const L = new THREE.PointLight(0xe8be78, .8, 6.5, 1);
-    L.position.set(e.x, .84, e.y);
+    L.position.set(e.x, .80, e.y);
     scene.add(L); lamps.push({ L, x: e.x, y: e.y, base: .8 });
   }
   // globo visível da lâmpada (senão a luz vem do nada)
@@ -18301,11 +18553,11 @@ function gl3Init() {
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0xf6e0a8 });
   for (const l of lamps) {
     const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-    bulb.position.set(l.x, .84, l.y); scene.add(bulb);
+    bulb.position.set(l.x, .80, l.y); scene.add(bulb);
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .16, 4), new THREE.MeshBasicMaterial({ color: 0x15130d }));
-    cord.position.set(l.x, .93, l.y); scene.add(cord);
+    cord.position.set(l.x, .87, l.y); scene.add(cord);
   }
-  const lantern = new THREE.PointLight(0xcfc09a, .42, 3.4, 1);
+  const lantern = new THREE.PointLight(0xcfc09a, .56, 4.6, 1);   // a luz que o próprio corpo carrega
   scene.add(lantern);
 
   // luz azulada da TV, pulsando (a mãe assiste no escuro)
@@ -18331,7 +18583,7 @@ function renderHouse3() {
       GL.renderer.setSize(w, h, false);
       GL.cam.aspect = w / h; GL.cam.updateProjectionMatrix();
     }
-    const eye = .52 + (HOUSE.bobY || 0) * .0022;
+    const eye = .58 + (HOUSE.bobY || 0) * .0022;   // olho de gente em pé, quase no forro
     GL.cam.position.set(HOUSE.x, eye, HOUSE.y);
     const ty = eye + Math.tan((HOUSE.pitch || 0) * .012);
     GL.cam.lookAt(HOUSE.x + Math.cos(HOUSE.ang), ty, HOUSE.y + Math.sin(HOUSE.ang));

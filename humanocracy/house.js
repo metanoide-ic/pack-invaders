@@ -620,11 +620,14 @@ function buildTextures() {
     }
     grain(x, 0.06);
   });
-  TEX.ceil = mk(64, 64, (x) => { // reboco escuro do teto (usado pelo ceiling casting)
-    base(x, '#17130d');
+  TEX.ceil = mk(64, 64, (x) => { // reboco do teto (usado pelo ceiling casting e pelo 3D)
+    /* Era #17130d: preto demais. Um teto que não reflete NADA vira um vazio
+       no terço superior da tela e a casa parece um galpão. Reboco velho é
+       escuro, mas continua sendo reboco — pega a luz da lâmpada. */
+    base(x, '#2a2318');
     x.strokeStyle = 'rgba(0,0,0,.45)'; x.lineWidth = 2;                 // frisos/vigas fracas
     for (const gy of [0, 32]) { x.beginPath(); x.moveTo(0, gy); x.lineTo(64, gy); x.stroke(); }
-    x.fillStyle = 'rgba(236,240,246,.03)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
+    x.fillStyle = 'rgba(236,240,246,.07)'; x.fillRect(0, 1, 64, 1); x.fillRect(0, 33, 64, 1);
     for (let i = 0; i < 4; i++) { x.fillStyle = `rgba(30,24,16,${.2 + rnd() * .2})`; x.fillRect(rnd() * 56, rnd() * 60, 6 + rnd() * 12, 2 + rnd() * 3); } // manchas de umidade
     crack(x, 22, 10, 8, 1.2); crack(x, 44, 40, 6, 0.5);
     grain(x, 0.05);

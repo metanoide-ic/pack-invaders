@@ -1102,6 +1102,18 @@ function openLifeline() {
 
 /* ---------- GERAÇÃO DE CIDADÃOS ---------- */
 const DISC_TYPES = ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction', 'luggage'];
+/* Que TIPO de fraude o mundo produz em cada altura da campanha. Nos primeiros
+   dias só o que se vê a olho nu com o que está sobre a mesa: data vencida,
+   nome trocado, número que não bate. Foto divergente exige olhar de perto
+   (lupa, dia 3); contradição exige interrogatório fechado; bagagem exige
+   autorização de revista (dia 7). Pedir ao jogador que ache o que ele ainda
+   não tem como achar é a definição de dificuldade injusta. */
+function discPoolForDay(day) {
+  if (day <= 2) return ['expired', 'nameMismatch', 'numberMismatch'];
+  if (day <= 4) return ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch'];
+  if (day <= 6) return ['expired', 'nameMismatch', 'numberMismatch', 'wrongSeal', 'invalidCity', 'photoMismatch', 'sexMismatch', 'contradiction'];
+  return DISC_TYPES;
+}
 
 function fullName(pais, sexo) {
   const c = COUNTRIES[pais];
@@ -1198,9 +1210,15 @@ function makeCitizen(day, opts) {
   if (opts.forceValid || opts.encounter) { if (opts.forcedDisc) cz.isForger = true; }
   else if (opts.forcedDisc) { cz.isForger = true; }
   else {
-    const pAlt = Math.min(.10 + day * .004, .3);
+    /* RAMPA DOS PRIMEIROS DIAS. O dia 1 ensina: ler, comparar, carimbar. Um
+       único papel vencido é toda a dificuldade que ele precisa ter — punir o
+       jogador por uma divergência sutil antes de ele ter lupa, mapa ou
+       dossiê não é dificuldade, é emboscada. A partir do dia 3 a fronteira
+       volta a ser o que é. */
+    const pAlt = day <= 2 ? 0 : Math.min(.10 + day * .004, .3);
+    const pFraude = day === 1 ? .14 : day === 2 ? .18 : .22;
     if (chance(pAlt)) cz.isAlternado = true;
-    else if (chance(.22)) cz.isForger = true;
+    else if (chance(pFraude)) cz.isForger = true;
   }
   if (day >= 20 && day <= 26 && pais === 'taranstan' && chance(.5)) cz.refugee = true;
 
@@ -1214,7 +1232,7 @@ function makeCitizen(day, opts) {
     if (day >= 46) pPerfect = .95;
     if (!chance(pPerfect)) applyDisc(cz, weightedPick(w), day);
   } else if (cz.isForger) {
-    applyDisc(cz, pick(DISC_TYPES), day);
+    applyDisc(cz, pick(discPoolForDay(day)), day);
   }
   if (opts.forcedMissing) delete cz.docs[opts.forcedMissing];
 
@@ -2043,16 +2061,34 @@ function applyToolUnlocks() {
   show('inst-bio-slot', toolReady('bio'));
   show('btn-scan-bio', false);
   show('gun-obj', toolReady('gun'));
-  show('btn-detain', toolReady('detain'));   // o DET só ganha fio no dia 4
   // o tampo não mostra suporte vazio: some com a bandeja de instrumentos
   show('instruments', toolReady('pulse') || toolReady('bio'));
   const bagBtn = $('btn-exam-bag'); if (bagBtn) bagBtn.style.display = toolReady('bag') ? '' : 'none';
-  // gaveta sem nada dentro não abre — nem aparece
-  const dA = $('drawer-left'), dB = $('drawer-right');
-  const anyA = toolReady('mapa') || toolReady('lupa');
-  const anyB = toolReady('thermo') || toolReady('dossie');
-  if (dA) { dA.style.display = anyA ? '' : 'none'; if (!anyA) dA.classList.remove('open'); }
-  if (dB) { dB.style.display = anyB ? '' : 'none'; if (!anyB) dB.classList.remove('open'); }
+  /* O DET é PARTE DA MESA — ele não some, ele não tem fio. Um botão vermelho
+     morto sob a borda do balcão diz mais sobre este emprego do que um botão
+     ausente: a autoridade existe antes de a permissão chegar. */
+  const det = $('btn-detain');
+  if (det) { det.style.display = ''; det.classList.toggle('sem-fio', !toolReady('detain')); }
+  /* AS GAVETAS TAMBÉM SÃO A MESA. Nunca somem: ficam VAZIAS, com o cartão do
+     almoxarifado dentro, e o jogador entende que aquilo vai ser preenchido.
+     (Móvel que desaparece lê-se como bug — e era, para quem jogou.) */
+  const encheGaveta = (id, tem) => {
+    const d = $(id); if (!d) return;
+    d.style.display = '';
+    d.classList.toggle('vazia', !tem);
+    const tray = d.querySelector('.drawer-tray'); if (!tray) return;
+    let vaz = tray.querySelector('.dr-vazia');
+    if (!tem) {
+      if (!vaz) {
+        vaz = document.createElement('div'); vaz.className = 'dr-vazia';
+        tray.appendChild(vaz);
+      }
+      vaz.innerHTML = `<b>${T('SEM MATERIAL')}</b><span>${T('Aguardando remessa do Ministério.')}</span>`;
+      vaz.style.display = '';
+    } else if (vaz) { vaz.style.display = 'none'; }
+  };
+  encheGaveta('drawer-left', toolReady('mapa') || toolReady('lupa'));
+  encheGaveta('drawer-right', toolReady('thermo') || toolReady('dossie'));
 }
 /* a remessa do dia: ofício + o objeto novo, com a gaveta abrindo sozinha */
 function announceNewTools(after) {
@@ -2072,8 +2108,7 @@ function announceNewTools(after) {
         PENDING_TOOLS.delete(id); applyToolUnlocks();
         if (!u.circular) {
           // a gaveta onde o material foi guardado abre sozinha para o inspetor conferir
-          document.querySelectorAll('.drawer').forEach((d, k2) => {
-            if (d.style.display === 'none') return;
+          document.querySelectorAll('.drawer:not(.vazia)').forEach((d, k2) => {
             setTimeout(() => { d.classList.add('open'); sfxTool('drawer'); }, k2 * 260);
           });
         }
@@ -2843,7 +2878,7 @@ function nextCitizen() {
         cz = makeCitizen(S.day, {
           nome: rec.nome, pais: rec.pais, sexo: rec.sexo, etnia: rec.etnia,
           features: rec.features, returning: rec,
-          forceValid: valid, forcedDisc: valid ? null : pick(DISC_TYPES.filter(t => t !== 'luggage')),
+          forceValid: valid, forcedDisc: valid ? null : pick(discPoolForDay(S.day).filter(t => t !== 'luggage')),
         });
         cz.nervous = true;
       }
@@ -5238,9 +5273,13 @@ function renderHome() {
   let html = '';
   for (const k in S.family) {
     const m = S.family[k];
-    const cls = !m.alive ? 'fam-status-dead' : m.sick ? 'fam-status-bad' : 'fam-status-ok';
-    const st = !m.alive ? 'falecido(a)' : m.sick ? `DOENTE (${m.sickDays}d)` : m.hunger > 0 ? 'com fome' : 'bem';
-    html += `<div class="fam-row"><span>${m.nome}</span><span class="${cls}">${st}</span></div>`;
+    const cls = !m.alive ? 'fam-status-dead' : m.sick ? 'fam-status-bad' : m.hunger > 0 ? 'fam-status-fome' : 'fam-status-ok';
+    const st = !m.alive ? T('falecido(a)') : m.sick ? `${T('DOENTE')} (${m.sickDays}d)` : m.hunger > 0 ? T('com fome') : T('bem');
+    // o nome vem com o parêntese do parentesco: a folha separa os dois
+    const mm = /^(.*?)\s*\((.*)\)\s*$/.exec(m.nome);
+    const nome = mm ? mm[1] : m.nome, rel = mm ? mm[2] : '';
+    html += `<div class="fam-row"><span class="fam-nome">${nome}${rel ? `<i>${T(rel)}</i>` : ''}</span>` +
+            `<span class="${cls}">${st}</span></div>`;
   }
   $('family-status').innerHTML = html;
 
@@ -5253,30 +5292,41 @@ function renderHome() {
   $('home-events').innerHTML = evHtml;
 
   // orçamento
+  const aluguel = S.day >= 31 ? 25 : 15;
   $('home-budget').innerHTML =
-    `<div class="row"><span>Saldo</span><span>${MOEDA} ${S.money}</span></div>` +
-    `<div class="row"><span>Aluguel (descontado à noite)</span><span>${MOEDA} ${S.day >= 31 ? 25 : 15}</span></div>`;
+    `<div class="row"><span>${T('Saldo em caixa')}</span><span>${MOEDA} ${S.money}</span></div>` +
+    `<div class="row"><span>${T('Aluguel (descontado à noite)')}</span><span>− ${MOEDA} ${aluguel}</span></div>` +
+    `<div class="row total"><span>${T('Sobra depois da noite')}</span><span>${MOEDA} ${S.money - aluguel}</span></div>`;
 
   // loja
   const shop = $('home-shop'); shop.innerHTML = '';
-  const buyBtn = (key, label, cost) => {
+  /* as compras da manhã são CAUTELAS DE RACIONAMENTO: talões destacáveis,
+     com número de série e o valor impresso. Gastas, ficam carimbadas. */
+  const buyBtn = (key, label, cost, serie) => {
     const b = document.createElement('button');
-    b.textContent = `${label} — ${MOEDA} ${cost}`;
+    b.className = 'cautela';
+    const usada = !!morningPurchases[key];
+    b.innerHTML = `<i>${T('CAUTELA')} Nº ${serie == null ? '—' : serie}</i><b>${T(label)}</b><u>${MOEDA} ${cost}</u>`;
+    if (usada) { b.classList.add('usada'); b.disabled = true; }
     b.onclick = () => {
       if (morningPurchases[key]) return;
-      if (S.money < cost) { b.textContent = 'SEM SALDO'; setTimeout(() => b.textContent = `${label} — ${MOEDA} ${cost}`, 900); return; }
-      S.money -= cost; morningPurchases[key] = true; b.disabled = true; renderHome();
+      if (S.money < cost) {
+        b.classList.add('semsaldo');
+        setTimeout(() => b.classList.remove('semsaldo'), 900);
+        return;
+      }
+      S.money -= cost; morningPurchases[key] = true; sfxTool('paper'); renderHome();
     };
     shop.appendChild(b);
   };
-  buyBtn('comida', 'Comida p/ família', COSTS.comida);
-  buyBtn('aquecimento', 'Aquecimento', COSTS.aquecimento);
+  buyBtn('comida', 'Comida para a família', COSTS.comida, 4);
+  buyBtn('aquecimento', 'Carvão para o fogão', COSTS.aquecimento, 9);
   for (const k in S.family) {
     const m = S.family[k];
-    if (m.alive && m.sick) buyBtn('remedio_' + k, `Remédio (${m.nome.split(' ')[0]})`, COSTS.remedio);
+    if (m.alive && m.sick) buyBtn('remedio_' + k, `${T('Remédio para')} ${m.nome.split(' ')[0].replace(',', '')}`, COSTS.remedio, 17);
   }
   // calibração do mercador (dia 38+)
-  if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (mercado negro)', 40);
+  if (S.flags.calibOferta && !S.bioCalibrated) buyBtn('calib', 'Calibração do detector (sem recibo)', 40, '—');
   if (morningPurchases.calib) S.bioCalibrated = true;
 
   drawHomeScene();
@@ -5705,7 +5755,15 @@ $('btn-scan-pulse').onclick = () => scan('pulse');
 $('btn-scan-bio').onclick = () => scan('bio');
 $('btn-approve').onclick = () => decide('approve');
 $('btn-reject').onclick = () => decide('reject');
-$('btn-detain').onclick = () => decide('detain');
+$('btn-detain').onclick = () => {
+  if (!toolReady('detain')) {   // apertar um botão morto também é informação
+    sfx('buzz');
+    const ib = $('inspect-bar');
+    if (ib) { ib.textContent = T('O botão não tem fio. A ordem de detenção ainda não chegou ao posto.'); setTimeout(() => { if (ib.textContent.startsWith(T('O botão não tem fio'))) ib.textContent = ''; }, 2600); }
+    return;
+  }
+  decide('detain');
+};
 $('btn-restart').onclick = () => { location.reload(); };
 
 /* ícones de instrumento das ferramentas (desenhados, não emoji feio) */

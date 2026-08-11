@@ -23,7 +23,11 @@ function gl3Init() {
   renderer.setPixelRatio(1);
   renderer.outputEncoding = THREE.sRGBEncoding;
   const scene = new THREE.Scene();
-  scene.fog = new THREE.FogExp2(0x060504, 0.13);    // a escuridão da casa come o fundo
+  /* A casa é escura de propósito, mas escuro não é o mesmo que ILEGÍVEL: com
+     0.13 de névoa e 55% de ambiente o corredor virava um túnel preto onde o
+     chão ocupava meia tela e nada mais se lia. A dose certa deixa a planta
+     visível e continua engolindo o fundo. */
+  scene.fog = new THREE.FogExp2(0x070605, 0.105);   // a escuridão da casa come o fundo
   scene.background = new THREE.Color(0x060504);
   const cam = new THREE.PerspectiveCamera(66, 1, .05, 60);
 
@@ -66,7 +70,7 @@ function gl3Init() {
   scene.add(floor);
   const ctx2 = tex(TEX.ceil); ctx2.wrapS = ctx2.wrapT = THREE.RepeatWrapping; ctx2.repeat.set(CUR.w, CUR.h);
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(CUR.w, CUR.h), new THREE.MeshLambertMaterial({ map: ctx2 }));
-  ceil.rotation.x = Math.PI / 2; ceil.position.set(CUR.w / 2, 1, CUR.h / 2);
+  ceil.rotation.x = Math.PI / 2; ceil.position.set(CUR.w / 2, .92, CUR.h / 2);   // pé-direito baixo de bloco popular
   scene.add(ceil);
 
   // ---- MÓVEIS COMPOSTOS: cada peça é um conjunto de volumes de verdade ----
@@ -225,12 +229,12 @@ function gl3Init() {
   // ---- LUZ: ambiente fraca + lâmpadas quentes + a lanterna do inspetor ----
   // Decaimento físico (decay 2) estoura o que está perto; usamos decay 1 com
   // alcance curto: a luz cai rápido mas não queima a parede em que encostamos.
-  scene.add(new THREE.AmbientLight(0x3a3426, .55));
+  scene.add(new THREE.AmbientLight(0x453d2c, .72));   // ambiente quente de lâmpada fraca
   const lamps = [];
   for (const e of ENTS) {
     if (!e.glowWarm || lamps.length >= 12) continue;
     const L = new THREE.PointLight(0xe8be78, .8, 6.5, 1);
-    L.position.set(e.x, .84, e.y);
+    L.position.set(e.x, .80, e.y);
     scene.add(L); lamps.push({ L, x: e.x, y: e.y, base: .8 });
   }
   // globo visível da lâmpada (senão a luz vem do nada)
@@ -238,11 +242,11 @@ function gl3Init() {
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0xf6e0a8 });
   for (const l of lamps) {
     const bulb = new THREE.Mesh(bulbGeo, bulbMat);
-    bulb.position.set(l.x, .84, l.y); scene.add(bulb);
+    bulb.position.set(l.x, .80, l.y); scene.add(bulb);
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .16, 4), new THREE.MeshBasicMaterial({ color: 0x15130d }));
-    cord.position.set(l.x, .93, l.y); scene.add(cord);
+    cord.position.set(l.x, .87, l.y); scene.add(cord);
   }
-  const lantern = new THREE.PointLight(0xcfc09a, .42, 3.4, 1);
+  const lantern = new THREE.PointLight(0xcfc09a, .56, 4.6, 1);   // a luz que o próprio corpo carrega
   scene.add(lantern);
 
   // luz azulada da TV, pulsando (a mãe assiste no escuro)
@@ -268,7 +272,7 @@ function renderHouse3() {
       GL.renderer.setSize(w, h, false);
       GL.cam.aspect = w / h; GL.cam.updateProjectionMatrix();
     }
-    const eye = .52 + (HOUSE.bobY || 0) * .0022;
+    const eye = .58 + (HOUSE.bobY || 0) * .0022;   // olho de gente em pé, quase no forro
     GL.cam.position.set(HOUSE.x, eye, HOUSE.y);
     const ty = eye + Math.tan((HOUSE.pitch || 0) * .012);
     GL.cam.lookAt(HOUSE.x + Math.cos(HOUSE.ang), ty, HOUSE.y + Math.sin(HOUSE.ang));
