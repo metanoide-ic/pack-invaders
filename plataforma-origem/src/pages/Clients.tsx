@@ -7,7 +7,8 @@ import { PlanModal } from '@/components/PlanModal';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
-import type { BillingMethod, Client, WeeklyPlan } from '@/lib/types';
+import { AREA_LABEL, RAIO_PADRAO_KM } from '@/lib/adsPlaybook';
+import type { BillingMethod, Client, ServiceArea, WeeklyPlan } from '@/lib/types';
 
 const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
@@ -15,7 +16,7 @@ const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
 const blank = {
   name: '', contact: '', instagram: '', monthlyFee: '', color: AVATAR_COLORS[0],
   briefing: '', city: '', whatsappGroup: '',
-  billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5', document: '',
+  billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5', document: '', serviceArea: 'cidade' as ServiceArea, serviceRadiusKm: '',
   weekly: {} as WeeklyPlan,
 };
 
@@ -38,6 +39,7 @@ export default function Clients() {
       briefing: c.briefing ?? '', city: c.city ?? '', whatsappGroup: c.whatsappGroup ?? '',
       billingWhatsapp: c.billingWhatsapp ?? '', billingMethod: c.billingMethod ?? 'pix',
       billingDay: (c.billingDay ?? 5).toString(), document: c.document ?? '',
+      serviceArea: c.serviceArea ?? 'cidade', serviceRadiusKm: (c.serviceRadiusKm ?? '').toString(),
       weekly: { ...(c.weeklyPlan ?? {}) },
     });
     setOpen(true);
@@ -66,6 +68,10 @@ export default function Clients() {
       billingMethod: form.billingMethod,
       billingDay: Math.min(Math.max(parseInt(form.billingDay, 10) || 5, 1), 28),
       document: form.document.trim() || undefined,
+      serviceArea: form.serviceArea,
+      serviceRadiusKm: form.serviceArea === 'raio'
+        ? (parseInt(form.serviceRadiusKm, 10) || RAIO_PADRAO_KM)
+        : undefined,
       weeklyPlan: form.weekly,
     };
     if (editing) updateClient(editing.id, payload);
@@ -203,6 +209,27 @@ export default function Clients() {
                   <Field label="CPF ou CNPJ" hint="Necessário para o gateway emitir Pix e boleto.">
                     <Input value={form.document} onChange={(e) => setForm({ ...form, document: e.target.value })} placeholder="00.000.000/0001-00" inputMode="numeric" />
                   </Field>
+                </div>
+              </div>
+              <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+                <div className="mb-1 text-xs font-medium uppercase tracking-wide text-white/45">Área de atendimento</div>
+                <p className="mb-3 text-xs text-white/40">
+                  Até onde este cliente consegue atender. O tráfego pago usa isso para avisar
+                  quando o anúncio está sendo entregue para quem não tem como comprar.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Alcance">
+                    <Select value={form.serviceArea} onChange={(e) => setForm({ ...form, serviceArea: e.target.value as ServiceArea })}>
+                      {(Object.keys(AREA_LABEL) as ServiceArea[]).map((a) => (
+                        <option key={a} value={a}>{AREA_LABEL[a]}</option>
+                      ))}
+                    </Select>
+                  </Field>
+                  {form.serviceArea === 'raio' && (
+                    <Field label="Raio em km" hint="Pizzaria e salão costumam ficar entre 5 e 10 km.">
+                      <Input value={form.serviceRadiusKm} onChange={(e) => setForm({ ...form, serviceRadiusKm: e.target.value })} placeholder="8" inputMode="numeric" />
+                    </Field>
+                  )}
                 </div>
               </div>
             </>

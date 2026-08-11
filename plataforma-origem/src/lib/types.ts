@@ -44,6 +44,10 @@ export interface Client {
   billingDay?: number;
   /** CPF ou CNPJ, exigido pelo gateway para emitir Pix e boleto. */
   document?: string;
+  /** Até onde o cliente atende. Base da conferência de região no tráfego. */
+  serviceArea?: ServiceArea;
+  /** Raio de atendimento em km, quando a área é por raio. */
+  serviceRadiusKm?: number;
   createdAt: number;
 }
 
@@ -271,6 +275,21 @@ export interface CampaignDay {
  */
 export type CampaignFunnel = 'topo' | 'meio' | 'fundo';
 
+/**
+ * Até onde o negócio atende de fato. É o que impede uma pizzaria de bairro
+ * de ter o anúncio entregue para o Brasil inteiro.
+ */
+export type ServiceArea = 'raio' | 'cidade' | 'regiao' | 'estado' | 'nacional';
+
+/** Segmentação geográfica lida da plataforma de anúncios. */
+export interface GeoReal {
+  paises: string[];
+  estados: string[];
+  cidades: Array<{ nome: string; raioKm?: number }>;
+  /** Quando a plataforma não devolveu nada utilizável. */
+  desconhecido?: boolean;
+}
+
 export interface Campaign {
   id: ID;
   clientId?: ID;
@@ -294,6 +313,14 @@ export interface Campaign {
   targetRoas?: number;
   /** Endereço de destino do anúncio, para montar as UTMs. */
   landingUrl?: string;
+  /** Alcance geográfico combinado para esta campanha. */
+  geoMode?: ServiceArea;
+  /** Cidades, estados ou ponto central, conforme o alcance. */
+  geoPlaces?: string;
+  /** Raio em km, quando o alcance é por raio. */
+  geoRadiusKm?: number;
+  /** O que a plataforma de anúncios está realmente segmentando. */
+  geoReal?: GeoReal;
   /** Últimos dias de números, do mais antigo para o mais recente. */
   history?: CampaignDay[];
   /** Marca que o investimento já virou despesa no caixa. */

@@ -92,6 +92,11 @@ secret e refresh token de um projeto no Google Cloud com a API do Google Ads
 liberada. O TikTok pede só o ID do anunciante e um token, gerados no TikTok for
 Business.
 
+O conector também lê a **segmentação geográfica** que está no ar em cada
+conjunto da campanha na Meta. É assim que a plataforma consegue avisar quando o
+anúncio de um negócio local está sendo entregue para muito além da área de
+atendimento, mesmo quando o combinado no papel estava certo.
+
 Não é preciso configurar as três. Se só a Meta estiver ligada, as campanhas da
 Meta sincronizam normalmente e a plataforma avisa quais ficaram sem retorno.
 

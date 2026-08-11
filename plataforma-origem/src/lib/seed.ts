@@ -13,11 +13,12 @@ export function seedData(): WorkspaceData {
     {
       id: uid('cli'), name: 'Café Matriz', color: '#f59e0b', instagram: 'cafematriz', monthlyFee: 2600,
       city: 'Volta Redonda', whatsappGroup: 'Café Matriz x Origem',
+      serviceArea: 'raio', serviceRadiusKm: 8,
       briefing: 'Cafeteria artesanal no centro, com grãos próprios e brunch aos fins de semana. Público 25 a 45 anos. Tom acolhedor e direto, valoriza o preparo e o ambiente.',
       weeklyPlan: { 1: ['Vídeo'], 3: ['Post'], 5: ['Carrossel'] },
       createdAt: Date.now(),
     },
-    { id: uid('cli'), name: 'Vértice Imóveis', color: '#06b6d4', contact: 'marketing@vertice.com', instagram: 'verticeimoveis', monthlyFee: 6900, createdAt: Date.now() },
+    { id: uid('cli'), name: 'Vértice Imóveis', color: '#06b6d4', contact: 'marketing@vertice.com', instagram: 'verticeimoveis', monthlyFee: 6900, city: 'Volta Redonda', serviceArea: 'regiao', createdAt: Date.now() },
     { id: uid('cli'), name: 'Academia Pulse', color: '#10b981', instagram: 'pulsefit', monthlyFee: 3200, createdAt: Date.now() },
   ];
 
@@ -168,6 +169,7 @@ export function seedData(): WorkspaceData {
       id: uid('cmp'), name: 'Vendas — lançamentos Vértice', clientId: vertice.id, platform: 'Meta',
       objective: 'Leads', status: 'ativa', dailyBudget: 60, startDate: daysFromNow(-12),
       funnel: 'topo', targetCpa: 12,
+      geoMode: 'regiao', geoPlaces: 'Volta Redonda, Barra Mansa, Resende',
       landingUrl: 'https://verticeimoveis.com.br/lancamentos',
       notes: 'Público de 25 a 55 anos na região, criativos de tour do apartamento.',
       metrics: { spend: 720, impressions: 148320, reach: 61240, clicks: 3140, results: 87, frequency: 2.4, updatedAt: Date.now() },
@@ -179,6 +181,9 @@ export function seedData(): WorkspaceData {
       id: uid('cmp'), name: 'Movimento de loja — Café Matriz', clientId: cafe.id, platform: 'Meta',
       objective: 'Mensagens', status: 'ativa', dailyBudget: 25, startDate: daysFromNow(-24),
       funnel: 'topo', targetCpa: 4,
+      geoMode: 'raio', geoPlaces: 'Volta Redonda', geoRadiusKm: 8,
+      // O combinado é raio de 8 km, mas o gerenciador está com o país inteiro.
+      geoReal: { paises: ['BR'], estados: [], cidades: [] },
       metrics: { spend: 600, impressions: 141870, reach: 32910, clicks: 1964, results: 141, frequency: 4.3, updatedAt: Date.now() },
       history: [
         ...serie(9, () => ({ spend: 25, impressions: 5800, clicks: 105, results: 7 })),

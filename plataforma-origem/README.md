@@ -36,6 +36,12 @@ lugar, três ferramentas do dia a dia da equipe:
   configurada não atrapalha as outras: sincroniza o que dá e avisa o resto. Um
   clique lança o investimento como despesa de Mídia no caixa (só para quem tem
   acesso ao Financeiro).
+- **Região de entrega** — cada cliente tem uma área de atendimento (raio em km,
+  cidade, região, estado ou país) e cada campanha nasce com a região dele já
+  preenchida. O Conector lê a segmentação que está de fato no ar na Meta e
+  compara com a área do cliente, então uma pizzaria de bairro entregando para o
+  Brasil inteiro vira alerta crítico, mesmo que no papel estivesse combinado
+  certo.
 - **Diagnóstico de campanha** — a plataforma lê os números e diz o que fazer:
   verba que não permite sair do aprendizado, criativo cansando o público, queda
   de CTR antes da frequência estourar, custo acima da meta, dinheiro saindo sem

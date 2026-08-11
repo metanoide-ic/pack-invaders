@@ -217,7 +217,60 @@ async function metricasMeta(c) {
     revenue: somarValores(linha.action_values),
     frequency: Number(linha.frequency) || 0,
     history,
+    geo: await geoMeta(c.externalId, token),
   };
+}
+
+/**
+ * Lê a segmentação geográfica que está de fato no ar, juntando o que cada
+ * conjunto da campanha tem. É o que permite flagrar a pizzaria de bairro
+ * sendo entregue para o Brasil inteiro: o combinado pode estar certo no
+ * papel e errado no gerenciador.
+ */
+async function geoMeta(campanhaId, token) {
+  try {
+    const url = new URL(`${API_META}/${campanhaId}/adsets`);
+    url.searchParams.set('access_token', token);
+    url.searchParams.set('fields', 'targeting{geo_locations}');
+    url.searchParams.set('limit', '50');
+
+    const res = await fetch(url);
+    const json = await res.json();
+    if (!res.ok) return { paises: [], estados: [], cidades: [], desconhecido: true };
+
+    const paises = new Set();
+    const estados = new Set();
+    const cidades = new Map();
+
+    for (const conjunto of json.data || []) {
+      const g = conjunto.targeting?.geo_locations;
+      if (!g) continue;
+      for (const p of g.countries || []) paises.add(p);
+      for (const r of g.regions || []) estados.add(r.name || r.key);
+      for (const cid of g.cities || []) {
+        const nome = cid.name || String(cid.key);
+        // A Meta devolve o raio na unidade escolhida no gerenciador.
+        const raio = cid.radius !== undefined
+          ? (cid.distance_unit === 'mile' ? Math.round(Number(cid.radius) * 1.609) : Number(cid.radius))
+          : undefined;
+        // Entre conjuntos, o maior raio é o que manda no alcance real.
+        const atual = cidades.get(nome);
+        if (!atual || (raio !== undefined && (atual.raioKm ?? 0) < raio)) {
+          cidades.set(nome, { nome, raioKm: raio });
+        }
+      }
+    }
+
+    const vazio = paises.size === 0 && estados.size === 0 && cidades.size === 0;
+    return {
+      paises: [...paises],
+      estados: [...estados],
+      cidades: [...cidades.values()],
+      ...(vazio ? { desconhecido: true } : {}),
+    };
+  } catch {
+    return { paises: [], estados: [], cidades: [], desconhecido: true };
+  }
 }
 
 /** O Google devolve token de acesso curto a partir do refresh token. */

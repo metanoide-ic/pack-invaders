@@ -9,11 +9,11 @@ import { derived, syncCampaignMetrics, postSpendToFinance } from '@/lib/ads';
 import { CampaignDoctor, CampaignFindings, SeverityDot } from '@/components/CampaignDoctor';
 import { diagnosticar, severidadeGeral } from '@/lib/adsDoctor';
 import {
-  FUNNEL_LABEL, OBJETIVO_COM_ROAS, PLATFORM_RULES,
-  buildUtm, playbook, verbaMinimaRecomendada,
+  AREA_LABEL, AREA_ORDEM, FUNNEL_LABEL, OBJETIVO_COM_ROAS, PLATFORM_RULES, RAIO_PADRAO_KM,
+  buildUtm, descreverGeo, playbook, verbaMinimaRecomendada,
 } from '@/lib/adsPlaybook';
 import { money, cn, todayISO } from '@/lib/utils';
-import type { AdPlatform, Campaign, CampaignFunnel, CampaignObjective, CampaignStatus } from '@/lib/types';
+import type { AdPlatform, Campaign, CampaignFunnel, CampaignObjective, CampaignStatus, ServiceArea } from '@/lib/types';
 
 const PLATFORMS: AdPlatform[] = ['Meta', 'Google', 'TikTok'];
 const OBJECTIVES: CampaignObjective[] = ['Reconhecimento', 'Tráfego', 'Engajamento', 'Mensagens', 'Leads', 'Vendas'];
@@ -29,6 +29,7 @@ const blank = {
   status: 'ativa' as CampaignStatus, dailyBudget: '', totalBudget: '',
   startDate: todayISO(), endDate: '', externalId: '', notes: '',
   funnel: 'topo' as CampaignFunnel, targetCpa: '', targetRoas: '', landingUrl: '',
+  geoMode: 'cidade' as ServiceArea, geoPlaces: '', geoRadiusKm: '',
 };
 
 const num = (v: string) => (v ? parseFloat(v.replace(',', '.')) : undefined);
@@ -64,7 +65,20 @@ export default function Traffic() {
     return { ...t, ...derived({ ...t, reach: 0, results: t.results }) };
   }, [visible]);
 
-  function openNew() { setEditing(null); setForm(blank); setOpen(true); }
+  function openNew() {
+    setEditing(null);
+    // Já nasce com a região do cliente selecionado: o padrão certo evita o
+    // erro mais caro, que é subir a campanha aberta para o país inteiro.
+    const c = clientFilter ? clientMap[clientFilter] : undefined;
+    setForm({
+      ...blank,
+      clientId: clientFilter,
+      geoMode: c?.serviceArea ?? blank.geoMode,
+      geoPlaces: c?.city ?? '',
+      geoRadiusKm: (c?.serviceRadiusKm ?? '').toString(),
+    });
+    setOpen(true);
+  }
   function openEdit(c: Campaign) {
     setEditing(c);
     setForm({
@@ -73,6 +87,8 @@ export default function Traffic() {
       startDate: c.startDate ?? '', endDate: c.endDate ?? '', externalId: c.externalId ?? '', notes: c.notes ?? '',
       funnel: c.funnel ?? 'topo', targetCpa: c.targetCpa?.toString() ?? '',
       targetRoas: c.targetRoas?.toString() ?? '', landingUrl: c.landingUrl ?? '',
+      geoMode: c.geoMode ?? 'cidade', geoPlaces: c.geoPlaces ?? '',
+      geoRadiusKm: (c.geoRadiusKm ?? '').toString(),
     });
     setOpen(true);
   }
@@ -86,6 +102,10 @@ export default function Traffic() {
       externalId: form.externalId.trim() || undefined, notes: form.notes.trim() || undefined,
       funnel: form.funnel, targetCpa: num(form.targetCpa), targetRoas: num(form.targetRoas),
       landingUrl: form.landingUrl.trim() || undefined,
+      geoMode: form.geoMode, geoPlaces: form.geoPlaces.trim() || undefined,
+      geoRadiusKm: form.geoMode === 'raio'
+        ? (parseInt(form.geoRadiusKm, 10) || RAIO_PADRAO_KM)
+        : undefined,
     };
     if (editing) updateCampaign(editing.id, payload);
     else addCampaign(payload);
@@ -93,6 +113,15 @@ export default function Traffic() {
   }
 
   const guia = useMemo(() => playbook(form.platform, form.objective), [form.platform, form.objective]);
+  const alertaArea = useMemo(() => {
+    const c = form.clientId ? clientMap[form.clientId] : undefined;
+    if (!c) return '';
+    if (!c.serviceArea) return `${c.name} está sem área de atendimento cadastrada. Preencha no cadastro do cliente para a plataforma conseguir conferir.`;
+    if (AREA_ORDEM[form.geoMode] > AREA_ORDEM[c.serviceArea]) {
+      return `${c.name} atende ${AREA_LABEL[c.serviceArea].toLowerCase()}. Entregar para ${AREA_LABEL[form.geoMode].toLowerCase()} gasta verba com quem não tem como comprar.`;
+    }
+    return '';
+  }, [form.clientId, form.geoMode, clientMap]);
   const utm = useMemo(
     () => buildUtm({ landingUrl: form.landingUrl, platform: form.platform, name: form.name, objective: form.objective }),
     [form.landingUrl, form.platform, form.name, form.objective],
@@ -187,7 +216,7 @@ export default function Traffic() {
                 {visible.map((c) => {
                   const d = derived(c.metrics);
                   const client = c.clientId ? clientMap[c.clientId] : undefined;
-                  const achados = diagnosticar(c);
+                  const achados = diagnosticar(c, c.clientId ? clientMap[c.clientId] : undefined);
                   const pior = severidadeGeral(achados);
                   const resumo = achados.find((a) => a.severidade === pior);
                   return (
@@ -249,7 +278,18 @@ export default function Traffic() {
           </Field>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Cliente">
-              <Select value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+              <Select value={form.clientId} onChange={(e) => {
+                const c = clientMap[e.target.value];
+                setForm({
+                  ...form,
+                  clientId: e.target.value,
+                  ...(c ? {
+                    geoMode: c.serviceArea ?? form.geoMode,
+                    geoPlaces: c.city ?? form.geoPlaces,
+                    geoRadiusKm: (c.serviceRadiusKm ?? '').toString(),
+                  } : {}),
+                });
+              }}>
                 <option value="">—</option>
                 {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
               </Select>
@@ -302,6 +342,40 @@ export default function Traffic() {
             </div>
           </div>
 
+          <div className="rounded-xl border border-line bg-white/[0.02] p-4">
+            <div className="mb-1 text-xs font-medium uppercase tracking-wide text-white/45">Onde vai entregar</div>
+            <p className="mb-3 text-xs text-white/40">{guia.regiao}</p>
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Alcance">
+                <Select value={form.geoMode} onChange={(e) => setForm({ ...form, geoMode: e.target.value as ServiceArea })}>
+                  {(Object.keys(AREA_LABEL) as ServiceArea[]).map((a) => (
+                    <option key={a} value={a}>{AREA_LABEL[a]}</option>
+                  ))}
+                </Select>
+              </Field>
+              {form.geoMode === 'raio' ? (
+                <>
+                  <Field label="Cidade ou endereço central">
+                    <Input value={form.geoPlaces} onChange={(e) => setForm({ ...form, geoPlaces: e.target.value })} placeholder="Volta Redonda, RJ" />
+                  </Field>
+                  <Field label="Raio em km">
+                    <Input value={form.geoRadiusKm} onChange={(e) => setForm({ ...form, geoRadiusKm: e.target.value })} placeholder="8" inputMode="numeric" />
+                  </Field>
+                </>
+              ) : form.geoMode !== 'nacional' ? (
+                <Field label="Cidades ou estados" hint="Separe por vírgula.">
+                  <Input value={form.geoPlaces} onChange={(e) => setForm({ ...form, geoPlaces: e.target.value })} placeholder="Volta Redonda, Barra Mansa" />
+                </Field>
+              ) : null}
+            </div>
+            {alertaArea && <p className="mt-3 text-xs text-amber-300">{alertaArea}</p>}
+            {editing?.geoReal && (
+              <p className="mt-3 text-xs text-white/45">
+                No ar agora, segundo a {editing.platform}: {descreverGeo(editing.geoReal)}.
+              </p>
+            )}
+          </div>
+
           <Field label="Página de destino" hint={utm ? 'Link com UTMs pronto abaixo.' : 'Para gerar as UTMs e medir de onde vem cada venda.'}>
             <Input value={form.landingUrl} onChange={(e) => setForm({ ...form, landingUrl: e.target.value })} placeholder="https://cliente.com.br/promocao" />
           </Field>
@@ -330,7 +404,7 @@ export default function Traffic() {
             </dl>
           </div>
 
-          {editing && <CampaignFindings campaign={editing} />}
+          {editing && <CampaignFindings campaign={editing} client={editing.clientId ? clientMap[editing.clientId] : undefined} />}
 
           <Field label="Observações">
             <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Público, criativos, testes em andamento." />

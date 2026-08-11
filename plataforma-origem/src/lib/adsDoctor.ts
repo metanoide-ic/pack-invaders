@@ -1,6 +1,9 @@
-import type { Campaign, CampaignDay } from './types';
+import type { Campaign, CampaignDay, Client } from './types';
 import { derived } from './ads';
-import { FREQUENCIA_LIMITE, PLATFORM_RULES, verbaParaAprender } from './adsPlaybook';
+import {
+  AREA_LABEL, AREA_ORDEM, FREQUENCIA_LIMITE, PLATFORM_RULES,
+  abrangenciaReal, descreverGeo, verbaParaAprender,
+} from './adsPlaybook';
 
 /**
  * Diagnóstico das campanhas.
@@ -32,6 +35,8 @@ export const PESO: Record<Severidade, number> = { critico: 0, atencao: 1, oportu
  * vem antes de tudo; ajuste fino de verba vem por último.
  */
 const ORDEM = [
+  'regiao-ampla',
+  'regiao-real-ampla',
   'sem-resultado',
   'converte-mal',
   'cpa-alto',
@@ -45,6 +50,10 @@ const ORDEM = [
   'gasto-lento',
   'cpa-acima',
   'verba-minima',
+  'regiao-divergente',
+  'raio-grande',
+  'sem-regiao',
+  'sem-area-cliente',
   'sem-id',
   'sem-meta',
   'escalar',
@@ -89,7 +98,11 @@ function diasEntre(de: string, ate: string): number {
  * Analisa uma campanha e devolve os achados, do mais grave para o menos.
  * `hoje` é injetável para o resultado não depender da data em que roda.
  */
-export function diagnosticar(c: Campaign, hoje = new Date().toISOString().slice(0, 10)): Achado[] {
+export function diagnosticar(
+  c: Campaign,
+  client?: Client,
+  hoje = new Date().toISOString().slice(0, 10),
+): Achado[] {
   const achados: Achado[] = [];
   const m = c.metrics;
   const d = derived(m);
@@ -301,7 +314,77 @@ export function diagnosticar(c: Campaign, hoje = new Date().toISOString().slice(
     });
   }
 
-  // ---------- 12. Sem como acompanhar ----------
+  // ---------- 12. Região: o dinheiro está indo para quem pode comprar? ----------
+  const areaCliente = client?.serviceArea;
+  const real = abrangenciaReal(c.geoReal);
+  const declarada = c.geoMode;
+
+  if (rodando) {
+    if (!areaCliente) {
+      achados.push({
+        id: 'sem-area-cliente',
+        severidade: 'atencao',
+        titulo: 'Área de atendimento do cliente não cadastrada',
+        detalhe: `Sem saber até onde ${client?.name ?? 'o cliente'} atende, não dá para conferir se o anúncio está indo para quem consegue comprar.`,
+        acao: 'Preencher a área de atendimento no cadastro do cliente. É o que evita entregar uma pizzaria de bairro para o Brasil inteiro.',
+      });
+    }
+
+    // O que a plataforma está realmente segmentando manda mais que o combinado.
+    if (real && areaCliente && AREA_ORDEM[real] > AREA_ORDEM[areaCliente]) {
+      achados.push({
+        id: 'regiao-real-ampla',
+        severidade: 'critico',
+        titulo: 'Anúncio entregando fora da área de atendimento',
+        detalhe: `A ${c.platform} está entregando para ${descreverGeo(c.geoReal)}, mas ${client?.name ?? 'o cliente'} atende ${AREA_LABEL[areaCliente].toLowerCase()}. Boa parte da verba está sendo gasta com gente que não tem como comprar.`,
+        acao: `Fechar a segmentação no gerenciador para ${AREA_LABEL[areaCliente].toLowerCase()} e conferir se o resultado por real melhora.`,
+      });
+    } else if (!real && declarada && areaCliente && AREA_ORDEM[declarada] > AREA_ORDEM[areaCliente]) {
+      achados.push({
+        id: 'regiao-ampla',
+        severidade: 'critico',
+        titulo: 'Região da campanha maior que a área de atendimento',
+        detalhe: `A campanha está combinada para ${AREA_LABEL[declarada].toLowerCase()}, mas ${client?.name ?? 'o cliente'} atende ${AREA_LABEL[areaCliente].toLowerCase()}.`,
+        acao: `Reduzir para ${AREA_LABEL[areaCliente].toLowerCase()} antes de mexer em qualquer outra coisa.`,
+      });
+    }
+
+    if (!declarada && !real) {
+      achados.push({
+        id: 'sem-regiao',
+        severidade: 'critico',
+        titulo: 'Campanha sem região definida',
+        detalhe: 'Não há registro de onde esta campanha entrega. Campanha sem região costuma sair para o país inteiro, e a verba se dilui em quem nunca vai comprar.',
+        acao: 'Definir a região aqui e conferir no gerenciador se bate com o que está no ar.',
+      });
+    }
+
+    // Combinado x realidade: os dois preenchidos e diferentes.
+    if (real && declarada && AREA_ORDEM[real] !== AREA_ORDEM[declarada]) {
+      achados.push({
+        id: 'regiao-divergente',
+        severidade: 'atencao',
+        titulo: 'Região no ar diferente da combinada',
+        detalhe: `Aqui está registrado ${AREA_LABEL[declarada].toLowerCase()}, mas a plataforma está entregando para ${descreverGeo(c.geoReal)}.`,
+        acao: 'Alinhar os dois: ou corrigir no gerenciador, ou atualizar o registro se a mudança foi proposital.',
+      });
+    }
+
+    // Raio bem maior que o do cliente.
+    const raioCampanha = c.geoRadiusKm ?? c.geoReal?.cidades.find((x) => x.raioKm)?.raioKm;
+    const raioCliente = client?.serviceRadiusKm;
+    if (raioCampanha && raioCliente && raioCampanha > raioCliente * 2) {
+      achados.push({
+        id: 'raio-grande',
+        severidade: 'atencao',
+        titulo: 'Raio maior que o de atendimento',
+        detalhe: `A campanha alcança ${raioCampanha} km e o cliente atende ${raioCliente} km. Quem está entre os dois vê o anúncio e não consegue ser atendido.`,
+        acao: `Fechar o raio em ${raioCliente} km. Se a ideia é testar alcance maior, fazer numa campanha separada para dar para comparar.`,
+      });
+    }
+  }
+
+  // ---------- 13. Sem como acompanhar ----------
   if (rodando && !c.externalId) {
     achados.push({
       id: 'sem-id',
@@ -312,7 +395,7 @@ export function diagnosticar(c: Campaign, hoje = new Date().toISOString().slice(
     });
   }
 
-  // ---------- 13. Sem meta definida ----------
+  // ---------- 14. Sem meta definida ----------
   if (rodando && !c.targetCpa) {
     achados.push({
       id: 'sem-meta',

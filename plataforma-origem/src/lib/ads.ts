@@ -72,6 +72,7 @@ export async function syncCampaignMetrics(): Promise<SyncResult> {
         // Histórico só é sobrescrito quando vem: plataforma que não devolve
         // o dia a dia não pode apagar o que já foi guardado.
         ...(Array.isArray(item.history) && item.history.length ? { history: item.history } : {}),
+        ...(item.geo ? { geoReal: item.geo } : {}),
       });
       atualizadas++;
     }

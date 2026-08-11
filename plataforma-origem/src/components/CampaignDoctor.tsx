@@ -16,7 +16,9 @@ export function SeverityDot({ sev, title }: { sev: Severidade; title?: string })
 }
 
 function Item({ achado, campanha }: { achado: Achado; campanha?: string }) {
-  const [aberto, setAberto] = useState(false);
+  // Achado crítico já abre explicado: a equipe precisa do porquê na hora,
+  // não depois de caçar onde clicar.
+  const [aberto, setAberto] = useState(achado.severidade === 'critico');
   const meta = SEV_META[achado.severidade];
   return (
     <div className="border-t border-line first:border-t-0">
@@ -50,7 +52,8 @@ export function CampaignDoctor({ campaigns, clients }: { campaigns: Campaign[]; 
     const lista: Array<{ achado: Achado; campanha: string }> = [];
     for (const c of campaigns) {
       const nome = c.clientId && clients[c.clientId] ? `${c.name} · ${clients[c.clientId].name}` : c.name;
-      for (const a of diagnosticar(c)) lista.push({ achado: a, campanha: nome });
+      const client = c.clientId ? clients[c.clientId] : undefined;
+      for (const a of diagnosticar(c, client)) lista.push({ achado: a, campanha: nome });
     }
     return lista;
   }, [campaigns, clients]);
@@ -100,8 +103,8 @@ export function CampaignDoctor({ campaigns, clients }: { campaigns: Campaign[]; 
 }
 
 /** Diagnóstico de uma campanha só, dentro do modal. */
-export function CampaignFindings({ campaign }: { campaign: Campaign }) {
-  const achados = useMemo(() => diagnosticar(campaign), [campaign]);
+export function CampaignFindings({ campaign, client }: { campaign: Campaign; client?: Client }) {
+  const achados = useMemo(() => diagnosticar(campaign, client), [campaign, client]);
   if (achados.length === 0) return null;
   return (
     <div className="overflow-hidden rounded-xl border border-line">
