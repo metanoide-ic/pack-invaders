@@ -3,31 +3,36 @@
 Plataforma interna da agência **Origem — Comunicação & Marketing**. Reúne, em um só
 lugar, três ferramentas do dia a dia da equipe:
 
-- 🗂️ **Quadros** — gestão de tarefas no estilo Trello (colunas + arrastar-e-soltar,
+- **Quadros** — gestão de tarefas no estilo Trello (colunas + arrastar-e-soltar,
   etiquetas, prioridade, prazo, checklist e vínculo com cliente).
-- ✅ **Checklist de Posts** — pipeline arrastável da _ideia_ à _veiculação_
+- **Checklist de Posts** — pipeline arrastável da _ideia_ à _veiculação_
   (ideia → roteiro → produção → edição → aprovação → alteração → agendado →
   publicado) **ou visão de calendário mensal**, com **copy gerada por IA**, upload
   de mídia, responsável, checklist e o loop de aprovação (aprovar → publica;
   reprovar → vai para _Alteração_ com cada pedido registrado separadamente).
-- 🎬 **Edição de Vídeo** — pipeline próprio (briefing → gravação → decupagem →
+- **Edição de Vídeo** — pipeline próprio (briefing → gravação → decupagem →
   edição → revisão → aprovação → alteração → entregue) com links de material,
   checklist e pedidos de alteração empilhados.
-- 📚 **Biblioteca de Postagens** — modelos/legendas reutilizáveis; use como novo
+- **Biblioteca de Postagens** — modelos/legendas reutilizáveis; use como novo
   post em um clique.
-- ⚡ **Automações** — ao mover um post para _Aprovação_, a plataforma gera a copy e
+- **Automações** — ao mover um post para _Aprovação_, a plataforma gera a copy e
   envia ao grupo do WhatsApp ("Segue aqui para aprovação"). Aprovou → publica no
   feed e no story. Não gostou → volta para _Alteração_. Tudo fica no log.
-- 🔔 **Notificações** — avisa (no app e via notificação do navegador/PWA) quando um
+- **Notificações** — avisa (no app e via notificação do navegador/PWA) quando um
   post precisa ir hoje e ainda não foi.
-- 🤖 **IA** — gerador de copy grátis/ilimitado por template, ou conecte uma IA
+- **IA** — gerador de copy grátis/ilimitado por template, ou conecte uma IA
   externa (endpoint compatível com OpenAI: Groq, OpenRouter, OpenAI, etc.).
   Planejamento mensal automático por cliente (cadência semanal + datas
   comemorativas, com post extra para todos nas datas universais).
-- 👥 **Equipe & Clientes** — todos no mesmo workflow; responsáveis atribuíveis em
+- **Equipe & Clientes** — todos no mesmo workflow; responsáveis atribuíveis em
   tarefas, posts e vídeos; página de cada cliente com posts, tarefas, vídeos e
   financeiro consolidados. Cadastro de clientes com briefing e cadência semanal.
-- 💰 **Financeiro** — receitas, despesas, saldo e "a receber", com gráfico de
+- **Tráfego pago** — campanhas por cliente (Meta, Google, TikTok) com objetivo,
+  verba diária ou total, situação e período. Traz os números reais da Meta pelo
+  Conector (investido, impressões, alcance, cliques e resultados) e calcula CTR,
+  CPC, CPM e custo por resultado. Um clique lança o investimento como despesa de
+  Mídia no caixa (só para quem tem acesso ao Financeiro).
+- **Financeiro** — receitas, despesas, saldo e "a receber", com gráfico de
   evolução e visão por cliente. **Acesso restrito** a contas com permissão especial
   (o Painel e os cards de clientes também ocultam valores para quem não tem acesso).
 

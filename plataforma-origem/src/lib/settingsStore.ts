@@ -21,6 +21,9 @@ export interface Settings {
   // --- Notificações ---
   notifyEnabled: boolean;
 
+  /** Endereço do Conector Orikay, para recursos que precisam de resposta. */
+  connectorUrl: string;
+
   // --- Cobrança ---
   /** Chave Pix da agência (vai na mensagem de cobrança). */
   pixKey: string;
@@ -47,6 +50,7 @@ const defaults: Settings = {
   whatsappGroup: '',
   sendOnApprovalStage: true,
   notifyEnabled: false,
+  connectorUrl: '',
   pixKey: '',
   contadorWhatsapp: '',
   autoBilling: true,

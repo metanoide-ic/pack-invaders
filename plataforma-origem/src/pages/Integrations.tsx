@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Sparkles, MessageCircle, Instagram, Bell, ShieldCheck, Check, Info, Receipt } from 'lucide-react';
+import { Sparkles, MessageCircle, Instagram, Bell, ShieldCheck, Check, Info, Receipt, Plug } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Field, Input, Textarea, Avatar, Badge } from '@/components/ui';
 import { useSettings } from '@/lib/settingsStore';
@@ -121,6 +121,18 @@ export default function Integrations() {
             Publicar automaticamente quando aprovado
           </label>
           <Note>Postar no Instagram exige a Graph API oficial (conta Profissional + Meta). O webhook entrega os dados prontos para seu fluxo publicar — do jeito seguro, sem risco às contas.</Note>
+        </Section>
+
+        {/* Conector */}
+        <Section icon={<Plug size={20} />} title="Conector Orikay" tint="#7c5cff"
+          desc="Programa local que executa WhatsApp, Instagram e tráfego sem depender de outros serviços.">
+          <Field label="Endereço do conector" hint="Aparece na tela do conector, normalmente http://localhost:8787/webhook">
+            <Input value={s.connectorUrl} onChange={(e) => s.update({ connectorUrl: e.target.value })} placeholder="http://localhost:8787/webhook" />
+          </Field>
+          <Note>
+            Cole o mesmo endereço nos campos de WhatsApp e de publicação abaixo. Este
+            campo é o que permite trazer os números das campanhas de tráfego.
+          </Note>
         </Section>
 
         {/* Cobrança */}

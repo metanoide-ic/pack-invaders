@@ -223,6 +223,47 @@ export interface AutomationEvent {
   createdAt: number;
 }
 
+// -------------------------- Tráfego pago ------------------------------
+export type AdPlatform = 'Meta' | 'Google' | 'TikTok';
+export type CampaignStatus = 'planejada' | 'ativa' | 'pausada' | 'encerrada';
+export type CampaignObjective =
+  | 'Reconhecimento'
+  | 'Tráfego'
+  | 'Engajamento'
+  | 'Mensagens'
+  | 'Leads'
+  | 'Vendas';
+
+export interface CampaignMetrics {
+  spend: number;
+  impressions: number;
+  reach: number;
+  clicks: number;
+  /** Conversões, leads ou mensagens, conforme o objetivo. */
+  results: number;
+  updatedAt?: number;
+}
+
+export interface Campaign {
+  id: ID;
+  clientId?: ID;
+  name: string;
+  platform: AdPlatform;
+  objective: CampaignObjective;
+  status: CampaignStatus;
+  dailyBudget?: number;
+  totalBudget?: number;
+  startDate?: string;
+  endDate?: string;
+  /** ID da campanha na plataforma de anúncios, usado para sincronizar. */
+  externalId?: string;
+  notes?: string;
+  metrics: CampaignMetrics;
+  /** Marca que o investimento já virou despesa no caixa. */
+  postedToFinance?: boolean;
+  createdAt: number;
+}
+
 export interface WorkspaceData {
   clients: Client[];
   boards: Board[];
@@ -232,4 +273,5 @@ export interface WorkspaceData {
   library: LibraryItem[];
   events: AutomationEvent[];
   charges: Charge[];
+  campaigns: Campaign[];
 }

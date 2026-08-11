@@ -41,7 +41,9 @@ export default function Auth() {
     setTimeout(() => {
       setLoading(false);
       if (!res.ok) return setError(res.error || 'Algo deu errado.');
-      navigate('/app');
+      // Vai direto ao quadro de posts: passar por /app deixaria um redirect
+      // pendente que engole o primeiro clique no menu.
+      navigate('/app/posts', { replace: true });
     }, 300);
   }
 

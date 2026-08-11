@@ -45,6 +45,22 @@ Detalhe importante: o Instagram só aceita imagem que esteja numa **URL
 pública**. Imagem colada direto na plataforma não serve para a publicação
 automática — use um link (Drive público, site, storage) no campo de mídia.
 
+### Tráfego pago
+Serve para o botão **Sincronizar números** da aba Tráfego trazer investimento,
+impressões, alcance, cliques e resultados direto da Meta, sem digitar nada.
+
+Precisa de dois dados, do mesmo app da Meta usado no Instagram (basta a
+permissão `ads_read`):
+
+- **ID da conta de anúncios** — aparece no Gerenciador de Anúncios
+  (https://adsmanager.facebook.com), no formato `act_1234567890`.
+- **Token de acesso** — pode ser o mesmo token do Instagram, desde que o app
+  tenha `ads_read`.
+
+Na plataforma, cada campanha precisa ter o **ID na Meta** preenchido (o número
+da campanha no Gerenciador). Só as campanhas da Meta com esse ID são
+sincronizadas; as de Google e TikTok continuam com os números digitados à mão.
+
 ## Perguntas comuns
 
 **Preciso deixar aberto?** Sim, enquanto quiser que as ações saiam

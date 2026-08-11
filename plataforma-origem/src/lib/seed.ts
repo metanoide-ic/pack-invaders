@@ -1,4 +1,4 @@
-import type { Board, Card, Client, LibraryItem, Post, Transaction, VideoProject, WorkspaceData } from './types';
+import type { Board, Campaign, Card, Client, LibraryItem, Post, Transaction, VideoProject, WorkspaceData } from './types';
 import { uid } from './utils';
 
 function daysFromNow(n: number): string {
@@ -159,5 +159,27 @@ export function seedData(): WorkspaceData {
     },
   ];
 
-  return { clients, boards, transactions, posts, videos, library, events: [], charges: [] };
+  const campaigns: Campaign[] = [
+    {
+      id: uid('cmp'), name: 'Vendas — lançamentos Vértice', clientId: vertice.id, platform: 'Meta',
+      objective: 'Leads', status: 'ativa', dailyBudget: 60, startDate: daysFromNow(-12),
+      notes: 'Público de 25 a 55 anos na região, criativos de tour do apartamento.',
+      metrics: { spend: 720, impressions: 148320, reach: 61240, clicks: 3140, results: 87, updatedAt: Date.now() },
+      createdAt: Date.now(),
+    },
+    {
+      id: uid('cmp'), name: 'Movimento de loja — Café Matriz', clientId: cafe.id, platform: 'Meta',
+      objective: 'Mensagens', status: 'ativa', dailyBudget: 25, startDate: daysFromNow(-6),
+      metrics: { spend: 150, impressions: 41870, reach: 22910, clicks: 964, results: 41, updatedAt: Date.now() },
+      createdAt: Date.now(),
+    },
+    {
+      id: uid('cmp'), name: 'Reconhecimento — Studio Aurora', clientId: aurora.id, platform: 'Google',
+      objective: 'Reconhecimento', status: 'planejada', totalBudget: 900, startDate: daysFromNow(3),
+      metrics: { spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 },
+      createdAt: Date.now(),
+    },
+  ];
+
+  return { clients, boards, transactions, posts, videos, library, events: [], charges: [], campaigns };
 }

@@ -1,5 +1,4 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
-import { AnimatePresence } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { useAuth } from '@/lib/authStore';
 import { AppShell } from '@/components/AppShell';
@@ -13,6 +12,7 @@ import Posts from '@/pages/Posts';
 import Videos from '@/pages/Videos';
 import Library from '@/pages/Library';
 import Automations from '@/pages/Automations';
+import Traffic from '@/pages/Traffic';
 import Clients from '@/pages/Clients';
 import ClientDetail from '@/pages/ClientDetail';
 import Team from '@/pages/Team';
@@ -51,10 +51,9 @@ export default function App() {
   const currentId = useAuth((s) => s.currentId);
 
   return (
-    <AnimatePresence mode="wait">
-      <Routes location={location} key={location.pathname.split('/')[1] || 'root'}>
-        <Route path="/" element={currentId ? <Navigate to="/app" replace /> : <Landing />} />
-        <Route path="/entrar" element={currentId ? <Navigate to="/app" replace /> : <Auth />} />
+    <Routes location={location}>
+        <Route path="/" element={currentId ? <Navigate to="/app/posts" replace /> : <Landing />} />
+        <Route path="/entrar" element={currentId ? <Navigate to="/app/posts" replace /> : <Auth />} />
 
         {/* O quadro de posts é a tela principal da plataforma. */}
         <Route path="/app" element={<Navigate to="/app/posts" replace />} />
@@ -63,6 +62,7 @@ export default function App() {
         <Route path="/app/quadros/:boardId" element={<Protected><BoardView /></Protected>} />
         <Route path="/app/posts" element={<Protected><Posts /></Protected>} />
         <Route path="/app/videos" element={<Protected><Videos /></Protected>} />
+        <Route path="/app/trafego" element={<Protected><Traffic /></Protected>} />
         <Route path="/app/biblioteca" element={<Protected><Library /></Protected>} />
         <Route path="/app/automacoes" element={<Protected><Automations /></Protected>} />
         <Route path="/app/clientes" element={<Protected><Clients /></Protected>} />
@@ -73,7 +73,6 @@ export default function App() {
         <Route path="/app/config" element={<Protected><Settings /></Protected>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </AnimatePresence>
+    </Routes>
   );
 }

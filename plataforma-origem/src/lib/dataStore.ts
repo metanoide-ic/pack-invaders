@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import type {
   AutomationEvent,
   Board,
+  Campaign,
   Card,
   Charge,
   Client,
@@ -27,6 +28,7 @@ interface DataState {
   library: LibraryItem[];
   events: AutomationEvent[];
   charges: Charge[];
+  campaigns: Campaign[];
   seeded: boolean;
 
   loadDemo: () => void;
@@ -90,6 +92,11 @@ interface DataState {
   addEvent: (e: Omit<AutomationEvent, 'id' | 'createdAt'>) => void;
   clearEvents: () => void;
 
+  // Tráfego pago
+  addCampaign: (c: Omit<Campaign, 'id' | 'createdAt' | 'metrics'> & { metrics?: Campaign['metrics'] }) => void;
+  updateCampaign: (id: string, patch: Partial<Campaign>) => void;
+  removeCampaign: (id: string) => void;
+
   // Cobranças
   upsertCharges: (list: Charge[]) => void;
   updateCharge: (id: string, patch: Partial<Charge>) => void;
@@ -98,7 +105,7 @@ interface DataState {
 
 const empty = {
   clients: [], boards: [], transactions: [], posts: [],
-  videos: [], library: [], events: [], charges: [],
+  videos: [], library: [], events: [], charges: [], campaigns: [],
 };
 
 export const useData = create<DataState>()(
@@ -374,6 +381,24 @@ export const useData = create<DataState>()(
           events: [{ ...e, id: uid('ev'), createdAt: Date.now() }, ...s.events].slice(0, 200),
         })),
       clearEvents: () => set({ events: [] }),
+
+      // ---------- Tráfego pago ----------
+      addCampaign: (c) =>
+        set((s) => ({
+          campaigns: [
+            {
+              ...c,
+              id: uid('camp'),
+              createdAt: Date.now(),
+              metrics: c.metrics ?? { spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 },
+            },
+            ...s.campaigns,
+          ],
+        })),
+      updateCampaign: (id, patch) =>
+        set((s) => ({ campaigns: s.campaigns.map((c) => (c.id === id ? { ...c, ...patch } : c)) })),
+      removeCampaign: (id) =>
+        set((s) => ({ campaigns: s.campaigns.filter((c) => c.id !== id) })),
 
       // ---------- Cobranças ----------
       upsertCharges: (list) =>

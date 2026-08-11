@@ -1,0 +1,251 @@
+import { useMemo, useState } from 'react';
+import { Plus, Megaphone, Trash2, Pencil, RefreshCw, Loader2, ArrowDownToLine } from 'lucide-react';
+import { PageHeader } from '@/components/PageHeader';
+import { Button, Field, Input, Textarea, Select, Modal, Badge, EmptyState, Stat } from '@/components/ui';
+import { useData } from '@/lib/dataStore';
+import { useAuth } from '@/lib/authStore';
+import { useClientMap } from '@/lib/hooks';
+import { derived, syncCampaignMetrics, postSpendToFinance } from '@/lib/ads';
+import { money, cn, todayISO } from '@/lib/utils';
+import type { AdPlatform, Campaign, CampaignObjective, CampaignStatus } from '@/lib/types';
+
+const PLATFORMS: AdPlatform[] = ['Meta', 'Google', 'TikTok'];
+const OBJECTIVES: CampaignObjective[] = ['Reconhecimento', 'Tráfego', 'Engajamento', 'Mensagens', 'Leads', 'Vendas'];
+const STATUS_META: Record<CampaignStatus, { label: string; color: string }> = {
+  planejada: { label: 'Planejada', color: '#94a3b8' },
+  ativa: { label: 'Ativa', color: '#34d399' },
+  pausada: { label: 'Pausada', color: '#f59e0b' },
+  encerrada: { label: 'Encerrada', color: '#7c5cff' },
+};
+
+const blank = {
+  name: '', clientId: '', platform: 'Meta' as AdPlatform, objective: 'Vendas' as CampaignObjective,
+  status: 'ativa' as CampaignStatus, dailyBudget: '', totalBudget: '',
+  startDate: todayISO(), endDate: '', externalId: '', notes: '',
+};
+
+const num = (v: string) => (v ? parseFloat(v.replace(',', '.')) : undefined);
+const int = (n: number) => new Intl.NumberFormat('pt-BR').format(Math.round(n));
+
+export default function Traffic() {
+  const { campaigns, clients, addCampaign, updateCampaign, removeCampaign } = useData();
+  const canFinance = !!useAuth((s) => s.current()?.canFinance);
+  const clientMap = useClientMap();
+
+  const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<Campaign | null>(null);
+  const [form, setForm] = useState(blank);
+  const [clientFilter, setClientFilter] = useState('');
+  const [syncing, setSyncing] = useState(false);
+  const [msg, setMsg] = useState('');
+
+  const visible = useMemo(
+    () => (clientFilter ? campaigns.filter((c) => c.clientId === clientFilter) : campaigns),
+    [campaigns, clientFilter],
+  );
+
+  const totals = useMemo(() => {
+    const t = visible.reduce(
+      (a, c) => ({
+        spend: a.spend + c.metrics.spend,
+        impressions: a.impressions + c.metrics.impressions,
+        clicks: a.clicks + c.metrics.clicks,
+        results: a.results + c.metrics.results,
+      }),
+      { spend: 0, impressions: 0, clicks: 0, results: 0 },
+    );
+    return { ...t, ...derived({ ...t, reach: 0, results: t.results }) };
+  }, [visible]);
+
+  function openNew() { setEditing(null); setForm(blank); setOpen(true); }
+  function openEdit(c: Campaign) {
+    setEditing(c);
+    setForm({
+      name: c.name, clientId: c.clientId ?? '', platform: c.platform, objective: c.objective,
+      status: c.status, dailyBudget: c.dailyBudget?.toString() ?? '', totalBudget: c.totalBudget?.toString() ?? '',
+      startDate: c.startDate ?? '', endDate: c.endDate ?? '', externalId: c.externalId ?? '', notes: c.notes ?? '',
+    });
+    setOpen(true);
+  }
+  function save() {
+    if (!form.name.trim()) return;
+    const payload = {
+      name: form.name.trim(), clientId: form.clientId || undefined,
+      platform: form.platform, objective: form.objective, status: form.status,
+      dailyBudget: num(form.dailyBudget), totalBudget: num(form.totalBudget),
+      startDate: form.startDate || undefined, endDate: form.endDate || undefined,
+      externalId: form.externalId.trim() || undefined, notes: form.notes.trim() || undefined,
+    };
+    if (editing) updateCampaign(editing.id, payload);
+    else addCampaign(payload);
+    setOpen(false);
+  }
+
+  async function sincronizar() {
+    setSyncing(true);
+    const r = await syncCampaignMetrics();
+    setMsg(r.ok ? `${r.atualizadas} campanha(s) atualizada(s) com os números da Meta.` : (r.erro ?? 'Não foi possível sincronizar.'));
+    setSyncing(false);
+    setTimeout(() => setMsg(''), 7000);
+  }
+
+  return (
+    <div>
+      <PageHeader
+        title="Tráfego pago"
+        subtitle="Campanhas por cliente, com verba, resultados e investimento no caixa."
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={sincronizar} disabled={syncing}>
+              {syncing ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Sincronizar números
+            </Button>
+            <Button onClick={openNew}><Plus size={18} /> Nova campanha</Button>
+          </div>
+        }
+      />
+
+      {msg && <p className="mb-4 rounded-lg border border-line bg-white/[0.03] px-4 py-3 text-sm text-white/75">{msg}</p>}
+
+      {clients.length > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-1.5">
+          <button onClick={() => setClientFilter('')}
+            className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition', !clientFilter ? 'bg-white/10 text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}>
+            Todos os clientes
+          </button>
+          {clients.map((c) => (
+            <button key={c.id} onClick={() => setClientFilter(clientFilter === c.id ? '' : c.id)}
+              className={cn('inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', clientFilter === c.id ? 'text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
+              style={clientFilter === c.id ? { background: `${c.color}26`, boxShadow: `inset 0 0 0 1px ${c.color}66` } : undefined}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {campaigns.length === 0 ? (
+        <EmptyState icon={<Megaphone size={40} />} title="Nenhuma campanha"
+          description="Cadastre as campanhas para acompanhar verba, resultados e custo por resultado."
+          action={<Button onClick={openNew}><Plus size={18} /> Nova campanha</Button>} />
+      ) : (
+        <>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <Stat label="Investido" value={money(totals.spend)} valueColor="#f87171" />
+            <Stat label="Resultados" value={int(totals.results)} dot="#34d399" hint={totals.cpr ? `${money(totals.cpr)} por resultado` : undefined} />
+            <Stat label="Cliques" value={int(totals.clicks)} dot="#38bdf8" hint={totals.ctr ? `CTR ${totals.ctr.toFixed(2)}%` : undefined} />
+            <Stat label="Impressões" value={int(totals.impressions)} dot="#7c5cff" hint={totals.cpm ? `CPM ${money(totals.cpm)}` : undefined} />
+          </div>
+
+          <div className="card mt-4 overflow-x-auto">
+            <table className="w-full min-w-[900px] text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-[11px] uppercase tracking-wider text-white/40">
+                  <th className="px-4 py-3 font-medium">Campanha</th>
+                  <th className="px-3 py-3 font-medium">Verba</th>
+                  <th className="px-3 py-3 text-right font-medium">Investido</th>
+                  <th className="px-3 py-3 text-right font-medium">Resultados</th>
+                  <th className="px-3 py-3 text-right font-medium">Custo/result.</th>
+                  <th className="px-3 py-3 text-right font-medium">CTR</th>
+                  <th className="px-4 py-3 text-right font-medium">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-line">
+                {visible.map((c) => {
+                  const d = derived(c.metrics);
+                  const client = c.clientId ? clientMap[c.clientId] : undefined;
+                  return (
+                    <tr key={c.id} className="group">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-white">{c.name}</span>
+                          <Badge color={STATUS_META[c.status].color}>{STATUS_META[c.status].label}</Badge>
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-2 text-xs text-white/45">
+                          <span>{c.platform}</span>
+                          <span>· {c.objective}</span>
+                          {client && (
+                            <span className="inline-flex items-center gap-1">
+                              · <span className="h-1.5 w-1.5 rounded-full" style={{ background: client.color }} />{client.name}
+                            </span>
+                          )}
+                          {c.metrics.updatedAt && (
+                            <span>· números de {new Date(c.metrics.updatedAt).toLocaleDateString('pt-BR')}</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-3.5 text-xs text-white/60">
+                        {c.dailyBudget ? `${money(c.dailyBudget)}/dia` : c.totalBudget ? money(c.totalBudget) : '—'}
+                      </td>
+                      <td className="px-3 py-3.5 text-right tabular-nums text-white">{money(c.metrics.spend)}</td>
+                      <td className="px-3 py-3.5 text-right tabular-nums text-white">{int(c.metrics.results)}</td>
+                      <td className="px-3 py-3.5 text-right tabular-nums text-white/70">{d.cpr ? money(d.cpr) : '—'}</td>
+                      <td className="px-3 py-3.5 text-right tabular-nums text-white/70">{d.ctr ? `${d.ctr.toFixed(2)}%` : '—'}</td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center justify-end gap-1.5">
+                          {canFinance && c.metrics.spend > 0 && !c.postedToFinance && (
+                            <Button size="sm" variant="soft" onClick={() => postSpendToFinance(c.id)}>
+                              <ArrowDownToLine size={14} /> Lançar no caixa
+                            </Button>
+                          )}
+                          {c.postedToFinance && <span className="text-[11px] text-white/35">no caixa</span>}
+                          <button onClick={() => openEdit(c)} className="grid h-8 w-8 place-items-center rounded-lg text-white/45 transition hover:bg-white/5 hover:text-white"><Pencil size={15} /></button>
+                          <button onClick={() => removeCampaign(c.id)} className="grid h-8 w-8 place-items-center rounded-lg text-white/45 transition hover:bg-red-500/10 hover:text-red-300"><Trash2 size={15} /></button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
+
+      <Modal open={open} onClose={() => setOpen(false)} title={editing ? 'Editar campanha' : 'Nova campanha'} wide
+        footer={<><Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button><Button onClick={save}>{editing ? 'Salvar' : 'Criar'}</Button></>}>
+        <div className="space-y-4">
+          <Field label="Nome da campanha">
+            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Vendas: coleção de verão" autoFocus />
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Cliente">
+              <Select value={form.clientId} onChange={(e) => setForm({ ...form, clientId: e.target.value })}>
+                <option value="">—</option>
+                {clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </Select>
+            </Field>
+            <Field label="Plataforma">
+              <Select value={form.platform} onChange={(e) => setForm({ ...form, platform: e.target.value as AdPlatform })}>
+                {PLATFORMS.map((p) => <option key={p}>{p}</option>)}
+              </Select>
+            </Field>
+            <Field label="Objetivo">
+              <Select value={form.objective} onChange={(e) => setForm({ ...form, objective: e.target.value as CampaignObjective })}>
+                {OBJECTIVES.map((o) => <option key={o}>{o}</option>)}
+              </Select>
+            </Field>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Verba por dia"><Input value={form.dailyBudget} onChange={(e) => setForm({ ...form, dailyBudget: e.target.value })} placeholder="0,00" inputMode="decimal" /></Field>
+            <Field label="Verba total"><Input value={form.totalBudget} onChange={(e) => setForm({ ...form, totalBudget: e.target.value })} placeholder="0,00" inputMode="decimal" /></Field>
+            <Field label="Situação">
+              <Select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as CampaignStatus })}>
+                {(Object.keys(STATUS_META) as CampaignStatus[]).map((s) => <option key={s} value={s}>{STATUS_META[s].label}</option>)}
+              </Select>
+            </Field>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <Field label="Início"><Input type="date" value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} /></Field>
+            <Field label="Fim"><Input type="date" value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} /></Field>
+            <Field label="ID na Meta" hint="Para puxar os números.">
+              <Input value={form.externalId} onChange={(e) => setForm({ ...form, externalId: e.target.value })} placeholder="1203..." />
+            </Field>
+          </div>
+          <Field label="Observações">
+            <Textarea value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Público, criativos, testes em andamento." />
+          </Field>
+        </div>
+      </Modal>
+    </div>
+  );
+}

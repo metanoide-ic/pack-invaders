@@ -1,9 +1,9 @@
 import { type ReactNode, useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   LayoutDashboard, KanbanSquare, Wallet, Users, Settings, LogOut,
-  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle, Building2, Columns3,
+  Menu, X, Clapperboard, Library, Zap, Plug, Bell, AlertTriangle, Building2, Columns3, Megaphone,
 } from 'lucide-react';
 import { Logo, LogoMark } from './Logo';
 import { Avatar } from './ui';
@@ -21,6 +21,7 @@ function useNav(): NavDef[] {
     { to: '/app/quadros', label: 'Quadros', icon: Columns3 },
     { to: '/app/videos', label: 'Vídeos', icon: Clapperboard },
     { to: '/app/painel', label: 'Painel', icon: LayoutDashboard },
+    { to: '/app/trafego', label: 'Tráfego', icon: Megaphone },
     { to: '/app/biblioteca', label: 'Biblioteca', icon: Library },
     { to: '/app/automacoes', label: 'Automações', icon: Zap },
     { to: '/app/clientes', label: 'Clientes', icon: Building2 },
@@ -126,6 +127,7 @@ function UserCard() {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { pathname } = useLocation();
   return (
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-ink-900/60 p-4 backdrop-blur-xl lg:flex">
@@ -160,7 +162,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       <main className="lg:pl-64">
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
+        <motion.div key={pathname} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}
           className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           {children}
         </motion.div>

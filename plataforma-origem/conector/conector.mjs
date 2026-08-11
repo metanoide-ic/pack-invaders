@@ -29,6 +29,8 @@ const CONFIG_PADRAO = {
   evolutionApiKey: '',
   igUserId: '',
   igToken: '',
+  adAccountId: '',
+  adsToken: '',
 };
 
 function lerConfig() {
@@ -116,6 +118,52 @@ async function publicarInstagram(destino, legenda, mediaUrl) {
   if (!r2.ok) throw new Error(`Graph API (publicar): ${JSON.stringify(d2).slice(0, 200)}`);
 }
 
+/* ------------------------- Tráfego pago (Meta Ads) -------------------- */
+
+/**
+ * Busca os números das campanhas na Meta. Devolve um item por campanha,
+ * com os nomes de campo que a plataforma espera.
+ */
+async function buscarMetricas(campanhas) {
+  const token = config.adsToken || config.igToken;
+  if (!token) throw new Error('token de anúncios não configurado no conector');
+
+  const saida = [];
+  for (const c of campanhas) {
+    if (!c.externalId) continue;
+    const url = new URL(`https://graph.facebook.com/v21.0/${c.externalId}/insights`);
+    url.searchParams.set('access_token', token);
+    url.searchParams.set('fields', 'spend,impressions,reach,clicks,actions');
+    url.searchParams.set('date_preset', 'maximum');
+
+    const res = await fetch(url);
+    const json = await res.json();
+    if (!res.ok) throw new Error(`Graph API: ${JSON.stringify(json).slice(0, 180)}`);
+
+    const linha = json.data?.[0];
+    if (!linha) { saida.push({ id: c.id, spend: 0, impressions: 0, reach: 0, clicks: 0, results: 0 }); continue; }
+
+    // "Resultados" varia com o objetivo: pega a ação mais relevante disponível.
+    const acoes = linha.actions || [];
+    const prioridade = ['purchase', 'lead', 'onsite_conversion.messaging_conversation_started_7d', 'link_click'];
+    let results = 0;
+    for (const tipo of prioridade) {
+      const achou = acoes.find((a) => a.action_type === tipo);
+      if (achou) { results = Number(achou.value) || 0; break; }
+    }
+
+    saida.push({
+      id: c.id,
+      spend: Number(linha.spend) || 0,
+      impressions: Number(linha.impressions) || 0,
+      reach: Number(linha.reach) || 0,
+      clicks: Number(linha.clicks) || 0,
+      results,
+    });
+  }
+  return saida;
+}
+
 /* ------------------------- Roteamento dos eventos --------------------- */
 
 async function processar(evento) {
@@ -137,6 +185,12 @@ async function processar(evento) {
     await enviarWhatsapp(evento.numero, evento.mensagem);
     registrar('nota_fiscal', `pedido de NF de ${evento.cliente} enviado ao contador`);
     return;
+  }
+
+  if (tipo === 'metricas') {
+    const metricas = await buscarMetricas(evento.campanhas || []);
+    registrar('metricas', `${metricas.length} campanha(s) consultada(s) na Meta`);
+    return { metricas };
   }
 
   if (tipo === 'publicar') {
@@ -176,9 +230,9 @@ const servidor = createServer(async (req, res) => {
   if (url.pathname === '/webhook' && req.method === 'POST') {
     const evento = await corpo(req);
     try {
-      await processar(evento);
+      const extra = await processar(evento);
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ ok: true }));
+      return res.end(JSON.stringify({ ok: true, ...(extra || {}) }));
     } catch (e) {
       registrar(evento.tipo || 'evento', e.message, false);
       res.writeHead(200, { 'Content-Type': 'application/json' });
@@ -202,6 +256,7 @@ const servidor = createServer(async (req, res) => {
       historico,
       whatsapp: whatsappConfigurado(),
       instagram: Boolean(config.igUserId && config.igToken),
+      ads: Boolean(config.adsToken || config.igToken),
     }));
   }
 
@@ -309,6 +364,16 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
       A imagem do post precisa estar numa URL pública para o Instagram aceitar.</p>
   </div>
 
+  <div class="card">
+    <h2><span class="dot" id="da"></span> Tráfego pago (Meta Ads)</h2>
+    <div class="row">
+      <div><label>Conta de anúncios</label><input id="adAccountId" placeholder="act_123456789"></div>
+      <div><label>Token de anúncios</label><input id="adsToken" placeholder="deixe vazio para usar o token do Instagram"></div>
+    </div>
+    <p class="hint">Usado para trazer investimento, cliques e resultados das campanhas
+      para a aba Tráfego. O token precisa da permissão <b>ads_read</b>.</p>
+  </div>
+
   <button onclick="salvar()">Salvar configuração</button>
 
   <div class="card">
@@ -317,7 +382,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   </div>
 </div>
 <script>
-  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken'];
+  const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken'];
   document.getElementById('url').textContent = location.origin + '/webhook';
   document.getElementById('provedor').onchange = trocar;
   function trocar(){
@@ -331,6 +396,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     trocar();
     document.getElementById('dw').className = 'dot' + (r.whatsapp ? ' on' : '');
     document.getElementById('di').className = 'dot' + (r.instagram ? ' on' : '');
+    document.getElementById('da').className = 'dot' + (r.ads ? ' on' : '');
     const h = document.getElementById('hist');
     if (r.historico.length) {
       h.innerHTML = r.historico.map(e =>
