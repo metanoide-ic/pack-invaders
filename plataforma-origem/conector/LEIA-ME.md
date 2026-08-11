@@ -1,0 +1,63 @@
+# Conector Orikay
+
+Programa que roda no computador da agência e executa de verdade o que a
+plataforma dispara: manda as mensagens no WhatsApp (aprovação, cobrança e
+pedido de nota fiscal) e publica no Instagram (feed e story).
+
+Ele substitui o Make.com. Não precisa de conta lá, nem montar cenários.
+
+## Como usar (primeira vez)
+
+1. Instale o Node.js (se ainda não tiver): https://nodejs.org — versão LTS.
+2. Baixe esta pasta `conector` para o computador.
+3. Abra a pasta e execute:
+   - **Windows:** dois cliques em `iniciar-conector.bat`
+   - **Mac/Linux:** `bash iniciar-conector.sh` (ou `node conector.mjs`)
+4. Abra http://localhost:8787 no navegador.
+5. Preencha os dados (abaixo) e clique em **Salvar configuração**.
+6. Na plataforma, em **Integrações**, cole `http://localhost:8787/webhook`
+   nos dois campos: "Webhook de saída (WhatsApp)" e "Webhook de publicação".
+
+Depois disso, é só deixar a janela do conector aberta enquanto a equipe usa
+o Orikay. As ações aparecem na lista de atividade da própria tela.
+
+## O que preencher
+
+### WhatsApp
+Escolha um provedor e conecte o número da agência nele:
+
+- **Z-API** (https://www.z-api.io) — pago, simples: cria a instância, lê o QR
+  Code com o WhatsApp da agência e copia **instância**, **token** e
+  **Client-Token** do painel.
+- **Evolution API** (https://github.com/EvolutionAPI/evolution-api) — gratuita,
+  mas precisa ser hospedada por você: informe a **URL**, a **instância** e a
+  **API Key**.
+
+Use o botão **Enviar mensagem de teste** com o seu próprio número (com DDI,
+ex.: `5524999999999`) para confirmar antes de usar com clientes.
+
+### Instagram
+Precisa da conta como Profissional, ligada a uma Página do Facebook, e de um
+app na Meta (https://developers.facebook.com/apps/) com a permissão
+`instagram_content_publish`. Informe o **IG User ID** e o **token de acesso**.
+
+Detalhe importante: o Instagram só aceita imagem que esteja numa **URL
+pública**. Imagem colada direto na plataforma não serve para a publicação
+automática — use um link (Drive público, site, storage) no campo de mídia.
+
+## Perguntas comuns
+
+**Preciso deixar aberto?** Sim, enquanto quiser que as ações saiam
+automaticamente. Fechou, a plataforma volta a registrar como simulado.
+
+**Funciona em qualquer computador?** Sim, mas só na máquina onde ele está
+rodando. Para a equipe inteira, rode num computador que fique ligado (ou num
+servidor) e troque `localhost` pelo endereço dessa máquina na rede.
+
+**E a resposta do cliente no grupo?** O conector envia; a leitura automática
+das respostas exige um endereço público (o provedor precisa alcançar o seu
+computador). Enquanto isso, use os botões do post: Aprovado, Pediu alteração
+ou Publicamos manualmente.
+
+**Onde ficam os tokens?** No arquivo `conector.config.json`, dentro desta
+pasta, no seu computador. Não sobem para lugar nenhum.
