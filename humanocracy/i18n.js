@@ -1587,6 +1587,21 @@ const I18N_EN = {
   'Aguardando remessa do Ministério.': 'Awaiting shipment from the Ministry.',
   'O botão não tem fio. A ordem de detenção ainda não chegou ao posto.':
     'The button has no wire. The detention order has not reached the post yet.',
+  /* ---- legenda da carta ---- */
+  'LEGENDA': 'LEGEND',
+  'SITUAÇÃO DE HOJE': "TODAY'S STATUS",
+  'Limite internacional': 'International boundary',
+  'Litoral': 'Coastline',
+  'Território nacional (hachura por país)': 'National territory (hatching per country)',
+  'Entrada proibida hoje': 'Entry forbidden today',
+  'Posto de triagem': 'Screening post',
+  'Capital': 'Capital',
+  'Fronteira fechada a: ': 'Border closed to: ',
+  'Nenhuma nação interditada hoje.': 'No nation barred today.',
+  'Carta levantada em 1949 pelo Instituto Geográfico de Osteria. As fronteiras mudaram três vezes desde então; a carta, não.':
+    'Chart surveyed in 1949 by the Geographic Institute of Osteria. The borders have changed three times since; the chart has not.',
+  'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
+    'Click a country to see its cities, peoples, seal and border status.',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -3188,6 +3203,21 @@ const I18N_ES = {
   'Aguardando remessa do Ministério.': 'A la espera de remesa del Ministerio.',
   'O botão não tem fio. A ordem de detenção ainda não chegou ao posto.':
     'El botón no tiene cable. La orden de detención aún no llegó al puesto.',
+  /* ---- leyenda de la carta ---- */
+  'LEGENDA': 'LEYENDA',
+  'SITUAÇÃO DE HOJE': 'SITUACIÓN DE HOY',
+  'Limite internacional': 'Límite internacional',
+  'Litoral': 'Litoral',
+  'Território nacional (hachura por país)': 'Territorio nacional (trama por país)',
+  'Entrada proibida hoje': 'Entrada prohibida hoy',
+  'Posto de triagem': 'Puesto de triaje',
+  'Capital': 'Capital',
+  'Fronteira fechada a: ': 'Frontera cerrada a: ',
+  'Nenhuma nação interditada hoje.': 'Ninguna nación vetada hoy.',
+  'Carta levantada em 1949 pelo Instituto Geográfico de Osteria. As fronteiras mudaram três vezes desde então; a carta, não.':
+    'Carta levantada en 1949 por el Instituto Geográfico de Osteria. Las fronteras cambiaron tres veces desde entonces; la carta, no.',
+  'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
+    'Haga clic en un país para ver ciudades, pueblos, sello y estado de la frontera.',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',

@@ -3399,7 +3399,10 @@ function mapGeometry(W, H) {
       const d = Math.hypot(dx2, dy2) * wob / s2.w;
       if (d < bd) { bd = d; best = s2.i; }
     }
-    own[gy * gw + gx] = bd < 1.5 ? best : -1;   // -1 = mar
+    /* 1.5 deixava FRESTAS de mar entre vizinhos — buracos pretos no meio do
+       continente, que é o tipo de coisa que denuncia geometria gerada. 1.95
+       faz os países se encostarem de verdade e guarda o mar só para fora. */
+    own[gy * gw + gx] = bd < 1.95 ? best : -1;   // -1 = mar
   }
   MAPGEO = { W, H, step, gw, gh, own, seeds, ids, S, ox, oy };
   return MAPGEO;
@@ -3427,111 +3430,246 @@ function drawFlag(ctx, k, cx2, cy2) {
   ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(x0, y0 + fh, fw, 1.5);       // sombra do pano
   ctx.restore();
 }
+/* ============================================================
+   A CARTA DE FRONTEIRAS — uma carta GRAVADA, não um infográfico
+   ------------------------------------------------------------
+   Mapa de tinta chapada com países em cores lisas é a assinatura
+   visual de arte gerada. Uma carta de 1957 é OUTRA coisa: papel,
+   traço, hachura cruzada em ângulo diferente por país, costa
+   desenhada em linhas paralelas que se afastam do litoral,
+   graticulado, dobras de quem carrega isso na gaveta há anos.
+   Tudo aqui é desenhado com linha e ponto — nenhuma superfície
+   é preenchida de forma uniforme.
+   ============================================================ */
+function paperTint(hex, t, dark) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const pr = dark ? 96 : 214, pg = dark ? 88 : 202, pb = dark ? 66 : 166;
+  return `rgb(${Math.round(r + (pr - r) * t)},${Math.round(g + (pg - g) * t)},${Math.round(b + (pb - b) * t)})`;
+}
 function drawWorldMap() {
   const cv = $('map-canvas'); if (!cv) return;
   const ctx = cv.getContext('2d'); const W = cv.width, H = cv.height;
   const G = mapGeometry(W, H);
   const { step, gw, gh, own, seeds, ids } = G;
-  // mar de carta antiga
-  ctx.fillStyle = '#1b2620'; ctx.fillRect(0, 0, W, H);
-  const sea = ctx.createRadialGradient(W / 2, H / 2, 40, W / 2, H / 2, W * 0.62);
-  sea.addColorStop(0, '#28362e'); sea.addColorStop(1, '#161f1a');
-  ctx.fillStyle = sea; ctx.fillRect(0, 0, W, H);
-  // linhas de rumo
-  const [rcx, rcy] = [W / 2, H / 2];
-  ctx.strokeStyle = 'rgba(200,180,130,.06)'; ctx.lineWidth = 1;
-  for (let a = 0; a < 6.28; a += Math.PI / 8) { ctx.beginPath(); ctx.moveTo(rcx, rcy); ctx.lineTo(rcx + Math.cos(a) * W, rcy + Math.sin(a) * W); ctx.stroke(); }
-  // TERRA: pinta cada célula com a tinta chapada do dono
-  const cols = ids.map(k => shade(COUNTRIES[k].color, 2));
-  const colsSel = ids.map(k => shade(COUNTRIES[k].color, 26));
+  ctx.imageSmoothingEnabled = false;
+  const R = makeRng(90210);
+
+  /* ---- 1. o papel da carta ---- */
+  ctx.fillStyle = '#d5c8a4'; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 2200; i++) {                       // fibra do papel
+    const a = 0.02 + R() * 0.05;
+    ctx.fillStyle = R() < .5 ? `rgba(120,100,60,${a})` : `rgba(255,250,232,${a * 1.4})`;
+    ctx.fillRect((R() * W) | 0, (R() * H) | 0, 1, 1);
+  }
+
+  /* ---- 2. o mar: linhas paralelas finas, como água gravada ---- */
+  ctx.strokeStyle = 'rgba(70,92,104,.16)'; ctx.lineWidth = 1;
+  for (let y = 0; y < H; y += 5) {
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 8) ctx.lineTo(x, y + Math.sin((x + y) * .035) * 1.1);
+    ctx.stroke();
+  }
+
+  /* ---- 3. graticulado: meridianos e paralelos do impresso ---- */
+  ctx.strokeStyle = 'rgba(60,48,26,.12)'; ctx.lineWidth = 1;
+  for (let x = 60; x < W; x += 60) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 60; y < H; y += 60) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  /* ---- 4. a terra: cada país com sua hachura, em ângulo próprio ---- */
+  const base = ids.map(k => paperTint(COUNTRIES[k].color, .58));
+  const hatc = ids.map(k => paperTint(COUNTRIES[k].color, .12, true));
   const selIdx = MAP_SEL ? ids.indexOf(MAP_SEL) : -2;
+  const ang = ids.map((k, i) => (i * 37 % 4) * (Math.PI / 4) + .22);
+  const per = ids.map((k, i) => 3 + (i % 3));
+  const cosA = ang.map(Math.cos), sinA = ang.map(Math.sin);
   for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
     const o = own[gy * gw + gx]; if (o < 0) continue;
-    ctx.fillStyle = o === selIdx ? colsSel[o] : cols[o];
-    ctx.fillRect(gx * step, gy * step, step, step);
-  }
-  // sombra da costa no mar (uma passada deslocada)
-  ctx.fillStyle = 'rgba(0,0,0,.28)';
-  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
-    const o = own[gy * gw + gx];
-    if (o >= 0 && (own[gy * gw + gx + 1] < 0 || own[(gy + 1) * gw + gx] < 0)) ctx.fillRect(gx * step + 2, gy * step + 3, step, step);
-  }
-  // FRONTEIRAS entre países (tinta) e COSTA (tinta grossa + fio claro)
-  for (let gy = 0; gy < gh - 1; gy++) for (let gx = 0; gx < gw - 1; gx++) {
-    const o = own[gy * gw + gx], oR = own[gy * gw + gx + 1], oB = own[(gy + 1) * gw + gx];
-    if (o === oR && o === oB) continue;
-    const coast = (o < 0) !== (oR < 0) || (o < 0) !== (oB < 0);
-    if (coast) {
-      ctx.fillStyle = 'rgba(16,12,6,.85)'; ctx.fillRect(gx * step, gy * step, step, step);
-    } else if (o >= 0 && (o !== oR || o !== oB)) {
-      ctx.fillStyle = 'rgba(24,18,10,.6)'; ctx.fillRect(gx * step + 1, gy * step + 1, step - 1, step - 1);
+    const px = gx * step, py = gy * step;
+    ctx.fillStyle = base[o];
+    if (o === selIdx) ctx.fillStyle = paperTint(COUNTRIES[ids[o]].color, .34);
+    ctx.fillRect(px, py, step, step);
+    // hachura: a linha do buril, uma direção por país
+    const u = (gx * cosA[o] + gy * sinA[o]);
+    if (((u % per[o]) + per[o]) % per[o] < 1) {
+      ctx.fillStyle = hatc[o]; ctx.globalAlpha = .30;
+      ctx.fillRect(px, py, step, step); ctx.globalAlpha = 1;
     }
   }
-  // relevo: hachuras e estipulado por país (recortado pelo dono das células)
+
+  /* ---- 5. a costa: três linhas que se afastam do litoral ---- */
+  const ehLitoral = (gx, gy) => {
+    const o = own[gy * gw + gx]; if (o >= 0) return false;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = gx + dx, ny = gy + dy;
+      if (nx < 0 || ny < 0 || nx >= gw || ny >= gh) continue;
+      if (own[ny * gw + nx] >= 0) return true;
+    }
+    return false;
+  };
+  let anel = [];
+  for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) if (ehLitoral(gx, gy)) anel.push([gx, gy]);
+  const alphas = [.5, .28, .16];
+  for (let n = 0; n < 3; n++) {
+    ctx.fillStyle = `rgba(52,66,74,${alphas[n]})`;
+    for (const [gx, gy] of anel) ctx.fillRect(gx * step, gy * step, step, step);
+    // dilata o anel para a linha seguinte
+    const prox = new Set(), chave = (a, b) => a * gw + b;
+    const dentro = new Set(anel.map(([a, b]) => chave(a, b)));
+    const novo = [];
+    for (const [gx, gy] of anel) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = gx + dx, ny = gy + dy;
+      if (nx < 1 || ny < 1 || nx >= gw - 1 || ny >= gh - 1) continue;
+      if (own[ny * gw + nx] >= 0) continue;
+      const c2 = chave(nx, ny);
+      if (dentro.has(c2) || prox.has(c2)) continue;
+      prox.add(c2); novo.push([nx, ny]);
+    }
+    anel = novo;
+  }
+
+  /* ---- 6. fronteiras: traço-ponto entre países, com colarinho claro ---- */
+  for (let gy = 1; gy < gh - 1; gy++) for (let gx = 1; gx < gw - 1; gx++) {
+    const o = own[gy * gw + gx]; if (o < 0) continue;
+    const oR = own[gy * gw + gx + 1], oB = own[(gy + 1) * gw + gx];
+    if (o === oR && o === oB) continue;
+    if (oR < 0 && oB < 0) continue;                  // isso é costa, já desenhada
+    const px = gx * step, py = gy * step;
+    ctx.fillStyle = 'rgba(244,238,214,.30)';         // colarinho discreto
+    ctx.fillRect(px, py, step, step);
+    if (((gx + gy) % 9) < 7) {                       // traço-ponto do limite
+      ctx.fillStyle = 'rgba(38,26,12,.78)';
+      ctx.fillRect(px + 1, py + 1, step - 1, step - 1);
+    }
+  }
+
+  /* ---- 7. relevo: hachuras de montanha e rios ---- */
   const hr = makeRng(4242);
   for (const s2 of seeds) {
-    for (let i = 0; i < 26; i++) {
-      const hx = s2.x + (hr() - .5) * s2.w * 2.2, hy = s2.y + (hr() - .5) * s2.w * 2;
+    for (let i = 0; i < 22; i++) {
+      const hx = s2.x + (hr() - .5) * s2.w * 1.9, hy = s2.y + (hr() - .5) * s2.w * 1.7;
       const gi = ((hy / step) | 0) * gw + ((hx / step) | 0);
       if (own[gi] !== s2.i) continue;
-      if (i % 2) {
-        ctx.strokeStyle = 'rgba(30,22,12,.16)'; ctx.lineWidth = 1;
-        const len = 4 + hr() * 5;
-        ctx.beginPath(); ctx.moveTo(hx, hy); ctx.lineTo(hx + len, hy - len * .7); ctx.stroke();
-      } else {
-        ctx.fillStyle = 'rgba(255,246,214,.06)'; ctx.fillRect(hx, hy, 2, 2);
+      if (i % 3) {                                    // hachura de encosta
+        ctx.strokeStyle = 'rgba(46,32,14,.30)'; ctx.lineWidth = 1;
+        for (let j = 0; j < 3; j++) {
+          const len = 3 + hr() * 4;
+          ctx.beginPath(); ctx.moveTo(hx + j * 2, hy); ctx.lineTo(hx + j * 2 + len * .5, hy - len); ctx.stroke();
+        }
+      } else {                                        // rio
+        ctx.strokeStyle = 'rgba(58,88,104,.45)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(hx, hy);
+        let rx2 = hx, ry2 = hy;
+        for (let j = 0; j < 7; j++) { rx2 += (hr() - .5) * 9; ry2 += 5 + hr() * 5; ctx.lineTo(rx2, ry2); }
+        ctx.stroke();
       }
     }
   }
-  // interdição do dia: hachura vermelha só nas células do país banido
+
+  /* ---- 8. interdição do dia: cancelado a lápis vermelho ---- */
   for (const s2 of seeds) {
     if (!countryBannedToday(s2.k)) continue;
-    ctx.fillStyle = 'rgba(200,60,50,.4)';
+    ctx.fillStyle = 'rgba(168,44,34,.42)';
     for (let gy = 0; gy < gh; gy++) for (let gx = 0; gx < gw; gx++) {
       if (own[gy * gw + gx] !== s2.i) continue;
-      if (((gx + gy) % 5) === 0) ctx.fillRect(gx * step, gy * step, step, step);
+      if (((gx - gy) % 4) === 0) ctx.fillRect(gx * step, gy * step, step, step);
     }
   }
-  // seleção: contorno dourado nas bordas do país escolhido
+
+  /* ---- 9. seleção: contorno a lápis dourado ---- */
   if (selIdx >= 0) {
-    ctx.fillStyle = 'rgba(232,216,150,.85)';
+    ctx.fillStyle = 'rgba(148,104,24,.95)';
     for (let gy = 1; gy < gh - 1; gy++) for (let gx = 1; gx < gw - 1; gx++) {
       if (own[gy * gw + gx] !== selIdx) continue;
       if (own[gy * gw + gx + 1] !== selIdx || own[gy * gw + gx - 1] !== selIdx ||
-          own[(gy + 1) * gw + gx] !== selIdx || own[(gy - 1) * gw + gx] !== selIdx) ctx.fillRect(gx * step, gy * step, step, step);
+          own[(gy + 1) * gw + gx] !== selIdx || own[(gy - 1) * gw + gx] !== selIdx) {
+        ctx.fillRect(gx * step - 1, gy * step - 1, step + 2, step + 2);
+      }
     }
   }
-  // NOMES + BANDEIRAS
+
+  /* ---- 10. nomes e bandeiras ---- */
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   for (const s2 of seeds) {
     const c = COUNTRIES[s2.k];
-    drawFlag(ctx, s2.k, s2.x, s2.y - 13);
-    ctx.font = 'bold ' + Math.max(11, Math.round(s2.w * .30)) + 'px "VT323", monospace';
-    ctx.fillStyle = 'rgba(14,10,4,.55)'; ctx.fillText(c.name.toUpperCase(), s2.x + 1, s2.y + 14);
-    ctx.fillStyle = '#efe7cd'; ctx.fillText(c.name.toUpperCase(), s2.x, s2.y + 13);
+    drawFlag(ctx, s2.k, s2.x, s2.y - 14);
+    const fs = Math.max(12, Math.round(s2.w * .30));
+    ctx.font = 'bold ' + fs + 'px "VT323", monospace';
+    const nome = c.name.toUpperCase().split('').join(' ');   // espacejado de carta
+    ctx.lineJoin = 'round'; ctx.lineWidth = 4;
+    ctx.strokeStyle = 'rgba(228,218,188,.9)'; ctx.strokeText(nome, s2.x, s2.y + 13);
+    ctx.fillStyle = '#2a1e0c'; ctx.fillText(nome, s2.x, s2.y + 13);
+    ctx.fillStyle = 'rgba(42,30,12,.7)';                     // capital
+    ctx.beginPath(); ctx.arc(s2.x - fs * .1, s2.y + 25, 2.2, 0, 6.29); ctx.fill();
+    ctx.beginPath(); ctx.arc(s2.x - fs * .1, s2.y + 25, 4.2, 0, 6.29); ctx.stroke();
   }
-  // marcador do POSTO 7 na fronteira leste de Osteria
+
+  /* ---- 11. o Posto Nº 7, marcado a mão na fronteira leste ---- */
   const om = seeds[ids.indexOf('osteria')], km = seeds[ids.indexOf('kranton')];
   if (om && km) {
     const px7 = (om.x + km.x) / 2, py7 = (om.y + km.y) / 2;
-    ctx.fillStyle = '#c9a34a'; ctx.fillRect(px7 - 3, py7 - 3, 6, 6);
-    ctx.strokeStyle = '#c9a34a'; ctx.lineWidth = 1; ctx.strokeRect(px7 - 6, py7 - 6, 12, 12);
-    ctx.fillStyle = '#e8ddc4'; ctx.font = 'bold 12px "VT323", monospace'; ctx.textAlign = 'left';
-    ctx.fillText('POSTO 7', px7 + 10, py7 + 1);
+    ctx.strokeStyle = '#8e2c1e'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px7, py7, 8, 0, 6.29); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(px7 - 11, py7 - 11); ctx.lineTo(px7 + 11, py7 + 11);
+    ctx.moveTo(px7 + 11, py7 - 11); ctx.lineTo(px7 - 11, py7 + 11); ctx.stroke();
+    ctx.font = 'bold 13px "VT323", monospace'; ctx.textAlign = 'center';
+    ctx.lineWidth = 4; ctx.strokeStyle = 'rgba(232,224,196,.95)';
+    ctx.strokeText('POSTO Nº 7', px7, py7 - 20);
+    ctx.fillStyle = '#8e2c1e'; ctx.fillText('POSTO Nº 7', px7, py7 - 20);
     ctx.textAlign = 'center';
   }
-  // rosa dos ventos
-  const rx = W - 44, ry = H - 40;
-  ctx.strokeStyle = 'rgba(200,190,160,.4)'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx, ry + 12); ctx.moveTo(rx - 12, ry); ctx.lineTo(rx + 12, ry); ctx.stroke();
-  ctx.fillStyle = '#c9a34a'; ctx.beginPath(); ctx.moveTo(rx, ry - 12); ctx.lineTo(rx - 3, ry); ctx.lineTo(rx + 3, ry); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(200,190,160,.6)'; ctx.font = '9px "VT323", monospace'; ctx.fillText('N', rx, ry - 16);
-  // envelhecimento: manchas, grão, vinheta
+
+  /* ---- 12. rosa dos ventos e escala, gravadas no canto ---- */
+  const rx = W - 52, ry = H - 58;
+  ctx.strokeStyle = 'rgba(52,38,16,.65)'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(rx, ry, 17, 0, 6.29); ctx.stroke();
+  ctx.beginPath(); ctx.arc(rx, ry, 12, 0, 6.29); ctx.stroke();
+  for (let a = 0; a < 6.28; a += Math.PI / 4) {
+    ctx.beginPath(); ctx.moveTo(rx + Math.cos(a) * 12, ry + Math.sin(a) * 12);
+    ctx.lineTo(rx + Math.cos(a) * 17, ry + Math.sin(a) * 17); ctx.stroke();
+  }
+  ctx.fillStyle = '#2a1e0c';
+  ctx.beginPath(); ctx.moveTo(rx, ry - 20); ctx.lineTo(rx - 4, ry); ctx.lineTo(rx + 4, ry); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = 'rgba(52,38,16,.55)';
+  ctx.beginPath(); ctx.moveTo(rx, ry + 20); ctx.lineTo(rx - 4, ry); ctx.lineTo(rx + 4, ry); ctx.closePath(); ctx.fill();
+  ctx.font = 'bold 11px "VT323", monospace'; ctx.fillStyle = '#2a1e0c'; ctx.fillText('N', rx, ry - 26);
+  // escala
+  const sx0 = W - 128, sy0 = H - 20;
+  ctx.strokeStyle = 'rgba(42,30,12,.8)'; ctx.lineWidth = 1;
+  ctx.strokeRect(sx0, sy0 - 5, 96, 6);
+  for (let i = 0; i < 4; i++) { if (i % 2 === 0) { ctx.fillStyle = 'rgba(42,30,12,.8)'; ctx.fillRect(sx0 + i * 24, sy0 - 5, 24, 6); } }
+  ctx.font = '10px "VT323", monospace'; ctx.fillStyle = 'rgba(42,30,12,.75)'; ctx.textAlign = 'center';
+  ctx.fillText('0', sx0, sy0 - 9); ctx.fillText('200 km', sx0 + 96, sy0 - 9);
+
+  /* ---- 13. moldura dupla com marcas de grau ---- */
+  ctx.strokeStyle = 'rgba(42,30,12,.7)'; ctx.lineWidth = 2;
+  ctx.strokeRect(7, 7, W - 14, H - 14);
+  ctx.lineWidth = 1; ctx.strokeRect(13, 13, W - 26, H - 26);
+  ctx.fillStyle = 'rgba(42,30,12,.7)';
+  for (let x = 13; x < W - 13; x += 20) { ctx.fillRect(x, 7, 1, 6); ctx.fillRect(x, H - 13, 1, 6); }
+  for (let y = 13; y < H - 13; y += 20) { ctx.fillRect(7, y, 6, 1); ctx.fillRect(W - 13, y, 6, 1); }
+
+  /* ---- 14. as dobras de quem carrega isto na gaveta ---- */
+  for (const fx of [W / 3, (W * 2) / 3]) {
+    ctx.fillStyle = 'rgba(60,44,20,.16)'; ctx.fillRect(fx, 0, 1, H);
+    ctx.fillStyle = 'rgba(255,250,232,.22)'; ctx.fillRect(fx + 1, 0, 1, H);
+  }
+  ctx.fillStyle = 'rgba(60,44,20,.16)'; ctx.fillRect(0, H / 2, W, 1);
+  ctx.fillStyle = 'rgba(255,250,232,.22)'; ctx.fillRect(0, H / 2 + 1, W, 1);
+
+  /* ---- 15. envelhecimento ---- */
   const ar = makeRng(4242);
-  for (let i = 0; i < 5; i++) { const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 70; const st = ctx.createRadialGradient(sx, sy, sr * 0.3, sx, sy, sr); st.addColorStop(0, 'rgba(90,70,30,0)'); st.addColorStop(1, `rgba(70,52,24,${0.05 + ar() * 0.05})`); ctx.fillStyle = st; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill(); }
-  for (let i = 0; i < 500; i++) { ctx.fillStyle = `rgba(0,0,0,${0.02 + ar() * 0.04})`; ctx.fillRect(ar() * W, ar() * H, 1, 1); }
-  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.28, W / 2, H / 2, Math.max(W, H) * 0.62);
-  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(18,10,4,.6)'); ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  for (let i = 0; i < 6; i++) {
+    const sx = ar() * W, sy = ar() * H, sr = 30 + ar() * 80;
+    const st2 = ctx.createRadialGradient(sx, sy, sr * .25, sx, sy, sr);
+    st2.addColorStop(0, 'rgba(120,88,34,0)'); st2.addColorStop(1, `rgba(112,82,32,${.05 + ar() * .06})`);
+    ctx.fillStyle = st2; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 6.29); ctx.fill();
+  }
+  for (let i = 0; i < 700; i++) { ctx.fillStyle = `rgba(50,36,16,${.03 + ar() * .05})`; ctx.fillRect((ar() * W) | 0, (ar() * H) | 0, 1, 1); }
+  const vg = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .34, W / 2, H / 2, Math.max(W, H) * .68);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(34,22,8,.42)');
+  ctx.fillStyle = vg; ctx.fillRect(0, 0, W, H);
+  pixelSnap(cv, 2);
 }
 function shade(hex, amt) {
   const n = parseInt(hex.slice(1), 16); let r = (n >> 16) + amt, g = ((n >> 8) & 255) + amt, b = (n & 255) + amt;
@@ -3547,7 +3685,29 @@ function countryBannedToday(k) {
 function selectMapCountry(k) {
   MAP_SEL = k; drawWorldMap();
   const info = $('map-info'); if (!info) return;
-  if (!k) { info.innerHTML = `<div class="mi-empty">${T('Clique num país para ver seus dados, selo e o estado da fronteira hoje.')}</div>`; return; }
+  if (!k) {
+    /* Sem país escolhido o painel mostrava dois pixels de texto num vazio de
+       um quarto de tela. Uma carta impressa traz LEGENDA — e a legenda é o
+       lugar honesto para dizer o que os símbolos significam. */
+    const banidos = COUNTRY_IDS.filter(countryBannedToday).map(x => COUNTRIES[x].name);
+    info.innerHTML =
+      `<div class="mi-legenda">` +
+      `<div class="ml-cap">${T('LEGENDA')}</div>` +
+      `<div class="ml-item"><i class="ml-fr"></i><span>${T('Limite internacional')}</span></div>` +
+      `<div class="ml-item"><i class="ml-co"></i><span>${T('Litoral')}</span></div>` +
+      `<div class="ml-item"><i class="ml-ha"></i><span>${T('Território nacional (hachura por país)')}</span></div>` +
+      `<div class="ml-item"><i class="ml-ba"></i><span>${T('Entrada proibida hoje')}</span></div>` +
+      `<div class="ml-item"><i class="ml-po"></i><span>${T('Posto de triagem')}</span></div>` +
+      `<div class="ml-item"><i class="ml-ca"></i><span>${T('Capital')}</span></div>` +
+      `<div class="ml-cap">${T('SITUAÇÃO DE HOJE')}</div>` +
+      `<div class="ml-hoje">${banidos.length
+        ? '⃠ ' + T('Fronteira fechada a: ') + banidos.join(', ')
+        : '✓ ' + T('Nenhuma nação interditada hoje.')}</div>` +
+      `<div class="ml-nota">${T('Carta levantada em 1949 pelo Instituto Geográfico de Osteria. As fronteiras mudaram três vezes desde então; a carta, não.')}</div>` +
+      `<div class="ml-dica">${T('Clique num país para ver cidades, povos, selo e o estado da fronteira.')}</div>` +
+      `</div>`;
+    return;
+  }
   const c = COUNTRIES[k];
   const banned = countryBannedToday(k);
   const eth = (c.ethnics || []).map(e => ETHNIC_LABEL[e] || e).join(', ');

@@ -49,8 +49,22 @@ const DIAS = Number(process.env.QA_DAYS || 8);
   for (let dia = 1; dia <= DIAS; dia++) {
     // manhã → guichê
     let foi = false;
-    for (let i = 0; i < 14 && !foi; i++) { await limpaTela(); foi = await clique('#btn-gowork', 700); }
-    if (!foi) { problemas.push(`d${dia}: não achei IR TRABALHAR`); break; }
+    for (let i = 0; i < 20 && !foi; i++) {
+      await limpaTela();
+      foi = await clique('#btn-gowork', 700);
+      if (foi) break;
+      // preso na casa ou na noite? empurra pela porta como o jogo faria
+      const onde = await p.evaluate(() => [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','));
+      if (onde.includes('screen-house')) await p.evaluate(() => { try { hClose(); afterNight(); } catch (e) {} });
+      else if (onde.includes('screen-night')) await clique('#night-choices button', 900);
+    }
+    if (!foi) {
+      const onde = await p.evaluate(() => [...document.querySelectorAll('.screen.active')].map(s => s.id).join(',')
+        + ' modal=' + !!document.querySelector('#modal-overlay.active') + ' tv=' + !!document.querySelector('#tv-overlay.active'));
+      problemas.push(`d${dia}: não achei IR TRABALHAR (tela=${onde})`);
+      await p.screenshot({ path: path.join(OUT, `player-FALHA-d${dia}.png`) });
+      break;
+    }
     // espera o expediente REALMENTE começar (comunicado + remessas assinadas)
     for (let i = 0; i < 30; i++) {
       await limpaTela();
@@ -116,12 +130,14 @@ const DIAS = Number(process.env.QA_DAYS || 8);
     if (!casa) { problemas.push(`d${dia}: não achei VOLTAR PARA CASA`); break; }
     await p.waitForTimeout(1500);
     // dorme (a casa tem cama; o driver usa o botão de dormir se existir)
-    for (let i = 0; i < 12; i++) {
-      if (await p.evaluate(() => document.getElementById('screen-night').classList.contains('active'))) break;
+    for (let i = 0; i < 10; i++) {
+      const onde = await p.evaluate(() => [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','));
+      if (onde.includes('screen-night') || onde.includes('screen-morning')) break;
       if (await clique('#h-sleep', 900)) continue;
-      if (await clique('#btn-sleep', 900)) continue;
-      const emCasa = await p.evaluate(() => document.getElementById('screen-house').classList.contains('active'));
-      if (emCasa) { await p.evaluate(() => { try { hClose(); (typeof houseSleepNow === 'function') ? houseSleepNow() : afterNight(); } catch (e) { try { afterNight(); } catch (e2) {} } }); await p.waitForTimeout(1200); continue; }
+      if (onde.includes('screen-house')) {
+        await p.evaluate(() => { try { hClose(); afterNight(); } catch (e) {} });
+        await p.waitForTimeout(1300); continue;
+      }
       await p.waitForTimeout(500);
     }
     await clique('#night-choices button', 1400);
