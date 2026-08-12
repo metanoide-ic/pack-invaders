@@ -1,0 +1,102 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.35, 0.55, 0.8, 1)
+sky_horizon_color = Color(0.78, 0.83, 0.86, 1)
+ground_horizon_color = Color(0.78, 0.83, 0.86, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="BoxMesh" id="ground_mesh"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="StandardMaterial3D" id="ground_mat"]
+albedo_color = Color(0.42, 0.66, 0.32, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="ground_shape"]
+size = Vector3(60, 1, 60)
+
+[sub_resource type="BoxMesh" id="crate_mesh"]
+size = Vector3(1, 1, 1)
+
+[sub_resource type="StandardMaterial3D" id="crate_mat"]
+albedo_color = Color(0.6, 0.44, 0.26, 1)
+roughness = 1.0
+
+[sub_resource type="BoxShape3D" id="crate_shape"]
+size = Vector3(1, 1, 1)
+
+[node name="Main" type="Node3D"]
+script = ExtResource("1_main")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 12, 0)
+shadow_enabled = true
+
+[node name="Ground" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+
+[node name="Mesh" type="MeshInstance3D" parent="Ground"]
+mesh = SubResource("ground_mesh")
+surface_material_override/0 = SubResource("ground_mat")
+
+[node name="Collision" type="CollisionShape3D" parent="Ground"]
+shape = SubResource("ground_shape")
+
+[node name="Crates" type="Node3D" parent="."]
+
+[node name="Crate1" type="StaticBody3D" parent="Crates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0.5, -3)
+
+[node name="Mesh" type="MeshInstance3D" parent="Crates/Crate1"]
+mesh = SubResource("crate_mesh")
+surface_material_override/0 = SubResource("crate_mat")
+
+[node name="Collision" type="CollisionShape3D" parent="Crates/Crate1"]
+shape = SubResource("crate_shape")
+
+[node name="Crate2" type="StaticBody3D" parent="Crates"]
+transform = Transform3D(0.924, 0, 0.383, 0, 1, 0, -0.383, 0, 0.924, -5, 0.5, 2)
+
+[node name="Mesh" type="MeshInstance3D" parent="Crates/Crate2"]
+mesh = SubResource("crate_mesh")
+surface_material_override/0 = SubResource("crate_mat")
+
+[node name="Collision" type="CollisionShape3D" parent="Crates/Crate2"]
+shape = SubResource("crate_shape")
+
+[node name="Crate3" type="StaticBody3D" parent="Crates"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, 6)
+
+[node name="Mesh" type="MeshInstance3D" parent="Crates/Crate3"]
+mesh = SubResource("crate_mesh")
+surface_material_override/0 = SubResource("crate_mat")
+
+[node name="Collision" type="CollisionShape3D" parent="Crates/Crate3"]
+shape = SubResource("crate_shape")
+
+[node name="Player" parent="." instance=ExtResource("2_player")]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="ClockLabel" type="Label" parent="HUD"]
+offset_left = 16.0
+offset_top = 12.0
+offset_right = 500.0
+offset_bottom = 40.0
+theme_override_font_sizes/font_size = 20
+text = "06:00 — Dia 1, Primavera, Ano 1"
