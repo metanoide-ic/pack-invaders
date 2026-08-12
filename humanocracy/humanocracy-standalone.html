@@ -2771,6 +2771,8 @@ body.text-large .np-body { font-size:15px; }
         <span id="house-clock">20:30</span>
         <span id="house-room"></span>
         <span class="house-help">WASD/setas andar · mova o mouse p/ olhar · E interagir</span>
+        <!-- para quem já falou com todo mundo: vai direto para a cama -->
+        <button id="btn-recolher" class="btn-small" style="display:none">RECOLHER-SE →</button>
       </div>
       <div id="house-viewport">
         <canvas id="house-canvas"></canvas>
@@ -5588,6 +5590,12 @@ const I18N_EN = {
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Click a country to see its cities, peoples, seal and border status.',
   'REGISTRADAS': 'ON RECORD',
+  'RECOLHER-SE →': 'TURN IN →',
+  'Encerrar o dia?': 'End the day?',
+  'DORMIR': 'SLEEP',
+  'AINDA NÃO': 'NOT YET',
+  '§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.':
+    '§ ADMISSION QUOTA EXHAUSTED — from here on, reject (paid) or end the shift.',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -7205,6 +7213,12 @@ const I18N_ES = {
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Haga clic en un país para ver ciudades, pueblos, sello y estado de la frontera.',
   'REGISTRADAS': 'REGISTRADAS',
+  'RECOLHER-SE →': 'RETIRARSE →',
+  'Encerrar o dia?': '¿Terminar el día?',
+  'DORMIR': 'DORMIR',
+  'AINDA NÃO': 'AÚN NO',
+  '§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.':
+    '§ CUOTA DE ADMISIÓN AGOTADA — desde ahora, rechace (pagado) o termine el turno.',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',
@@ -15370,7 +15384,24 @@ function decide(decision) {
       S.counters.rejectedByQuota = (S.counters.rejectedByQuota || 0) + 1;
     }
   }
-  if (decision === 'approve') shift.approvedToday++;
+  if (decision === 'approve') {
+    shift.approvedToday++;
+    /* A cota acabou de esgotar: avisa UMA vez, na hora, em vez de deixar o
+       jogador descobrir na advertência seguinte. Rejeitar quem resta continua
+       pagando salário — trabalho de carimbo, como o Ministério gosta. */
+    if (!dayFree && shift.approvedToday === quota && !shift.quotaAvisada) {
+      shift.quotaAvisada = true;
+      setTimeout(() => {
+        const tb = $('queue-toast');
+        if (tb) {
+          tb.textContent = T('§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.');
+          tb.classList.add('on');
+          setTimeout(() => tb.classList.remove('on'), 5200);
+        }
+        sfx('ticket');
+      }, 1200);
+    }
+  }
   if (shift.stats) shift.stats[decision === 'approve' ? 'a' : decision === 'reject' ? 'r' : 'd']++;
 
   // o mundo tem memória: alguns voltam
@@ -17954,6 +17985,7 @@ function enterMirror48() {
   ];
   buildBoxes();
   HOUSE.mode = 'mirror';
+  setTimeout(setupRecolher, 0);
   HOUSE.active = true;
   HOUSE.x = 2; HOUSE.y = M48H - 3.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
   HOUSE.lastTs = 0; HOUSE.t = 0; HOUSE.knock = null; HOUSE.spoke = {};
@@ -17972,6 +18004,22 @@ function enterMirror48() {
   ]), 800);
 }
 
+/* RECOLHER-SE: a casa é o coração lento do jogo, mas ninguém merece fazer a
+   MESMA caminhada até a cama 47 noites seguidas. O botão pergunta o de
+   sempre ("Encerrar o dia?") e vai. No corredor do dia 48 ele não existe —
+   daquela porta ninguém se poupa. */
+function setupRecolher() {
+  const b = document.getElementById('btn-recolher');
+  if (!b) return;
+  b.textContent = T('RECOLHER-SE →');
+  b.style.display = HOUSE.mode === 'mirror' ? 'none' : '';
+  b.onclick = () => {
+    hSay('VOCÊ', [T('Encerrar o dia?')], [
+      { label: T('DORMIR'), fn: () => houseSleep(false) },
+      { label: T('AINDA NÃO'), fn: () => {} },
+    ]);
+  };
+}
 function enterHouse() {
   HOUSE.gl = window.gl3Wanted ? gl3Wanted() : false;
   setRegimeClass(S.day);
@@ -17980,6 +18028,7 @@ function enterHouse() {
   buildFaces();
   buildEnts();
   HOUSE.mode = 'house';
+  setTimeout(setupRecolher, 0);
   CUR.map = MAP; CUR.w = MAPW; CUR.h = MAPH; CUR.rooms = ROOMS;
   // horror ambiental da noite: nunca explicado, nunca repetido demais
   HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: S.day >= 30 && chance(.15), count: 0 };

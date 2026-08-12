@@ -1603,6 +1603,12 @@ const I18N_EN = {
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Click a country to see its cities, peoples, seal and border status.',
   'REGISTRADAS': 'ON RECORD',
+  'RECOLHER-SE →': 'TURN IN →',
+  'Encerrar o dia?': 'End the day?',
+  'DORMIR': 'SLEEP',
+  'AINDA NÃO': 'NOT YET',
+  '§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.':
+    '§ ADMISSION QUOTA EXHAUSTED — from here on, reject (paid) or end the shift.',
   'ORDEM DE DETENÇÃO': 'DETENTION ORDER',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'The red button under the lip of the desk is now wired. DET holds the applicant in place and calls the escort. Use it with proof — evidence recorded in the examination, or a name on a list. A detention without proof comes back as a citation in YOUR name.',
@@ -3220,6 +3226,12 @@ const I18N_ES = {
   'Clique num país para ver cidades, povos, selo e o estado da fronteira.':
     'Haga clic en un país para ver ciudades, pueblos, sello y estado de la frontera.',
   'REGISTRADAS': 'REGISTRADAS',
+  'RECOLHER-SE →': 'RETIRARSE →',
+  'Encerrar o dia?': '¿Terminar el día?',
+  'DORMIR': 'DORMIR',
+  'AINDA NÃO': 'AÚN NO',
+  '§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.':
+    '§ CUOTA DE ADMISIÓN AGOTADA — desde ahora, rechace (pagado) o termine el turno.',
   'ORDEM DE DETENÇÃO': 'ORDEN DE DETENCIÓN',
   'O botão vermelho sob a borda da mesa passa a ter fio. DET prende o requerente no lugar e chama a escolta. Use com prova — evidência registrada no exame ou nome em lista. Detenção sem prova volta como advertência no SEU nome.':
     'El botón rojo bajo el borde de la mesa ya tiene cable. DET retiene al solicitante en el lugar y llama a la escolta. Úselo con prueba — evidencia registrada en el examen o nombre en lista. Una detención sin prueba vuelve como amonestación a SU nombre.',

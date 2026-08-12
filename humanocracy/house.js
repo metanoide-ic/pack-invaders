@@ -1244,6 +1244,7 @@ function enterMirror48() {
   ];
   buildBoxes();
   HOUSE.mode = 'mirror';
+  setTimeout(setupRecolher, 0);
   HOUSE.active = true;
   HOUSE.x = 2; HOUSE.y = M48H - 3.5; HOUSE.ang = -Math.PI / 2; HOUSE.pitch = 0;
   HOUSE.lastTs = 0; HOUSE.t = 0; HOUSE.knock = null; HOUSE.spoke = {};
@@ -1262,6 +1263,22 @@ function enterMirror48() {
   ]), 800);
 }
 
+/* RECOLHER-SE: a casa é o coração lento do jogo, mas ninguém merece fazer a
+   MESMA caminhada até a cama 47 noites seguidas. O botão pergunta o de
+   sempre ("Encerrar o dia?") e vai. No corredor do dia 48 ele não existe —
+   daquela porta ninguém se poupa. */
+function setupRecolher() {
+  const b = document.getElementById('btn-recolher');
+  if (!b) return;
+  b.textContent = T('RECOLHER-SE →');
+  b.style.display = HOUSE.mode === 'mirror' ? 'none' : '';
+  b.onclick = () => {
+    hSay('VOCÊ', [T('Encerrar o dia?')], [
+      { label: T('DORMIR'), fn: () => houseSleep(false) },
+      { label: T('AINDA NÃO'), fn: () => {} },
+    ]);
+  };
+}
 function enterHouse() {
   HOUSE.gl = window.gl3Wanted ? gl3Wanted() : false;
   setRegimeClass(S.day);
@@ -1270,6 +1287,7 @@ function enterHouse() {
   buildFaces();
   buildEnts();
   HOUSE.mode = 'house';
+  setTimeout(setupRecolher, 0);
   CUR.map = MAP; CUR.w = MAPW; CUR.h = MAPH; CUR.rooms = ROOMS;
   // horror ambiental da noite: nunca explicado, nunca repetido demais
   HOUSE.fx = { tvOff: 0, dim: 0, shadowGone: S.day >= 30 && chance(.15), count: 0 };

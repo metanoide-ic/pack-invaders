@@ -4822,7 +4822,24 @@ function decide(decision) {
       S.counters.rejectedByQuota = (S.counters.rejectedByQuota || 0) + 1;
     }
   }
-  if (decision === 'approve') shift.approvedToday++;
+  if (decision === 'approve') {
+    shift.approvedToday++;
+    /* A cota acabou de esgotar: avisa UMA vez, na hora, em vez de deixar o
+       jogador descobrir na advertência seguinte. Rejeitar quem resta continua
+       pagando salário — trabalho de carimbo, como o Ministério gosta. */
+    if (!dayFree && shift.approvedToday === quota && !shift.quotaAvisada) {
+      shift.quotaAvisada = true;
+      setTimeout(() => {
+        const tb = $('queue-toast');
+        if (tb) {
+          tb.textContent = T('§ COTA DE ADMISSÃO ESGOTADA — daqui em diante, rejeite (pago) ou encerre o turno.');
+          tb.classList.add('on');
+          setTimeout(() => tb.classList.remove('on'), 5200);
+        }
+        sfx('ticket');
+      }, 1200);
+    }
+  }
   if (shift.stats) shift.stats[decision === 'approve' ? 'a' : decision === 'reject' ? 'r' : 'd']++;
 
   // o mundo tem memória: alguns voltam
