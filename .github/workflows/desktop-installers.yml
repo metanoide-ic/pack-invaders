@@ -5,10 +5,11 @@ on:
     branches:
       - main
       - claude/plataforma-origem-site-app-52kx29
+    # O instalador embute o app inteiro: qualquer mudança na plataforma
+    # precisa gerar instalador novo, senão ele congela numa versão velha.
     paths:
       - '.github/workflows/desktop-installers.yml'
-      - 'plataforma-origem/electron/**'
-      - 'plataforma-origem/package.json'
+      - 'plataforma-origem/**'
   workflow_dispatch:
 
 permissions:
