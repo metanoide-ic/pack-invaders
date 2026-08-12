@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { groundY, terrainGrid, zoneAt, fbm, clamp, CORES, R_ILHA, SIZE, SEG } from './world.js';
 import { buildCity, buildHash } from './city.js';
 import { buildInterior, FLOOR_Y } from './interior.js';
+import { createCrowd } from './npc.js';
 
 // ---------------------------------------------------------------- cena
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -39,28 +40,56 @@ gradientMap.needsUpdate = true;
 const toon = (opts) => new THREE.MeshToonMaterial({ gradientMap, ...opts });
 
 // ---------------------------------------------------------------- terreno
-const terraGeo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
-terraGeo.rotateX(-Math.PI / 2);
+// Fatiado em pedaços para o descarte por frustum funcionar: uma malha única de
+// 6,8 km seria desenhada inteira mesmo com quase tudo fora da tela.
 {
-  const pos = terraGeo.attributes.position;
   const grid = terrainGrid();
-  const cores = new Float32Array(pos.count * 3);
-  const c = new THREE.Color();
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i), z = pos.getZ(i);
-    const h = grid.arr[i];
-    pos.setY(i, h);
-    const zona = zoneAt(x, z, h);
-    c.setHex(zona.tipo === 'agua' ? 0x4a6a3a : zona.cor);
-    const v = 1 + fbm(x * 0.01, z * 0.01) * 0.06;
-    cores[i * 3] = c.r * v; cores[i * 3 + 1] = c.g * v; cores[i * 3 + 2] = c.b * v;
+  const cell = SIZE / SEG;
+  const PED = 8, passo = SEG / PED;                 // 8x8 pedaços
+  const matTerra = toon({ vertexColors: true });
+  const cor = new THREE.Color();
+  const alt = (ix, iz) => grid.arr[clamp(ix, 0, SEG) + grid.n * clamp(iz, 0, SEG)];
+
+  for (let pz = 0; pz < PED; pz++) for (let px = 0; px < PED; px++) {
+    const ix0 = px * passo, iz0 = pz * passo;
+    const n = passo + 1;
+    const pos = new Float32Array(n * n * 3);
+    const nor = new Float32Array(n * n * 3);
+    const col = new Float32Array(n * n * 3);
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const ix = ix0 + i, iz = iz0 + j, k = (i + j * n) * 3;
+      const x = -SIZE / 2 + ix * cell, z = -SIZE / 2 + iz * cell;
+      const h = alt(ix, iz);
+      pos[k] = x; pos[k + 1] = h; pos[k + 2] = z;
+      // normal pelo gradiente da grade: contínua entre pedaços, sem costura
+      const nx = alt(ix - 1, iz) - alt(ix + 1, iz);
+      const nz = alt(ix, iz - 1) - alt(ix, iz + 1);
+      const inv = 1 / Math.hypot(nx, 2 * cell, nz);
+      nor[k] = nx * inv; nor[k + 1] = 2 * cell * inv; nor[k + 2] = nz * inv;
+      const zona = zoneAt(x, z, h);
+      cor.setHex(zona.tipo === 'agua' ? 0x4a6a3a : zona.cor);
+      const v = 1 + fbm(x * 0.01, z * 0.01) * 0.06;
+      col[k] = cor.r * v; col[k + 1] = cor.g * v; col[k + 2] = cor.b * v;
+    }
+    // mesma triangulação do PlaneGeometry, para casar com groundY()
+    const idx = new Uint32Array(passo * passo * 6);
+    let t = 0;
+    for (let j = 0; j < passo; j++) for (let i = 0; i < passo; i++) {
+      const a = i + j * n, b = i + (j + 1) * n, c = (i + 1) + (j + 1) * n, d = (i + 1) + j * n;
+      idx[t++] = a; idx[t++] = b; idx[t++] = d;
+      idx[t++] = b; idx[t++] = c; idx[t++] = d;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    g.setIndex(new THREE.BufferAttribute(idx, 1));
+    g.computeBoundingSphere();
+    const m = new THREE.Mesh(g, matTerra);
+    m.receiveShadow = true;
+    scene.add(m);
   }
-  terraGeo.setAttribute('color', new THREE.BufferAttribute(cores, 3));
-  terraGeo.computeVertexNormals();
 }
-const terra = new THREE.Mesh(terraGeo, toon({ vertexColors: true }));
-terra.receiveShadow = true;
-scene.add(terra);
 
 const mar = new THREE.Mesh(
   new THREE.PlaneGeometry(20000, 20000).rotateX(-Math.PI / 2),
@@ -71,7 +100,7 @@ scene.add(mar);
 
 // ---------------------------------------------------------------- cidade
 const cidade = buildCity(scene, gradientMap);
-window.__dbg = { scene, cidade, THREE, groundY, player: null };
+window.__dbg = { scene, cidade, THREE, groundY, player: null, povoAtivo: true, renderer, sol, minimapaAtivo: true, povo: null };
 
 // ---------------------------------------------------------------- vegetação
 function scatter(count, testFn, makeFn) {
@@ -90,12 +119,12 @@ function scatter(count, testFn, makeFn) {
 {
   const tronco = new THREE.CylinderGeometry(0.5, 0.8, 5, 5);
   const copa = new THREE.ConeGeometry(4, 9, 6);
-  const nTrees = 900;
+  const nTrees = 2000;
   const iTronco = new THREE.InstancedMesh(tronco, toon({ color: 0x6b4a2a }), nTrees);
   const iCopa = new THREE.InstancedMesh(copa, toon({ color: 0x1d6b30 }), nTrees);
   const m = new THREE.Matrix4();
   let idx = 0;
-  scatter(nTrees, (z) => z.tipo === 'floresta' || (z.tipo === 'campo' && Math.random() < 0.25) || (z.tipo === 'pantano' && Math.random() < 0.3),
+  scatter(nTrees, (z) => z.tipo === 'floresta' || (z.tipo === 'campo' && Math.random() < 0.12) || (z.tipo === 'pantano' && Math.random() < 0.25),
     (x, y, zc) => {
       const s = 0.8 + Math.random() * 0.9;
       m.makeScale(s, s, s).setPosition(x, y + 2.5 * s, zc); iTronco.setMatrixAt(idx, m);
@@ -134,6 +163,10 @@ function scatter(count, testFn, makeFn) {
   iT.count = iF.count = idx;
   scene.add(iT, iF);
 }
+
+// ---------------------------------------------------------------- habitantes
+const povo = createCrowd(scene, gradientMap, cidade.colliders);
+window.__dbg.povo = povo;
 
 // ---------------------------------------------------------------- jogador
 const player = new THREE.Group();
@@ -316,11 +349,27 @@ window.__dbg.tp = (x, z, dist = 13, p = 0.32, y = Math.PI) => {
 };
 window.__dbg.player = player;
 
+// os contornos pretos só valem de perto; longe, é geometria desperdiçada
+let quadro = 0;
+function atualizarContornos() {
+  const p = player.position;
+  for (const om of cidade.contornos) {
+    const c = om.geometry.boundingSphere.center;
+    om.visible = !interior && Math.hypot(c.x - p.x, c.z - p.z) < 430;
+  }
+  for (const pm of cidade.portas) {
+    const c = pm.geometry.boundingSphere.center;
+    pm.visible = !interior && Math.hypot(c.x - p.x, c.z - p.z) < 190;
+  }
+}
+
 function tick() {
   requestAnimationFrame(tick);
   const dt = Math.min(clock.getDelta(), 0.05);
+  if ((quadro++ % 15) === 0) atualizarContornos();
   move(dt);
   placeCamera();
+  povo.update(dt, player.position, !interior && window.__dbg.povoAtivo);
 
   sol.position.set(player.position.x + 600, player.position.y + 900, player.position.z + 300);
   sol.target.position.copy(player.position);
@@ -341,7 +390,7 @@ function tick() {
       hudRegion.textContent = zona.regiao;
     }
     hudPrompt.textContent = cidade.nearDoor(player.position.x, player.position.z, 3.4) ? 'E — entrar' : '';
-    drawMinimap();
+    if (window.__dbg.minimapaAtivo) drawMinimap();
   }
   renderer.render(scene, camera);
 }

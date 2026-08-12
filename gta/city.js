@@ -105,11 +105,27 @@ export function buildCity(scene, gradientMap) {
   const buildings = [];
   const colliders = [];
   const road = newMesh(); road.uv = null;
-  const doors = newMesh(); doors.uv = null;
   const facade = facadeTexture();
   const cor = new THREE.Color();
   const asf = new THREE.Color(CORES.asfalto), cal = new THREE.Color(CORES.calcada);
   const asfC = [asf.r, asf.g, asf.b], calC = [cal.r, cal.g, cal.b];
+
+  const matPredio = new THREE.MeshToonMaterial({ gradientMap, vertexColors: true, map: facade });
+  const matOutline = new THREE.MeshBasicMaterial({ color: 0x0e0e10, side: THREE.BackSide });
+  // blocos de ~200 m: malhas menores são descartadas pelo frustum quando fora de vista
+  const BLOCO = 200;
+  const blocos = new Map();
+  const blocoDe = (x, z) => {
+    const key = Math.floor(x / BLOCO) + ',' + Math.floor(z / BLOCO);
+    let bl = blocos.get(key);
+    if (!bl) blocos.set(key, bl = { build: newMesh(), outline: newMesh() });
+    if (!bl.iniciado) {
+      bl.iniciado = true;
+      bl.outline.uv = null; bl.outline.col = null;
+      bl.doors = newMesh(); bl.doors.uv = null;
+    }
+    return bl;
+  };
 
   const reach = districtReach();
   DISTRICTS.forEach((d, di) => {
@@ -119,8 +135,6 @@ export function buildCity(scene, gradientMap) {
     const toWorld = (lx, lz) => [d.x + lx * cs - lz * sn, d.z + lx * sn + lz * cs];
     const step = d.block + d.road;
     const n = Math.ceil(alcance / step);
-    const build = newMesh();
-    const outline = newMesh(); outline.uv = null; outline.col = null;
 
     // ---- ruas (linhas da grade nos dois sentidos)
     const stripe = (ax, az, bx, bz, w, color, lift) => {
@@ -185,9 +199,10 @@ export function buildCity(scene, gradientMap) {
           cor.setHex(d.pal[(rnd() * d.pal.length) | 0]);
           const v = 0.9 + rnd() * 0.2;
           const rgb = [cor.r * v, cor.g * v, cor.b * v];
-          pushBox(build, wx, cy, wz, hw, hh, hd, ang, rgb, true);
+          const bl = blocoDe(wx, wz);
+          pushBox(bl.build, wx, cy, wz, hw, hh, hd, ang, rgb, true);
           const mg = Math.min(0.35, Math.max(0.1, Math.min(hw, hd) * 0.05));
-          pushBox(outline, wx, cy, wz, hw + mg, hh + mg, hd + mg, ang, null, false);
+          pushBox(bl.outline, wx, cy, wz, hw + mg, hh + mg, hd + mg, ang, null, false);
 
           // porta virada para a rua mais próxima do lote
           const ox = lx - blx, oz = lz - blz;
@@ -198,7 +213,7 @@ export function buildCity(scene, gradientMap) {
           const lxw = dnx * off, lzw = dnz * off;
           const dx = wx + lxw * dcs - lzw * dsn, dz = wz + lxw * dsn + lzw * dcs;
           const doorY = hi + 1.3;
-          pushBox(doors, dx, doorY, dz, dnx !== 0 ? 0.25 : 0.9, 1.3, dnx !== 0 ? 0.9 : 0.25, ang,
+          pushBox(bl.doors, dx, doorY, dz, dnx !== 0 ? 0.25 : 0.9, 1.3, dnx !== 0 ? 0.9 : 0.25, ang,
             [0.16, 0.12, 0.10], false);
 
           buildings.push({
@@ -211,21 +226,27 @@ export function buildCity(scene, gradientMap) {
       }
     }
 
-    if (build.pos.length) {
-      const mat = new THREE.MeshToonMaterial({ gradientMap, vertexColors: true, map: facade });
-      const mesh = new THREE.Mesh(toGeometry(build, true, true), mat);
-      mesh.castShadow = mesh.receiveShadow = true;
-      const om = new THREE.Mesh(toGeometry(outline, false, false),
-        new THREE.MeshBasicMaterial({ color: 0x0e0e10, side: THREE.BackSide }));
-      scene.add(mesh, om);
-    }
   });
+
+  // uma malha de prédios e uma de contorno por bloco
+  const matPorta = new THREE.MeshToonMaterial({ gradientMap, vertexColors: true });
+  const contornos = [], portas = [];
+  for (const bl of blocos.values()) {
+    if (!bl.build.pos.length) continue;
+    const mesh = new THREE.Mesh(toGeometry(bl.build, true, true), matPredio);
+    mesh.castShadow = mesh.receiveShadow = true;
+    const om = new THREE.Mesh(toGeometry(bl.outline, false, false), matOutline);
+    contornos.push(om);
+    scene.add(mesh, om);
+    if (bl.doors.pos.length) {
+      const pm = new THREE.Mesh(toGeometry(bl.doors, false, true), matPorta);
+      portas.push(pm);
+      scene.add(pm);
+    }
+  }
 
   scene.add(new THREE.Mesh(toGeometry(road, false, true),
     new THREE.MeshToonMaterial({ gradientMap, vertexColors: true })));
-  scene.add(new THREE.Mesh(toGeometry(doors, false, true),
-    new THREE.MeshToonMaterial({ gradientMap, vertexColors: true })));
-
   const doorMap = new Map();
   for (const b of buildings) {
     const key = Math.floor(b.door.x / CELL) + ',' + Math.floor(b.door.z / CELL);
@@ -247,7 +268,7 @@ export function buildCity(scene, gradientMap) {
     return best;
   };
 
-  return { buildings, colliders: buildHash(colliders), nearDoor };
+  return { buildings, colliders: buildHash(colliders), nearDoor, contornos, portas };
 }
 
 // ------------------------------------------------- colisão (hash espacial)

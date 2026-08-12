@@ -163,6 +163,28 @@ export function buildInterior(b, gradientMap) {
     }
   }
 
+  // moradores
+  const moradores = 1 + ((rnd() * 3) | 0);
+  const ROUPAS = [0xe0662e, 0x3f6f9c, 0x4a8f5a, 0xc9a33d, 0xa8496b, 0x6b5ba8, 0x2f6f7d];
+  const PELES = [0xf2c49a, 0xd9a273, 0xb07c4e, 0x8a5a34, 0x63422a];
+  for (let i = 0; i < moradores; i++) {
+    const c = comodos[(rnd() * comodos.length) | 0];
+    const mx = c.x0 + 1 + rnd() * Math.max(0.1, c.x1 - c.x0 - 2);
+    const mz = c.z0 + 1 + rnd() * Math.max(0.1, c.z1 - c.z0 - 2);
+    if (Math.hypot(mx - livre.x, mz - livre.z) < 1.8) continue;
+    const pessoa = new THREE.Mesh(new THREE.CapsuleGeometry(0.42, 1.0, 4, 8),
+      toon(ROUPAS[(rnd() * ROUPAS.length) | 0]));
+    pessoa.position.set(mx, 0.95, mz);
+    const cabeca = new THREE.Mesh(new THREE.SphereGeometry(0.31, 10, 8),
+      toon(PELES[(rnd() * PELES.length) | 0]));
+    cabeca.position.set(mx, 1.86, mz);
+    const oc = new THREE.Mesh(pessoa.geometry, outMat); oc.position.copy(pessoa.position); oc.scale.setScalar(1.09);
+    const oh = new THREE.Mesh(cabeca.geometry, outMat); oh.position.copy(cabeca.position); oh.scale.setScalar(1.14);
+    pessoa.rotation.y = rnd() * Math.PI * 2;
+    grupo.add(oc, oh, pessoa, cabeca);
+    colliders.push({ x: mx, z: mz, hw: 0.45, hd: 0.45, top: FLOOR_Y + 1.9, cs: 1, sn: 0 });
+  }
+
   // batente da porta de saída
   const alturaPorta = Math.min(2.2, PE - 0.3);
   const marco = new THREE.Mesh(

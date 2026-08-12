@@ -109,7 +109,7 @@ export function height(x, z) {
 // ------------------------------------------------------------- grade do relevo
 // A malha do terreno é uma grade regular; tudo que se apoia no chão precisa usar
 // a altura *interpolada da malha*, não a função contínua, senão afunda nela.
-export const SEG = 300;
+export const SEG = 240;
 const CELL = SIZE / SEG;
 let GRID = null;
 
