@@ -1,16 +1,18 @@
 # Direção de arte
 
-**Status: em decisão.**
+**Decisão: Low-poly colorido.**
 
-Quatro estilos candidatos, demonstrados nas mini demos 3D interativas
-("Quatro Fazendas" — a mesma cena renderizada ao vivo nos 4 estilos):
+Geometria facetada (flat shading), cores vivas e alegres, iluminação suave e
+quente. Escolhido entre quatro candidatos demonstrados nas mini demos 3D
+interativas ("Quatro Fazendas"): low-poly colorido, voxel, toon/cel-shaded e
+pixel art 3D (HD-2D). O low-poly é o que melhor escala para a quantidade de
+conteúdo do GDD (3.000+ móveis, 150 cultivos, 120–180 moradores) e permite
+produzir assets por geometria/código sem depender de arte externa.
 
-1. **Low-poly colorido** — geometria facetada, cores vivas. Mais rápido de
-   produzir por geometria/código, sem depender de assets externos.
-2. **Voxel** — mundo de blocos estilizados (Minecraft/Crossy Road).
-3. **Toon/cel-shaded** — contornos e sombreamento chapado (Wind Waker).
-4. **Pixel art 3D (HD-2D)** — sprites 2D num mundo 3D (Octopath Traveler),
-   mais fiel ao visual de Stardew Valley.
+Diretrizes:
+
+- Materiais flat-shaded, sem texturas realistas; paleta saturada e quente.
+- Silhuetas simples e legíveis — o jogo é visto de longe na câmera isométrica.
 
 Decisões já tomadas:
 

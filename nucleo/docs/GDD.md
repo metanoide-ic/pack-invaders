@@ -416,6 +416,6 @@ moradores, móveis, receitas e festivais.
 
 - **Engine**: Godot 4 (GDScript), export desktop para Steam (GodotSteam).
 - **Câmera**: alternável entre isométrica/top-down e terceira pessoa.
-- **Estilo visual**: _em decisão — ver `docs/art-style.md`_.
+- **Estilo visual**: low-poly colorido (flat shading) — ver `docs/art-style.md`.
 - **Mecânicas do protótipo inicial**: farming (plantar/regar/colher),
   inventário e ferramentas, ciclo de dia/noite e estações, NPCs e vila.
