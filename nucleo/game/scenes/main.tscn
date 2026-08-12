@@ -1,7 +1,9 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
+[ext_resource type="Script" path="res://scripts/farm_grid.gd" id="3_farm"]
+[ext_resource type="Script" path="res://scripts/hud.gd" id="4_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.35, 0.55, 0.8, 1)
@@ -57,6 +59,9 @@ surface_material_override/0 = SubResource("ground_mat")
 [node name="Collision" type="CollisionShape3D" parent="Ground"]
 shape = SubResource("ground_shape")
 
+[node name="FarmGrid" type="Node3D" parent="."]
+script = ExtResource("3_farm")
+
 [node name="Crates" type="Node3D" parent="."]
 
 [node name="Crate1" type="StaticBody3D" parent="Crates"]
@@ -92,6 +97,7 @@ shape = SubResource("crate_shape")
 [node name="Player" parent="." instance=ExtResource("2_player")]
 
 [node name="HUD" type="CanvasLayer" parent="."]
+script = ExtResource("4_hud")
 
 [node name="ClockLabel" type="Label" parent="HUD"]
 offset_left = 16.0
