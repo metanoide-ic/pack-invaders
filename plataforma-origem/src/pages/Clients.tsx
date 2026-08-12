@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Trash2, Pencil, CalendarRange, MessageCircle, Instagram, AtSign } from 'lucide-react';
+import { Plus, Users, Trash2, Pencil, CalendarRange, Loader2, MessageCircle, Instagram, AtSign } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Textarea, Modal, Select, EmptyState } from '@/components/ui';
 import { PlanModal } from '@/components/PlanModal';
+import { buildClientSlots, applyPlanToWorkspace } from '@/lib/planner';
+import { generatePlanIdeas } from '@/lib/ai';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
@@ -42,6 +44,45 @@ export default function Clients() {
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
   const [planFor, setPlanFor] = useState<Client | null>(null);
+  const [batchMsg, setBatchMsg] = useState('');
+  const [batchBusy, setBatchBusy] = useState(false);
+
+  /**
+   * Gera o mês inteiro da carteira de uma vez. Só entra quem tem cadência:
+   * agentes Omni (conteúdo vem do Banco Omni) e clientes sob demanda ficam
+   * de fora por definição, não por esquecimento.
+   */
+  async function gerarMesDeTodos() {
+    if (batchBusy) return;
+    const alvoData = new Date();
+    alvoData.setMonth(alvoData.getMonth() + 1); // sempre o mês seguinte
+    const year = alvoData.getFullYear();
+    const month = alvoData.getMonth();
+    const label = alvoData.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+
+    const comCadencia = clients.filter((c) => Object.keys(c.weeklyPlan ?? {}).length > 0);
+    if (comCadencia.length === 0) { setBatchMsg('Nenhum cliente com cadência semanal preenchida.'); return; }
+
+    setBatchBusy(true);
+    let posts = 0, cards = 0, videos = 0, feitos = 0;
+    for (const c of comCadencia) {
+      const slots = buildClientSlots(c, year, month);
+      if (slots.length === 0) continue;
+      // Com IA externa ligada, os temas saem do briefing; sem ela, do template.
+      const titles = await generatePlanIdeas(c, slots);
+      const itens = slots.map((slot, i) => ({ ...slot, title: titles[i] ?? slot.title }));
+      const r = applyPlanToWorkspace(c, itens);
+      posts += r.posts; cards += r.cards; videos += r.videos; feitos++;
+    }
+    setBatchBusy(false);
+    setBatchMsg(
+      posts + cards + videos === 0
+        ? `O mês de ${label} já estava planejado: nada novo a criar. Rodar de novo não duplica.`
+        : `Planejamento de ${label} gerado para ${feitos} cliente(s): ` +
+          `${posts} post(s), ${videos} vídeo(s) e ${cards} cartão(ões) nos quadros. ` +
+          `Quem não tem cadência (agentes Omni e clientes sob demanda) ficou de fora de propósito.`,
+    );
+  }
   const [confirmDelete, setConfirmDelete] = useState<Client | null>(null);
   const [form, setForm] = useState(blank);
 
@@ -102,8 +143,20 @@ export default function Clients() {
       <PageHeader
         title="Clientes"
         subtitle="Cada cliente com briefing, cadência da semana, grupo e Instagram."
-        action={<Button onClick={openNew}><Plus size={18} /> Adicionar cliente</Button>}
+        action={
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={gerarMesDeTodos} disabled={batchBusy}>
+              {batchBusy ? <Loader2 size={16} className="animate-spin" /> : <CalendarRange size={16} />}
+              Gerar mês de todos
+            </Button>
+            <Button onClick={openNew}><Plus size={18} /> Adicionar cliente</Button>
+          </div>
+        }
       />
+
+      {batchMsg && (
+        <p className="mb-4 rounded-lg border border-line bg-white/[0.03] px-4 py-3 text-sm text-white/75">{batchMsg}</p>
+      )}
 
       {clients.length === 0 ? (
         <EmptyState icon={<Users size={40} />} title="Nenhum cliente cadastrado"

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Plus, Megaphone, Trash2, Pencil, RefreshCw, Loader2, ArrowDownToLine } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { ClientFilter } from '@/components/ClientFilter';
 import { Button, Field, Input, Textarea, Select, Modal, Badge, EmptyState, Stat } from '@/components/ui';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
@@ -12,7 +13,7 @@ import {
   AREA_LABEL, AREA_ORDEM, FUNNEL_LABEL, OBJETIVO_COM_ROAS, PLATFORM_RULES, RAIO_PADRAO_KM,
   buildUtm, descreverGeo, playbook, verbaMinimaRecomendada,
 } from '@/lib/adsPlaybook';
-import { money, cn, todayISO } from '@/lib/utils';
+import { money, todayISO } from '@/lib/utils';
 import type { AdPlatform, Campaign, CampaignFunnel, CampaignObjective, CampaignStatus, ServiceArea } from '@/lib/types';
 
 const PLATFORMS: AdPlatform[] = ['Meta', 'Google', 'TikTok'];
@@ -164,22 +165,7 @@ export default function Traffic() {
 
       {msg && <p className="mb-4 rounded-lg border border-line bg-white/[0.03] px-4 py-3 text-sm text-white/75">{msg}</p>}
 
-      {clients.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-1.5">
-          <button onClick={() => setClientFilter('')}
-            className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition', !clientFilter ? 'bg-white/10 text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}>
-            Todos os clientes
-          </button>
-          {clients.map((c) => (
-            <button key={c.id} onClick={() => setClientFilter(clientFilter === c.id ? '' : c.id)}
-              className={cn('inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', clientFilter === c.id ? 'text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
-              style={clientFilter === c.id ? { background: `${c.color}26`, boxShadow: `inset 0 0 0 1px ${c.color}66` } : undefined}>
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />
-              {c.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <ClientFilter clients={clients} value={clientFilter} onChange={setClientFilter} />
 
       {campaigns.length === 0 ? (
         <EmptyState icon={<Megaphone size={40} />} title="Nenhuma campanha"

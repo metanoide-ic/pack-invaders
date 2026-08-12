@@ -14,6 +14,7 @@ import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-
 import { CSS } from '@dnd-kit/utilities';
 import { Plus, CheckSquare, MessageSquare, AlertTriangle, LayoutGrid, CalendarDays, X } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
+import { ClientFilter } from '@/components/ClientFilter';
 import { Button, Badge, Avatar } from '@/components/ui';
 import { PostsCalendar } from '@/components/PostsCalendar';
 import { useData } from '@/lib/dataStore';
@@ -88,27 +89,7 @@ export default function Posts() {
         }
       />
 
-      {clients.length > 0 && (
-        <div className="mb-4 flex flex-wrap items-center gap-1.5">
-          <button
-            onClick={() => setClientFilter('')}
-            className={cn('rounded-md px-3 py-1.5 text-xs font-medium transition', !clientFilter ? 'bg-white/10 text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
-          >
-            Todos os clientes
-          </button>
-          {clients.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => setClientFilter(clientFilter === c.id ? '' : c.id)}
-              className={cn('inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition', clientFilter === c.id ? 'text-white' : 'text-white/45 hover:bg-white/5 hover:text-white')}
-              style={clientFilter === c.id ? { background: `${c.color}26`, boxShadow: `inset 0 0 0 1px ${c.color}66` } : undefined}
-            >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: c.color }} />
-              {c.name}
-            </button>
-          ))}
-        </div>
-      )}
+      <ClientFilter clients={clients} value={clientFilter} onChange={setClientFilter} />
 
       {view === 'calendario' ? (
         <PostsCalendar posts={visible} onOpen={setOpenId} />
