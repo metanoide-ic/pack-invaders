@@ -20,15 +20,21 @@
   --color-brand-900: #2f1d6b;
   --color-brand-950: #1a1140;
 
-  /* Neutros — base do produto (frios, quase-preto) */
-  --color-ink-950: #0a0a0c;
-  --color-ink-900: #0e0e11;
-  --color-ink-850: #121216;
-  --color-ink-800: #17171c;
-  --color-ink-700: #1e1e25;
-  --color-ink-600: #26262f;
+  /* Neutros — grafite com viés violeta, não preto puro. O quase-preto
+     pesava a tela inteira; este degrau mantém o ar profissional e cansa
+     menos numa jornada de trabalho. */
+  --color-ink-950: #16151c;
+  --color-ink-900: #1b1a23;
+  --color-ink-850: #21202a;
+  --color-ink-800: #292833;
+  --color-ink-700: #33323f;
+  --color-ink-600: #3e3c4b;
 
-  --color-line: #24242c;
+  /* Tons claros, para texto sobre o grafite */
+  --color-ink-50: #f4f2f8;
+  --color-ink-400: #9b98ab;
+
+  --color-line: #35333f;
 
   --radius-xl2: 0.875rem;
 }
@@ -46,7 +52,7 @@
   body,
   #root {
     min-height: 100%;
-    background: #0a0a0c;
+    background: var(--color-ink-950);
   }
 
   html {
@@ -57,15 +63,15 @@
   body {
     margin: 0;
     font-family: var(--font-sans);
-    color: #e7e7ea;
+    color: var(--color-ink-50);
     letter-spacing: -0.006em;
   }
 
   /* Fundo pintado no container raiz — não depende do host/iframe */
   #root {
-    background-color: #0a0a0c;
+    background-color: var(--color-ink-950);
     background-image:
-      radial-gradient(70rem 50rem at 100% -20%, rgba(124, 92, 255, 0.08), transparent 55%);
+      radial-gradient(70rem 50rem at 100% -20%, rgba(124, 92, 255, 0.07), transparent 55%);
     background-attachment: fixed;
   }
 
@@ -86,12 +92,12 @@
   }
   *::-webkit-scrollbar { width: 10px; height: 10px; }
   *::-webkit-scrollbar-thumb {
-    background: #2a2a33;
+    background: var(--color-ink-700);
     border-radius: 999px;
     border: 3px solid transparent;
     background-clip: padding-box;
   }
-  *::-webkit-scrollbar-thumb:hover { background: #383843; background-clip: padding-box; }
+  *::-webkit-scrollbar-thumb:hover { background: var(--color-ink-600); background-clip: padding-box; }
 }
 
 @layer components {

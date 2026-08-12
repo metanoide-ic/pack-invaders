@@ -1,4 +1,4 @@
-import type { Board, Client, ServiceArea, WeeklyPlan, WorkspaceData } from './types';
+import type { BillingMethod, Board, Client, ServiceArea, WeeklyPlan, WorkspaceData } from './types';
 import { uid } from './utils';
 
 /**
@@ -27,7 +27,38 @@ interface Entrada {
   cidades?: string[];
   /** Observação de operação, quando o combinado foge do padrão. */
   nota?: string;
+  /** Contrato mensal, dia de vencimento e forma combinada. */
+  fee?: number;
+  dia?: number;
+  forma?: BillingMethod;
+  /** Razão social ou nome de quem paga, como aparece no controle. */
+  pagador?: string;
 }
+
+/**
+ * Agentes Omni. Cada um é um correspondente bancário em uma praça, fatura
+ * separado e tem a própria cidade, mas o conteúdo é o mesmo para todos:
+ * é produzido uma vez em "Banco Omni" e distribuído.
+ */
+const AGENTES_OMNI: Array<[string, string, number, number, BillingMethod?, string?]> = [
+  ['Omni Cotia', 'Cotia', 1500, 5, 'pix', 'TIRAL'],
+  ['Omni Jaú', 'Jaú', 1500, 5, 'pix', 'EDMAR MORETTI'],
+  ['Omni Juiz de Fora', 'Juiz de Fora', 1500, 5, 'pix', 'CONQUISTA INTERMED'],
+  ['Omni Jaguariúna', 'Jaguariúna', 1500, 10, 'pix', 'Artur Nogueira'],
+  ['Omni Guaratinguetá', 'Guaratinguetá', 1500, 10, 'pix', 'Beelinho'],
+  ['Omni Passo Fundo', 'Passo Fundo', 1500, 10, 'pix', 'EVOLUCAO INTERMED'],
+  ['Omni São Bernardo do Campo', 'São Bernardo do Campo', 1000, 10, 'pix', 'ACS INTERMED'],
+  ['Omni Taubaté', 'Taubaté', 1000, 10, 'pix', 'Garbelotto'],
+  ['Omni Zona Sul SP', 'São Paulo', 1000, 10, 'pix'],
+  ['Omni Franca', 'Franca', 2000, 20, 'pix', 'LD CADASTRAMENTO / MINAS SERV'],
+  ['Omni Jundiaí', 'Jundiaí', 1500, 20, 'pix', 'YOSI NEGOCIOS'],
+  ['Omni Limeira', 'Limeira', 2000, 20, 'pix', 'OPMAZETTI'],
+  ['Omni Volta Redonda', 'Volta Redonda', 1500, 20, 'pix', 'VIVAMAR INTERMED'],
+  ['Omni Rio de Janeiro', 'Rio de Janeiro', 1000, 20, 'pix', 'VIVAMAR INTERMED (Zona Oeste)'],
+  ['Omni Jacareí', 'Jacareí', 1000, 30, 'boleto', 'SERVCAR'],
+  ['Omni Linhares', 'Linhares', 1000, 30, 'boleto', 'CONTROLE INTERMED'],
+  ['Omni Uberaba', 'Uberaba', 1000, 30, 'pix', 'CARVALHO INTERMED'],
+];
 
 const CARTEIRA: Entrada[] = [
   {
@@ -41,6 +72,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Vidroscar',
+    fee: 2000, dia: 25, forma: 'pix', pagador: 'VIDROSCAR',
     cor: '#06b6d4',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Foto'] },
@@ -49,6 +81,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Rede de Postos Margarida',
+    fee: 900, dia: 5, forma: 'nf', pagador: 'POSTO MARGARIDA',
     cor: '#16a34a',
     area: 'regiao',
     cadencia: { [SEG]: ['Post'], [QUA]: ['Vídeo'], [SEX]: ['Post'] },
@@ -58,6 +91,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Carpintaria Meirelles',
+    fee: 1000, dia: 5, forma: 'pix', pagador: 'PEDRO E CLARA (cobrar com Carlos)',
     cor: '#0f766e',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUI]: ['Post'] },
@@ -66,6 +100,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Barra Escap Autocenter',
+    fee: 1200, dia: 25, forma: 'boleto', pagador: 'ACESSORIOS DE VEICULOS',
     cor: '#eab308',
     area: 'cidade',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -74,6 +109,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Start Car',
+    fee: 2000, dia: 10, forma: 'pix', pagador: 'AUTOMOTIVE',
     cor: '#1e40af',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -83,6 +119,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'RPM Veículos',
+    fee: 1500, dia: 25, forma: 'pix', pagador: 'RPS MOTA',
     cor: '#3b82f6',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -92,6 +129,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Connecta Telesaúde Digital',
+    fee: 1500, dia: 20, forma: 'pix', pagador: 'PAULO KIYOSHI UEKANE',
     cor: '#14b8a6',
     area: 'nacional',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -100,6 +138,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'AH-I Entertainment',
+    fee: 1000, dia: 30, forma: 'pix', pagador: 'JEFERSON MIATO',
     cor: '#22d3ee',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -108,6 +147,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Nascimento & Nascimento Advogados',
+    fee: 2000, dia: 20, forma: 'pix', pagador: 'NASCIMENTO',
     cor: '#155e75',
     area: 'estado',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -124,6 +164,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Concreblocos & Lajes',
+    fee: 750, dia: 25, forma: 'boleto', pagador: 'CONCREBLOCOS',
     cor: '#f97316',
     area: 'regiao',
     cidades: SUL_FLUMINENSE,
@@ -133,6 +174,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Dra. Elba Ferrão',
+    fee: 1500, dia: 16, forma: 'pix', pagador: 'ELBA CHRISTINA',
     cor: '#f472b6',
     area: 'cidade',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Foto'] },
@@ -141,6 +183,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Dra. Lara',
+    fee: 700, dia: 30, forma: 'pix', pagador: 'LARA',
     cor: '#a8a29e',
     area: 'cidade',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -149,6 +192,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Sicomércio Barra Mansa',
+    fee: 2733.69, dia: 13, forma: 'boleto', pagador: 'SICOMERCIO',
     cor: '#1d4ed8',
     area: 'cidade',
     cidades: ['Barra Mansa'],
@@ -158,6 +202,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'BT Veículos',
+    fee: 1000, dia: 20, forma: 'pix', pagador: 'BALCAO DE NEGOCIOS',
     cor: '#dc2626',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -166,7 +211,8 @@ const CARTEIRA: Entrada[] = [
     nota: 'Os dois posts da semana são de veículos, usando os carros que o cliente manda no grupo.',
   },
   {
-    nome: 'Kbral Park e Kbral Kids',
+    nome: 'Kbral Park',
+    fee: 1500, dia: 20, forma: 'pix', pagador: 'RJS RESTAURANTE LTDA',
     cor: '#d946ef',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Foto'], [SEX]: ['Foto'] },
@@ -175,7 +221,28 @@ const CARTEIRA: Entrada[] = [
     nota: 'As duas entregas semanais são fotos, não artes.',
   },
   {
+    nome: 'Kbral Kids',
+    cor: '#f0abfc',
+    area: 'regiao',
+    fee: 1000, dia: 5, forma: 'pix', pagador: 'SUKIO HIGO',
+    cadencia: {},
+    briefing:
+      'Entretenimento infantil da mesma família do Kbral Park, faturado separado. A comunicação mostra crianças usando o espaço e famílias aproveitando o ambiente, com cenas espontâneas e comida pronta. Conferir o Instagram antes de cada planejamento, para acompanhar atrações e novidades da temporada.',
+    nota: 'Entrega combinada junto com o Kbral Park.',
+  },
+  {
+    nome: 'Sienna Café',
+    cor: '#b45309',
+    area: 'cidade',
+    fee: 2000, dia: 25, forma: 'pix', pagador: 'PENA & MENEGHITTI',
+    cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
+    briefing:
+      'Cafeteria com ambiente acolhedor e produto artesanal. Conteúdo em cima do preparo, do ambiente e do que sai da cozinha, com foto real valorizando o produto. Briefing a completar com o cliente.',
+    nota: 'Cliente que estava no controle financeiro e faltava no briefing. Confirmar cadência e identidade.',
+  },
+  {
     nome: 'Mastermax Contabilidade',
+    fee: 1500, dia: 30, forma: 'boleto', pagador: 'MASTERMAX CONTABILIDADE',
     cor: '#0284c7',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
@@ -193,6 +260,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Barra Travel',
+    fee: 2000, dia: 10, forma: 'pix', pagador: 'BARRA TRAVEL',
     cor: '#0891b2',
     area: 'regiao',
     cadencia: { [TER]: ['Vídeo'], [QUI]: ['Post'] },
@@ -201,6 +269,7 @@ const CARTEIRA: Entrada[] = [
   },
   {
     nome: 'Camisaria Pinguim',
+    fee: 1000, dia: 5, forma: 'pix', pagador: 'CAMISARIA PINGUIM',
     cor: '#334155',
     area: 'cidade',
     cadencia: { [TER]: ['Vídeo'], [QUI]: ['Foto'] },
@@ -222,8 +291,34 @@ export function seedData(): WorkspaceData {
     // chutar a praça erra o aniversário da cidade no planejamento, e a tela de
     // Clientes mostra quem ainda está sem preencher.
     cities: c.cidades,
+    monthlyFee: c.fee,
+    billingDay: c.dia,
+    billingMethod: c.forma,
+    contact: c.pagador,
     createdAt: Date.now(),
   }));
+
+  // Cada agente Omni fatura sozinho e tem a própria praça. O conteúdo não é
+  // duplicado: sai uma vez em "Banco Omni" e serve para todos.
+  for (const [nome, cidade, fee, dia, forma, pagador] of AGENTES_OMNI) {
+    clients.push({
+      id: uid('cli'),
+      name: nome,
+      color: '#2563eb',
+      briefing:
+        `Agente Omni em ${cidade}, correspondente bancário do Banco Omni. ` +
+        'O conteúdo da semana vem pronto de "Banco Omni" e serve para todos os agentes. ' +
+        'Só feirão e ação local desta praça pedem peça exclusiva, e aí entram com a cidade no material.',
+      cities: [cidade],
+      serviceArea: 'cidade',
+      weeklyPlan: {},
+      monthlyFee: fee,
+      billingDay: dia,
+      billingMethod: forma ?? 'pix',
+      contact: pagador,
+      createdAt: Date.now(),
+    });
+  }
 
   const board: Board = {
     id: uid('board'),
