@@ -1,7 +1,8 @@
 // Ilha Paulista-Carioca — Fase 2: terreno, zonas, cidade e locomoção
 import * as THREE from 'three';
 import { groundY, terrainGrid, zoneAt, fbm, clamp, CORES, R_ILHA, SIZE, SEG } from './world.js';
-import { buildCity } from './city.js';
+import { buildCity, buildHash } from './city.js';
+import { buildInterior, FLOOR_Y } from './interior.js';
 
 // ---------------------------------------------------------------- cena
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -12,8 +13,10 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87c9f2);
-scene.fog = new THREE.Fog(0x87c9f2, 1100, 3600);
+const CEU = new THREE.Color(0x87c9f2);
+const NEVOA_CEU = new THREE.Fog(0x87c9f2, 1100, 3600);
+scene.background = CEU;
+scene.fog = NEVOA_CEU;
 
 const camera = new THREE.PerspectiveCamera(62, innerWidth / innerHeight, 0.5, 8000);
 
@@ -26,7 +29,8 @@ sol.shadow.camera.top = 160; sol.shadow.camera.bottom = -160;
 sol.shadow.camera.far = 3000;
 sol.shadow.bias = -0.0008;
 scene.add(sol, sol.target);
-scene.add(new THREE.HemisphereLight(0xbfe3ff, 0x4e7f3a, 0.95));
+const hemi = new THREE.HemisphereLight(0xbfe3ff, 0x4e7f3a, 0.95);
+scene.add(hemi);
 
 // gradient map de 3 tons — base do visual cel-shaded
 const tones = new Uint8Array([70, 160, 255]);
@@ -155,9 +159,63 @@ const player = new THREE.Group();
 }
 scene.add(player);
 
+// ------------------------------------------------------- entrar e sair de prédios
+const objetosMundo = scene.children.filter((o) => o.isMesh || o.isInstancedMesh);
+const RUA = {
+  ground: groundY,
+  colliders: cidade.colliders,
+  podeAndar: (x, z) => groundY(x, z) > 0.3,
+};
+let amb = RUA;
+let interior = null;
+
+function entrar(b) {
+  const it = buildInterior(b, gradientMap);
+  scene.add(it.grupo);
+  for (const o of objetosMundo) o.visible = false;
+  interior = it;
+  interior.retorno = { x: b.door.x + b.door.nx * 1.8, z: b.door.z + b.door.nz * 1.8 };
+  interior.camAntes = camDist;
+  interior.luzAntes = [sol.intensity, hemi.intensity];
+  sol.intensity = 0.45; hemi.intensity = 0.3;
+  const hash = buildHash(it.colliders);
+  amb = { ground: () => FLOOR_Y, colliders: hash, podeAndar: () => true };
+  player.position.set(it.spawn.x, FLOOR_Y, it.spawn.z);
+  camDist = 6; yaw = Math.PI; pitch = 0.30;
+  scene.background = new THREE.Color(0x14161a);
+  scene.fog = new THREE.Fog(0x14161a, 8, 46);
+}
+
+function sair() {
+  scene.remove(interior.grupo);
+  interior.grupo.traverse((o) => { if (o.geometry) o.geometry.dispose(); });
+  for (const o of objetosMundo) o.visible = true;
+  const r = interior.retorno;
+  camDist = interior.camAntes;
+  sol.intensity = interior.luzAntes[0]; hemi.intensity = interior.luzAntes[1];
+  player.position.set(r.x, groundY(r.x, r.z), r.z);
+  amb = RUA;
+  interior = null;
+  scene.background = CEU;
+  scene.fog = NEVOA_CEU;
+}
+
+function alternarPorta() {
+  if (interior) {
+    const d = Math.hypot(player.position.x - interior.saida.x, player.position.z - interior.saida.z);
+    if (d < 2.6) sair();
+    return;
+  }
+  const b = cidade.nearDoor(player.position.x, player.position.z, 3.4);
+  if (b) entrar(b);
+}
+
 // ---------------------------------------------------------------- input
 const keys = {};
-addEventListener('keydown', (e) => keys[e.code] = true);
+addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'KeyE' && !e.repeat) alternarPorta();
+});
 addEventListener('keyup', (e) => keys[e.code] = false);
 let yaw = Math.PI, pitch = 0.32, camDist = 13;
 renderer.domElement.addEventListener('click', () => renderer.domElement.requestPointerLock());
@@ -203,6 +261,7 @@ function drawMinimap() {
 // ---------------------------------------------------------------- loop
 const hudZone = document.getElementById('hud-zone');
 const hudRegion = document.getElementById('hud-region');
+const hudPrompt = document.getElementById('prompt');
 let lastZone = '';
 const clock = new THREE.Clock();
 
@@ -217,14 +276,15 @@ function move(dt) {
     let nx = player.position.x + Math.sin(ang) * vel * dt;
     let nz = player.position.z + Math.cos(ang) * vel * dt;
     for (let i = 0; i < 2; i++) {
-      const fix = cidade.colliders.resolve(nx, nz, 0.6, player.position.y + 1);
+      const fix = amb.colliders.resolve(nx, nz, 0.6, player.position.y + 1);
       if (!fix) break;
       nx = fix.x; nz = fix.z;
     }
-    if (groundY(nx, nz) > 0.3) { player.position.x = nx; player.position.z = nz; }
+    if (amb.podeAndar(nx, nz)) { player.position.x = nx; player.position.z = nz; }
     player.rotation.y = ang + Math.PI;
   }
-  player.position.y = Math.max(groundY(player.position.x, player.position.z), 0.3);
+  const chaoY = amb.ground(player.position.x, player.position.z);
+  player.position.y = interior ? chaoY : Math.max(chaoY, 0.3);
 }
 
 function placeCamera() {
@@ -235,20 +295,22 @@ function placeCamera() {
     const cx = player.position.x + Math.sin(yaw) * Math.cos(pitch) * d;
     const cz = player.position.z + Math.cos(yaw) * Math.cos(pitch) * d;
     const cy = player.position.y + 2 + Math.sin(pitch) * d;
-    if (!cidade.colliders.resolve(cx, cz, 0.4, cy)) { dist = d; break; }
+    if (!amb.colliders.resolve(cx, cz, 0.4, cy)) { dist = d; break; }
   }
   camera.position.set(
     player.position.x + Math.sin(yaw) * Math.cos(pitch) * dist,
     player.position.y + 2 + Math.sin(pitch) * dist,
     player.position.z + Math.cos(yaw) * Math.cos(pitch) * dist
   );
-  const chao = groundY(camera.position.x, camera.position.z) + 1.2;
+  const chao = amb.ground(camera.position.x, camera.position.z) + 1.2;
   if (camera.position.y < chao) camera.position.y = chao;
+  if (interior) camera.position.y = Math.min(camera.position.y, FLOOR_Y + interior.peDireito - 0.45);
   camera.lookAt(player.position.x, player.position.y + 2, player.position.z);
 }
 
 // ferramenta de desenvolvimento: teleporta e ajusta a câmera
 window.__dbg.tp = (x, z, dist = 13, p = 0.32, y = Math.PI) => {
+  if (interior) sair();
   player.position.set(x, groundY(x, z), z);
   camDist = dist; pitch = p; yaw = y;
 };
@@ -263,13 +325,24 @@ function tick() {
   sol.position.set(player.position.x + 600, player.position.y + 900, player.position.z + 300);
   sol.target.position.copy(player.position);
 
-  const zona = zoneAt(player.position.x, player.position.z, player.position.y);
-  if (zona.nome !== lastZone) {
-    lastZone = zona.nome;
-    hudZone.textContent = zona.nome;
-    hudRegion.textContent = zona.regiao;
+  if (interior) {
+    if (lastZone !== interior.titulo) {
+      lastZone = interior.titulo;
+      hudZone.textContent = interior.predio.bairro;
+      hudRegion.textContent = interior.titulo.split(' · ')[0];
+    }
+    const d = Math.hypot(player.position.x - interior.saida.x, player.position.z - interior.saida.z);
+    hudPrompt.textContent = d < 2.6 ? 'E — sair' : '';
+  } else {
+    const zona = zoneAt(player.position.x, player.position.z, player.position.y);
+    if (zona.nome !== lastZone) {
+      lastZone = zona.nome;
+      hudZone.textContent = zona.nome;
+      hudRegion.textContent = zona.regiao;
+    }
+    hudPrompt.textContent = cidade.nearDoor(player.position.x, player.position.z, 3.4) ? 'E — entrar' : '';
+    drawMinimap();
   }
-  drawMinimap();
   renderer.render(scene, camera);
 }
 tick();

@@ -23,6 +23,11 @@
       border: 3px solid #111; border-radius: 6px; box-shadow: 0 0 0 2px #f5d76e;
       pointer-events: none;
     }
+    #prompt {
+      position: fixed; bottom: 46px; left: 50%; transform: translateX(-50%);
+      color: #fff; font-size: 19px; font-weight: bold; letter-spacing: .5px;
+      text-shadow: 2px 2px 0 #000; pointer-events: none;
+    }
     #help {
       position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%);
       color: #eee; font-size: 13px; background: rgba(0,0,0,.45);
@@ -34,7 +39,8 @@
   <div id="hud-zone"></div>
   <div id="hud-region"></div>
   <canvas id="minimap" width="200" height="200"></canvas>
-  <div id="help">WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; Mouse (clique) câmera &nbsp;·&nbsp; Scroll zoom</div>
+  <div id="prompt"></div>
+  <div id="help">WASD mover &nbsp;·&nbsp; Shift correr &nbsp;·&nbsp; E entrar/sair &nbsp;·&nbsp; Mouse (clique) câmera &nbsp;·&nbsp; Scroll zoom</div>
   <script type="importmap">{ "imports": { "three": "./lib/three.module.js" } }</script>
   <script type="module" src="./main.js"></script>
 </body>

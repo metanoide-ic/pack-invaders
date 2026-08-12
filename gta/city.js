@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { groundY, zoneAt, DISTRICTS, CORES, R_ILHA } from './world.js';
 
-function mulberry32(a) {
+export function mulberry32(a) {
   return function () {
     a |= 0; a = (a + 0x6D2B79F5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
@@ -226,12 +226,33 @@ export function buildCity(scene, gradientMap) {
   scene.add(new THREE.Mesh(toGeometry(doors, false, true),
     new THREE.MeshToonMaterial({ gradientMap, vertexColors: true })));
 
-  return { buildings, colliders: buildHash(colliders) };
+  const doorMap = new Map();
+  for (const b of buildings) {
+    const key = Math.floor(b.door.x / CELL) + ',' + Math.floor(b.door.z / CELL);
+    let arr = doorMap.get(key);
+    if (!arr) doorMap.set(key, arr = []);
+    arr.push(b);
+  }
+  const nearDoor = (x, z, raio) => {
+    let best = null, bd = raio * raio;
+    const ci = Math.floor(x / CELL), cj = Math.floor(z / CELL);
+    for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) {
+      const arr = doorMap.get(i + ',' + j);
+      if (!arr) continue;
+      for (const b of arr) {
+        const dd = (x - b.door.x) ** 2 + (z - b.door.z) ** 2;
+        if (dd < bd) { bd = dd; best = b; }
+      }
+    }
+    return best;
+  };
+
+  return { buildings, colliders: buildHash(colliders), nearDoor };
 }
 
 // ------------------------------------------------- colisão (hash espacial)
 const CELL = 40;
-function buildHash(list) {
+export function buildHash(list) {
   const map = new Map();
   for (const c of list) {
     const x0 = Math.floor((c.x - c.hw - c.hd) / CELL), x1 = Math.floor((c.x + c.hw + c.hd) / CELL);

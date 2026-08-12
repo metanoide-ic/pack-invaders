@@ -24,7 +24,9 @@ Steam (Electron) e mobile (Capacitor).
   3ª pessoa, minimapa, HUD com nome do bairro/região
 - [x] **Fase 2 — Cidade**: ruas, calçadas e prédios cel-shaded, cada bairro com
   malha viária, altura e paleta próprias (~9 mil prédios)
-- [ ] **Fase 3 — Interiores**: todos os prédios entráveis (gerados proceduralmente)
+- [x] **Fase 3 — Interiores**: todos os ~9 mil prédios entráveis; o interior é
+  gerado na hora (cômodos, mobília e iluminação conforme o tipo do imóvel) e
+  descartado ao sair. Por enquanto um pavimento por imóvel
 - [ ] **Fase 4 — Vida**: NPCs em todas as zonas (cidade mais densa), tráfego
 - [ ] **Fase 5 — Veículos**: carros dirigíveis, esqui na neve
 - [ ] **Fase 6 — Conteúdo**: missões, lojas, praias com vida, ciclo dia/noite
