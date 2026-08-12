@@ -7,6 +7,18 @@ export interface Holiday {
   universal?: boolean; // gera post extra para todos os clientes
 }
 
+/**
+ * Aniversários das cidades da região, confirmados em fonte oficial.
+ * O planejador aplica sozinho a quem tiver a cidade no cadastro: preencher a
+ * cidade do cliente já traz o aniversário, sem cadastrar data à mão.
+ */
+export const ANIVERSARIO_CIDADE: Record<string, string> = {
+  'Barra Mansa': '10-03',
+  'Volta Redonda': '07-17',
+  'Resende': '09-29',
+  'Barra do Piraí': '03-10',
+};
+
 /** Datas comemorativas (Brasil). */
 export const HOLIDAYS: Holiday[] = [
   { md: '01-01', name: 'Ano Novo', universal: true },
@@ -78,6 +90,12 @@ export function buildClientSlots(client: Client, year: number, month: number): P
   // (aniversário de cada cidade onde ele atua, aniversário da loja, data do
   // setor). Um cliente regional pode ter várias.
   const proprias: Holiday[] = (client.localDates ?? []).map((d) => ({ md: d.md, name: d.name }));
+  for (const cidade of client.cities ?? []) {
+    const md = ANIVERSARIO_CIDADE[cidade];
+    if (md && !proprias.some((x) => x.md === md)) {
+      proprias.push({ md, name: `Aniversário de ${cidade}` });
+    }
+  }
   const monthHolidays = [...HOLIDAYS, ...proprias].filter(
     (h) => Number(h.md.slice(0, 2)) === month + 1,
   );
