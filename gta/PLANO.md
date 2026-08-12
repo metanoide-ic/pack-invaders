@@ -22,7 +22,8 @@ Steam (Electron) e mobile (Capacitor).
 
 - [x] **Fase 1 — Terreno e locomoção**: ilha com relevo e zonas, personagem em
   3ª pessoa, minimapa, HUD com nome do bairro/região
-- [ ] **Fase 2 — Cidade**: ruas e prédios cel-shaded por bairro
+- [x] **Fase 2 — Cidade**: ruas, calçadas e prédios cel-shaded, cada bairro com
+  malha viária, altura e paleta próprias (~9 mil prédios)
 - [ ] **Fase 3 — Interiores**: todos os prédios entráveis (gerados proceduralmente)
 - [ ] **Fase 4 — Vida**: NPCs em todas as zonas (cidade mais densa), tráfego
 - [ ] **Fase 5 — Veículos**: carros dirigíveis, esqui na neve
