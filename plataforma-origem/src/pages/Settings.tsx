@@ -172,8 +172,13 @@ export default function Settings() {
                 <Upload size={16} /> Importar backup
               </Button>
               <input ref={importRef} type="file" accept="application/json,.json" hidden onChange={importBackup} />
-              <Button variant="outline" onClick={() => data.loadDemo()}>
-                Recarregar dados de exemplo
+              <Button variant="outline" onClick={() => {
+                const n = data.restoreClients();
+                setBackupMsg(n === 0
+                  ? 'A carteira já está completa: nenhum cliente faltando.'
+                  : `${n} cliente(s) da carteira reposto(s). Nada mais foi alterado.`);
+              }}>
+                Repor clientes da carteira
               </Button>
               <Button variant="danger" onClick={() => setConfirmReset(true)}>
                 Limpar todos os dados

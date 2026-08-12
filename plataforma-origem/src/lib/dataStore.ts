@@ -32,6 +32,8 @@ interface DataState {
   seeded: boolean;
 
   loadDemo: () => void;
+  /** Repõe clientes da carteira que tenham sido removidos, sem apagar nada. */
+  restoreClients: () => number;
   resetAll: () => void;
 
   // Clientes
@@ -115,6 +117,15 @@ export const useData = create<DataState>()(
       seeded: false,
 
       loadDemo: () => set({ ...seedData(), seeded: true }),
+
+      restoreClients: () => {
+        const atuais = get().clients;
+        const faltando = seedData().clients.filter(
+          (c) => !atuais.some((a) => a.name.trim().toLowerCase() === c.name.trim().toLowerCase()),
+        );
+        if (faltando.length) set((s) => ({ clients: [...s.clients, ...faltando] }));
+        return faltando.length;
+      },
       resetAll: () => set({ ...empty, seeded: true }),
 
       // ---------- Clientes ----------
