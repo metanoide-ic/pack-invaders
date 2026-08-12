@@ -1,40 +1,21 @@
 import { cn } from '@/lib/utils';
 
 /**
- * Marca Orikay: um "O" aberto em traço grosso, com a seta saindo pelo canto
- * superior direito e a ponta do anel fechando por baixo dela. Redesenhada em
- * vetor para ficar nítida em qualquer tamanho e acompanhar o tema.
+ * Marca Orikay: o "O" aberto pela direita e o "K" reduzido às duas pernas,
+ * encaixadas na abertura do anel. Monocromática de propósito — herda a cor
+ * do texto, então funciona no tema escuro e em fundos claros.
  */
-export function LogoMark({
-  className,
-  gradient = true,
-}: {
-  className?: string;
-  gradient?: boolean;
-}) {
-  const fill = gradient ? 'url(#orikay-grad)' : 'currentColor';
+export function LogoMark({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 100" className={cn('block', className)} aria-hidden="true">
-      {gradient && (
-        <defs>
-          <linearGradient id="orikay-grad" x1="14" y1="86" x2="86" y2="14" gradientUnits="userSpaceOnUse">
-            <stop offset="0" stopColor="#5b2fe0" />
-            <stop offset="0.55" stopColor="#7c4dff" />
-            <stop offset="1" stopColor="#c4a0ff" />
-          </linearGradient>
-        </defs>
-      )}
-
-      {/* Anel aberto no canto superior direito, desenhado como arco puro:
-          a versão com máscara facetava o traço em alguns renderizadores. */}
+    <svg viewBox="0 0 100 100" className={cn('block text-ink-50', className)} aria-hidden="true">
+      {/* Anel aberto: arco puro, sem máscara, para não facetar ao rasterizar. */}
       <path
-        d="M51.21 26.46 A30 30 0 1 0 75.34 49.76"
-        fill="none" stroke={fill} strokeWidth="14" strokeLinecap="round"
+        d="M54.71 30.08 A26 26 0 1 0 54.71 69.92"
+        fill="none" stroke="currentColor" strokeWidth="14"
       />
-      {/* Haste da seta, atravessando o anel. */}
-      <path d="M44 58 L82 20 L90 28 L52 66 Z" fill={fill} />
-      {/* Cabeça da seta. */}
-      <path d="M68 12 L94 8 L90 34 Z" fill={fill} strokeLinejoin="round" />
+      {/* Pernas do K, partindo do vértice dentro da abertura do anel. */}
+      <path d="M58 50 L78 20 L94 20 L74 50 Z" fill="currentColor" />
+      <path d="M58 50 L78 80 L94 80 L74 50 Z" fill="currentColor" />
     </svg>
   );
 }

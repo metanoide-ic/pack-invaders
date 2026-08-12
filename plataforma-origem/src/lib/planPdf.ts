@@ -4,7 +4,8 @@ import type { PlanItem } from './planner';
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 
-const LOGO_SVG = `<svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="14" y1="86" x2="86" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5b2fe0"/><stop offset="0.55" stop-color="#7c4dff"/><stop offset="1" stop-color="#c4a0ff"/></linearGradient></defs><path d="M51.21 26.46 A30 30 0 1 0 75.34 49.76" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round"/><path d="M44 58 L82 20 L90 28 L52 66 Z" fill="url(#g)"/><path d="M68 12 L94 8 L90 34 Z" fill="url(#g)"/></svg>`;
+// No papel o fundo é branco, então a marca sai no tom escuro da identidade.
+const LOGO_SVG = `<svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><path d="M54.71 30.08 A26 26 0 1 0 54.71 69.92" fill="none" stroke="#16151c" stroke-width="14"/><path d="M58 50 L78 20 L94 20 L74 50 Z" fill="#16151c"/><path d="M58 50 L78 80 L94 80 L74 50 Z" fill="#16151c"/></svg>`;
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
