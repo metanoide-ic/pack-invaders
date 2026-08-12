@@ -60,7 +60,7 @@ export default function ClientDetail() {
             <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-white/50">
               {client.instagram && <span>@{client.instagram}</span>}
               {client.contact && <span>{client.contact}</span>}
-              {client.city && <span className="inline-flex items-center gap-1"><MapPin size={13} /> {client.city}</span>}
+              {client.cities?.length ? <span className="inline-flex items-center gap-1"><MapPin size={13} /> {client.cities.join(', ')}</span> : null}
               {client.whatsappGroup && <span className="inline-flex items-center gap-1"><MessageCircle size={13} /> {client.whatsappGroup}</span>}
               {client.monthlyFee && canFinance && <span className="inline-flex items-center gap-1"><Wallet size={13} /> {money(client.monthlyFee)}/mês</span>}
             </div>

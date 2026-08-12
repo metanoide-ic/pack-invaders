@@ -34,8 +34,16 @@ export interface Client {
   monthlyFee?: number;
   /** Briefing do cliente — contexto para a IA gerar conteúdo. */
   briefing?: string;
-  /** Cidade — usada para datas comemorativas locais. */
-  city?: string;
+  /**
+   * Cidades onde o cliente atua. Um cliente regional atende várias, e cada
+   * uma traz as próprias datas locais para o planejamento.
+   */
+  cities?: string[];
+  /**
+   * Datas próprias deste cliente: aniversário de cidade, aniversário da loja,
+   * data do setor. Formato MM-DD. O planejamento cria post em cada uma.
+   */
+  localDates?: Array<{ md: string; name: string }>;
   /** Cadência semanal de entregas. */
   weeklyPlan?: WeeklyPlan;
   /** ID/nome do grupo de WhatsApp deste cliente. */

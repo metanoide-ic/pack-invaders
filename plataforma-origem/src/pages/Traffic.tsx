@@ -74,7 +74,7 @@ export default function Traffic() {
       ...blank,
       clientId: clientFilter,
       geoMode: c?.serviceArea ?? blank.geoMode,
-      geoPlaces: c?.city ?? '',
+      geoPlaces: (c?.cities ?? []).join(', '),
       geoRadiusKm: (c?.serviceRadiusKm ?? '').toString(),
     });
     setOpen(true);
@@ -285,7 +285,7 @@ export default function Traffic() {
                   clientId: e.target.value,
                   ...(c ? {
                     geoMode: c.serviceArea ?? form.geoMode,
-                    geoPlaces: c.city ?? form.geoPlaces,
+                    geoPlaces: c.cities?.length ? c.cities.join(', ') : form.geoPlaces,
                     geoRadiusKm: (c.serviceRadiusKm ?? '').toString(),
                   } : {}),
                 });

@@ -12,13 +12,19 @@ import { uid } from './utils';
 /** Dias da semana: 1 = segunda ... 5 = sexta. */
 const SEG = 1, TER = 2, QUA = 3, QUI = 4, SEX = 5;
 
+/** Municípios do Sul Fluminense atendidos pelos clientes regionais. */
+const SUL_FLUMINENSE = [
+  'Barra Mansa', 'Volta Redonda', 'Resende', 'Barra do Piraí', 'Piraí',
+  'Valença', 'Pinheiral', 'Quatis', 'Porto Real', 'Itatiaia', 'Rio Claro',
+];
+
 interface Entrada {
   nome: string;
   cor: string;
   briefing: string;
   cadencia: WeeklyPlan;
   area: ServiceArea;
-  cidade?: string;
+  cidades?: string[];
   /** Observação de operação, quando o combinado foge do padrão. */
   nota?: string;
 }
@@ -31,7 +37,7 @@ const CARTEIRA: Entrada[] = [
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Financeira focada em financiamento e refinanciamento de carros, motos e caminhões, com mais de 30 anos e presença em mais de 100 cidades. Trabalha por uma rede de Agentes Omni, correspondentes bancários espalhados pelo Brasil: o mesmo conteúdo serve para todos os agentes, e só feirões e ações locais pedem peça exclusiva. Comunicação popular, comercial e voltada à conversão. Azul royal, branco e laranja, com veículos, pessoas reais, movimento e headlines curtas de grande impacto. Pautas recorrentes: feirões, ações em loja, refinanciamento, Plano Renova, campanhas sazonais e material para correspondentes e lojistas.',
-    nota: 'Conteúdo único para todos os agentes. Feirão e ação de agente específico entram como peça extra.',
+    nota: 'Conteúdo único para todos os agentes. Os agentes ficam em praças diferentes, inclusive em outros estados, então feirão e ação local entram como peça extra com a cidade daquele agente.',
   },
   {
     nome: 'Vidroscar',
@@ -73,7 +79,7 @@ const CARTEIRA: Entrada[] = [
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Loja multimarcas de veículos, comunicação jovem, comercial e orientada à venda. Azul escuro, branco e amarelo, com mascote presente e grande destaque para os veículos e as condições comerciais. Campanhas de oferta, aniversário da loja, oportunidades especiais, datas comemorativas e argumentos para acelerar a decisão de compra.',
-    nota: 'Os dois posts da semana são de veículos.',
+    nota: 'Os dois posts da semana são de veículos, usando os carros que o cliente manda no grupo.',
   },
   {
     nome: 'RPM Veículos',
@@ -82,7 +88,7 @@ const CARTEIRA: Entrada[] = [
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Segmento automotivo, vendas e campanhas com carros e motos. Azul royal, branco e ciano, veículos em cenário urbano ou rodoviário, comunicação dinâmica. Além do comercial, produzimos campanhas internas de metas, premiações, vouchers e peças comemorativas.',
-    nota: 'Os dois posts da semana são de veículos.',
+    nota: 'Os dois posts da semana são de veículos, usando os carros que o cliente manda no grupo.',
   },
   {
     nome: 'Connecta Telesaúde Digital',
@@ -120,6 +126,7 @@ const CARTEIRA: Entrada[] = [
     nome: 'Concreblocos & Lajes',
     cor: '#f97316',
     area: 'regiao',
+    cidades: SUL_FLUMINENSE,
     cadencia: { [TER]: ['Vídeo'], [QUI]: ['Post'] },
     briefing:
       'Construção civil: lajes, pré-moldados e soluções estruturais para obra. Azul royal, amarelo e laranja, branco, com prioridade para foto real, headline forte e linguagem profissional acessível. O conteúdo mistura obras realizadas, bastidores, orientação técnica, logística, autoridade e campanhas comerciais regionais.',
@@ -144,7 +151,7 @@ const CARTEIRA: Entrada[] = [
     nome: 'Sicomércio Barra Mansa',
     cor: '#1d4ed8',
     area: 'cidade',
-    cidade: 'Barra Mansa',
+    cidades: ['Barra Mansa'],
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Entidade representativa do comércio de Barra Mansa, comunicação institucional voltada aos comerciantes e à valorização da economia local. Linha profissional e institucional, que pode ganhar tom mais comercial em campanhas promocionais. Trabalhamos datas comemorativas, ações como Amor Premiado e mensagens incentivando o consumidor a prestigiar o comércio da cidade.',
@@ -156,7 +163,7 @@ const CARTEIRA: Entrada[] = [
     cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Loja de veículos com campanhas comerciais ligadas a feirões e condições especiais de financiamento. Visual automotivo, forte e promocional, com os carros em destaque, chamada objetiva e benefício claro. Campanhas já feitas: desconto no pátio, transferência, tanque cheio, datas especiais e ações em parceria com financiamento.',
-    nota: 'Os dois posts da semana usam os carros que o cliente manda no grupo.',
+    nota: 'Os dois posts da semana são de veículos, usando os carros que o cliente manda no grupo.',
   },
   {
     nome: 'Kbral Park e Kbral Kids',
@@ -211,9 +218,10 @@ export function seedData(): WorkspaceData {
     briefing: c.briefing + (c.nota ? `\n\nCombinado de operação: ${c.nota}` : ''),
     weeklyPlan: c.cadencia,
     serviceArea: c.area,
-    // A carteira é da região do Sul Fluminense; ajuste quando o cliente for
-    // de outra cidade. A cidade alimenta as datas comemorativas locais.
-    city: c.cidade ?? (c.area === 'nacional' ? undefined : 'Barra Mansa'),
+    // Só entra cidade onde há certeza. As demais ficam em branco de propósito:
+    // chutar a praça erra o aniversário da cidade no planejamento, e a tela de
+    // Clientes mostra quem ainda está sem preencher.
+    cities: c.cidades,
     createdAt: Date.now(),
   }));
 

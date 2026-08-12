@@ -11,11 +11,26 @@ import { AREA_LABEL, RAIO_PADRAO_KM } from '@/lib/adsPlaybook';
 import type { BillingMethod, Client, ServiceArea, WeeklyPlan } from '@/lib/types';
 
 const WD = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+/** Lê "10/03 Aniversário da cidade" por linha e devolve MM-DD + nome. */
+function parseLocalDates(texto: string): Array<{ md: string; name: string }> {
+  return texto
+    .split('\n')
+    .map((linha) => linha.trim())
+    .filter(Boolean)
+    .map((linha) => {
+      const m = linha.match(/^(\d{1,2})[\/\-.](\d{1,2})\s+(.+)$/);
+      if (!m) return null;
+      const [, dia, mes, nome] = m;
+      return { md: `${mes.padStart(2, '0')}-${dia.padStart(2, '0')}`, name: nome.trim() };
+    })
+    .filter((x): x is { md: string; name: string } => x !== null);
+}
 const CONTENT_TYPES = ['Post', 'Carrossel', 'Stories', 'Vídeo', 'Reels'];
 
 const blank = {
   name: '', contact: '', instagram: '', monthlyFee: '', color: AVATAR_COLORS[0],
-  briefing: '', city: '', whatsappGroup: '',
+  briefing: '', cities: '', localDates: '', whatsappGroup: '',
   billingWhatsapp: '', billingMethod: 'pix' as BillingMethod, billingDay: '5', document: '', serviceArea: 'cidade' as ServiceArea, serviceRadiusKm: '',
   weekly: {} as WeeklyPlan,
 };
@@ -36,7 +51,9 @@ export default function Clients() {
     setForm({
       name: c.name, contact: c.contact ?? '', instagram: c.instagram ?? '',
       monthlyFee: c.monthlyFee?.toString() ?? '', color: c.color,
-      briefing: c.briefing ?? '', city: c.city ?? '', whatsappGroup: c.whatsappGroup ?? '',
+      briefing: c.briefing ?? '', cities: (c.cities ?? []).join(', '),
+      localDates: (c.localDates ?? []).map((d) => `${d.md.slice(3)}/${d.md.slice(0, 2)} ${d.name}`).join('\n'),
+      whatsappGroup: c.whatsappGroup ?? '',
       billingWhatsapp: c.billingWhatsapp ?? '', billingMethod: c.billingMethod ?? 'pix',
       billingDay: (c.billingDay ?? 5).toString(), document: c.document ?? '',
       serviceArea: c.serviceArea ?? 'cidade', serviceRadiusKm: (c.serviceRadiusKm ?? '').toString(),
@@ -62,7 +79,8 @@ export default function Clients() {
       monthlyFee: form.monthlyFee ? parseFloat(form.monthlyFee.replace(',', '.')) : undefined,
       color: form.color,
       briefing: form.briefing.trim() || undefined,
-      city: form.city.trim() || undefined,
+      cities: form.cities.split(',').map((x) => x.trim()).filter(Boolean),
+      localDates: parseLocalDates(form.localDates),
       whatsappGroup: form.whatsappGroup.trim() || undefined,
       billingWhatsapp: form.billingWhatsapp.trim() || undefined,
       billingMethod: form.billingMethod,
@@ -115,7 +133,9 @@ export default function Clients() {
                           <div className="truncate font-medium text-white">{c.name}</div>
                           <div className="flex items-center gap-2 text-xs text-white/45">
                             {c.instagram && <span className="inline-flex items-center gap-0.5"><AtSign size={11} />{c.instagram}</span>}
-                            {c.city && <span>{c.city}</span>}
+                            {c.cities?.length
+                              ? <span>{c.cities.length > 3 ? `${c.cities.slice(0, 3).join(', ')} +${c.cities.length - 3}` : c.cities.join(', ')}</span>
+                              : <span className="text-amber-300/70">sem cidade</span>}
                           </div>
                         </div>
                       </div>
@@ -171,7 +191,13 @@ export default function Clients() {
         <div className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome do cliente"><Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Ótica Vista Clara" autoFocus /></Field>
-            <Field label="Cidade"><Input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="Ex.: Volta Redonda" /></Field>
+            <Field label="Cidades onde atende" hint="Separe por vírgula. Cliente regional pode ter várias.">
+              <Input value={form.cities} onChange={(e) => setForm({ ...form, cities: e.target.value })} placeholder="Barra Mansa, Volta Redonda, Resende" />
+            </Field>
+            <Field label="Datas próprias" hint="Uma por linha: dia/mês e o nome. Entram no planejamento como post garantido.">
+              <Textarea value={form.localDates} onChange={(e) => setForm({ ...form, localDates: e.target.value })}
+                placeholder={'10/03 Aniversário de Barra do Piraí\n15/08 Aniversário da loja'} className="min-h-[70px]" />
+            </Field>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Instagram">

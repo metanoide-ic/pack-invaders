@@ -74,7 +74,13 @@ function localTitle(type: string, index: number, holiday?: string): string {
 /** Monta os slots do mês a partir da cadência semanal + datas comemorativas. */
 export function buildClientSlots(client: Client, year: number, month: number): PlanItem[] {
   const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const monthHolidays = HOLIDAYS.filter((h) => Number(h.md.slice(0, 2)) === month + 1);
+  // Datas do calendário nacional mais as datas próprias do cliente
+  // (aniversário de cada cidade onde ele atua, aniversário da loja, data do
+  // setor). Um cliente regional pode ter várias.
+  const proprias: Holiday[] = (client.localDates ?? []).map((d) => ({ md: d.md, name: d.name }));
+  const monthHolidays = [...HOLIDAYS, ...proprias].filter(
+    (h) => Number(h.md.slice(0, 2)) === month + 1,
+  );
   const items: PlanItem[] = [];
   let idx = 0;
 
@@ -87,8 +93,10 @@ export function buildClientSlots(client: Client, year: number, month: number): P
     }
   }
 
-  // Post extra nas datas universais (mesmo sem cadência no dia).
-  for (const h of monthHolidays.filter((x) => x.universal)) {
+  // Post extra nas datas universais e nas datas próprias do cliente, mesmo
+  // que não haja cadência naquele dia.
+  const proprioNoMes = new Set(proprias.map((p) => p.md));
+  for (const h of monthHolidays.filter((x) => x.universal || proprioNoMes.has(x.md))) {
     const date = iso(year, month, Number(h.md.slice(3)));
     if (!items.some((i) => i.date === date && i.holiday === h.name)) {
       items.push({ date, type: 'Post', title: localTitle('Post', idx++, h.name), holiday: h.name });

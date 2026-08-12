@@ -77,7 +77,7 @@ export async function generatePlanIdeas(
     const prompt =
       `Você planeja conteúdo de redes sociais para o cliente "${client.name}" da agência Origem.\n` +
       (client.briefing ? `Sobre o cliente: ${client.briefing}\n` : '') +
-      (client.city ? `Cidade: ${client.city}.\n` : '') +
+      (client.cities?.length ? `Cidades onde atende: ${client.cities.join(', ')}.\n` : '') +
       `Crie um tema curto e específico (até 12 palavras, sem emojis, sem aspas) para cada item:\n${listado}\n` +
       `Responda somente com uma lista numerada, um tema por linha, na mesma ordem.`;
     const res = await fetch(s.aiEndpoint, {
