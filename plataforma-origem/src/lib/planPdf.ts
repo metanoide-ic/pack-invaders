@@ -4,7 +4,7 @@ import type { PlanItem } from './planner';
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const DIAS = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
 
-const LOGO_SVG = `<svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="10" y1="90" x2="90" y2="10" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5836c4"/><stop offset="1" stop-color="#7c5cff"/></linearGradient></defs><mask id="c"><rect width="100" height="100" fill="white"/><line x1="46" y1="56" x2="92" y2="10" stroke="black" stroke-width="17" stroke-linecap="round"/></mask><circle cx="43" cy="57" r="27" fill="none" stroke="url(#g)" stroke-width="11" mask="url(#c)"/><line x1="41" y1="59" x2="84" y2="16" stroke="url(#g)" stroke-width="11" stroke-linecap="round"/><path d="M67 12 L88 8 L84 29 Z" fill="url(#g)"/></svg>`;
+const LOGO_SVG = `<svg viewBox="0 0 100 100" width="44" height="44" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="g" x1="14" y1="86" x2="86" y2="14" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5b2fe0"/><stop offset="0.55" stop-color="#7c4dff"/><stop offset="1" stop-color="#c4a0ff"/></linearGradient></defs><path d="M51.21 26.46 A30 30 0 1 0 75.34 49.76" fill="none" stroke="url(#g)" stroke-width="14" stroke-linecap="round"/><path d="M44 58 L82 20 L90 28 L52 66 Z" fill="url(#g)"/><path d="M68 12 L94 8 L90 34 Z" fill="url(#g)"/></svg>`;
 
 function esc(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -56,7 +56,7 @@ export function openPlanPdf(client: Client, items: PlanItem[], year: number, mon
   footer { margin-top: 26px; padding-top: 12px; border-top: 1px solid #e4e4ee; display: flex; justify-content: space-between; font-size: 10px; color: #8a8a99; letter-spacing: 1px; }
 </style></head><body>
 <header>
-  <div class="marca">${LOGO_SVG}<div><div class="nome">ORIGEM</div><div class="tag">COMUNICAÇÃO &amp; MARKETING</div></div></div>
+  <div class="marca">${LOGO_SVG}<div><div class="nome">Orikay</div><div class="tag">COMUNICAÇÃO &amp; MARKETING</div></div></div>
   <div class="doc"><div class="titulo">Planejamento de conteúdo</div><div class="mes">${MESES[month]} ${year}</div></div>
 </header>
 <div class="cliente">

@@ -25,35 +25,16 @@ export function LogoMark({
         </defs>
       )}
 
-      {/* Anel: aberto no canto superior direito, por onde a seta escapa. */}
-      <mask id="orikay-abertura">
-        <rect width="100" height="100" fill="white" />
-        <path d="M52 62 L96 18 L104 26 L60 70 Z" fill="black" />
-      </mask>
-      <circle
-        cx="46" cy="56" r="30"
-        fill="none" stroke={fill} strokeWidth="14"
-        mask="url(#orikay-abertura)"
-      />
-
-      {/* Ponta inferior do anel, que na marca desce solta ao lado da seta. */}
+      {/* Anel aberto no canto superior direito, desenhado como arco puro:
+          a versão com máscara facetava o traço em alguns renderizadores. */}
       <path
-        d="M72 64 C74 74 70 84 62 90 C64 79 66 71 66 64 Z"
-        fill={fill}
+        d="M51.21 26.46 A30 30 0 1 0 75.34 49.76"
+        fill="none" stroke={fill} strokeWidth="14" strokeLinecap="round"
       />
-
-      {/* Haste da seta, saindo de dentro do anel. */}
-      <path
-        d="M44 58 L82 20 L90 28 L52 66 Z"
-        fill={fill}
-      />
-
+      {/* Haste da seta, atravessando o anel. */}
+      <path d="M44 58 L82 20 L90 28 L52 66 Z" fill={fill} />
       {/* Cabeça da seta. */}
-      <path
-        d="M70 14 L92 10 L88 32 Z"
-        fill={fill}
-        strokeLinejoin="round"
-      />
+      <path d="M68 12 L94 8 L90 34 Z" fill={fill} strokeLinejoin="round" />
     </svg>
   );
 }
