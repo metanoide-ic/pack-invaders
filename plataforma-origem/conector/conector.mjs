@@ -929,6 +929,10 @@ for (const sinal of ['SIGINT', 'SIGTERM']) {
 
 /* --------------------------- Tela de configuração --------------------- */
 
+// Sobe a cada correção na tela de configuração, para dar pra confirmar
+// por telefone se a pessoa está mesmo na versão nova (sem precisar de print).
+const VERSAO_TELA = '4';
+
 const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 <title>Conector Orikay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -1077,6 +1081,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     <h2>Atividade</h2>
     <div id="hist"><p class="sub">Nada ainda. As ações da plataforma aparecem aqui.</p></div>
   </div>
+  <p class="sub" style="text-align:center;margin-top:18px">versão da tela: ${VERSAO_TELA}</p>
 </div>
 <script>
   const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken','googleCustomerId','googleDevToken','googleClientId','googleClientSecret','googleRefreshToken','googleLoginCustomerId','tiktokAdvertiserId','tiktokToken','asaasToken','asaasAmbiente'];
