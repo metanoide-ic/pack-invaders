@@ -161,9 +161,9 @@ export default function Finance() {
             }}>Gerar cobranças</Button>
             <Button size="sm" onClick={async () => {
               const n = await sendAllPending();
-              setBillingMsg(n ? `${n} cobrança(s) enviada(s) no WhatsApp.` : 'Nenhuma cobrança pendente para enviar.');
+              setBillingMsg(n ? `${n} cobrança(s) enviada(s) no WhatsApp.` : 'Nenhuma cobrança vencida pendente de envio.');
               setTimeout(() => setBillingMsg(''), 4000);
-            }}>Cobrar todos</Button>
+            }}>Cobrar vencidas</Button>
           </div>
         </div>
         {billingMsg && <p className="border-b border-line bg-white/[0.02] px-5 py-2.5 text-sm text-white/70">{billingMsg}</p>}

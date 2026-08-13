@@ -196,11 +196,12 @@ export async function sendCharge(chargeId: string): Promise<void> {
   store.updateCharge(chargeId, { status: 'enviada', sentAt: Date.now() });
 }
 
-/** Envia todas as cobranças ainda não pagas do mês corrente. */
+/** Envia as cobranças do mês corrente que já venceram (ou vencem hoje) e ainda não foram pagas. */
 export async function sendAllPending(): Promise<number> {
   const store = useData.getState();
   const month = currentMonthKey();
-  const pending = store.charges.filter((c) => c.month === month && c.status !== 'paga');
+  const hoje = todayISO();
+  const pending = store.charges.filter((c) => c.month === month && c.status !== 'paga' && c.dueDate <= hoje);
   for (const ch of pending) await sendCharge(ch.id);
   return pending.length;
 }
