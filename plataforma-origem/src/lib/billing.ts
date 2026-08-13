@@ -59,7 +59,19 @@ export function generateMonthlyCharges(): number {
   return created.length;
 }
 
-function chargeMessage(ch: Charge, pixKey: string): string {
+/** A segunda cobrança em diante é um lembrete educado, não repete a mensagem inteira. */
+function reminderMessage(ch: Charge): string {
+  const venc = new Date(ch.dueDate + 'T00:00').toLocaleDateString('pt-BR');
+  return (
+    `Olá! Aqui é a equipe da Origem, tudo bem?\n\n` +
+    `Passando só para lembrar da cobrança de ${monthLabel(ch.month)} (venc. ${venc}), ` +
+    `no valor de ${money(ch.amount)}. Consegue confirmar se o pagamento já foi feito?\n\n` +
+    `Se já tiver pago, pode desconsiderar — muito obrigado! Qualquer dúvida é só responder por aqui.`
+  );
+}
+
+function chargeMessage(ch: Charge, pixKey: string, reenvio: boolean): string {
+  if (reenvio) return reminderMessage(ch);
   const venc = new Date(ch.dueDate + 'T00:00').toLocaleDateString('pt-BR');
   const base =
     `Olá! Aqui é a equipe da Origem.\n\n` +
@@ -87,7 +99,8 @@ export async function sendCharge(chargeId: string): Promise<void> {
   const client = store.clients.find((c) => c.id === ch.clientId);
   if (!client) return;
 
-  const message = chargeMessage(ch, settings.pixKey);
+  const reenvio = ch.status === 'enviada';
+  const message = chargeMessage(ch, settings.pixKey, reenvio);
   const payload = {
     tipo: 'cobranca',
     chargeId: ch.id,
