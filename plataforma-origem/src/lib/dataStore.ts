@@ -16,7 +16,7 @@ import type {
   VideoProject,
   VideoStage,
 } from './types';
-import { uid } from './utils';
+import { uid, acharPorNome } from './utils';
 import { seedData } from './seed';
 
 interface DataState {
@@ -127,8 +127,10 @@ export const useData = create<DataState>()(
 
       restoreClients: () => {
         const atuais = get().clients;
+        // Aproximado, não exato: "Agente Omni Cotia" e "Omni Cotia" contam
+        // como o mesmo cliente, para não duplicar quem só mudou de grafia.
         const faltando = seedData().clients.filter(
-          (c) => !atuais.some((a) => a.name.trim().toLowerCase() === c.name.trim().toLowerCase()),
+          (c) => !acharPorNome(c.name, atuais, (a) => a.name),
         );
         if (faltando.length) set((s) => ({ clients: [...s.clients, ...faltando] }));
         return faltando.length;
@@ -138,7 +140,7 @@ export const useData = create<DataState>()(
         let corrigidos = 0;
         set((s) => ({
           clients: s.clients.map((c) => {
-            const base = seedClients.find((sc) => sc.name.trim().toLowerCase() === c.name.trim().toLowerCase());
+            const base = acharPorNome(c.name, seedClients, (sc) => sc.name);
             if (!base) return c;
             const patch: Partial<Client> = {};
             if (!c.monthlyFee && base.monthlyFee) patch.monthlyFee = base.monthlyFee;

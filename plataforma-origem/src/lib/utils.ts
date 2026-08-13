@@ -8,6 +8,31 @@ export function uid(prefix = 'id'): string {
   return `${prefix}_${Math.random().toString(36).slice(2, 9)}${Date.now().toString(36).slice(-4)}`;
 }
 
+/**
+ * Nome de cliente sem acento, caixa ou prefixo comum ("Agente Omni X" vira
+ * "omni x"), para casar cadastros que variaram de grafia com o tempo.
+ */
+export function normalizarNome(s: string): string {
+  return s
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/^agente\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/** Acha, numa lista, o item cujo nome bate com `alvo` — exato primeiro, depois por aproximação. */
+export function acharPorNome<T>(alvo: string, lista: T[], nomeDe: (item: T) => string): T | undefined {
+  const nAlvo = normalizarNome(alvo);
+  return (
+    lista.find((item) => normalizarNome(nomeDe(item)) === nAlvo) ??
+    lista.find((item) => {
+      const n = normalizarNome(nomeDe(item));
+      return n.length > 3 && nAlvo.length > 3 && (n.includes(nAlvo) || nAlvo.includes(n));
+    })
+  );
+}
+
 /** Hash leve, apenas para não guardar a senha em texto puro no navegador. */
 export function hash(str: string): string {
   let h = 0x811c9dc5;
