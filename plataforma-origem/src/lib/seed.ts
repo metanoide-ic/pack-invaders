@@ -155,6 +155,16 @@ const CARTEIRA: Entrada[] = [
       'Escritório jurídico tradicional, cerca de 40 anos de atuação, forte em direito previdenciário e causas de servidores. Identidade premium e institucional: azul-petróleo escuro, branco e detalhes dourados e bege. Pautas: INSS, aposentadoria, professores, piso do magistério, paridade, imposto de renda, benefícios negados e direitos pouco conhecidos.',
   },
   {
+    nome: 'Sterna Café Barra Mansa',
+    cor: '#7c2d12',
+    area: 'cidade',
+    cidades: ['Barra Mansa'],
+    cadencia: {},
+    briefing:
+      'Unidade local da rede Sterna Café, franquia de cafeteria especializada em café especial brasileiro (grãos 100% especiais de várias regiões, métodos de extração internacionais). Cardápio variado: cafés quentes e gelados, massas, refeições, saladas, sanduíches, salgados e sobremesas. Identidade da marca remete à ave sterna, a que mais viaja no mundo — conceito de experiência, cada xícara como uma descoberta. Comunicação deve valorizar o preparo, o ambiente e o produto com foto real.',
+    nota: 'Cadastrado a partir de pesquisa pública (site e Instagram da marca) — falta o cliente confirmar cadência semanal, fee, dia de vencimento e forma de pagamento.',
+  },
+  {
     nome: 'Rua de Carros',
     cor: '#65a30d',
     area: 'regiao',
