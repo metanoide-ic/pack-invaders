@@ -219,13 +219,16 @@ export async function sendAllPending(): Promise<number> {
 export async function autoSendDueCharges(): Promise<number> {
   const settings = useSettings.getState();
   if (!settings.autoBilling) return 0;
-  if (!settings.connectorUrl && !settings.whatsappWebhook) return 0;
 
   const hoje = todayISO();
   if (settings.lastAutoBillingRun === hoje) return 0;
   settings.update({ lastAutoBillingRun: hoje });
 
+  // Gerar as cobranças do mês não depende de canal de WhatsApp nenhum —
+  // só o envio depende. Sem isso, elas nem apareciam no Financeiro.
   generateMonthlyCharges();
+  if (!settings.connectorUrl && !settings.whatsappWebhook) return 0;
+
   const store = useData.getState();
   const vencidas = store.charges.filter((c) => c.status === 'pendente' && c.dueDate <= hoje);
   for (const ch of vencidas) await sendCharge(ch.id);
