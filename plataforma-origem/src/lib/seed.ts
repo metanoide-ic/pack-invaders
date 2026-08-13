@@ -155,6 +155,15 @@ const CARTEIRA: Entrada[] = [
       'Escritório jurídico tradicional, cerca de 40 anos de atuação, forte em direito previdenciário e causas de servidores. Identidade premium e institucional: azul-petróleo escuro, branco e detalhes dourados e bege. Pautas: INSS, aposentadoria, professores, piso do magistério, paridade, imposto de renda, benefícios negados e direitos pouco conhecidos.',
   },
   {
+    nome: 'Rua de Carros',
+    cor: '#65a30d',
+    area: 'regiao',
+    cadencia: { [TER]: ['Vídeo'], [SEX]: ['Post'] },
+    briefing:
+      'Loja multimarcas de veículos, comunicação comercial e orientada à venda. O conteúdo mistura oferta agressiva, condições comerciais e destaque para os veículos.',
+    nota: 'Os posts são de veículos, usando os carros que o cliente manda no grupo. Fee, dia de vencimento e forma de pagamento ainda não foram informados.',
+  },
+  {
     nome: 'Grupo 3D Empreendimentos',
     cor: '#475569',
     area: 'regiao',
