@@ -14,7 +14,10 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': o app baixa a versão nova sozinho em segundo plano, mas só
+      // troca quando a pessoa clicar em "Atualizar" — nunca recarrega a tela
+      // sem avisar, no meio de um trabalho.
+      registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'Orikay',
