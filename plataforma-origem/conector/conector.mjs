@@ -906,7 +906,9 @@ const servidor = createServer(async (req, res) => {
     }
   }
 
-  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  // Sem cache: se o navegador guardar esta página, correções feitas aqui
+  // não aparecem numa aba já aberta mesmo depois de reiniciar o conector.
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' });
   res.end(PAGINA);
 });
 
@@ -974,17 +976,17 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     </select>
     <div id="zapi">
       <div class="row">
-        <div><label>ID da instância</label><input id="zapiInstancia"></div>
-        <div><label>Token</label><input id="zapiToken"></div>
+        <div><label>ID da instância</label><input id="zapiInstancia" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div><label>Token</label><input id="zapiToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
       </div>
-      <label>Client-Token (segurança da conta)</label><input id="zapiClientToken">
+      <label>Client-Token (segurança da conta)</label><input id="zapiClientToken" autocomplete="off" autocorrect="off" spellcheck="false">
       <p class="hint">Os três aparecem no painel da Z-API depois de conectar o número por QR Code.</p>
     </div>
     <div id="evolution" style="display:none">
       <label>URL do servidor</label><input id="evolutionUrl" placeholder="https://seu-servidor.com">
       <div class="row">
-        <div><label>Instância</label><input id="evolutionInstancia"></div>
-        <div><label>API Key</label><input id="evolutionApiKey"></div>
+        <div><label>Instância</label><input id="evolutionInstancia" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+        <div><label>API Key</label><input id="evolutionApiKey" autocomplete="off" autocorrect="off" spellcheck="false"></div>
       </div>
     </div>
     <label>Testar envio (número com DDI, ex.: 5524999999999)</label>
@@ -995,8 +997,8 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   <div class="card">
     <h2><span class="dot" id="di"></span> Instagram</h2>
     <div class="row">
-      <div><label>ID da conta (IG User ID)</label><input id="igUserId"></div>
-      <div><label>Token de acesso</label><input id="igToken"></div>
+      <div><label>ID da conta (IG User ID)</label><input id="igUserId" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <div><label>Token de acesso</label><input id="igToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <p class="hint">Gerados no app da Meta, com a conta do Instagram como Profissional.
       A imagem do post precisa estar numa URL pública para o Instagram aceitar.</p>
@@ -1016,15 +1018,15 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     <h2><span class="dot" id="dg"></span> Tráfego pago (Google Ads)</h2>
     <div class="row">
       <div><label>ID da conta</label><input id="googleCustomerId" placeholder="123-456-7890"></div>
-      <div><label>Developer token</label><input id="googleDevToken"></div>
+      <div><label>Developer token</label><input id="googleDevToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <div class="row">
-      <div><label>Client ID</label><input id="googleClientId"></div>
-      <div><label>Client secret</label><input id="googleClientSecret"></div>
+      <div><label>Client ID</label><input id="googleClientId" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <div><label>Client secret</label><input id="googleClientSecret" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <div class="row">
-      <div><label>Refresh token</label><input id="googleRefreshToken"></div>
-      <div><label>Conta gerenciadora (MCC), se houver</label><input id="googleLoginCustomerId"></div>
+      <div><label>Refresh token</label><input id="googleRefreshToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <div><label>Conta gerenciadora (MCC), se houver</label><input id="googleLoginCustomerId" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <p class="hint">O developer token sai do Google Ads API Center; os outros três vêm de um
       projeto no Google Cloud com a API do Google Ads liberada. É mais trabalhoso que a Meta,
@@ -1034,8 +1036,8 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   <div class="card">
     <h2><span class="dot" id="dt"></span> Tráfego pago (TikTok Ads)</h2>
     <div class="row">
-      <div><label>ID do anunciante</label><input id="tiktokAdvertiserId"></div>
-      <div><label>Token de acesso</label><input id="tiktokToken"></div>
+      <div><label>ID do anunciante</label><input id="tiktokAdvertiserId" autocomplete="off" autocorrect="off" spellcheck="false"></div>
+      <div><label>Token de acesso</label><input id="tiktokToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
     </div>
     <p class="hint">Gerados no TikTok for Business, em Ferramentas para desenvolvedores.</p>
   </div>
@@ -1059,7 +1061,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   <div class="card">
     <h2><span class="dot" id="dp"></span> Cobrança automática (Asaas)</h2>
     <div class="row">
-      <div><label>Token da API</label><input id="asaasToken"></div>
+      <div><label>Token da API</label><input id="asaasToken" autocomplete="off" autocorrect="off" spellcheck="false"></div>
       <div><label>Ambiente</label><select id="asaasAmbiente"><option value="producao">Produção</option><option value="sandbox">Sandbox (teste)</option></select></div>
     </div>
     <p class="hint">Com isto ligado, a cobrança sai com link de pagamento e Pix copia e cola,
