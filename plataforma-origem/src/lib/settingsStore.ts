@@ -31,6 +31,8 @@ export interface Settings {
   contadorWhatsapp: string;
   /** Gera as cobranças do mês automaticamente ao abrir o Financeiro. */
   autoBilling: boolean;
+  /** Última data (AAAA-MM-DD) em que a cobrança automática do dia já rodou. */
+  lastAutoBillingRun: string;
 }
 
 interface SettingsState extends Settings {
@@ -54,6 +56,7 @@ const defaults: Settings = {
   pixKey: '',
   contadorWhatsapp: '',
   autoBilling: true,
+  lastAutoBillingRun: '',
 };
 
 export const useSettings = create<SettingsState>()(

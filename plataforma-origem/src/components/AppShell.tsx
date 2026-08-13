@@ -11,6 +11,8 @@ import { useAuth } from '@/lib/authStore';
 import { useSettings } from '@/lib/settingsStore';
 import { usePendingPosts, fireDueNotifications } from '@/lib/notifications';
 import { useApprovalInbox } from '@/lib/inbox';
+import { autoSendDueCharges } from '@/lib/billing';
+import { generateMonthlyExpenses } from '@/lib/expenses';
 import { cn } from '@/lib/utils';
 
 interface NavDef { to: string; label: string; icon: typeof LayoutDashboard; end?: boolean; }
@@ -129,7 +131,19 @@ function UserCard() {
 export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { pathname } = useLocation();
+  const canFinance = useAuth((s) => s.current()?.canFinance);
   useApprovalInbox();
+
+  // Cobrança do dia: roda sozinha ao abrir a plataforma, em qualquer tela,
+  // não só quando alguém entra no Financeiro. Só quem tem permissão de
+  // financeiro dispara, para não sair cobrando cliente porque o designer
+  // abriu o app de manhã.
+  useEffect(() => {
+    if (!canFinance) return;
+    generateMonthlyExpenses();
+    void autoSendDueCharges();
+  }, [canFinance]);
+
   return (
     <div className="min-h-screen">
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-64 flex-col border-r border-line bg-ink-900/60 p-4 backdrop-blur-xl lg:flex">

@@ -149,13 +149,17 @@ export default function Integrations() {
           </div>
           <label className="flex items-center gap-2.5 text-sm text-white/70">
             <input type="checkbox" checked={s.autoBilling} onChange={(e) => s.update({ autoBilling: e.target.checked })} className="h-4 w-4 accent-[#7c5cff]" />
-            Gerar as cobranças do mês automaticamente ao abrir o Financeiro
+            Gerar e cobrar sozinho todo dia, sem precisar abrir o Financeiro
           </label>
           <Note>
-            O envio usa o mesmo webhook do WhatsApp acima, com o WhatsApp de cobrança
-            definido em cada cliente. Confirmação automática de pagamento exige um
-            gateway (Asaas, Cora, Efí): o webhook de retorno dele pode dar baixa via
-            fluxo no Make. Sem gateway, use o botão "Marcar paga".
+            Com isso ligado, ao abrir a plataforma (em qualquer tela) ela gera as
+            cobranças do mês e manda no WhatsApp quem já venceu — uma vez por dia,
+            só quem tiver o Conector ou o webhook do WhatsApp configurado abaixo.
+            Sem canal de envio configurado, as cobranças ficam prontas mas não saem
+            sozinhas, para nunca marcar como enviada uma cobrança que não saiu de
+            verdade. Confirmação automática de pagamento exige o gateway (Asaas):
+            o Conector dá baixa sozinho quando o cliente paga. Sem gateway, use o
+            botão "Marcar paga".
           </Note>
         </Section>
 

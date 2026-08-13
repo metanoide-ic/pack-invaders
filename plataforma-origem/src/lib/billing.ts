@@ -206,6 +206,33 @@ export async function sendAllPending(): Promise<number> {
 }
 
 /**
+ * Cobrança do dia, sem precisar abrir o Financeiro nem clicar em nada: gera
+ * as cobranças do mês (se ainda não existirem) e manda quem venceu hoje ou
+ * já passou do vencimento e ainda está pendente. Roda uma vez por dia — o
+ * settingsStore guarda a última data em que rodou para não mandar de novo
+ * a cada tela aberta.
+ *
+ * Só envia de verdade quando existe um canal de WhatsApp configurado
+ * (Conector ou webhook). Sem isso, fica pendente à espera de um envio
+ * manual — nunca marca como "enviada" uma cobrança que não saiu de fato.
+ */
+export async function autoSendDueCharges(): Promise<number> {
+  const settings = useSettings.getState();
+  if (!settings.autoBilling) return 0;
+  if (!settings.connectorUrl && !settings.whatsappWebhook) return 0;
+
+  const hoje = todayISO();
+  if (settings.lastAutoBillingRun === hoje) return 0;
+  settings.update({ lastAutoBillingRun: hoje });
+
+  generateMonthlyCharges();
+  const store = useData.getState();
+  const vencidas = store.charges.filter((c) => c.status === 'pendente' && c.dueDate <= hoje);
+  for (const ch of vencidas) await sendCharge(ch.id);
+  return vencidas.length;
+}
+
+/**
  * Baixa manual: marca como paga e lança a receita no caixa.
  */
 export function markChargePaid(chargeId: string): void {
