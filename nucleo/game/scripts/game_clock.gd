@@ -33,6 +33,13 @@ func _process(delta: float) -> void:
 		hour_changed.emit(hour)
 
 
+## Pula direto para o início do próximo dia (dormir na cama).
+func sleep_to_next_day() -> void:
+	time_of_day = DAY_START_HOUR
+	_last_hour = int(DAY_START_HOUR)
+	_advance_day()
+
+
 func _advance_day() -> void:
 	day += 1
 	if day > DAYS_PER_SEASON:

@@ -1,9 +1,10 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://scripts/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://scenes/player.tscn" id="2_player"]
 [ext_resource type="Script" path="res://scripts/farm_grid.gd" id="3_farm"]
 [ext_resource type="Script" path="res://scripts/hud.gd" id="4_hud"]
+[ext_resource type="Script" path="res://scripts/house.gd" id="5_house"]
 
 [sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
 sky_top_color = Color(0.35, 0.55, 0.8, 1)
@@ -65,6 +66,10 @@ shape = SubResource("ground_shape")
 
 [node name="FarmGrid" type="Node3D" parent="."]
 script = ExtResource("3_farm")
+
+[node name="House" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9, 0, -9)
+script = ExtResource("5_house")
 
 [node name="Crates" type="Node3D" parent="."]
 

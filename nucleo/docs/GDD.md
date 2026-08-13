@@ -432,4 +432,6 @@ moradores, móveis, receitas e festivais.
   folhas, anda pelo chão) e **Prisma** (cristal facetado com brilho interno,
   flutua). Base para expandir a galeria de moradores fantásticos do §7 do GDD.
 - **Mecânicas do protótipo inicial**: farming (plantar/regar/colher),
-  inventário e ferramentas, ciclo de dia/noite e estações, NPCs e vila.
+  inventário e ferramentas, ciclo de dia/noite e estações, NPCs e vila,
+  energia e sono (casa com cama; usar ferramentas gasta energia, dormir
+  restaura e pula para o próximo dia — base do competência "Energia" do §2).

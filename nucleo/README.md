@@ -24,9 +24,13 @@ rosto, cabelo, chifres, roupas, jeito). Monte seu personagem e clique em
 |---|---|
 | WASD | Mover |
 | 1–5 / roda do mouse | Escolher ferramenta da hotbar |
-| E / clique esquerdo | Usar ferramenta na célula marcada |
+| E / clique esquerdo | Usar ferramenta na célula marcada — ou dormir, perto da cama |
 | Mouse (botão direito + arrastar) | Girar câmera |
 | V | Alternar câmera: isométrica ↔ terceira pessoa |
+
+Usar ferramentas gasta energia (barra amarela no canto superior esquerdo);
+com energia zerada o personagem anda mais devagar. Durma na cama de casa
+(E por perto) para restaurar a energia e pular para o dia seguinte.
 
 ## Estrutura
 
