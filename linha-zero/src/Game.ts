@@ -17,6 +17,10 @@ const RAIDER_FIGHT = 30; // raider hp/sec removed while a player fights back
 const REPAIR_RATE = 9; // wagon hp/sec
 const REPAIR_COST = 3; // resources/sec
 const GRACE_PERIOD = 22; // seconds before hazards can start appearing
+const CAM_DISTANCE = 21; // a relatively distant, wide third-person view — not a tight over-the-shoulder cam
+const CAM_HEIGHT = 10.5;
+const CAM_LOOK_AHEAD = 13;
+const WRECK_LIFETIME = 1.4; // seconds the tumble-away wreck animation plays before despawning
 
 export class Game {
   private renderer: THREE.WebGLRenderer;
@@ -35,6 +39,9 @@ export class Game {
   private running = false;
   private gameOver = false;
   private elapsedRunTime = 0;
+  private wrecks: { mesh: THREE.Object3D; life: number; spin: THREE.Vector3 }[] = [];
+  // modular construction leans toward whichever supply flavor the crew has been gathering
+  private supplyTally = { cargo: 1, passenger: 1 };
 
   private camLook = new THREE.Vector3();
   private camPos = new THREE.Vector3();
@@ -46,22 +53,27 @@ export class Game {
 
     this.camera = new THREE.PerspectiveCamera(62, window.innerWidth / window.innerHeight, 0.1, 500);
 
-    this.scene.background = new THREE.Color(0x1b2740);
-    this.scene.fog = new THREE.Fog(0x1b2740, 70, 260);
+    // bright, cheerful "storybook diorama" sky instead of a realistic dusk —
+    // legible, colorful, and unmistakably a toy world.
+    this.scene.background = new THREE.Color(0x8fd8ff);
+    this.scene.fog = new THREE.Fog(0x8fd8ff, 110, 300);
 
-    const hemi = new THREE.HemisphereLight(0x9fb4ff, 0x2a1f10, 1.15);
+    const hemi = new THREE.HemisphereLight(0xffffff, 0x7fae5c, 1.25);
     this.scene.add(hemi);
-    const sun = new THREE.DirectionalLight(0xffe3b0, 1.5);
-    sun.position.set(-30, 40, -20);
+    const sun = new THREE.DirectionalLight(0xfff2d0, 1.6);
+    sun.position.set(-30, 45, -20);
     sun.castShadow = true;
     sun.shadow.mapSize.set(1024, 1024);
     this.scene.add(sun);
+    const fill = new THREE.DirectionalLight(0xbfe3ff, 0.4);
+    fill.position.set(25, 20, 30);
+    this.scene.add(fill);
 
     this.train = new Train(this.scene);
     this.track = new Track(this.scene);
 
-    this.camPos.set(0, 8.5, this.train.z - 15.5);
-    this.camLook.set(0, 2.4, this.train.z + 12);
+    this.camPos.set(0, CAM_HEIGHT, this.train.z - CAM_DISTANCE);
+    this.camLook.set(0, 2.6, this.train.z + CAM_LOOK_AHEAD);
     this.camera.position.copy(this.camPos);
     this.camera.lookAt(this.camLook);
 
@@ -124,13 +136,29 @@ export class Game {
     for (let i = 0; i < this.players.length; i++) this.updatePlayer(i, dt);
 
     this.maybeExpandTrain();
+    this.updateWrecks(dt);
     this.checkGameOver();
 
     const elapsed = performance.now() / 1000;
-    this.train.syncMeshes(elapsed);
+    this.train.syncMeshes(elapsed, dt);
     for (const p of this.players) p.syncMesh();
     this.updateCamera(dt);
     this.hud.update(dt, this.stats, this.train, this.players);
+  }
+
+  // exaggerated cartoon "accident" — severed wagons don't just vanish, they
+  // tip over, tumble, and bounce away behind the train before despawning.
+  private updateWrecks(dt: number) {
+    for (const w of this.wrecks) {
+      w.life -= dt;
+      w.mesh.position.z -= this.train.speed * 0.4 * dt; // left behind as the train pulls away
+      w.mesh.position.y = Math.max(-3, w.mesh.position.y - 9 * dt);
+      w.mesh.rotation.x += w.spin.x * dt;
+      w.mesh.rotation.y += w.spin.y * dt;
+      w.mesh.rotation.z += w.spin.z * dt;
+    }
+    for (const w of this.wrecks.filter((w) => w.life <= 0)) this.scene.remove(w.mesh);
+    this.wrecks = this.wrecks.filter((w) => w.life > 0);
   }
 
   // ---- hazards: fire spreading, raiders latching onto the caboose ----
@@ -197,9 +225,18 @@ export class Game {
     if (removed.length === 0) return;
     this.stats.wagonsLost += removed.length;
     this.hud.banner_show(`💥 ${removed.length} vagão(ões) perdidos (${reason})! -${lostResources} recursos`);
+    for (const { mesh } of removed) {
+      this.scene.add(mesh);
+      this.wrecks.push({
+        mesh,
+        life: WRECK_LIFETIME,
+        spin: new THREE.Vector3((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 4, 3 + Math.random() * 3),
+      });
+    }
     for (const p of affectedPlayers) {
       p.onTrain = false;
       p.z = this.train.z + p.trainOffsetZ; // stranded exactly where the wreck fell behind
+      p.jolt(); // startled little hop-and-stumble reaction to the sudden decoupling
     }
   }
 
@@ -216,6 +253,10 @@ export class Game {
         p.carry = null;
         p.trainOffsetZ = Math.max(0.5, this.train.length - 1.5);
         p.x = 0;
+        p.y = 0;
+        p.vy = 0;
+        p.grounded = true;
+        p.jolt(); // pop back into the air as the crew hauls them aboard
         this.hud.banner_show(`${p.name} foi puxado de volta a bordo!`, 2);
       }
       return;
@@ -232,6 +273,7 @@ export class Game {
         this.loseCarry(p);
         p.alive = false;
         p.respawnTimer = 2.4;
+        p.startTumble();
         this.hud.banner_show(`😱 ${p.name} perdeu o trem!`, 2.6);
       }
     }
@@ -336,9 +378,11 @@ export class Game {
     if (p.carry === 'resource') {
       this.stats.resources += p.carryValue;
       w.resources += p.carryValue;
+      this.supplyTally.cargo += p.carryValue;
       this.hud.hint(`+${p.carryValue} recursos entregues!`);
     } else if (p.carry === 'passenger' || p.carry === 'animal') {
       this.stats.passengersSaved++;
+      this.supplyTally.passenger += 6;
       w.hp = Math.min(w.maxHp, w.hp + 8);
       this.hud.banner_show(`🎉 ${p.name} trouxe alguém a bordo em segurança!`, 2.4);
     }
@@ -351,14 +395,39 @@ export class Game {
     p.carryValue = 0;
   }
 
+  /**
+   * Modular construction: the new block snapped onto the train is chosen by
+   * what the crew has actually been hauling in — more crates biases toward
+   * cargo/flat capacity, more rescues biases toward passenger wagons, with a
+   * standing utility slot (tank) for repairs.
+   */
+  private pickNextWagonKind(): WagonState['kind'] {
+    const { cargo, passenger } = this.supplyTally;
+    const weights: Record<WagonState['kind'], number> = {
+      cargo: cargo * 0.6,
+      flat: cargo * 0.4,
+      passenger: passenger,
+      tank: 12,
+      engine: 0,
+    };
+    const total = Object.values(weights).reduce((a, b) => a + b, 0);
+    let roll = Math.random() * total;
+    for (const kind of Object.keys(weights) as Array<WagonState['kind']>) {
+      roll -= weights[kind];
+      if (roll <= 0 && weights[kind] > 0) return kind;
+    }
+    return 'cargo';
+  }
+
   private maybeExpandTrain() {
     if (this.stats.resources >= this.nextWagonCost) {
       this.stats.resources -= this.nextWagonCost;
-      const kinds: Array<WagonState['kind']> = ['cargo', 'passenger', 'tank', 'flat'];
-      this.train.addWagon(kinds[Math.floor(Math.random() * kinds.length)]);
+      const kind = this.pickNextWagonKind();
+      this.train.addWagon(kind);
       this.stats.wagonsBuilt++;
       this.nextWagonCost = Math.round(this.nextWagonCost * 1.55);
-      this.hud.banner_show('🚃 Novo vagão acoplado à composição!', 2.6);
+      const label = { cargo: 'de carga', passenger: 'de passageiros', tank: 'tanque', flat: 'plataforma', engine: '' }[kind];
+      this.hud.banner_show(`🚃 Novo vagão ${label} acoplado à composição!`, 2.6);
     }
   }
 
@@ -400,8 +469,8 @@ export class Game {
   }
 
   private updateCamera(dt: number) {
-    const targetPos = new THREE.Vector3(0, 8.5, this.train.z - 15.5);
-    const targetLook = new THREE.Vector3(0, 2.4, this.train.z + 12);
+    const targetPos = new THREE.Vector3(0, CAM_HEIGHT, this.train.z - CAM_DISTANCE);
+    const targetLook = new THREE.Vector3(0, 2.6, this.train.z + CAM_LOOK_AHEAD);
     this.camPos.lerp(targetPos, Math.min(1, dt * 3.2));
     this.camLook.lerp(targetLook, Math.min(1, dt * 4));
     this.camera.position.copy(this.camPos);

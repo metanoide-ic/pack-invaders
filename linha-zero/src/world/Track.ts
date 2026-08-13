@@ -1,10 +1,25 @@
 import * as THREE from 'three';
 import { Pickup, RescueTarget, WorldZone, ZoneKind } from '../types';
 import { WAGON_WIDTH } from './Train';
+import { toonMat } from './ToonMaterial';
 
 const RAIL_GAUGE = 1.4;
 const SPAWN_AHEAD = 220; // generate zones/props up to this far ahead of the engine
 const CULL_BEHIND = 40; // remove props once this far behind the caboose
+
+// bright, saturated, toy-box palette — legible at a glance, not realistic
+const GROUND_COLOR = 0x6fcf6a;
+const RAIL_COLOR = 0xe8edf5;
+const TIE_COLOR = 0x8a5a34;
+const PLATFORM_COLOR = 0xf2c94c;
+const BUILDING_COLORS = [0xff6f61, 0x56ccf2, 0xbb6bd9, 0xf2994a, 0x6fcf97];
+const CRATE_COLOR = 0xf2994a;
+const RESCUE_GROUND_COLOR = 0x9fd989;
+const PASSENGER_COLOR = 0xffd166;
+const ANIMAL_COLOR = 0xd88c4e;
+const ROCK_COLOR = 0x8d6e63;
+const TREE_LEAF_COLOR = 0x3fae4a;
+const TREE_TRUNK_COLOR = 0x7a4a2b;
 
 let idSeq = 1;
 
@@ -29,20 +44,14 @@ export class Track {
   }
 
   private buildGround() {
-    const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(400, 4000, 1, 1),
-      new THREE.MeshStandardMaterial({ color: 0x3a4c34, roughness: 1 })
-    );
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 4000, 1, 1), toonMat(GROUND_COLOR));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.02, 1800);
     ground.receiveShadow = true;
     this.group.add(ground);
 
     for (const side of [-1, 1]) {
-      const rail = new THREE.Mesh(
-        new THREE.BoxGeometry(0.12, 0.15, 4000),
-        new THREE.MeshStandardMaterial({ color: 0x8a8f99, metalness: 0.8, roughness: 0.3 })
-      );
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 4000), toonMat(RAIL_COLOR));
       rail.position.set(side * RAIL_GAUGE, 0.05, 1800);
       this.group.add(rail);
     }
@@ -51,10 +60,7 @@ export class Track {
   private ensureTies(engineZ: number) {
     const spacing = 2.2;
     while (this.ties.length < 260) {
-      const tie = new THREE.Mesh(
-        new THREE.BoxGeometry(2.2, 0.14, 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x3c2a1d, roughness: 1 })
-      );
+      const tie = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.14, 0.5), toonMat(TIE_COLOR));
       this.ties.push(tie);
       this.tieGroup.add(tie);
     }
@@ -142,25 +148,26 @@ export class Track {
   private buildCityZone(zone: WorldZone) {
     const x = this.platformX(zone.side);
     // platform slab
-    const platform = new THREE.Mesh(
-      new THREE.BoxGeometry(2.8, 0.5, zone.endZ - zone.startZ),
-      new THREE.MeshStandardMaterial({ color: 0x5a5f66, roughness: 0.9 })
-    );
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.5, zone.endZ - zone.startZ), toonMat(PLATFORM_COLOR));
     platform.position.set(x, 0.25, (zone.startZ + zone.endZ) / 2);
     this.group.add(platform);
     this.props.push({ z: zone.endZ, mesh: platform });
 
-    // buildings behind the platform for skyline flavor
+    // chunky, candy-colored building blocks behind the platform
     const buildingCount = 4 + Math.floor(Math.random() * 3);
     for (let i = 0; i < buildingCount; i++) {
-      const h = 4 + Math.random() * 10;
-      const b = new THREE.Mesh(
-        new THREE.BoxGeometry(3 + Math.random() * 2, h, 3 + Math.random() * 2),
-        new THREE.MeshStandardMaterial({ color: 0x293042 + Math.floor(Math.random() * 0x050505), roughness: 0.8 })
-      );
+      const h = 4 + Math.random() * 8;
+      const color = BUILDING_COLORS[Math.floor(Math.random() * BUILDING_COLORS.length)];
+      const b = new THREE.Mesh(new THREE.BoxGeometry(3 + Math.random() * 2, h, 3 + Math.random() * 2), toonMat(color));
       b.position.set(x + zone.side * (5 + Math.random() * 6), h / 2, zone.startZ + Math.random() * (zone.endZ - zone.startZ));
       this.group.add(b);
       this.props.push({ z: b.position.z, mesh: b });
+      // a bright roof cap so buildings read as playful blocks, not offices
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.4, 1.6, 4), toonMat(0xffffff));
+      roof.rotation.y = Math.PI / 4;
+      roof.position.set(b.position.x, h + 0.8, b.position.z);
+      this.group.add(roof);
+      this.props.push({ z: b.position.z, mesh: roof });
     }
 
     // resource crates along the platform
@@ -168,10 +175,7 @@ export class Track {
     for (let i = 0; i < crateCount; i++) {
       const z = zone.startZ + 6 + (i / crateCount) * (zone.endZ - zone.startZ - 10) + (Math.random() - 0.5) * 4;
       const crate: Pickup = { id: idSeq++, x, z, taken: false, value: 5 + Math.floor(Math.random() * 6) };
-      const mesh = new THREE.Mesh(
-        new THREE.BoxGeometry(0.7, 0.7, 0.7),
-        new THREE.MeshStandardMaterial({ color: 0xd9a441, roughness: 0.6 })
-      );
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.7, 0.7), toonMat(CRATE_COLOR));
       mesh.position.set(x, 0.85, z);
       crate.mesh = mesh;
       this.group.add(mesh);
@@ -181,10 +185,7 @@ export class Track {
 
   private buildRescueZone(zone: WorldZone) {
     const x = this.platformX(zone.side) - 0.6;
-    const ground = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 0.3, zone.endZ - zone.startZ),
-      new THREE.MeshStandardMaterial({ color: 0x4a5334, roughness: 1 })
-    );
+    const ground = new THREE.Mesh(new THREE.BoxGeometry(3, 0.3, zone.endZ - zone.startZ), toonMat(RESCUE_GROUND_COLOR));
     ground.position.set(x, 0.15, (zone.startZ + zone.endZ) / 2);
     this.group.add(ground);
     this.props.push({ z: zone.endZ, mesh: ground });
@@ -195,13 +196,25 @@ export class Track {
       const kind: 'passenger' | 'animal' = Math.random() < 0.5 ? 'passenger' : 'animal';
       const target: RescueTarget = { id: idSeq++, x, z, kind, rescued: false, lost: false };
       const mesh = new THREE.Group();
-      const bodyColor = kind === 'passenger' ? 0xffd27f : 0xb5723c;
+      const bodyColor = kind === 'passenger' ? PASSENGER_COLOR : ANIMAL_COLOR;
       const body = new THREE.Mesh(
         kind === 'passenger' ? new THREE.CapsuleGeometry(0.28, 0.7, 4, 8) : new THREE.BoxGeometry(0.9, 0.5, 0.4),
-        new THREE.MeshStandardMaterial({ color: bodyColor })
+        toonMat(bodyColor)
       );
       body.position.y = kind === 'passenger' ? 1.0 : 0.4;
       mesh.add(body);
+      const head = new THREE.Mesh(
+        new THREE.SphereGeometry(kind === 'passenger' ? 0.24 : 0.28, 10, 8),
+        toonMat(kind === 'passenger' ? 0xffe0b0 : 0x6b4a30)
+      );
+      head.position.y = kind === 'passenger' ? 1.55 : 0.72;
+      head.position.z = kind === 'passenger' ? 0 : 0.25;
+      mesh.add(head);
+      // a bobbing "help!" marker so rescue targets read instantly against the scenery
+      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.4, 6), toonMat(0xff4d4d));
+      flag.position.y = kind === 'passenger' ? 2.1 : 1.3;
+      flag.name = 'flag';
+      mesh.add(flag);
       mesh.position.set(x, 0, z);
       target.mesh = mesh;
       this.group.add(mesh);
@@ -213,10 +226,7 @@ export class Track {
     // visual dust/warning marker along the track to telegraph danger
     for (let i = 0; i < 3; i++) {
       const z = zone.startZ + (i / 3) * (zone.endZ - zone.startZ);
-      const rock = new THREE.Mesh(
-        new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.5),
-        new THREE.MeshStandardMaterial({ color: 0x3a2f28, roughness: 1 })
-      );
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.5), toonMat(ROCK_COLOR));
       rock.position.set((Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3), 0.5, z);
       this.group.add(rock);
       this.props.push({ z, mesh: rock });
@@ -227,11 +237,15 @@ export class Track {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = side * (7 + Math.random() * 10);
     const z = aheadZ + Math.random() * 20;
-    const tree = new THREE.Mesh(
-      new THREE.ConeGeometry(1 + Math.random(), 3 + Math.random() * 3, 6),
-      new THREE.MeshStandardMaterial({ color: 0x2f5d34, roughness: 1 })
-    );
-    tree.position.set(x, 1.8, z);
+    const tree = new THREE.Group();
+    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.1, 6), toonMat(TREE_TRUNK_COLOR));
+    trunk.position.y = 0.55;
+    tree.add(trunk);
+    const leaves = new THREE.Mesh(new THREE.ConeGeometry(1 + Math.random(), 3 + Math.random() * 3, 7), toonMat(TREE_LEAF_COLOR));
+    leaves.position.y = 2.4;
+    tree.add(leaves);
+    tree.position.set(x, 0, z);
+    tree.scale.setScalar(0.8 + Math.random() * 0.6);
     this.group.add(tree);
     this.props.push({ z, mesh: tree });
   }

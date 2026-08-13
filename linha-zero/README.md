@@ -59,9 +59,35 @@ controle a qualquer momento durante a partida:
 4. **Saqueadores** se agarram ao último vagão e o corroem aos poucos; lute
    (`E`) ou corte o vagão para se livrar da ameaça.
 5. **Recursos coletados** acoplam automaticamente novos vagões à composição
-   conforme acumulam — a família cresce, mas cada vagão extra é mais um
+   conforme acumulam — construção modular: o tipo do vagão acoplado reflete
+   o que a tripulação andou trazendo (mais carga → vagões de carga/plataforma,
+   mais resgates → vagões de passageiros), então a estratégia de coleta
+   molda o formato do trem. A família cresce, mas cada vagão extra é mais um
    ponto que pode pegar fogo.
 6. Se a locomotiva for destruída, a linha para. Fim de jogo.
+
+## Direção de arte
+
+- **Estilizado, sem realismo**: paleta saturada tipo brinquedo, materiais
+  `MeshToonMaterial` com um degradê de 4 tons (cel-shading), céu e cenário
+  claros e legíveis — não um render fotorrealista.
+- **Câmera em terceira pessoa, afastada**: visão ampla atrás e acima do
+  trem, dando espaço para ver ameaças chegando e vagões se soltando.
+- **Personagens pequenos, expressivos e customizáveis**: proporção chibi
+  (cabeça grande, corpo pequeno), rosto simples (olhos + sorriso) e um
+  chapéu de silhueta distinta por jogador (cone, caixa, cúpula, argola),
+  além da cor própria de cada um.
+- **Física divertida, mas controlável**: pulo com arco de gravidade real,
+  squash & stretch de desenho animado ao saltar/aterrissar — mas sem
+  ragdoll incontrolável durante o jogo normal.
+- **Animações exageradas para quedas e acidentes**: perder o trem dispara
+  um tombo cômico (giro rápido + achatamento + fade); um vagão desacoplado
+  ou destruído se solta e cai girando atrás do trem antes de sumir; ser
+  ejetado por um desacoplamento repentino dá um salto de susto.
+- **Construção modular**: cada tipo de vagão tem um "módulo" visualmente
+  distinto (caixotes empilhados, janelas, tanque cilíndrico, cargas presas
+  a cintas) e se encaixa com engates visíveis entre os vagões — mais um
+  novo vagão entra com uma animação de "clique" saltitante.
 
 ## Estrutura do código
 
