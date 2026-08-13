@@ -1085,15 +1085,18 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
     document.getElementById('zapi').style.display = p === 'zapi' ? '' : 'none';
     document.getElementById('evolution').style.display = p === 'evolution' ? '' : 'none';
   }
+  let preenchidoUmaVez = false;
   async function carregar(){
     const r = await (await fetch('/estado')).json();
-    campos.forEach(c => {
-      const el = document.getElementById(c);
-      // Nunca sobrescreve um campo que a pessoa está editando agora: a
-      // atualização automática rodava a cada 4s e apagava o que tinha
-      // acabado de ser colado, antes do clique em "Salvar".
-      if (r.config[c] !== undefined && document.activeElement !== el) el.value = r.config[c];
-    });
+    // Os campos só são preenchidos na primeira carga da página. Depois
+    // disso a atualização automática (a cada 4s) mexe só nos status e no
+    // túnel — nunca mais no valor dos campos, senão qualquer coisa colada
+    // e ainda não salva (às vezes o Ctrl+V já dispara o próximo tique)
+    // é apagada antes da pessoa clicar em Salvar.
+    if (!preenchidoUmaVez) {
+      campos.forEach(c => { if (r.config[c] !== undefined) document.getElementById(c).value = r.config[c]; });
+      preenchidoUmaVez = true;
+    }
     trocar();
     document.getElementById('dw').className = 'dot' + (r.whatsapp ? ' on' : '');
     document.getElementById('di').className = 'dot' + (r.instagram ? ' on' : '');
