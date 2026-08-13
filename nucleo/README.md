@@ -14,14 +14,19 @@ segredos e construa a sua história.
 2. Abra o Godot, clique em **Importar** e selecione `nucleo/game/project.godot`.
 3. Pressione **F5** para jogar.
 
+O jogo abre no **criador de personagem** (23 opções de customização: corpo,
+rosto, cabelo, chifres, roupas, jeito). Monte seu personagem e clique em
+**Começar** para ir à fazenda.
+
 ### Controles do protótipo
 
 | Tecla | Ação |
 |---|---|
 | WASD | Mover |
-| Mouse (botão direito + arrastar) | Girar câmera (terceira pessoa) |
+| 1–5 / roda do mouse | Escolher ferramenta da hotbar |
+| E / clique esquerdo | Usar ferramenta na célula marcada |
+| Mouse (botão direito + arrastar) | Girar câmera |
 | V | Alternar câmera: isométrica ↔ terceira pessoa |
-| E | Interagir (em breve) |
 
 ## Estrutura
 

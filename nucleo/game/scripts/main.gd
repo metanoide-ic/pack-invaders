@@ -6,8 +6,26 @@ extends Node3D
 @onready var player: Player = $Player
 
 
+const NPC_SPAWNS := [
+	{"seed": 7, "pos": Vector3(-5, 0.1, 4)},
+	{"seed": 21, "pos": Vector3(6, 0.1, 5)},
+	{"seed": 42, "pos": Vector3(-3, 0.1, -5)},
+]
+
+const SPECIAL_SPAWNS := [
+	{"kind": "nimbo", "seed": 100, "pos": Vector3(2, 0.1, -8)},
+	{"kind": "cintila", "seed": 200, "pos": Vector3(-8, 0.1, -2)},
+	{"kind": "broto", "seed": 300, "pos": Vector3(8, 0.1, -6)},
+	{"kind": "prisma", "seed": 400, "pos": Vector3(-1, 0.1, 9)},
+]
+
+
 func _ready() -> void:
 	hud.setup(player)
+	for spawn: Dictionary in NPC_SPAWNS:
+		add_child(NPC.create(spawn.seed, spawn.pos))
+	for spawn: Dictionary in SPECIAL_SPAWNS:
+		add_child(NPC.create_special(spawn.kind, spawn.seed, spawn.pos))
 
 
 func _process(_delta: float) -> void:

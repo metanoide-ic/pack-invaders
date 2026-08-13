@@ -25,6 +25,7 @@ var inventory := {}  # nome do item -> quantidade
 
 var _farm: FarmGrid
 var _marker: MeshInstance3D
+var _rig: CharacterRig
 
 @onready var camera_rig: Node3D = $CameraRig
 @onready var mesh: Node3D = $Mesh
@@ -35,6 +36,8 @@ func _ready() -> void:
 	if _farm != null:
 		_farm.crop_harvested.connect(_on_crop_harvested)
 	_make_marker()
+	_rig = CharacterBuilder.build(PlayerData.appearance)
+	mesh.add_child(_rig)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -69,6 +72,7 @@ func _physics_process(delta: float) -> void:
 		mesh.rotation.y = lerp_angle(mesh.rotation.y, target_angle, ROTATION_SPEED * delta)
 
 	move_and_slide()
+	_rig.set_moving(Vector2(velocity.x, velocity.z).length() / WALK_SPEED)
 	_update_marker()
 
 

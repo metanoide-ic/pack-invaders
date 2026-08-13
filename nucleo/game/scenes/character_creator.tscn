@@ -1,0 +1,63 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/character_creator.gd" id="1_creator"]
+
+[sub_resource type="ProceduralSkyMaterial" id="sky_mat"]
+sky_top_color = Color(0.38, 0.52, 0.72, 1)
+sky_horizon_color = Color(0.82, 0.78, 0.72, 1)
+ground_horizon_color = Color(0.82, 0.78, 0.72, 1)
+
+[sub_resource type="Sky" id="sky"]
+sky_material = SubResource("sky_mat")
+
+[sub_resource type="Environment" id="env"]
+background_mode = 2
+sky = SubResource("sky")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="CylinderMesh" id="platform_mesh"]
+top_radius = 0.9
+bottom_radius = 1.05
+height = 0.18
+radial_segments = 10
+
+[sub_resource type="StandardMaterial3D" id="platform_mat"]
+albedo_color = Color(0.55, 0.45, 0.35, 1)
+roughness = 1.0
+
+[sub_resource type="PlaneMesh" id="floor_mesh"]
+size = Vector2(30, 30)
+
+[node name="CharacterCreator" type="Node3D"]
+script = ExtResource("1_creator")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.354, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 2, 4, 3)
+shadow_enabled = true
+light_energy = 1.3
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+transform = Transform3D(-0.866, -0.25, -0.433, 0, 0.866, -0.5, 0.5, -0.433, -0.75, -2, 2, -2)
+light_energy = 0.4
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.09, 0)
+mesh = SubResource("floor_mesh")
+surface_material_override/0 = SubResource("platform_mat")
+
+[node name="Platform" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, -0.09, 0)
+mesh = SubResource("platform_mesh")
+surface_material_override/0 = SubResource("platform_mat")
+
+[node name="Holder" type="Node3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 0, 0)
+
+[node name="Camera" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.995, 0.105, 0, -0.105, 0.995, 0.55, 0.85, 2.9)
+current = true
+fov = 40.0

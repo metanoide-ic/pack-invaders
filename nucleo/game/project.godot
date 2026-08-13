@@ -7,12 +7,14 @@ config_version=5
 [application]
 
 config/name="Nucleo"
-run/main_scene="res://scenes/main.tscn"
+run/main_scene="res://scenes/character_creator.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
 
 [autoload]
 
 GameClock="*res://scripts/game_clock.gd"
+PlayerData="*res://scripts/player_data.gd"
+DebugShot="*res://scripts/debug_shot.gd"
 
 [display]
 

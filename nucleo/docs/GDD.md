@@ -417,5 +417,19 @@ moradores, móveis, receitas e festivais.
 - **Engine**: Godot 4 (GDScript), export desktop para Steam (GodotSteam).
 - **Câmera**: alternável entre isométrica/top-down e terceira pessoa.
 - **Estilo visual**: low-poly colorido (flat shading) — ver `docs/art-style.md`.
+- **Personagens**: sistema procedural próprio (`scripts/characters/`) —
+  `CharacterAppearance` (dados de customização + paletas), `CharacterBuilder`
+  (gera a malha facetada por peças: rosto com olhos/íris/brilho, sobrancelhas,
+  nariz, boca em arco esférico, bochechas, orelhas, chifres, 9 penteados,
+  chapéus, óculos, roupas em camadas) e `CharacterRig` (caminhada, respiração,
+  piscada; o "jeito" muda amplitude, ritmo e postura). Jogador e moradores
+  humanóides usam o mesmo sistema; moradores têm semente fixa (sempre os
+  mesmos).
+- **Criaturas especiais**: moradores únicos que fogem do corpo humanóide
+  (`CreatureBuilder`/`CreatureRig`), ligados aos elementos do mundo — hoje
+  **Nimbo** (nuvenzinha translúcida, só olhos, flutua), **Cintila** (cabeça de
+  estrela dourada e brilhante, flutua), **Broto** (semente com coroa de
+  folhas, anda pelo chão) e **Prisma** (cristal facetado com brilho interno,
+  flutua). Base para expandir a galeria de moradores fantásticos do §7 do GDD.
 - **Mecânicas do protótipo inicial**: farming (plantar/regar/colher),
   inventário e ferramentas, ciclo de dia/noite e estações, NPCs e vila.
