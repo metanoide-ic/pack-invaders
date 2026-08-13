@@ -1087,7 +1087,13 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   }
   async function carregar(){
     const r = await (await fetch('/estado')).json();
-    campos.forEach(c => { if (r.config[c] !== undefined) document.getElementById(c).value = r.config[c]; });
+    campos.forEach(c => {
+      const el = document.getElementById(c);
+      // Nunca sobrescreve um campo que a pessoa está editando agora: a
+      // atualização automática rodava a cada 4s e apagava o que tinha
+      // acabado de ser colado, antes do clique em "Salvar".
+      if (r.config[c] !== undefined && document.activeElement !== el) el.value = r.config[c];
+    });
     trocar();
     document.getElementById('dw').className = 'dot' + (r.whatsapp ? ' on' : '');
     document.getElementById('di').className = 'dot' + (r.instagram ? ' on' : '');
