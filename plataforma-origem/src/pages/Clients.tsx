@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Trash2, Pencil, CalendarRange, Loader2, MessageCircle, Instagram, AtSign } from 'lucide-react';
+import { Plus, Users, Trash2, Pencil, CalendarRange, Loader2, MessageCircle, Instagram, AtSign, Send } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Textarea, Modal, Select, EmptyState } from '@/components/ui';
 import { PlanModal } from '@/components/PlanModal';
 import { buildClientSlots, applyPlanToWorkspace } from '@/lib/planner';
 import { generatePlanIdeas } from '@/lib/ai';
+import { omniAtivos, sendOmniBroadcast } from '@/lib/broadcast';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
@@ -85,6 +86,24 @@ export default function Clients() {
   }
   const [confirmDelete, setConfirmDelete] = useState<Client | null>(null);
   const [form, setForm] = useState(blank);
+  const [omniOpen, setOmniOpen] = useState(false);
+  const [omniMsg, setOmniMsg] = useState('');
+  const [omniBusy, setOmniBusy] = useState(false);
+  const [omniResult, setOmniResult] = useState('');
+  const alvosOmni = omniAtivos();
+
+  async function dispararOmnis() {
+    if (!omniMsg.trim() || omniBusy) return;
+    setOmniBusy(true);
+    const { enviados, falhas } = await sendOmniBroadcast(omniMsg.trim());
+    setOmniBusy(false);
+    setOmniResult(
+      falhas === 0
+        ? `Enviado para ${enviados} agente(s) Omni.`
+        : `Enviado para ${enviados} — ${falhas} falharam (confira o WhatsApp em Integrações).`,
+    );
+    setOmniMsg('');
+  }
 
   function openNew() { setEditing(null); setForm(blank); setOpen(true); }
   function openEdit(c: Client) {
@@ -145,6 +164,9 @@ export default function Clients() {
         subtitle="Cada cliente com briefing, cadência da semana, grupo e Instagram."
         action={
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => { setOmniResult(''); setOmniOpen(true); }}>
+              <Send size={16} /> Falar com as Omnis
+            </Button>
             <Button variant="outline" onClick={gerarMesDeTodos} disabled={batchBusy}>
               {batchBusy ? <Loader2 size={16} className="animate-spin" /> : <CalendarRange size={16} />}
               Gerar mês de todos
@@ -360,6 +382,29 @@ export default function Clients() {
         <p className="text-sm text-white/60">
           {confirmDelete?.name} será removido da lista. Posts, tarefas e lançamentos já criados continuam existindo, sem o vínculo.
         </p>
+      </Modal>
+
+      {/* Aviso em massa para os agentes Omni ativos */}
+      <Modal open={omniOpen} onClose={() => setOmniOpen(false)} title="Falar com as Omnis"
+        footer={<><Button variant="ghost" onClick={() => setOmniOpen(false)}>Fechar</Button>
+          <Button onClick={dispararOmnis} disabled={omniBusy || !omniMsg.trim()}>
+            {omniBusy ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />} Enviar para todas
+          </Button></>}>
+        <div className="space-y-4">
+          <p className="text-sm text-white/60">
+            Manda a mesma mensagem para o grupo de WhatsApp de cada agente Omni que ainda está ativo
+            (tem o grupo cadastrado). Quem saiu não recebe — não tem grupo vinculado.
+          </p>
+          <div className="rounded-lg border border-line bg-white/[0.02] px-3.5 py-2.5 text-sm text-white/70">
+            {alvosOmni.length} agente(s) Omni com grupo cadastrado{' '}
+            {alvosOmni.length === 0 && <span className="text-amber-300/80">— vincule o grupo de cada um em Clientes primeiro.</span>}
+          </div>
+          <Field label="Mensagem">
+            <Textarea value={omniMsg} onChange={(e) => setOmniMsg(e.target.value)} className="min-h-[110px]"
+              placeholder="Ex.: Pessoal, lembrando de mandar as fotos dos carros da semana até quinta." autoFocus />
+          </Field>
+          {omniResult && <p className="text-sm text-white/70">{omniResult}</p>}
+        </div>
       </Modal>
 
       {planFor && <PlanModal client={planFor} onClose={() => setPlanFor(null)} />}

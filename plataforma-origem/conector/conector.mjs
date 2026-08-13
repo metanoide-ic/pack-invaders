@@ -761,6 +761,12 @@ async function processar(evento) {
     return emissao ? { gatewayId: emissao.gatewayId, gatewayUrl: emissao.link } : undefined;
   }
 
+  if (tipo === 'mensagem') {
+    await enviarWhatsapp(evento.numero, evento.mensagem);
+    registrar('mensagem', `aviso enviado para ${evento.cliente || evento.numero}`);
+    return;
+  }
+
   if (tipo === 'nota_fiscal') {
     await enviarWhatsapp(evento.numero, evento.mensagem);
     registrar('nota_fiscal', `pedido de NF de ${evento.cliente} enviado ao contador`);

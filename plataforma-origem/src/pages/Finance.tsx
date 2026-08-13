@@ -158,6 +158,14 @@ export default function Finance() {
           </div>
         </div>
         {billingMsg && <p className="border-b border-line bg-white/[0.02] px-5 py-2.5 text-sm text-white/70">{billingMsg}</p>}
+        {monthCharges.length > 0 && (
+          <div className="border-b border-line px-5 py-3">
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-full rounded-full bg-emerald-400 transition-all"
+                style={{ width: `${Math.round((chargeTotals.pagas / chargeTotals.total) * 100)}%` }} />
+            </div>
+          </div>
+        )}
         {monthCharges.length === 0 ? (
           <p className="px-5 py-8 text-center text-sm text-white/40">
             Nenhuma cobrança este mês. Defina o fee mensal dos clientes para gerar automaticamente.
