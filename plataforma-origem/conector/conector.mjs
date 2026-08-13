@@ -99,7 +99,15 @@ async function enviarWhatsapp(numero, mensagem) {
       headers,
       body: JSON.stringify({ phone: numero, message: mensagem }),
     });
-    if (!res.ok) throw new Error(`Z-API respondeu ${res.status}: ${(await res.text()).slice(0, 160)}`);
+    const texto = await res.text();
+    // A Z-API às vezes responde 200 mesmo sem entregar nada — por exemplo
+    // quando a instância nunca foi conectada ao WhatsApp pelo QR Code.
+    // Por isso olha o corpo da resposta também, não só o status HTTP.
+    let corpo = {};
+    try { corpo = JSON.parse(texto); } catch { /* resposta não era JSON */ }
+    if (!res.ok || corpo.error || corpo.value === false || corpo.connected === false) {
+      throw new Error(`Z-API não confirmou o envio: ${texto.slice(0, 200)}`);
+    }
     return;
   }
 
