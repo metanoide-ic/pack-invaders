@@ -34,6 +34,13 @@ interface DataState {
   loadDemo: () => void;
   /** Repõe clientes da carteira que tenham sido removidos, sem apagar nada. */
   restoreClients: () => number;
+  /**
+   * Preenche fee, dia de vencimento, forma de pagamento e contato de quem já
+   * existe mas nasceu sem esses dados (base antiga, de antes da carteira ter
+   * sido cadastrada). Só entra em campo que estiver vazio — nunca sobrescreve
+   * o que já foi preenchido na tela (grupo, WhatsApp de cobrança, documento).
+   */
+  restoreBillingFields: () => number;
   resetAll: () => void;
 
   // Clientes
@@ -125,6 +132,25 @@ export const useData = create<DataState>()(
         );
         if (faltando.length) set((s) => ({ clients: [...s.clients, ...faltando] }));
         return faltando.length;
+      },
+      restoreBillingFields: () => {
+        const seedClients = seedData().clients;
+        let corrigidos = 0;
+        set((s) => ({
+          clients: s.clients.map((c) => {
+            const base = seedClients.find((sc) => sc.name.trim().toLowerCase() === c.name.trim().toLowerCase());
+            if (!base) return c;
+            const patch: Partial<Client> = {};
+            if (!c.monthlyFee && base.monthlyFee) patch.monthlyFee = base.monthlyFee;
+            if (!c.billingDay && base.billingDay) patch.billingDay = base.billingDay;
+            if (!c.billingMethod && base.billingMethod) patch.billingMethod = base.billingMethod;
+            if (!c.contact && base.contact) patch.contact = base.contact;
+            if (Object.keys(patch).length === 0) return c;
+            corrigidos++;
+            return { ...c, ...patch };
+          }),
+        }));
+        return corrigidos;
       },
       resetAll: () => set({ ...empty, seeded: true }),
 

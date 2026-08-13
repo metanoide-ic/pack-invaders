@@ -180,6 +180,14 @@ export default function Settings() {
               }}>
                 Repor clientes da carteira
               </Button>
+              <Button variant="outline" onClick={() => {
+                const n = data.restoreBillingFields();
+                setBackupMsg(n === 0
+                  ? 'Fee, vencimento e forma de pagamento já estavam preenchidos em todo mundo.'
+                  : `${n} cliente(s) tiveram fee, vencimento ou forma de pagamento repostos. O que já estava preenchido não foi tocado.`);
+              }}>
+                Repor fee e forma de pagamento
+              </Button>
               <Button variant="danger" onClick={() => setConfirmReset(true)}>
                 Limpar todos os dados
               </Button>
