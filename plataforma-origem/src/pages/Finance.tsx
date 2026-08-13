@@ -24,6 +24,7 @@ import {
   generateMonthlyCharges, sendCharge, sendAllPending, markChargePaid,
   isOverdue, currentMonthKey, monthLabel, METHOD_LABEL,
 } from '@/lib/billing';
+import { generateMonthlyExpenses } from '@/lib/expenses';
 import { money, todayISO, cn } from '@/lib/utils';
 import type { TxType, TxStatus } from '@/lib/types';
 
@@ -37,9 +38,10 @@ export default function Finance() {
   const [filter, setFilter] = useState<'todos' | TxType>('todos');
   const [billingMsg, setBillingMsg] = useState('');
 
-  // Gera as cobranças do mês automaticamente (idempotente).
+  // Gera as cobranças e as contas fixas do mês automaticamente (idempotente).
   useEffect(() => {
     if (autoBilling) generateMonthlyCharges();
+    generateMonthlyExpenses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -98,6 +100,13 @@ export default function Finance() {
         .sort((a, b) => b.date.localeCompare(a.date)),
     [transactions, filter],
   );
+
+  // Checklist de pagamentos do mês: despesas fixas + as demais lançadas.
+  const monthExpenses = useMemo(
+    () => transactions.filter((t) => t.type === 'despesa' && monthKey(t.date) === month),
+    [transactions, month],
+  );
+  const expensesPaid = monthExpenses.filter((t) => t.status === 'pago').length;
 
   function save() {
     const amount = parseFloat(form.amount.replace(',', '.'));
@@ -253,6 +262,18 @@ export default function Finance() {
 
       {/* Lançamentos */}
       <div className="mt-6">
+        {monthExpenses.length > 0 && (
+          <div className="mb-3 card px-4 py-3">
+            <div className="mb-2 flex items-center justify-between text-xs text-white/50">
+              <span>Checklist de pagamentos — {monthLabel(month)}</span>
+              <span>{expensesPaid}/{monthExpenses.length} pagas</span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/[0.06]">
+              <div className="h-full rounded-full bg-brand-400 transition-all"
+                style={{ width: `${Math.round((expensesPaid / monthExpenses.length) * 100)}%` }} />
+            </div>
+          </div>
+        )}
         <div className="mb-3 flex items-center gap-2">
           {(['todos', 'receita', 'despesa'] as const).map((f) => (
             <button

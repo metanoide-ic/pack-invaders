@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Users, Trash2, Pencil, CalendarRange, Loader2, MessageCircle, Instagram, AtSign, Send } from 'lucide-react';
+import { Plus, Users, Trash2, Pencil, CalendarRange, Loader2, MessageCircle, Instagram, AtSign, Send, ClipboardPaste } from 'lucide-react';
 import { PageHeader } from '@/components/PageHeader';
 import { Button, Field, Input, Textarea, Modal, Select, EmptyState } from '@/components/ui';
 import { PlanModal } from '@/components/PlanModal';
 import { buildClientSlots, applyPlanToWorkspace } from '@/lib/planner';
 import { generatePlanIdeas } from '@/lib/ai';
 import { omniAtivos, sendOmniBroadcast } from '@/lib/broadcast';
+import { applyBillingContacts } from '@/lib/contacts';
 import { useData } from '@/lib/dataStore';
 import { useAuth } from '@/lib/authStore';
 import { AVATAR_COLORS, money, initials, cn } from '@/lib/utils';
@@ -92,6 +93,16 @@ export default function Clients() {
   const [omniResult, setOmniResult] = useState('');
   const alvosOmni = omniAtivos();
 
+  const [contatosOpen, setContatosOpen] = useState(false);
+  const [contatosTexto, setContatosTexto] = useState('');
+  const [contatosResult, setContatosResult] = useState<{ aplicados: string[]; naoEncontrados: string[] } | null>(null);
+
+  function importarContatos() {
+    if (!contatosTexto.trim()) return;
+    setContatosResult(applyBillingContacts(contatosTexto));
+    setContatosTexto('');
+  }
+
   async function dispararOmnis() {
     if (!omniMsg.trim() || omniBusy) return;
     setOmniBusy(true);
@@ -164,6 +175,9 @@ export default function Clients() {
         subtitle="Cada cliente com briefing, cadência da semana, grupo e Instagram."
         action={
           <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={() => { setContatosResult(null); setContatosOpen(true); }}>
+              <ClipboardPaste size={16} /> Importar contatos de cobrança
+            </Button>
             <Button variant="outline" onClick={() => { setOmniResult(''); setOmniOpen(true); }}>
               <Send size={16} /> Falar com as Omnis
             </Button>
@@ -382,6 +396,32 @@ export default function Clients() {
         <p className="text-sm text-white/60">
           {confirmDelete?.name} será removido da lista. Posts, tarefas e lançamentos já criados continuam existindo, sem o vínculo.
         </p>
+      </Modal>
+
+      {/* Importar contatos de cobrança: fica só no navegador, nunca no código */}
+      <Modal open={contatosOpen} onClose={() => setContatosOpen(false)} title="Importar contatos de cobrança"
+        footer={<><Button variant="ghost" onClick={() => setContatosOpen(false)}>Fechar</Button>
+          <Button onClick={importarContatos} disabled={!contatosTexto.trim()}><ClipboardPaste size={16} /> Aplicar</Button></>}>
+        <div className="space-y-4">
+          <p className="text-sm text-white/60">
+            Uma linha por cliente, no formato <b>Nome do cliente: telefone</b> — o nome precisa bater com o
+            cadastrado aqui na plataforma. Isso fica salvo só neste navegador, nunca entra no código do site.
+          </p>
+          <Field label="Contatos">
+            <Textarea value={contatosTexto} onChange={(e) => setContatosTexto(e.target.value)} className="min-h-[160px] font-mono text-xs"
+              placeholder={'Omni Cotia: +55 11 99639-1855\nVidroscar: +55 24 99238-8134'} autoFocus />
+          </Field>
+          {contatosResult && (
+            <div className="space-y-2 text-sm">
+              {contatosResult.aplicados.length > 0 && (
+                <p className="text-emerald-300/90">{contatosResult.aplicados.length} preenchido(s): {contatosResult.aplicados.join(', ')}</p>
+              )}
+              {contatosResult.naoEncontrados.length > 0 && (
+                <p className="text-amber-300/90">Não encontrei o nome exato de: {contatosResult.naoEncontrados.join(', ')} — confira como está escrito em Clientes.</p>
+              )}
+            </div>
+          )}
+        </div>
       </Modal>
 
       {/* Aviso em massa para os agentes Omni ativos */}
