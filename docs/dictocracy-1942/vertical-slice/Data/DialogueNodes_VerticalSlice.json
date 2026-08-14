@@ -1,0 +1,76 @@
+[
+  {
+    "Name": "radio_intro",
+    "NodeId": "radio_intro",
+    "SpeakerCharacterId": "ismay",
+    "SpeakerLine": "Primeiro-Ministro, a BBC está pronta para a transmissão às 21h. O texto está sobre a mesa — mas o senhor sempre revisa até o último minuto.",
+    "Responses": [
+      { "ResponseId": "tone_resolute", "Label": "\"Vamos entregar como está escrito. Sem suavizar.\"", "Type": "Approve", "NextNodeId": "radio_close", "LinkedDecisionId": "radio_pronouncement", "LinkedDecisionOptionId": "resolute", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "tone_comforting", "Label": "\"Vamos suavizar as partes mais duras. As pessoas precisam de esperança.\"", "Type": "Modify", "NextNodeId": "radio_close", "LinkedDecisionId": "radio_pronouncement", "LinkedDecisionOptionId": "comforting", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "radio_close",
+    "NodeId": "radio_close",
+    "SpeakerCharacterId": "ismay",
+    "SpeakerLine": "Foi ao ar, Primeiro-Ministro. A resposta virá amanhã pelos jornais — e por quem realmente importa: o povo que estava ouvindo.",
+    "Responses": []
+  },
+  {
+    "Name": "briefing_intro",
+    "NodeId": "briefing_intro",
+    "SpeakerCharacterId": "menzies",
+    "SpeakerLine": "Primeiro-Ministro, material Ultra decifrado nas últimas 36 horas sugere que Rommel está recebendo reforços blindados significativos pela rota costeira — se confirmado, muda o cálculo de Montgomery para a ofensiva.",
+    "Responses": [
+      { "ResponseId": "hear_aldous", "Label": "\"Wing Commander Aldous, sua leitura?\"", "Type": "Consult", "NextNodeId": "aldous_disagreement", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "aldous_disagreement",
+    "NodeId": "aldous_disagreement",
+    "SpeakerCharacterId": "aldous",
+    "SpeakerLine": "Com todo respeito, senhor... o reconhecimento fotográfico das últimas 48 horas não mostra esse volume de tráfego na estrada costeira. Ou os reforços ainda não chegaram, ou estão vindo por outra rota que não estamos monitorando.",
+    "Responses": [
+      { "ResponseId": "ask_menzies_source", "Label": "\"Menzies, há quanto tempo essa fonte está confiável?\"", "Type": "RequestInfo", "NextNodeId": "menzies_source_detail", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "ask_aldous_coverage", "Label": "\"Aldous, quão confiável é a cobertura fotográfica nessa área?\"", "Type": "RequestInfo", "NextNodeId": "aldous_coverage_detail", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "skip_to_alamein_decision", "Label": "\"Já ouvi o suficiente de ambos. Preciso decidir.\"", "Type": "Approve", "NextNodeId": "alamein_decision", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": -1 }
+    ]
+  },
+  {
+    "Name": "menzies_source_detail",
+    "NodeId": "menzies_source_detail",
+    "SpeakerCharacterId": "menzies",
+    "SpeakerLine": "Ultra não erra sobre a existência da ordem de movimento — pode errar sobre o momento exato. A fonte tem histórico sólido, mas a decodificação de ontem teve uma lacuna de seis horas. Eu confiaria nela antes de confiar na ausência de evidência fotográfica.",
+    "Responses": [
+      { "ResponseId": "to_decision_after_menzies", "Label": "\"Entendido. Preciso decidir.\"", "Type": "Approve", "NextNodeId": "alamein_decision", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "menzies", "LoyaltyImpact": 2 }
+    ]
+  },
+  {
+    "Name": "aldous_coverage_detail",
+    "NodeId": "aldous_coverage_detail",
+    "SpeakerCharacterId": "aldous",
+    "SpeakerLine": "A cobertura da rota alternativa que o Sir Stewart menciona é fraca, senhor — não posso descartá-la, só não posso confirmá-la. Não estou dizendo que ele está errado. Estou dizendo que não tenho como dizer que está certo.",
+    "Responses": [
+      { "ResponseId": "to_decision_after_aldous", "Label": "\"Entendido. Preciso decidir.\"", "Type": "Approve", "NextNodeId": "alamein_decision", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "aldous", "LoyaltyImpact": 2 }
+    ]
+  },
+  {
+    "Name": "alamein_decision",
+    "NodeId": "alamein_decision",
+    "SpeakerCharacterId": "menzies",
+    "SpeakerLine": "Montgomery precisa da sua orientação até amanhã de manhã, Primeiro-Ministro.",
+    "Responses": [
+      { "ResponseId": "decide_approve_as_planned", "Label": "\"Autorizem o ataque conforme planejado. Confio em Ultra.\"", "Type": "Approve", "NextNodeId": "alamein_close", "LinkedDecisionId": "alamein_orders", "LinkedDecisionOptionId": "approve_as_planned", "LoyaltyTargetCharacterId": "menzies", "LoyaltyImpact": 4 },
+      { "ResponseId": "decide_delay_48h", "Label": "\"Atrasem 48 horas para reconhecimento confirmar.\"", "Type": "Delay", "NextNodeId": "alamein_close", "LinkedDecisionId": "alamein_orders", "LinkedDecisionOptionId": "delay_48h", "LoyaltyTargetCharacterId": "aldous", "LoyaltyImpact": 3 },
+      { "ResponseId": "decide_reconnaissance", "Label": "\"Autorizem um ataque de reconhecimento em força antes do assalto principal.\"", "Type": "Modify", "NextNodeId": "alamein_close", "LinkedDecisionId": "alamein_orders", "LinkedDecisionOptionId": "reconnaissance_in_force", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "decide_delegate", "Label": "\"Repassem as duas informações a Montgomery. A decisão final é dele.\"", "Type": "Delegate", "NextNodeId": "alamein_close", "LinkedDecisionId": "alamein_orders", "LinkedDecisionOptionId": "delegate_to_montgomery", "LoyaltyTargetCharacterId": "brooke", "LoyaltyImpact": -2 }
+    ]
+  },
+  {
+    "Name": "alamein_close",
+    "NodeId": "alamein_close",
+    "SpeakerCharacterId": "menzies",
+    "SpeakerLine": "A ordem será transmitida imediatamente, Primeiro-Ministro.",
+    "Responses": []
+  }
+]

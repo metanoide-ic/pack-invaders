@@ -1,0 +1,26 @@
+[
+  {
+    "Name": "ending_war_continues",
+    "EndingId": "ending_war_continues",
+    "Title": "A Guerra Continua nas Suas Mãos",
+    "GateIndicator": "ElAlameinReadiness",
+    "GateComparison": "GreaterOrEqual",
+    "GateThreshold": 0,
+    "EvaluationNotes": "Gate primário e único deste encerramento local (o slice não implementa o avaliador genérico FConditionExpr do modelo de dados completo — isso é Fase 4 — aqui a condição é uma comparação direta de um único indicador, suficiente para demonstrar o padrão). Avaliar DEPOIS que o efeito atrasado de alamein_orders já manifestou (2 dias de jogo após a Cena 5) — nunca antes, senão o valor ainda reflete só o efeito imediato.",
+    "FlavorVariantIndicator": "CivilianMoraleUK",
+    "FlavorVariantNote": "CivilianMoraleUK alto (tom Resoluto ou Reconfortante, ambos positivos) só muda o tom do texto de epílogo, não se este final é alcançado — reflete FEndingData.FactorsConsidered do modelo completo, aplicado em miniatura.",
+    "EpilogueText": "Nos dias seguintes, os relatórios de Montgomery confirmam: a ofensiva avança. Não sem custo — nunca sem custo —, mas avança. Em Londres, a transmissão de rádio é lembrada como um momento de clareza em meio à exaustão. Churchill dorme poucas horas essa noite, como quase todas as outras. A guerra não terminou. Só uma decisão, entre centenas ainda por vir, foi tomada — e o mundo, por enquanto, segue o rumo que ela abriu."
+  },
+  {
+    "Name": "ending_shadows_of_doubt",
+    "EndingId": "ending_shadows_of_doubt",
+    "Title": "Sombras de Dúvida",
+    "GateIndicator": "ElAlameinReadiness",
+    "GateComparison": "LessThan",
+    "GateThreshold": 0,
+    "EvaluationNotes": "Complementar ao ending_war_continues — os dois gates juntos cobrem o espaço inteiro de valores possíveis de ElAlameinReadiness ao fim do slice, então exatamente um dos dois sempre dispara. Isso PRECISA ser verificado manualmente sempre que qualquer efeito de alamein_orders for editado (ver Testing, item novo abaixo) — não há avaliador automático de cobertura no protótipo/slice.",
+    "FlavorVariantIndicator": "CivilianMoraleUK",
+    "FlavorVariantNote": "Tom Reconfortante (CivilianMoraleUK +5) combinado com este final tem leitura mais amarga no epílogo — a esperança pública transmitida na Cena 3 contrasta mais com a dúvida real mostrada aqui do que aconteceria com o tom Resoluto.",
+    "EpilogueText": "Os primeiros relatórios de Montgomery são ambíguos — nem derrota, nem a vitória decisiva que Londres esperava. Nos corredores do Gabinete de Guerra, começam as perguntas silenciosas sobre se a informação certa chegou a tempo, e se foi usada da forma certa. Churchill relê a transcrição do próprio discurso e nota, pela primeira vez, a distância entre o que disse ao país e o que sabia quando disse. A guerra não terminou. Essa decisão específica vai custar mais do que parecia, quando foi tomada."
+  }
+]

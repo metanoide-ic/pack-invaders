@@ -1,0 +1,161 @@
+[
+  {
+    "Name": "radio_pronouncement",
+    "DecisionId": "radio_pronouncement",
+    "Title": "Tom da Transmissão de Rádio",
+    "DescriptionText": "O texto do discurso está pronto e é factualmente fixo — a escolha é sobre como entregá-lo ao país esta noite.",
+    "Options": [
+      {
+        "OptionId": "resolute",
+        "Label": "Tom Resoluto — franqueza sem suavizar",
+        "Type": "Approve",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "CivilianMoraleUK",
+            "Delta": 3
+          }
+        ],
+        "DelayedEffects": []
+      },
+      {
+        "OptionId": "comforting",
+        "Label": "Tom Reconfortante — suavizar as partes mais duras",
+        "Type": "Modify",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "CivilianMoraleUK",
+            "Delta": 5
+          }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 2,
+            "Effects": [
+              {
+                "IndicatorName": "DiplomaticInfluenceUK",
+                "Delta": -1
+              }
+            ],
+            "ManifestationText": "Eden comenta que aliados notaram a discrepância entre o tom público da transmissão e os relatórios reais que circulam entre governos."
+          }
+        ]
+      }
+    ],
+    "Provenance": "PlausibleSpeculation",
+    "SourceNote": "Transmissões de rádio de Churchill durante a guerra são documentadas; este pronunciamento específico, seu texto e a escolha de tom são dramatização para o vertical slice."
+  },
+  {
+    "Name": "alamein_orders",
+    "DecisionId": "alamein_orders",
+    "Title": "Orientação a Montgomery — Reforços de Rommel",
+    "DescriptionText": "Inteligência Ultra (Menzies) e reconhecimento fotográfico (Aldous) discordam sobre a chegada de reforços blindados alemães pela rota costeira. Montgomery precisa de orientação até amanhã de manhã.",
+    "Options": [
+      {
+        "OptionId": "approve_as_planned",
+        "Label": "Autorizar o ataque conforme planejado, confiando na inteligência Ultra",
+        "Type": "Approve",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "MilitaryMoraleUK",
+            "Delta": 2
+          },
+          {
+            "IndicatorName": "WarRoomsWearLevel",
+            "Delta": 2
+          }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 2,
+            "Effects": [
+              {
+                "IndicatorName": "ElAlameinReadiness",
+                "Delta": -4
+              }
+            ],
+            "ManifestationText": "Os reforços de Rommel haviam de fato chegado — a inteligência Ultra estava correta. O ataque enfrenta resistência mais dura do que o planejado; Montgomery ajusta o avanço, mas o custo é real."
+          }
+        ]
+      },
+      {
+        "OptionId": "delay_48h",
+        "Label": "Atrasar 48 horas para reconhecimento adicional confirmar",
+        "Type": "Delay",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "WarRoomsWearLevel",
+            "Delta": 2
+          }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 2,
+            "Effects": [
+              {
+                "IndicatorName": "ElAlameinReadiness",
+                "Delta": -2
+              }
+            ],
+            "ManifestationText": "O reconhecimento adicional confirma os reforços — Menzies estava certo — mas a vantagem de surpresa tática já havia sido parcialmente perdida com o atraso."
+          }
+        ]
+      },
+      {
+        "OptionId": "reconnaissance_in_force",
+        "Label": "Autorizar um ataque de reconhecimento em força antes do assalto principal",
+        "Type": "Modify",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "ElAlameinReadiness",
+            "Delta": 1
+          },
+          {
+            "IndicatorName": "WarRoomsWearLevel",
+            "Delta": 2
+          }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 2,
+            "Effects": [
+              {
+                "IndicatorName": "ElAlameinReadiness",
+                "Delta": -1
+              }
+            ],
+            "ManifestationText": "O ataque de reconhecimento confirma parte dos reforços a tempo de ajustar o plano principal — resultado misto, nem o risco pleno de agir cego, nem o custo pleno do atraso."
+          }
+        ]
+      },
+      {
+        "OptionId": "delegate_to_montgomery",
+        "Label": "Delegar a decisão final a Montgomery, com as duas informações repassadas",
+        "Type": "Delegate",
+        "ImmediateEffects": [
+          {
+            "IndicatorName": "BrookeTrueLoyalty",
+            "Delta": -2
+          },
+          {
+            "IndicatorName": "WarRoomsWearLevel",
+            "Delta": 2
+          }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 2,
+            "Effects": [
+              {
+                "IndicatorName": "ElAlameinReadiness",
+                "Delta": -1
+              }
+            ],
+            "ManifestationText": "Montgomery decide por conta própria — Brooke observa, em particular, que o Primeiro-Ministro evitou o peso da escolha bem quando ela mais importava."
+          }
+        ]
+      }
+    ],
+    "Provenance": "PlausibleSpeculation",
+    "SourceNote": "A tensão real entre Ultra e reconhecimento fotográfico como fontes de inteligência é historicamente documentada como fenômeno geral da guerra; este episódio específico, seus personagens e o resultado configurado (reforços reais) são dramatização construída para o vertical slice, fixados nestes dados para fins de demonstração determinística — não uma simulação probabilística."
+  }
+]
