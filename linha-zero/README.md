@@ -1,13 +1,14 @@
 # Linha Zero
 
 Cooperativo 3D para 1–4 jogadores, dentro de um trem que nunca pode parar.
+**Alvo de plataforma: PC (Steam)** — jogo desktop, não mobile.
 
-Construído com **Three.js + TypeScript + Vite**. Renderiza em qualquer navegador
-moderno, sem instalação — é um endless-runner 3D em terceira pessoa onde a
-tripulação corre pelo teto dos vagões, salta para plataformas de cidades para
-saquear recursos, resgata sobreviventes e animais à beira da linha, apaga
-incêndios, repele saqueadores e decide, sob pressão, quais vagões abandonar
-para manter o resto da composição viva.
+Construído com **Three.js + TypeScript + Vite**, empacotado como app desktop
+via **Electron**. É um endless-runner 3D em terceira pessoa onde a tripulação
+corre pelo teto dos vagões, salta para plataformas de cidades para saquear
+recursos, resgata sobreviventes e animais à beira da linha, apaga incêndios,
+repele saqueadores e decide, sob pressão, quais vagões abandonar para manter
+o resto da composição viva.
 
 ## Rodando localmente
 
@@ -24,6 +25,32 @@ npm run build      # build de produção em dist/
 npm run check       # checagem de tipos (tsc --noEmit)
 npm run preview     # serve o build de produção
 ```
+
+## Build desktop (Windows/Mac/Linux) e caminho até a Steam
+
+```bash
+npm run build       # gera dist/ primeiro — o Electron carrega esse build, não o dev server
+npm run start        # abre o jogo numa janela Electron (não no navegador)
+npm run package       # empacota um app desktop nativo em out/ (usa a plataforma atual)
+npm run make           # como package, mas também gera um .zip distribuível
+```
+
+`electron/main.cjs` abre uma janela própria (sem chrome de navegador), com
+`F11` para tela cheia — o padrão que se espera de um jogo, não de uma página
+web. O `forge.config.cjs` empacota só `dist/` + `electron/`: o build do Vite
+já embute o Three.js inteiro num único arquivo, então `node_modules` e o
+código-fonte não precisam ir para o pacote final (testado: sem essa exclusão,
+o pacote saía com o `node_modules` de desenvolvimento inteiro dentro).
+
+**O que falta para publicar de verdade na Steam** (depende de acesso a uma
+conta Steamworks que esta sessão não tem):
+- Uma conta de parceiro Steamworks e um App ID.
+- Subir o conteúdo de `npm run package` (a pasta `out/<plataforma>/`) como
+  depot via SteamPipe (`steamcmd` + um script `app_build.vdf`/`depot_build.vdf`).
+- Opcionalmente, integrar o SDK do Steamworks (conquistas, save na nuvem,
+  overlay) via um binding nativo como `steamworks.js` — não incluído aqui.
+- Página da loja, classificação etária, arte de capa/capsule — fora do
+  escopo de código.
 
 ## Como jogar
 
