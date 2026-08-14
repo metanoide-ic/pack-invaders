@@ -18,6 +18,7 @@ Cada arquivo de código traz um cabeçalho `// STATUS: escrito, não compilado n
 | `Testing/guia-de-execucao-e-testes.md` | Critérios de aceite por sistema e passo a passo de teste manual no Editor |
 | `Testing/protocolo-playtest.md` | Protocolo de playtest interno (12 participantes) que opera sobre os critérios objetivos de diversão já definidos em `../07-producao-e-riscos.md` §12 — roteiro de moderador, questionário, planilha de coleta e cálculo do gate |
 | `CI/` | Pipeline de build/teste (GitHub Actions, runner self-hosted com UE5) — compromisso do Sprint 1, pronto para ativar quando o projeto UE5 real existir |
+| `Assets/plano-de-assets-temporarios.md` | Onde buscar cada asset temporário do escritório 3D (mobiliário, props, áudio, tipografia) e sob que licença — nada foi de fato baixado aqui, é o plano + tabela de registro de proveniência a preencher no download real |
 
 ## Escopo deste protótipo (recorte de Sprint 2–5, ver `../07-producao-e-riscos.md`)
 

@@ -25,7 +25,7 @@
 4. Conferir após import: nenhuma linha deve ficar com campos em branco por erro de parsing — o importador da UE5 avisa por linha quando um campo não casa com a struct; revisar o log de import antes de seguir.
 
 ## Passo 4 — Montar o nível e os Blueprints
-Seguir `Blueprints/especificacao-blueprints.md` — cada Blueprint necessário está descrito nó a nó (não é possível fornecer `.uasset` binário fora do Editor).
+Seguir `Blueprints/especificacao-blueprints.md` — cada Blueprint necessário está descrito nó a nó (não é possível fornecer `.uasset` binário fora do Editor). Para os props/mobiliário/texturas do escritório, seguir `Assets/plano-de-assets-temporarios.md` antes de importar qualquer coisa — cada download real precisa entrar na tabela de proveniência desse documento, sem exceção.
 
 ## Passo 5 — Testar
 Seguir `Testing/guia-de-execucao-e-testes.md`.
