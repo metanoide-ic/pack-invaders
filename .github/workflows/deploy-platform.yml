@@ -45,3 +45,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: plataforma-origem/dist
           commit_message: 'Deploy da Plataforma Origem'
+          cname: orikay.com.br
