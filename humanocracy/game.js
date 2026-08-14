@@ -5050,6 +5050,12 @@ function encounterOutcome(enc, decision) {
       } else if (decision === 'detain') { f.resTraida = true; }
       break;
     case 'elara3': if (decision === 'approve') f.elaraGrata = true; else f.elaraRancor = true; break;
+    case 'gravadora1':
+      if (decision === 'approve') {
+        S.counters.resHelped++;
+        S.pendingNews.push({ day: S.day + 3, text: T('Um lote de cartões de identidade "extraviados" reapareceu, dias depois, nas mãos certas. O Ministério abriu inquérito. Não achou nada — o que, dizem, é a marca de um bom trabalho.') });
+      } else if (decision === 'detain') { f.resTraida = true; }
+      break;
     case 'odim':
       if (decision === 'approve') S.pendingNews.push({ day: S.day + 3, text: T('A jornalista Vela Odim publicou no exterior: "Os postos de triagem detêm 9 inocentes para cada suspeito real". O governo nega. O governo sempre nega.') });
       else f.odimDetida = true;

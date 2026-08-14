@@ -423,6 +423,13 @@ const ENCOUNTERS = {
     fala: 'Eu sei o nome da sua esposa. Sei o nome do seu filho, o mais novo. Não é ameaça, inspetor — é currículo. Alguém me paga pra saber esse tipo de coisa sobre gente como o senhor. Achei educado avisar.',
     nota: { texto: 'Um nome e um endereço — os seus. Sem assinatura.', tipo: 'vigiado' },
   },
+  35: {
+    id: 'gravadora1', nome: 'Sela Kroft', pais: 'osteria', sexo: 'f', etnia: 'mestico',
+    profissao: 'gravadora', motivo: 'trabalho', valid: false, forcedDisc: 'wrongSeal',
+    fala: 'Sou gravadora, inspetor. Carimbos, moldes, chapas — trabalho fino. Esse selo aqui saiu das minhas próprias mãos, e olhe a ironia: nem eu consigo fazer o meu sair perfeito. Ninguém consegue duas vezes seguidas. É por isso que gente como eu ainda tem trabalho.',
+    nota: { texto: 'Se um selo não bater, pode ser mão amiga, não inimiga. — S.K.', tipo: 'resistencia_contato' },
+    resistencia: true,
+  },
   36: {
     id: 'okim2', nome: 'Talvo Okim', pais: 'frimia', sexo: 'm', etnia: 'osano',
     profissao: 'desempregado', motivo: 'transito', valid: true,

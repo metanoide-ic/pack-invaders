@@ -60,6 +60,10 @@ S.counters.bribes = 3;              // testar reputação "corrupto"
 - [ ] Regras novas do Conselho não contradizem silenciosamente regras antigas
       que ainda estejam ativas
 - [ ] A cota do dia bate com o que o comunicado anuncia
+- [ ] Dia 35: Sela Kroft (gravadora, selo incorreto) é a segunda chance da
+      campanha de ganhar `resHelped` — aprová-la deve incrementar o contador
+      e disparar o eco de notícia ("cartões extraviados"); detê-la marca
+      `S.flags.resTraida`
 
 ### Dia 37–42 · ainda Conselho Popular, virando "Apatia"
 - [ ] Mesmo regime visual da fase anterior — o que muda é o TOM: o Estado
@@ -142,7 +146,7 @@ combinação, o que não é razoável.)
 | O Envelope Virou Rotina | `bribes >= 6` |
 | A Pontaria Errada | `alternadosBlocked = 0`, `alternadosIn >= 3`, `innocentsDetained >= 3` |
 | A Mira Certa | `alternadosCaught >= 8`, `innocentsDetained = 0` |
-| A Rota do Barbeiro | `resHelped >= 1` + contato da resistência + `citTotal < 12` |
+| A Rota do Barbeiro | `resHelped >= 1` + contato da resistência + `citTotal < 12` (dois jeitos de ganhar `resHelped`: o dia 9, Nadia Baruk, ou o dia 35, a gravadora Sela Kroft) |
 | A Cidade Silenciosa | `alternadosIn >= 6` |
 | A Medalha | `citTotal <= 4`, `bribes = 0` |
 | A Casa Vazia | os 4 da família mortos |
