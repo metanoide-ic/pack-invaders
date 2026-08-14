@@ -115,8 +115,25 @@ export async function sendCharge(chargeId: string): Promise<void> {
     mensagem: message,
   };
 
+  // Sem o número de cobrança do cliente não tem pra onde mandar — nem tenta,
+  // pra não gastar a chamada do Conector com um erro óbvio.
+  if (!client.billingWhatsapp) {
+    store.addEvent({
+      channel: 'whatsapp',
+      title: `Não foi possível cobrar: ${client.name}`,
+      status: 'erro',
+      detail: 'Este cliente não tem WhatsApp de cobrança cadastrado. Preencha em Clientes ou pelo importador.',
+    });
+    return;
+  }
+
   // Com o Conector, dá para ler a resposta e guardar o link da fatura que o
   // gateway emitiu. Um webhook comum é de mão única, então só dispara.
+  // "enviouDeVerdade" controla se a cobrança pode ser marcada como enviada:
+  // uma falha real (Conector fora do ar, erro do gateway) tem que deixar a
+  // cobrança pendente, pra poder tentar de novo — nunca marcar como enviada
+  // uma cobrança que não saiu.
+  let enviouDeVerdade = false;
   if (settings.connectorUrl) {
     let ok = false;
     let detalhe = '';
@@ -135,22 +152,24 @@ export async function sendCharge(chargeId: string): Promise<void> {
     } catch (e) {
       detalhe = (e as Error).message;
     }
+    enviouDeVerdade = ok;
     store.addEvent({
       channel: 'whatsapp',
       title: `Cobrança enviada: ${client.name} (${money(ch.amount)})`,
       status: ok ? 'ok' : 'erro',
       detail: ok
-        ? `Enviada para ${client.billingWhatsapp || 'o contato de cobrança'} por ${METHOD_LABEL[ch.method]}.`
-        : `Não foi enviada: ${detalhe || 'o Conector não respondeu.'}`,
+        ? `Enviada para ${client.billingWhatsapp} por ${METHOD_LABEL[ch.method]}.`
+        : `Não foi enviada: ${detalhe || 'o Conector não respondeu — confira se ele está aberto no computador.'}`,
     });
   } else if (settings.whatsappWebhook) {
     const ok = await fireWebhook(settings.whatsappWebhook, payload);
+    enviouDeVerdade = ok;
     store.addEvent({
       channel: 'whatsapp',
       title: `Cobrança enviada: ${client.name} (${money(ch.amount)})`,
       status: ok ? 'ok' : 'erro',
       detail: ok
-        ? `Enviada para ${client.billingWhatsapp || 'o contato de cobrança'} por ${METHOD_LABEL[ch.method]}.`
+        ? `Enviada para ${client.billingWhatsapp} por ${METHOD_LABEL[ch.method]}.`
         : 'Falha ao disparar o webhook do WhatsApp.',
     });
   } else {
@@ -158,9 +177,11 @@ export async function sendCharge(chargeId: string): Promise<void> {
       channel: 'whatsapp',
       title: `(Simulado) Cobrança de ${client.name} (${money(ch.amount)})`,
       status: 'simulado',
-      detail: `Conecte o webhook do WhatsApp nas Integrações para enviar de verdade. Mensagem pronta:\n\n${message}`,
+      detail: `Conecte o Conector ou o webhook do WhatsApp nas Integrações para enviar de verdade. Mensagem pronta:\n\n${message}`,
     });
   }
+
+  if (!enviouDeVerdade) return; // fica pendente — dá pra tentar de novo
 
   if (ch.method === 'nf') {
     const nfPayload = {
