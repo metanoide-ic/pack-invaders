@@ -61,9 +61,10 @@ export function buildItemGroup(item: ItemDef): ItemInstance {
     }
     if (spec.role === 'weld') {
       material = new THREE.MeshStandardMaterial({
-        color: spec.color ?? '#ffb347',
+        color: '#8a5a34',
         emissive: new THREE.Color(spec.color ?? '#ffb347'),
-        emissiveIntensity: 0.5,
+        emissiveIntensity: 0.22,
+        roughness: 0.6,
       });
     }
     const mesh = new THREE.Mesh(geometry, material);

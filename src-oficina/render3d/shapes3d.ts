@@ -1,17 +1,18 @@
 import * as THREE from 'three';
 import type { ShapeId } from '../core/types';
 import type { Shape3D, Part3DSpec } from './types';
-import { drawDialFace } from './texturePatterns';
+import { drawDialFace, drawCarvedPanel, drawKeyRows, drawBlankPaper, drawTypedPaper, drawClockFace } from './texturePatterns';
 
 const box = (w: number, h: number, d: number) => () => new THREE.BoxGeometry(w, h, d);
 const cyl = (rt: number, rb: number, h: number, seg = 16) => () =>
   new THREE.CylinderGeometry(rt, rb, h, seg);
 const sph = (r: number, seg = 16) => () => new THREE.SphereGeometry(r, seg, seg);
 const torus = (r: number, tube: number, seg = 20) => () => new THREE.TorusGeometry(r, tube, 8, seg);
-
-function rotY(obj: { rotation: THREE.Euler }, a: number) {
-  obj.rotation.y = a;
-}
+/** A box whose pivot sits at one end (x=0) instead of the center — for hand/needle-style parts. */
+const pivotBox = (len: number, h: number, d: number) => () => new THREE.BoxGeometry(len, h, d).translate(len / 2, 0, 0);
+/** A cylinder whose pivot sits at its top (y=0) instead of the center — for hanging parts. */
+const pivotCyl = (r: number, len: number, seg = 8) => () =>
+  new THREE.CylinderGeometry(r, r, len, seg).translate(0, -len / 2, 0);
 
 // ---------------------------------------------------------------- RADIO
 // A 1950s-style tabletop valve radio: walnut cabinet, wood-slat speaker grille,
@@ -179,21 +180,71 @@ const radio: Shape3D = {
 };
 
 // ---------------------------------------------------------------- MUSIC BOX
+// A hand-carved wooden music box with a dancing figurine under the open lid.
+const mbFeet: Part3DSpec[] = ([[-0.58, -0.35], [0.58, -0.35], [-0.58, 0.35], [0.58, 0.35]] as [number, number][]).map(
+  ([x, z], i) => ({
+    id: `mb-foot-${i}`,
+    role: 'detail' as const,
+    geo: cyl(0.04, 0.05, 0.06, 10),
+    position: [x, 0.03, z] as [number, number, number],
+    color: '#2a1c10',
+  })
+);
+
 const musicboxParts: Part3DSpec[] = [
-  { id: 'base', role: 'body', geo: box(1.4, 0.5, 1), position: [0, 0.25, 0] },
-  { id: 'lid', role: 'body', geo: box(1.4, 0.08, 1), position: [0, 0.53, -0.42], rotation: [-0.5, 0, 0] },
+  { id: 'base', role: 'body', bodyStyle: 'wood', geo: box(1.4, 0.55, 1), position: [0, 0.275, 0] },
+  ...mbFeet,
   {
-    id: 'figurine',
+    id: 'carved-panel',
     role: 'detail',
-    geo: sph(0.09, 16),
-    position: [0, 0.62, 0.15],
-    color: '#e8d3a3',
+    geo: box(1.16, 0.4, 0.02),
+    position: [0, 0.3, 0.512],
+    textureFn: drawCarvedPanel,
+    textureAspect: [200, 140],
+  },
+  {
+    id: 'lid',
+    role: 'body',
+    bodyStyle: 'wood',
+    geo: box(1.4, 0.07, 1),
+    position: [0, 0.58, -0.4],
+    rotation: [-0.55, 0, 0],
+  },
+  { id: 'hinge-left', role: 'detail', geo: cyl(0.03, 0.03, 0.12, 10), position: [-0.55, 0.55, -0.47], rotation: [0, 0, Math.PI / 2], color: '#c9a24a', metalness: 0.6 },
+  { id: 'hinge-right', role: 'detail', geo: cyl(0.03, 0.03, 0.12, 10), position: [0.55, 0.55, -0.47], rotation: [0, 0, Math.PI / 2], color: '#c9a24a', metalness: 0.6 },
+  {
+    id: 'figurine-skirt',
+    role: 'detail',
+    geo: cyl(0.001, 0.08, 0.16, 16),
+    position: [0, 0.68, 0.05],
+    color: '#e8b98a',
+  },
+  {
+    id: 'figurine-head',
+    role: 'detail',
+    geo: sph(0.05, 14),
+    position: [0, 0.81, 0.05],
+    color: '#f0c8a0',
+  },
+  {
+    id: 'figurine-partner-skirt',
+    role: 'detail',
+    geo: cyl(0.001, 0.075, 0.15, 16),
+    position: [0, 0.675, -0.16],
+    color: '#d9622b',
+  },
+  {
+    id: 'figurine-partner-head',
+    role: 'detail',
+    geo: sph(0.048, 14),
+    position: [0, 0.8, -0.16],
+    color: '#f0c8a0',
   },
   {
     id: 'crank',
     role: 'switch',
-    geo: cyl(0.05, 0.05, 0.28, 10),
-    position: [0.75, 0.35, 0.3],
+    geo: cyl(0.05, 0.05, 0.26, 10),
+    position: [0.76, 0.32, 0.3],
     rotation: [0, 0, Math.PI / 2],
     color: '#c9a24a',
     metalness: 0.7,
@@ -206,32 +257,104 @@ const musicbox: Shape3D = {
   testAnimate(parts, t) {
     const crank = parts.get('crank');
     if (crank) crank.rotation.x = t * 5;
-    const fig = parts.get('figurine');
-    if (fig) fig.rotation.y = t * 2;
+    for (const id of ['figurine-skirt', 'figurine-head', 'figurine-partner-skirt', 'figurine-partner-head']) {
+      const p = parts.get(id);
+      if (p) p.rotation.y = t * 2;
+    }
+    const lid = parts.get('lid');
+    if (lid) lid.rotation.x = -0.55 + Math.sin(t * 3) * 0.02;
   },
 };
 
 // ---------------------------------------------------------------- BIKE
-const bikeParts: Part3DSpec[] = [
-  {
-    id: 'frame-top',
+// A messenger bicycle with a proper diamond frame: two axles, a bottom bracket,
+// a seat point and a head-tube point, connected by six straight tubes.
+const REAR_AXLE: [number, number] = [-0.85, 0.45];
+const FRONT_AXLE: [number, number] = [0.85, 0.45];
+const BOTTOM_BRACKET: [number, number] = [0, 0.45];
+const SEAT_TOP: [number, number] = [-0.32, 1.16];
+const HEAD_TOP: [number, number] = [0.72, 0.92];
+
+function frameBar(id: string, p1: [number, number], p2: [number, number], thick = 0.095): Part3DSpec {
+  const dx = p2[0] - p1[0];
+  const dy = p2[1] - p1[1];
+  const len = Math.hypot(dx, dy);
+  const angle = Math.atan2(dy, dx);
+  return {
+    id,
     role: 'body',
-    geo: box(1.7, 0.13, 0.13),
-    position: [0, 0.85, 0],
-    rotation: [0, 0, 0.32],
+    geo: box(len, thick, thick),
+    position: [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2, 0],
+    rotation: [0, 0, angle],
+  };
+}
+
+const bikeFrame: Part3DSpec[] = [
+  frameBar('chain-stay', REAR_AXLE, BOTTOM_BRACKET),
+  frameBar('seat-stay', REAR_AXLE, SEAT_TOP, 0.06),
+  frameBar('seat-tube', BOTTOM_BRACKET, SEAT_TOP),
+  frameBar('top-tube', SEAT_TOP, HEAD_TOP),
+  frameBar('down-tube', BOTTOM_BRACKET, HEAD_TOP),
+  frameBar('fork', HEAD_TOP, FRONT_AXLE, 0.075),
+];
+
+const bikeParts: Part3DSpec[] = [
+  ...bikeFrame,
+  {
+    id: 'handlebar',
+    role: 'detail',
+    geo: box(0.42, 0.035, 0.035),
+    position: [HEAD_TOP[0] + 0.14, HEAD_TOP[1] + 0.14, 0],
+    rotation: [0, 0, 0.5],
+    color: '#2a2a2a',
+    metalness: 0.5,
   },
   {
-    id: 'frame-seat',
-    role: 'body',
-    geo: box(0.95, 0.11, 0.11),
-    position: [-0.35, 0.95, 0],
-    rotation: [0, 0, -1.0],
+    id: 'headlight',
+    role: 'detail',
+    geo: cyl(0.05, 0.05, 0.045, 14),
+    position: [HEAD_TOP[0] + 0.05, HEAD_TOP[1] + 0.03, 0.09],
+    rotation: [Math.PI / 2, 0, 0],
+    color: '#e8dcb8',
+    roughness: 0.3,
+  },
+  {
+    id: 'kickstand',
+    role: 'detail',
+    geo: box(0.035, 0.32, 0.035),
+    position: [BOTTOM_BRACKET[0] - 0.08, 0.18, 0.14],
+    rotation: [0, 0, 0.2],
+    color: '#1c1c1c',
+    metalness: 0.5,
+  },
+  {
+    id: 'crank-axle',
+    role: 'detail',
+    geo: cyl(0.05, 0.05, 0.16, 14),
+    position: [BOTTOM_BRACKET[0], BOTTOM_BRACKET[1], 0],
+    rotation: [Math.PI / 2, 0, 0],
+    color: '#2a2a2a',
+    metalness: 0.6,
+  },
+  {
+    id: 'pedal-a',
+    role: 'detail',
+    geo: box(0.13, 0.03, 0.085),
+    position: [BOTTOM_BRACKET[0] + 0.17, BOTTOM_BRACKET[1], 0],
+    color: '#1c1c1c',
+  },
+  {
+    id: 'pedal-b',
+    role: 'detail',
+    geo: box(0.13, 0.03, 0.085),
+    position: [BOTTOM_BRACKET[0] - 0.17, BOTTOM_BRACKET[1], 0],
+    color: '#1c1c1c',
   },
   {
     id: 'front-wheel',
     role: 'removable',
     geo: torus(0.42, 0.06, 24),
-    position: [0.85, 0.45, 0],
+    position: [FRONT_AXLE[0], FRONT_AXLE[1], 0],
     rotation: [0, Math.PI / 2, 0],
     color: '#20201f',
     detachDir: [1, 0.4, 0.2],
@@ -240,7 +363,7 @@ const bikeParts: Part3DSpec[] = [
     id: 'back-wheel',
     role: 'removable',
     geo: torus(0.42, 0.06, 24),
-    position: [-0.85, 0.45, 0],
+    position: [REAR_AXLE[0], REAR_AXLE[1], 0],
     rotation: [0, Math.PI / 2, 0],
     color: '#20201f',
     detachDir: [-1, 0.4, -0.2],
@@ -248,16 +371,16 @@ const bikeParts: Part3DSpec[] = [
   {
     id: 'seat',
     role: 'removable',
-    geo: cyl(0.13, 0.11, 0.22, 16),
-    position: [-0.55, 1.28, 0],
+    geo: cyl(0.12, 0.1, 0.24, 16),
+    position: [SEAT_TOP[0], SEAT_TOP[1] + 0.13, 0],
     color: '#2a1c10',
     detachDir: [0, 1, 0],
   },
   {
     id: 'chain',
     role: 'removable',
-    geo: torus(0.16, 0.025, 16),
-    position: [0, 0.45, 0],
+    geo: torus(0.16, 0.02, 16),
+    position: [BOTTOM_BRACKET[0], BOTTOM_BRACKET[1], 0],
     rotation: [Math.PI / 2, 0, 0],
     color: '#4a4a4a',
     metalness: 0.7,
@@ -266,14 +389,14 @@ const bikeParts: Part3DSpec[] = [
   {
     id: 'bell',
     role: 'switch',
-    geo: sph(0.08, 16),
-    position: [0.75, 1.0, 0.15],
+    geo: sph(0.07, 16),
+    position: [HEAD_TOP[0] + 0.24, HEAD_TOP[1] + 0.12, 0.1],
     color: '#d9622b',
     metalness: 0.5,
   },
-  { id: 'weld-front', role: 'weld', geo: sph(0.1, 14), position: [0.55, 0.55, 0], color: '#ffb347' },
-  { id: 'weld-back', role: 'weld', geo: sph(0.1, 14), position: [-0.55, 0.55, 0], color: '#ffb347' },
-  { id: 'weld-seat', role: 'weld', geo: sph(0.1, 14), position: [-0.35, 1.1, 0], color: '#ffb347' },
+  { id: 'weld-bb', role: 'weld', geo: sph(0.09, 14), position: [BOTTOM_BRACKET[0], BOTTOM_BRACKET[1] - 0.14, 0], color: '#ffb347' },
+  { id: 'weld-head', role: 'weld', geo: sph(0.09, 14), position: [HEAD_TOP[0] + 0.04, HEAD_TOP[1] + 0.04, 0], color: '#ffb347' },
+  { id: 'weld-seat', role: 'weld', geo: sph(0.09, 14), position: [SEAT_TOP[0], SEAT_TOP[1] + 0.04, 0], color: '#ffb347' },
 ];
 
 const bike: Shape3D = {
@@ -285,11 +408,24 @@ const bike: Shape3D = {
     if (fw) fw.rotation.x = angle;
     if (bw) bw.rotation.x = angle;
     const bell = parts.get('bell');
-    if (bell) bell.position.y = 1.0 + Math.sin(t * 20) * 0.02;
+    if (bell) bell.position.y = HEAD_TOP[1] + 0.12 + Math.sin(t * 20) * 0.02;
+    const axle = parts.get('crank-axle');
+    if (axle) axle.rotation.y = angle * 0.6;
+    const pa = parts.get('pedal-a');
+    const pb = parts.get('pedal-b');
+    if (pa) {
+      pa.position.x = BOTTOM_BRACKET[0] + Math.cos(angle * 0.6) * 0.17;
+      pa.position.y = BOTTOM_BRACKET[1] + Math.sin(angle * 0.6) * 0.17;
+    }
+    if (pb) {
+      pb.position.x = BOTTOM_BRACKET[0] + Math.cos(angle * 0.6 + Math.PI) * 0.17;
+      pb.position.y = BOTTOM_BRACKET[1] + Math.sin(angle * 0.6 + Math.PI) * 0.17;
+    }
   },
 };
 
 // ---------------------------------------------------------------- TYPEWRITER
+const TYPED_TEXT = 'a oficina continua...';
 const typewriterParts: Part3DSpec[] = [
   { id: 'base', role: 'body', geo: box(1.6, 0.3, 1.1), position: [0, 0.15, 0] },
   { id: 'deck', role: 'body', geo: box(1.3, 0.28, 0.85), position: [0, 0.44, -0.05] },
@@ -303,11 +439,37 @@ const typewriterParts: Part3DSpec[] = [
     detachDir: [0, 1, -0.4],
   },
   {
+    id: 'roller-knob-l',
+    role: 'detail',
+    geo: cyl(0.09, 0.09, 0.06, 14),
+    position: [-0.7, 0.72, -0.42],
+    rotation: [0, 0, Math.PI / 2],
+    color: '#1c1c1c',
+  },
+  {
+    id: 'roller-knob-r',
+    role: 'detail',
+    geo: cyl(0.09, 0.09, 0.06, 14),
+    position: [0.7, 0.72, -0.42],
+    rotation: [0, 0, Math.PI / 2],
+    color: '#1c1c1c',
+  },
+  {
+    id: 'paper',
+    role: 'detail',
+    geo: box(0.82, 0.55, 0.015),
+    position: [0, 1.02, -0.48],
+    rotation: [-0.12, 0, 0],
+    textureFn: drawBlankPaper,
+    textureAspect: [220, 150],
+  },
+  {
     id: 'keys',
     role: 'removable',
     geo: box(1.0, 0.1, 0.55),
     position: [0, 0.5, 0.18],
-    color: '#141414',
+    textureFn: drawKeyRows,
+    textureAspect: [220, 44],
     detachDir: [0, 1, 0.6],
   },
   {
@@ -317,6 +479,13 @@ const typewriterParts: Part3DSpec[] = [
     position: [0.55, 0.53, -0.28],
     color: '#5a1c2a',
     detachDir: [0.6, 0.8, 0],
+  },
+  {
+    id: 'ribbon-spool-2',
+    role: 'detail',
+    geo: cyl(0.1, 0.1, 0.16, 14),
+    position: [-0.55, 0.53, -0.28],
+    color: '#3a1c2a',
   },
   {
     id: 'lever',
@@ -336,17 +505,52 @@ const typewriter: Shape3D = {
   testAnimate(parts, t) {
     const lever = parts.get('lever');
     if (lever) lever.position.x = 0.78 - Math.min(0.35, (t % 1) * 0.7);
+    const paper = parts.get('paper') as THREE.Mesh | undefined;
+    if (paper) {
+      const mat = paper.material as THREE.MeshStandardMaterial;
+      const tex = mat.map;
+      const canvas = tex?.image as HTMLCanvasElement | undefined;
+      if (canvas) {
+        const chars = Math.min(TYPED_TEXT.length, Math.floor(t * 5));
+        drawTypedPaper(canvas.getContext('2d')!, canvas.width, canvas.height, TYPED_TEXT, chars);
+        tex!.needsUpdate = true;
+      }
+    }
   },
 };
 
 // ---------------------------------------------------------------- CLOCK
+// A wall clock with a printed face, swinging pendulum and a brass winding key.
+const CLOCK_CX = 0;
+const CLOCK_CY = 0.95;
+const PENDULUM_PIVOT: [number, number, number] = [0, 0.42, 0.06];
+const PENDULUM_LEN = 0.4;
+
 const clockParts: Part3DSpec[] = [
   {
     id: 'case',
     role: 'body',
+    bodyStyle: 'wood',
     geo: cyl(0.62, 0.62, 0.16, 32),
-    position: [0, 0.95, 0],
+    position: [CLOCK_CX, CLOCK_CY, 0],
     rotation: [Math.PI / 2, 0, 0],
+  },
+  {
+    id: 'crown',
+    role: 'detail',
+    geo: sph(0.07, 16),
+    position: [0, 1.43, 0],
+    color: '#c9a24a',
+    metalness: 0.6,
+  },
+  {
+    id: 'face',
+    role: 'detail',
+    geo: cyl(0.54, 0.54, 0.02, 32),
+    position: [CLOCK_CX, CLOCK_CY, 0.1],
+    rotation: [Math.PI / 2, 0, 0],
+    textureFn: drawClockFace,
+    textureAspect: [220, 220],
   },
   {
     id: 'pendulum-box',
@@ -355,15 +559,36 @@ const clockParts: Part3DSpec[] = [
     position: [0, 0.38, 0.02],
     color: '#4a3020',
   },
-  { id: 'hour-hand', role: 'detail', geo: box(0.28, 0.045, 0.02), position: [0.14, 0.95, 0.1], color: '#1a1a1a' },
-  { id: 'minute-hand', role: 'detail', geo: box(0.4, 0.03, 0.02), position: [0.2, 0.95, 0.11], color: '#1a1a1a' },
+  {
+    id: 'hour-hand',
+    role: 'detail',
+    geo: pivotBox(0.24, 0.045, 0.015),
+    position: [CLOCK_CX, CLOCK_CY, 0.13],
+    color: '#1a1a1a',
+  },
+  {
+    id: 'minute-hand',
+    role: 'detail',
+    geo: pivotBox(0.34, 0.03, 0.015),
+    position: [CLOCK_CX, CLOCK_CY, 0.14],
+    color: '#1a1a1a',
+  },
   {
     id: 'pendulum-rod',
     role: 'detail',
-    geo: cyl(0.012, 0.012, 0.45, 8),
-    position: [0, 0.2, 0.1],
+    geo: pivotCyl(0.012, PENDULUM_LEN, 8),
+    position: PENDULUM_PIVOT,
     color: '#c9a24a',
     metalness: 0.6,
+  },
+  {
+    id: 'pendulum-bob',
+    role: 'detail',
+    geo: sph(0.08, 16),
+    position: [PENDULUM_PIVOT[0], PENDULUM_PIVOT[1] - PENDULUM_LEN, PENDULUM_PIVOT[2]],
+    color: '#c9a24a',
+    metalness: 0.65,
+    roughness: 0.3,
   },
   {
     id: 'weld-hanger',
@@ -397,9 +622,17 @@ const clock: Shape3D = {
     if (hour) hour.rotation.z = -t * 0.2;
     if (minute) minute.rotation.z = -t * 1.4;
     const rod = parts.get('pendulum-rod');
-    if (rod) rod.rotation.x = Math.sin(t * 3) * 0.35;
+    const bob = parts.get('pendulum-bob');
+    const angle = Math.sin(t * 3) * 0.3;
+    if (rod) rod.rotation.z = angle;
+    if (bob) {
+      bob.position.set(
+        PENDULUM_PIVOT[0] + Math.sin(angle) * PENDULUM_LEN,
+        PENDULUM_PIVOT[1] - Math.cos(angle) * PENDULUM_LEN,
+        PENDULUM_PIVOT[2]
+      );
+    }
   },
 };
 
 export const SHAPES3D: Record<ShapeId, Shape3D> = { radio, musicbox, bike, typewriter, clock };
-export { rotY };

@@ -48,7 +48,7 @@ export function runPaint3D(
     const v = (1 - hit.uv.y) * S;
     layer.pctx.fillStyle = paintColor;
     layer.pctx.beginPath();
-    layer.pctx.arc(u, v, 24 * (S / 256), 0, Math.PI * 2);
+    layer.pctx.arc(u, v, 46 * (S / 256), 0, Math.PI * 2);
     layer.pctx.fill();
     layer.body.ctx.drawImage(layer.paintLayer, 0, 0);
     layer.body.texture.needsUpdate = true;
@@ -58,7 +58,7 @@ export function runPaint3D(
       lastCheck = now;
       let painted = 0;
       for (const l of layers) painted += layerAlpha(l.paintLayer);
-      const pct = Math.min(1, painted / (S * S * 255 * layers.length * 0.85));
+      const pct = Math.min(1, painted / (S * S * 255 * layers.length * 0.55));
       onProgress(pct);
       if (pct >= 0.85 && !done) {
         done = true;
