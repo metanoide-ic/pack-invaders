@@ -4695,10 +4695,34 @@ function clearPicks() {
   shift.picks = [];
   document.querySelectorAll('.picked').forEach(e => e.classList.remove('picked'));
 }
+// feixe que liga os dois alvos comparados — some sozinho, é só o "clique"
+// visual do instante da comparação, não guarda estado.
+function inspBeam(elA, elB, cls) {
+  const ra = elA.getBoundingClientRect(), rb = elB.getBoundingClientRect();
+  if ((!ra.width && !ra.height) || (!rb.width && !rb.height)) return;
+  const ax = ra.left + ra.width / 2, ay = ra.top + ra.height / 2;
+  const bx = rb.left + rb.width / 2, by = rb.top + rb.height / 2;
+  const len = Math.hypot(bx - ax, by - ay);
+  if (!len) return;
+  const ang = Math.atan2(by - ay, bx - ax) * 180 / Math.PI;
+  const beam = document.createElement('div');
+  beam.className = 'insp-beam ' + cls;
+  beam.style.left = ax + 'px'; beam.style.top = ay + 'px'; beam.style.width = len + 'px';
+  beam.style.transform = `rotate(${ang}deg)`;
+  document.body.appendChild(beam);
+  setTimeout(() => beam.remove(), 750);
+}
+function inspFlash(elA, elB, ok) {
+  const cls = ok ? 'insp-match' : 'insp-nomatch';
+  [elA, elB].forEach(el => { el.classList.remove('insp-match', 'insp-nomatch'); void el.offsetWidth; el.classList.add(cls); });
+  inspBeam(elA, elB, ok ? 'match' : 'nomatch');
+  setTimeout(() => { elA.classList.remove(cls); elB.classList.remove(cls); }, 850);
+}
 function pickTarget(fid, el) {
   if (!shift.inspecting || !shift.citizen) return;
   if (shift.picks.find(p => p.fid === fid)) return;
   el.classList.add('picked');
+  sfx('click');
   shift.picks.push({ fid, el });
   if (shift.picks.length === 2) {
     const [a, b] = shift.picks;
@@ -4708,27 +4732,33 @@ function pickTarget(fid, el) {
 function evaluatePair(a, b) {
   const cz = shift.citizen;
   const set = [a.fid, b.fid];
-  let found = null;
+  let found = null, already = false;
   // procurado: nome × lista
   if (cz.isWanted && set.includes('pass.nome') && set.includes('rb:wanted')) {
     cz.evidence = true;
     $('btn-detain').disabled = false;
     $('inspect-bar').textContent = T('★ IDENTIDADE CONFERE COM PROCURADO. Detenção autorizada.');
-    sfx('ding'); clearPicks(); return;
+    inspFlash(a.el, b.el, true); sfx('ding'); clearPicks(); return;
   }
   for (const d of cz.discrepancies) {
-    if (d.fids.every(f => set.includes(f))) { found = d; break; }
+    if (d.fids.every(f => set.includes(f))) { found = d; already = shift.confirmed.includes(d); break; }
   }
-  if (found && !shift.confirmed.includes(found)) {
+  if (found && !already) {
     shift.confirmed.push(found);
     cz.evidence = true;
     S.ai.det[found.type] = (S.ai.det[found.type] || 0) + 1; // a espécie observa você
     $('btn-detain').disabled = false;
     $('inspect-bar').textContent = `${T('▲ DISCREPÂNCIA CONFIRMADA: ')}${found.desc}.`;
     a.el.classList.add('flagged'); b.el.classList.add('flagged');
+    inspFlash(a.el, b.el, true);
     sfx('ding');
+  } else if (found && already) {
+    $('inspect-bar').textContent = T('Essa discrepância já está confirmada.');
+    inspFlash(a.el, b.el, true);
   } else {
     $('inspect-bar').textContent = T('Nenhuma discrepância entre estes dois elementos.');
+    inspFlash(a.el, b.el, false);
+    sfx('buzz');
   }
   clearPicks();
 }
@@ -5634,10 +5664,39 @@ function pickEnding(kind) {
   if (kind === 'prisao') return 'prisao';
   const famDead = Object.values(S.family).every(m => !m.alive);
   if (famDead) return 'familia';
+  // REJEITAR a si mesmo é um contrato fechado: sempre o Espelho, sem
+  // exceção — é a dúvida pura, não um resultado que se calcula. Só depois
+  // desse corte é que o resto dos critérios (aprovar, ou nem chegar ao
+  // espelho) entra em jogo.
   if (kind === 'mirror_reject') return 'duvida';
+  const famPartial = Object.values(S.family).some(m => !m.alive);
+  // um único ato, décadas de peso: quem denunciou o vizinho carrega isso até
+  // o fim, não importa em que mais o resto do turno tenha se transformado.
+  if (S.flags.denunciouVizinho) return 'denuncia';
+  if (c.bribes >= 6) return 'corrupcao';
+  if (c.alternadosBlocked === 0 && c.alternadosIn >= 3 && c.innocentsDetained >= 3) return 'cego';
+  if (c.alternadosCaught >= 8 && c.innocentsDetained === 0) return 'cacador';
   if (c.resHelped >= 1 && (S.flags.resistencia_contato || S.flags.resistencia_norte) && S.citTotal < 12) return 'resistencia';
   if (c.alternadosIn >= 6) return 'silencio';
+  // o espelho: o próprio reflexo, no dia 48. Os critérios de personagem
+  // (cruel/corrupto/implacável/protetor/perfeito) vêm ANTES do "funcionário
+  // exemplar" genérico — senão um caso extremo (ex.: muitos inocentes
+  // detidos) cai sempre no final mais brando só por ter poucas citações.
+  const tier = reputationTier();
+  if (kind === 'mirror_approve') {
+    if (tier === 'cruel') return 'espelho_cruel';
+    if (tier === 'corrupto') return 'espelho_corrupto';
+    if (tier === 'implacavel') return 'espelho_implacavel';
+    if (tier === 'protetor') return 'espelho_protetor';
+    if (c.wrong === 0 && c.correct >= 35) return 'espelho_perfeito';
+    if (S.citTotal <= 4 && c.bribes === 0) return 'funcionario';
+    if (famPartial) return 'familia_parcial';
+    return 'espelho';
+  }
+  // segurança: finishGame() chamado sem kind (ex. dia 48 sem passar pelo
+  // espelho) segue os mesmos critérios do aprovar, menos os de personagem.
   if (S.citTotal <= 4 && c.bribes === 0) return 'funcionario';
+  if (famPartial) return 'familia_parcial';
   return 'duvida';
 }
 
@@ -5652,6 +5711,9 @@ function finishGame(kind) {
   if (key === 'funcionario') unlockAchievement('ACH_MEDALHA');
   if (key === 'resistencia') unlockAchievement('ACH_ROTA');
   if (key === 'silente') unlockAchievement('ACH_OLHOU');
+  if (key === 'cacador') unlockAchievement('ACH_CACADOR');
+  if (key === 'corrupcao') unlockAchievement('ACH_ENVELOPE');
+  if (key === 'denuncia') unlockAchievement('ACH_CORREDOR');
   if (c.alternadosIn >= 6) unlockAchievement('ACH_SILENCIO');
   if (S.day >= 48) unlockAchievement('ACH_ESPELHO');
   if ((S.flags.silenteSurvived || 0) >= 2) unlockAchievement('ACH_SILENTE');

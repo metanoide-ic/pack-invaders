@@ -93,19 +93,36 @@ Regras: nunca explicar; nunca repetir o mesmo tipo de medo; consequências mecâ
 tem custo mecânico, só custo de sono. O olho mágico vazio (noites 19, 22 e 43) é o
 recurso mais barato e mais eficaz do jogo.
 
-## 6.2 Finais (protótipo: 7; produção: matriz expandida)
+## 6.2 Finais (protótipo: 20; produção: matriz expandida)
 
-Selecionados pela **Memória do Mundo** — não por uma escolha final isolada:
+Selecionados pela **Memória do Mundo** — não por uma escolha final isolada. Dois deles
+(morte por ameaça no guichê e o teste d'O Contador) interrompem o expediente e reabrem o
+mesmo dia; não entram nesta tabela por não serem conclusões de campanha, e sim falhas que
+o jogador reabre e tenta de novo. Os 18 abaixo são finais de fato — o Dia 48 termina com
+uma cena de espelho (Volume 3), e REJEITAR a si mesmo sempre volta ao Espelho, sem
+exceção; APROVAR se abre em quem o jogador se tornou, lido pela mesma **Memória do
+Mundo** que decide o resto da tabela:
 
 | Final | Gatilho | Tese |
 |---|---|---|
 | **O Que Olha de Volta** (O Silente) | olhar de perto, demorar demais ou chamar guardas no encontro com O Silente | não há final "certo" para essa cena — as três reações erram; o próprio prêmio (o cargo, a família) já é a punição |
 | **O Formulário 77-B** (prisão) | 12+ advertências ou auditoria de corrupção | *"Nós também estávamos inspecionando você. Desde o primeiro dia."* |
 | **A Casa Vazia** | família inteira morta | perfeição profissional × ruína humana |
+| **A Mesa Com Um Lugar a Menos** | parte da família morta (não todos) | o luto sem o colapso total — o que dói é a rotina que continua |
+| **O Corredor Vazio** | denunciou o vizinho (evento noturno "Mencionar o 7") | um único ato pesa mais do que 47 dias de silêncio depois dele |
+| **O Envelope Virou Rotina** | 6+ subornos aceitos | a corrupção deixou de ser exceção e virou aritmética |
+| **A Pontaria Errada** | 3+ inocentes detidos **e** 3+ Alternados nunca bloqueados | o pior dos dois erros, ao mesmo tempo, sem que o jogador saiba qual pesou mais |
+| **A Mira Certa** | 8+ Alternados capturados, zero inocentes detidos | a competência que também assusta os colegas |
 | **A Rota do Barbeiro** | ajudou a resistência e guardou o contato | escapar sem documentos — e decidir todos os dias não pensar no sorriso longo demais |
 | **A Cidade Silenciosa** | 6+ Alternados aprovados | a paz perfeita demais; a respiração perfeita demais |
 | **A Medalha** | ≤4 advertências, zero subornos | o servidor exemplar de um Estado que a medalha não especifica |
-| **O Espelho** | padrão / rejeitar-se no Dia 48 | a pergunta final devolvida ao jogador |
+| **O Espelho** | REJEITAR a si mesmo no Dia 48 (sempre, sem condição) | a dúvida pura devolvida ao jogador |
+| **O Carimbo Conhecido** | APROVAR a si mesmo, sem se destacar em nenhum extremo | o hábito como identidade |
+| **O Carimbo Não Hesitou** | APROVAR + reputação cruel (3+ inocentes detidos) | o próprio rigor, nunca questionado nem de si mesmo |
+| **O Preço do Próprio Carimbo** | APROVAR + reputação corrupta (2+ subornos) | o suborno virou hábito até consigo mesmo |
+| **O Portão de Ferro** | APROVAR + reputação implacável (rejeitou mais do que aprovou) | o rigor como identidade permanente, não como escolha do dia |
+| **A Mão Que Não Tremeu do Jeito Errado** | APROVAR + ajudou a resistência sem nunca deter um inocente | a única autoaprovação que parece merecida |
+| **A Máquina Perfeita** | APROVAR + zero erros em 35+ decisões corretas | a perfeição que apaga a diferença entre certo e errado |
 
 Todos os finais exibem o **relatório do Estado Verdadeiro** (quantos Alternados passaram,
 quantos inocentes detidos, subornos) com a última rasteira: *"Se é que este relatório

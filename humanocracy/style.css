@@ -1161,6 +1161,58 @@ body.silente-present #booth-vhs { opacity:1; animation: vhs-tear .2s steps(2) in
    box-shadow em vez de outline pra não brigar com .picked/.flagged, que já
    usam outline nos mesmos elementos. */
 .gp-focus { box-shadow: 0 0 0 2px var(--accent2), 0 0 10px 2px rgba(185,164,92,.55); }
+
+/* INSPEÇÃO COMPARATIVA — feedback universal. Antes só os campos de texto,
+   a foto, o selo e as regras do regulamento tinham CSS de ".picked"/
+   ".flagged"; o rosto do cidadão (#npc-stage) e o relógio (.shift-clock) —
+   dois dos alvos mais comuns da comparação — não tinham NENHUM, então
+   clicar neles parecia não fazer nada. Estas regras são agnósticas de
+   elemento: valem pra qualquer alvo clicável, sem precisar de uma linha
+   por tipo. As regras específicas acima continuam valendo por cima
+   (mesma cor, só refinam o visual de cada tipo). */
+.picked {
+  outline:2px solid var(--stamp-red); outline-offset:2px;
+  animation: insp-pulse 1.05s ease-in-out infinite;
+}
+@keyframes insp-pulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(140,47,36,.55); }
+  50% { box-shadow:0 0 10px 3px rgba(140,47,36,.4); }
+}
+.flagged { outline:1.5px solid var(--stamp-red); }
+/* o instante da comparação: convergem um feixe entre os dois alvos e cada
+   um pisca — bate (verde-selo) se casou, treme (cinza) se não casou. */
+.insp-match {
+  animation: insp-match-flash .8s ease-out;
+}
+@keyframes insp-match-flash {
+  0% { box-shadow:0 0 0 0 rgba(140,47,36,.95); filter:brightness(1); }
+  35% { box-shadow:0 0 24px 8px rgba(140,47,36,.55); filter:brightness(1.35); }
+  100% { box-shadow:0 0 0 0 rgba(140,47,36,0); filter:brightness(1); }
+}
+.insp-nomatch { animation: insp-shake .48s ease-in-out; }
+@keyframes insp-shake {
+  10%,90% { transform:translateX(-1px); }
+  20%,80% { transform:translateX(2px); }
+  30%,50%,70% { transform:translateX(-3px); }
+  40%,60% { transform:translateX(3px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .picked, .insp-match, .insp-nomatch { animation:none !important; }
+}
+.insp-beam {
+  position:fixed; height:2px; left:0; top:0; width:0; transform-origin:0 50%;
+  z-index:9999; pointer-events:none; border-radius:2px;
+  animation: insp-beam-life .7s ease-out forwards;
+}
+.insp-beam.match { background:linear-gradient(90deg, rgba(140,47,36,.05), rgba(217,139,124,.95), rgba(140,47,36,.05)); box-shadow:0 0 8px 1px rgba(217,139,124,.6); }
+.insp-beam.nomatch { background:linear-gradient(90deg, rgba(120,116,100,.04), rgba(150,144,124,.55), rgba(120,116,100,.04)); }
+@keyframes insp-beam-life {
+  0% { opacity:0; transform:scaleX(0); }
+  30% { opacity:1; }
+  75% { opacity:1; transform:scaleX(1); }
+  100% { opacity:0; transform:scaleX(1); }
+}
+@media (prefers-reduced-motion: reduce) { .insp-beam { display:none; } }
 .doc-photo {
   float:right; margin:0 0 4px 6px; padding:2px; background:#e9e2cc;
   border:1px solid #4a4636; box-shadow: 0 1px 3px rgba(0,0,0,.4), inset 0 0 0 1px rgba(0,0,0,.15);

@@ -6,7 +6,6 @@ const DIR = require('os').tmpdir() + '/';
   const b = await chromium.launch({ executablePath: '/opt/pw-browsers/chromium', args: ['--no-sandbox', '--autoplay-policy=no-user-gesture-required'] });
   const p = await b.newPage({ viewport: { width: 1280, height: 800 } });
   const errs = []; p.on('pageerror', e => errs.push(String(e).slice(0, 140)));
-  const U = U;
   const badge = () => p.evaluate(() => ({
     play: document.querySelector('#title-slots .title-slot[data-act="play"] .ms-badge').textContent,
     ach: document.querySelector('#title-slots .title-slot[data-act="achievements"] .ms-badge').textContent,

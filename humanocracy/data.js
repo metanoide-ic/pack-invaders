@@ -704,6 +704,50 @@ const ENDINGS = {
     t: 'FINAL — O ESPELHO',
     b: 'Dia 49. O posto amanhece sem fila. Sem guardas. Sem ordens.\n\nVocê senta na cadeira mesmo assim — quarenta e oito dias criam sulcos — e percebe que há alguém do outro lado do vidro.\n\nÉ o seu reflexo. Claro que é. O vidro sempre refletiu.\n\nVocê desliza os seus próprios documentos pela bandeja, por hábito, por piada, por desespero. Nome. Foto. Assinatura.\n\nA assinatura está correta. Você acha. Você assinava assim há 48 dias?\n\nO reflexo espera, paciente, a sua decisão.',
   },
+  espelho: {
+    t: 'FINAL — O CARIMBO CONHECIDO',
+    b: 'Você olha para o vidro. O vidro sempre refletiu — hoje não é diferente, é só a primeira vez que você presta atenção nisso durante o expediente.\n\nOs documentos do outro lado são os seus: nome, foto, 48 assinaturas de turno, nenhuma delas perfeitamente igual à anterior. Ninguém nunca reparou. Você também não reparava nos outros.\n\nA mão pega o carimbo. É o mesmo gesto de sempre — nem apressado, nem hesitante, só conhecido, do jeito que um músculo conhece um movimento depois de repeti-lo mil vezes sem pensar.\n\nAPROVADO. A tinta seca. Do outro lado do vidro, alguém com o seu rosto guarda os documentos, levanta, e sai andando na direção de uma vida que talvez seja a sua. Você fica sentado mais um instante, sem saber ao certo qual dos dois ficou com o lugar de verdade.',
+  },
+  espelho_cruel: {
+    t: 'FINAL — O CARIMBO NÃO HESITOU',
+    b: 'Você olha para o vidro, para o seu próprio rosto do outro lado, e aprova sem pausa. É o mesmo gesto de sempre: rápido, seco, definitivo.\n\nO problema é que você lembra dos outros gestos, os de antes. Várias pessoas inocentes saíram do seu guichê algemadas porque era mais fácil detê-las do que continuar duvidando. Você chamou isso de rigor, na época. Chamou isso de fazer o trabalho direito.\n\nO reflexo aceita o carimbo sem reclamar. Claro que aceita — ele é você, e você nunca recusou nada de si mesmo antes.\n\nAPROVADO. A tinta seca. Do outro lado do vidro, alguém com o seu rosto guarda os documentos e sai andando, como se nada tivesse pesado, porque para ele — para você — nunca pesou o suficiente.',
+  },
+  espelho_corrupto: {
+    t: 'FINAL — O PREÇO DO PRÓPRIO CARIMBO',
+    b: 'Você desliza os seus documentos pela bandeja e, por hábito, procura o envelope. Não tem envelope. É você do outro lado do vidro; você não vai subornar a si mesmo, ainda que uma parte sua ache graça na ideia.\n\nFoi fácil, no fim das contas. Um envelope aqui, outro ali, ninguém contando alto o bastante para ouvir. O dinheiro pagou o remédio, o aquecimento, um mês de aluguel adiantado. Também pagou, sem que ninguém assinasse nada, o direito de algumas pessoas erradas atravessarem a fronteira.\n\nO reflexo espera, paciente, com a mesma cara que você tem quando finge não fazer contas.\n\nVocê aprova. Claro que aprova — o seu próprio carimbo, pelo menos esse, sempre esteve à venda para você mesmo, de graça.',
+  },
+  espelho_implacavel: {
+    t: 'FINAL — O PORTÃO DE FERRO',
+    b: 'Você rejeitou mais do que aprovou. No fim, rejeitar virou o padrão, e aprovar, a exceção que precisava se justificar.\n\nHá pessoas na fronteira de Osteria, hoje, que nunca vão saber que passaram pelo seu guichê e voltaram para onde vieram por causa de uma vírgula errada, um selo desbotado, um segundo de dúvida que você decidiu não arriscar. Algumas delas, você sabe, não tinham para onde voltar.\n\nO reflexo no vidro é implacável do mesmo jeito. Você olha para ele, reconhece o gesto — o carimbo vermelho decidido antes mesmo de ler até o fim — e aprova a si mesmo sem hesitar, porque essa é a única coisa que você sempre aprova sem hesitar: o próprio rigor.\n\nO portão fica fechado para quase todo mundo. Para você, no fim, ele sempre esteve aberto.',
+  },
+  espelho_protetor: {
+    t: 'FINAL — A MÃO QUE NÃO TREMEU DO JEITO ERRADO',
+    b: 'Nenhum inocente saiu do seu guichê algemado. Nem um, em 48 dias. Isso não está em nenhum boletim do Ministério — não é o tipo de número que eles publicam — mas você sabe, e é seu.\n\nAjudou quem pôde ajudar, quando havia como ajudar sem que ninguém visse. Um bilhete guardado em vez de queimado. Um nome que você não perguntou de novo na segunda vez que apareceu.\n\nO reflexo no vidro aprova a si mesmo, e pela primeira vez em 48 dias isso não parece um gesto vazio. Parece, quase, merecido.\n\nVocê não salvou o país. Não salvou nem o posto. Salvou algumas pessoas específicas, com nome, que você nunca soube se eram humanas ou não — e decidiu, no fim, que a pergunta importava menos do que a resposta que você deu.',
+  },
+  espelho_perfeito: {
+    t: 'FINAL — A MÁQUINA PERFEITA',
+    b: 'Nenhum erro registrado. Trinta e cinco decisões corretas, ou mais — o número exato nem importa mais, porque a partir de um certo ponto "perfeito" deixa de ser contável e vira só um estado permanente.\n\nOs colegas param de te chamar pelo nome nos últimos dias. Chamam de "o modelo", em voz baixa, meio elogio, meio aviso. Ninguém acerta 48 dias seguidos sendo humano o tempo inteiro.\n\nO reflexo no vidro aprova, e a mão não treme, porque a mão nunca tremeu — nem uma vez, em 48 dias, mesmo quando devia.\n\nVocê saiu do posto sem uma única marca no registro. Não sabe mais dizer se isso prova que fez tudo certo, ou só que parou de sentir a diferença entre certo e errado faz tempo.',
+  },
+  familia_parcial: {
+    t: 'FINAL — A MESA COM UM LUGAR A MENOS',
+    b: 'A casa não ficou vazia. Ficou incompleta, o que de algum jeito dói mais: a rotina continua, o jantar é servido, só que sempre com um prato de menos que ninguém tira da pilha.\n\nOs que restaram não falam do assunto. Falam ao redor dele, com uma delicadeza que vocês nunca precisaram ter uns com os outros antes.\n\nVocê carimbou documentos por 48 dias tentando decidir quem entra e quem fica de fora. Não conseguiu decidir a única coisa que importava de verdade: quem, na sua própria casa, sobrevive ao inverno.\n\nO posto reabre amanhã, com ou sem você. A mesa em casa também.',
+  },
+  denuncia: {
+    t: 'FINAL — O CORREDOR VAZIO',
+    b: 'No dia 48, o corredor do Bloco 14 ainda tem sete portas. Uma delas nunca mais abriu.\n\nVocê tentou não contar os dias. Contou de qualquer jeito: três, entre a menção e os móveis saindo de manhã. Ninguém no prédio pergunta pelo apartamento vazio — perguntar virou o tipo de coisa que move as pessoas para uma porta diferente da sua.\n\nO sargento disse "excelente memória, inspetor" e nunca mais precisou de outra. Você forneceu uma vez. Isso basta para sempre ser, no fichário de alguém, a pessoa que fornece.\n\nOs quarenta e oito dias terminam. O corredor continua com sete portas. Você aprende a olhar só para a sua.',
+  },
+  corrupcao: {
+    t: 'FINAL — O ENVELOPE VIROU ROTINA',
+    b: 'Ninguém mais desliza um envelope escondido. Nos últimos dias, colocam em cima da pilha de documentos, junto com o passaporte, como mais um papel a carimbar.\n\nVocê perdeu a conta em algum lugar entre o terceiro e o sétimo. Não perdeu o hábito de contar o dinheiro depois, no banheiro do posto, com a porta trancada.\n\nOs colegas sabem. O supervisor sabe, e o supervisor também sabe quanto custa saber e ficar calado. É o tipo de aritmética que o Ministério nunca ensina, mas que todo mundo aprende sozinho até o dia 20.\n\nNo dia 48, o guichê fecha como sempre fechou: no horário, sem escândalo. Você sai com mais dinheiro do que qualquer salário jamais te daria, e menos certeza do que aprovou de verdade do que qualquer inspetor deveria ter.',
+  },
+  cego: {
+    t: 'FINAL — A PONTARIA ERRADA',
+    b: 'O relatório do Ministério não sabe o que você fez. Sabe os números, e os números não perdoam.\n\nVárias pessoas inocentes passaram pelo seu guichê e saíram detidas. Vários Alternados, ao mesmo tempo, passaram pelo mesmo guichê e saíram livres, sem que você desconfiasse de nada.\n\nNão há uma palavra oficial para isso. Você inventou uma, sozinho, numa madrugada de insônia: errar para os dois lados. Bateu na porta errada da paranoia e na porta errada da negligência, na mesma semana, com o mesmo carimbo.\n\nDia 48. Você ainda não sabe se prendeu gente demais ou gente de menos. As duas coisas são verdadeiras ao mesmo tempo, e essa é a única certeza que sobrou.',
+  },
+  cacador: {
+    t: 'FINAL — A MIRA CERTA',
+    b: 'Oito. O número fica repetindo na sua cabeça mesmo depois que você para de contar: oito Alternados identificados, detidos, removidos do fluxo — e nenhum inocente arrastado junto no caminho.\n\nOs colegas comentam baixo, quase respeito, quase medo: você tem "faro". Ninguém usa a palavra certa, porque a palavra certa implicaria que você sabe algo que o Ministério não ensina em nenhum manual.\n\nTalvez seja mesmo faro. Talvez seja sorte disfarçada de método, oito vezes seguidas. Talvez os oito só fossem particularmente descuidados, e o próximo — o que você não vai pegar — seja bom demais para o olho que você sempre teve.\n\nNo dia 48, o Ministério manda uma carta de reconhecimento formal e um convite para "consultoria de treinamento". Você não sabe se aceita. Sabe, com uma certeza fria que não devia ter, que vai continuar olhando as pessoas do jeito que aprendeu a olhar, pelo resto da vida, dentro ou fora do posto.',
+  },
 };
 
 /* ---------- CONQUISTAS (protótipo web: toast local em unlockAchievement(),
@@ -727,6 +771,9 @@ const ACHIEVEMENTS = {
   ACH_AMIGO: 'O Amigo Nunca Erra',
   ACH_REFLEXO: 'O Vidro Não Devolve',
   ACH_SANGUE_FRIO: 'Sangue Frio no Guichê',
+  ACH_CACADOR: 'O Faro',
+  ACH_ENVELOPE: 'Rotina',
+  ACH_CORREDOR: 'Sete Portas',
 };
 const ACH_DESC = {
   ACH_DIA1: 'Você fechou o primeiro expediente. Nada disso parecia grave ainda.',
@@ -743,6 +790,9 @@ const ACH_DESC = {
   ACH_AMIGO: 'O amigo do Tomi avisou. O amigo do Tomi acertou. O amigo do Tomi não existe.',
   ACH_REFLEXO: 'Olhou no espelho e reconheceu o que estava lá.',
   ACH_SANGUE_FRIO: 'Deteve ou abateu um agressor no guichê antes que ele agisse.',
+  ACH_CACADOR: 'Oito Alternados identificados. Nenhum inocente detido no caminho.',
+  ACH_ENVELOPE: 'Seis envelopes ou mais. Parou de contar antes do Ministério contar por você.',
+  ACH_CORREDOR: 'Uma menção, um nome, uma porta que não abriu mais.',
 };
 
 /* ============================================================
