@@ -7,6 +7,7 @@ import { Player, PlayerCustomization } from './entities/Player';
 import { HUD } from './hud/HUD';
 import { Sfx } from './audio/Sfx';
 import { reportDistanceMeters } from './core/HighScore';
+import { hasSeenTutorial, markTutorialSeen, TUTORIAL_STEPS } from './core/Onboarding';
 import { RunStats, WagonState } from './types';
 
 const MISS_DISTANCE = 20;
@@ -29,7 +30,6 @@ const STORM_DURATION_MAX = 18;
 const STORM_WIND_ACCEL = 5.5; // units/sec² pushing off-train players sideways
 const STORM_FOG_FAR = 130; // vs. the normal 300 — a real visibility cut
 const NORMAL_FOG_FAR = 300;
-const SKY_CLEAR = new THREE.Color(0x8fd8ff);
 const SKY_STORM = new THREE.Color(0x4a5568);
 const RAIN_COUNT = 500;
 const RAIN_FALL_SPEED = 22;
@@ -52,6 +52,8 @@ export class Game {
   private running = false;
   private gameOver = false;
   private elapsedRunTime = 0;
+  private tutorialActive = false;
+  private tutorialIndex = 0;
   private wrecks: { mesh: THREE.Object3D; life: number; spin: THREE.Vector3 }[] = [];
   // modular construction leans toward whichever supply flavor the crew has been gathering
   private supplyTally = { cargo: 1, passenger: 1 };
@@ -136,6 +138,8 @@ export class Game {
     this.running = true;
     this.gameOver = false;
     this.sfx.unlock(); // must happen from this user gesture — browsers block audio before it
+    this.tutorialActive = !hasSeenTutorial();
+    markTutorialSeen();
     this.hud.show();
     this.spawnInitialPlayers();
     this.clock.start();
@@ -181,9 +185,10 @@ export class Game {
     this.train.z += this.train.speed * dt;
     this.stats.distance += this.train.speed * dt;
 
-    this.track.update(this.train.z, this.train.tailZ);
+    this.track.update(this.train.z, this.train.tailZ, dt);
     this.updateHazards(dt, difficulty);
     this.updateWeather(dt, difficulty);
+    this.updateTutorial();
 
     for (let i = 0; i < this.players.length; i++) this.updatePlayer(i, dt);
 
@@ -319,9 +324,10 @@ export class Game {
     }
 
     const lerpT = Math.min(1, dt * 1.5);
+    const clearSky = this.track.getBiomeSkyColor(this.train.z);
     fog.far = THREE.MathUtils.lerp(fog.far, NORMAL_FOG_FAR, lerpT);
-    fog.color.lerp(SKY_CLEAR, lerpT);
-    sky.lerp(SKY_CLEAR, lerpT);
+    fog.color.lerp(clearSky, lerpT);
+    sky.lerp(clearSky, lerpT);
 
     this.stormCooldown -= dt;
     if (this.stormCooldown <= 0) {
@@ -334,6 +340,17 @@ export class Game {
         this.sfx.storm();
       }
     }
+  }
+
+  // ---- first-run-only onboarding banners, spaced to land before hazards can start (GRACE_PERIOD) ----
+  private updateTutorial() {
+    if (!this.tutorialActive) return;
+    while (this.tutorialIndex < TUTORIAL_STEPS.length && this.elapsedRunTime >= TUTORIAL_STEPS[this.tutorialIndex].at) {
+      const step = TUTORIAL_STEPS[this.tutorialIndex];
+      this.hud.banner_show(step.text, step.duration);
+      this.tutorialIndex++;
+    }
+    if (this.tutorialIndex >= TUTORIAL_STEPS.length) this.tutorialActive = false;
   }
 
   private playerFightingFire(w: WagonState): boolean {

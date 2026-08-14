@@ -8,18 +8,33 @@ const SPAWN_AHEAD = 220; // generate zones/props up to this far ahead of the eng
 const CULL_BEHIND = 40; // remove props once this far behind the caboose
 
 // bright, saturated, toy-box palette — legible at a glance, not realistic
-const GROUND_COLOR = 0x6fcf6a;
 const RAIL_COLOR = 0xe8edf5;
 const TIE_COLOR = 0x8a5a34;
 const PLATFORM_COLOR = 0xf2c94c;
 const BUILDING_COLORS = [0xff6f61, 0x56ccf2, 0xbb6bd9, 0xf2994a, 0x6fcf97];
 const CRATE_COLOR = 0xf2994a;
 const RESCUE_GROUND_COLOR = 0x9fd989;
-const PASSENGER_COLOR = 0xffd166;
-const ANIMAL_COLOR = 0xd88c4e;
-const ROCK_COLOR = 0x8d6e63;
-const TREE_LEAF_COLOR = 0x3fae4a;
-const TREE_TRUNK_COLOR = 0x7a4a2b;
+const PASSENGER_OUTFITS = [0xffd166, 0x56ccf2, 0xbb6bd9, 0xff6f61, 0x6fcf97];
+const ANIMAL_COLORS = [0xd88c4e, 0xf2f2f2, 0x6b4a30, 0xe0c097];
+
+interface Biome {
+  name: string;
+  ground: number;
+  sky: number;
+  rock: number;
+  scenery: 'pine' | 'cactus' | 'snowpine';
+  leaf: number;
+  trunk: number;
+}
+
+// the world cycles through these forever — long runs keep seeing new scenery
+// instead of the same forest for 10 straight minutes
+const BIOMES: Biome[] = [
+  { name: 'pradaria', ground: 0x6fcf6a, sky: 0x8fd8ff, rock: 0x8d6e63, scenery: 'pine', leaf: 0x3fae4a, trunk: 0x7a4a2b },
+  { name: 'deserto', ground: 0xe0c068, sky: 0xffdfa3, rock: 0xc97b5a, scenery: 'cactus', leaf: 0x4a9e5c, trunk: 0x3a7d48 },
+  { name: 'nevado', ground: 0xe8f0f5, sky: 0xcfe3ee, rock: 0x8a97a3, scenery: 'snowpine', leaf: 0xeaf3f7, trunk: 0x5c4a3a },
+];
+const BIOME_PERIOD = 900; // world units of track per biome before cycling to the next
 
 let idSeq = 1;
 
@@ -36,6 +51,7 @@ export class Track {
   private tieGroup = new THREE.Group();
   private ties: THREE.Mesh[] = [];
   private difficulty = 0;
+  private groundMesh!: THREE.Mesh;
 
   constructor(private scene: THREE.Scene) {
     scene.add(this.group);
@@ -43,12 +59,23 @@ export class Track {
     this.group.add(this.tieGroup);
   }
 
+  private biomeAt(z: number): Biome {
+    const idx = Math.floor(Math.max(0, z) / BIOME_PERIOD) % BIOMES.length;
+    return BIOMES[idx];
+  }
+
+  /** Read by Game.ts to blend the sky/fog toward whatever biome the train is currently passing through. */
+  getBiomeSkyColor(z: number): THREE.Color {
+    return new THREE.Color(this.biomeAt(z).sky);
+  }
+
   private buildGround() {
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 4000, 1, 1), toonMat(GROUND_COLOR));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 4000, 1, 1), toonMat(BIOMES[0].ground));
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, -0.02, 1800);
     ground.receiveShadow = true;
     this.group.add(ground);
+    this.groundMesh = ground;
 
     for (const side of [-1, 1]) {
       const rail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.15, 4000), toonMat(RAIL_COLOR));
@@ -74,8 +101,11 @@ export class Track {
     this.difficulty = d;
   }
 
-  update(engineZ: number, tailZ: number) {
+  update(engineZ: number, tailZ: number, dt = 1 / 60) {
     this.ensureTies(engineZ);
+
+    const groundMat = this.groundMesh.material as THREE.MeshToonMaterial;
+    groundMat.color.lerp(new THREE.Color(this.biomeAt(engineZ).ground), Math.min(1, dt * 0.6));
 
     // spawn new zones ahead
     while (this.nextZoneZ < engineZ + SPAWN_AHEAD) {
@@ -241,26 +271,7 @@ export class Track {
       const z = zone.startZ + 6 + (i / count) * (zone.endZ - zone.startZ - 10);
       const kind: 'passenger' | 'animal' = Math.random() < 0.5 ? 'passenger' : 'animal';
       const target: RescueTarget = { id: idSeq++, x, z, kind, rescued: false, lost: false };
-      const mesh = new THREE.Group();
-      const bodyColor = kind === 'passenger' ? PASSENGER_COLOR : ANIMAL_COLOR;
-      const body = new THREE.Mesh(
-        kind === 'passenger' ? new THREE.CapsuleGeometry(0.28, 0.7, 4, 8) : new THREE.BoxGeometry(0.9, 0.5, 0.4),
-        toonMat(bodyColor)
-      );
-      body.position.y = kind === 'passenger' ? 1.0 : 0.4;
-      mesh.add(body);
-      const head = new THREE.Mesh(
-        new THREE.SphereGeometry(kind === 'passenger' ? 0.24 : 0.28, 10, 8),
-        toonMat(kind === 'passenger' ? 0xffe0b0 : 0x6b4a30)
-      );
-      head.position.y = kind === 'passenger' ? 1.55 : 0.72;
-      head.position.z = kind === 'passenger' ? 0 : 0.25;
-      mesh.add(head);
-      // a bobbing "help!" marker so rescue targets read instantly against the scenery
-      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.4, 6), toonMat(0xff4d4d));
-      flag.position.y = kind === 'passenger' ? 2.1 : 1.3;
-      flag.name = 'flag';
-      mesh.add(flag);
+      const mesh = this.buildRescueFigure(kind);
       mesh.position.set(x, 0, z);
       target.mesh = mesh;
       this.group.add(mesh);
@@ -268,11 +279,91 @@ export class Track {
     }
   }
 
+  /** Passengers vary by outfit color; animals come in three distinct silhouettes — nobody looks copy-pasted. */
+  private buildRescueFigure(kind: 'passenger' | 'animal'): THREE.Group {
+    const mesh = new THREE.Group();
+
+    if (kind === 'passenger') {
+      const outfit = PASSENGER_OUTFITS[Math.floor(Math.random() * PASSENGER_OUTFITS.length)];
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 0.7, 4, 8), toonMat(outfit));
+      body.position.y = 1.0;
+      mesh.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 10, 8), toonMat(0xffe0b0));
+      head.position.y = 1.55;
+      mesh.add(head);
+      const flag = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.4, 6), toonMat(0xff4d4d));
+      flag.position.y = 2.1;
+      flag.name = 'flag';
+      mesh.add(flag);
+      return mesh;
+    }
+
+    const archetype = Math.floor(Math.random() * 3);
+    const color = ANIMAL_COLORS[Math.floor(Math.random() * ANIMAL_COLORS.length)];
+    const bodyMat = toonMat(color);
+    let flagY = 1.3;
+
+    if (archetype === 0) {
+      // dog: compact body, perky triangular ears, a wagging tail
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.42, 0.34), bodyMat);
+      body.position.y = 0.36;
+      mesh.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 8), bodyMat);
+      head.position.set(0, 0.55, 0.32);
+      mesh.add(head);
+      for (const dx of [-0.12, 0.12]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.18, 4), bodyMat);
+        ear.position.set(dx, 0.72, 0.32);
+        mesh.add(ear);
+      }
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(0.07, 0.32, 6), bodyMat);
+      tail.rotation.x = Math.PI / 2.4;
+      tail.position.set(0, 0.5, -0.32);
+      mesh.add(tail);
+      flagY = 1.1;
+    } else if (archetype === 1) {
+      // cat: smaller, sleeker, tall pointed ears
+      const body = new THREE.Mesh(new THREE.CapsuleGeometry(0.16, 0.32, 4, 8), bodyMat);
+      body.rotation.z = Math.PI / 2;
+      body.position.y = 0.24;
+      mesh.add(body);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), bodyMat);
+      head.position.set(0, 0.36, 0.24);
+      mesh.add(head);
+      for (const dx of [-0.09, 0.09]) {
+        const ear = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.14, 4), bodyMat);
+        ear.position.set(dx, 0.48, 0.24);
+        mesh.add(ear);
+      }
+      flagY = 0.9;
+    } else {
+      // a larger farm animal (cow-like) — bigger, needs a proportionally bigger flag
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.15, 0.62, 0.5), bodyMat);
+      body.position.y = 0.5;
+      mesh.add(body);
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), bodyMat);
+      head.position.set(0, 0.6, 0.5);
+      mesh.add(head);
+      const spotMat = toonMat(0xffffff);
+      const spot = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.25, 0.05), spotMat);
+      spot.position.set(0.2, 0.55, 0.53);
+      mesh.add(spot);
+      flagY = 1.6;
+    }
+
+    const flag = new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.4, 6), toonMat(0xff4d4d));
+    flag.position.y = flagY;
+    flag.name = 'flag';
+    mesh.add(flag);
+    return mesh;
+  }
+
   private buildRaidMarker(zone: WorldZone) {
     // visual dust/warning marker along the track to telegraph danger
+    const rockColor = this.biomeAt(zone.startZ).rock;
     for (let i = 0; i < 3; i++) {
       const z = zone.startZ + (i / 3) * (zone.endZ - zone.startZ);
-      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.5), toonMat(ROCK_COLOR));
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.6 + Math.random() * 0.5), toonMat(rockColor));
       rock.position.set((Math.random() < 0.5 ? -1 : 1) * (4 + Math.random() * 3), 0.5, z);
       this.group.add(rock);
       this.props.push({ z, mesh: rock });
@@ -283,13 +374,35 @@ export class Track {
     const side = Math.random() < 0.5 ? -1 : 1;
     const x = side * (7 + Math.random() * 10);
     const z = aheadZ + Math.random() * 20;
+    const biome = this.biomeAt(z);
     const tree = new THREE.Group();
-    const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.1, 6), toonMat(TREE_TRUNK_COLOR));
-    trunk.position.y = 0.55;
-    tree.add(trunk);
-    const leaves = new THREE.Mesh(new THREE.ConeGeometry(1 + Math.random(), 3 + Math.random() * 3, 7), toonMat(TREE_LEAF_COLOR));
-    leaves.position.y = 2.4;
-    tree.add(leaves);
+
+    if (biome.scenery === 'cactus') {
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.4, 2.2 + Math.random(), 8), toonMat(biome.leaf));
+      trunk.position.y = 1.2;
+      tree.add(trunk);
+      for (const side2 of [-1, 1]) {
+        if (Math.random() < 0.7) {
+          const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 1, 6), toonMat(biome.leaf));
+          arm.position.set(side2 * 0.4, 1.6, 0);
+          arm.rotation.z = side2 * 0.5;
+          tree.add(arm);
+        }
+      }
+    } else {
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.24, 1.1, 6), toonMat(biome.trunk));
+      trunk.position.y = 0.55;
+      tree.add(trunk);
+      const leaves = new THREE.Mesh(new THREE.ConeGeometry(1 + Math.random(), 3 + Math.random() * 3, 7), toonMat(biome.leaf));
+      leaves.position.y = 2.4;
+      tree.add(leaves);
+      if (biome.scenery === 'snowpine') {
+        const cap = new THREE.Mesh(new THREE.ConeGeometry(0.55 + Math.random() * 0.3, 0.8, 7), toonMat(0xffffff));
+        cap.position.y = 3.6 + Math.random();
+        tree.add(cap);
+      }
+    }
+
     tree.position.set(x, 0, z);
     tree.scale.setScalar(0.8 + Math.random() * 0.6);
     this.group.add(tree);

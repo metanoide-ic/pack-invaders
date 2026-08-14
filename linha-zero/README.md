@@ -56,14 +56,23 @@ e onde cada jogador está.
 ou reiniciar. O jogo lembra sua maior distância percorrida entre sessões
 (salvo localmente no navegador) e comemora quando você bate o recorde.
 
+**Primeira vez**: na primeira partida, uma sequência curta de dicas aparece
+nos primeiros 25 segundos explicando os controles — só uma vez, nunca mais
+depois disso.
+
+**Biomas**: o cenário alterna entre pradaria, deserto e neve conforme a
+distância percorrida, cada um com vegetação, cores de terreno e céu próprios.
+
 ## O laço de jogo
 
 1. **Cidades** aparecem ao lado da linha. Salte do teto do vagão para a
    plataforma, corra (você é mais rápido que o trem em velocidade base, mas
    ele acelera com o tempo!) até as caixas de recurso, pegue-as e salte de
    volta antes que o trem passe.
-2. **Resgates** funcionam do mesmo jeito, mas o prêmio é um passageiro ou
-   animal — trazê-lo a bordo cura um pouco o vagão em que ele embarca.
+2. **Resgates** funcionam do mesmo jeito, mas o prêmio é um passageiro (com
+   roupa de uma cor aleatória) ou um animal (cachorro, gato ou uma criatura
+   maior tipo vaca) — trazê-lo a bordo cura um pouco o vagão em que ele
+   embarca.
 3. **Incêndios** podem começar em qualquer vagão de carga. Sem ninguém para
    apagar (`E`), o fogo cresce e destrói o vagão — e tudo que estiver
    acoplado atrás dele, numa reação em cadeia.
