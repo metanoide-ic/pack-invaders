@@ -1,5 +1,6 @@
 import { Game } from './Game';
 import { PLAYER_COLORS, PLAYER_HATS, HatKind } from './entities/Player';
+import { getBestDistanceMeters } from './core/HighScore';
 
 const canvas = document.getElementById('game') as HTMLCanvasElement;
 const game = new Game(canvas);
@@ -10,6 +11,15 @@ const startScreen = document.getElementById('start')!;
 const gameOverScreen = document.getElementById('gameover')!;
 const btnStart = document.getElementById('btn-start')!;
 const btnRestart = document.getElementById('btn-restart')!;
+const btnResume = document.getElementById('btn-resume')!;
+const btnMute = document.getElementById('btn-mute')!;
+const btnRestartPause = document.getElementById('btn-restart-pause')!;
+
+const bestDistance = getBestDistanceMeters();
+if (bestDistance > 0) {
+  document.getElementById('start-record')!.classList.remove('hidden');
+  document.getElementById('start-record-value')!.textContent = `${bestDistance} m`;
+}
 
 // --- Player 1 customization (color + hat), picked before the run starts ---
 const HAT_GLYPH: Record<HatKind, string> = { cone: '▲', box: '■', dome: '●', ring: '◯' };
@@ -55,4 +65,16 @@ btnStart.addEventListener('click', () => {
 
 btnRestart.addEventListener('click', () => {
   window.location.reload();
+});
+btnRestartPause.addEventListener('click', () => {
+  window.location.reload();
+});
+
+btnResume.addEventListener('click', () => {
+  game.togglePause();
+});
+
+btnMute.addEventListener('click', () => {
+  const muted = game.toggleMute();
+  btnMute.textContent = muted ? '🔇 Som mudo' : '🔊 Som ligado';
 });

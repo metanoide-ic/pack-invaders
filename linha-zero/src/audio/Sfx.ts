@@ -64,4 +64,11 @@ export class Sfx {
   gameOver() {
     [440, 380, 300, 220].forEach((f, i) => setTimeout(() => this.tone(f, 0.35, { type: 'sawtooth', gain: 0.3 }), i * 180));
   }
+  storm() {
+    this.tone(90, 0.9, { type: 'sawtooth', slideTo: 45, gain: 0.22 });
+    setTimeout(() => this.tone(70, 0.6, { type: 'sawtooth', slideTo: 30, gain: 0.18 }), 200);
+  }
+  record() {
+    [660, 880, 1100].forEach((f, i) => setTimeout(() => this.tone(f, 0.2, { type: 'triangle', gain: 0.32 }), i * 100));
+  }
 }

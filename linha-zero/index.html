@@ -35,6 +35,8 @@
       text-shadow: 0 0 40px rgba(255,138,61,0.35);
     }
     .subtitle { color: #b9c2e0; max-width: 640px; line-height: 1.5; font-size: 0.95rem; }
+    .record-line { color: #ffd166; font-size: 0.95rem; }
+    .record-line b { color: #fff; }
     .panel {
       background: var(--panel); border: 1px solid rgba(255,255,255,0.08);
       border-radius: 14px; padding: 18px 22px; backdrop-filter: blur(6px);
@@ -178,11 +180,13 @@
           <div id="custom-hats" class="swatch-row"></div>
         </div>
       </div>
+      <p id="start-record" class="record-line hidden">🏆 Recorde atual: <b id="start-record-value">0 m</b></p>
       <button class="cta" id="btn-start">Embarcar</button>
     </div>
 
     <div id="gameover" class="overlay hidden">
       <h1 class="title" style="font-size: 2.4rem;">A LINHA PAROU</h1>
+      <p id="go-record" class="record-line hidden">🏆 Novo recorde de distância!</p>
       <div class="panel">
         <div class="stats-grid">
           <span>Distância percorrida</span><span id="go-distance">0 km</span>
@@ -192,6 +196,16 @@
         </div>
       </div>
       <button class="cta" id="btn-restart">Nova viagem</button>
+    </div>
+
+    <div id="pause" class="overlay hidden">
+      <h1 class="title" style="font-size: 2.4rem;">PAUSADO</h1>
+      <p class="subtitle">O trem segue firme enquanto vocês recuperam o fôlego.</p>
+      <button class="cta" id="btn-resume">Continuar</button>
+      <div style="display:flex; gap: 12px; margin-top: 4px;">
+        <button class="secondary" id="btn-mute">🔊 Som ligado</button>
+        <button class="secondary" id="btn-restart-pause">Reiniciar</button>
+      </div>
     </div>
   </div>
 

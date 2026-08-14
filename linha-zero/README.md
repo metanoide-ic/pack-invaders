@@ -52,6 +52,10 @@ seu personagem antes de embarcar.
 à frente — cidades (amarelo), resgates (verde) e zonas de perigo (vermelho) —
 e onde cada jogador está.
 
+**Pausa**: `Esc` a qualquer momento pausa a partida, com opção de mutar o som
+ou reiniciar. O jogo lembra sua maior distância percorrida entre sessões
+(salvo localmente no navegador) e comemora quando você bate o recorde.
+
 ## O laço de jogo
 
 1. **Cidades** aparecem ao lado da linha. Salte do teto do vagão para a
@@ -65,13 +69,16 @@ e onde cada jogador está.
    acoplado atrás dele, numa reação em cadeia.
 4. **Saqueadores** se agarram ao último vagão e o corroem aos poucos; lute
    (`E`) ou corte o vagão para se livrar da ameaça.
-5. **Recursos coletados** acoplam automaticamente novos vagões à composição
+5. **Tempestades** aparecem periodicamente: reduzem a visibilidade, freiam um
+   pouco o trem e empurram lateralmente quem estiver fora dele — cidades e
+   resgates ficam mais arriscados até ela passar.
+6. **Recursos coletados** acoplam automaticamente novos vagões à composição
    conforme acumulam — construção modular: o tipo do vagão acoplado reflete
    o que a tripulação andou trazendo (mais carga → vagões de carga/plataforma,
    mais resgates → vagões de passageiros), então a estratégia de coleta
    molda o formato do trem. A família cresce, mas cada vagão extra é mais um
    ponto que pode pegar fogo.
-6. Se a locomotiva for destruída, a linha para. Fim de jogo.
+7. Se a locomotiva for destruída, a linha para. Fim de jogo.
 
 ## Direção de arte
 

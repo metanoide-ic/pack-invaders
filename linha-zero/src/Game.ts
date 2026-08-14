@@ -6,6 +6,7 @@ import { Track } from './world/Track';
 import { Player, PlayerCustomization } from './entities/Player';
 import { HUD } from './hud/HUD';
 import { Sfx } from './audio/Sfx';
+import { reportDistanceMeters } from './core/HighScore';
 import { RunStats, WagonState } from './types';
 
 const MISS_DISTANCE = 20;
@@ -22,6 +23,12 @@ const CAM_DISTANCE = 21; // a relatively distant, wide third-person view — not
 const CAM_HEIGHT = 10.5;
 const CAM_LOOK_AHEAD = 13;
 const WRECK_LIFETIME = 1.4; // seconds the tumble-away wreck animation plays before despawning
+const STORM_MIN_GAP = 35; // seconds of calm guaranteed after a storm ends
+const STORM_DURATION_MIN = 11;
+const STORM_DURATION_MAX = 18;
+const STORM_WIND_ACCEL = 5.5; // units/sec² pushing off-train players sideways
+const STORM_FOG_FAR = 130; // vs. the normal 300 — a real visibility cut
+const NORMAL_FOG_FAR = 300;
 
 export class Game {
   private renderer: THREE.WebGLRenderer;
@@ -45,6 +52,13 @@ export class Game {
   private supplyTally = { cargo: 1, passenger: 1 };
   private sfx = new Sfx();
   private p1Custom: PlayerCustomization | null = null;
+  private paused = false;
+
+  // weather: periodic storms cut visibility and shove anyone off the train sideways
+  private stormActive = false;
+  private stormTimer = 0;
+  private stormCooldown = STORM_MIN_GAP;
+  private windDir: 1 | -1 = 1;
 
   private camLook = new THREE.Vector3();
   private camPos = new THREE.Vector3();
@@ -82,6 +96,21 @@ export class Game {
 
     window.addEventListener('resize', () => this.onResize());
     this.onResize();
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Escape' && this.running && !this.gameOver) this.togglePause();
+    });
+  }
+
+  togglePause() {
+    this.paused = !this.paused;
+    document.getElementById('pause')?.classList.toggle('hidden', !this.paused);
+    if (!this.paused) this.clock.start(); // reset internal delta so resume doesn't jump
+    return this.paused;
+  }
+
+  toggleMute(): boolean {
+    this.sfx.muted = !this.sfx.muted;
+    return this.sfx.muted;
   }
 
   private onResize() {
@@ -119,6 +148,10 @@ export class Game {
 
   private loop = () => {
     if (!this.running) return;
+    if (this.paused) {
+      requestAnimationFrame(this.loop); // keep polling cheaply so resume needs no extra kick
+      return;
+    }
     const dt = Math.min(this.clock.getDelta(), 0.06);
     this.update(dt);
     this.render();
@@ -134,13 +167,15 @@ export class Game {
 
     const difficulty = this.stats.distance / 3200;
     this.track.setDifficulty(difficulty);
-    this.train.speed = Math.min(this.train.maxSpeed, this.train.baseSpeed + difficulty * 5.5);
+    const headwind = this.stormActive ? 0.85 : 1; // storms slow the train too, not just the crew
+    this.train.speed = Math.min(this.train.maxSpeed, this.train.baseSpeed + difficulty * 5.5) * headwind;
 
     this.train.z += this.train.speed * dt;
     this.stats.distance += this.train.speed * dt;
 
     this.track.update(this.train.z, this.train.tailZ);
     this.updateHazards(dt, difficulty);
+    this.updateWeather(dt, difficulty);
 
     for (let i = 0; i < this.players.length; i++) this.updatePlayer(i, dt);
 
@@ -209,6 +244,41 @@ export class Game {
       if (!w.destroyed && w.hp <= 0) {
         this.severFrom(w.index, 'estrutural');
         break; // train array mutated, re-evaluate next frame
+      }
+    }
+  }
+
+  // ---- weather: periodic storms cut visibility and shove off-train players sideways ----
+  private updateWeather(dt: number, difficulty: number) {
+    if (this.elapsedRunTime < GRACE_PERIOD) return;
+
+    if (this.stormActive) {
+      this.stormTimer -= dt;
+      const fog = this.scene.fog as THREE.Fog;
+      fog.far = THREE.MathUtils.lerp(fog.far, STORM_FOG_FAR, Math.min(1, dt * 1.5));
+      for (const p of this.players) {
+        if (p.alive && !p.onTrain) p.x += this.windDir * STORM_WIND_ACCEL * dt;
+      }
+      if (this.stormTimer <= 0) {
+        this.stormActive = false;
+        this.stormCooldown = STORM_MIN_GAP;
+        this.hud.banner_show('🌤️ A tempestade passou.', 2.2);
+      }
+      return;
+    }
+
+    const fog = this.scene.fog as THREE.Fog;
+    fog.far = THREE.MathUtils.lerp(fog.far, NORMAL_FOG_FAR, Math.min(1, dt * 1.5));
+
+    this.stormCooldown -= dt;
+    if (this.stormCooldown <= 0) {
+      const chance = (0.003 + difficulty * 0.004) * dt;
+      if (Math.random() < chance) {
+        this.stormActive = true;
+        this.stormTimer = STORM_DURATION_MIN + Math.random() * (STORM_DURATION_MAX - STORM_DURATION_MIN);
+        this.windDir = Math.random() < 0.5 ? -1 : 1;
+        this.hud.banner_show('⛈️ Tempestade! Visibilidade reduzida e vento forte fora do trem!', 3.4);
+        this.sfx.storm();
       }
     }
   }
@@ -461,16 +531,21 @@ export class Game {
   private endRun() {
     this.running = false;
     this.gameOver = true;
-    this.sfx.gameOver();
     this.hud.hide();
+    const distanceMeters = Math.floor(this.stats.distance / 10);
+    const isRecord = reportDistanceMeters(distanceMeters);
+    this.sfx.gameOver();
+    if (isRecord) setTimeout(() => this.sfx.record(), 700);
     const goDistance = document.getElementById('go-distance')!;
     const goResources = document.getElementById('go-resources')!;
     const goPassengers = document.getElementById('go-passengers')!;
     const goWagons = document.getElementById('go-wagons')!;
-    goDistance.textContent = `${Math.floor(this.stats.distance / 10)} m`;
+    const goRecord = document.getElementById('go-record')!;
+    goDistance.textContent = `${distanceMeters} m`;
     goResources.textContent = `${Math.floor(this.stats.resources)}`;
     goPassengers.textContent = `${this.stats.passengersSaved}`;
     goWagons.textContent = `${this.train.wagons.length}`;
+    goRecord.classList.toggle('hidden', !isRecord);
     document.getElementById('gameover')!.classList.remove('hidden');
   }
 
