@@ -13,6 +13,7 @@ Entrega solicitada pelo diretor do projeto: documento de design completo, **ante
 7. [`06-sistemas-e-visual.md`](./06-sistemas-e-visual.md) — Lista de sistemas necessários e plano visual para realismo.
 8. [`07-producao-e-riscos.md`](./07-producao-e-riscos.md) — Plano de produção por sprints, estimativa de equipe/tempo/orçamento, riscos, critérios de diversão do protótipo, escopo fora da v1.
 9. [`08-finais-e-conformidade.md`](./08-finais-e-conformidade.md) — Tela inicial obrigatória, lista dos 20 finais globais, conformidade internacional.
+10. [`bibliografia.md`](./bibliografia.md) — Fontes históricas por tópico para todo o conteúdo já escrito (protótipo + vertical slice), ponto de partida para a revisão por historiador consultor — não inventa citações, sinaliza onde a confiança é baixa.
 
 ## Posicionamento inegociável (resumo)
 
