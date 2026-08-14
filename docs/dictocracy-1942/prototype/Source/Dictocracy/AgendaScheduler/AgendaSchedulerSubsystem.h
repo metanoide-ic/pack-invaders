@@ -2,10 +2,15 @@
 //
 // Versão mínima do AgendaScheduler (GDD 5.3): mantém uma lista de itens de agenda
 // para o dia atual (reuniões disponíveis) e avança o dia delegando para o
-// DecisionSystemSubsystem (que dispara os efeitos atrasados). A geração dinâmica de
-// agenda a partir de eventos condicionais fica para a Fase 3 — aqui a agenda do dia
-// é fixa/definida por Blueprint, o suficiente para o protótipo (um assistente
-// apresentando compromissos do dia).
+// DecisionSystemSubsystem (que dispara os efeitos atrasados).
+//
+// AddAgendaItem permite que algo (hoje, um binding simples no Level Blueprint escutando
+// UDecisionSystemSubsystem::OnDelayedEffectManifested) injete um novo item na agenda em
+// reação a um evento — é o que fecha a cadeia "consultar Eden agora -> avaliação dele
+// aparece na agenda dali a 3 dias -> nova decisão". O que fica para a Fase 3 é o
+// AVALIADOR GENÉRICO de condições de ativação (FConditionExpr do modelo de dados
+// completo, ver 05-modelo-de-dados.md) — aqui a ligação evento->item é feita a mão,
+// uma de cada vez, sem motor de regras por trás.
 
 #pragma once
 
@@ -39,6 +44,11 @@ class AGENDASCHEDULER_API UAgendaSchedulerSubsystem : public UGameInstanceSubsys
 public:
 	UFUNCTION(BlueprintCallable, Category = "Agenda")
 	void SetTodayAgenda(const TArray<FAgendaItem>& Items);
+
+	/** Adiciona um item à agenda do dia atual sem substituir os existentes. Idempotente por
+	 *  ItemId — chamar duas vezes com o mesmo ItemId não duplica o item. */
+	UFUNCTION(BlueprintCallable, Category = "Agenda")
+	void AddAgendaItem(const FAgendaItem& Item);
 
 	UFUNCTION(BlueprintCallable, Category = "Agenda")
 	void MarkAttended(FName ItemId);

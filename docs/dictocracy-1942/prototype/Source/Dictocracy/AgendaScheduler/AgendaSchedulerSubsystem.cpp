@@ -8,6 +8,17 @@ void UAgendaSchedulerSubsystem::SetTodayAgenda(const TArray<FAgendaItem>& Items)
 	TodayAgenda = Items;
 }
 
+void UAgendaSchedulerSubsystem::AddAgendaItem(const FAgendaItem& Item)
+{
+	const bool bAlreadyPresent = TodayAgenda.ContainsByPredicate(
+		[&Item](const FAgendaItem& Existing) { return Existing.ItemId == Item.ItemId; });
+
+	if (!bAlreadyPresent)
+	{
+		TodayAgenda.Add(Item);
+	}
+}
+
 void UAgendaSchedulerSubsystem::MarkAttended(FName ItemId)
 {
 	if (FAgendaItem* Item = TodayAgenda.FindByPredicate(

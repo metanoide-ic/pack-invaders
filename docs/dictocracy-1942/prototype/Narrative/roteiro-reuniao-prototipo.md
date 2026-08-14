@@ -40,7 +40,32 @@ Muito bem, Primeiro-Ministro. Vou transmitir a ordem ao Comando de Bombardeiros.
 
 ---
 
+---
+
+## Cena 2 — "A Avaliação de Eden" (só ocorre se a opção 5 foi escolhida na Cena 1)
+
+**Gatilho:** efeito atrasado da opção `consult_eden` manifesta no dia +3, adicionando o item "Avaliação de Eden" à agenda.
+
+**Local:** mesma sala de mapas, três dias depois — nenhuma alteração visual grande de cenário é necessária, mas o `BP_DamageStateManager` já pode estar em estado "danificado" se o jogador tiver tomado outras decisões que reduziram `GermanIndustrialOutput` nesse meio-tempo.
+
+**EDEN** *(mais confiante que na Cena 1, papéis na mão)*
+Primeiro-Ministro, minha avaliação está pronta. O risco diplomático é real, mas administrável — se o ataque for anunciado como resposta a um alvo militar específico, não como um bombardeio de área. Brooke pode confirmar a nova janela climática.
+
+> *[Jogador pode perguntar a Brooke sobre a janela antes de decidir, ou ir direto à decisão.]*
+
+**BROOKE** *(se perguntado — tom mais resignado que na Cena 1)*
+A janela original se foi, Primeiro-Ministro — essa consulta teve um custo. Mas uma nova aparece em 48 horas, com eficácia um pouco menor que a original.
+
+**EDEN** *(fecha, entregando a decisão de volta ao jogador)*
+A decisão é sua, Primeiro-Ministro. Desta vez, de olhos ainda mais abertos.
+
+> *[Decisão final — apenas duas opções desta vez, deliberadamente: a consulta já fez seu trabalho de trazer mais informação; não há mais o que adiar.]*
+
+1. **"Autorizem o ataque, seguindo sua estratégia de comunicação, Sir Anthony."** — efeito imediato levemente menor que a aprovação direta da Cena 1 (janela climática pior); consequência tardia (dia +10) também menor, porque a narrativa de Eden já está preparada.
+2. **"Não. A resposta continua sendo não."** — Brooke aceita sem confronto: teve tempo de se preparar psicologicamente para essa possibilidade, então o desgaste de lealdade é menor que seria se recusado de imediato na Cena 1.
+
 ## Notas de direção
 - Nenhuma opção deve ser lida pelo jogador como "a certa". Brooke e Eden têm razões válidas e legítimas para suas posições — o desconforto da escolha é o ponto da cena, não um quebra-cabeça com resposta correta.
 - A consequência tardia da opção 1 (vazamento de imprensa) não deve ser dramatizada como punição arbitrária: é a mesma lógica de risco que Eden nomeou na cena, apenas paga depois.
 - Reservar um asset de "jornal" no ambiente (mesa da secretária, por exemplo) para exibir fisicamente a manchete que materializa a consequência tardia quando ela se manifesta — ligação direta ao pilar "você está na sala": a consequência também deve ser vivida no espaço, não só relatada em texto de sistema.
+- A Cena 2 existe para provar, em escala mínima, o padrão "decisão adia decisão" que sustenta boa parte da rejogabilidade do jogo completo — nenhuma opção da Cena 1 deveria ser lida como "a decisão real"; `consult_eden` é uma escolha legítima e completa por si só, que troca urgência por informação, com seu próprio custo (janela climática pior na Cena 2).

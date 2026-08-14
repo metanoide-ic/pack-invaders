@@ -12,8 +12,8 @@ Cada arquivo de código traz um cabeçalho `// STATUS: escrito, não compilado n
 |---|---|
 | `00-setup-guia.md` | Passo a passo para criar o projeto UE5 e importar este código |
 | `Source/Dictocracy/` | Módulos C++ do protótipo (subconjunto dos módulos da arquitetura completa, ver `../04-arquitetura-tecnica.md`), cada um com testes de Automation Framework em sua subpasta `Tests/` |
-| `Data/` | Data Tables em CSV prontas para importar como `UDataTable` no Editor (NPCs, Decisão, Líder do protótipo) |
-| `Narrative/roteiro-reuniao-prototipo.md` | Roteiro completo da cena de reunião com 3 NPCs exigida pelo GDD, pronto para gravação/dublagem placeholder e para alimentar as Data Tables de diálogo |
+| `Data/` | Data Tables em CSV/JSON prontas para importar como `UDataTable` no Editor: 1 líder, 3 NPCs, 2 decisões encadeadas (`raid_duisburg` → `eden_assessment`), 1 grafo de diálogo com 2 cenas |
+| `Narrative/roteiro-reuniao-prototipo.md` | Roteiro completo das duas cenas (reunião inicial com 3 NPCs + decisão final encadeada), pronto para gravação/dublagem placeholder e para alimentar as Data Tables de diálogo |
 | `Blueprints/especificacao-blueprints.md` | Especificação nó-a-nó dos Blueprints necessários (não é possível gerar arquivos `.uasset` binários fora do Editor — a especificação substitui o arquivo) |
 | `Testing/guia-de-execucao-e-testes.md` | Critérios de aceite por sistema e passo a passo de teste manual no Editor |
 
@@ -26,8 +26,8 @@ Cobre exatamente o pedido da Fase 2 no prompt original:
 4. Uma reunião com três NPCs (ver `Narrative/roteiro-reuniao-prototipo.md`).
 5. Um documento assinável.
 6. Um mapa estratégico simplificado.
-7. Uma decisão com consequência atrasada (dado real em `Data/Decisions_Prototype.csv`, lógica em `SaveGameSystem`/`DecisionSystem`).
+7. Uma decisão com consequência atrasada (dado real em `Data/Decisions_Prototype.json`, lógica em `DecisionSystem`) — **estendido** além do mínimo pedido: a opção "consultar Eden" encadeia uma segunda decisão (`eden_assessment`) via `AgendaSchedulerSubsystem::AddAgendaItem`, provando o padrão "decisão gera novo item de agenda no futuro" que sustenta a estrutura de eventos condicionais do jogo completo.
 8. Um sistema de salvamento (`UDictocracySaveGame`).
-9. Uma pequena alteração visual no ambiente condicionada a estado de jogo.
+9. Uma pequena alteração visual no ambiente condicionada a estado de jogo (`ADamageStateManager`, C++, `Source/Dictocracy/Environment/` — regra de limiar em código, troca visual em Blueprint).
 
-Sistemas de escopo maior da arquitetura completa (`CountryAI`, `InfoFidelity`, mapa mundial real, diplomacia) **não** entram neste recorte — ver corte explícito em `../07-producao-e-riscos.md`, seção 13, e a lista de "fora do protótipo" no fim de `00-setup-guia.md`.
+Sistemas de escopo maior da arquitetura completa (`CountryAI`, `InfoFidelity`, mapa mundial real, diplomacia, avaliador genérico de condições de ativação) **não** entram neste recorte — ver corte explícito em `../07-producao-e-riscos.md`, seção 13, e a lista de "fora do protótipo" no fim de `00-setup-guia.md`.

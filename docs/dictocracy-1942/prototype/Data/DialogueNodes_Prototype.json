@@ -56,5 +56,34 @@
     "SpeakerCharacterId": "ismay",
     "SpeakerLine": "Muito bem, Primeiro-Ministro. Vou transmitir a ordem ao Comando de Bombardeiros.",
     "Responses": []
+  },
+  {
+    "Name": "eden_assessment_intro",
+    "NodeId": "eden_assessment_intro",
+    "SpeakerCharacterId": "eden",
+    "SpeakerLine": "Primeiro-Ministro, minha avaliação está pronta. O risco diplomático é real, mas administrável — se o ataque for anunciado como resposta a um alvo militar específico, não como um bombardeio de área. Brooke pode confirmar a nova janela climática.",
+    "Responses": [
+      { "ResponseId": "ask_brooke_window", "Label": "\"General Brooke, e a janela climática?\"", "Type": "RequestInfo", "NextNodeId": "brooke_new_window", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "skip_to_final_decision", "Label": "\"Já ouvi o suficiente. Preciso decidir agora.\"", "Type": "Approve", "NextNodeId": "eden_assessment_decision", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "brooke_new_window",
+    "NodeId": "brooke_new_window",
+    "SpeakerCharacterId": "brooke",
+    "SpeakerLine": "A janela original se foi, Primeiro-Ministro — essa consulta teve um custo. Mas uma nova aparece em 48 horas, com eficácia um pouco menor que a original.",
+    "Responses": [
+      { "ResponseId": "to_final_decision", "Label": "\"Entendido. Preciso decidir agora.\"", "Type": "Approve", "NextNodeId": "eden_assessment_decision", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyTargetCharacterId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "eden_assessment_decision",
+    "NodeId": "eden_assessment_decision",
+    "SpeakerCharacterId": "eden",
+    "SpeakerLine": "A decisão é sua, Primeiro-Ministro. Desta vez, de olhos ainda mais abertos.",
+    "Responses": [
+      { "ResponseId": "decide_approve_informed", "Label": "\"Autorizem o ataque, seguindo sua estratégia de comunicação, Sir Anthony.\"", "Type": "Approve", "NextNodeId": "meeting_close", "LinkedDecisionId": "eden_assessment", "LinkedDecisionOptionId": "approve_informed", "LoyaltyTargetCharacterId": "eden", "LoyaltyImpact": 3 },
+      { "ResponseId": "decide_refuse_informed", "Label": "\"Não. A resposta continua sendo não.\"", "Type": "Refuse", "NextNodeId": "meeting_close", "LinkedDecisionId": "eden_assessment", "LinkedDecisionOptionId": "refuse_informed", "LoyaltyTargetCharacterId": "brooke", "LoyaltyImpact": -3 }
+    ]
   }
 ]

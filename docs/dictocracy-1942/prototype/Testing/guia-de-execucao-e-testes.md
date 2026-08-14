@@ -11,6 +11,7 @@ Cada módulo com lógica não-trivial tem uma pasta `Tests/` com testes escritos
 | `DecisionSystem/Tests/DecisionSystemTests.cpp` | Efeito imediato aplicado na hora; efeito atrasado **não** se manifesta antes do prazo e se manifesta exatamente uma vez no dia certo; IDs inválidos retornam `false` sem crash. |
 | `CharacterMemory/Tests/CharacterMemoryTests.cpp` | Clamp de lealdade em [0,100] sob impacto extremo; `HasMemoryOf` correto antes/depois; `RestoreSavedState` repõe valores exatos sem recalcular. |
 | `DialogueRuntime/Tests/DialogueRuntimeTests.cpp` | **Teste de regressão**: o impacto de lealdade de uma resposta vai para `LoyaltyTargetCharacterId`, não para quem fala o nó — cobre exatamente o bug encontrado e corrigido durante a autoria deste pacote. |
+| `AgendaScheduler/Tests/AgendaSchedulerTests.cpp` | `AddAgendaItem` é idempotente por `ItemId` (evento disparando mais de uma vez não duplica o item); `AdvanceToNextDay` esvazia a agenda. |
 
 **Como rodar (após compilar):** Editor → Window → Test Automation → filtrar por `Dictocracy.` → Run Tests. Ou via linha de comando: `UnrealEditor-Cmd.exe <Projeto>.uproject -ExecCmds="Automation RunTests Dictocracy" -unattended -nopause -testexit="Automation Test Queue Empty"`.
 
@@ -38,6 +39,14 @@ Estes testes são o primeiro gate real de qualidade — devem passar **antes** d
 - [ ] Item de agenda "Reunião sobre Duisburg" aparece em `GetTodayAgenda()` antes de ser atendido.
 - [ ] `MarkAttended` reflete corretamente em `bAttended`.
 - [ ] `AdvanceToNextDay` chama `DecisionSystem->AdvanceDay()` (confirmar via breakpoint ou log que o dia do `DecisionSystemSubsystem` avança em paralelo).
+- [ ] **Fluxo de encadeamento completo**: escolher `consult_eden` na Cena 1 → avançar 3 dias → confirmar que "Avaliação de Eden" aparece em `GetTodayAgenda()` automaticamente (via binding do Level Blueprint em `OnDelayedEffectManifested`, filtrando `SourceDecisionId == "raid_duisburg" && SourceOptionId == "consult_eden"`) → atender o item → confirmar que a Cena 2 (`eden_assessment_intro`) inicia corretamente e resolve a decisão `eden_assessment`.
+- [ ] Confirmar que o filtro do binding realmente distingue a origem — forçar outra decisão/efeito atrasado a manifestar no mesmo período e confirmar que **não** adiciona "Avaliação de Eden" por engano (só a combinação exata `raid_duisburg` + `consult_eden` deve disparar).
+
+### ADamageStateManager
+- [ ] Estado inicial (`BeginPlay`) chama `OnDamageStateChanged` com `PreviousStateIndex == NewStateIndex` (convenção de "não é uma transição real") — confirmar que o Blueprint não dispara efeito de transição nesse primeiro call.
+- [ ] Resolver `raid_duisburg` com `approve` (`GermanIndustrialOutput -8`, cruza o limiar `-5` de `Thresholds = [-5, -10]`) e confirmar que o estado visual muda para "danificado" (`NewStateIndex = 1`) imediatamente, sem esperar o efeito atrasado.
+- [ ] Empilhar decisões até `GermanIndustrialOutput` cruzar `-10` e confirmar transição para "crítico" (`NewStateIndex = 2`).
+- [ ] Confirmar que `OnDamageStateChanged` **não** dispara de novo se o indicador mudar mas permanecer na mesma faixa (ex.: de -6 para -7, ainda dentro de "danificado").
 
 ### SaveGameSystem
 - [ ] Salvar após resolver a decisão `raid_duisburg` (opção `approve`), fechar e reabrir o nível, carregar o slot: `CurrentDay` e os indicadores voltam ao valor salvo.

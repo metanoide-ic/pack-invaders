@@ -84,12 +84,58 @@
           {
             "DelayInDays": 3,
             "Effects": [],
-            "ManifestationText": "Eden entrega uma avaliação por escrito sobre risco diplomático — nova decisão fica disponível com esta informação adicional (gatilho de evento condicional, fora do escopo mínimo deste protótipo)."
+            "ManifestationText": "Eden entrega uma avaliação por escrito sobre risco diplomático. Um novo item aparece na agenda: a decisão final sobre Duisburg, agora informada por essa avaliação."
           }
         ]
       }
     ],
     "Provenance": "PlausibleSpeculation",
     "SourceNote": "Bombardeios de área ao Ruhr em 1942 são documentados; esta decisão específica, seus NPCs e diálogo são dramatização para o protótipo. Não representa um evento único e real de outubro de 1942 — é um composto plausível para fins de demonstração de sistema."
+  },
+  {
+    "Name": "eden_assessment",
+    "DecisionId": "eden_assessment",
+    "Title": "Decisão Final sobre Duisburg — Após Avaliação de Eden",
+    "DescriptionText": "Três dias se passaram. Eden entrega pessoalmente sua avaliação por escrito: o risco diplomático é real, mas administrável se o ataque for anunciado como resposta a um alvo militar específico, não como ataque de área. Brooke observa que a janela climática original já se foi, mas uma nova aparece em 48 horas — com eficácia um pouco menor. A decisão sobre Duisburg, adiada pela consulta, precisa ser tomada agora.",
+    "Options": [
+      {
+        "OptionId": "approve_informed",
+        "Label": "Autorizar o ataque, seguindo a estratégia de comunicação de Eden",
+        "Type": "Approve",
+        "ImmediateEffects": [
+          { "IndicatorName": "GermanIndustrialOutput", "Delta": -6 },
+          { "IndicatorName": "MilitaryMoraleUK", "Delta": 2 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 10,
+            "Effects": [
+              { "IndicatorName": "PublicSupportUK", "Delta": -2 },
+              { "IndicatorName": "DiplomaticInfluenceUK", "Delta": -3 }
+            ],
+            "ManifestationText": "A narrativa preparada por Eden reduz, mas não elimina, o desconforto diplomático quando os relatos de baixas civis chegam à imprensa neutra."
+          }
+        ]
+      },
+      {
+        "OptionId": "refuse_informed",
+        "Label": "Recusar definitivamente, mesmo com a estratégia de comunicação pronta",
+        "Type": "Refuse",
+        "ImmediateEffects": [
+          { "IndicatorName": "MilitaryMoraleUK", "Delta": -1 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 5,
+            "Effects": [
+              { "IndicatorName": "BrookeTrueLoyalty", "Delta": -3 }
+            ],
+            "ManifestationText": "Brooke registra a decisão sem confronto aberto — teve tempo de se preparar para essa possibilidade —, mas o desgaste de confiança permanece."
+          }
+        ]
+      }
+    ],
+    "Provenance": "DramaticFiction",
+    "SourceNote": "Decisão inteiramente ficcional, criada para demonstrar encadeamento de decisões via evento condicional (consult_eden -> efeito atrasado -> novo item de agenda -> esta decisão). Não corresponde a nenhum evento histórico específico."
   }
 ]

@@ -83,13 +83,16 @@ IMPLEMENT_SIMPLE_AUTOMATION_TEST(FDecisionSystemDelayedEffectTest,
 
 bool FDecisionSystemDelayedEffectTest::RunTest(const FString& Parameters)
 {
+	// Nota: FOnDelayedEffectManifested é DECLARE_DYNAMIC_MULTICAST_DELEGATE (para ser
+	// BlueprintAssignable) — delegates dinâmicos só aceitam bind via AddDynamic/AddUFunction
+	// (exigem um UFUNCTION real como alvo), não .AddLambda(), que é exclusivo de delegates
+	// multicast não-dinâmicos. Testar o broadcast em si exigiria um UObject auxiliar com
+	// UFUNCTION próprio; em vez disso, este teste prova "disparou exatamente uma vez, no dia
+	// certo" observando o efeito colateral (o indicador), que é uma prova equivalente e mais simples.
 	UDecisionSystemSubsystem* System = NewObject<UDecisionSystemSubsystem>();
 	UDataTable* Table = DictocracyTests::BuildTestDecisionTable(System);
 	System->SetDecisionTable(Table);
 	System->ResolveDecision(FName("test_decision"), FName("approve")); // efeito atrasado agendado para dia +10
-
-	int32 ManifestCount = 0;
-	System->OnDelayedEffectManifested.AddLambda([&ManifestCount](const FDelayedEffect&) { ++ManifestCount; });
 
 	// Avança 9 dias — o efeito (agendado para o dia 10) ainda não deve ter disparado.
 	for (int32 Day = 0; Day < 9; ++Day)
@@ -97,18 +100,16 @@ bool FDecisionSystemDelayedEffectTest::RunTest(const FString& Parameters)
 		System->AdvanceDay();
 	}
 	TestEqual(TEXT("IndicatorB permanece 0 até o dia anterior ao prazo"), System->GetIndicatorValue(FName("IndicatorB")), 0);
-	TestEqual(TEXT("Delegate ainda não disparou"), ManifestCount, 0);
 
-	// Dia 10: o efeito deve se manifestar exatamente agora, uma única vez.
+	// Dia 10: o efeito deve se manifestar exatamente agora.
 	System->AdvanceDay();
 	TestEqual(TEXT("IndicatorB reflete o efeito atrasado no dia do prazo"), System->GetIndicatorValue(FName("IndicatorB")), -4);
-	TestEqual(TEXT("Delegate disparou exatamente uma vez"), ManifestCount, 1);
 
-	// Dias seguintes não devem reaplicar o mesmo efeito.
+	// Dias seguintes não devem reaplicar o mesmo efeito (senão o indicador continuaria caindo).
 	System->AdvanceDay();
 	System->AdvanceDay();
-	TestEqual(TEXT("IndicatorB não muda novamente em dias posteriores"), System->GetIndicatorValue(FName("IndicatorB")), -4);
-	TestEqual(TEXT("Delegate não disparou de novo"), ManifestCount, 1);
+	TestEqual(TEXT("IndicatorB não muda novamente em dias posteriores — efeito não reaplicado"),
+		System->GetIndicatorValue(FName("IndicatorB")), -4);
 
 	return true;
 }

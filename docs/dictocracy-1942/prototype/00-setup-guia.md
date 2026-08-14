@@ -13,9 +13,10 @@
 ## Passo 2 — Importar os módulos deste pacote
 1. Copiar o conteúdo de `Source/Dictocracy/` deste pacote para `<SeuProjeto>/Source/Dictocracy/`, preservando a subpasta por módulo.
 2. Abrir `<SeuProjeto>/Source/Dictocracy/Dictocracy.Build.cs` (gerado pelo template) e adicionar os módulos internos como dependência do módulo principal — ver `Source/Dictocracy/Dictocracy.Build.cs.reference` neste pacote para o bloco `PrivateDependencyModuleNames` esperado.
-3. Cada submódulo (`DecisionSystem`, `CharacterMemory`, `DialogueRuntime`, `AgendaScheduler`, `SaveGameSystem`, `DictocracyCore`) precisa de seu próprio `.Build.cs` — modelos inclusos em cada subpasta.
-4. Regenerar arquivos de projeto (botão direito no `.uproject` → "Generate Visual Studio project files", ou `GenerateProjectFiles.sh`/`.bat` do UE5).
-5. Compilar em modo `Development Editor`. **Este é o primeiro ponto real de verificação** — os arquivos aqui foram escritos contra a API pública da UE5 5.4 (`Subsystem`, `UPrimaryDataAsset`, `USaveGame`, `UActorComponent`), mas erros de compilação são esperados até essa etapa e devem ser corrigidos por quem tiver o Editor à mão antes de seguir.
+3. Cada submódulo de sistema (`DecisionSystem`, `CharacterMemory`, `DialogueRuntime`, `AgendaScheduler`, `SaveGameSystem`, `DictocracyCore`) precisa de seu próprio `.Build.cs` — modelos inclusos em cada subpasta, cada um com sua pasta `Tests/` de testes de Automation Framework (ver `Testing/guia-de-execucao-e-testes.md`).
+4. `Source/Dictocracy/Environment/` **não** é um submódulo — é presentation-layer e entra dentro do módulo principal `Dictocracy` (gerado pelo template), junto de qualquer `GameMode`/`Character` que você criar. Copiar `DamageStateManager.h/.cpp` para dentro da pasta do módulo principal, não como módulo separado.
+5. Regenerar arquivos de projeto (botão direito no `.uproject` → "Generate Visual Studio project files", ou `GenerateProjectFiles.sh`/`.bat` do UE5).
+6. Compilar em modo `Development Editor`. **Este é o primeiro ponto real de verificação** — os arquivos aqui foram escritos contra a API pública da UE5 5.4 (`Subsystem`, `UPrimaryDataAsset`, `USaveGame`, `UActorComponent`), mas erros de compilação são esperados até essa etapa e devem ser corrigidos por quem tiver o Editor à mão antes de seguir.
 
 ## Passo 3 — Importar dados
 1. No Editor, criar `UDataTable` a partir de `FCharacterData` (struct definida em `DictocracyCore/DictocracyDataTypes.h`) e importar `Data/NPCs_Prototype.csv`.

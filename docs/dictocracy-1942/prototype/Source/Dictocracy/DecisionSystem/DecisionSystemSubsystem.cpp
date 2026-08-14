@@ -80,7 +80,7 @@ void UDecisionSystemSubsystem::AdvanceDay()
 		if (Pending.ManifestOnDay <= CurrentDay)
 		{
 			ApplyEffects(Pending.Effect.Effects);
-			OnDelayedEffectManifested.Broadcast(Pending.Effect);
+			OnDelayedEffectManifested.Broadcast(Pending.SourceDecisionId, Pending.SourceOptionId, Pending.Effect);
 
 			UE_LOG(LogTemp, Log, TEXT("Efeito atrasado da decisão '%s' (opção '%s') manifestou no dia %d."),
 				*Pending.SourceDecisionId.ToString(), *Pending.SourceOptionId.ToString(), CurrentDay);

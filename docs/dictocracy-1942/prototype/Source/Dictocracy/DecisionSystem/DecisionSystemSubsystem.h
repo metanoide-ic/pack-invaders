@@ -33,7 +33,13 @@ struct FPendingDelayedEffect
 };
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDecisionResolved, FName, DecisionId, FName, OptionId, EDecisionOptionType, Type);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDelayedEffectManifested, const FDelayedEffect&, Effect);
+
+// Inclui DecisionId/OptionId de origem — sem eles, quem escuta este delegate (tipicamente o
+// Level Blueprint, para reagir com efeitos de mundo/UI) não tem como distinguir "o efeito
+// atrasado de qual decisão/opção acabou de disparar". Isso é necessário, por exemplo, para
+// encadear eventos condicionais (ver AgendaSchedulerSubsystem::AddAgendaItem): reagir
+// especificamente ao efeito atrasado da opção "consult_eden" e não a qualquer outro.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_ThreeParams(FOnDelayedEffectManifested, FName, SourceDecisionId, FName, SourceOptionId, const FDelayedEffect&, Effect);
 
 /**
  * Runtime de avaliação de decisões (ver GDD 5.3 / 6.3).
