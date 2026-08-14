@@ -82,7 +82,7 @@ export function runClean3D(
     layer.dctx.save();
     layer.dctx.globalCompositeOperation = 'destination-out';
     layer.dctx.beginPath();
-    layer.dctx.arc(u, v, 26 * (S / 256), 0, Math.PI * 2);
+    layer.dctx.arc(u, v, 46 * (S / 256), 0, Math.PI * 2);
     layer.dctx.fill();
     layer.dctx.restore();
     redraw();
@@ -96,9 +96,9 @@ export function runClean3D(
         remaining += layerAlpha(l.dirt);
         initial += l.initial;
       }
-      const pct = Math.min(1, Math.max(0, 1 - remaining / initial));
+      const pct = Math.min(1, Math.max(0, (1 - remaining / initial) / 0.65));
       onProgress(pct);
-      if (pct >= 0.9 && !done) {
+      if (pct >= 1 && !done) {
         done = true;
         for (const l of dirtLayers) l.dctx.clearRect(0, 0, S, S);
         redraw();

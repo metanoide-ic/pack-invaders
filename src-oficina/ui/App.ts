@@ -161,7 +161,10 @@ export class App {
     } else {
       sceneHost.appendChild(this.scene3d!.canvas);
       this.scene3d!.container = sceneHost;
-      this.scene3d!.resize();
+      // Defer resize until the new container has been laid out — calling it
+      // synchronously right after appendChild can read clientWidth/Height as 0
+      // and leave the camera/raycaster with a degenerate aspect ratio.
+      requestAnimationFrame(() => this.scene3d?.resize());
     }
     const scene = this.scene3d!;
     scene.onEquip = (toolId) => {

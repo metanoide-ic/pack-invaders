@@ -62,6 +62,7 @@ export class WorkshopScene {
     this.buildToolRack();
 
     this.resize();
+    requestAnimationFrame(() => this.resize());
     window.addEventListener('resize', this.resize);
     this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
     this.canvas.addEventListener('pointerdown', this.onOrbitDown);
