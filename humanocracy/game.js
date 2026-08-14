@@ -1727,13 +1727,14 @@ const shift = {
   picks: [], inspecting: false, confirmed: [], zTop: 10,
   encounterDone: false, whispered: false,
   approvedToday: 0, quotaRejects: 0, returnDone: false,
+  mirrorActive: false,   // Dia 48: sem relógio, sem fila — só o carimbo no próprio reflexo
 };
 
 function startDay() {
   setRegimeClass(S.day);
   shift.clock = 480; shift.processed = 0; shift.citToday = 0;
   shift.citizen = null; shift.picks = []; shift.confirmed = [];
-  shift.encounterDone = false; shift.whispered = false;
+  shift.encounterDone = false; shift.whispered = false; shift.mirrorActive = false;
   shift.specialDone = false; shift.specialSlot = -1; shift.special = null;
   shift.altInToday = 0;                       // Alternados que ENTRARAM hoje
   shift.wantedName = null;
@@ -4383,7 +4384,7 @@ function setupStamps() {
     const el = $(id); if (!el) return;
     const kind = defs[id];
     el.addEventListener('pointerdown', (ev) => {
-      if (!shift.running || !shift.citizen || el.classList.contains('busy')) return;
+      if ((!shift.running && !shift.mirrorActive) || !shift.citizen || el.classList.contains('busy')) return;
       ev.preventDefault();
       const r = el.getBoundingClientRect();
       const home = { x: r.left, y: r.top };
@@ -4421,7 +4422,7 @@ function setupStamps() {
             el.style.transform = '';
             instReturn(el, home, 160);
           }, 150);
-        } else if (doc && shift.citizen && shift.running) {
+        } else if (doc && shift.citizen && (shift.running || shift.mirrorActive)) {
           // BATE: o carimbo desce, esmaga, deixa a tinta — e a decisão sai
           el.classList.add('busy');
           el.style.transition = 'transform .09s ease-in';
@@ -4766,7 +4767,15 @@ function evaluatePair(a, b) {
 /* ---------- DECISÃO ---------- */
 function decide(decision) {
   const cz = shift.citizen;
-  if (!cz || !shift.running) return;
+  if (!cz || (!shift.running && !shift.mirrorActive)) return;
+  // Dia 48: o próprio reflexo. Nada de discrepância, cota ou ameaça — só a
+  // pergunta binária que fecha a campanha.
+  if (shift.mirrorActive) {
+    if (decision === 'detain') return;   // o espelho não oferece deter
+    shift.mirrorActive = false;
+    finishGame(decision === 'approve' ? 'mirror_approve' : 'mirror_reject');
+    return;
+  }
   // com uma arma apontada para você, só a detenção (ou o disparo) resolve
   if (THREAT.on) {
     if (decision === 'detain') { threatResolve('detain'); return; }
@@ -5263,13 +5272,18 @@ function presentMirror() {
   shift.running = false;
   clearInterval(shift.tickId);
   const you = makeCitizen(48, { nome: 'VOCÊ', pais: 'osteria', sexo: 'm', forceValid: true });
+  shift.citizen = you;          // sem isto, nenhum carimbo — de teclado ou arrastado — reage
+  shift.mirrorActive = true;    // libera o carimbo mesmo com o turno (shift.running) desligado
   $('npc-portrait').innerHTML = portraitSVG(you.features); if (window.clearActorPhoto) clearActorPhoto(); $('npc-actor').className = '';
   $('npc-name').textContent = T('— o vidro reflete —');
   $('speech').textContent = T('Não há fila. Há um vidro. Do outro lado do vidro, alguém desliza documentos na bandeja. São os seus.');
   layDocs(you);
   $('ask-row').innerHTML = '';
+  // #btn-reject/#btn-approve são o par legado (.legacy-scan, display:none — só
+  // o objeto físico do carimbo, #st-apv/#st-rej, é o que o jogador vê e arrasta)
   $('btn-reject').classList.remove('hidden');
   $('btn-detain').classList.add('hidden');
+  const sr = $('st-rej'); if (sr) sr.classList.remove('hidden');
   $('btn-approve').onclick = () => finishGame('mirror_approve');
   $('btn-reject').onclick = () => finishGame('mirror_reject');
 }
@@ -6109,7 +6123,7 @@ function togglePause() {
    O carimbo desce sozinho sobre o primeiro documento, com a mesma tinta
    e o mesmo baque de quando você o arrasta com a mão. */
 function stampByKey(kind) {
-  if (!shift.running || !shift.citizen) return;
+  if ((!shift.running && !shift.mirrorActive) || !shift.citizen) return;
   if ($('pause-overlay').classList.contains('active')) return;
   if ($('modal-overlay').classList.contains('active')) return;
   const el = $(kind === 'approve' ? 'st-apv' : kind === 'reject' ? 'st-rej' : null);

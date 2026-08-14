@@ -24,7 +24,7 @@ Sem instalação, sem build, sem internet.
 
 | Pasta/arquivo | O quê |
 |---|---|
-| `index.html`, `style.css`, `data.js`, `game.js` | O jogo completo (48 dias, 3 regimes, 6 finais, IA adaptativa) |
+| `index.html`, `style.css`, `data.js`, `game.js` | O jogo completo (48 dias, 3 regimes + colapso, 20 finais, IA adaptativa) |
 | `gdd/00-visao-geral.md` … `gdd/09-tecnico.md` | Game Design Document profissional em 10 volumes |
 
 ## Sistemas principais

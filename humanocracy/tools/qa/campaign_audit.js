@@ -77,6 +77,40 @@ const U = process.env.HUMANOCRACY_URL || 'file://' + require('path').resolve(__d
     screen: [...document.querySelectorAll('.screen.active')].map(s => s.id).join(',') }));
   console.log('dia 48 → tela:', mirror.screen, '· modo da casa:', mirror.mode);
 
+  /* O ESPELHO TEM QUE SER TERMINÁVEL. Chegar até ele não basta — em 2026 o
+     jogo chegou a ficar com o espelho travado (shift.running desligado e
+     shift.citizen nunca setado bloqueavam o carimbo de teclado E o
+     arrastado, o único jeito de terminar a campanha inteira). Testa os dois
+     caminhos: tecla (REJEITAR) e arrastar o carimbo físico (APROVAR). */
+  const rejeitar = await p.evaluate(() => {
+    S = freshState(); S.day = 48; showScreen('screen-shift'); presentMirror();
+    const before = { running: shift.running, mirrorActive: shift.mirrorActive, hasCitizen: !!shift.citizen };
+    decide('reject');
+    return { before, screen: [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','),
+      title: (document.getElementById('ending-title') || {}).textContent };
+  });
+  console.log('espelho → REJEITAR via decide():', JSON.stringify(rejeitar));
+  if (rejeitar.screen !== 'screen-ending' || rejeitar.title !== 'FINAL — O ESPELHO') {
+    console.log('FALHA CRÍTICA: rejeitar no espelho não terminou o jogo (regressão do bug de 2026)');
+  }
+  await p.evaluate(() => { S = freshState(); S.day = 48; showScreen('screen-shift'); presentMirror(); });
+  await p.waitForTimeout(300);
+  // arrasta o carimbo físico de verdade (mouse real do Playwright, não
+  // evento sintético dentro de evaluate() — o handler usa setPointerCapture
+  // e um listener de 'pointerup' no document, que não reagem do mesmo jeito
+  // a um PointerEvent despachado à mão)
+  const stampBox = await p.$eval('#st-apv', el => { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  const docBox = await p.$eval('#desk .document', el => { const r = el.getBoundingClientRect(); return { x: r.x + r.width / 2, y: r.y + r.height / 2 }; });
+  await p.mouse.move(stampBox.x, stampBox.y);
+  await p.mouse.down();
+  await p.mouse.move(docBox.x, docBox.y, { steps: 12 });
+  await p.mouse.up();
+  await p.waitForTimeout(900);
+  const aprovResult = await p.evaluate(() => ({ screen: [...document.querySelectorAll('.screen.active')].map(s => s.id).join(','),
+    title: (document.getElementById('ending-title') || {}).textContent }));
+  console.log('espelho → APROVAR via carimbo arrastado:', JSON.stringify(aprovResult));
+  if (aprovResult.screen !== 'screen-ending') console.log('FALHA CRÍTICA: aprovar no espelho (carimbo arrastado) não terminou o jogo');
+
   console.log('PAGEERRORS:', JSON.stringify(errs.slice(0, 6)));
   await b.close();
 })();
