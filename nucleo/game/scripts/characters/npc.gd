@@ -13,6 +13,55 @@ const WALK_SPEED := 1.8
 const WANDER_RADIUS := 5.0
 const FLY_WANDER_RADIUS := 3.5
 
+# ---------- falas ----------
+# Cosmético por enquanto (sem ramificação nem memória) — variedade por
+# CharacterAppearance.vibe nos humanóides e por espécie nas criaturas
+# especiais. Base para o sistema de diálogo/memória do GDD (§9-10).
+const HUMANOID_LINES := {
+	0: [  # Sereno
+		"Que dia tranquilo, não é?",
+		"Gosto de ficar por aqui, sentindo o vento passar.",
+		"Não tenho pressa nenhuma hoje. E você?",
+	],
+	1: [  # Animado
+		"Ei! Que bom te ver por aqui!",
+		"Adivinha o que eu vi hoje cedo? Depois eu te conto!",
+		"Vamos fazer alguma coisa divertida um dia desses!",
+	],
+	2: [  # Tímido
+		"Ah... oi. Não esperava te ver.",
+		"Er, desculpa, eu só estava passeando por aqui...",
+		"...oi. (acena baixinho)",
+	],
+	3: [  # Confiante
+		"Sabia que você ia passar por aqui.",
+		"Essa cidade tem sorte de ter alguém como eu por perto.",
+		"Vamos, não precisa ter vergonha de puxar assunto.",
+	],
+}
+const CREATURE_LINES := {
+	"nimbo": [
+		"*flutua baixinho, como se respirasse com o vento*",
+		"Psss... hoje o céu está gostoso.",
+		"*solta uma garoinha fina e se afasta, contente*",
+	],
+	"cintila": [
+		"*brilha um pouco mais forte por um instante*",
+		"Vi uma estrela cadente ontem. Fiz um pedido por você.",
+		"*gira devagar no ar, como se dançasse*",
+	],
+	"broto": [
+		"*balança as folhinhas da coroa, quieto*",
+		"A terra por aqui é boa. Dá pra sentir.",
+		"*se inclina em direção ao sol por um segundo*",
+	],
+	"prisma": [
+		"*suas facetas capturam a luz por um instante*",
+		"Cada ângulo meu mostra algo diferente. Repare.",
+		"*emite um brilho interno suave e constante*",
+	],
+}
+
 var appearance: CharacterAppearance  # null para criaturas especiais
 var creature_kind := ""              # "" para moradores humanóides
 var npc_name := ""
@@ -61,6 +110,8 @@ static func create_special(kind: String, seed_value: int, home_pos: Vector3) -> 
 
 
 func _ready() -> void:
+	add_to_group("npc")
+
 	var shape := CollisionShape3D.new()
 	var capsule := CapsuleShape3D.new()
 	capsule.radius = 0.32
@@ -138,3 +189,12 @@ func _pick_target(radius: float) -> void:
 	var dist := randf_range(1.5, radius)
 	var offset := Vector3(cos(angle) * dist, randf_range(-0.35, 0.35) if flies else 0.0, sin(angle) * dist)
 	_target = home + offset
+
+
+## Fala aleatória para quando o jogador interage (E) perto do morador.
+## Já vem com o nome prefixado, pronta para exibir no toast do HUD.
+func get_greeting() -> String:
+	var lines: Array = (
+			CREATURE_LINES.get(creature_kind, ["..."]) if creature_kind != ""
+			else HUMANOID_LINES.get(appearance.vibe, ["Oi!"]))
+	return "%s: %s" % [npc_name, lines[randi() % lines.size()]]

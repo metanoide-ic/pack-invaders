@@ -8,6 +8,7 @@ signal inventory_changed(inventory: Dictionary)
 signal notified(text: String)
 signal energy_changed(current: float, max_energy: float)
 signal near_bed_changed(near: bool)
+signal near_npc_changed(near: bool)
 signal slept
 
 const TOOLS := [
@@ -26,6 +27,7 @@ const MAX_ENERGY := 100.0
 const TOOL_ENERGY_COST := 3.0
 const EXHAUSTED_SPEED_MULT := 0.55
 const BED_RANGE := 1.8
+const NPC_TALK_RANGE := 2.0
 
 var selected_tool := 0
 var inventory := {}  # nome do item -> quantidade
@@ -36,6 +38,7 @@ var _marker: MeshInstance3D
 var _rig: CharacterRig
 var _just_harvested := false
 var _near_bed := false
+var _near_npc: NPC = null
 # Acessados via get_node_or_null (não pelo nome do autoload direto) para que
 # este script continue compilável em contextos sem autoloads registrados,
 # como os testes headless com `--script`.
@@ -95,6 +98,7 @@ func _physics_process(delta: float) -> void:
 	_rig.set_moving(Vector2(velocity.x, velocity.z).length() / WALK_SPEED)
 	_update_marker()
 	_update_near_bed()
+	_update_near_npc()
 
 
 func _target_cell() -> Vector2i:
@@ -102,9 +106,12 @@ func _target_cell() -> Vector2i:
 	return _farm.world_to_cell(global_position + facing * REACH)
 
 
-## E/clique: dorme se estiver perto de uma cama, senão usa a ferramenta
-## selecionada na célula à frente.
+## E/clique: conversa se estiver perto de um morador, senão dorme se estiver
+## perto de uma cama, senão usa a ferramenta selecionada na célula à frente.
 func _interact() -> void:
+	if _near_npc != null:
+		notified.emit(_near_npc.get_greeting())
+		return
 	if _near_bed:
 		_sleep()
 		return
@@ -164,6 +171,19 @@ func _update_near_bed() -> void:
 	if near_now != _near_bed:
 		_near_bed = near_now
 		near_bed_changed.emit(_near_bed)
+
+
+func _update_near_npc() -> void:
+	var closest: NPC = null
+	var closest_dist := NPC_TALK_RANGE
+	for npc: NPC in get_tree().get_nodes_in_group("npc"):
+		var dist := global_position.distance_to(npc.global_position)
+		if dist < closest_dist:
+			closest = npc
+			closest_dist = dist
+	if closest != _near_npc:
+		_near_npc = closest
+		near_npc_changed.emit(_near_npc != null)
 
 
 func _make_marker() -> void:

@@ -14,6 +14,7 @@ var _toast_tween: Tween
 var _energy_bar: ProgressBar
 var _energy_fill: StyleBoxFlat
 var _sleep_hint: Label
+var _npc_hint: Label
 var _fade: ColorRect
 
 @onready var clock_label: Label = $ClockLabel
@@ -26,6 +27,7 @@ func setup(player: Player) -> void:
 	player.notified.connect(_show_toast)
 	player.energy_changed.connect(_on_energy_changed)
 	player.near_bed_changed.connect(_on_near_bed_changed)
+	player.near_npc_changed.connect(_on_near_npc_changed)
 	player.slept.connect(_play_sleep_transition)
 	_on_tool_changed(player.selected_tool)
 	_on_inventory_changed(player.inventory)
@@ -116,6 +118,18 @@ func _build(player: Player) -> void:
 	_sleep_hint.visible = false
 	root.add_child(_sleep_hint)
 
+	_npc_hint = Label.new()
+	_npc_hint.text = "Pressione E para conversar"
+	_npc_hint.set_anchors_preset(Control.PRESET_CENTER)
+	_npc_hint.offset_left = -200.0
+	_npc_hint.offset_right = 200.0
+	_npc_hint.offset_top = 140.0
+	_npc_hint.offset_bottom = 170.0
+	_npc_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_npc_hint.add_theme_font_size_override("font_size", 18)
+	_npc_hint.visible = false
+	root.add_child(_npc_hint)
+
 	_fade = ColorRect.new()
 	_fade.color = Color(0, 0, 0, 0)
 	_fade.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -152,7 +166,13 @@ func _on_energy_changed(current: float, max_energy: float) -> void:
 
 
 func _on_near_bed_changed(near: bool) -> void:
-	_sleep_hint.visible = near
+	_sleep_hint.visible = near and not _npc_hint.visible
+
+
+func _on_near_npc_changed(near: bool) -> void:
+	_npc_hint.visible = near
+	if near:
+		_sleep_hint.visible = false
 
 
 func _play_sleep_transition() -> void:
