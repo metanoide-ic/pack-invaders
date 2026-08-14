@@ -23,6 +23,8 @@ Entrega solicitada pelo diretor do projeto: documento de design completo, **ante
 
 ## Status
 
-**Fase 1 concluída — aguardando aprovação para iniciar Fase 2 (Protótipo).**
+**Fase 1 aprovada. Fase 2 (Protótipo) em andamento — ver `prototype/`.**
 
-Nenhuma linha de código de produção, nenhum asset final e nenhuma implementação de sistema foram criados nesta entrega, conforme solicitado. Próximo passo, mediante aprovação: abrir a Fase 2 em etapas pequenas, testáveis e documentadas, começando por locomoção em terceira pessoa + um ambiente + um assistente + uma reunião com três NPCs, conforme especificado em `03-vertical-slice-e-loop.md` e `07-producao-e-riscos.md`.
+O material de engenharia da Fase 2 está em [`prototype/`](./prototype/README.md): módulos C++ (`DecisionSystem`, `CharacterMemory`, `DialogueRuntime`, `AgendaScheduler`, `SaveGameSystem`), dados de conteúdo (3 NPCs, 1 decisão com consequência atrasada, 1 cena de diálogo não-binária completa) e especificação de Blueprints/nível.
+
+**Importante:** este ambiente de desenvolvimento não tem o Unreal Engine 5 instalado — o código foi escrito seguindo as convenções da UE5 5.4+ mas **não foi compilado nem testado em runtime**. Isso está marcado em cada arquivo (`// STATUS: escrito, não compilado neste ambiente`) e detalhado em `prototype/README.md`. O "protótipo funcional" exigido pelo GDD só existe de fato após alguém com o Editor instalado seguir `prototype/00-setup-guia.md`, compilar, e validar contra `prototype/Testing/guia-de-execucao-e-testes.md`.

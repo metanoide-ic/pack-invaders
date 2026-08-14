@@ -1,0 +1,60 @@
+[
+  {
+    "Name": "meeting_intro",
+    "NodeId": "meeting_intro",
+    "SpeakerCharacterId": "ismay",
+    "SpeakerLine": "Primeiro-Ministro, o Comando de Bombardeiros está aguardando sua decisão sobre Duisburg. O General Brooke e Sir Anthony já estão à sua espera na sala de mapas.",
+    "Responses": [
+      { "ResponseId": "go_in", "Label": "Entrar e ouvir a proposta completa", "Type": "Approve", "NextNodeId": "brooke_brief", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "brooke_brief",
+    "NodeId": "brooke_brief",
+    "SpeakerCharacterId": "brooke",
+    "SpeakerLine": "O alvo é o complexo siderúrgico de Duisburg. Reconhecimento aéreo confirma produção plena. Uma noite clara está prevista para depois de amanhã — é a melhor janela que teremos em semanas.",
+    "Responses": [
+      { "ResponseId": "ask_civilians", "Label": "\"Qual a estimativa de baixas civis?\"", "Type": "RequestInfo", "NextNodeId": "brooke_civilian_risk", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "ask_weather", "Label": "\"O que acontece se perdermos essa janela?\"", "Type": "RequestInfo", "NextNodeId": "brooke_weather", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": 0 },
+      { "ResponseId": "skip_to_decision", "Label": "\"Já entendi o suficiente. Sir Anthony?\"", "Type": "Consult", "NextNodeId": "eden_warning", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": -2 }
+    ]
+  },
+  {
+    "Name": "brooke_civilian_risk",
+    "NodeId": "brooke_civilian_risk",
+    "SpeakerCharacterId": "brooke",
+    "SpeakerLine": "Os bairros operários ficam a menos de um quilômetro da linha de produção. Não há como isolar um do outro nesse tipo de ataque noturno. A estimativa é de centenas de baixas civis, possivelmente mais.",
+    "Responses": [
+      { "ResponseId": "to_eden_after_civilians", "Label": "\"Entendido. Sir Anthony, sua avaliação?\"", "Type": "Consult", "NextNodeId": "eden_warning", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": 2 }
+    ]
+  },
+  {
+    "Name": "brooke_weather",
+    "NodeId": "brooke_weather",
+    "SpeakerCharacterId": "brooke",
+    "SpeakerLine": "Perdemos a janela e adiamos por no mínimo três semanas — e essa produção continua alimentando a frente russa nesse período.",
+    "Responses": [
+      { "ResponseId": "to_eden_after_weather", "Label": "\"Compreendo a urgência. Sir Anthony?\"", "Type": "Consult", "NextNodeId": "eden_warning", "LinkedDecisionId": "None", "LinkedDecisionOptionId": "None", "LoyaltyImpact": 0 }
+    ]
+  },
+  {
+    "Name": "eden_warning",
+    "NodeId": "eden_warning",
+    "SpeakerCharacterId": "eden",
+    "SpeakerLine": "Se a imprensa sueca noticiar o número de vítimas civis, teremos perguntas incômodas em Washington antes do fim do mês — bem no momento em que precisamos do apoio deles para Overlord. Isso não significa que devamos recusar. Significa que o senhor precisa decidir de olhos abertos.",
+    "Responses": [
+      { "ResponseId": "decide_approve", "Label": "\"Autorizo o ataque conforme planejado.\"", "Type": "Approve", "NextNodeId": "meeting_close", "LinkedDecisionId": "raid_duisburg", "LinkedDecisionOptionId": "approve", "LoyaltyTargetCharacterId": "brooke", "LoyaltyImpact": 4 },
+      { "ResponseId": "decide_modify", "Label": "\"Restrinjam o alvo às instalações industriais.\"", "Type": "Modify", "NextNodeId": "meeting_close", "LinkedDecisionId": "raid_duisburg", "LinkedDecisionOptionId": "modify", "LoyaltyTargetCharacterId": "eden", "LoyaltyImpact": 2 },
+      { "ResponseId": "decide_refuse", "Label": "\"Não vamos autorizar este ataque.\"", "Type": "Refuse", "NextNodeId": "meeting_close", "LinkedDecisionId": "raid_duisburg", "LinkedDecisionOptionId": "refuse", "LoyaltyTargetCharacterId": "brooke", "LoyaltyImpact": -4 },
+      { "ResponseId": "decide_delay", "Label": "\"Quero um novo reconhecimento aéreo antes de decidir.\"", "Type": "Delay", "NextNodeId": "meeting_close", "LinkedDecisionId": "raid_duisburg", "LinkedDecisionOptionId": "delay", "LoyaltyTargetCharacterId": "brooke", "LoyaltyImpact": -1 },
+      { "ResponseId": "decide_consult", "Label": "\"Quero sua avaliação por escrito antes de decidir, Sir Anthony.\"", "Type": "Consult", "NextNodeId": "meeting_close", "LinkedDecisionId": "raid_duisburg", "LinkedDecisionOptionId": "consult_eden", "LoyaltyTargetCharacterId": "eden", "LoyaltyImpact": 3 }
+    ]
+  },
+  {
+    "Name": "meeting_close",
+    "NodeId": "meeting_close",
+    "SpeakerCharacterId": "ismay",
+    "SpeakerLine": "Muito bem, Primeiro-Ministro. Vou transmitir a ordem ao Comando de Bombardeiros.",
+    "Responses": []
+  }
+]

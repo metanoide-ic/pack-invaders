@@ -1,0 +1,29 @@
+// STATUS: referência para editar o Dictocracy.Build.cs gerado pelo template UE5 (não substitui o arquivo — o
+// template gera um Build.cs próprio para o módulo de jogo principal; adicione o bloco PrivateDependencyModuleNames
+// abaixo a ele).
+using UnrealBuildTool;
+
+public class Dictocracy : ModuleRules
+{
+	public Dictocracy(ReadOnlyTargetRules Target) : base(Target)
+	{
+		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
+
+		PublicDependencyModuleNames.AddRange(new[]
+		{
+			"Core", "CoreUObject", "Engine", "InputCore",
+			"EnhancedInput"
+		});
+
+		// Módulos internos do protótipo — adicionar esta linha ao Build.cs gerado pelo template.
+		PrivateDependencyModuleNames.AddRange(new[]
+		{
+			"DictocracyCore",
+			"DecisionSystem",
+			"CharacterMemory",
+			"DialogueRuntime",
+			"AgendaScheduler",
+			"SaveGameSystem"
+		});
+	}
+}

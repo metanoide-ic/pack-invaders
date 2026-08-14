@@ -1,0 +1,95 @@
+[
+  {
+    "Name": "raid_duisburg",
+    "DecisionId": "raid_duisburg",
+    "Title": "Autorização de Bombardeio de Área — Vale do Ruhr",
+    "DescriptionText": "O Comando de Bombardeiros propõe um ataque noturno de área contra o complexo industrial de Duisburg. A inteligência aérea estima dano severo à produção de aço, mas a proximidade de bairros operários torna baixas civis significativas prováveis. Brooke pede decisão até amanhã à noite; Eden alerta para o custo diplomático se a imprensa neutra noticiar o número de vítimas.",
+    "Options": [
+      {
+        "OptionId": "approve",
+        "Label": "Autorizar o ataque conforme planejado",
+        "Type": "Approve",
+        "ImmediateEffects": [
+          { "IndicatorName": "GermanIndustrialOutput", "Delta": -8 },
+          { "IndicatorName": "MilitaryMoraleUK", "Delta": 3 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 10,
+            "Effects": [
+              { "IndicatorName": "PublicSupportUK", "Delta": -4 },
+              { "IndicatorName": "DiplomaticInfluenceUK", "Delta": -6 }
+            ],
+            "ManifestationText": "Relatos de baixas civis em Duisburg chegam à imprensa neutra na Suécia. Eden relata protestos de diplomatas suecos e um desconforto crescente na opinião pública americana."
+          }
+        ]
+      },
+      {
+        "OptionId": "modify",
+        "Label": "Restringir o alvo a instalações industriais, aceitando menor eficácia",
+        "Type": "Modify",
+        "ImmediateEffects": [
+          { "IndicatorName": "GermanIndustrialOutput", "Delta": -4 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 10,
+            "Effects": [
+              { "IndicatorName": "PublicSupportUK", "Delta": 1 }
+            ],
+            "ManifestationText": "Brooke relata que o ataque restrito teve efeito industrial limitado, mas nenhum incidente diplomático se seguiu."
+          }
+        ]
+      },
+      {
+        "OptionId": "refuse",
+        "Label": "Recusar o ataque",
+        "Type": "Refuse",
+        "ImmediateEffects": [
+          { "IndicatorName": "MilitaryMoraleUK", "Delta": -2 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 7,
+            "Effects": [
+              { "IndicatorName": "BrookeTrueLoyalty", "Delta": -5 }
+            ],
+            "ManifestationText": "Brooke expressa, em relatório reservado, frustração com a hesitação em autorizar operações já planejadas pelo Estado-Maior."
+          }
+        ]
+      },
+      {
+        "OptionId": "delay",
+        "Label": "Adiar — exigir novo reconhecimento aéreo antes de decidir",
+        "Type": "Delay",
+        "ImmediateEffects": [],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 5,
+            "Effects": [
+              { "IndicatorName": "GermanIndustrialOutput", "Delta": -1 }
+            ],
+            "ManifestationText": "O novo reconhecimento aéreo confirma o alvo, mas a janela climática favorável já passou — o ataque, quando finalmente ocorre, tem eficácia reduzida."
+          }
+        ]
+      },
+      {
+        "OptionId": "consult_eden",
+        "Label": "Consultar Eden sobre repercussão diplomática antes de decidir",
+        "Type": "Consult",
+        "ImmediateEffects": [
+          { "IndicatorName": "EdenTrueLoyalty", "Delta": 3 }
+        ],
+        "DelayedEffects": [
+          {
+            "DelayInDays": 3,
+            "Effects": [],
+            "ManifestationText": "Eden entrega uma avaliação por escrito sobre risco diplomático — nova decisão fica disponível com esta informação adicional (gatilho de evento condicional, fora do escopo mínimo deste protótipo)."
+          }
+        ]
+      }
+    ],
+    "Provenance": "PlausibleSpeculation",
+    "SourceNote": "Bombardeios de área ao Ruhr em 1942 são documentados; esta decisão específica, seus NPCs e diálogo são dramatização para o protótipo. Não representa um evento único e real de outubro de 1942 — é um composto plausível para fins de demonstração de sistema."
+  }
+]
