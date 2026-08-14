@@ -16,6 +16,8 @@ Cada arquivo de código traz um cabeçalho `// STATUS: escrito, não compilado n
 | `Narrative/roteiro-reuniao-prototipo.md` | Roteiro completo das duas cenas (reunião inicial com 3 NPCs + decisão final encadeada), pronto para gravação/dublagem placeholder e para alimentar as Data Tables de diálogo |
 | `Blueprints/especificacao-blueprints.md` | Especificação nó-a-nó dos Blueprints necessários (não é possível gerar arquivos `.uasset` binários fora do Editor — a especificação substitui o arquivo) |
 | `Testing/guia-de-execucao-e-testes.md` | Critérios de aceite por sistema e passo a passo de teste manual no Editor |
+| `Testing/protocolo-playtest.md` | Protocolo de playtest interno (12 participantes) que opera sobre os critérios objetivos de diversão já definidos em `../07-producao-e-riscos.md` §12 — roteiro de moderador, questionário, planilha de coleta e cálculo do gate |
+| `CI/` | Pipeline de build/teste (GitHub Actions, runner self-hosted com UE5) — compromisso do Sprint 1, pronto para ativar quando o projeto UE5 real existir |
 
 ## Escopo deste protótipo (recorte de Sprint 2–5, ver `../07-producao-e-riscos.md`)
 

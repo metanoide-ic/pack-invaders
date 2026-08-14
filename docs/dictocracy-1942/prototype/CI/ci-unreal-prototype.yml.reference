@@ -1,0 +1,72 @@
+# STATUS: escrito, não executado neste ambiente (sem runner com UE5 instalado disponível aqui).
+# Renomear para .github/workflows/ci-unreal-prototype.yml no repositório do projeto UE5 real.
+#
+# Requer um runner self-hosted com a label "unreal-5.4", UE5 5.4+ instalado, e a variável de
+# ambiente UE5_ROOT apontando para a instalação da Engine (ex.: C:\Program Files\Epic Games\UE_5.4
+# no Windows, ou o caminho de build de source em Linux/macOS).
+
+name: Build & Test — Dictocracy Prototype
+
+on:
+  pull_request:
+    paths:
+      - "Source/Dictocracy/**"
+      - "Content/Data/**"
+  push:
+    branches: [main]
+    paths:
+      - "Source/Dictocracy/**"
+
+env:
+  UPROJECT_PATH: "Dictocracy.uproject"   # ajustar para o caminho real relativo à raiz do repo
+  UE5_TARGET: "DictocracyEditor"          # alvo de build: <NomeDoProjeto>Editor
+  TEST_FILTER: "Dictocracy"               # casa com os grupos "Dictocracy.*" dos testes
+
+jobs:
+  build-and-test:
+    runs-on: [self-hosted, unreal-5.4]
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build (Development Editor)
+        shell: bash
+        run: |
+          "$UE5_ROOT/Engine/Build/BatchFiles/RunUAT.sh" BuildEditor \
+            -project="$GITHUB_WORKSPACE/$UPROJECT_PATH" \
+            -target="$UE5_TARGET" \
+            -platform=Linux \
+            -configuration=Development
+        # No Windows, trocar RunUAT.sh por RunUAT.bat e -platform=Linux por -platform=Win64.
+
+      - name: Run Automation Tests (headless)
+        shell: bash
+        run: |
+          "$UE5_ROOT/Engine/Binaries/Linux/UnrealEditor-Cmd" \
+            "$GITHUB_WORKSPACE/$UPROJECT_PATH" \
+            -ExecCmds="Automation RunTests $TEST_FILTER; Quit" \
+            -unattended -nopause -nosplash -nullrhi \
+            -testexit="Automation Test Queue Empty" \
+            -ReportOutputPath="$GITHUB_WORKSPACE/TestReports"
+        # -nullrhi: testes de lógica pura (DecisionSystem, CharacterMemory, AgendaScheduler,
+        # DialogueRuntime) não precisam de renderização real — mantém o job mais rápido e
+        # viável em runners sem GPU dedicada. Remover -nullrhi se algum teste futuro
+        # depender de rendering real (não é o caso de nenhum teste deste pacote).
+
+      - name: Publish test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dictocracy-automation-test-report
+          path: TestReports/
+          retention-days: 14
+
+      - name: Fail job if any test failed
+        shell: bash
+        run: |
+          if grep -q '"failed"' "$GITHUB_WORKSPACE/TestReports/index.json" 2>/dev/null; then
+            echo "Um ou mais testes de Automation Framework falharam — ver artefato dictocracy-automation-test-report."
+            exit 1
+          fi
