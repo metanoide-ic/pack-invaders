@@ -145,6 +145,61 @@ export class Track {
     return side * (WAGON_WIDTH / 2 + 2.4);
   }
 
+  /** One of four distinct building silhouettes, picked at random, so a skyline never looks copy-pasted. */
+  private buildCityBuilding(bx: number, bz: number) {
+    const color = BUILDING_COLORS[Math.floor(Math.random() * BUILDING_COLORS.length)];
+    const trim = toonMat(0xffffff);
+    const archetype = Math.floor(Math.random() * 4);
+    const g = new THREE.Group();
+
+    if (archetype === 0) {
+      // tower: tall box, pyramid-cap roof
+      const h = 6 + Math.random() * 8;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(3 + Math.random(), h, 3 + Math.random()), toonMat(color));
+      body.position.y = h / 2;
+      g.add(body);
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.4, 1.6, 4), trim);
+      roof.rotation.y = Math.PI / 4;
+      roof.position.y = h + 0.8;
+      g.add(roof);
+    } else if (archetype === 1) {
+      // warehouse: low, wide, flat roof with a bright stripe
+      const h = 3 + Math.random() * 1.5;
+      const w = 5 + Math.random() * 2.5;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(w, h, 4 + Math.random() * 1.5), toonMat(color));
+      body.position.y = h / 2;
+      g.add(body);
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(w + 0.05, 0.5, 0.1), trim);
+      stripe.position.set(0, h * 0.6, 2.05);
+      g.add(stripe);
+    } else if (archetype === 2) {
+      // shop: small cube with a triangular awning over the "door" side
+      const h = 2.4 + Math.random() * 1.2;
+      const body = new THREE.Mesh(new THREE.BoxGeometry(2.6, h, 2.6), toonMat(color));
+      body.position.y = h / 2;
+      g.add(body);
+      const awning = new THREE.Mesh(new THREE.ConeGeometry(2, 0.9, 4), trim);
+      awning.rotation.y = Math.PI / 4;
+      awning.position.y = h + 0.3;
+      g.add(awning);
+    } else {
+      // silo: cylinder with a domed cap — breaks up the all-box skyline
+      const h = 4 + Math.random() * 5;
+      const r = 1.4 + Math.random() * 0.6;
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, 12), toonMat(color));
+      body.position.y = h / 2;
+      g.add(body);
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), trim);
+      dome.position.y = h;
+      g.add(dome);
+    }
+
+    g.position.set(bx, 0, bz);
+    g.rotation.y = Math.random() * Math.PI * 2;
+    this.group.add(g);
+    this.props.push({ z: bz, mesh: g });
+  }
+
   private buildCityZone(zone: WorldZone) {
     const x = this.platformX(zone.side);
     // platform slab
@@ -153,21 +208,12 @@ export class Track {
     this.group.add(platform);
     this.props.push({ z: zone.endZ, mesh: platform });
 
-    // chunky, candy-colored building blocks behind the platform
-    const buildingCount = 4 + Math.floor(Math.random() * 3);
+    // a skyline of mixed building archetypes, so every city reads differently
+    const buildingCount = 5 + Math.floor(Math.random() * 4);
     for (let i = 0; i < buildingCount; i++) {
-      const h = 4 + Math.random() * 8;
-      const color = BUILDING_COLORS[Math.floor(Math.random() * BUILDING_COLORS.length)];
-      const b = new THREE.Mesh(new THREE.BoxGeometry(3 + Math.random() * 2, h, 3 + Math.random() * 2), toonMat(color));
-      b.position.set(x + zone.side * (5 + Math.random() * 6), h / 2, zone.startZ + Math.random() * (zone.endZ - zone.startZ));
-      this.group.add(b);
-      this.props.push({ z: b.position.z, mesh: b });
-      // a bright roof cap so buildings read as playful blocks, not offices
-      const roof = new THREE.Mesh(new THREE.ConeGeometry(2.4, 1.6, 4), toonMat(0xffffff));
-      roof.rotation.y = Math.PI / 4;
-      roof.position.set(b.position.x, h + 0.8, b.position.z);
-      this.group.add(roof);
-      this.props.push({ z: b.position.z, mesh: roof });
+      const bx = x + zone.side * (5 + Math.random() * 7);
+      const bz = zone.startZ + Math.random() * (zone.endZ - zone.startZ);
+      this.buildCityBuilding(bx, bz);
     }
 
     // resource crates along the platform

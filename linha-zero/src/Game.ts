@@ -29,6 +29,11 @@ const STORM_DURATION_MAX = 18;
 const STORM_WIND_ACCEL = 5.5; // units/sec² pushing off-train players sideways
 const STORM_FOG_FAR = 130; // vs. the normal 300 — a real visibility cut
 const NORMAL_FOG_FAR = 300;
+const SKY_CLEAR = new THREE.Color(0x8fd8ff);
+const SKY_STORM = new THREE.Color(0x4a5568);
+const RAIN_COUNT = 500;
+const RAIN_FALL_SPEED = 22;
+const RAIN_BOX = { x: 20, yTop: 24, zBack: 15, zFwd: 55 };
 
 export class Game {
   private renderer: THREE.WebGLRenderer;
@@ -59,6 +64,7 @@ export class Game {
   private stormTimer = 0;
   private stormCooldown = STORM_MIN_GAP;
   private windDir: 1 | -1 = 1;
+  private rain: THREE.Points;
 
   private camLook = new THREE.Vector3();
   private camPos = new THREE.Vector3();
@@ -88,6 +94,8 @@ export class Game {
 
     this.train = new Train(this.scene);
     this.track = new Track(this.scene);
+    this.rain = this.buildRain();
+    this.scene.add(this.rain);
 
     this.camPos.set(0, CAM_HEIGHT, this.train.z - CAM_DISTANCE);
     this.camLook.set(0, 2.6, this.train.z + CAM_LOOK_AHEAD);
@@ -187,7 +195,39 @@ export class Game {
     this.train.syncMeshes(elapsed, dt);
     for (const p of this.players) p.syncMesh();
     this.updateCamera(dt);
-    this.hud.update(dt, this.stats, this.train, this.players, this.track);
+    this.updateRain(dt);
+    this.hud.update(dt, this.stats, this.train, this.players, this.track, this.stormActive);
+  }
+
+  private buildRain(): THREE.Points {
+    const positions = new Float32Array(RAIN_COUNT * 3);
+    for (let i = 0; i < RAIN_COUNT; i++) {
+      positions[i * 3] = (Math.random() - 0.5) * 2 * RAIN_BOX.x;
+      positions[i * 3 + 1] = Math.random() * RAIN_BOX.yTop;
+      positions[i * 3 + 2] = -RAIN_BOX.zBack + Math.random() * (RAIN_BOX.zFwd + RAIN_BOX.zBack);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    const mat = new THREE.PointsMaterial({ color: 0xcfe8ff, size: 0.16, transparent: true, opacity: 0, depthWrite: false });
+    const points = new THREE.Points(geo, mat);
+    points.frustumCulled = false;
+    return points;
+  }
+
+  /** Rain streaks around wherever the train currently is, only visible during a storm. */
+  private updateRain(dt: number) {
+    const mat = this.rain.material as THREE.PointsMaterial;
+    const targetOpacity = this.stormActive ? 0.55 : 0;
+    mat.opacity = THREE.MathUtils.lerp(mat.opacity, targetOpacity, Math.min(1, dt * 3));
+    this.rain.position.set(0, 0, this.train.z);
+    if (mat.opacity < 0.01) return;
+    const pos = this.rain.geometry.getAttribute('position') as THREE.BufferAttribute;
+    for (let i = 0; i < RAIN_COUNT; i++) {
+      let y = pos.getY(i) - RAIN_FALL_SPEED * dt;
+      if (y < 0) y = RAIN_BOX.yTop;
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
   }
 
   // exaggerated cartoon "accident" — severed wagons don't just vanish, they
@@ -227,16 +267,22 @@ export class Game {
       }
     }
 
-    const last = this.train.wagons[this.train.wagons.length - 1];
-    if (last && !last.raider && !last.destroyed && Math.random() < raiderChance) {
-      last.raider = true;
-      last.raiderHp = 40 + difficulty * 10;
-      this.hud.banner_show('⚠️ Um saqueador se agarrou ao último vagão!');
-      this.sfx.danger();
+    // at low difficulty only the caboose is at risk; past a threshold, a second
+    // raider can climb onto the wagon just ahead of it at the same time
+    const tailRiskCount = difficulty > 1.6 ? 2 : 1;
+    for (const w of this.train.wagons.slice(-tailRiskCount)) {
+      if (!w.raider && !w.destroyed && Math.random() < raiderChance) {
+        w.raider = true;
+        w.raiderHp = 40 + difficulty * 10;
+        this.hud.banner_show(`⚠️ Um saqueador se agarrou ao vagão ${w.index + 1}!`);
+        this.sfx.danger();
+      }
     }
-    if (last && last.raider) {
-      const fought = this.playerFightingRaider(last);
-      if (!fought) last.hp -= RAIDER_DAMAGE * dt;
+    for (const w of this.train.wagons) {
+      if (w.raider) {
+        const fought = this.playerFightingRaider(w);
+        if (!fought) w.hp -= RAIDER_DAMAGE * dt;
+      }
     }
 
     // resolve destroyed wagons (structural failure severs everything behind it)
@@ -252,10 +298,15 @@ export class Game {
   private updateWeather(dt: number, difficulty: number) {
     if (this.elapsedRunTime < GRACE_PERIOD) return;
 
+    const fog = this.scene.fog as THREE.Fog;
+    const sky = this.scene.background as THREE.Color;
+
     if (this.stormActive) {
       this.stormTimer -= dt;
-      const fog = this.scene.fog as THREE.Fog;
-      fog.far = THREE.MathUtils.lerp(fog.far, STORM_FOG_FAR, Math.min(1, dt * 1.5));
+      const lerpT = Math.min(1, dt * 1.5);
+      fog.far = THREE.MathUtils.lerp(fog.far, STORM_FOG_FAR, lerpT);
+      fog.color.lerp(SKY_STORM, lerpT);
+      sky.lerp(SKY_STORM, lerpT);
       for (const p of this.players) {
         if (p.alive && !p.onTrain) p.x += this.windDir * STORM_WIND_ACCEL * dt;
       }
@@ -267,8 +318,10 @@ export class Game {
       return;
     }
 
-    const fog = this.scene.fog as THREE.Fog;
-    fog.far = THREE.MathUtils.lerp(fog.far, NORMAL_FOG_FAR, Math.min(1, dt * 1.5));
+    const lerpT = Math.min(1, dt * 1.5);
+    fog.far = THREE.MathUtils.lerp(fog.far, NORMAL_FOG_FAR, lerpT);
+    fog.color.lerp(SKY_CLEAR, lerpT);
+    sky.lerp(SKY_CLEAR, lerpT);
 
     this.stormCooldown -= dt;
     if (this.stormCooldown <= 0) {

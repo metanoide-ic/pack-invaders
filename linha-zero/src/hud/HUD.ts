@@ -22,6 +22,7 @@ export class HUD {
   private actionHint = document.getElementById('action-hint')!;
   private minimap = document.getElementById('minimap') as HTMLCanvasElement;
   private minimapCtx = this.minimap.getContext('2d')!;
+  private stormBadge = document.getElementById('storm-badge')!;
   private bannerTimer = 0;
   private hintTimer = 0;
 
@@ -40,7 +41,8 @@ export class HUD {
     this.hintTimer = 0.2;
   }
 
-  update(dt: number, stats: RunStats, train: Train, players: Player[], track: Track) {
+  update(dt: number, stats: RunStats, train: Train, players: Player[], track: Track, stormActive = false) {
+    this.stormBadge.classList.toggle('hidden', !stormActive);
     this.distanceEl.textContent = `${Math.floor(stats.distance / 10)} m`;
     this.speedEl.textContent = `${Math.round(train.speed * 3.2)} km/h`;
     this.resourcesEl.textContent = `${stats.resources}`;

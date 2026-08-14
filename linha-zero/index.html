@@ -129,6 +129,9 @@
       display: block;
     }
 
+    .storm-badge { border-color: rgba(255,209,102,0.5); animation: stormPulse 1.4s infinite alternate; }
+    @keyframes stormPulse { from { box-shadow: 0 0 0 rgba(255,209,102,0); } to { box-shadow: 0 0 14px rgba(255,209,102,0.5); } }
+
     #gameover .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; text-align: left; margin-top: 10px; }
     #gameover .stats-grid span:nth-child(odd) { color: #9aa5c9; }
     #gameover .stats-grid span:nth-child(even) { font-weight: 700; color: var(--accent2); }
@@ -144,6 +147,7 @@
         <div class="stat"><div class="label">Velocidade</div><div class="value" id="stat-speed">0</div></div>
         <div class="stat"><div class="label">Recursos</div><div class="value" id="stat-resources">0</div></div>
         <div class="stat"><div class="label">Passageiros</div><div class="value" id="stat-passengers">0</div></div>
+        <div class="stat storm-badge hidden" id="storm-badge"><div class="value">⛈️ Tempestade</div></div>
       </div>
       <div id="wagons-strip"></div>
       <div id="event-banner"></div>
