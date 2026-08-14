@@ -317,12 +317,14 @@
       <div class="house-top">
         <span id="house-clock">20:30</span>
         <span id="house-room"></span>
-        <span class="house-help">WASD/setas andar · mova o mouse p/ olhar · E interagir</span>
+        <span class="house-help">WASD/setas andar · clique para travar o mouse · E interagir</span>
         <!-- para quem já falou com todo mundo: vai direto para a cama -->
         <button id="btn-recolher" class="btn-small" style="display:none">RECOLHER-SE →</button>
       </div>
       <div id="house-viewport">
         <canvas id="house-canvas"></canvas>
+        <!-- some assim que o pointer lock prende (ver .mouse-locked no CSS) -->
+        <div id="house-lock-hint"><span>◎</span>CLIQUE PARA OLHAR AO REDOR</div>
       </div>
       <div id="house-prompt"></div>
       <div id="touch-controls">

@@ -209,12 +209,112 @@ function gl3Init() {
   }
   for (const b of BOXES) scene.add(buildFurn(b));
 
-  // ---- GENTE e decoração: planos com o sprite procedural, billboard no eixo Y
-  // (as figuras volumétricas foram removidas: ficavam estranhas de perto; o
-  // sprite pintado pelo mesmo motor dos rostos lê muito melhor) ----
+  /* ---- QUADROS, CARTAZES E JANELAS: presos na parede, não no jogador ----
+     Antes eram billboards como qualquer outro sprite — giravam no eixo Y
+     para sempre encarar a câmera, e um retrato ou um ESTANDARTE fazendo
+     isso lê como banner perseguindo quem anda pelo corredor. Um quadro
+     pendurado não faz isso: fica preso na parede, encarando pra sempre a
+     mesma direção. wallFacing() acha a parede mais perto (norte/sul/
+     leste/oeste) e devolve pra que lado o objeto deve olhar; a orientação
+     é calculada uma vez, na hora de montar a cena — não a cada quadro. */
+  function wallFacing(x, y) {
+    const cx = Math.floor(x), cy = Math.floor(y);
+    const solidAt = (mx, my) => { const r = CUR.map[my]; return !r || r[mx] !== 0; };
+    const cands = [];
+    if (solidAt(cx, cy - 1)) cands.push({ dx: 0, dy: 1, dist: y - cy });          // parede ao norte → encara sul
+    if (solidAt(cx, cy + 1)) cands.push({ dx: 0, dy: -1, dist: (cy + 1) - y });   // parede ao sul → encara norte
+    if (solidAt(cx - 1, cy)) cands.push({ dx: 1, dy: 0, dist: x - cx });          // parede a oeste → encara leste
+    if (solidAt(cx + 1, cy)) cands.push({ dx: -1, dy: 0, dist: (cx + 1) - x });   // parede a leste → encara oeste
+    cands.sort((a, b) => a.dist - b.dist);
+    return cands[0] || { dx: 0, dy: 1 };
+  }
+  const WALL_DECOR = { retrato: 1, poster: 1, tapestry: 1, janela: 1 };
+  function buildWallDecor(e) {
+    const spr = SPR[e.spr]; if (!spr) return null;
+    const h = Math.max(.12, e.sc), w = h * (spr.width / spr.height);
+    const g = new THREE.Group();
+    const isWindow = e.spr === 'janela';
+    const depth = isWindow ? .09 : .032;
+    const frameCol = isWindow ? '#1c1712' : e.spr === 'tapestry' ? '#241a10' : '#1d160d';
+    P(g, w * 1.08, h * 1.1, depth, 0, 0, -depth * .55, frameCol);          // moldura funda, dá sombra real
+    const picMat = new THREE.MeshLambertMaterial({ map: tex(spr), transparent: true, alphaTest: .04, side: THREE.DoubleSide });
+    const pic = new THREE.Mesh(new THREE.PlaneGeometry(w, h), picMat);
+    pic.position.z = isWindow ? -depth * .35 : .008;                        // janela: vidro recuado no vão
+    g.add(pic);
+    if (isWindow) {                                                        // caixilho cruzado na frente do vidro
+      P(g, w * .05, h * .96, .012, 0, 0, .01, frameCol);
+      P(g, w * .92, h * .05, .012, 0, 0, .01, frameCol);
+    }
+    const f = wallFacing(e.x, e.y);
+    g.position.set(e.x - f.dx * .015, (e.lift || 0) + h / 2, e.y - f.dy * .015);
+    g.rotation.y = Math.atan2(f.dx, f.dy);
+    return g;
+  }
+
+  /* ---- PLANTA e CABIDEIRO: viraram peças de verdade (vaso+folhagem em
+     volume, cabide com gancho e casaco) — o mesmo tratamento que já vale
+     pros móveis, só que soltos no chão em vez de presos numa caixa. ---- */
+  const plantLeafGeo = new THREE.SphereGeometry(1, 6, 5);   // uma esfera achatada, reaproveitada por toda folha
+  function buildPlant(e) {
+    const h = Math.max(.14, e.sc);
+    const g = new THREE.Group();
+    const potH = h * .30;
+    CY(g, h * .21, potH, 0, potH / 2, 0, '#4a3a28', 8);
+    CY(g, h * .165, potH * .12, 0, potH * .94, 0, '#5a4632', 8);
+    CY(g, h * .022, h * .40, 0, potH + h * .18, 0, '#2f3b24', 5);          // caule
+    /* copa em CACHOS de esferas achatadas — não cones pontudos (aquilo lia
+       como guarda-chuva, não planta). Verde escuro e saturado de propósito:
+       perto da lanterna do jogador, um verde claro estoura pra creme. */
+    const seed = Math.abs(Math.sin(e.x * 12.9898 + e.y * 78.233) * 43758.5453) % 1;
+    const leafCols = ['#2c3a20', '#334423', '#243318', '#3a4a28'];
+    const n = 13;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + seed * 6.28;
+      const ring = i % 3;
+      const ry = potH + h * (.30 + ring * .16 + ((i * 5) % 3) * .025);
+      const rr = h * (.05 + ring * .028);
+      const rad = h * (.10 + ((i * 3 + seed * 7) % 4) * .022);
+      const leaf = new THREE.Mesh(plantLeafGeo, solid(leafCols[i % leafCols.length]));
+      leaf.scale.set(rad, rad * .58, rad);
+      leaf.position.set(Math.cos(a) * rr, ry, Math.sin(a) * rr);
+      g.add(leaf);
+    }
+    g.position.set(e.x, 0, e.y);
+    return g;
+  }
+  function buildCoatrack(e) {
+    const h = Math.max(.14, e.sc);
+    const g = new THREE.Group();
+    CY(g, h * .11, h * .025, 0, h * .015, 0, '#1d160d', 12);                // base
+    CY(g, h * .017, h * .84, 0, h * .45, 0, '#2c2115', 8);                  // haste
+    CY(g, h * .05, h * .02, 0, h * .87, 0, '#3a2c1c', 10);                  // topo torneado
+    for (const ang of [0, 2.1, 4.2, 1.05]) {
+      const hook = new THREE.Mesh(new THREE.TorusGeometry(h * .05, h * .009, 5, 8, Math.PI * 1.25), solid('#3a2c1c'));
+      hook.position.set(Math.cos(ang) * h * .018, h * (ang % 2 ? .62 : .74), Math.sin(ang) * h * .018);
+      hook.rotation.y = ang; hook.rotation.x = Math.PI / 2;
+      g.add(hook);
+    }
+    // o casaco pendurado: dois volumes afunilados (ombro largo, barra estreita).
+    // Tom bem escuro de propósito — de perto, junto da lanterna do jogador,
+    // um tecido claro estoura pra quase branco; escuro segura melhor a cor.
+    const coat = new THREE.Mesh(new THREE.CylinderGeometry(h * .095, h * .155, h * .40, 10, 1, true), solid('#20241f'));
+    coat.material.side = THREE.DoubleSide;
+    coat.position.set(0, h * .48, 0);
+    g.add(coat);
+    P(g, h * .19, h * .05, h * .05, 0, h * .70, 0, '#20241f');              // ombros
+    g.position.set(e.x, 0, e.y);
+    return g;
+  }
+
+  // ---- GENTE: planos com o sprite procedural, billboard no eixo Y — só
+  // quem é GENTE deve girar pra encarar o jogador (quadro na parede, não).
   const bills = [];
   for (const e of ENTS) {
     if (!e.spr || BOX_DEFS[e.spr]) continue;
+    if (WALL_DECOR[e.spr]) { const d = buildWallDecor(e); if (d) scene.add(d); continue; }
+    if (e.spr === 'plant') { scene.add(buildPlant(e)); continue; }
+    if (e.spr === 'coatrack') { scene.add(buildCoatrack(e)); continue; }
+    if (e.spr === 'lamp') continue;                     // vira luminária de verdade, abaixo
     const spr = SPR[e.spr]; if (!spr) continue;
     const h = Math.max(.12, e.sc), w = h * (spr.width / spr.height);
     const m = new THREE.Mesh(
@@ -237,14 +337,20 @@ function gl3Init() {
     L.position.set(e.x, .80, e.y);
     scene.add(L); lamps.push({ L, x: e.x, y: e.y, base: .8 });
   }
-  // globo visível da lâmpada (senão a luz vem do nada)
+  // globo visível da lâmpada + cúpula cônica de verdade (senão a luz vem do nada)
   const bulbGeo = new THREE.SphereGeometry(.045, 8, 6);
   const bulbMat = new THREE.MeshBasicMaterial({ color: 0xf6e0a8 });
+  const shadeMat = new THREE.MeshLambertMaterial({ color: 0x241c12, side: THREE.DoubleSide });
+  const shadeRimMat = new THREE.MeshBasicMaterial({ color: 0x6a5228 });
   for (const l of lamps) {
     const bulb = new THREE.Mesh(bulbGeo, bulbMat);
     bulb.position.set(l.x, .80, l.y); scene.add(bulb);
     const cord = new THREE.Mesh(new THREE.CylinderGeometry(.006, .006, .16, 4), new THREE.MeshBasicMaterial({ color: 0x15130d }));
     cord.position.set(l.x, .87, l.y); scene.add(cord);
+    const shade = new THREE.Mesh(new THREE.CylinderGeometry(.018, .085, .11, 12, 1, true), shadeMat);
+    shade.position.set(l.x, .885, l.y); scene.add(shade);
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(.085, .006, 5, 12), shadeRimMat);
+    rim.rotation.x = Math.PI / 2; rim.position.set(l.x, .83, l.y); scene.add(rim);
   }
   const lantern = new THREE.PointLight(0xcfc09a, .56, 4.6, 1);   // a luz que o próprio corpo carrega
   scene.add(lantern);

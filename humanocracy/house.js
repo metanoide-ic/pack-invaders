@@ -1304,7 +1304,7 @@ function enterHouse() {
   HOUSE.raf = requestAnimationFrame(houseLoop);
   if (S.day === 1) setTimeout(() => hSay('SUA CASA', [
     '20:30. O apartamento cheira a sopa rala e a aquecedor velho. Estão todos aqui: sua mãe na sala, Vessa na cozinha, os meninos nos quartos.',
-    'Ande com WASD ou setas. Arraste o mouse na tela para olhar ao redor. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.',
+    'Ande com WASD ou setas. Clique no visor para travar o mouse e olhar ao redor — livre, como em qualquer jogo, sem arrastar nada. Aproxime-se de alguém e aperte E para conversar — eles sabem coisas que o posto não sabe.',
     'Quando terminar, durma na sua cama, no último quarto. Amanhã tem fila.',
   ]), 900);
 }
@@ -1440,14 +1440,6 @@ function houseLoop(ts) {
     fwd = Math.max(-1, Math.min(1, fwd)); str = Math.max(-1, Math.min(1, str));
     if (K('ArrowLeft')) HOUSE.ang -= dt * .0024;
     if (K('ArrowRight')) HOUSE.ang += dt * .0024;
-    // HOVER-STEER: gira/inclina conforme o cursor sobre a tela (zona morta central)
-    if (hoverActive && !mouseLook) {
-      const dz = 0.14;
-      const hx = Math.abs(hoverX) > dz ? (hoverX - Math.sign(hoverX) * dz) / (1 - dz) : 0;
-      HOUSE.ang += hx * dt * .0026;
-      const tp = Math.max(-90, Math.min(90, -hoverY * 30));   // olhar p/ cima/baixo conforme o cursor
-      HOUSE.pitch += (tp - HOUSE.pitch) * Math.min(1, dt * .005);
-    }
     HOUSE.moving = Math.abs(fwd) > .05 || Math.abs(str) > .05;
     if (HOUSE.moving) {
       const sp = dt * .0028;
@@ -1824,43 +1816,51 @@ document.addEventListener('keydown', (e) => {
   }
 });
 document.addEventListener('keyup', (e) => { KEYS[e.key] = false; });
-/* OLHAR COM O MOUSE: HOVER-STEER — basta MOVER o mouse sobre a tela e a câmera
-   gira na direção do cursor (zona morta no centro fica parada). Sem clicar, sem
-   arrastar, sem pointer lock — funciona em qualquer navegador/embed (inclusive
-   dentro de iframe, onde o lock costuma ser bloqueado). Um clique curto (ou E)
-   interage com quem está à frente / avança o diálogo. Arrastar (segurar e mover)
-   também gira, como alternativa para quem preferir. */
-let mouseLook = null;
-let hoverX = 0, hoverY = 0, hoverActive = false;   // hover-steer (mouse sobre a tela)
+/* OLHAR COM O MOUSE: pointer lock de verdade, como em qualquer jogo em
+   primeira pessoa. Um clique no visor prende o cursor (ele some da tela);
+   dali em diante o mouse gira a câmera pelo MOVIMENTO relativo — livre,
+   sem segurar botão, sem arrastar nada de um lado pro outro. Esc solta
+   sozinho (o navegador cuida disso); um novo clique prende de novo.
+   Se o navegador recusar o lock (alguns embeds/iframes bloqueiam), cai
+   sozinho para arrastar como alternativa — mas o padrão é sempre o lock. */
 const hcanvas = $('house-canvas');
+let dragLook = null, lockBlocked = false;
+function houseLocked() { return document.pointerLockElement === hcanvas; }
+function requestHouseLock() {
+  if (!hcanvas.requestPointerLock) { lockBlocked = true; return; }
+  try {
+    const req = hcanvas.requestPointerLock();
+    if (req && req.catch) req.catch(() => { lockBlocked = true; });
+  } catch (e) { lockBlocked = true; }
+}
+hcanvas.addEventListener('click', () => {
+  if (!HOUSE.active || HD.open) return;
+  if (houseLocked() || lockBlocked) { const t = interactTarget(); if (t) interactWith(t.spot); return; }
+  requestHouseLock();
+});
+document.addEventListener('pointerlockchange', () => {
+  const vp = $('house-viewport'); if (vp) vp.classList.toggle('mouse-locked', houseLocked());
+});
+document.addEventListener('pointerlockerror', () => { lockBlocked = true; });
+document.addEventListener('mousemove', (e) => {
+  if (!HOUSE.active || HD.open) return;
+  if (houseLocked()) {                                       // olhar de verdade: movimento relativo do mouse
+    HOUSE.ang += e.movementX * .0026;
+    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - e.movementY * .22));
+    return;
+  }
+  if (dragLook) {                                             // fallback: só existe se o lock foi recusado
+    const dx = e.clientX - dragLook.x, dy = e.clientY - dragLook.y;
+    HOUSE.ang += dx * .0048;
+    HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .40));
+    dragLook.x = e.clientX; dragLook.y = e.clientY;
+  }
+});
 hcanvas.addEventListener('mousedown', (e) => {
-  if (!HOUSE.active) return;
-  mouseLook = { x: e.clientX, y: e.clientY, moved: false };
-  if (!HD.open) hcanvas.style.cursor = 'grabbing';
+  if (!HOUSE.active || HD.open || houseLocked() || !lockBlocked) return;
+  dragLook = { x: e.clientX, y: e.clientY };
 });
-hcanvas.addEventListener('mousemove', (e) => {              // HOVER-STEER
-  if (mouseLook || HD.open || !HOUSE.active) { hoverActive = false; return; }  // arrastando/diálogo: ignora
-  const r = hcanvas.getBoundingClientRect();
-  hoverX = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width - 0.5) * 2));
-  hoverY = Math.max(-1, Math.min(1, ((e.clientY - r.top) / r.height - 0.5) * 2));
-  hoverActive = true;
-});
-hcanvas.addEventListener('mouseleave', () => { hoverActive = false; });
-document.addEventListener('mousemove', (e) => {            // ARRASTO (alternativa)
-  if (!mouseLook || !HOUSE.active || HD.open) return;
-  const dx = e.clientX - mouseLook.x, dy = e.clientY - mouseLook.y;
-  if (Math.abs(dx) + Math.abs(dy) > 3) mouseLook.moved = true;
-  HOUSE.ang += dx * .0048;
-  HOUSE.pitch = Math.max(-90, Math.min(90, HOUSE.pitch - dy * .40));
-  mouseLook.x = e.clientX; mouseLook.y = e.clientY;
-});
-document.addEventListener('mouseup', () => {
-  const wasDrag = mouseLook && mouseLook.moved;
-  mouseLook = null; hcanvas.style.cursor = '';
-  if (wasDrag || !HOUSE.active) return;                     // arrastou = só olhou
-  if (HD.open) { hAdvance(); return; }                      // diálogo: clique avança
-  const t = interactTarget(); if (t) interactWith(t.spot);  // clique curto: interage
-});
+document.addEventListener('mouseup', () => { dragLook = null; });
 $('house-dialog').addEventListener('click', (e) => { if (!e.target.closest('button')) hAdvance(); });
 
 /* ---------- TOQUE (celular) ---------- */
