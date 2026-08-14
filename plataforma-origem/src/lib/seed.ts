@@ -159,10 +159,11 @@ const CARTEIRA: Entrada[] = [
     cor: '#7c2d12',
     area: 'cidade',
     cidades: ['Barra Mansa'],
-    cadencia: {},
+    fee: 2000, dia: 25, forma: 'pix', pagador: 'PENA & MENEGHITTI',
+    cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
     briefing:
       'Unidade local da rede Sterna Café, franquia de cafeteria especializada em café especial brasileiro (grãos 100% especiais de várias regiões, métodos de extração internacionais). Cardápio variado: cafés quentes e gelados, massas, refeições, saladas, sanduíches, salgados e sobremesas. Identidade da marca remete à ave sterna, a que mais viaja no mundo — conceito de experiência, cada xícara como uma descoberta. Comunicação deve valorizar o preparo, o ambiente e o produto com foto real.',
-    nota: 'Cadastrado a partir de pesquisa pública (site e Instagram da marca) — falta o cliente confirmar cadência semanal, fee, dia de vencimento e forma de pagamento.',
+    nota: 'Fee, vencimento e forma de pagamento vieram do controle financeiro; briefing e identidade vieram de pesquisa pública (site e Instagram da marca). Cadência ainda não foi confirmada pelo cliente.',
   },
   {
     nome: 'Rua de Carros',
@@ -248,16 +249,6 @@ const CARTEIRA: Entrada[] = [
     briefing:
       'Entretenimento infantil da mesma família do Kbral Park, faturado separado. A comunicação mostra crianças usando o espaço e famílias aproveitando o ambiente, com cenas espontâneas e comida pronta. Conferir o Instagram antes de cada planejamento, para acompanhar atrações e novidades da temporada.',
     nota: 'Entrega combinada junto com o Kbral Park.',
-  },
-  {
-    nome: 'Sienna Café',
-    cor: '#b45309',
-    area: 'cidade',
-    fee: 2000, dia: 25, forma: 'pix', pagador: 'PENA & MENEGHITTI',
-    cadencia: { [TER]: ['Vídeo'], [QUA]: ['Post'], [SEX]: ['Post'] },
-    briefing:
-      'Cafeteria com ambiente acolhedor e produto artesanal. Conteúdo em cima do preparo, do ambiente e do que sai da cozinha, com foto real valorizando o produto. Briefing a completar com o cliente.',
-    nota: 'Cliente que estava no controle financeiro e faltava no briefing. Confirmar cadência e identidade.',
   },
   {
     nome: 'Mastermax Contabilidade',
