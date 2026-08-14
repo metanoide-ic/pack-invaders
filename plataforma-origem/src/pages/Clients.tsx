@@ -245,7 +245,7 @@ export default function Clients() {
                     <td className="px-4 py-3.5">
                       {c.whatsappGroup
                         ? <span className="inline-flex items-center gap-1.5 text-xs text-white/70"><MessageCircle size={13} className="text-emerald-400" />{c.whatsappGroup}</span>
-                        : <span className="text-xs text-white/30">Sem grupo</span>}
+                        : <span className="text-xs text-amber-300/70">Sem grupo</span>}
                     </td>
                     {canFinance && (
                       <td className="px-4 py-3.5 text-xs">
