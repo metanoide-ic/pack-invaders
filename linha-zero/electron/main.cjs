@@ -11,6 +11,10 @@ function createWindow() {
     backgroundColor: '#0a0e18',
     autoHideMenuBar: true,
     fullscreenable: true,
+    // Windows/macOS get their icon baked in at packaging time (see
+    // forge.config.cjs); Linux window managers read it from the running
+    // BrowserWindow instead, so it's set here too.
+    icon: path.join(__dirname, '..', 'assets', 'icons', 'icon-1024.png'),
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

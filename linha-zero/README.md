@@ -42,6 +42,15 @@ já embute o Three.js inteiro num único arquivo, então `node_modules` e o
 código-fonte não precisam ir para o pacote final (testado: sem essa exclusão,
 o pacote saía com o `node_modules` de desenvolvimento inteiro dentro).
 
+**Ícone**: `assets/icons/` tem o ícone do jogo (`icon-source.html` é a fonte
+editável, renderizada e convertida para `icon.ico`/`icon.icns`/`icon-1024.png`).
+O `.ico` é embutido no `.exe` do Windows automaticamente pelo `electron-packager`
+na hora de empacotar (verificado inspecionando os recursos do `.exe` gerado —
+os bytes do ícone embutido batem exatamente com `icon.ico`, não é o ícone
+padrão do Electron); o `.icns` faz o mesmo no macOS; no Linux, o ícone é
+definido em tempo de execução pelo próprio `main.cjs`. Para trocar o ícone,
+edite `icon-source.html` e regenere com `png2icons` (já é devDependency).
+
 **O que falta para publicar de verdade na Steam** (depende de acesso a uma
 conta Steamworks que esta sessão não tem):
 - Uma conta de parceiro Steamworks e um App ID.

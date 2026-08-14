@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; padding: 0; }
+  #icon {
+    width: 1024px; height: 1024px;
+    background: radial-gradient(circle at 32% 28%, #2a3a66 0%, #131a30 62%, #0a0e18 100%);
+    border-radius: 200px;
+    position: relative;
+    overflow: hidden;
+    font-family: sans-serif;
+  }
+  .rail {
+    position: absolute; left: 0; right: 0; height: 26px; background: #3a4256; bottom: 300px;
+  }
+  .tie { position: absolute; width: 34px; height: 40px; background: #5a4530; bottom: 262px; }
+  .wagon {
+    position: absolute; bottom: 340px; left: 210px; width: 300px; height: 220px;
+    background: linear-gradient(180deg, #ff9d52 0%, #ff8a3d 60%, #e0691f 100%);
+    border-radius: 26px;
+    box-shadow: 0 18px 0 rgba(0,0,0,0.18);
+  }
+  .engine {
+    position: absolute; bottom: 340px; left: 530px; width: 300px; height: 300px;
+    background: linear-gradient(180deg, #5f7bff 0%, #3d5af1 55%, #2c3ec4 100%);
+    border-radius: 30px 30px 26px 26px;
+    box-shadow: 0 18px 0 rgba(0,0,0,0.18);
+  }
+  .cab {
+    position: absolute; bottom: 560px; left: 560px; width: 200px; height: 140px;
+    background: linear-gradient(180deg, #6f8bff 0%, #4a63e8 100%);
+    border-radius: 24px 24px 0 0;
+  }
+  .window {
+    position: absolute; bottom: 600px; left: 592px; width: 130px; height: 70px;
+    background: #bfe3ff; border-radius: 14px; box-shadow: inset 0 -8px 0 rgba(0,0,0,0.1);
+  }
+  .stack {
+    position: absolute; bottom: 630px; left: 500px; width: 46px; height: 90px;
+    background: #232733; border-radius: 10px 10px 4px 4px;
+  }
+  .stack::before {
+    content: ''; position: absolute; top: -22px; left: -8px; width: 62px; height: 30px;
+    background: #232733; border-radius: 30px;
+  }
+  .wheel {
+    position: absolute; bottom: 260px; width: 108px; height: 108px; border-radius: 50%;
+    background: radial-gradient(circle at 38% 34%, #4b5568, #1a1d26 68%);
+    border: 10px solid #0d0f16;
+  }
+  .wheel::after {
+    content:''; position:absolute; inset: 30px; border-radius: 50%; background: #6b7690;
+  }
+  .w1 { left: 250px; }
+  .w2 { left: 400px; }
+  .w3 { left: 580px; }
+  .w4 { left: 730px; }
+  .spark {
+    position: absolute; border-radius: 50%; background: #ffe27a; opacity: 0.9;
+  }
+</style>
+</head>
+<body>
+  <div id="icon">
+    <div class="rail"></div>
+    <div class="tie" style="left:120px"></div>
+    <div class="tie" style="left:260px"></div>
+    <div class="tie" style="left:400px"></div>
+    <div class="tie" style="left:540px"></div>
+    <div class="tie" style="left:680px"></div>
+    <div class="tie" style="left:820px"></div>
+    <div class="wagon"></div>
+    <div class="engine"></div>
+    <div class="cab"></div>
+    <div class="window"></div>
+    <div class="stack"></div>
+    <div class="wheel w1"></div>
+    <div class="wheel w2"></div>
+    <div class="wheel w3"></div>
+    <div class="wheel w4"></div>
+    <div class="spark" style="width:26px;height:26px; left:120px; top:120px;"></div>
+    <div class="spark" style="width:14px;height:14px; left:840px; top:200px;"></div>
+    <div class="spark" style="width:18px;height:18px; left:760px; top:90px;"></div>
+  </div>
+</body>
+</html>
