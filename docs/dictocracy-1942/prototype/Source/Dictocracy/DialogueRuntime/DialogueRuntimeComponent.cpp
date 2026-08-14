@@ -94,13 +94,19 @@ void UDialogueRuntimeComponent::SelectResponse(FName ResponseId)
 			{
 				if (UCharacterMemoryComponent* Memory = Actor->FindComponentByClass<UCharacterMemoryComponent>())
 				{
+					// CurrentDay é apenas um carimbo de log para o registro de memória — a ausência de
+					// GameInstance/DecisionSystemSubsystem (ex.: teste isolado, componente fora de um mundo
+					// totalmente inicializado) não pode impedir o impacto de lealdade de ser aplicado.
+					// Cai para o dia 0 nesse caso; nunca pula RecordDecisionImpact.
+					int32 CurrentDay = 0;
 					if (UGameInstance* GameInstance = GetWorld() ? GetWorld()->GetGameInstance() : nullptr)
 					{
-						const int32 CurrentDay = GameInstance->GetSubsystem<UDecisionSystemSubsystem>()
-							? GameInstance->GetSubsystem<UDecisionSystemSubsystem>()->GetCurrentDay()
-							: 0;
-						Memory->RecordDecisionImpact(Response->LinkedDecisionId, Response->LinkedDecisionOptionId, CurrentDay, Response->LoyaltyImpact);
+						if (UDecisionSystemSubsystem* DecisionSystem = GameInstance->GetSubsystem<UDecisionSystemSubsystem>())
+						{
+							CurrentDay = DecisionSystem->GetCurrentDay();
+						}
 					}
+					Memory->RecordDecisionImpact(Response->LinkedDecisionId, Response->LinkedDecisionOptionId, CurrentDay, Response->LoyaltyImpact);
 				}
 			}
 		}

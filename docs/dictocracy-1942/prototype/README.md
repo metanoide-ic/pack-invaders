@@ -11,7 +11,7 @@ Cada arquivo de código traz um cabeçalho `// STATUS: escrito, não compilado n
 | Pasta | Conteúdo |
 |---|---|
 | `00-setup-guia.md` | Passo a passo para criar o projeto UE5 e importar este código |
-| `Source/Dictocracy/` | Módulos C++ do protótipo (subconjunto dos módulos da arquitetura completa, ver `../04-arquitetura-tecnica.md`) |
+| `Source/Dictocracy/` | Módulos C++ do protótipo (subconjunto dos módulos da arquitetura completa, ver `../04-arquitetura-tecnica.md`), cada um com testes de Automation Framework em sua subpasta `Tests/` |
 | `Data/` | Data Tables em CSV prontas para importar como `UDataTable` no Editor (NPCs, Decisão, Líder do protótipo) |
 | `Narrative/roteiro-reuniao-prototipo.md` | Roteiro completo da cena de reunião com 3 NPCs exigida pelo GDD, pronto para gravação/dublagem placeholder e para alimentar as Data Tables de diálogo |
 | `Blueprints/especificacao-blueprints.md` | Especificação nó-a-nó dos Blueprints necessários (não é possível gerar arquivos `.uasset` binários fora do Editor — a especificação substitui o arquivo) |

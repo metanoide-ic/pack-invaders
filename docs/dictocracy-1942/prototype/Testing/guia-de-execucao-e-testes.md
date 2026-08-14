@@ -2,6 +2,20 @@
 
 Este guia assume que os passos 1–4 de `../00-setup-guia.md` já foram concluídos (projeto compilado com sucesso no Editor).
 
+## Testes automatizados (Automation Framework)
+
+Cada módulo com lógica não-trivial tem uma pasta `Tests/` com testes escritos contra o `Misc/AutomationTest.h` da UE5 (guardados por `WITH_DEV_AUTOMATION_TESTS`, então só compilam em build de Development/Editor):
+
+| Arquivo | Cobertura |
+|---|---|
+| `DecisionSystem/Tests/DecisionSystemTests.cpp` | Efeito imediato aplicado na hora; efeito atrasado **não** se manifesta antes do prazo e se manifesta exatamente uma vez no dia certo; IDs inválidos retornam `false` sem crash. |
+| `CharacterMemory/Tests/CharacterMemoryTests.cpp` | Clamp de lealdade em [0,100] sob impacto extremo; `HasMemoryOf` correto antes/depois; `RestoreSavedState` repõe valores exatos sem recalcular. |
+| `DialogueRuntime/Tests/DialogueRuntimeTests.cpp` | **Teste de regressão**: o impacto de lealdade de uma resposta vai para `LoyaltyTargetCharacterId`, não para quem fala o nó — cobre exatamente o bug encontrado e corrigido durante a autoria deste pacote. |
+
+**Como rodar (após compilar):** Editor → Window → Test Automation → filtrar por `Dictocracy.` → Run Tests. Ou via linha de comando: `UnrealEditor-Cmd.exe <Projeto>.uproject -ExecCmds="Automation RunTests Dictocracy" -unattended -nopause -testexit="Automation Test Queue Empty"`.
+
+Estes testes são o primeiro gate real de qualidade — devem passar **antes** de qualquer sessão de playtest manual abaixo, e antes de fechar qualquer Sprint que toque nesses módulos.
+
 ## Checklist de aceite por sistema
 
 ### DecisionSystemSubsystem
