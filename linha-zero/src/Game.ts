@@ -3,8 +3,9 @@ import { InputManager } from './input/InputManager';
 import { Train, WAGON_LENGTH, WAGON_SPACING, WAGON_ROOF_HALF } from './world/Train';
 import { detachFrom } from './world/TrainExt';
 import { Track } from './world/Track';
-import { Player } from './entities/Player';
+import { Player, PlayerCustomization } from './entities/Player';
 import { HUD } from './hud/HUD';
+import { Sfx } from './audio/Sfx';
 import { RunStats, WagonState } from './types';
 
 const MISS_DISTANCE = 20;
@@ -42,6 +43,8 @@ export class Game {
   private wrecks: { mesh: THREE.Object3D; life: number; spin: THREE.Vector3 }[] = [];
   // modular construction leans toward whichever supply flavor the crew has been gathering
   private supplyTally = { cargo: 1, passenger: 1 };
+  private sfx = new Sfx();
+  private p1Custom: PlayerCustomization | null = null;
 
   private camLook = new THREE.Vector3();
   private camPos = new THREE.Vector3();
@@ -87,9 +90,15 @@ export class Game {
     this.renderer.setSize(window.innerWidth, window.innerHeight);
   }
 
+  /** Called from the start-screen customization UI before start(). */
+  setPlayerOneCustomization(custom: PlayerCustomization) {
+    this.p1Custom = custom;
+  }
+
   start() {
     this.running = true;
     this.gameOver = false;
+    this.sfx.unlock(); // must happen from this user gesture — browsers block audio before it
     this.hud.show();
     this.spawnInitialPlayers();
     this.clock.start();
@@ -103,7 +112,7 @@ export class Game {
 
   private addPlayer(i: number) {
     if (this.players[i]) return;
-    const p = new Player(i, this.train);
+    const p = new Player(i, this.train, i === 0 ? this.p1Custom ?? undefined : undefined);
     this.scene.add(p.mesh);
     this.players[i] = p;
   }
@@ -143,7 +152,7 @@ export class Game {
     this.train.syncMeshes(elapsed, dt);
     for (const p of this.players) p.syncMesh();
     this.updateCamera(dt);
-    this.hud.update(dt, this.stats, this.train, this.players);
+    this.hud.update(dt, this.stats, this.train, this.players, this.track);
   }
 
   // exaggerated cartoon "accident" — severed wagons don't just vanish, they
@@ -174,6 +183,7 @@ export class Game {
       if (w.fire <= 0 && w.kind !== 'engine' && Math.random() < fireChance) {
         w.fire = 10;
         this.hud.banner_show(`🔥 Fogo no vagão ${w.index + 1}! Alguém precisa apagar!`);
+        this.sfx.danger();
       }
       if (w.fire > 0) {
         const beingFought = this.playerFightingFire(w);
@@ -187,6 +197,7 @@ export class Game {
       last.raider = true;
       last.raiderHp = 40 + difficulty * 10;
       this.hud.banner_show('⚠️ Um saqueador se agarrou ao último vagão!');
+      this.sfx.danger();
     }
     if (last && last.raider) {
       const fought = this.playerFightingRaider(last);
@@ -225,6 +236,7 @@ export class Game {
     if (removed.length === 0) return;
     this.stats.wagonsLost += removed.length;
     this.hud.banner_show(`💥 ${removed.length} vagão(ões) perdidos (${reason})! -${lostResources} recursos`);
+    this.sfx.detach();
     for (const { mesh } of removed) {
       this.scene.add(mesh);
       this.wrecks.push({
@@ -258,9 +270,12 @@ export class Game {
         p.grounded = true;
         p.jolt(); // pop back into the air as the crew hauls them aboard
         this.hud.banner_show(`${p.name} foi puxado de volta a bordo!`, 2);
+        this.sfx.board();
       }
       return;
     }
+
+    if (input.jumpPressed) this.sfx.jump();
 
     p.applyInput(dt, input, this.train);
 
@@ -275,6 +290,7 @@ export class Game {
         p.respawnTimer = 2.4;
         p.startTumble();
         this.hud.banner_show(`😱 ${p.name} perdeu o trem!`, 2.6);
+        this.sfx.miss();
       }
     }
   }
@@ -340,6 +356,7 @@ export class Game {
           p.carry = 'resource';
           p.carryValue = pk.value;
           this.hud.hint(`Recurso coletado (+${pk.value})! Volte pro trem!`);
+          this.sfx.pickup();
           break;
         }
       }
@@ -352,6 +369,7 @@ export class Game {
           if (r.mesh) r.mesh.visible = false;
           p.carry = r.kind;
           this.hud.hint('Resgatado! Corra e salte de volta pro trem!');
+          this.sfx.rescue();
           break;
         }
       }
@@ -368,6 +386,7 @@ export class Game {
         p.onTrain = true;
         p.trainOffsetZ = THREE.MathUtils.clamp(p.z - this.train.z, 0.5, this.train.length - 0.5);
         p.x = THREE.MathUtils.clamp(p.x, -WAGON_ROOF_HALF, WAGON_ROOF_HALF);
+        this.sfx.board();
         this.deliverCarry(p, w);
         break;
       }
@@ -428,6 +447,7 @@ export class Game {
       this.nextWagonCost = Math.round(this.nextWagonCost * 1.55);
       const label = { cargo: 'de carga', passenger: 'de passageiros', tank: 'tanque', flat: 'plataforma', engine: '' }[kind];
       this.hud.banner_show(`🚃 Novo vagão ${label} acoplado à composição!`, 2.6);
+      this.sfx.build();
     }
   }
 
@@ -441,6 +461,7 @@ export class Game {
   private endRun() {
     this.running = false;
     this.gameOver = true;
+    this.sfx.gameOver();
     this.hud.hide();
     const goDistance = document.getElementById('go-distance')!;
     const goResources = document.getElementById('go-resources')!;

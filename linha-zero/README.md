@@ -45,6 +45,13 @@ controle a qualquer momento durante a partida:
 - `X` — interagir
 - `Y` — desacoplar
 
+**Personalização**: na tela inicial, o Jogador 1 escolhe a cor e o chapéu do
+seu personagem antes de embarcar.
+
+**Radar**: o pequeno mapa no canto inferior direito mostra o trecho de trilho
+à frente — cidades (amarelo), resgates (verde) e zonas de perigo (vermelho) —
+e onde cada jogador está.
+
 ## O laço de jogo
 
 1. **Cidades** aparecem ao lado da linha. Salte do teto do vagão para a

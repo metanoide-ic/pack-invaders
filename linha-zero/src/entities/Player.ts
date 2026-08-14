@@ -3,10 +3,15 @@ import { PlayerInput } from '../types';
 import { Train, WAGON_GAP, WAGON_ROOF_HALF } from '../world/Train';
 import { toonMat } from '../world/ToonMaterial';
 
-const PLAYER_COLORS = [0xff8a3d, 0x3ddbff, 0x8bff6a, 0xff5ba0];
+export const PLAYER_COLORS = [0xff8a3d, 0x3ddbff, 0x8bff6a, 0xff5ba0];
 const PLAYER_NAMES = ['P1', 'P2', 'P3', 'P4'];
-type HatKind = 'cone' | 'box' | 'dome' | 'ring';
-const PLAYER_HATS: HatKind[] = ['cone', 'box', 'dome', 'ring'];
+export type HatKind = 'cone' | 'box' | 'dome' | 'ring';
+export const PLAYER_HATS: HatKind[] = ['cone', 'box', 'dome', 'ring'];
+
+export interface PlayerCustomization {
+  color: number;
+  hat: HatKind;
+}
 
 const GRAVITY = -26;
 const JUMP_SPEED = 9.5;
@@ -44,9 +49,9 @@ export class Player {
   private tumbleAxis = new THREE.Vector3(1, 0, 0);
   private landingSquash = 0; // 0..1, decays after any hard landing — big springy squash & stretch
 
-  constructor(public index: number, train: Train) {
-    this.color = PLAYER_COLORS[index % 4];
-    this.hat = PLAYER_HATS[index % 4];
+  constructor(public index: number, train: Train, custom?: PlayerCustomization) {
+    this.color = custom?.color ?? PLAYER_COLORS[index % 4];
+    this.hat = custom?.hat ?? PLAYER_HATS[index % 4];
     this.name = PLAYER_NAMES[index % 4];
     this.trainOffsetZ = 3 + index * 2.4;
     this.buildMesh();

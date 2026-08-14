@@ -1,6 +1,14 @@
 import { Train } from '../world/Train';
+import { Track } from '../world/Track';
 import { Player } from '../entities/Player';
 import { RunStats } from '../types';
+
+const MINIMAP_RANGE = 170; // world units of track shown ahead of the engine
+const ZONE_COLOR: Record<string, string> = {
+  city: '#f2c94c',
+  rescue: '#6fcf97',
+  raid: '#ff5c5c',
+};
 
 export class HUD {
   private hud = document.getElementById('hud')!;
@@ -12,6 +20,8 @@ export class HUD {
   private banner = document.getElementById('event-banner')!;
   private playersPanel = document.getElementById('players-panel')!;
   private actionHint = document.getElementById('action-hint')!;
+  private minimap = document.getElementById('minimap') as HTMLCanvasElement;
+  private minimapCtx = this.minimap.getContext('2d')!;
   private bannerTimer = 0;
   private hintTimer = 0;
 
@@ -30,7 +40,7 @@ export class HUD {
     this.hintTimer = 0.2;
   }
 
-  update(dt: number, stats: RunStats, train: Train, players: Player[]) {
+  update(dt: number, stats: RunStats, train: Train, players: Player[], track: Track) {
     this.distanceEl.textContent = `${Math.floor(stats.distance / 10)} m`;
     this.speedEl.textContent = `${Math.round(train.speed * 3.2)} km/h`;
     this.resourcesEl.textContent = `${stats.resources}`;
@@ -79,5 +89,62 @@ export class HUD {
       this.hintTimer -= dt;
       if (this.hintTimer <= 0) this.actionHint.classList.remove('show');
     }
+
+    this.drawMinimap(train, players, track);
   }
+
+  /** Small radar: what's coming up the line, and where the crew currently is. */
+  private drawMinimap(train: Train, players: Player[], track: Track) {
+    const ctx = this.minimapCtx;
+    const w = this.minimap.width;
+    const h = this.minimap.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(10,12,20,0.35)';
+    ctx.fillRect(0, 0, w, h);
+
+    const cx = w / 2;
+    const zToY = (z: number) => h - 14 - ((z - train.z) / MINIMAP_RANGE) * (h - 24);
+
+    // rails
+    ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(cx - 4, h);
+    ctx.lineTo(cx - 4, 0);
+    ctx.moveTo(cx + 4, h);
+    ctx.lineTo(cx + 4, 0);
+    ctx.stroke();
+
+    // upcoming zones, offset to whichever side they're actually on
+    for (const zone of track.zones) {
+      const color = ZONE_COLOR[zone.kind];
+      if (!color) continue; // 'calm' zones don't need a blip
+      const yStart = zToY(zone.startZ);
+      const yEnd = zToY(zone.endZ);
+      if (yEnd > h && yStart > h) continue;
+      if (yStart < -10 && yEnd < -10) continue;
+      const x = cx + zone.side * 16;
+      ctx.fillStyle = color;
+      ctx.fillRect(x - 4, Math.min(yStart, yEnd), 8, Math.max(2, Math.abs(yEnd - yStart)));
+    }
+
+    // the train itself, near the bottom
+    const trainY = zToY(train.z + train.length / 2);
+    ctx.fillStyle = '#9fb4ff';
+    ctx.fillRect(cx - 3, trainY - 5, 6, 10);
+
+    // crew dots
+    for (const p of players) {
+      const y = clampNum(zToY(p.z), 4, h - 4);
+      const x = clampNum(cx + (p.x / 12) * 16, 4, w - 4);
+      ctx.fillStyle = `#${p.color.toString(16).padStart(6, '0')}`;
+      ctx.beginPath();
+      ctx.arc(x, y, p.alive ? 3 : 2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+}
+
+function clampNum(v: number, min: number, max: number) {
+  return v < min ? min : v > max ? max : v;
 }
