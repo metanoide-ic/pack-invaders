@@ -981,8 +981,9 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   <div class="card">
     <h2>Endereço para a plataforma</h2>
     <div class="end" id="url"></div>
-    <p class="hint">Cole este endereço na plataforma, em <b>Integrações</b>, nos dois campos:
-      "Webhook de saída (WhatsApp)" e "Webhook de publicação".</p>
+    <p class="hint">Cole este endereço na plataforma, em <b>Integrações → Conector Orikay</b>,
+      no campo "Endereço do conector". É o único campo necessário — ele cobre WhatsApp,
+      publicação e cobrança de uma vez.</p>
   </div>
 
   <div class="card">
