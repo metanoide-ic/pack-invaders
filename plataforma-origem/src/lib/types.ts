@@ -186,6 +186,8 @@ export interface Post {
   sentForApproval?: boolean;
   /** true quando publicado automaticamente. */
   published?: boolean;
+  /** true quando falta o cliente mandar foto/vídeo — trava a produção até chegar. */
+  awaitingMaterial?: boolean;
   createdAt: number;
 }
 

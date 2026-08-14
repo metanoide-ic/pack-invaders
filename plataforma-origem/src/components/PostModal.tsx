@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Trash2, Sparkles, Loader2, Send, Check, X, Image as ImageIcon, Copy as CopyIcon } from 'lucide-react';
+import { Trash2, Sparkles, Loader2, Send, Check, X, Image as ImageIcon, Copy as CopyIcon, VideoOff } from 'lucide-react';
 import { Modal, Button, Field, Input, Textarea, Select } from './ui';
 import { RevisionList } from './RevisionList';
 import { useData } from '@/lib/dataStore';
@@ -63,6 +63,17 @@ export function PostModal({ postId, onClose }: { postId: string; onClose: () => 
         <Field label="Título / tema">
           <Input value={post.title} onChange={(e) => updatePost(postId, { title: e.target.value })} />
         </Field>
+
+        <label className={cn(
+          'flex cursor-pointer items-center gap-2.5 rounded-xl border px-3.5 py-2.5 text-sm transition',
+          post.awaitingMaterial ? 'border-amber-400/40 bg-amber-500/10 text-amber-200' : 'border-line bg-white/[0.02] text-white/60',
+        )}>
+          <input type="checkbox" checked={Boolean(post.awaitingMaterial)}
+            onChange={(e) => updatePost(postId, { awaitingMaterial: e.target.checked })}
+            className="h-4 w-4 accent-amber-400" />
+          <VideoOff size={15} className="shrink-0" />
+          Pendência de gravação — falta o cliente mandar foto ou vídeo pra começar
+        </label>
 
         {/* Trilha de etapas */}
         <div>
