@@ -1,26 +1,30 @@
 import { GameState } from '../core/GameState';
 import type { ItemDef, StageType, ChoiceOption } from '../core/types';
-import { SHAPES } from '../render/shapes';
 import { NPCS, describeStat } from '../data/community';
 import { el, statBar } from './dom';
-import { runClean } from '../minigames/clean';
-import { runDisassemble } from '../minigames/disassemble';
-import { runWeld } from '../minigames/weld';
-import { runPaint } from '../minigames/paint';
-import { runTest } from '../minigames/test';
-import { CANVAS_W, CANVAS_H } from '../minigames/common';
+import { WorkshopScene } from '../render3d/WorkshopScene';
+import { mountPreview } from '../render3d/preview';
+import { TOOLS } from '../render3d/tools3d';
+import { STAGE_TOOL } from '../render3d/types';
+import { runClean3D } from '../render3d/stages/clean3d';
+import { runDisassemble3D } from '../render3d/stages/disassemble3d';
+import { runWeld3D } from '../render3d/stages/weld3d';
+import { runPaint3D } from '../render3d/stages/paint3d';
+import { runTest3D } from '../render3d/stages/test3d';
 
 const STAGE_META: Record<StageType, { title: string; icon: string; instructions: string }> = {
-  clean: { title: 'Limpar', icon: '🧽', instructions: 'Arraste o mouse (ou o dedo) para tirar a sujeira acumulada.' },
-  disassemble: { title: 'Desmontar', icon: '🔧', instructions: 'Clique nas peças destacadas para soltá-las com cuidado.' },
-  weld: { title: 'Soldar', icon: '⚡', instructions: 'Clique (ou espaço) quando o marcador estiver sobre a zona verde.' },
-  paint: { title: 'Pintar', icon: '🎨', instructions: 'Arraste o pincel até cobrir toda a peça.' },
-  test: { title: 'Testar', icon: '🔌', instructions: 'Arraste a alavanca até o fim para ligar o objeto.' },
+  clean: { title: 'Limpar', icon: '🧽', instructions: 'Pegue a esponja na bancada e arraste sobre o objeto para tirar a sujeira.' },
+  disassemble: { title: 'Desmontar', icon: '🔧', instructions: 'Pegue a chave de fenda e clique nas peças destacadas para soltá-las.' },
+  weld: { title: 'Soldar', icon: '⚡', instructions: 'Pegue o maçarico e clique no ponto de solda no tempo certo.' },
+  paint: { title: 'Pintar', icon: '🎨', instructions: 'Pegue o pincel e arraste sobre o objeto até cobrir toda a peça.' },
+  test: { title: 'Testar', icon: '🔌', instructions: 'Pegue a mão e clique no interruptor para ligar o objeto.' },
 };
 
 export class App {
   root: HTMLElement;
   state: GameState;
+  private previewDispose: (() => void) | null = null;
+  private scene3d: WorkshopScene | null = null;
 
   constructor(root: HTMLElement) {
     this.root = root;
@@ -33,8 +37,20 @@ export class App {
     for (const c of children) this.root.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
   }
 
+  private teardownPreview() {
+    this.previewDispose?.();
+    this.previewDispose = null;
+  }
+
+  private teardownScene() {
+    this.scene3d?.dispose();
+    this.scene3d = null;
+  }
+
   // ---------- TITLE ----------
   showTitle() {
+    this.teardownPreview();
+    this.teardownScene();
     const hasSave = this.state.dayIndex > 0 || this.state.finished;
     this.mount(
       el('div', { class: 'screen title-screen' }, [
@@ -80,13 +96,15 @@ export class App {
 
   // ---------- DAY INTRO ----------
   showDayIntro() {
+    this.teardownScene();
     const item = this.state.currentItem;
     if (!item) return this.showEnding();
+    const previewHost = el('div', { class: 'item-preview-3d' });
     this.mount(
       el('div', { class: 'screen intro-screen' }, [
         el('div', { class: 'day-badge' }, [`Dia ${this.state.dayIndex + 1} de ${this.state.totalDays}`]),
         el('div', { class: 'intro-card' }, [
-          el('div', { class: 'item-preview' }, [this.renderStaticPreview(item)]),
+          previewHost,
           el('h2', {}, [item.name]),
           el('p', { class: 'owner' }, [`Trazido por: ${item.ownerName}`]),
           el('p', { class: 'dialogue' }, [item.intro]),
@@ -96,43 +114,29 @@ export class App {
         ]),
       ])
     );
+    this.teardownPreview();
+    this.previewDispose = mountPreview(previewHost, item);
   }
 
-  private renderStaticPreview(item: ItemDef): HTMLElement {
-    const canvas = el('canvas', { width: 260, height: 170, class: 'preview-canvas' });
-    const ctx = canvas.getContext('2d')!;
-    const shape = SHAPES[item.shape];
-    ctx.save();
-    ctx.translate(0, -50);
-    ctx.globalAlpha = 0.9;
-    ctx.fillStyle = '#3a2f28';
-    shape.drawSilhouette(ctx, 130, 135, '#3a2f28');
-    ctx.restore();
-    return canvas;
-  }
-
-  // ---------- REPAIR LOOP ----------
+  // ---------- REPAIR LOOP (3D) ----------
   runRepair(item: ItemDef, stageIdx: number) {
+    this.teardownPreview();
     if (stageIdx >= item.stages.length) {
       this.showStoryReveal(item);
       return;
     }
     const stage = item.stages[stageIdx];
     const meta = STAGE_META[stage];
-    const shape = SHAPES[item.shape];
+    const tool = TOOLS[STAGE_TOOL[stage]];
 
-    const canvas = el('canvas', {
-      width: CANVAS_W,
-      height: CANVAS_H,
-      class: 'work-canvas',
-    }) as HTMLCanvasElement;
+    const sceneHost = el('div', { class: 'scene-3d-host' });
+    const hud = el('div', { class: 'hud-overlay' });
+    const toolLabel = el('div', { class: 'equipped-tool' }, ['Ferramenta: nenhuma']);
+    const hint = el('div', { class: 'hint-toast' });
     const progressFill = el('div', { class: 'progress-fill' });
-    const stepDots = item.stages
-      .map((s, i) =>
-        el('div', {
-          class: `step-dot ${i < stageIdx ? 'done' : i === stageIdx ? 'active' : ''}`,
-        })
-      );
+    const stepDots = item.stages.map((s, i) =>
+      el('div', { class: `step-dot ${i < stageIdx ? 'done' : i === stageIdx ? 'active' : ''}` })
+    );
 
     this.mount(
       el('div', { class: 'screen repair-screen' }, [
@@ -140,11 +144,38 @@ export class App {
           el('h2', {}, [`${meta.icon} ${meta.title} — ${item.name}`]),
           el('div', { class: 'step-dots' }, stepDots),
         ]),
-        el('p', { class: 'instructions' }, [meta.instructions]),
-        el('div', { class: 'canvas-wrap' }, [canvas]),
+        el('p', { class: 'instructions' }, [
+          meta.instructions,
+          ` (dica: ${tool.icon} ${tool.label})`,
+        ]),
+        el('div', { class: 'scene-wrap' }, [sceneHost, toolLabel, hint, hud]),
         el('div', { class: 'progress-track' }, [progressFill]),
       ])
     );
+
+    const isNewItem = stageIdx === 0 || !this.scene3d;
+    if (isNewItem) {
+      this.teardownScene();
+      this.scene3d = new WorkshopScene(sceneHost);
+      this.scene3d.loadItem(item);
+    } else {
+      sceneHost.appendChild(this.scene3d!.canvas);
+      this.scene3d!.container = sceneHost;
+      this.scene3d!.resize();
+    }
+    const scene = this.scene3d!;
+    scene.onEquip = (toolId) => {
+      toolLabel.textContent = `Ferramenta: ${TOOLS[toolId].icon} ${TOOLS[toolId].label}`;
+    };
+    if (scene.equipped) toolLabel.textContent = `Ferramenta: ${TOOLS[scene.equipped].icon} ${TOOLS[scene.equipped].label}`;
+
+    let hintTimeout = 0;
+    const onHint = (msg: string) => {
+      hint.textContent = msg;
+      hint.classList.add('show');
+      window.clearTimeout(hintTimeout);
+      hintTimeout = window.setTimeout(() => hint.classList.remove('show'), 1800);
+    };
 
     const onProgress = (pct: number) => {
       progressFill.style.width = `${Math.round(pct * 100)}%`;
@@ -155,16 +186,17 @@ export class App {
     };
 
     let cleanup = () => {};
-    if (stage === 'clean') cleanup = runClean(canvas, shape, item.baseColor, onProgress, onComplete);
-    else if (stage === 'disassemble')
-      cleanup = runDisassemble(canvas, shape, item.baseColor, onProgress, onComplete);
-    else if (stage === 'weld') cleanup = runWeld(canvas, shape, item.baseColor, onProgress, onComplete);
-    else if (stage === 'paint') cleanup = runPaint(canvas, shape, item.paintColor, onProgress, onComplete);
-    else if (stage === 'test') cleanup = runTest(canvas, shape, item.paintColor, onProgress, onComplete);
+    const instance = scene.current!;
+    if (stage === 'clean') cleanup = runClean3D(scene, instance, item.baseColor, onProgress, onComplete, onHint);
+    else if (stage === 'disassemble') cleanup = runDisassemble3D(scene, instance, onProgress, onComplete, onHint);
+    else if (stage === 'weld') cleanup = runWeld3D(scene, instance, hud, onProgress, onComplete, onHint);
+    else if (stage === 'paint') cleanup = runPaint3D(scene, instance, item.paintColor, onProgress, onComplete, onHint);
+    else if (stage === 'test') cleanup = runTest3D(scene, instance, onProgress, onComplete, onHint);
   }
 
   // ---------- STORY REVEAL ----------
   showStoryReveal(item: ItemDef) {
+    this.teardownScene();
     this.mount(
       el('div', { class: 'screen story-screen' }, [
         el('div', { class: 'story-card' }, [

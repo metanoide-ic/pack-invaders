@@ -196,22 +196,124 @@ p {
   color: var(--text-dim);
 }
 
-.canvas-wrap {
-  display: flex;
-  justify-content: center;
+.item-preview-3d {
+  width: 100%;
+  max-width: 320px;
+  height: 220px;
+  margin: 0 auto 8px;
+}
+
+.item-preview-3d canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.scene-wrap {
+  position: relative;
   background: var(--bg-1);
   border-radius: 14px;
   border: 1px solid rgba(255, 255, 255, 0.08);
   overflow: hidden;
+  aspect-ratio: 16 / 10;
+  max-width: 720px;
+  margin: 0 auto;
 }
 
-.work-canvas {
+.scene-3d-host {
   width: 100%;
-  max-width: 640px;
-  height: auto;
-  touch-action: none;
-  cursor: crosshair;
+  height: 100%;
+}
+
+.scene-3d-host canvas {
+  width: 100%;
+  height: 100%;
   display: block;
+  touch-action: none;
+  cursor: pointer;
+}
+
+.equipped-tool {
+  position: absolute;
+  top: 10px;
+  left: 12px;
+  background: rgba(0, 0, 0, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  padding: 5px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--paper);
+  pointer-events: none;
+}
+
+.hint-toast {
+  position: absolute;
+  bottom: 14px;
+  left: 50%;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(20, 12, 8, 0.85);
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  color: var(--paper);
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+  max-width: 80%;
+  text-align: center;
+}
+
+.hint-toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.hud-overlay {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+  pointer-events: none;
+}
+
+.weld-bar-label {
+  font-size: 0.72rem;
+  color: var(--paper);
+  background: rgba(0, 0, 0, 0.45);
+  padding: 4px 10px;
+  border-radius: 8px;
+  max-width: 220px;
+  text-align: right;
+}
+
+.weld-bar {
+  position: relative;
+  width: 220px;
+  height: 14px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.weld-bar-zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: rgba(120, 220, 150, 0.6);
+}
+
+.weld-bar-cursor {
+  position: absolute;
+  top: -3px;
+  width: 4px;
+  height: 20px;
+  background: #ffb347;
+  border-radius: 2px;
 }
 
 .progress-track {
