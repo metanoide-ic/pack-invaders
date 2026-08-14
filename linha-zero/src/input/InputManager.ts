@@ -1,4 +1,5 @@
 import { PlayerInput } from '../types';
+import { TouchControls } from './TouchControls';
 
 const DEAD_ZONE = 0.2;
 
@@ -23,7 +24,9 @@ export class InputManager {
   private prevKeys = new Set<string>();
   private states: PlayerInput[] = [emptyInput(), emptyInput(), emptyInput(), emptyInput()];
   private prevButtons: boolean[][] = [[], [], [], []];
+  private prevTouch = { jump: false, interact: false, detach: false };
   public connectedPads = 0;
+  public readonly touch = new TouchControls();
 
   constructor() {
     window.addEventListener('keydown', (e) => this.keys.add(e.code));
@@ -52,6 +55,20 @@ export class InputManager {
     kb.jumpPressed = kb.jump && !this.prevKeys.has('Space');
     kb.interactPressed = kb.interact && !this.prevKeys.has('KeyE');
     kb.detachPressed = kb.detach && !this.prevKeys.has('KeyQ');
+
+    // touch (mobile) merges into player 0 the same way a gamepad would
+    if (this.touch.active) {
+      if (kb.moveX === 0) kb.moveX = this.touch.moveX;
+      if (kb.moveZ === 0) kb.moveZ = this.touch.moveZ;
+      kb.jump = kb.jump || this.touch.jump;
+      kb.interact = kb.interact || this.touch.interact;
+      kb.detach = kb.detach || this.touch.detach;
+      kb.jumpPressed = kb.jumpPressed || (this.touch.jump && !this.prevTouch.jump);
+      kb.interactPressed = kb.interactPressed || (this.touch.interact && !this.prevTouch.interact);
+      kb.detachPressed = kb.detachPressed || (this.touch.detach && !this.prevTouch.detach);
+      this.prevTouch = { jump: this.touch.jump, interact: this.touch.interact, detach: this.touch.detach };
+    }
+
     this.states[0] = kb;
     this.prevKeys = new Set(this.keys);
 

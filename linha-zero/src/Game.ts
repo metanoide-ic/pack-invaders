@@ -47,7 +47,10 @@ export class Game {
   private players: Player[] = [];
   private hud = new HUD();
 
-  private stats: RunStats = { distance: 0, resources: 0, passengersSaved: 0, wagonsLost: 0, wagonsBuilt: 0 };
+  private stats: RunStats = {
+    distance: 0, resources: 0, passengersSaved: 0, wagonsLost: 0, wagonsBuilt: 0,
+    topSpeed: 0, firesExtinguished: 0, raidersRepelled: 0, stormsSurvived: 0,
+  };
   private nextWagonCost = 45;
   private running = false;
   private gameOver = false;
@@ -114,7 +117,11 @@ export class Game {
   togglePause() {
     this.paused = !this.paused;
     document.getElementById('pause')?.classList.toggle('hidden', !this.paused);
-    if (!this.paused) this.clock.start(); // reset internal delta so resume doesn't jump
+    if (this.paused) this.input.touch.hide();
+    else {
+      this.input.touch.show();
+      this.clock.start(); // reset internal delta so resume doesn't jump
+    }
     return this.paused;
   }
 
@@ -141,6 +148,7 @@ export class Game {
     this.tutorialActive = !hasSeenTutorial();
     markTutorialSeen();
     this.hud.show();
+    this.input.touch.show();
     this.spawnInitialPlayers();
     this.clock.start();
     requestAnimationFrame(() => this.loop());
@@ -172,6 +180,10 @@ export class Game {
 
   private update(dt: number) {
     this.input.update();
+    if (this.input.touch.consumePause()) {
+      this.togglePause();
+      return;
+    }
 
     // dynamic co-op join: a controller plugged in mid-run adds a crew member
     for (let i = 0; i < this.input.connectedPads; i++) this.addPlayer(i);
@@ -181,6 +193,7 @@ export class Game {
     this.track.setDifficulty(difficulty);
     const headwind = this.stormActive ? 0.85 : 1; // storms slow the train too, not just the crew
     this.train.speed = Math.min(this.train.maxSpeed, this.train.baseSpeed + difficulty * 5.5) * headwind;
+    this.stats.topSpeed = Math.max(this.stats.topSpeed, this.train.speed * 3.2); // km/h, matching the HUD's conversion
 
     this.train.z += this.train.speed * dt;
     this.stats.distance += this.train.speed * dt;
@@ -201,6 +214,8 @@ export class Game {
     for (const p of this.players) p.syncMesh();
     this.updateCamera(dt);
     this.updateRain(dt);
+    this.sfx.updateChug(dt, this.train.speed);
+    this.sfx.setWindIntensity(this.stormActive ? 1 : 0);
     this.hud.update(dt, this.stats, this.train, this.players, this.track, this.stormActive);
   }
 
@@ -318,6 +333,7 @@ export class Game {
       if (this.stormTimer <= 0) {
         this.stormActive = false;
         this.stormCooldown = STORM_MIN_GAP;
+        this.stats.stormsSurvived++;
         this.hud.banner_show('🌤️ A tempestade passou.', 2.2);
       }
       return;
@@ -457,10 +473,12 @@ export class Game {
     if (input.interact) {
       if (w.fire > 0) {
         w.fire = Math.max(0, w.fire - FIRE_EXTINGUISH * dt);
+        if (w.fire === 0) this.stats.firesExtinguished++;
       } else if (w.raider) {
         w.raiderHp -= RAIDER_FIGHT * dt;
         if (w.raiderHp <= 0) {
           w.raider = false;
+          this.stats.raidersRepelled++;
           this.hud.banner_show('✅ Saqueador repelido!', 2);
         }
       } else if (w.hp < w.maxHp && this.stats.resources > 0) {
@@ -602,20 +620,22 @@ export class Game {
     this.running = false;
     this.gameOver = true;
     this.hud.hide();
+    this.input.touch.hide();
     const distanceMeters = Math.floor(this.stats.distance / 10);
     const isRecord = reportDistanceMeters(distanceMeters);
     this.sfx.gameOver();
     if (isRecord) setTimeout(() => this.sfx.record(), 700);
-    const goDistance = document.getElementById('go-distance')!;
-    const goResources = document.getElementById('go-resources')!;
-    const goPassengers = document.getElementById('go-passengers')!;
-    const goWagons = document.getElementById('go-wagons')!;
-    const goRecord = document.getElementById('go-record')!;
-    goDistance.textContent = `${distanceMeters} m`;
-    goResources.textContent = `${Math.floor(this.stats.resources)}`;
-    goPassengers.textContent = `${this.stats.passengersSaved}`;
-    goWagons.textContent = `${this.train.wagons.length}`;
-    goRecord.classList.toggle('hidden', !isRecord);
+    const set = (id: string, text: string) => (document.getElementById(id)!.textContent = text);
+    set('go-distance', `${distanceMeters} m`);
+    set('go-resources', `${Math.floor(this.stats.resources)}`);
+    set('go-passengers', `${this.stats.passengersSaved}`);
+    set('go-wagons', `${this.train.wagons.length}`);
+    set('go-topspeed', `${Math.round(this.stats.topSpeed)} km/h`);
+    set('go-fires', `${this.stats.firesExtinguished}`);
+    set('go-raiders', `${this.stats.raidersRepelled}`);
+    set('go-storms', `${this.stats.stormsSurvived}`);
+    set('go-wagonslost', `${this.stats.wagonsLost}`);
+    document.getElementById('go-record')!.classList.toggle('hidden', !isRecord);
     document.getElementById('gameover')!.classList.remove('hidden');
   }
 

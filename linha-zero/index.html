@@ -135,6 +135,19 @@
     #gameover .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 24px; text-align: left; margin-top: 10px; }
     #gameover .stats-grid span:nth-child(odd) { color: #9aa5c9; }
     #gameover .stats-grid span:nth-child(even) { font-weight: 700; color: var(--accent2); }
+
+    /* Touch devices: the on-screen joystick/buttons live in the same corners the
+       desktop HUD uses, so give them the room instead of letting things overlap. */
+    body.touch-ui-active #minimap { bottom: 210px; width: 110px; height: 110px; }
+    body.touch-ui-active #players-panel { bottom: 210px; }
+    @media (max-width: 640px) {
+      body.touch-ui-active #hud .top-bar { flex-wrap: wrap; padding-right: 60px; row-gap: 6px; }
+      body.touch-ui-active .stat { min-width: 84px; padding: 6px 10px; }
+      body.touch-ui-active .stat .label { font-size: 0.6rem; }
+      body.touch-ui-active .stat .value { font-size: 0.95rem; }
+      body.touch-ui-active #wagons-strip { top: 112px; }
+      body.touch-ui-active #event-banner { top: 162px; max-width: 90vw; font-size: 0.85rem; padding: 8px 14px; }
+    }
   </style>
 </head>
 <body>
@@ -171,6 +184,7 @@
           <div><b>Jogadores 2–4</b><br/>Conecte controles (gamepad)<br/>Analógico move · A pula<br/>X interage · Y desacopla</div>
           <div><b>Objetivo</b><br/>Sobrevivam o máximo de distância<br/>mantendo vagões e passageiros vivos</div>
           <div><b>Cidades</b><br/>Corram até os pontos de saque<br/>e voltem antes que a cidade acabe</div>
+          <div><b>Celular/tablet</b><br/>Joystick e botões na tela<br/>aparecem automaticamente</div>
         </div>
       </div>
       <div class="panel">
@@ -197,6 +211,11 @@
           <span>Recursos coletados</span><span id="go-resources">0</span>
           <span>Passageiros salvos</span><span id="go-passengers">0</span>
           <span>Vagões restantes</span><span id="go-wagons">0</span>
+          <span>Velocidade máxima</span><span id="go-topspeed">0 km/h</span>
+          <span>Incêndios apagados</span><span id="go-fires">0</span>
+          <span>Saqueadores repelidos</span><span id="go-raiders">0</span>
+          <span>Tempestades enfrentadas</span><span id="go-storms">0</span>
+          <span>Vagões perdidos</span><span id="go-wagonslost">0</span>
         </div>
       </div>
       <button class="cta" id="btn-restart">Nova viagem</button>

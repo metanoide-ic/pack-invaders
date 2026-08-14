@@ -8,6 +8,10 @@ export class Sfx {
   private master: GainNode | null = null;
   muted = false;
 
+  // continuous ambience: a looping filtered-noise "wind" bed, faded in/out by storms
+  private windGain: GainNode | null = null;
+  private chugAccumulator = 0;
+
   private ensure() {
     if (this.ctx) return this.ctx;
     const Ctx = window.AudioContext || (window as any).webkitAudioContext;
@@ -23,6 +27,50 @@ export class Sfx {
   unlock() {
     const ctx = this.ensure();
     if (ctx && ctx.state === 'suspended') ctx.resume();
+    this.startWindBed();
+  }
+
+  /** A single looping filtered-noise buffer, always running at gain 0 until a storm fades it in. */
+  private startWindBed() {
+    const ctx = this.ensure();
+    if (!ctx || !this.master || this.windGain) return;
+    const bufferSize = ctx.sampleRate * 2;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = 400;
+    filter.Q.value = 0.6;
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    source.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.master);
+    source.start();
+    this.windGain = gain;
+  }
+
+  /** 0 = silent, 1 = full storm howl. Called every frame with the current storm blend. */
+  setWindIntensity(amount: number) {
+    if (!this.windGain || !this.ctx) return;
+    const target = this.muted ? 0 : Math.max(0, Math.min(1, amount)) * 0.22;
+    this.windGain.gain.setTargetAtTime(target, this.ctx.currentTime, 0.4);
+  }
+
+  /** Rhythmic chugging tied to train speed — call every frame with dt and current speed (units/sec). */
+  updateChug(dt: number, speed: number) {
+    if (this.muted) return;
+    const interval = Math.max(0.16, 8 / Math.max(1, speed));
+    this.chugAccumulator += dt;
+    while (this.chugAccumulator >= interval) {
+      this.chugAccumulator -= interval;
+      this.tone(70, 0.09, { type: 'square', slideTo: 40, gain: 0.14 });
+    }
   }
 
   private tone(freq: number, duration: number, opts: { type?: OscillatorType; gain?: number; slideTo?: number } = {}) {

@@ -45,6 +45,10 @@ controle a qualquer momento durante a partida:
 - `X` — interagir
 - `Y` — desacoplar
 
+**Celular/tablet**: um joystick e botões na tela aparecem automaticamente em
+dispositivos de toque (controlando o Jogador 1), incluindo um botão de pausa
+próprio já que não há tecla `Esc`.
+
 **Personalização**: na tela inicial, o Jogador 1 escolhe a cor e o chapéu do
 seu personagem antes de embarcar.
 
@@ -62,6 +66,11 @@ depois disso.
 
 **Biomas**: o cenário alterna entre pradaria, deserto e neve conforme a
 distância percorrida, cada um com vegetação, cores de terreno e céu próprios.
+
+**Som ambiente**: o trem "chugga" continuamente no ritmo da velocidade atual,
+e um vento contínuo entra durante tempestades — além dos efeitos pontuais de
+ação. A tela de fim de jogo agora também mostra velocidade máxima, incêndios
+apagados, saqueadores repelidos, tempestades enfrentadas e vagões perdidos.
 
 ## O laço de jogo
 

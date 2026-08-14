@@ -65,4 +65,8 @@ export interface RunStats {
   passengersSaved: number;
   wagonsLost: number;
   wagonsBuilt: number;
+  topSpeed: number;
+  firesExtinguished: number;
+  raidersRepelled: number;
+  stormsSurvived: number;
 }
