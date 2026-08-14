@@ -1,5 +1,6 @@
-const { app, BrowserWindow } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
+const steam = require('./steam.cjs');
 
 function createWindow() {
   const win = new BrowserWindow({
@@ -18,6 +19,7 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
 
@@ -40,7 +42,12 @@ function createWindow() {
   // win.webContents.openDevTools({ mode: 'detach' });
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(() => {
+  steam.init(); // no-ops safely if Steam/an App ID isn't available — see electron/steam.cjs
+  ipcMain.handle('steam:isAvailable', () => steam.isAvailable());
+  ipcMain.handle('steam:unlockAchievement', (_event, id) => steam.unlockAchievement(id));
+  createWindow();
+});
 
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();

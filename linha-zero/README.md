@@ -51,13 +51,32 @@ padrão do Electron); o `.icns` faz o mesmo no macOS; no Linux, o ícone é
 definido em tempo de execução pelo próprio `main.cjs`. Para trocar o ícone,
 edite `icon-source.html` e regenere com `png2icons` (já é devDependency).
 
-**O que falta para publicar de verdade na Steam** (depende de acesso a uma
-conta Steamworks que esta sessão não tem):
-- Uma conta de parceiro Steamworks e um App ID.
+**Steamworks (conquistas)**: `electron/steam.cjs` inicializa o
+[`steamworks.js`](https://www.npmjs.com/package/steamworks.js) no processo
+principal, com fallback silencioso se o Steam/App ID não estiver disponível;
+`electron/preload.cjs` expõe isso ao jogo como `window.steamBridge`
+(`contextIsolation` continua ativo — o jogo nunca ganha acesso direto ao
+Node/Electron); `src/core/Achievements.ts` dispara conquistas nos marcos do
+jogo (primeiro resgate, primeira tempestade sobrevivida, primeiro saqueador
+repelido, 10 vagões, 1000 m e 5000 m percorridos).
+
+**Status honesto disso**: nunca foi testado contra um App ID real ou o
+cliente Steam de verdade — este ambiente não tem nem um nem outro. O que
+*foi* verificado, empacotando de verdade e rodando o binário: o app não
+quebra quando o Steam está indisponível, cai no fallback e loga a razão
+exata (neste sandbox, falta o `libsteam_api.so`, que o cliente Steam normal
+instalaria). Antes de publicar: trocar o App ID de teste (480, o
+"Spacewar" público da Valve) pelo App ID real do jogo, e cadastrar os IDs de
+conquista de `electron/steam.cjs` no painel do Steamworks — eles não fazem
+nada até existirem lá.
+
+**O que mais falta para publicar de verdade na Steam** (depende de acesso a
+uma conta Steamworks que esta sessão não tem):
+- Uma conta de parceiro Steamworks e um App ID real.
 - Subir o conteúdo de `npm run package` (a pasta `out/<plataforma>/`) como
   depot via SteamPipe (`steamcmd` + um script `app_build.vdf`/`depot_build.vdf`).
-- Opcionalmente, integrar o SDK do Steamworks (conquistas, save na nuvem,
-  overlay) via um binding nativo como `steamworks.js` — não incluído aqui.
+- Save na nuvem (Steam Cloud) — configurável no painel do Steamworks sem
+  precisar de código adicional, já que os saves hoje são só `localStorage`.
 - Página da loja, classificação etária, arte de capa/capsule — fora do
   escopo de código.
 

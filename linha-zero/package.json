@@ -15,7 +15,8 @@
     "make": "electron-forge make"
   },
   "dependencies": {
-    "three": "^0.185.1"
+    "three": "^0.185.1",
+    "steamworks.js": "^0.4.0"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.4.0",

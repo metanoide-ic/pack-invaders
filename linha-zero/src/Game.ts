@@ -8,6 +8,7 @@ import { HUD } from './hud/HUD';
 import { Sfx } from './audio/Sfx';
 import { reportDistanceMeters } from './core/HighScore';
 import { hasSeenTutorial, markTutorialSeen, TUTORIAL_STEPS } from './core/Onboarding';
+import { ACHIEVEMENTS, unlockAchievement } from './core/Achievements';
 import { RunStats, WagonState } from './types';
 
 const MISS_DISTANCE = 20;
@@ -196,7 +197,11 @@ export class Game {
     this.stats.topSpeed = Math.max(this.stats.topSpeed, this.train.speed * 3.2); // km/h, matching the HUD's conversion
 
     this.train.z += this.train.speed * dt;
+    const distBeforeMeters = Math.floor(this.stats.distance / 10);
     this.stats.distance += this.train.speed * dt;
+    const distAfterMeters = Math.floor(this.stats.distance / 10);
+    if (distBeforeMeters < 1000 && distAfterMeters >= 1000) unlockAchievement(ACHIEVEMENTS.DISTANCE_1000M);
+    if (distBeforeMeters < 5000 && distAfterMeters >= 5000) unlockAchievement(ACHIEVEMENTS.DISTANCE_5000M);
 
     this.track.update(this.train.z, this.train.tailZ, dt);
     this.updateHazards(dt, difficulty);
@@ -334,6 +339,7 @@ export class Game {
         this.stormActive = false;
         this.stormCooldown = STORM_MIN_GAP;
         this.stats.stormsSurvived++;
+        if (this.stats.stormsSurvived === 1) unlockAchievement(ACHIEVEMENTS.FIRST_STORM_SURVIVED);
         this.hud.banner_show('🌤️ A tempestade passou.', 2.2);
       }
       return;
@@ -479,6 +485,7 @@ export class Game {
         if (w.raiderHp <= 0) {
           w.raider = false;
           this.stats.raidersRepelled++;
+          if (this.stats.raidersRepelled === 1) unlockAchievement(ACHIEVEMENTS.FIRST_RAIDER_REPELLED);
           this.hud.banner_show('✅ Saqueador repelido!', 2);
         }
       } else if (w.hp < w.maxHp && this.stats.resources > 0) {
@@ -559,6 +566,7 @@ export class Game {
       this.hud.hint(`+${p.carryValue} recursos entregues!`);
     } else if (p.carry === 'passenger' || p.carry === 'animal') {
       this.stats.passengersSaved++;
+      if (this.stats.passengersSaved === 1) unlockAchievement(ACHIEVEMENTS.FIRST_RESCUE);
       this.supplyTally.passenger += 6;
       w.hp = Math.min(w.maxHp, w.hp + 8);
       this.hud.banner_show(`🎉 ${p.name} trouxe alguém a bordo em segurança!`, 2.4);
@@ -606,6 +614,7 @@ export class Game {
       const label = { cargo: 'de carga', passenger: 'de passageiros', tank: 'tanque', flat: 'plataforma', engine: '' }[kind];
       this.hud.banner_show(`🚃 Novo vagão ${label} acoplado à composição!`, 2.6);
       this.sfx.build();
+      if (this.train.wagons.length >= 10) unlockAchievement(ACHIEVEMENTS.TEN_WAGONS);
     }
   }
 
