@@ -83,7 +83,7 @@ interface DataState {
   removeRevision: (postId: string, revId: string) => void;
 
   // Vídeos
-  addVideo: (v: { title: string; clientId?: string; editor?: string; dueDate?: string }) => VideoProject;
+  addVideo: (v: { title: string; clientId?: string; editor?: string; dueDate?: string; notes?: string }) => VideoProject;
   updateVideo: (id: string, patch: Partial<VideoProject>) => void;
   removeVideo: (id: string) => void;
   moveVideo: (id: string, stage: VideoStage) => void;
@@ -364,9 +364,9 @@ export const useData = create<DataState>()(
         })),
 
       // ---------- Vídeos ----------
-      addVideo: ({ title, clientId, editor, dueDate }) => {
+      addVideo: ({ title, clientId, editor, dueDate, notes }) => {
         const video: VideoProject = {
-          id: uid('vid'), title, clientId, editor, dueDate,
+          id: uid('vid'), title, clientId, editor, dueDate, notes,
           stage: 'briefing', links: [], checklist: [], revisions: [], createdAt: Date.now(),
         };
         set((s) => ({ videos: [video, ...s.videos] }));

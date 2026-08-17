@@ -44,9 +44,13 @@ export const HOLIDAYS: Holiday[] = [
 
 export interface PlanItem {
   date: string; // ISO
-  type: string; // Post, Carrossel, Stories, Vídeo, Reels
+  type: string; // Post, Carrossel, Stories, Vídeo, Reels, Foto
   title: string;
   holiday?: string;
+  /** true quando o formato precisa de foto/vídeo real, não arte de estúdio. */
+  isVideo: boolean;
+  /** Instrução concreta do que fazer — foto pede material, vídeo vem com roteiro. */
+  brief: string;
 }
 
 const WEEKDAYS = ['domingo', 'segunda', 'terça', 'quarta', 'quinta', 'sexta', 'sábado'];
@@ -55,32 +59,56 @@ function iso(y: number, m: number, d: number) {
   return `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-/** Ângulos editoriais usados no gerador local de temas. */
-const ANGLES: Record<string, string[]> = {
-  default: [
-    'Dica prática para o público',
-    'Bastidores do trabalho',
-    'Prova social com resultado de cliente',
-    'Mito e verdade do segmento',
-    'Pergunta para engajar os seguidores',
-    'Apresentação de produto ou serviço',
-    'Conteúdo educativo sobre o segmento',
-    'Depoimento ou avaliação',
+function isVideoType(type: string): boolean {
+  return /víd|reels/i.test(type);
+}
+
+/**
+ * Ângulos editoriais do gerador local de temas. Cada um já vem com a
+ * instrução do formato — foto pede o material real, vídeo vem com roteiro
+ * de gancho/conteúdo/CTA — pra ninguém abrir o card sem saber o que fazer.
+ */
+const ANGLES = {
+  foto: [
+    { titulo: 'Dica prática para o público', material: 'foto real do produto, ambiente ou equipe relacionada à dica' },
+    { titulo: 'Bastidores do trabalho', material: 'foto tirada no local, mostrando a equipe ou o processo em ação' },
+    { titulo: 'Prova social com resultado de cliente', material: 'foto do resultado entregue, ou print do depoimento do cliente' },
+    { titulo: 'Mito e verdade do segmento', material: 'foto de produto ou ambiente que ilustre o tema (pode ser de estúdio)' },
+    { titulo: 'Apresentação de produto ou serviço', material: 'foto real do produto/serviço em destaque, boa iluminação' },
+    { titulo: 'Conteúdo educativo sobre o segmento', material: 'foto de apoio ao tema (pode ser de estúdio, sem precisar do cliente)' },
+    { titulo: 'Depoimento ou avaliação', material: 'print do depoimento ou foto do cliente satisfeito (pedir autorização)' },
+    { titulo: 'Oferta ou condição comercial', material: 'foto do produto com destaque para o preço/condição' },
   ],
   video: [
-    'Bastidores gravados no local',
-    'Antes e depois',
-    'Tutorial rápido',
-    'Resposta a uma dúvida frequente',
-    'Tendência adaptada ao segmento',
-    'Tour ou demonstração',
+    { titulo: 'Bastidores gravados no local', gancho: 'Abre mostrando algo inesperado do dia a dia do negócio', conteudo: 'Mostra o processo/trabalho acontecendo de verdade, sem roteiro engessado', cta: 'Convite pra visitar, marcar horário ou mandar mensagem' },
+    { titulo: 'Antes e depois', gancho: 'Mostra o "antes", o problema real', conteudo: 'Corte pro "depois", o resultado alcançado', cta: 'Chamada pra quem tem o mesmo problema entrar em contato' },
+    { titulo: 'Tutorial rápido', gancho: 'Promessa direta: "em X segundos você aprende..."', conteudo: 'Passo a passo simples, linguagem acessível', cta: 'Pedir pra salvar o vídeo e seguir o perfil' },
+    { titulo: 'Resposta a uma dúvida frequente', gancho: 'Repete a pergunta que os clientes mais fazem', conteudo: 'Resposta direta, sem enrolação, com exemplo real', cta: 'Convite pra mandar outras dúvidas nos comentários' },
+    { titulo: 'Tendência adaptada ao segmento', gancho: 'Usa o formato/áudio em alta do momento', conteudo: 'Adapta a tendência pro contexto do negócio, sem forçar', cta: 'CTA leve, foco em engajamento (comentar, compartilhar)' },
+    { titulo: 'Tour ou demonstração', gancho: 'Abre já mostrando o espaço ou o produto em uso', conteudo: 'Percorre os pontos fortes do local/produto', cta: 'Convite direto pra visitar ou comprar' },
   ],
-};
+} as const;
+
+function anglePool(type: string) {
+  return isVideoType(type) ? ANGLES.video : ANGLES.foto;
+}
 
 function localTitle(type: string, index: number, holiday?: string): string {
   if (holiday) return `${type} comemorativo: ${holiday}`;
-  const pool = /víd|reels/i.test(type) ? ANGLES.video : ANGLES.default;
-  return `${type}: ${pool[index % pool.length]}`;
+  const angle = anglePool(type)[index % anglePool(type).length];
+  return `${type}: ${angle.titulo}`;
+}
+
+/** Instrução concreta do que fazer com o item — formato explícito, nunca vago. */
+function localBrief(type: string, index: number, holiday?: string): string {
+  if (isVideoType(type)) {
+    const a = ANGLES.video[index % ANGLES.video.length];
+    const tema = holiday ? `Vídeo sobre ${holiday}.` : '';
+    return `Formato: vídeo. ${tema} Roteiro — Gancho: ${a.gancho}. Conteúdo: ${a.conteudo}. CTA: ${a.cta}.`;
+  }
+  const a = ANGLES.foto[index % ANGLES.foto.length];
+  const tema = holiday ? `Arte sobre ${holiday}.` : '';
+  return `Formato: foto/arte estática. ${tema} Material necessário: ${a.material}.`;
 }
 
 /** Monta os slots do mês a partir da cadência semanal + datas comemorativas. */
@@ -107,7 +135,11 @@ export function buildClientSlots(client: Client, year: number, month: number): P
     const types = client.weeklyPlan?.[dow] ?? [];
     const hol = monthHolidays.find((h) => Number(h.md.slice(3)) === d);
     for (const type of types) {
-      items.push({ date: iso(year, month, d), type, title: localTitle(type, idx++, hol?.name), holiday: hol?.name });
+      const i = idx++;
+      items.push({
+        date: iso(year, month, d), type, title: localTitle(type, i, hol?.name), holiday: hol?.name,
+        isVideo: isVideoType(type), brief: localBrief(type, i, hol?.name),
+      });
     }
   }
 
@@ -117,7 +149,11 @@ export function buildClientSlots(client: Client, year: number, month: number): P
   for (const h of monthHolidays.filter((x) => x.universal || proprioNoMes.has(x.md))) {
     const date = iso(year, month, Number(h.md.slice(3)));
     if (!items.some((i) => i.date === date && i.holiday === h.name)) {
-      items.push({ date, type: 'Post', title: localTitle('Post', idx++, h.name), holiday: h.name });
+      const i = idx++;
+      items.push({
+        date, type: 'Post', title: localTitle('Post', i, h.name), holiday: h.name,
+        isVideo: false, brief: localBrief('Post', i, h.name),
+      });
     }
   }
 
@@ -161,7 +197,7 @@ export function applyPlanToWorkspace(client: Client, items: PlanItem[]): ApplyRe
 
   for (const item of items) {
     const due = dueDateFor(item.date);
-    const isVideo = /víd|reels/i.test(item.type);
+    const isVideo = item.isVideo;
 
     const postExists = store.posts.some(
       (p) => p.clientId === client.id && p.scheduledDate === item.date && p.title === item.title,
@@ -173,7 +209,10 @@ export function applyPlanToWorkspace(client: Client, items: PlanItem[]): ApplyRe
         clientId: client.id,
         stage: 'ideia',
         scheduledDate: item.date,
-        notes: item.holiday ? `Data comemorativa: ${item.holiday}.` : undefined,
+        // Sem material de vídeo em mãos, o post já nasce marcado — o quadro
+        // mostra o selo "falta material" sem precisar abrir o card.
+        awaitingMaterial: isVideo,
+        notes: item.brief + (item.holiday ? `\n\nData comemorativa: ${item.holiday}.` : ''),
       });
       posts++;
     }
@@ -184,7 +223,7 @@ export function applyPlanToWorkspace(client: Client, items: PlanItem[]): ApplyRe
         dueDate: due,
         clientId: client.id,
         labels: [isVideo ? 'Vídeo' : 'Design'],
-        description: `Publicação prevista para ${new Date(item.date + 'T00:00').toLocaleDateString('pt-BR')} (${WEEKDAYS[new Date(item.date + 'T00:00').getDay()]}).${item.holiday ? ` Data comemorativa: ${item.holiday}.` : ''}`,
+        description: `${item.brief}\n\nPublicação prevista para ${new Date(item.date + 'T00:00').toLocaleDateString('pt-BR')} (${WEEKDAYS[new Date(item.date + 'T00:00').getDay()]}).${item.holiday ? ` Data comemorativa: ${item.holiday}.` : ''}`,
       });
       existingCards.add(`${item.title}|${due}`);
       cards++;
@@ -193,7 +232,7 @@ export function applyPlanToWorkspace(client: Client, items: PlanItem[]): ApplyRe
     if (isVideo) {
       const vidExists = store.videos.some((v) => v.clientId === client.id && v.title === item.title && v.dueDate === due);
       if (!vidExists) {
-        store.addVideo({ title: item.title, clientId: client.id, dueDate: due });
+        store.addVideo({ title: item.title, clientId: client.id, dueDate: due, notes: item.brief });
         videos++;
       }
     }
