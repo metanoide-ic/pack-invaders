@@ -20,6 +20,13 @@ const PORT = Number(process.env.PORT || 8787);
 const DIR = dirname(fileURLToPath(import.meta.url));
 const CONFIG_FILE = join(DIR, 'conector.config.json');
 
+// No computador de casa, ninguém mais alcança "localhost" — sem exigência
+// nenhuma, como sempre foi. Hospedado num servidor com endereço público,
+// EXIGIR_TOKEN=1 tranca tudo atrás do token (o mesmo que já protege
+// /entrada e /entrada-pagamento) — sem isso, a tela e as credenciais
+// ficariam visíveis pra qualquer um que descobrisse o endereço.
+const EXIGIR_TOKEN = process.env.EXIGIR_TOKEN === '1';
+
 const CONFIG_PADRAO = {
   provedor: 'zapi', // 'zapi' | 'evolution'
   zapiInstancia: '',
@@ -812,6 +819,15 @@ const servidor = createServer(async (req, res) => {
 
   const url = new URL(req.url, `http://localhost:${PORT}`);
 
+  // /entrada e /entrada-pagamento têm o próprio token (endereço fixo dado
+  // aos serviços externos) e continuam liberados aqui — sem eles a Z-API e
+  // o Asaas nunca conseguiriam entregar nada.
+  const rotaComTokenProprio = url.pathname === '/entrada' || url.pathname === '/entrada-pagamento';
+  if (EXIGIR_TOKEN && !rotaComTokenProprio && url.searchParams.get('token') !== config.entradaToken) {
+    res.writeHead(403, { 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ ok: false, erro: 'token inválido ou ausente — confira o endereço colado na Orikay' }));
+  }
+
   // Recebe os eventos da plataforma.
   if (url.pathname === '/webhook' && req.method === 'POST') {
     const evento = await corpo(req);
@@ -927,10 +943,17 @@ const servidor = createServer(async (req, res) => {
 });
 
 servidor.listen(PORT, () => {
+  const sufixo = EXIGIR_TOKEN ? `?token=${config.entradaToken}` : '';
   console.log('');
   console.log('  Conector Orikay em execução.');
-  console.log(`  Abra no navegador:  http://localhost:${PORT}`);
-  console.log(`  Endereço para colar na plataforma:  http://localhost:${PORT}/webhook`);
+  if (EXIGIR_TOKEN) {
+    console.log('  Modo hospedado: a tela e as rotas exigem o token de acesso.');
+    console.log(`  Endereço da tela:  ${TUNEL_FIXO || `http://localhost:${PORT}`}/${sufixo}`);
+    console.log(`  Endereço para colar na plataforma:  ${TUNEL_FIXO || `http://localhost:${PORT}`}/webhook${sufixo}`);
+  } else {
+    console.log(`  Abra no navegador:  http://localhost:${PORT}`);
+    console.log(`  Endereço para colar na plataforma:  http://localhost:${PORT}/webhook`);
+  }
   console.log('');
   console.log('  Deixe esta janela aberta enquanto usar a plataforma.');
   console.log('');
@@ -1100,7 +1123,8 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
 </div>
 <script>
   const campos = ['provedor','zapiInstancia','zapiToken','zapiClientToken','evolutionUrl','evolutionInstancia','evolutionApiKey','igUserId','igToken','adAccountId','adsToken','googleCustomerId','googleDevToken','googleClientId','googleClientSecret','googleRefreshToken','googleLoginCustomerId','tiktokAdvertiserId','tiktokToken','asaasToken','asaasAmbiente'];
-  document.getElementById('url').textContent = location.origin + '/webhook';
+  const u = (p) => p + location.search; // preserva o ?token= em todo pedido desta página
+  document.getElementById('url').textContent = location.origin + '/webhook' + location.search;
   document.getElementById('provedor').onchange = trocar;
   function trocar(){
     const p = document.getElementById('provedor').value;
@@ -1109,7 +1133,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   }
   let preenchidoUmaVez = false;
   async function carregar(){
-    const r = await (await fetch('/estado')).json();
+    const r = await (await fetch(u('/estado'))).json();
     // Os campos só são preenchidos na primeira carga da página. Depois
     // disso a atualização automática (a cada 4s) mexe só nos status e no
     // túnel — nunca mais no valor dos campos, senão qualquer coisa colada
@@ -1147,11 +1171,11 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   async function salvar(){
     const dados = {};
     campos.forEach(c => dados[c] = document.getElementById(c).value.trim());
-    await fetch('/config', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) });
+    await fetch(u('/config'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(dados) });
     carregar();
   }
   async function tunel(acao){
-    const r = await (await fetch('/tunel', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ acao }) })).json();
+    const r = await (await fetch(u('/tunel'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ acao }) })).json();
     if (acao === 'registrar') {
       alert(r.ok ? ('Registrado em: ' + (r.feitos || []).join(', ')) : ('Falhou: ' + (r.falhas || [r.erro]).join(' | ')));
     }
@@ -1160,7 +1184,7 @@ const PAGINA = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
   async function testar(){
     await salvar();
     const numero = document.getElementById('numeroTeste').value.trim();
-    const r = await (await fetch('/testar', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ numero }) })).json();
+    const r = await (await fetch(u('/testar'), { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ numero }) })).json();
     alert(r.ok ? 'Mensagem enviada. Confira o WhatsApp.' : 'Não foi enviada: ' + r.erro);
     carregar();
   }

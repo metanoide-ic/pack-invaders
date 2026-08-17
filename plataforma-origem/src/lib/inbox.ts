@@ -23,9 +23,19 @@ interface PaymentDecision {
 
 type Decision = PostDecision | PaymentDecision;
 
-/** Endereço base do conector, a partir do endereço do webhook. */
-export function connectorBase(url: string): string {
-  return url.trim().replace(/\/+$/, '').replace(/\/webhook$/, '');
+/**
+ * Troca "/webhook" por outro caminho no endereço do conector, preservando
+ * qualquer "?token=" que exista — trocar isso por regex ingênua quebra
+ * assim que o endereço tem parâmetro na URL (caso do conector hospedado).
+ */
+export function connectorPath(url: string, path: string): string {
+  try {
+    const u = new URL(url.trim());
+    u.pathname = u.pathname.replace(/\/webhook\/?$/, '') + path;
+    return u.toString();
+  } catch {
+    return url.trim().replace(/\/+$/, '').replace(/\/webhook$/, '') + path;
+  }
 }
 
 /**
@@ -42,7 +52,7 @@ export async function pullDecisions(): Promise<number> {
 
   let lista: Decision[] = [];
   try {
-    const res = await fetch(`${connectorBase(connectorUrl)}/decisoes`);
+    const res = await fetch(connectorPath(connectorUrl, '/decisoes'));
     const data = await res.json();
     if (!data?.ok) return 0;
     lista = data.decisoes ?? [];
