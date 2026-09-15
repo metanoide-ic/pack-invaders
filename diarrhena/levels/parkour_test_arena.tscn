@@ -1,0 +1,275 @@
+[gd_scene load_steps=20 format=3]
+
+[ext_resource type="PackedScene" path="res://entities/player/player.tscn" id="1"]
+[ext_resource type="PackedScene" path="res://entities/dummy_target/dummy_target.tscn" id="2"]
+[ext_resource type="Script" path="res://levels/kill_zone.gd" id="3"]
+[ext_resource type="PackedScene" path="res://ui/hud.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://entities/enemy/enemy.tscn" id="5"]
+[ext_resource type="Script" path="res://levels/objective_manager.gd" id="6"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/buildings/building-a.glb" id="7"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/buildings/building-b.glb" id="8"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/buildings/building-c.glb" id="9"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/buildings/building-skyscraper-a.glb" id="10"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/buildings/building-skyscraper-b.glb" id="11"]
+[ext_resource type="Texture2D" path="res://assets/kenney_city/roads/Textures/colormap.png" id="12"]
+[ext_resource type="Texture2D" path="res://assets/kenney_city/roads/Textures/asphalt_swatch.png" id="20"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/roads/electricity-pole.glb" id="13"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/roads/light-curved.glb" id="14"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/roads/dumpster.glb" id="15"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/roads/construction-cone.glb" id="16"]
+[ext_resource type="PackedScene" path="res://assets/kenney_city/roads/construction-barrier.glb" id="17"]
+[ext_resource type="Texture2D" path="res://assets/kenney_city/buildings/Textures/colormap.png" id="18"]
+[ext_resource type="Script" path="res://common/apply_colormap.gd" id="19"]
+
+[sub_resource type="BoxShape3D" id="floor_start_shape"]
+size = Vector3(30, 1, 20)
+
+[sub_resource type="BoxMesh" id="floor_start_mesh"]
+size = Vector3(30, 1, 20)
+
+[sub_resource type="BoxShape3D" id="floor_end_shape"]
+size = Vector3(30, 1, 20)
+
+[sub_resource type="BoxMesh" id="floor_end_mesh"]
+size = Vector3(30, 1, 20)
+
+[sub_resource type="StandardMaterial3D" id="floor_material"]
+albedo_texture = ExtResource("20")
+uv1_scale = Vector3(15, 10, 1)
+roughness = 0.9
+
+[sub_resource type="BoxShape3D" id="corridor_wall_shape"]
+size = Vector3(0.4, 6, 18)
+
+[sub_resource type="BoxMesh" id="corridor_wall_mesh"]
+size = Vector3(0.4, 6, 18)
+
+[sub_resource type="StandardMaterial3D" id="wall_material"]
+albedo_color = Color(0.55, 0.53, 0.5, 1)
+roughness = 0.7
+
+[sub_resource type="BoxShape3D" id="tower_tall_shape"]
+size = Vector3(2, 14, 2)
+
+[sub_resource type="BoxMesh" id="tower_tall_mesh"]
+size = Vector3(2, 14, 2)
+
+[sub_resource type="BoxShape3D" id="tower_short_shape"]
+size = Vector3(2, 4, 2)
+
+[sub_resource type="BoxMesh" id="tower_short_mesh"]
+size = Vector3(2, 4, 2)
+
+[sub_resource type="StandardMaterial3D" id="tower_material"]
+albedo_color = Color(0.5, 0.35, 0.25, 1)
+roughness = 0.75
+
+[sub_resource type="BoxShape3D" id="killzone_shape"]
+size = Vector3(200, 2, 200)
+
+[sub_resource type="Environment" id="env_1"]
+background_mode = 1
+background_color = Color(0.55, 0.68, 0.78, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.7, 0.75, 0.8, 1)
+ambient_light_energy = 0.5
+tonemap_mode = 2
+glow_enabled = true
+
+[node name="ParkourTestArena" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("env_1")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.8, -0.35, 0.48, 0, 0.8, 0.6, -0.6, -0.48, 0.64, 0, 15, 0)
+shadow_enabled = true
+light_energy = 1.1
+
+[node name="Player" parent="." instance=ExtResource("1")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 3)
+
+[node name="HUD" parent="." instance=ExtResource("4")]
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="FloorStart" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -5)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/FloorStart"]
+mesh = SubResource("floor_start_mesh")
+surface_material_override/0 = SubResource("floor_material")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/FloorStart"]
+shape = SubResource("floor_start_shape")
+
+[node name="FloorEnd" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, -43)
+collision_layer = 1
+
+[node name="Mesh" type="MeshInstance3D" parent="Geometry/FloorEnd"]
+mesh = SubResource("floor_end_mesh")
+surface_material_override/0 = SubResource("floor_material")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/FloorEnd"]
+shape = SubResource("floor_end_shape")
+
+[node name="CorridorWallLeft" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -2.5, 3, -19)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/CorridorWallLeft"]
+shape = SubResource("corridor_wall_shape")
+
+[node name="Building1" parent="Geometry/CorridorWallLeft" instance=ExtResource("7")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, -6.75)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building2" parent="Geometry/CorridorWallLeft" instance=ExtResource("8")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, -2.25)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building3" parent="Geometry/CorridorWallLeft" instance=ExtResource("9")]
+transform = Transform3D(1.3, 0, 0, 0, 6.719, 0, 0, 0, 4.128, 0, -3, 2.25)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building4" parent="Geometry/CorridorWallLeft" instance=ExtResource("7")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, 6.75)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="CorridorWallRight" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.5, 3, -19)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/CorridorWallRight"]
+shape = SubResource("corridor_wall_shape")
+
+[node name="Building1" parent="Geometry/CorridorWallRight" instance=ExtResource("8")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, -6.75)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building2" parent="Geometry/CorridorWallRight" instance=ExtResource("9")]
+transform = Transform3D(1.3, 0, 0, 0, 6.719, 0, 0, 0, 4.128, 0, -3, -2.25)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building3" parent="Geometry/CorridorWallRight" instance=ExtResource("7")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, 2.25)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Building4" parent="Geometry/CorridorWallRight" instance=ExtResource("8")]
+transform = Transform3D(1.3, 0, 0, 0, 4.64, 0, 0, 0, 4.787, 0, -3, 6.75)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="GrappleTowerTall" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 7, -40)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/GrappleTowerTall"]
+shape = SubResource("tower_tall_shape")
+
+[node name="Skyscraper1" parent="Geometry/GrappleTowerTall" instance=ExtResource("11")]
+transform = Transform3D(1.47, 0, 0, 0, 1, 0, 0, 0, 1.47, 0, -7, 0)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Skyscraper2" parent="Geometry/GrappleTowerTall" instance=ExtResource("11")]
+transform = Transform3D(1.47, 0, 0, 0, 1, 0, 0, 0, 1.47, 0, -2.52, 0)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="Skyscraper3" parent="Geometry/GrappleTowerTall" instance=ExtResource("11")]
+transform = Transform3D(1.47, 0, 0, 0, 1, 0, 0, 0, 1.47, 0, 1.96, 0)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="GrappleTowerShort" type="StaticBody3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 2, -33)
+collision_layer = 1
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Geometry/GrappleTowerShort"]
+shape = SubResource("tower_short_shape")
+
+[node name="Skyscraper1" parent="Geometry/GrappleTowerShort" instance=ExtResource("10")]
+transform = Transform3D(1.47, 0, 0, 0, 1.389, 0, 0, 0, 1.47, 0, -2, 0)
+script = ExtResource("19")
+colormap = ExtResource("18")
+
+[node name="StreetProps" type="Node3D" parent="Geometry"]
+
+[node name="ElectricityPole" parent="Geometry/StreetProps" instance=ExtResource("13")]
+transform = Transform3D(1.6, 0, 0, 0, 1.6, 0, 0, 0, 1.6, -10, 0, 2)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="StreetLight" parent="Geometry/StreetProps" instance=ExtResource("14")]
+transform = Transform3D(1.4, 0, 0, 0, 1.4, 0, 0, 0, 1.4, 10, 0, 2)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="Dumpster" parent="Geometry/StreetProps" instance=ExtResource("15")]
+transform = Transform3D(1.3, 0, 0, 0, 1.3, 0, 0, 0, 1.3, -10, 0, -9)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="ConstructionCone1" parent="Geometry/StreetProps" instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 0, 3)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="ConstructionCone2" parent="Geometry/StreetProps" instance=ExtResource("16")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.6, 0, 3.6)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="ConstructionBarrier" parent="Geometry/StreetProps" instance=ExtResource("17")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -8, 0, -11)
+script = ExtResource("19")
+colormap = ExtResource("12")
+
+[node name="KillZone" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -10, 0)
+monitoring = true
+collision_layer = 0
+collision_mask = 2
+script = ExtResource("3")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="KillZone"]
+shape = SubResource("killzone_shape")
+
+[node name="DummyTargets" type="Node3D" parent="."]
+
+[node name="Dummy1" parent="DummyTargets" instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4, 1, 0)
+
+[node name="Dummy2" parent="DummyTargets" instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 1, 0.5)
+
+[node name="Dummy3" parent="DummyTargets" instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -3)
+
+[node name="Dummy4_OnTower" parent="DummyTargets" instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 15, -40)
+
+[node name="Enemies" type="Node3D" parent="."]
+
+[node name="Enemy1" parent="Enemies" instance=ExtResource("5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, -2)
+
+[node name="Enemy2" parent="Enemies" instance=ExtResource("5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -38)
+
+[node name="Enemy3" parent="Enemies" instance=ExtResource("5")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -48)
+
+[node name="ObjectiveManager" type="Node" parent="."]
+script = ExtResource("6")
+target_kills = 5

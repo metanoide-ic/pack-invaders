@@ -1,0 +1,14 @@
+# Godot 4 — pasta de import/cache, nunca versionar
+.godot/
+.import/
+export.cfg
+export_presets.cfg
+
+# builds
+build/
+*.exe
+*.pck
+
+# SO
+.DS_Store
+Thumbs.db
