@@ -44,7 +44,7 @@ export const VENDOR_LUNA: VendorDefinition = {
   unlockTrigger: null, // Available from start
   exclusiveItems: [
     'basic_gun', 'repair_kit', 'gold_magnet', 'armor_plate', 'wind_fan',
-    'lucky_charm', 'watering_can', 'plant_shield', 'cat', 'snack_box',
+    'lucky_charm', 'watering_can', 'plant_shield', 'cat', 'parrot',
     'coin_doubler', 'medkit', 'scrap_recycler', 'magnet_field', 'emergency_repair',
     'ammo_box', 'targeting_array', 'golden_egg', 'luck_stone', 'phase_shifter',
     'shotgun', 'poison_dart', 'ice_gun', 'dual_pistols', 'boomerang',
@@ -92,7 +92,7 @@ export const VENDOR_BRUTUS: VendorDefinition = {
   title: 'O Arsenal Ambulante',
   description: 'Ex-fisiculturista e militar que encontrou seu propósito no apocalipse.',
   personality: 'Agressivo, entusiasmado com violência, trata armas como filhos. Surpreendentemente gentil com crianças.',
-  unlockTrigger: 'fire_lord', // Unlocks when 2nd character (Inferno) is unlocked
+  unlockTrigger: 'fire_lord', // Unlocks when 2nd character (Kagutsuchi) is unlocked
   exclusiveItems: [
     'fire_gun', 'shotgun', 'sniper', 'missile_launcher', 'chain_gun',
     'plasma_cannon', 'grenade_launcher', 'flamethrower', 'harpoon_gun', 'bone_spear',
@@ -136,10 +136,10 @@ export const VENDOR_BRUTUS: VendorDefinition = {
 export const VENDOR_NYX: VendorDefinition = {
   id: 'nyx',
   name: 'Nyx',
-  title: 'A Alquimista das Sombras',
-  description: 'Cientista brilhante com estética gótica que cria tecnologia a partir de cadáveres alien.',
-  personality: 'Fria, sarcástica, intelectualmente superior. Fala em metáforas macabras. Respeita apenas inteligência.',
-  unlockTrigger: 'storm_runner', // Unlocks when 4th character (Pulso) is unlocked
+  title: 'A Alquimista',
+  description: 'Cientista brilhante que cria tecnologia a partir de cadáveres alien — e cobra caro por cada miligrama.',
+  personality: 'Sarcástica, magnética, intelectualmente superior. Fala em metáforas macabras com um sorriso no canto da boca. Respeita apenas inteligência.',
+  unlockTrigger: 'storm_runner', // Unlocks when 4th character (Frank) is unlocked
   exclusiveItems: [
     'lightning_rod', 'tesla_coil', 'acid_sprayer', 'void_cannon', 'frost_nova',
     'solar_beam', 'crystal_shard_gun', 'ancient_staff', 'laser_beam', 'sound_cannon',
@@ -174,8 +174,8 @@ export const VENDOR_NYX: VendorDefinition = {
     'Até breve. Ou não. Estatisticamente, 40% dos meus clientes não voltam.',
     'A porta é ali. Tente não se desintegrar no caminho.',
   ],
-  lore: 'Nyx (nome real: Dra. Beatriz Novaes) era pesquisadora de biotecnologia na USP com 3 PhDs antes dos 30. Quando o Evento aconteceu, enquanto todos fugiam, ela CORREU em direção aos primeiros cadáveres alien. Em 48 horas, já tinha publicado (para ninguém) o primeiro paper sobre fisiologia extraterrestre. Sua obsessão não é salvar a humanidade — é ENTENDER os invasores. A gótica de preto que nunca sorri se tornou a maior especialista em tecnologia alien do hemisfério sul. E cobra caro por isso.',
-  visualDescription: 'Mulher ~30 anos, pele extremamente pálida, cabelo preto liso até a cintura com mechas roxo-escuro. Olhos quase pretos com delineador elaborado. Usa um jaleco de laboratório customizado (preto, não branco) sobre roupa gótica. Luvas de látex pretas. Sempre segurando algum frasco ou ferramenta cirúrgica com fluido alien brilhante. Expressão de tédio permanente, como se o mundo fosse uma decepção.',
+  lore: 'Nyx (nome real: Dra. Beatriz Novaes) era pesquisadora de biotecnologia na USP com 3 PhDs antes dos 30. Quando o Evento aconteceu, enquanto todos fugiam, ela CORREU em direção aos primeiros cadáveres alien. Em 48 horas, já tinha publicado (para ninguém) o primeiro paper sobre fisiologia extraterrestre. Sua obsessão não é salvar a humanidade — é ENTENDER os invasores. A maior especialista em tecnologia alien do hemisfério sul destila química xeno num laboratório improvisado no lixão — e cobra caro por cada gota.',
+  visualDescription: 'Mulher ~30 anos, pele bronzeada, cabelão preto volumoso e cacheado, olhos azul-esverdeados penetrantes. Argolas grandes, jaqueta de couro surrada com patch de caveira, top rasgado, shorts jeans com bandana vermelha no quadril, luvas sem dedos e coturnos de combate. Tatuagens de fórmulas químicas no braço. Expressão confiante, meio sorriso permanente de quem sabe mais que você.',
   color: '#7c3aed',
   accentColor: '#c4b5fd',
 };

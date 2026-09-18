@@ -8,6 +8,7 @@ import { InputHandler } from './InputHandler';
 import { AudioManager } from './AudioManager';
 import { isPaused } from './PauseState';
 import { loadAllSprites } from './SpriteLoader';
+import { ALL_COMBINATIONS, markFusionDiscovered } from '../core/ItemCombinations';
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D;
@@ -32,11 +33,33 @@ try {
   renderer = new Renderer(ctx, canvas, game);
   input = new InputHandler(canvas, game, renderer, audio);
   renderer.inputHandler = input;
+  // Final-boss entrance roar (fired by CombatEngine at the cutscene's peak)
+  game.combat.onBossRoar = () => audio.monsterRoar();
+
+  // Kick off the pixel-font downloads now — the canvas re-renders every
+  // frame, so text upgrades from the fallback the moment they arrive
+  if (document.fonts?.load) {
+    document.fonts.load('16px VT323');
+  }
+
+  // Debug handles for automated playtests
+  (window as any).__game = game;
+  (window as any).__renderer = renderer;
 
   // Load real sprite assets in background (non-blocking)
   loadAllSprites().then(sprites => {
     (renderer as any).loadedSprites = sprites;
-    console.log(`Loaded: ${sprites.characters.size} chars, ${sprites.vendors.size} vendors, ${sprites.bosses.size} bosses`);
+    // Swap real item art into the procedural icon map — every draw path
+    // (backpack grid, shop, tooltips, fusion guide) reads renderer.sprites.items,
+    // so replacing entries here upgrades all of them at once.
+    for (const [id, img] of sprites.items) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d')!.drawImage(img, 0, 0);
+      renderer.sprites.items.set(id, canvas);
+    }
+    console.log(`Loaded: ${sprites.characters.size} chars, ${sprites.vendors.size} vendors, ${sprites.bosses.size} bosses, ${sprites.items.size} items`);
   }).catch(() => { /* Use procedural fallback */ });
 } catch (err) {
   // Show error on screen if initialization fails
@@ -48,10 +71,10 @@ try {
     if (errCtx) {
       errCtx.fillStyle = '#000';
       errCtx.fillRect(0, 0, 1280, 720);
-      errCtx.font = '20px monospace';
+      errCtx.font = '24px VT323, monospace';
       errCtx.fillStyle = '#ef4444';
       errCtx.fillText('ERRO NA INICIALIZAÇÃO:', 50, 100);
-      errCtx.font = '14px monospace';
+      errCtx.font = '17px VT323, monospace';
       errCtx.fillStyle = '#fbbf24';
       errCtx.fillText(String(err), 50, 140);
       errCtx.fillStyle = '#94a3b8';
@@ -67,23 +90,34 @@ let prevPhase: GamePhase = game.phase;
 let prevEnemyCount = 0;
 let lavaWarningCooldown = 0;
 let prevFusionCount = 0;
+let prevBeamCount = 0;
+let prevDiveTelegraph = false;
 
 function gameLoop(): void {
   const now = performance.now();
   const dt = Math.min((now - lastTime) / 1000, 0.05);
   lastTime = now;
 
+  // Gamepad: poll once per frame (combat = direct control, menus = cursor)
+  const inCombatPhase = game.phase === 'COMBAT' || game.phase === 'COOP';
+  input.gamepad.poll(dt, inCombatPhase && !isPaused());
+  if (input.gamepad.consumeJustConnected()) {
+    const brandNames = { xbox: 'Xbox', playstation: 'PlayStation', switch: 'Switch', generic: 'Arcade' } as const;
+    renderer.showFusionNotif(`🎮 Controle ${brandNames[input.gamepad.brand]} conectado!`, '#4ade80');
+  }
+
   // Phase transition audio & effects
   if (game.phase !== prevPhase) {
     renderer.phaseTransitionTimer = 0.3; // Brief fade on any phase change
     if (game.phase === 'COMBAT' || game.phase === 'COOP') {
       audio.waveStart();
-      audio.setCombatAmbient(true);
+      const hasBoss = game.combat.state.enemies.some(e => e.isBoss);
+      audio.setMusicMode(hasBoss ? 'boss' : 'combat');
       renderer.startWaveTransition(game.wave);
       prevEnemyCount = game.combat.state.enemies.length;
     }
     if (game.phase === 'CARDS') {
-      audio.setCombatAmbient(false);
+      audio.setMusicMode('calm');
       renderer.startCardAnimation();
       audio.waveComplete();
       if (game.pendingCollectible) {
@@ -107,16 +141,25 @@ function gameLoop(): void {
           if (!game.stats.fusionsDiscovered.includes(fname)) {
             game.stats.fusionsDiscovered.push(fname);
           }
+          const combo = ALL_COMBINATIONS.find(c => c.resultName === fname);
+          if (combo) markFusionDiscovered(combo.id);
           renderer.showFusionNotif(fname, fcolor);
         }
       }
       prevFusionCount = fusions;
     }
-    if (game.phase === 'MAIN_MENU' && !audio['ambientPlaying']) {
-      audio.startAmbient();
+    if (game.phase === 'MAIN_MENU') {
+      audio.startMusic('calm');
+      audio.setMusicMode('calm');
     }
-    if (game.phase === 'GAME_OVER') audio.gameOver();
-    if (game.phase === 'VICTORY') audio.victory();
+    if (game.phase === 'GAME_OVER') {
+      audio.stopMusic();
+      audio.gameOver();
+    }
+    if (game.phase === 'VICTORY') {
+      audio.stopMusic();
+      audio.victory();
+    }
     prevPhase = game.phase;
   }
 
@@ -130,6 +173,16 @@ function gameLoop(): void {
     const timeMult = hpRatio < 0.15 && hpRatio > 0 ? 0.4 : 1.0;
     game.combat.tick(dt * timeMult, playerDir, p2Dir);
     game.updateSkills(dt * timeMult);
+
+    // Boss attack alarms: new laser telegraph or dive wind-up
+    const beamCount = (game.combat.state as any).bossBeams?.length ?? 0;
+    const diveTelegraphing = game.combat.state.enemies.some(
+      e => e.isBoss && (e as any)._divePhase === 'telegraph');
+    if (beamCount > prevBeamCount || (diveTelegraphing && !prevDiveTelegraph)) {
+      audio.bossAlarm();
+    }
+    prevBeamCount = beamCount;
+    prevDiveTelegraph = diveTelegraphing;
 
     // Check dash input
     if (input.checkDash()) {
@@ -198,6 +251,19 @@ function gameLoop(): void {
         );
         game.twitch.shieldActive = false;
         game.twitch.addNotification('Escudo absorveu dano!', '#6366f1');
+      }
+    }
+
+    // Power-up catch sound
+    const puCaught = (game.combat.state as any)._powerupCaughtType;
+    if (puCaught) {
+      (game.combat.state as any)._powerupCaughtType = null;
+      if (puCaught === 'nuke') {
+        audio.comboMilestone();
+        renderer.spawnParticles(game.combat.state.playerX, 660, '#a855f7', 20);
+      } else {
+        audio.collectibleFound();
+        renderer.spawnParticles(game.combat.state.playerX, 660, '#4ade80', 6);
       }
     }
 
@@ -286,6 +352,8 @@ function gameLoop(): void {
         if (!game.stats.fusionsDiscovered.includes(fname)) {
           game.stats.fusionsDiscovered.push(fname);
         }
+        const combo = ALL_COMBINATIONS.find(c => c.resultName === fname);
+        if (combo) markFusionDiscovered(combo.id);
         renderer.showFusionNotif(fname, fcolor);
       }
     }
@@ -342,8 +410,7 @@ function gameLoop(): void {
 // Init audio context on first click (browser requirement)
 canvas.addEventListener('click', () => {
   // AudioContext is lazily initialized inside AudioManager
-  // Start ambient on first interaction
-  audio.startAmbient();
+  audio.startMusic('calm');
 }, { once: true });
 
 requestAnimationFrame(gameLoop);

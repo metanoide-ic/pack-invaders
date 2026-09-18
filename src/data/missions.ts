@@ -21,19 +21,26 @@ export interface Mission {
   rewardGold: number;
 }
 
+// Reward values are intentionally small — this bonus is permanent and
+// stacks forever (every claimed mission adds to every future run's starting
+// gold via getMetaGoldBonus). At the old 10-50 scale, a completionist ended
+// up with +340 starting gold against a 30-80 starting-gold cast and a
+// first-shop income of ~90-100g total — enough to trivialize the shop from
+// month 1 onward for anyone who'd played a few runs. Full completion now
+// adds ~+81, a real but modest edge instead of a run-breaking one.
 export const ALL_MISSIONS: Mission[] = [
-  { id: 'm_kills_50',     name: 'Linha de Frente',   description: 'Mate 50 inimigos no total.',        icon: '⚔', stat: 'totalKills',          goal: 50,   rewardGold: 10 },
-  { id: 'm_kills_500',    name: 'Máquina de Guerra',  description: 'Mate 500 inimigos no total.',       icon: '💀', stat: 'totalKills',          goal: 500,  rewardGold: 25 },
-  { id: 'm_kills_2000',   name: 'Tempestade de Aço',  description: 'Mate 2000 inimigos no total.',      icon: '🔥', stat: 'totalKills',          goal: 2000, rewardGold: 50 },
-  { id: 'm_boss_3',       name: 'Caçador de Titãs',   description: 'Derrote 3 bosses.',                 icon: '🐉', stat: 'bossesKilled',        goal: 3,    rewardGold: 20 },
-  { id: 'm_boss_15',      name: 'Mata-Titãs',         description: 'Derrote 15 bosses.',                icon: '⚡', stat: 'bossesKilled',        goal: 15,   rewardGold: 45 },
-  { id: 'm_months_12',    name: 'Um Ano de Guerra',   description: 'Sobreviva 12 meses no total.',      icon: '📅', stat: 'totalMonthsSurvived', goal: 12,   rewardGold: 15 },
-  { id: 'm_months_48',    name: 'Resistência',        description: 'Sobreviva 48 meses no total.',      icon: '🎖', stat: 'totalMonthsSurvived', goal: 48,   rewardGold: 40 },
-  { id: 'm_runs_10',      name: 'Persistência',       description: 'Complete 10 runs.',                 icon: '🔄', stat: 'totalRuns',           goal: 10,   rewardGold: 20 },
-  { id: 'm_chars_4',      name: 'Esquadrão',          description: 'Desbloqueie 4 personagens.',        icon: '🔓', stat: 'charactersUnlocked',  goal: 4,    rewardGold: 30 },
-  { id: 'm_combo_25',     name: 'Imparável',          description: 'Alcance um combo de 25.',           icon: '🌟', stat: 'maxCombo',            goal: 25,   rewardGold: 25 },
-  { id: 'm_collect_20',   name: 'Arquivista',         description: 'Encontre 20 colecionáveis.',        icon: '📜', stat: 'collectiblesFound',   goal: 20,   rewardGold: 25 },
-  { id: 'm_gold_5000',    name: 'Magnata da Guerra',  description: 'Acumule 5000 gold no total.',       icon: '💰', stat: 'totalGoldEarned',     goal: 5000, rewardGold: 35 },
+  { id: 'm_kills_50',     name: 'Linha de Frente',   description: 'Mate 50 inimigos no total.',        icon: '⚔', stat: 'totalKills',          goal: 50,   rewardGold: 3 },
+  { id: 'm_kills_500',    name: 'Máquina de Guerra',  description: 'Mate 500 inimigos no total.',       icon: '💀', stat: 'totalKills',          goal: 500,  rewardGold: 6 },
+  { id: 'm_kills_2000',   name: 'Tempestade de Aço',  description: 'Mate 2000 inimigos no total.',      icon: '🔥', stat: 'totalKills',          goal: 2000, rewardGold: 12 },
+  { id: 'm_boss_3',       name: 'Caçador de Titãs',   description: 'Derrote 3 bosses.',                 icon: '🐉', stat: 'bossesKilled',        goal: 3,    rewardGold: 5 },
+  { id: 'm_boss_15',      name: 'Mata-Titãs',         description: 'Derrote 15 bosses.',                icon: '⚡', stat: 'bossesKilled',        goal: 15,   rewardGold: 10 },
+  { id: 'm_months_12',    name: 'Um Ano de Guerra',   description: 'Sobreviva 12 meses no total.',      icon: '📅', stat: 'totalMonthsSurvived', goal: 12,   rewardGold: 4 },
+  { id: 'm_months_48',    name: 'Resistência',        description: 'Sobreviva 48 meses no total.',      icon: '🎖', stat: 'totalMonthsSurvived', goal: 48,   rewardGold: 9 },
+  { id: 'm_runs_10',      name: 'Persistência',       description: 'Complete 10 runs.',                 icon: '🔄', stat: 'totalRuns',           goal: 10,   rewardGold: 5 },
+  { id: 'm_chars_4',      name: 'Esquadrão',          description: 'Desbloqueie 4 personagens.',        icon: '🔓', stat: 'charactersUnlocked',  goal: 4,    rewardGold: 7 },
+  { id: 'm_combo_25',     name: 'Imparável',          description: 'Alcance um combo de 25.',           icon: '🌟', stat: 'maxCombo',            goal: 25,   rewardGold: 6 },
+  { id: 'm_collect_20',   name: 'Arquivista',         description: 'Encontre 20 colecionáveis.',        icon: '📜', stat: 'collectiblesFound',   goal: 20,   rewardGold: 6 },
+  { id: 'm_gold_5000',    name: 'Magnata da Guerra',  description: 'Acumule 5000 gold no total.',       icon: '💰', stat: 'totalGoldEarned',     goal: 5000, rewardGold: 8 },
 ];
 
 const CLAIMED_KEY = 'packinvaders_missions_claimed';

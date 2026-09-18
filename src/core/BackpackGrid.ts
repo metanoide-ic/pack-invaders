@@ -216,6 +216,13 @@ export class BackpackGrid {
     const item = this.items.get(instanceId);
     if (!item) return [];
 
+    // Cristal Nexus: while placed, every item counts as adjacent to every
+    // other — the whole backpack becomes one synergy web (its entire point).
+    const hasNexus = Array.from(this.items.values()).some(i => i.definition.id === 'nexus_crystal');
+    if (hasNexus) {
+      return Array.from(this.items.values()).filter(i => i.instanceId !== instanceId);
+    }
+
     const myCells = getOccupiedCells(item.definition.gridShape, item.position);
     const myCellSet = new Set(myCells.map(c => `${c.col},${c.row}`));
     const adjacentIds = new Set<string>();
@@ -271,6 +278,20 @@ export class BackpackGrid {
     // Reset all stats to base, then re-apply persistent card bonuses
     for (const item of allItems) {
       item.stats = { ...defaultStats(), ...item.definition.baseStats } as ItemStats;
+      // Neighbor/fusion-granted state fields (piercingBonus, homingBonus,
+      // critChance, goldBonus, shopRarityBonus) get ADDED to by other items'
+      // onSynergyUpdate and by applyCombinations below. Unlike item.stats
+      // above, item.state is never recreated — without this reset, every
+      // placement/move/removal anywhere in the backpack re-runs this whole
+      // function and adds the bonus AGAIN on top of whatever was already
+      // there, so e.g. Piercing Lens's "+1 to neighbors" silently became
+      // "+1 per backpack edit, forever, never reverting" even after the
+      // items were separated.
+      (item.state as any).piercingBonus = 0;
+      (item.state as any).homingBonus = 0;
+      (item.state as any).critChance = 0;
+      (item.state as any).goldBonus = 0;
+      (item.state as any).shopRarityBonus = 0;
       // Card bonuses are stored in item.state._cp so they survive stat resets
       const cp = item.state._cp as { d?: number; r?: number; p?: number; a?: number; h?: number; s?: number; ao?: number } | undefined;
       if (cp) {
@@ -340,6 +361,11 @@ export class BackpackGrid {
         if (combo.bonuses.piercing) item.state.piercingBonus = (item.state.piercingBonus ?? 0) + combo.bonuses.piercing;
         if (combo.bonuses.healPerSecond) item.stats.healPerSecond += combo.bonuses.healPerSecond;
         if (combo.bonuses.projectileCount) item.stats.projectileCount += combo.bonuses.projectileCount;
+        // Gold-economy fusions stack into the same fields their base items already use
+        // (gold_magnet's goldBonus, luck_stone's shopRarityBonus) so they combine cleanly
+        // with any other gold/luck sources instead of needing their own read path.
+        if (combo.bonuses.goldMultiplier) (item.state as any).goldBonus = ((item.state as any).goldBonus ?? 0) + combo.bonuses.goldMultiplier;
+        if (combo.bonuses.shopRarityBonus) (item.state as any).shopRarityBonus = ((item.state as any).shopRarityBonus ?? 0) + combo.bonuses.shopRarityBonus;
         if (combo.addTags) {
           for (const tag of combo.addTags) {
             if (!item.definition.tags.includes(tag as any)) {

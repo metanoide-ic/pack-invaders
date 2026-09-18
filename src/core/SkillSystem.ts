@@ -22,8 +22,8 @@ export interface SkillDefinition {
 export interface SkillContext {
   arenaWidth: number;
   arenaHeight: number;
-  /** Spawn a projectile burst */
-  spawnBurst: (count: number, damage: number, speed: number, color: string) => void;
+  /** Spawn a projectile burst. homing=true makes shots track the nearest enemy (Diana's swarm). */
+  spawnBurst: (count: number, damage: number, speed: number, color: string, homing?: boolean) => void;
   /** Damage all enemies in radius */
   damageArea: (x: number, y: number, radius: number, damage: number) => void;
   /** Heal player */
@@ -32,6 +32,8 @@ export interface SkillContext {
   slowAll: (amount: number, duration: number) => void;
   /** Push enemies away from point */
   pushEnemies: (x: number, y: number, force: number) => void;
+  /** Diana's Reanimar: revive the strongest kill this wave as an ally turret. Returns false if none available. */
+  reanimateStrongest: () => boolean;
 }
 
 export interface SkillState {
@@ -60,8 +62,9 @@ const SKILL_VINE_BURST: SkillDefinition = {
 const SKILL_PHOTOSYNTHESIS: SkillDefinition = {
   id: 'photosynthesis_active', name: 'Fotossíntese', description: 'Regenera 40 HP ao longo de 5 segundos.',
   icon: '☀', cooldown: 15, duration: 5,
-  activate(state, ctx) {
-    ctx.heal(40);
+  activate(_state, _ctx) {
+    // The 40 HP total is delivered gradually (8 HP/s × 5s) by GameManager's
+    // active-skill tick loop below — an instant heal() here used to double it.
   },
 };
 
@@ -162,7 +165,7 @@ const SKILL_EMP_BLAST: SkillDefinition = {
   },
 };
 
-// ─── Fenda (Void Walker) ─────────────────────────────────────────────────────
+// ─── Dr. Eon (Void Walker) ─────────────────────────────────────────────────────
 
 const SKILL_VOID_RIFT: SkillDefinition = {
   id: 'void_rift', name: 'Fenda do Vazio', description: 'Abre uma fenda que suga inimigos e causa 50 dano.',
@@ -203,7 +206,7 @@ const SKILL_SUMMON_SWARM: SkillDefinition = {
   id: 'summon_swarm', name: 'Invocar Enxame', description: 'Invoca 8 projéteis teleguiados que caçam inimigos.',
   icon: '🐝', cooldown: 9, duration: 0,
   activate(_state, ctx) {
-    ctx.spawnBurst(8, 15, 300, '#fbbf24');
+    ctx.spawnBurst(8, 15, 300, '#fbbf24', true);
   },
 };
 
@@ -218,14 +221,10 @@ const SKILL_FRENZY: SkillDefinition = {
 const SKILL_REANIMATE: SkillDefinition = {
   id: 'reanimate_skill', name: 'Reanimar', description: 'O inimigo mais forte morto nesta wave é reanimado como aliado.',
   icon: '💚', cooldown: 20, duration: 0,
-  activate(state, ctx) {
-    // Heal as compensation since reanimation is complex
-    ctx.heal(25);
-    // Damage random enemies (simulating the reanimated one attacking)
-    for (let i = 0; i < 3 && state.enemies.length > 0; i++) {
-      const idx = Math.floor(Math.random() * state.enemies.length);
-      ctx.damageArea(state.enemies[idx].x, state.enemies[idx].y, 30, 40);
-    }
+  activate(_state, ctx) {
+    // If nothing has died yet this wave, there's nothing to reanimate — a
+    // small heal keeps the button from feeling like a complete waste.
+    if (!ctx.reanimateStrongest()) ctx.heal(15);
   },
 };
 
@@ -258,6 +257,60 @@ const SKILL_AXE_SPIN: SkillDefinition = {
   },
 };
 
+// ─── Zabel (scrapper) ────────────────────────────────────────────────────────
+
+const SKILL_SCRAP_GRENADE: SkillDefinition = {
+  id: 'scrap_grenade', name: 'Granada de Sucata', description: 'Arremessa uma lata cheia de estilhaços: 10 projéteis de 12 de dano.',
+  icon: '🧨', cooldown: 8, duration: 0,
+  activate(_state, ctx) {
+    ctx.spawnBurst(10, 12, 340, '#f59e0b');
+  },
+};
+
+const SKILL_JURY_RIG: SkillDefinition = {
+  id: 'jury_rig', name: 'Gambiarra', description: 'Conserta a si mesma na marra: cura 30 HP na hora.',
+  icon: '🔧', cooldown: 13, duration: 0,
+  activate(_state, ctx) {
+    ctx.heal(30);
+  },
+};
+
+const SKILL_BOLT_RAIN: SkillDefinition = {
+  id: 'bolt_rain', name: 'Chuva de Parafusos', description: 'Detona o estoque: 40 de dano em todos os inimigos da arena.',
+  icon: '⚙', cooldown: 15, duration: 0,
+  activate(_state, ctx) {
+    ctx.damageArea(ctx.arenaWidth / 2, ctx.arenaHeight / 2, 900, 40);
+  },
+};
+
+// ─── Sétimo (renegade) ───────────────────────────────────────────────────────
+
+const SKILL_SWARM_CRY: SkillDefinition = {
+  id: 'swarm_cry', name: 'Grito do Enxame', description: 'Grita na língua deles: empurra todos os inimigos e os desacelera por 3s.',
+  icon: '📢', cooldown: 11, duration: 3,
+  activate(state, ctx) {
+    ctx.pushEnemies(state.playerX, 600, 260);
+    ctx.slowAll(0.5, 3);
+  },
+};
+
+const SKILL_MOLT: SkillDefinition = {
+  id: 'molt', name: 'Muda de Carapaça', description: 'Troca a pele danificada: cura 35 HP.',
+  icon: '🦎', cooldown: 14, duration: 0,
+  activate(_state, ctx) {
+    ctx.heal(35);
+  },
+};
+
+const SKILL_ANCIENT_HUNGER: SkillDefinition = {
+  id: 'ancient_hunger', name: 'Fome Antiga', description: 'Devora biomassa próxima: 45 de dano em área e cura 15 HP.',
+  icon: '🦷', cooldown: 12, duration: 0,
+  activate(state, ctx) {
+    ctx.damageArea(state.playerX, 560, 300, 45);
+    ctx.heal(15);
+  },
+};
+
 // ═══════════════════════════════════════════════════════════════════════════════
 // SKILL SETS PER CHARACTER
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -270,6 +323,8 @@ export const CHARACTER_SKILLS: Record<string, SkillDefinition[]> = {
   void_walker: [SKILL_VOID_RIFT, SKILL_PHASE_SHIFT, SKILL_DARK_HARVEST],
   beast_tamer: [SKILL_SUMMON_SWARM, SKILL_FRENZY, SKILL_REANIMATE],
   firefighter: [SKILL_FOAM_JET, SKILL_RESCUE_SHIELD, SKILL_AXE_SPIN],
+  scrapper: [SKILL_SCRAP_GRENADE, SKILL_JURY_RIG, SKILL_BOLT_RAIN],
+  renegade: [SKILL_SWARM_CRY, SKILL_MOLT, SKILL_ANCIENT_HUNGER],
 };
 
 /**

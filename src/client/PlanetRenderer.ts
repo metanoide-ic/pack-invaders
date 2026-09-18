@@ -3,6 +3,38 @@
  * The planet changes appearance based on the current timeline era.
  */
 
+/** Offscreen buffer reused across frames for the pixelated variant */
+let planetBuf: HTMLCanvasElement | null = null;
+
+/**
+ * Pixel-art wrapper: renders the planet small and upscales without smoothing,
+ * turning the smooth gradients into chunky retro pixels. Time is quantized
+ * so orbiting UFOs/moons step frame-by-frame like classic sprite animation.
+ */
+export function renderPlanetPixelated(
+  ctx: CanvasRenderingContext2D,
+  x: number, y: number, radius: number,
+  totalMonths: number, time: number
+): void {
+  const scale = 5;
+  const pad = 2.3; // covers moon orbit (1.8r) and ring (1.4r)
+  const bufSize = Math.ceil((radius * pad * 2) / scale);
+  if (!planetBuf || planetBuf.width !== bufSize) {
+    planetBuf = document.createElement('canvas');
+    planetBuf.width = bufSize;
+    planetBuf.height = bufSize;
+  }
+  const bctx = planetBuf.getContext('2d')!;
+  bctx.clearRect(0, 0, bufSize, bufSize);
+  const steppedTime = Math.floor(time * 8) / 8;
+  renderPlanet(bctx, bufSize / 2, bufSize / 2, radius / scale, totalMonths, steppedTime);
+  const prevSmooth = ctx.imageSmoothingEnabled;
+  ctx.imageSmoothingEnabled = false;
+  const drawSize = bufSize * scale;
+  ctx.drawImage(planetBuf, x - drawSize / 2, y - drawSize / 2, drawSize, drawSize);
+  ctx.imageSmoothingEnabled = prevSmooth;
+}
+
 export function renderPlanet(
   ctx: CanvasRenderingContext2D,
   x: number, y: number, radius: number,

@@ -77,6 +77,12 @@ export interface ItemDefinition {
   /** Rarity tier: 0=common, 1=uncommon, 2=rare, 3=legendary */
   rarity: number;
   /**
+   * Backpack weight. Optional hand-tuned override — when absent,
+   * getItemWeight() derives it from cost so every one of the 150 items
+   * gets a sensible weight without needing a manual pass over each one.
+   */
+  weight?: number;
+  /**
    * Called when adjacencies change. Mutate `stats` based on context.
    * This is the heart of emergent synergies.
    */
@@ -109,9 +115,29 @@ export interface ProjectileData {
   aoeRadius: number;
   tags: Tag[];
   ownerId: string;
+  /** Max travel distance in px before the shot fizzles out (short-range
+   * weapons only — undefined flies until it hits something or exits the
+   * arena, same as before). */
+  range?: number;
 }
 
 export type EmitProjectile = (proj: ProjectileData) => void;
+
+// ─── Backpack Weight ─────────────────────────────────────────────────────────
+
+/**
+ * Backpack weight for an item. Uses the explicit `weight` field when an item
+ * defines one; otherwise derives it from cost (roughly cost/20, min 1) so
+ * every item has a sensible weight without a manual pass over all of them.
+ * Costs across the roster run ~0-300 (median ~60), which maps to weights of
+ * ~1-15 (median ~3) — a handful of median items plus one or two legendaries
+ * fill a typical ~22-25 weight budget, matching a "curated loadout" feel
+ * instead of "fill every grid cell."
+ */
+export function getItemWeight(def: ItemDefinition): number {
+  if (def.weight !== undefined) return def.weight;
+  return Math.max(1, Math.round(def.cost / 20));
+}
 
 // ─── Item Shape Utilities ────────────────────────────────────────────────────
 
