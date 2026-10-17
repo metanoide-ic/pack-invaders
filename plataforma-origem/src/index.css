@@ -145,6 +145,11 @@
   }
 }
 
+/* faixa de diferenciais da Landing — conteúdo duplicado, desliza metade da largura pra fechar o loop. */
+@keyframes marquee {
+  to { transform: translateX(-50%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
